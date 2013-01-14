@@ -1,3 +1,7 @@
+# ReadNetCDFFile.py
+# Created by WALDM on 14th Jan 2013
+# Copyright TODO
+#
 # Module to test the reading of NetCDF files
 from nose.tools import *
 import iris
