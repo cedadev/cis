@@ -4,4 +4,7 @@
 #
 # Error raised when an invalid dimension is entered
 class InvalidDimensionError(Exception):
-    pass
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
