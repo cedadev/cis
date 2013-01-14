@@ -33,5 +33,10 @@ def should_raise_value_error_with_file_that_is_not_netcdf():
 def can_read_15GB_file():
     pass
 
+@istest
+@raises(IOError)
+def should_raise_io_error_with_file_that_does_not_have_read_permissions():
+    filename = "/home/daniel/NetCDF Files/Unreadable Folder/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
+    file = iris.load(filename)    
 
 
