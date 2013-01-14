@@ -2,6 +2,7 @@
 from nose.tools import *
 import iris
 
+'''
 @istest
 def x_equals_0():
     x = 0
@@ -11,6 +12,7 @@ def x_equals_0():
 def test_that_fails():
     x = 0
     eq_(x, 1)
+'''
     
 @istest
 def can_read_netcdf_file():       
@@ -39,4 +41,14 @@ def should_raise_io_error_with_file_that_does_not_have_read_permissions():
     filename = "/home/daniel/NetCDF Files/Unreadable Folder/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
     file = iris.load(filename)    
 
+@istest
+def can_read_netcdf_file_with_incorrect_file_extension():
+    filename = "/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.waldm"
+    file = iris.load(filename)  
+
+@istest
+@raises(ValueError)
+def should_raise_value_error_with_file_that_has_netcdf_extension_but_is_not_netcdf():
+    filename = "/home/daniel/NetCDF Files/notarealnetcdffile.nc"
+    file = iris.load(filename) 
 
