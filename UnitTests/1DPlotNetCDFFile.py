@@ -2,9 +2,10 @@
 # Created by WALDM on 14th Jan 2013
 # Copyright TODO
 #
-# Module to test the reading of NetCDF files
+# Module to test the one-dimensional plotting of NetCDF files
 from nose.tools import *
 import iris
+import Exceptions.InvalidVariableError
 
 @istest
 def can_plot_specified_variable_in_netcdf_file():
@@ -20,7 +21,7 @@ def should_raise_error_when_variable_does_not_exist_in_file():
     myplotter.plot1D(filename, variable, toscreen)
     
 @istest
-@raises(InvalidDimensioneError)
+@raises(InvalidDimensionError)
 def should_raise_error_when_variable_is_not_1D():
     filename = "/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
     variable = "invalidvariable"
