@@ -1,3 +1,7 @@
+/Plotting/Plotter.pyc
+/Plotting/__init__.pyc
+/Exceptions/InvalidVariableError.pyc
+/Exceptions/InvalidDimensionError.pyc
 /UnitTests/PlotNetCDFFile.pyc
 /UnitTests/1DPlotNetCDFFile.pyc
 /UnitTests/__init__.pyc
