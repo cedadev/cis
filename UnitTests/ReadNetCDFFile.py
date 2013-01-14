@@ -5,6 +5,7 @@
 # Module to test the reading of NetCDF files
 from nose.tools import *
 import iris
+import Controller
 
 '''
 @istest
@@ -56,3 +57,8 @@ def should_raise_value_error_with_file_that_has_netcdf_extension_but_is_not_netc
     filename = "/home/daniel/NetCDF Files/notarealnetcdffile.nc"
     file = iris.load(filename) 
 
+@istest
+def can_get_number_of_variables_in_file():
+    filename = "/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
+    file = iris.load(filename)   
+    eq_(Controller.get_number_of_variables(file), 466)
