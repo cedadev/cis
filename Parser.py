@@ -7,6 +7,9 @@ import argparse
 import sys
 import os.path
 import Controller
+from Exceptions.InvalidFilenameError import InvalidFilenameError
+from Exceptions.InvalidChartTypeError import InvalidChartTypeError
+from Exceptions.NoVariablesSpecifiedError import NoVariablesSpecifiedError
 
 def initialise_parser():
     parser = argparse.ArgumentParser("Read and plot NetCDF files")    
@@ -22,26 +25,23 @@ def initialise_parser():
 
 def parse_args(arguments = None):
     parser = initialise_parser()
-    if (arguments == None):
+    if arguments == None:
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     args = parser.parse_args(arguments) 
+    validate_args(args)
     return args
 
 def validate_args(args): 
     for filename in args.filenames:
         if not os.path.isfile(filename):
-            print "'" + filename + "' cannot be found"
-            exit(1)
-    if (args.type != None) and not(args.type in Controller.chart_types):
-        print "'" + args.type + "' is not a valid chart type"
-        exit(1)
+            raise InvalidFilenameError(filename)
+    if (args.type != None) and not(args.type in Controller.chart_types):        
+        raise InvalidChartTypeError(args.type)
     if args.variables == None:
-        print "At least one variable is required"
-        exit(1)
-    print "Successfully parsed"
+        raise NoVariablesSpecifiedError()        
+    print "Successfully parsed"   
 
-    
 '''args = parse_args(["/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc", "--type","heatmap"])
 validate_args(args)
 parse_args(["-h"])'''
