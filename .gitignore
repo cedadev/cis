@@ -1,3 +1,7 @@
+/UnitTests/StringsUsedInTests.pyc
+/Exceptions/NoVariablesSpecifiedError.pyc
+/Exceptions/InvalidFilenameError.pyc
+/Exceptions/InvalidChartTypeError.pyc
 /UnitTests/TestParser.pyc
 /UnitTests/Strings.pyc
 /Parser.pyc
