@@ -1,3 +1,5 @@
+/.pydevproject
+/.project
 /UnitTests/TestArguments.pyc
 /Controller.pyc
 /Plotting/Plotter.pyc
