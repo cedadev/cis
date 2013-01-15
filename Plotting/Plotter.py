@@ -5,16 +5,15 @@
 # Class for plotting graphs
 from Exceptions.InvalidDimensionError import InvalidDimensionError
 from Exceptions.InvalidVariableError import InvalidVariableError
+import Controller
 
-class Plotter():
-    variables = [["nameofvariable", "not1Dvariable"], [1, 2]]
-    
+class Plotter():   
     def plot1D(self, filename, variable):
-        if (variable not in self.variables[0][:]):
+        if (variable not in Controller.variables[0][:]):
             raise InvalidVariableError(variable + " cannot be found")
         else:
-            indexOfVariable = self.variables[0][:].index(variable)
-            dimensionsOfVariable = self.variables[1][indexOfVariable]
+            indexOfVariable = Controller.variables[0][:].index(variable)
+            dimensionsOfVariable = Controller.variables[1][indexOfVariable]
             
             if (dimensionsOfVariable != 1):
                 raise InvalidDimensionError(variable + " does not have one dimension")
