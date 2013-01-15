@@ -3,9 +3,10 @@
 # Copyright TODO
 #
 # Module to test the reading of NetCDF files
-from nose.tools import *
+from nose.tools import istest, raises, eq_
 import iris
 import Controller
+from UnitTests.Strings import valid_filename, invalid_filename, non_netcdf_file, file_without_read_permissions, non_netcdf_file_with_netcdf_file_extension, netcdf_file_with_incorrect_file_extension
 
 '''
 @istest
@@ -21,20 +22,20 @@ def test_that_fails():
     
 @istest
 def can_read_netcdf_file():       
-    filename = "/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
-    file = iris.load(filename)    
+    filename = valid_filename
+    iris.load(filename)    
         
 @istest
 @raises(IOError)
 def should_raise_io_error_with_invalid_filename():   
-    filename = "invalidfilename"
-    file = iris.load(filename)  
+    filename = invalid_filename
+    iris.load(filename)  
 
 @istest
 @raises(ValueError)
 def should_raise_value_error_with_file_that_is_not_netcdf():      
-    filename = "/home/daniel/Desktop/Connect to Jasmin"
-    file = iris.load(filename)
+    filename = non_netcdf_file
+    iris.load(filename)
 
 @istest
 def can_read_15GB_file():
@@ -43,22 +44,22 @@ def can_read_15GB_file():
 @istest
 @raises(IOError)
 def should_raise_io_error_with_file_that_does_not_have_read_permissions():
-    filename = "/home/daniel/NetCDF Files/Unreadable Folder/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
-    file = iris.load(filename)    
+    filename = file_without_read_permissions
+    iris.load(filename)    
 
 @istest
 def can_read_netcdf_file_with_incorrect_file_extension():
-    filename = "/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.waldm"
-    file = iris.load(filename)  
+    filename = netcdf_file_with_incorrect_file_extension
+    iris.load(filename)  
 
 @istest
 @raises(ValueError)
 def should_raise_value_error_with_file_that_has_netcdf_extension_but_is_not_netcdf():
-    filename = "/home/daniel/NetCDF Files/notarealnetcdffile.nc"
-    file = iris.load(filename) 
+    filename = non_netcdf_file_with_netcdf_file_extension
+    iris.load(filename) 
 
 @istest
 def can_get_number_of_variables_in_file():
-    filename = "/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
-    file = iris.load(filename)   
-    eq_(Controller.get_number_of_variables(file), 466)
+    filename = valid_filename
+    netcdf_file = iris.load(filename)   
+    eq_(Controller.get_number_of_variables(netcdf_file), 466)
