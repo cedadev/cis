@@ -3,32 +3,23 @@
 # Copyright TODO
 #
 # Module to test the parser
-from nose.tools import istest, eq_
+from nose.tools import istest, raises
 import Parser
-import UnitTests.ReadNetCDFFile
-import UnitTests.Plot1DNetCDFFile
+from UnitTests.StringsUsedInTests import valid_filename, valid_variable, invalid_filename, netcdf_file_with_incorrect_file_extension
+from Exceptions.InvalidFilenameError import InvalidFilenameError
 
 @istest
-def can_get_help(): 
-    Parser.parse_args("-h")
-    Parser.parse_args("--help")
-
-@istest
-def can_specify_one_filename():
-    filename = ["myfilename"]
-    args = Parser.parse_args(filename)
-    eq_(args.filenames, filename)
+def can_specify_one_valid_filename():
+    args = [valid_filename, "-v", valid_variable]
+    Parser.parse_args(args)
     
 @istest
-def can_specify_more_than_one_filename():
-    filenames = ["one", "two", "three", "four"]
-    args = Parser.parse_args(filenames)
-    eq_(args.filenames, filenames)
+@raises(InvalidFilenameError)
+def should_raise_error_with_one_invalid_filename():
+    args = [invalid_filename, "-v", valid_variable]
+    Parser.parse_args(args)   
     
 @istest
-def can_validate_if_one_filename_exists():
-    filename = [UnitTests.ReadNetCDFFile.valid_filename, "-v", UnitTests.Plot1DNetCDFFile.valid_variable]
-    args = Parser.parse_args(filename)
-    Parser.validate_args(args)
-    
-#can_validate_if_one_filename_exists()
+def can_specify_more_than_one_valid_filename():
+    args = [valid_filename, netcdf_file_with_incorrect_file_extension, "-v", valid_variable]
+    Parser.parse_args(args)
