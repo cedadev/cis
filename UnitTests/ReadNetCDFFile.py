@@ -63,3 +63,25 @@ def can_get_number_of_variables_in_file():
     filename = valid_filename
     netcdf_file = iris.load(filename)   
     eq_(Controller.get_number_of_variables(netcdf_file), 466)
+
+'''    
+@istest
+def can_plot_specified_variable_in_netcdf_file():
+    filename = valid_filename
+    variable = valid_variable    
+    myplotter.plot1D(filename, variable)
+    
+@istest
+@raises(InvalidVariableError)
+def should_raise_error_when_variable_does_not_exist_in_file():
+    filename = valid_filename
+    variable = invalid_variable    
+    myplotter.plot1D(filename, variable)
+    
+@istest
+@raises(InvalidDimensionError)
+def should_raise_error_when_variable_is_not_1D():
+    filename = valid_filename
+    variable = not1Dvariable   
+    myplotter.plot1D(filename, variable)
+    '''
