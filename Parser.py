@@ -1,8 +1,8 @@
-# Controller.py
+# Parser.py
 # Created by WALDM on 14th Jan 2013
 # Copyright TODO
 #
-# Controller module
+# Module used for parsing
 import argparse
 import sys
 import os.path
@@ -25,7 +25,7 @@ def parse_args(arguments = None):
     if (arguments == None):
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
-    args = parser.parse_args(arguments)   
+    args = parser.parse_args(arguments) 
     return args
 
 def validate_args(args): 
@@ -40,7 +40,8 @@ def validate_args(args):
         print "At least one variable is required"
         exit(1)
     print "Successfully parsed"
+
     
-args = parse_args(["/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc", "--type","heatmap"])
+'''args = parse_args(["/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc", "--type","heatmap"])
 validate_args(args)
-parse_args(["-h"])
+parse_args(["-h"])'''
