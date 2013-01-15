@@ -4,7 +4,7 @@
 #
 # Error raised when no variables are entered
 class NoVariablesSpecifiedError(Exception):
-    def __init__(self, value):
-        self.value = value
+    '''def __init__(self):
+        pass
     def __str__(self):
-        return repr(self.value)
+        return repr(self.value)'''
