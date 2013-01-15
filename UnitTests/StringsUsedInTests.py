@@ -12,3 +12,4 @@ non_netcdf_file_with_netcdf_file_extension = "/home/daniel/NetCDF Files/notareal
 valid_variable = "nameofvariable"
 invalid_variable = "invalidvariable"
 not1Dvariable = "not1Dvariable" 
+valid_variable_in_valid_filename = "rain"
