@@ -51,15 +51,15 @@ def parse_args(arguments = None):
         plot_args = parse_plot_args(remaining_arguments)
         for filename in main_args.filenames:
             if not os.path.isfile(filename):
-                parser.error("Please enter a valid filename")
+                parser.error("'" + filename + "' is not a valid filename")
         if (main_args.type != None) and not(main_args.type in plot_types.keys()):        
-            parser.error("Please enter a valid plot type")
+            parser.error("'" + main_args.type + "' is not a valid plot type")
         if main_args.variables == None:
             parser.error("At least one variable must be specified")
         main_args.plot_args = plot_args
     return main_args
 
-args, p_args = parse_args(["/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc","--type","heatmap", "-v", "rain","--title", "test"])
-print args, p_args
+#args, p_args = parse_args(["/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc","--type","heatmap", "-v", "rain","--title", "test"])
+#print args, p_args
 #print vars(args)
 #print vars(p_args)
