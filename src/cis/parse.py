@@ -7,12 +7,25 @@ import argparse
 import sys
 import os.path
 
-def initialise_parser():
-    parser = argparse.ArgumentParser("Read and plot NetCDF files")    
+def initialise_top_parser():
+    parser = argparse.ArgumentParser("CIS")
+    subparsers = parser.add_subparsers(help="plot, reduce, co-locate, info", dest='command')
+    plot_parser = subparsers.add_parser("plot", help = "This is the help for plot")
+    plot_parser = add_plot_parser_arguments(plot_parser)
+    info_parser = subparsers.add_parser("info", help = "This is the help for info")
+    info_parser = add_info_parser_arguments(info_parser)
+    return parser
+
+def add_plot_parser_arguments(parser):
     parser.add_argument("filenames", metavar = "Input filename(s)", nargs = "+", help = "The filename(s) of the file(s) to be plotted")
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to plot")
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type")    
+    return parser
+
+def add_info_parser_arguments(parser):
+    parser.add_argument("filename", metavar = "Filename", help = "The filename of the file to inspect")
+    parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
     return parser
     
 def initialise_plot_parser():
@@ -28,21 +41,23 @@ def parse_plot_args(arguments):
 
 def parse_args(arguments = None):
     from plot import plot_types
-    parser = initialise_parser()
+    parser = initialise_top_parser()
     if arguments == None:
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args, remaining_arguments = parser.parse_known_args(arguments)
-    # Read off the main arguments and any keywords that aren't recognised are passed to the plot parser
-    plot_args = parse_plot_args(remaining_arguments)
-    for filename in main_args.filenames:
-        if not os.path.isfile(filename):
-            parser.error("Please enter a valid filename")
-    if (main_args.type != None) and not(main_args.type in plot_types.keys()):        
-        parser.error("Please enter a valid plot type")
-    if main_args.variables == None:
-        parser.error("At least one variable must be specified")
-    return main_args, plot_args
+    if main_args.command == 'plot':
+        # Read off the main arguments and any keywords that aren't recognised are passed to the plot parser
+        plot_args = parse_plot_args(remaining_arguments)
+        for filename in main_args.filenames:
+            if not os.path.isfile(filename):
+                parser.error("Please enter a valid filename")
+        if (main_args.type != None) and not(main_args.type in plot_types.keys()):        
+            parser.error("Please enter a valid plot type")
+        if main_args.variables == None:
+            parser.error("At least one variable must be specified")
+        main_args.plot_args = plot_args
+    return main_args
 
 args, p_args = parse_args(["/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc","--type","heatmap", "-v", "rain","--title", "test"])
 print args, p_args
