@@ -6,17 +6,17 @@
 
 import iris.plot as iplt
 import matplotlib.pyplot as plt
-   
+
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
               'ylabel' : plt.ylabel } 
         
-plot_types = {'line_plot' : iplt.plot,
+plot_types = {'line' : iplt.plot,
                 'scatter' : iplt.points, 
                 'heatmap' : iplt.pcolormesh }   
    
 def plot(data, plot_type, out_filename = None, options = None, *args, **kwargs):
-    from Exceptions.InvalidPlotTypeError import InvalidPlotTypeError
+    from exceptions import InvalidPlotTypeError
     
     try:
         plot_types[plot_type](data, *args, **kwargs)

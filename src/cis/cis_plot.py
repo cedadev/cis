@@ -2,11 +2,10 @@
 '''
 Main driver script for the plotting tool
 '''
-from Plotting.Plotter import plot
-from Parser import parse_args
-from Reading.DataReader import read_variable
-from Exceptions.InvalidDimensionError import InvalidDimensionError
-from Exceptions.InvalidPlotTypeError import InvalidPlotTypeError
+from plot import plot
+from parse import parse_args
+from io.read import read_variable 
+from exceptions import InvalidPlotTypeError, InvalidDimensionError
 
 if __name__ ==  '__main__':
     main_arguments, plot_args = parse_args()

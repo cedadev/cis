@@ -1,3 +1,13 @@
+/src/cis/plot.pyc
+/src/cis/__init__.pyc
+/src/cis/exceptions.pyc
+/src/cis/parse.pyc
+/test/test_cis/__init__.pyc
+/test/test_cis/data.pyc
+/test/test_cis/io/__init__.pyc
+/test/test_cis/io/test_read.pyc
+/test/test_cis/test_parse.pyc
+/test/test_cis/test_plot.pyc
 /src/Exceptions/InvalidDimensionError.pyc
 /src/Exceptions/InvalidVariableError.pyc
 /src/Exceptions/__init__.pyc

@@ -3,9 +3,9 @@
 # Copyright TODO
 #
 # Module to test the one-dimensional plotting of NetCDF files
-from Plotting import Plotter
+from cis.plot import plot
 from nose.tools import istest, raises
-from UnitTests.StringsUsedInTests import valid_1d_filename, valid_2d_filename, valid_variable_in_valid_filename, out_filename
+from test_cis.data import *
 import iris
 import os.path
 
@@ -23,43 +23,43 @@ def make_cube(filename):
 def can_plot_line_graph_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_1d_filename)
-    Plotter.plot_line_graph(cube, out_filename)   
+    plot(cube, "line", out_filename)   
     assert(os.path.isfile(out_filename))
 
 # Not an automated test   
 def can_plot_line_graph_to_screen():    
     cube = make_cube(valid_1d_filename)       
-    Plotter.plot_line_graph(cube)
+    plot(cube, "line")
     
 @istest
 def can_plot_scatter_graph_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_2d_filename)
-    Plotter.plot_scatter_graph(cube, out_filename)   
+    plot(cube, "scatter", out_filename)     
     assert(os.path.isfile(out_filename))
     
 # Not an automated test    
 def can_plot_scatter_graph_to_screen():    
     cube = make_cube(valid_2d_filename)       
-    Plotter.plot_scatter_graph(cube)
+    plot(cube, "scatter")
 
 @istest
 def can_plot_heatmap_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_2d_filename)
-    Plotter.plot_heatmap(cube, out_filename)   
+    plot(cube, "heatmap", out_filename)   
     assert(os.path.isfile(out_filename))
    
 # Not an automated test   
 def can_plot_heatmap_to_screen():    
     cube = make_cube(valid_2d_filename)       
-    Plotter.plot_heatmap(cube)
+    plot(cube, "heatmap")
     
 @istest
 @raises(IOError)
 def should_raise_io_error_with_invalid_filename():     
     cube = make_cube(valid_1d_filename)
-    Plotter.plot_line_graph(cube, "/")
+    plot(cube, "line", "/")
     
 if __name__ == "__main__":
     can_plot_line_graph_to_screen()

@@ -9,7 +9,7 @@ def read_gridded_data_file_variable(filename, variable):
     
     
     """
-    from Exceptions.InvalidVariableError import InvalidVariableError
+    from cis.exceptions import InvalidVariableError
     import iris
     from netCDF4 import Dataset
     
@@ -40,7 +40,7 @@ def read_variable(filenames, variable):
     
     
     """
-    from UngriddedDataReader import read_ungridded_data
+    from cis.io.read_ungridded import UngriddedData, read_ungridded_data
     from iris.exceptions import IrisError
     try:
         data = read_gridded_data_file_variable(file, variable)

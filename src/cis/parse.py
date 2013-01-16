@@ -6,7 +6,6 @@
 import argparse
 import sys
 import os.path
-import Controller
 
 def initialise_parser():
     parser = argparse.ArgumentParser("Read and plot NetCDF files")    
@@ -28,6 +27,7 @@ def parse_plot_args(arguments):
     return parser.parse_args(arguments)
 
 def parse_args(arguments = None):
+    from plot import plot_types
     parser = initialise_parser()
     if arguments == None:
         #sys.argv[0] is the name of the script itself
@@ -38,7 +38,7 @@ def parse_args(arguments = None):
     for filename in main_args.filenames:
         if not os.path.isfile(filename):
             parser.error("Please enter a valid filename")
-    if (main_args.type != None) and not(main_args.type in Controller.chart_types):        
+    if (main_args.type != None) and not(main_args.type in plot_types.keys()):        
         parser.error("Please enter a valid plot type")
     if main_args.variables == None:
         parser.error("At least one variable must be specified")
@@ -46,5 +46,5 @@ def parse_args(arguments = None):
 
 args, p_args = parse_args(["/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc","--type","heatmap", "-v", "rain","--title", "test"])
 print args, p_args
-print vars(args)
-print vars(p_args)
+#print vars(args)
+#print vars(p_args)
