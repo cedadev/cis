@@ -9,11 +9,20 @@ import matplotlib.pyplot as plt
    
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
-              'ylabel' : plt.ylabel }
-    
+              'ylabel' : plt.ylabel } 
+        
+plot_types = {'line_plot' : iplt.plot,
+                'scatter' : iplt.points, 
+                'heatmap' : iplt.pcolormesh }   
    
-def plot_line_graph(data, out_filename = None, options = None, *args, **kwargs):
-    iplt.plot(data, *args, **kwargs)      
+def plot(data, plot_type, out_filename = None, options = None, *args, **kwargs):
+    from Exceptions.InvalidPlotTypeError import InvalidPlotTypeError
+    
+    try:
+        plot_types[plot_type](data, *args, **kwargs)
+    except KeyError:
+        raise InvalidPlotTypeError(plot_type)
+    
     if options != None:
         for option, value in options.iteritems():
             try:
@@ -23,42 +32,8 @@ def plot_line_graph(data, out_filename = None, options = None, *args, **kwargs):
                 # This should never be reached as the plot_options
                 # should include all of the valid formatting options 
          
-    show_or_save_plot(out_filename)
-    
-def plot_scatter_graph(data, out_filename = None, *args, **kwargs):        
-    iplt.points(data, *args, **kwargs)   
-    show_or_save_plot(out_filename)
-    
-def plot_heatmap(data, out_filename = None, *args, **kwargs):        
-    iplt.pcolormesh(data, *args, **kwargs)   
-    show_or_save_plot(out_filename)
-     
-def show_or_save_plot(out_filename = None):
     if out_filename == None:
         plt.show()  
     else:
         # Will overwrite if file already exists
-        plt.savefig(out_filename)
-        
-plot_types = {'line_plot' : plot_line_graph,
-                'scatter' : plot_scatter_graph, 
-                'heatmap' : plot_heatmap }   
-   
-def plot(data, type, out_filename = None, options = None, *args, **kwargs):
-    from Exceptions.InvalidPlotTypeError import InvalidPlotTypeError
-    
-    try:
-        plot_types[type](data, options, *args, **kwargs)
-    except KeyError:
-        raise InvalidPlotTypeError(type)
-    
-    if options != None:
-        for option, value in options.iteritems():
-            try:
-                plot_options[option](value)
-            except KeyError:
-                print "Invalid formatting option"
-                # This should never be reached as the plot_options
-                # should include all of the valid formatting options 
-         
-    show_or_save_plot(out_filename)        
+        plt.savefig(out_filename)        
