@@ -7,9 +7,6 @@ import argparse
 import sys
 import os.path
 import Controller
-from Exceptions.InvalidFilenameError import InvalidFilenameError
-from Exceptions.InvalidChartTypeError import InvalidChartTypeError
-from Exceptions.NoVariablesSpecifiedError import NoVariablesSpecifiedError
 
 def initialise_parser():
     parser = argparse.ArgumentParser("Read and plot NetCDF files")    
