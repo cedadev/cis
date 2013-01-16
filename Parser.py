@@ -29,6 +29,7 @@ def parse_args(arguments = None):
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     args = parser.parse_args(arguments) 
+    print "Successfully parsed"
     validate_args(args)
     return args
 
@@ -39,8 +40,9 @@ def validate_args(args):
     if (args.type != None) and not(args.type in Controller.chart_types):        
         raise InvalidChartTypeError(args.type)
     if args.variables == None:
-        raise NoVariablesSpecifiedError()        
-    print "Successfully parsed"   
+        raise NoVariablesSpecifiedError() 
+    print "Successfully validated"       
+       
 
 '''args = parse_args(["/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc", "--type","heatmap"])
 validate_args(args)
