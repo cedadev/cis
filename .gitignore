@@ -1,3 +1,14 @@
+/UnitTests/StringsUsedInTests.pyc
+/Exceptions/NoVariablesSpecifiedError.pyc
+/Exceptions/InvalidFilenameError.pyc
+/Exceptions/InvalidChartTypeError.pyc
+/UnitTests/TestParser.pyc
+/UnitTests/Strings.pyc
+/Parser.pyc
+/UnitTests/Plot1DNetCDFFile.pyc
+/.pydevproject
+/.project
+/UnitTests/TestArguments.pyc
 /Controller.pyc
 /Plotting/Plotter.pyc
 /Plotting/__init__.pyc

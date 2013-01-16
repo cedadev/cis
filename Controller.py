@@ -3,7 +3,9 @@
 # Copyright TODO
 #
 # Controller module
-import iris
 
-def get_number_of_variables(file):
-    return len(file)
+variables = [["nameofvariable", "not1Dvariable"], [1, 2]]
+chart_types = ["heatmap", "contour", "filled_contour", "line", "scatter"]
+
+def get_number_of_variables(netcdf_file):
+    return len(netcdf_file)
