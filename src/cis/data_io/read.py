@@ -4,7 +4,8 @@
 #
 # Class for reading data
 
-def read_gridded_data_file_variable(filename, variable):
+#def read_gridded_data_file_variable(filename, variable):
+def read_gridded_data_file_variable(filenames, variables):
     """
     
     
@@ -13,15 +14,18 @@ def read_gridded_data_file_variable(filename, variable):
     import iris
     from netCDF4 import Dataset
     
-    var_constraint = iris.AttributeConstraint(name=variable)
+    #var_constraint = iris.AttributeConstraint(name=variable)
+    var_constraint = iris.AttributeConstraint(name=variables[0])
     # Create an Attribute constraint on the name Attribute for the variable given
     
     try:
-        cube = iris.load_cube(filename, var_constraint)
+        #cube = iris.load_cube(filenames, var_constraint)
+        cube = iris.load_cube(filenames[0], var_constraint)
     except iris.exceptions.ConstraintMismatchError:
         print "Variable not found: "+variable
         print "Try one of these instead:"
-        f = Dataset(filename)
+        #f = Dataset(filenames)
+        f = Dataset(filenames[0])
         for variable in f.variables:
             print "  "+variable
         raise InvalidVariableError
@@ -43,7 +47,8 @@ def read_variable(filenames, variable):
     from cis.data_io.read_ungridded import UngriddedData, read_ungridded_data
     from iris.exceptions import IrisError
     try:
-        data = read_gridded_data_file_variable(file, variable)
+        #data = read_gridded_data_file_variable(file, variable)
+        data = read_gridded_data_file_variable(filenames, variable)
     except IrisError:
         print "Unable to create Cube, trying Ungridded data"
         data = read_ungridded_data(file, variable)

@@ -18,7 +18,7 @@ plot_types = {'line' : iplt.plot,
                 'contourf' : iplt.contourf}   
    
 def plot(data, plot_type, out_filename = None, options = None, *args, **kwargs):
-    from exceptions import InvalidPlotTypeError
+    from cis.exceptions import InvalidPlotTypeError
     
     try:
         plot_types[plot_type](data, *args, **kwargs)
@@ -32,7 +32,7 @@ def plot(data, plot_type, out_filename = None, options = None, *args, **kwargs):
             except KeyError:
                 print "Invalid formatting option"
                 # This should never be reached as the plot_options
-                # should include all of the valid formatting options 
+                # should include all of the valid formatting options
          
     if out_filename == None:
         plt.show()  

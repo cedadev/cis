@@ -1,3 +1,6 @@
+/src/__init__.pyc
+/src/cis/data_io/read_ungridded.pyc
+/src/cis/subparser_example.pyc
 /test/test_cis/test_io/test_read.pyc
 /test/test_cis/test_io/__init__.pyc
 /src/cis/plot.pyc
