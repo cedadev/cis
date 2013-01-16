@@ -3,7 +3,8 @@
 # Copyright TODO
 #
 # Module that contains various strings that are used in tests
-valid_filename = "/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
+valid_1d_filename = "/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
+valid_2d_filename = "/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc"
 invalid_filename = "invalidfilename"
 non_netcdf_file = "/home/shared/NetCDF Files/notanetcdffile"
 file_without_read_permissions = "/home/shared/NetCDF Files/Unreadable Folder/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
