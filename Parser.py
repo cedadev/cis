@@ -29,20 +29,15 @@ def parse_args(arguments = None):
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     args = parser.parse_args(arguments) 
-    print "Successfully parsed"
-    validate_args(args)
-    return args
-
-def validate_args(args): 
+    #print "Successfully parsed"
     for filename in args.filenames:
         if not os.path.isfile(filename):
-            raise InvalidFilenameError(filename)
+            parser.error("Please enter a valid filename")
     if (args.type != None) and not(args.type in Controller.chart_types):        
-        raise InvalidChartTypeError(args.type)
+        parser.error("Please enter a valid plot type")
     if args.variables == None:
-        raise NoVariablesSpecifiedError() 
-    print "Successfully validated"       
-       
+        parser.error("At least one variable must be specified")
+    return args
 
 '''args = parse_args(["/home/daniel/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc", "--type","heatmap"])
 validate_args(args)
