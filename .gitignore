@@ -1,3 +1,13 @@
+/src/Exceptions/InvalidDimensionError.pyc
+/src/Exceptions/InvalidVariableError.pyc
+/src/Exceptions/__init__.pyc
+/src/Plotting/Plotter.pyc
+/src/Plotting/__init__.pyc
+/test/Plot1DNetCDFFile.pyc
+/test/ReadNetCDFFile.pyc
+/test/StringsUsedInTests.pyc
+/test/TestParser.pyc
+/test/__init__.pyc
 /UnitTests/.png
 /UnitTests/StringsUsedInTests.pyc
 /Exceptions/NoVariablesSpecifiedError.pyc
