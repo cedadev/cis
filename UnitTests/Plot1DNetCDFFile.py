@@ -11,7 +11,8 @@ import iris
 @istest
 def can_plot_cube():    
     variable = iris.AttributeConstraint(name = valid_variable_in_valid_filename)
-    cube = iris.load_cube(valid_filename, variable)    
+    cube = iris.load_cube(valid_filename, variable) 
+    cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]   
     Plotter.plot1D(cube)
 
 
