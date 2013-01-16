@@ -4,21 +4,17 @@ Main driver script for the Climate Intercomparison Suite
 '''
 from plot import plot
 from parse import parse_args
-from io.read import read_variable 
-from exceptions import InvalidPlotTypeError, InvalidDimensionError
+from data_io.read import read_variable 
 
 def plot_cmd(main_arguments):
     try:
         data = read_variable(main_arguments.filenames, main_arguments.variable)
     except:
-        pass
+        print "Data Error"
+        exit(1)
         # Think about what to catch here
     
-    try:
-        plot(data, main_arguments.type, main_arguments.output, main_arguments.plot_args)
-    except InvalidPlotTypeError:
-        print "Please enter a valid plot type"
-        exit(1)
+    plot(data, main_arguments.type, main_arguments.output, main_arguments.plot_args)
 
 def info_cmd(main_arguments):
     pass

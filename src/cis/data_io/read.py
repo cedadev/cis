@@ -40,7 +40,7 @@ def read_variable(filenames, variable):
     
     
     """
-    from cis.io.read_ungridded import UngriddedData, read_ungridded_data
+    from cis.data_io.read_ungridded import UngriddedData, read_ungridded_data
     from iris.exceptions import IrisError
     try:
         data = read_gridded_data_file_variable(file, variable)
