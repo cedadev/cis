@@ -2,13 +2,11 @@
 '''
 Main driver script for the plotting tool
 '''
-from Plotting.Plotter import plot_line_graph, plot_heatmap
+from Plotting.Plotter import plot
 from Parser import parse_args
 from Reading.DataReader import read_variable
 from Exceptions.InvalidDimensionError import InvalidDimensionError
-
-plot_types = {'line_plot' : plot_line_graph, 
-                'heatmap' : plot_heatmap }
+from Exceptions.InvalidPlotTypeError import InvalidPlotTypeError
 
 if __name__ ==  '__main__':
     main_arguments, plot_args = parse_args()
@@ -20,9 +18,7 @@ if __name__ ==  '__main__':
         # Think about what to catch here
     
     try:
-        plot_types[main_arguments.type](data, main_arguments.output, *plot_args)
-    except KeyError:
-        print "Invalid plot type"
+        plot(data, main_arguments.type, main_arguments.output, plot_args)
+    except InvalidPlotTypeError:
+        print "Please enter a valid plot type"
         exit(1)
-    
-    
