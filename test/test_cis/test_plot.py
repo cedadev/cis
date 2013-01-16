@@ -56,6 +56,18 @@ def can_plot_heatmap_to_screen():
     plot(cube, "heatmap")
     
 @istest
+def can_plot_contour_to_file():    
+    delete_file_if_exists()
+    cube = make_cube(valid_2d_filename)
+    plot(cube, "contour", out_filename)   
+    assert(os.path.isfile(out_filename))
+   
+# Not an automated test   
+def can_plot_contour_to_screen():    
+    cube = make_cube(valid_2d_filename)       
+    plot(cube, "contour")
+    
+@istest
 @raises(IOError)
 def should_raise_io_error_with_invalid_filename():     
     cube = make_cube(valid_1d_filename)
@@ -65,3 +77,4 @@ if __name__ == "__main__":
     can_plot_line_graph_to_screen()
     can_plot_scatter_graph_to_screen()
     can_plot_heatmap_to_screen()
+    can_plot_contour_to_screen()

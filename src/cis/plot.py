@@ -13,7 +13,9 @@ plot_options = { 'title' : plt.title,
         
 plot_types = {'line' : iplt.plot,
                 'scatter' : iplt.points, 
-                'heatmap' : iplt.pcolormesh }   
+                'heatmap' : iplt.pcolormesh,
+                'contour' : iplt.contour,
+                'contourf' : iplt.contourf}   
    
 def plot(data, plot_type, out_filename = None, options = None, *args, **kwargs):
     from exceptions import InvalidPlotTypeError
