@@ -38,7 +38,7 @@ def can_plot_scatter_graph_to_file():
     Plotter.plot_scatter_graph(cube, out_filename)   
     assert(os.path.isfile(out_filename))
     
-# Not an automated test   
+# Not an automated test    
 def can_plot_scatter_graph_to_screen():    
     cube = make_cube(valid_2d_filename)       
     Plotter.plot_scatter_graph(cube)
