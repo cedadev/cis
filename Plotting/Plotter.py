@@ -14,6 +14,10 @@ def plot_line_graph(data, out_filename = None, *args, **kwargs):
 def plot_scatter_graph(data, out_filename = None, *args, **kwargs):        
     iplt.points(data, *args, **kwargs)   
     show_or_save_plot(out_filename)
+    
+def plot_heatmap(data, out_filename = None, *args, **kwargs):        
+    iplt.pcolormesh(data, *args, **kwargs)   
+    show_or_save_plot(out_filename)
      
 def show_or_save_plot(out_filename = None):
     if out_filename == None:
