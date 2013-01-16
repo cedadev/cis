@@ -5,28 +5,50 @@
 # Module to test the one-dimensional plotting of NetCDF files
 from Plotting import Plotter
 from nose.tools import istest, raises
-from UnitTests.StringsUsedInTests import valid_filename, valid_variable_in_valid_filename, out_filename
+from UnitTests.StringsUsedInTests import valid_1d_filename, valid_2d_filename, valid_variable_in_valid_filename, out_filename
 import iris
 import os.path
 
-@istest
-def can_plot_cube_to_file():    
+def delete_file_if_exists():
     if os.path.isfile(out_filename):
         os.remove(out_filename)
-    
+
+def setup_plot(filename):
     variable = iris.AttributeConstraint(name = valid_variable_in_valid_filename)
-    cube = iris.load_cube(valid_filename, variable) 
-    cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]   
-    Plotter.plotLineGraph(cube, out_filename)
-    
+    cube = iris.load_cube(filename, variable) 
+    cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
+    return cube       
+
+@istest
+def can_plot_line_graph_to_file():    
+    delete_file_if_exists()
+    cube = setup_plot(valid_1d_filename)
+    Plotter.plot_line_graph(cube, out_filename)   
     assert(os.path.isfile(out_filename))
+
+# Not an automated test   
+def can_plot_line_graph_to_screen():    
+    cube = setup_plot(valid_1d_filename)       
+    Plotter.plot_line_graph(cube)
+    
+@istest
+def can_plot_scatter_graph_to_file():    
+    delete_file_if_exists()
+    cube = setup_plot(valid_2d_filename)
+    Plotter.plot_scatter_graph(cube, out_filename)   
+    assert(os.path.isfile(out_filename))
+    
+# Not an automated test   
+def can_plot_scatter_graph_to_screen():    
+    cube = setup_plot(valid_2d_filename)       
+    Plotter.plot_scatter_graph(cube)
     
 @istest
 @raises(IOError)
-def should_raise_io_error_with_invalid_filename():    
-    variable = iris.AttributeConstraint(name = valid_variable_in_valid_filename)
-    cube = iris.load_cube(valid_filename, variable) 
-    cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]   
-    Plotter.plotLineGraph(cube, "/")
-
+def should_raise_io_error_with_invalid_filename():     
+    cube = setup_plot(valid_1d_filename)
+    Plotter.plot_line_graph(cube, "/")
     
+if __name__ == "__main__":
+    can_plot_line_graph_to_screen()
+    can_plot_scatter_graph_to_screen()
