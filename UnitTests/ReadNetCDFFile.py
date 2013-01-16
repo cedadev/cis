@@ -6,7 +6,7 @@
 from nose.tools import istest, raises, eq_
 import iris
 import Controller
-from UnitTests.Strings import valid_filename, invalid_filename, non_netcdf_file, file_without_read_permissions, non_netcdf_file_with_netcdf_file_extension, netcdf_file_with_incorrect_file_extension
+from UnitTests.StringsUsedInTests import valid_filename, invalid_filename, non_netcdf_file, file_without_read_permissions, non_netcdf_file_with_netcdf_file_extension, netcdf_file_with_incorrect_file_extension
 
 '''
 @istest
