@@ -42,7 +42,14 @@ def can_plot_scatter_graph_to_file():
 def can_plot_scatter_graph_to_screen():    
     cube = make_cube(valid_2d_filename)       
     Plotter.plot_scatter_graph(cube)
-    
+
+@istest
+def can_plot_heatmap_to_file():    
+    delete_file_if_exists()
+    cube = make_cube(valid_2d_filename)
+    Plotter.plot_heatmap(cube, out_filename)   
+    assert(os.path.isfile(out_filename))
+   
 # Not an automated test   
 def can_plot_heatmap_to_screen():    
     cube = make_cube(valid_2d_filename)       
