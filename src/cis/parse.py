@@ -59,7 +59,7 @@ def parse_args(arguments = None):
         main_args.plot_args = plot_args
     return main_args
 
-args, p_args = parse_args(["/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc","--type","heatmap", "-v", "rain","--title", "test"])
-print args, p_args
+#args, p_args = parse_args(["/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc","--type","heatmap", "-v", "rain","--title", "test"])
+#print args, p_args
 #print vars(args)
 #print vars(p_args)
