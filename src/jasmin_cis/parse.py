@@ -28,19 +28,39 @@ def add_info_parser_arguments(parser):
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
     return parser
     
-def initialise_plot_parser():
+def initialise_plot_format_parser():
     parser = argparse.ArgumentParser("Read and plot NetCDF files")
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")
     return parser
 
-def parse_plot_args(arguments):
-    parser = initialise_plot_parser()
+def parse_plot_format_args(arguments):
+    parser = initialise_plot_format_parser()
     return parser.parse_args(arguments)
 
-def parse_args(arguments = None):
+def validate_plot_args(arguments, parser):
     from plot import plot_types
+    # Check input files exist
+    for filename in arguments.filenames:
+        if not os.path.isfile(filename):
+            parser.error("'" + filename + "' is not a valid filename")
+    # Check at least one variable is specified        
+    if arguments.variables == None:
+        parser.error("At least one variable must be specified") 
+    # Check plot type is valid option for number of variables if specified
+    if (arguments.type != None):
+        if (arguments.type in plot_types.keys()):
+            if plot_types[arguments.type].expected_no_of_variables != len(arguments.variables):
+                parser.error("Invalid number of variables for plot type")        
+        else:        
+            parser.error("'" + arguments.type + "' is not a valid plot type")
+        
+def validate_info_args(arguments, parser):
+    if not os.path.isfile(arguments.filename):
+        parser.error("'" + arguments.filename + "' is not a valid filename")
+
+def parse_args(arguments = None):
     parser = initialise_top_parser()
     if arguments == None:
         #sys.argv[0] is the name of the script itself
@@ -49,18 +69,13 @@ def parse_args(arguments = None):
     if main_args.command == 'plot':
         if len(remaining_arguments) != 0:
             # Read off the main arguments and any keywords that aren't recognised are passed to the plot parser
-            plot_args = parse_plot_args(remaining_arguments)
-            main_args.plot_args = plot_args
+            plot_format_args = parse_plot_format_args(remaining_arguments)
+            main_args.plot_format_args = plot_format_args
         else:
-            main_args.plot_args = None
-            
-        for filename in main_args.filenames:
-            if not os.path.isfile(filename):
-                parser.error("'" + filename + "' is not a valid filename")
-        if (main_args.type != None) and not(main_args.type in plot_types.keys()):        
-            parser.error("'" + main_args.type + "' is not a valid plot type")
-        if main_args.variables == None:
-            parser.error("At least one variable must be specified")
+            main_args.plot_format_args = None
+        validate_plot_args(main_args, parser)
+    elif main_args.command == 'info':
+        validate_info_args(main_args, parser)
         
     return main_args
 
