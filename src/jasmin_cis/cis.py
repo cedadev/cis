@@ -17,20 +17,20 @@ def plot_cmd(main_arguments):
         for variable in main_arguments.variables:
             data.append(read_variable(main_arguments.filenames, variable))
     except IrisError as e:
-        sys.stderr.write(str(e))
+        sys.stderr.write(str(e) + "\n")
         exit(1)
     except IOError as e:
         print "There was an error reading one of the files: "
-        sys.stderr.write(str(e))
+        sys.stderr.write(str(e) + "\n")
         exit(1)
     
     try:
         plot(data, main_arguments.type, main_arguments.output, main_arguments.plot_format_args)
     except ex.InvalidPlotTypeError as e:
-        sys.stderr.write(str(e))
+        sys.stderr.write(str(e) + "\n")
         exit(1)
     except ex.InvalidPlotFormatError as e:
-        sys.stderr.write(str(e))
+        sys.stderr.write(str(e) + "\n")
         exit(1)
 
 def info_cmd(main_arguments):
