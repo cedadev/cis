@@ -3,7 +3,7 @@
 # Copyright TODO
 #
 # Module to test the one-dimensional plotting of NetCDF files
-from cis.plot import plot
+from jasmin_cis.plot import plot
 from nose.tools import istest, raises
 from test_cis.data import *
 import iris
