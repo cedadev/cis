@@ -14,16 +14,17 @@ plot_options = { 'title' : plt.title,
               'ylabel' : plt.ylabel } 
 
 class plot_type(object):
-    def __init__(self, expected_no_of_variables, variable_dimensions, plot_method):
+    def __init__(self, expected_no_of_variables, variable_dimensions, plot_method, is_map):
         self.expected_no_of_variables = expected_no_of_variables
         self.variable_dimensions = variable_dimensions
         self.plot_method = plot_method
+        self.is_map = is_map
         
-plot_types = {'line' : plot_type(1, 1, iplt.plot),
-                'scatter' : plot_type(1, 2, iplt.points), 
-                'heatmap' : plot_type(1, 2, iplt.pcolormesh),
-                'contour' : plot_type(1, 2, iplt.contour),
-                'contourf' : plot_type(1, 2, iplt.contourf)}
+plot_types = {'line' : plot_type(1, 1, iplt.plot, False),
+                'scatter' : plot_type(1, 2, iplt.points, False), 
+                'heatmap' : plot_type(1, 2, iplt.pcolormesh, True),
+                'contour' : plot_type(1, 2, iplt.contour, False),
+                'contourf' : plot_type(1, 2, iplt.contourf, False)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
@@ -65,6 +66,9 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
                 raise ex.InvalidPlotFormatError("Invalid formatting option")
                 # This should never be reached as the plot_options
                 # should include all of the valid formatting options
+    
+    if plot_types[plot_type].is_map:
+        plt.gca().coastlines()    
          
     if out_filename == None:
         plt.show()  
