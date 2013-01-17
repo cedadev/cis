@@ -1,12 +1,11 @@
-# TestParsers.py
 # Created by WALDM on 14th Jan 2013
 # Copyright TODO
 #
 # Module to test the parser
 from nose.tools import istest
-from cis.parse import parse_args
+from jasmin_cis.parse import parse_args
 from data import *
-from cis.plot import plot_types
+from jasmin_cis.plot import plot_types
 
 @istest
 def can_specify_one_valid_filename():
