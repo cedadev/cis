@@ -13,26 +13,6 @@ def can_specify_one_valid_filename():
     parse_args(args)
     
 @istest
-def should_exit_with_no_filenames_specified_for_plot_command():
-    try:
-        args = ["plot"]
-        parse_args(args)
-        assert False
-    except SystemExit as e:
-        if e.code != 2:
-            raise e            
-
-@istest
-def should_exit_with_no_filenames_specified_for_info_command():
-    try:
-        args = ["info"]
-        parse_args(args)
-        assert False
-    except SystemExit as e:
-        if e.code != 2:
-            raise e
-    
-@istest
 def should_raise_invalidfilenameerror_with_one_invalid_filename():
     try:
         args = ["plot", invalid_filename, "-v", valid_variable]
