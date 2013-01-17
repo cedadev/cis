@@ -23,8 +23,8 @@ class plot_type(object):
 plot_types = {'line' : plot_type(1, 1, iplt.plot, False),
                 'scatter' : plot_type(1, 2, iplt.points, False), 
                 'heatmap' : plot_type(1, 2, iplt.pcolormesh, True),
-                'contour' : plot_type(1, 2, iplt.contour, False),
-                'contourf' : plot_type(1, 2, iplt.contourf, False)}
+                'contour' : plot_type(1, 2, iplt.contour, True),
+                'contourf' : plot_type(1, 2, iplt.contourf, True)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
