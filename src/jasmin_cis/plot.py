@@ -14,16 +14,17 @@ plot_options = { 'title' : plt.title,
               'ylabel' : plt.ylabel } 
 
 class plot_type(object):
-    def __init__(self, expected_no_of_variables, variable_dimensions, plot_method):
+    def __init__(self, expected_no_of_variables, variable_dimensions, plot_method, is_map):
         self.expected_no_of_variables = expected_no_of_variables
         self.variable_dimensions = variable_dimensions
         self.plot_method = plot_method
+        self.is_map = is_map
         
-plot_types = {'line' : plot_type(1, 1, iplt.plot),
-                'scatter' : plot_type(1, 2, iplt.points), 
-                'heatmap' : plot_type(1, 2, iplt.pcolormesh),
-                'contour' : plot_type(1, 2, iplt.contour),
-                'contourf' : plot_type(1, 2, iplt.contourf)}
+plot_types = {'line' : plot_type(1, 1, iplt.plot, False),
+                'scatter' : plot_type(1, 2, iplt.points, False), 
+                'heatmap' : plot_type(1, 2, iplt.pcolormesh, True),
+                'contour' : plot_type(1, 2, iplt.contour, True),
+                'contourf' : plot_type(1, 2, iplt.contourf, True)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
@@ -52,6 +53,9 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
     elif plot_types[plot_type].variable_dimensions != variable_dim:
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
     
+    if plot_types[plot_type].expected_no_of_variables != len(data):
+        raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")   
+    
     try:
         plot_types[plot_type].plot_method(data, *args, **kwargs)
     except KeyError:
@@ -65,6 +69,13 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
                 raise ex.InvalidPlotFormatError("Invalid formatting option")
                 # This should never be reached as the plot_options
                 # should include all of the valid formatting options
+    
+    if plot_types[plot_type].is_map:
+        # Try and add the coast lines if the map supports it
+        try:
+            plt.gca().coastlines()
+        except AttributeError:
+            pass
          
     if out_filename == None:
         plt.show()  

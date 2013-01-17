@@ -3,7 +3,7 @@
 # Copyright TODO
 #
 # Module to test the reading of NetCDF files
-from nose.tools import istest, raises, eq_
+from nose.tools import istest, raises
 import iris
 from test_cis.data import *
     

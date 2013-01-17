@@ -8,10 +8,10 @@ import os.path
 
 def initialise_top_parser():
     parser = argparse.ArgumentParser("CIS")
-    subparsers = parser.add_subparsers(help="plot, reduce, co-locate, info", dest='command')
-    plot_parser = subparsers.add_parser("plot", help = "This is the help for plot")
+    subparsers = parser.add_subparsers(dest='command')
+    plot_parser = subparsers.add_parser("plot", help = "Create plots")
     plot_parser = add_plot_parser_arguments(plot_parser)
-    info_parser = subparsers.add_parser("info", help = "This is the help for info")
+    info_parser = subparsers.add_parser("info", help = "Get information about a file")
     info_parser = add_info_parser_arguments(info_parser)
     return parser
 
@@ -68,8 +68,7 @@ def parse_args(arguments = None):
     if main_args.command == 'plot':
         if len(remaining_arguments) != 0:
             # Read off the main arguments and any keywords that aren't recognised are passed to the plot parser
-            plot_format_args = parse_plot_format_args(remaining_arguments)
-            main_args.plot_format_args = plot_format_args
+            main_args.plot_format_args = vars(parse_plot_format_args(remaining_arguments))
         else:
             main_args.plot_format_args = None
         validate_plot_args(main_args, parser)

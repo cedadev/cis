@@ -3,10 +3,10 @@
 #
 # Class for reading data
 
-def list_netcdf_file_variables(filename):
+def get_netcdf_file_variables(filename):
     from netCDF4 import Dataset    
     """
-     Return a list of the valid variables in a netCDF file
+     Return an OrderedDict of the valid variables in a netCDF file
     """
     f = Dataset(filename)
     return f.variables
@@ -27,7 +27,7 @@ def read_gridded_data_file_variable(filenames, variable):
     except iris.exceptions.ConstraintMismatchError:
         print "Variable not found: "+variable
         print "Try one of these instead: "
-        for variable in list_netcdf_file_variables(filenames[0]):
+        for variable in get_netcdf_file_variables(filenames[0]):
             print variable
         raise InvalidVariableError
     
