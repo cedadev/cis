@@ -34,9 +34,15 @@ def plot_cmd(main_arguments):
         exit(1)
 
 def info_cmd(main_arguments):
-    from data_io.read import list_netcdf_file_variables
-    for item in list_netcdf_file_variables(main_arguments.filename):
-        print item
+    from data_io.read import get_netcdf_file_variables
+    file_variables = get_netcdf_file_variables(main_arguments.filename)
+    
+    if main_arguments.variables != None:
+        for variable in main_arguments.variables:
+            print file_variables[variable]
+    else:
+        for item in file_variables(main_arguments.filename):
+            print item
 
 
 commands = { 'plot' : plot_cmd,
