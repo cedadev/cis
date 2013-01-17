@@ -1,3 +1,10 @@
+/src/jasmin_cis/exceptions.pyc
+/src/jasmin_cis/parse.pyc
+/src/jasmin_cis/plot.pyc
+/src/jasmin_cis/data_io/read.pyc
+/src/jasmin_cis/data_io/read_ungridded.pyc
+/src/jasmin_cis/data_io/__init__.pyc
+/src/jasmin_cis/__init__.pyc
 /src/__init__.pyc
 /src/cis/data_io/read_ungridded.pyc
 /src/cis/subparser_example.pyc
