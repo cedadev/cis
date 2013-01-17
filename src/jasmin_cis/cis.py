@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python2.7
 '''
 Main driver script for the Climate Intercomparison Suite
 '''
