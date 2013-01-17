@@ -1,8 +1,10 @@
-# Plotter.py
 # Created by WALDM on 14th Jan 2013
 # Copyright TODO
 #
-# Class for plotting graphs
+"""
+    Module for plotting graphs. Also contains dictionaries for the valid
+     plot types and formatting options
+"""
 
 import iris.plot as iplt
 import matplotlib.pyplot as plt

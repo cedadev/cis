@@ -1,4 +1,3 @@
-# Parser.py
 # Created by WALDM on 14th Jan 2013
 # Copyright TODO
 #

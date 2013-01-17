@@ -1,4 +1,3 @@
-# DataReader.py
 # Created by PARD on 14th Jan 2013
 # Copyright TODO
 #
