@@ -8,10 +8,10 @@ import os.path
 
 def initialise_top_parser():
     parser = argparse.ArgumentParser("CIS")
-    subparsers = parser.add_subparsers(help="plot, reduce, co-locate, info", dest='command')
-    plot_parser = subparsers.add_parser("plot", help = "This is the help for plot")
+    subparsers = parser.add_subparsers(dest='command')
+    plot_parser = subparsers.add_parser("plot", help = "Create plots")
     plot_parser = add_plot_parser_arguments(plot_parser)
-    info_parser = subparsers.add_parser("info", help = "This is the help for info")
+    info_parser = subparsers.add_parser("info", help = "Get information about a file")
     info_parser = add_info_parser_arguments(info_parser)
     return parser
 
