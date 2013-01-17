@@ -37,6 +37,7 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
     #  gets passed to the plot function. This could be done with unpacking in the 
     #  plot method call but we already unpack the args list.
     variable_dim = len(data[0].shape)
+<<<<<<< HEAD
 
     print data[0].long_name
     print data[0].units
@@ -45,6 +46,11 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
             print coord.name()
         
     if len(data) == 1:
+=======
+    num_variables = len(data)
+    
+    if num_variables == 1:
+>>>>>>> 6ed55cb54528959bb9a6d36f8b184e42e72ad164
         data = data[0]
     else:
         for item in data:
