@@ -42,10 +42,22 @@ def info_cmd(main_arguments):
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd}
 
+def setup_logging(log_file, log_level):
+    import logging
+    logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
+    logging.captureWarnings(True)
+
 if __name__ ==  '__main__':
     from parse import parse_args
-    #arguments = parse_args()
+    import logging
+    from datetime import datetime
+    
+    setup_logging("cis.log", logging.INFO)
     arguments = parse_args(sys.argv[1:])
+    
+    logging.info(datetime.now().strftime("%Y-%m-%d %H:%M")+ ": CIS "+arguments.command+" got the following arguments: ")
+    logging.info(arguments)
+    
     commands[arguments.command](arguments)
     
     
