@@ -25,7 +25,7 @@ def plot_cmd(main_arguments):
         exit(1)
     
     try:
-        plot(data, main_arguments.type, main_arguments.output, main_arguments.plot_format_args)
+        plot(data, main_arguments.type, main_arguments.output, **main_arguments.plot_format_args)
     except ex.InvalidPlotTypeError as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)
