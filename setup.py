@@ -19,11 +19,11 @@ setup(
         "basemap",
         "pyke",
         "matplotlib==1.2.0",
-        "iris==1.1.0"
+        "iris>=1.1.0"
     ],
 
-    test_require=["nose==1.2.0"],
+    tests_require=["nose>=1.1.2"],
 
     dependency_links=["https://github.com/SciTools/iris/tarball/master#egg=iris-1.1.0"]
-
 )
+
