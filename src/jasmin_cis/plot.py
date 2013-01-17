@@ -37,7 +37,6 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
     #  gets passed to the plot function. This could be done with unpacking in the 
     #  plot method call but we already unpack the args list.
     variable_dim = len(data[0].shape)
-<<<<<<< HEAD
 
     print data[0].long_name
     print data[0].units
@@ -45,12 +44,9 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
         for coord in data[0].coords(contains_dimension=dim, dim_coords=True):
             print coord.name()
         
-    if len(data) == 1:
-=======
     num_variables = len(data)
     
     if num_variables == 1:
->>>>>>> 6ed55cb54528959bb9a6d36f8b184e42e72ad164
         data = data[0]
     else:
         for item in data:
@@ -66,7 +62,7 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
     elif plot_types[plot_type].variable_dimensions != variable_dim:
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
     
-    if plot_types[plot_type].expected_no_of_variables != len(data):
+    if plot_types[plot_type].expected_no_of_variables != num_variables:
         raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")   
     
     try:
