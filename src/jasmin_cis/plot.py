@@ -6,7 +6,7 @@
      plot types and formatting options
 """
 
-import iris.plot as iplt
+import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 
 plot_options = { 'title' : plt.title,
@@ -20,30 +20,54 @@ class plot_type(object):
         self.plot_method = plot_method
         self.is_map = is_map
         
-plot_types = {'line' : plot_type(1, 1, iplt.plot, False),
-                'scatter' : plot_type(1, 2, iplt.points, False), 
-                'heatmap' : plot_type(1, 2, iplt.pcolormesh, True),
-                'contour' : plot_type(1, 2, iplt.contour, True),
-                'contourf' : plot_type(1, 2, iplt.contourf, True)}
+plot_types = {'line' : plot_type(1, 1, qplt.plot, False),
+                'scatter' : plot_type(1, 2, qplt.points, False), 
+                'heatmap' : plot_type(1, 2, qplt.pcolormesh, True),
+                'contour' : plot_type(1, 2, qplt.contour, True),
+                'contourf' : plot_type(1, 2, qplt.contourf, True)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
-   
-def plot(data, plot_type = None, out_filename = None, options = None, *args, **kwargs):
-    #from jasmin_cis.exceptions import InvalidPlotTypeError, InconsistentDimensionsError
+
+def format_plot(data, options, plot_type):
+    if options["title"] == None:
+        options["title"] = ""
+    if options["xlabel"] == None:
+        for dim in xrange(len(data.shape)):
+            for coord in data.coords(contains_dimension=dim, dim_coords=True):
+                xlabel = coord.name()
+        options["xlabel"] = xlabel.capitalize()
+    if options["ylabel"] == None:
+        options["ylabel"] = data.long_name.title()
+    
+    for option, value in options.iteritems():        
+        plot_options[option](value)
+    
+    
+    if plot_types[plot_type].is_map:
+        # Try and add the coast lines if the map supports it
+        try:
+            plt.gca().coastlines()
+        except AttributeError:
+            pass
+    #print data[0].units   
+    plt.legend(loc="upper left")
+        
+def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     import jasmin_cis.exceptions as ex
 
     # Unpack the data list if there is only one element, otherwise the whole list
     #  gets passed to the plot function. This could be done with unpacking in the 
     #  plot method call but we already unpack the args list.
     variable_dim = len(data[0].shape)
-
-    print data[0].long_name
-    print data[0].units
-    for dim in xrange(len(data[0].shape)):
-        for coord in data[0].coords(contains_dimension=dim, dim_coords=True):
-            print coord.name()
-        
+    
+    options = {}
+    for key in plot_options.keys():
+        try:
+            options[key] = kwargs.pop(key)
+        except KeyError:
+            options[key] = None    
+    
     num_variables = len(data)
     
     if num_variables == 1:
@@ -51,8 +75,7 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
     else:
         for item in data:
             if len(item.shape) != variable_dim:
-                raise ex.InconsistentDimensionsError("Number of "
-                    "dimensions must be consistent across variables")
+                raise ex.InconsistentDimensionsError("Number of dimensions must be consistent across variables")
         
     if plot_type is None:
         try:
@@ -70,21 +93,7 @@ def plot(data, plot_type = None, out_filename = None, options = None, *args, **k
     except KeyError:
         raise ex.InvalidPlotTypeError(plot_type)
     
-    if options != None:
-        for option, value in options.iteritems():
-            try:
-                plot_options[option](value)
-            except KeyError:
-                raise ex.InvalidPlotFormatError("Invalid formatting option")
-                # This should never be reached as the plot_options
-                # should include all of the valid formatting options
-    
-    if plot_types[plot_type].is_map:
-        # Try and add the coast lines if the map supports it
-        try:
-            plt.gca().coastlines()
-        except AttributeError:
-            pass
+    format_plot(data, options, plot_type)
          
     if out_filename == None:
         plt.show()  
