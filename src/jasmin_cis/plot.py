@@ -63,11 +63,8 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     
     options = {}
     for key in plot_options.keys():
-        try:
-            options[key] = kwargs.pop(key)
-        except KeyError:
-            options[key] = None    
-    
+        options[key] = kwargs.pop(key, None)
+            
     num_variables = len(data)
     
     if num_variables == 1:
