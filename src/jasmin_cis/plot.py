@@ -1,10 +1,7 @@
-# Created by WALDM on 14th Jan 2013
-# Copyright TODO
-#
-"""
-    Module for plotting graphs. Also contains dictionaries for the valid
-     plot types and formatting options
-"""
+'''
+Module for plotting graphs.
+Also contains dictionaries for the valid plot types and formatting options
+'''
 
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
@@ -30,6 +27,7 @@ default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
 def format_plot(data, options, plot_type):
+    # If any of the options have not been specified, then use the defaults
     if options["title"] == None:
         options["title"] = ""
     if options["xlabel"] == None:
@@ -41,8 +39,7 @@ def format_plot(data, options, plot_type):
         options["ylabel"] = data.long_name.title()
     
     for option, value in options.iteritems():        
-        plot_options[option](value)
-    
+        plot_options[option](value)    
     
     if plot_types[plot_type].is_map:
         # Try and add the coast lines if the map supports it
@@ -50,15 +47,15 @@ def format_plot(data, options, plot_type):
             plt.gca().coastlines()
         except AttributeError:
             pass
-    #print data[0].units   
+ 
     plt.legend(loc="upper left")
         
 def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     import jasmin_cis.exceptions as ex
 
     # Unpack the data list if there is only one element, otherwise the whole list
-    #  gets passed to the plot function. This could be done with unpacking in the 
-    #  plot method call but we already unpack the args list.
+    # gets passed to the plot function. This could be done with unpacking in the 
+    # plot method call but we already unpack the args list.
     variable_dim = len(data[0].shape)
     
     options = {}

@@ -1,7 +1,8 @@
-# Created by WALDM on 14th Jan 2013
-# Copyright TODO
-#
-# Module to test the parser
+'''
+Module to test the parser
+The parse raises a SystemExit exception with code 2 if it fails to parse.
+Each test therefore ignores SystemExit exceptions with code 2 as they are expected.
+'''
 from nose.tools import istest
 from jasmin_cis.parse import parse_args
 from data import *

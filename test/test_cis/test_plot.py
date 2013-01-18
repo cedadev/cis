@@ -1,8 +1,6 @@
-# Plot1DNetCDFFile.py
-# Created by WALDM on 14th Jan 2013
-# Copyright TODO
-#
-# Module to test the one-dimensional plotting of NetCDF files
+'''
+Module to test the one-dimensional plotting of NetCDF files
+'''
 from jasmin_cis.plot import plot
 from nose.tools import istest, raises
 from test_cis.data import *
@@ -10,6 +8,10 @@ import iris
 import os.path
 
 def delete_file_if_exists():
+    '''
+    Used to delete the file that will be created before tests are run
+    in order to be able to check after the test if the file was created by the test
+    '''
     if os.path.isfile(out_filename):
         os.remove(out_filename)
 

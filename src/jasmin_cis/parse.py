@@ -1,12 +1,14 @@
-# Created by WALDM on 14th Jan 2013
-# Copyright TODO
-#
-# Module used for parsing
+'''
+Module used for parsing
+'''
 import argparse
 import sys
 import os.path
 
 def initialise_top_parser():
+    '''
+    The parser to which all arguments are initially passed
+    '''
     parser = argparse.ArgumentParser("CIS")
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help = "Create plots")
@@ -57,28 +59,24 @@ def validate_plot_args(arguments, parser):
             parser.error("'" + arguments.type + "' is not a valid plot type")
         
 def validate_info_args(arguments, parser):
+    # Check file exists
     if not os.path.isfile(arguments.filename):
         parser.error("'" + arguments.filename + "' is not a valid filename")
 
 def parse_args(arguments = None):
+    '''
+    Parse the arguments given. If no arguments are given, then used the command line arguments.
+    '''
     parser = initialise_top_parser()
     if arguments == None:
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args, remaining_arguments = parser.parse_known_args(arguments)
     if main_args.command == 'plot':
-        #if len(remaining_arguments) != 0:
-            # Read off the main arguments and any keywords that aren't recognised are passed to the plot parser
-        main_args.plot_format_args = vars(parse_plot_format_args(remaining_arguments))
-        #else:
-         #   main_args.plot_format_args = None
+        # Read off the main arguments and any keywords that aren't recognised are passed to the plot parser
+        main_args.plot_format_args = vars(parse_plot_format_args(remaining_arguments))        
         validate_plot_args(main_args, parser)
     elif main_args.command == 'info':
         validate_info_args(main_args, parser)
         
     return main_args
-
-#args, p_args = parse_args(["/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc","--type","heatmap", "-v", "rain","--title", "test"])
-#print args, p_args
-#print vars(args)
-#print vars(p_args)

@@ -1,8 +1,6 @@
-# ReadNetCDFFile.py
-# Created by WALDM on 14th Jan 2013
-# Copyright TODO
-#
-# Module to test the reading of NetCDF files
+'''
+Module to test the reading of NetCDF files
+'''
 from nose.tools import istest, raises
 import iris
 from test_cis.data import *
@@ -26,7 +24,7 @@ def should_raise_value_error_with_file_that_is_not_netcdf():
 
 @istest
 def can_read_15GB_file():
-    pass
+    raise Exception("Need to test")
 
 @istest
 @raises(IOError)
@@ -44,14 +42,6 @@ def can_read_netcdf_file_with_incorrect_file_extension():
 def should_raise_value_error_with_file_that_has_netcdf_extension_but_is_not_netcdf():
     filename = non_netcdf_file_with_netcdf_file_extension
     iris.load(filename) 
-
-@istest
-def can_get_number_of_variables_in_file():
-    #filename = valid_filename
-    #netcdf_file = iris.load(filename)   
-    #eq_(Controller.get_number_of_variables(netcdf_file), 466)
-    # TODO
-    pass
 
 '''    
 @istest

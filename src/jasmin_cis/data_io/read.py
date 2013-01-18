@@ -1,21 +1,32 @@
-# Created by PARD on 14th Jan 2013
-# Copyright TODO
-#
-# Class for reading data
+'''
+Module for reading data
+'''
 
 def get_netcdf_file_variables(filename):
+    '''
+    Get all the variables from a NetCDF file
+    
+    args:
+        filename: The filename of the file to get the variables from
+    
+    returns:
+        An OrderedDict containing the variables from the file
+    '''
     from netCDF4 import Dataset    
-    """
-     Return an OrderedDict of the valid variables in a netCDF file
-    """
     f = Dataset(filename)
     return f.variables
         
 def read_gridded_data_file_variable(filenames, variable):
-    """
+    '''
+    Read gridded data from a NetCDF file
     
-    
-    """
+    args:
+        filenames:   The filenames of the files to read
+        variable:    The variable to read from the files
+        
+    returns:
+        A cube containing the specified data with unnecessary dimensions removed    
+    '''
     from jasmin_cis.exceptions import InvalidVariableError
     import iris
     
@@ -40,11 +51,17 @@ def read_gridded_data_file_variable(filenames, variable):
     return sub_cube
         
 def read_variable(filenames, variable):
-    """
+    '''
+    Read data from a NetCDF file
+    Used for both gridded and ungridded data
     
-    
-    
-    """
+    args:
+        filenames:   The filenames of the files to read
+        variable:    The variable to read from the files
+        
+    returns:
+        A cube containing the specified data with unnecessary dimensions removed    
+    '''
     from read_ungridded import UngriddedData, read_ungridded_data
     from iris.exceptions import IrisError
     from jasmin_cis.exceptions import CISError

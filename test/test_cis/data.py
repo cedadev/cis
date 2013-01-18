@@ -1,8 +1,6 @@
-# StringsUsedInTests.py
-# Created by WALDM on 15th Jan 2013
-# Copyright TODO
-#
-# Module that contains various strings that are used in tests
+'''
+Module that contains various strings that are used in tests
+'''
 valid_1d_filename = "/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"
 valid_2d_filename = "/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc"
 invalid_filename = "invalidfilename"
