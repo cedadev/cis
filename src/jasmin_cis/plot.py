@@ -51,6 +51,9 @@ def format_plot(data, options, plot_type):
     plt.legend(loc="upper left")
         
 def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
+    '''
+    Note: Data must be a list of cubes
+    '''
     import jasmin_cis.exceptions as ex
 
     # Unpack the data list if there is only one element, otherwise the whole list
