@@ -86,4 +86,4 @@ def should_raise_valueerror_with_file_that_has_netcdf_extension_but_is_not_netcd
 def should_raise_error_when_variable_does_not_exist_in_file_when_loading_a_cube():
     filename = valid_1d_filename
     variable = invalid_variable    
-    cis_read.read_variable(filename, variable)
+    cis_read.read_variable([filename], variable)
