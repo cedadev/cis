@@ -21,8 +21,8 @@ class plot_type(object):
         self.plot_method = plot_method
         self.is_map = is_map
         
-plot_types = {'line' : plot_type(1, 1, iplt.plot, False),
-                'scatter' : plot_type(1, 2, iplt.points, False), 
+plot_types = {'line' : plot_type(1, 1, qplt.plot, False),
+                'scatter' : plot_type(1, 2, qplt.points, False), 
                 'heatmap' : plot_type(1, 2, qplt.pcolormesh, True),
                 'contour' : plot_type(1, 2, qplt.contour, True),
                 'contourf' : plot_type(1, 2, qplt.contourf, True)}
