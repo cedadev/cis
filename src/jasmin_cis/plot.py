@@ -6,7 +6,6 @@
      plot types and formatting options
 """
 
-import iris.plot as iplt
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 
