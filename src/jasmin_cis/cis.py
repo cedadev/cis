@@ -5,6 +5,13 @@ Main driver script for the Climate Intercomparison Suite
 import sys
 
 def plot_cmd(main_arguments):
+    """
+        Main routine for handling calls to the 'plot' command. 
+        
+        Takes the command line arguments (minus the plot command) as an argument,
+         reads in the data files specified and passes the rest of the arguments
+         to the plot function. 
+    """
     from plot import plot
     from data_io.read import read_variable 
     import jasmin_cis.exceptions as ex
@@ -34,12 +41,23 @@ def plot_cmd(main_arguments):
         exit(1)
 
 def info_cmd(main_arguments):
+    """
+        Main routine for handling calls to the 'info' command. 
+        
+        Takes the command line arguments (minus the info command) as an argument,
+         reads in the variables from the data file specified and lists them to stdout if no
+         particular variable was specified, otherwise prints detailed information about each
+         variable specified
+    """    
     from data_io.read import get_netcdf_file_variables
     file_variables = get_netcdf_file_variables(main_arguments.filename)
     
     if main_arguments.variables != None:
         for variable in main_arguments.variables:
-            print file_variables[variable]
+            try:
+                print file_variables[variable]
+            except KeyError:
+                print("Variable '{0}' not found".format(variable))
     else:
         for item in file_variables:
             print item
@@ -49,8 +67,13 @@ commands = { 'plot' : plot_cmd,
              'info' : info_cmd}
 
 def setup_logging(log_file, log_level):
+    """
+        Set up the logging used throughout cis
+    """
     import logging
     logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
+    # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
+    #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
 
 if __name__ ==  '__main__':
@@ -59,8 +82,10 @@ if __name__ ==  '__main__':
     from datetime import datetime
     
     setup_logging("cis.log", logging.INFO)
+    
     arguments = parse_args(sys.argv[1:])
     
+    # Log the input arguments so that the user can trace how a plot was created
     logging.info(datetime.now().strftime("%Y-%m-%d %H:%M")+ ": CIS "+arguments.command+" got the following arguments: ")
     logging.info(arguments)
     
