@@ -30,13 +30,13 @@ def plot_cmd(main_arguments):
         print "There was an error reading one of the files: "
         sys.stderr.write(str(e) + "\n")
         exit(1)
-    
-    try:
-        plot(data, main_arguments.type, main_arguments.output, **main_arguments.plot_format_args)
-    except ex.InvalidPlotTypeError as e:
+    except ex.InvalidVariableError as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)
-    except ex.InvalidPlotFormatError as e:
+        
+    try:
+        plot(data, main_arguments.type, main_arguments.output, **main_arguments.plot_format_args)
+    except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError) as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)
 
@@ -80,8 +80,8 @@ def setup_logging(log_file, log_level):
     # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
     #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
-
-def main():
+   
+if __name__ ==  '__main__':
     '''
     The main method for the program.
     Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
@@ -98,7 +98,4 @@ def main():
     logging.info(datetime.now().strftime("%Y-%m-%d %H:%M")+ ": CIS "+ arguments.command + " got the following arguments: ")
     logging.info(arguments)
     
-    commands[arguments.command](arguments)
-    
-if __name__ ==  '__main__':
-    main()   
+    commands[arguments.command](arguments) 
