@@ -19,3 +19,6 @@ class InconsistentDimensionsError(CISError):
 
 class InvalidPlotFormatError(CISError):
     pass
+
+class InvalidFileExtensionError(CISError):
+    pass
