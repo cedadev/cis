@@ -35,12 +35,9 @@ def read_gridded_data_file_variable(filenames, variable):
     
     try:
         cube = iris.load_cube(filenames, var_constraint)
-    except iris.exceptions.ConstraintMismatchError:
-        print "Variable not found: "+variable
-        print "Try one of these instead: "
-        for variable in get_netcdf_file_variables(filenames[0]):
-            print variable
-        raise InvalidVariableError
+    except iris.exceptions.ConstraintMismatchError:        
+        raise InvalidVariableError("Variable not found: " + variable +
+                                   "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
     
     sub_cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
     #  Ensure that there are no extra dimensions which can confuse the plotting.
