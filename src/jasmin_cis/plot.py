@@ -1,10 +1,7 @@
-# Created by WALDM on 14th Jan 2013
-# Copyright TODO
-#
-"""
-    Module for plotting graphs. Also contains dictionaries for the valid
-     plot types and formatting options
-"""
+'''
+Module for plotting graphs.
+Also contains dictionaries for the valid plot types and formatting options
+'''
 
 import iris.quickplot as qplt
 import iris.plot as iplt
@@ -13,7 +10,8 @@ import iris.coords as crds
 
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
-              'ylabel' : plt.ylabel } 
+              'ylabel' : plt.ylabel,
+              'fontsize' : plt.rcParams.update } 
 
 class plot_type(object):
     def __init__(self, expected_no_of_variables, variable_dimensions, plot_method, is_map):
@@ -64,19 +62,25 @@ default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
 def format_plot(data, options, plot_type):
-    if options["title"] == None:
+    if options["fontsize"] is None:
+        options.pop("fontsize")
+    else:
+        options["fontsize"] = { "font.size" : float(options["fontsize"]) }     
+            
+    
+    # If any of the options have not been specified, then use the defaults
+    if options["title"] is None:
         options["title"] = ""
-    if options["xlabel"] == None:
+    if options["xlabel"] is None:
         for dim in xrange(len(data.shape)):
             for coord in data.coords(contains_dimension=dim, dim_coords=True):
                 xlabel = coord.name()
         options["xlabel"] = xlabel.capitalize()
-    if options["ylabel"] == None:
+    if options["ylabel"] is None:
         options["ylabel"] = data.long_name.title()
     
     for option, value in options.iteritems():        
-        plot_options[option](value)
-    
+        plot_options[option](value)       
     
     if plot_types[plot_type].is_map:
         # Try and add the coast lines if the map supports it
@@ -84,24 +88,24 @@ def format_plot(data, options, plot_type):
             plt.gca().coastlines()
         except AttributeError:
             pass
-    #print data[0].units   
+ 
     plt.legend(loc="upper left")
         
 def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
+    '''
+    Note: Data must be a list of cubes
+    '''
     import jasmin_cis.exceptions as ex
-
+        
     # Unpack the data list if there is only one element, otherwise the whole list
-    #  gets passed to the plot function. This could be done with unpacking in the 
-    #  plot method call but we already unpack the args list.
+    # gets passed to the plot function. This could be done with unpacking in the 
+    # plot method call but we already unpack the args list.
     variable_dim = len(data[0].shape)
     
     options = {}
     for key in plot_options.keys():
-        try:
-            options[key] = kwargs.pop(key)
-        except KeyError:
-            options[key] = None    
-    
+        options[key] = kwargs.pop(key, None)
+            
     num_variables = len(data)
     
     if num_variables == 1:
@@ -119,19 +123,25 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     elif plot_types[plot_type].variable_dimensions != variable_dim:
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
     
+    if plot_type != "line" or kwargs["color"] is None:
+        kwargs.pop("color")
+
     if plot_types[plot_type].expected_no_of_variables != num_variables:
-        raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")   
-    
+        raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
+
     try:
         plot_types[plot_type].plot_method(data, *args, **kwargs)
     except KeyError:
         raise ex.InvalidPlotTypeError(plot_type)
+        
     
     format_plot(data, options, plot_type)
          
-    if out_filename == None:
-	pass
-        #plt.show()  
+    if out_filename is None:
+        plt.show()  
     else:
         # Will overwrite if file already exists
-        plt.savefig(out_filename)        
+        try:
+            plt.savefig(out_filename)
+        except ValueError as e:            
+            raise ex.InvalidFileExtensionError(str(e))        

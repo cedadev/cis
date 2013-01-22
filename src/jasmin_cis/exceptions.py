@@ -1,9 +1,7 @@
-# Created by PARD on 16th Jan 2013
-# Copyright TODO
-#
 """
-    Custom CIS exceptions
+Custom CIS exceptions
 """
+
 class CISError(Exception):
     pass
 
@@ -20,4 +18,7 @@ class InconsistentDimensionsError(CISError):
     pass
 
 class InvalidPlotFormatError(CISError):
+    pass
+
+class InvalidFileExtensionError(CISError):
     pass

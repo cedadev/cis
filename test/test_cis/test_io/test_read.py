@@ -1,76 +1,89 @@
-# ReadNetCDFFile.py
-# Created by WALDM on 14th Jan 2013
-# Copyright TODO
-#
-# Module to test the reading of NetCDF files
+'''
+Module to test the reading of NetCDF files
+'''
 from nose.tools import istest, raises
 import iris
 from test_cis.data import *
+from jasmin_cis.exceptions import *
+import jasmin_cis.data_io.read as cis_read
     
 @istest
 def can_read_netcdf_file():       
     filename = valid_1d_filename
-    iris.load(filename)    
+    cis_read.get_netcdf_file_variables(filename)
+    cis_read.read_variable(filename, valid_variable_in_valid_filename)
         
 @istest
-@raises(IOError)
-def should_raise_io_error_with_invalid_filename():   
+@raises(RuntimeError)
+def should_raise_runtimeerror_with_invalid_filename_when_reading_variables():   
     filename = invalid_filename
-    iris.load(filename)  
+    cis_read.get_netcdf_file_variables(filename)
+    
+@istest
+@raises(IOError)
+def should_raise_ioerror_with_invalid_filename_when_loading_a_cube():
+    filename = invalid_filename
+    cis_read.read_variable(filename, valid_variable_in_valid_filename)
+
+@istest
+@raises(RuntimeError)
+def should_raise_runtimeerror_with_file_that_is_not_netcdf_when_reading_variables():      
+    filename = non_netcdf_file    
+    cis_read.get_netcdf_file_variables(filename)
 
 @istest
 @raises(ValueError)
-def should_raise_value_error_with_file_that_is_not_netcdf():      
-    filename = non_netcdf_file
-    iris.load(filename)
+def should_raise_valueerror_with_file_that_is_not_netcdf_when_loading_a_cube():    
+    filename = non_netcdf_file    
+    cis_read.read_variable(filename, valid_variable_in_valid_filename)
 
 @istest
-def can_read_15GB_file():
-    pass
+def can_read_15GB_file_when_reading_variables():
+    filename = large_15GB_file_filename
+    cis_read.get_netcdf_file_variables(filename)
+
+@istest
+def can_read_15GB_file_when_loading_a_cube():
+    filename = large_15GB_file_filename
+    cis_read.read_variable(filename, valid_variable_in_valid_filename)
+
+@istest
+@raises(RuntimeError)
+def should_raise_runtimeerror_with_file_that_does_not_have_read_permissions_when_reading_variables():
+    filename = file_without_read_permissions    
+    cis_read.get_netcdf_file_variables(filename)
 
 @istest
 @raises(IOError)
-def should_raise_io_error_with_file_that_does_not_have_read_permissions():
+def should_raise_ioerror_with_file_that_does_not_have_read_permissions_when_loading_a_cube():    
     filename = file_without_read_permissions
-    iris.load(filename)    
+    cis_read.read_variable(filename, valid_variable_in_valid_filename)        
 
 @istest
-def can_read_netcdf_file_with_incorrect_file_extension():
+def can_read_netcdf_file_with_incorrect_file_extension_when_reading_variables():
     filename = netcdf_file_with_incorrect_file_extension
-    iris.load(filename)  
+    cis_read.get_netcdf_file_variables(filename)
+    
+@istest
+def can_read_netcdf_file_with_incorrect_file_extension_when_loading_a_cube():
+    filename = netcdf_file_with_incorrect_file_extension
+    cis_read.read_variable(filename, valid_variable_in_valid_filename)
 
+@istest
+@raises(RuntimeError)
+def should_raise_runtimeerror_with_file_that_has_netcdf_extension_but_is_not_netcdf_when_reading_variables():
+    filename = non_netcdf_file_with_netcdf_file_extension    
+    cis_read.get_netcdf_file_variables(filename)
+     
 @istest
 @raises(ValueError)
-def should_raise_value_error_with_file_that_has_netcdf_extension_but_is_not_netcdf():
-    filename = non_netcdf_file_with_netcdf_file_extension
-    iris.load(filename) 
+def should_raise_valueerror_with_file_that_has_netcdf_extension_but_is_not_netcdf_when_loading_a_cube():
+    filename = non_netcdf_file_with_netcdf_file_extension       
+    cis_read.read_variable(filename, valid_variable_in_valid_filename)        
 
-@istest
-def can_get_number_of_variables_in_file():
-    #filename = valid_filename
-    #netcdf_file = iris.load(filename)   
-    #eq_(Controller.get_number_of_variables(netcdf_file), 466)
-    # TODO
-    pass
-
-'''    
-@istest
-def can_plot_specified_variable_in_netcdf_file():
-    filename = valid_filename
-    variable = valid_variable    
-    myplotter.plot1D(filename, variable)
-    
 @istest
 @raises(InvalidVariableError)
-def should_raise_error_when_variable_does_not_exist_in_file():
-    filename = valid_filename
+def should_raise_error_when_variable_does_not_exist_in_file_when_loading_a_cube():
+    filename = valid_1d_filename
     variable = invalid_variable    
-    myplotter.plot1D(filename, variable)
-    
-@istest
-@raises(InvalidDimensionError)
-def should_raise_error_when_variable_is_not_1D():
-    filename = valid_filename
-    variable = not1Dvariable   
-    myplotter.plot1D(filename, variable)
-    '''
+    cis_read.read_variable([filename], variable)
