@@ -44,6 +44,9 @@ def plot_cmd(main_arguments):
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError) as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)
+    except ValueError as e:
+        sys.stderr.write(str(e) + "\n")
+        exit(1)
 
 def info_cmd(main_arguments):
     '''

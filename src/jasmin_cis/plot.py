@@ -147,7 +147,4 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         plt.show()  
     else:
         # Will overwrite if file already exists
-        try:
-            plt.savefig(out_filename)
-        except ValueError as e:            
-            raise ex.InvalidFileExtensionError(str(e))        
+        plt.savefig(out_filename)        
