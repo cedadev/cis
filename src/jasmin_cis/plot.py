@@ -8,7 +8,7 @@ import iris.plot as iplt
 import matplotlib.pyplot as plt
 import iris.coords as crds
 
-plot_options = { 'title' : plt.title,
+plot_options = { #'title' : plt.title,
               'xlabel' : plt.xlabel, 
               'ylabel' : plt.ylabel,
               'fontsize' : plt.rcParams.update } 
@@ -61,16 +61,13 @@ plot_types = {'line' : plot_type(1, 1, qplt.plot, False),
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
-def format_plot(data, options, plot_type):
-    if options["fontsize"] is None:
-        options.pop("fontsize")
+def format_plot(data, options, plot_type):    
+    if options["fontsize"] is not None:
+        options["fontsize"] = { "font.size" : float(options["fontsize"]) }   
     else:
-        options["fontsize"] = { "font.size" : float(options["fontsize"]) }     
-            
+        options.pop("fontsize")      
     
     # If any of the options have not been specified, then use the defaults
-    if options["title"] is None:
-        options["title"] = ""
     if options["xlabel"] is None:
         for dim in xrange(len(data.shape)):
             for coord in data.coords(contains_dimension=dim, dim_coords=True):
@@ -102,6 +99,10 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     # plot method call but we already unpack the args list.
     variable_dim = len(data[0].shape)
     
+    for key in kwargs.keys():
+        if kwargs[key] is None:
+            kwargs.pop(key)
+    
     options = {}
     for key in plot_options.keys():
         options[key] = kwargs.pop(key, None)
@@ -123,7 +124,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     elif plot_types[plot_type].variable_dimensions != variable_dim:
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
     
-    if plot_type != "line" or kwargs["color"] is None:
+    if plot_type != "line":
         kwargs.pop("color")
 
     if plot_types[plot_type].expected_no_of_variables != num_variables:
@@ -134,8 +135,8 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     except KeyError:
         raise ex.InvalidPlotTypeError(plot_type)
         
-    
-    format_plot(data, options, plot_type)
+    if options is not None:
+        format_plot(data, options, plot_type)
          
     if out_filename is None:
         plt.show()  
