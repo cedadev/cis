@@ -7,7 +7,9 @@
 """
 
 import iris.quickplot as qplt
+import iris.plot as iplt
 import matplotlib.pyplot as plt
+import iris.coords as crds
 
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
@@ -20,6 +22,38 @@ class plot_type(object):
         self.plot_method = plot_method
         self.is_map = is_map
         
+
+def my_contour(cube, *args, **kwargs):
+	from mpl_toolkits.basemap import Basemap
+	import numpy as np
+	
+	data = cube.data
+	mode = crds.POINT_MODE
+	plot_defn = iplt._get_plot_defn(cube, mode, ndims=2)
+        # Obtain U and V coordinates
+        v_coord, u_coord = plot_defn.coords
+        if u_coord:
+            u = u_coord.points
+        else:
+            u = np.arange(data.shape[1])
+        if v_coord:
+            v = v_coord.points
+        else:
+            v = np.arange(data.shape[0])
+
+	m = Basemap()
+	#m = Basemap(projection='robin',lon_0=0.5*(v[0]+v[-1]))
+
+	x, y = m(*np.meshgrid(u,v))
+
+	#print x, np.ptp(x)
+	#print y, np.ptp(y)
+	#print data
+
+	cs = m.pcolormesh(x,y,data,latlon=True)
+	m.drawcoastlines()
+	plt.show()
+
 plot_types = {'line' : plot_type(1, 1, qplt.plot, False),
                 'scatter' : plot_type(1, 2, qplt.points, False), 
                 'heatmap' : plot_type(1, 2, qplt.pcolormesh, True),
@@ -96,7 +130,8 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     format_plot(data, options, plot_type)
          
     if out_filename == None:
-        plt.show()  
+	pass
+        #plt.show()  
     else:
         # Will overwrite if file already exists
         plt.savefig(out_filename)        
