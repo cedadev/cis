@@ -32,6 +32,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--linewidth", metavar = "The line width", nargs = "?", help = "The width of the line")
     parser.add_argument("--color", metavar = "The line colour", nargs = "?", help = "The colour of the line")    
     parser.add_argument("--fontsize", metavar = "The font size", nargs = "?", help = "The size of the font")
+    parser.add_argument("--cmap", metavar = "The colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
     return parser
 
 def add_info_parser_arguments(parser):
