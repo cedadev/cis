@@ -107,4 +107,33 @@ def read_hdf4(filename, names=None, calipso_scaling=False, vdata=False, datadict
         if len(failednames) > 0:
             datadict = read_hdf4(filename,failednames,datadict=datadict)
     return datadict
+
+def get_hdf_file_variables(filename, vdata=False):
+    '''
+    Get all the variables from an HDF file
+    
+    args:
+        filename: The filename of the file to get the variables from
+    
+    returns:
+        An OrderedDict containing the variables from the file
+    '''
+    if not vdata: 
+        # MODIS/Calipso data
+        # Open the file.
+        datafile = SD.SD(filename)
+        # List of required variable names.
+        names = datafile.datasets()
+    else:  
+        # CloudSatPRECIP data
+        # Open file
+        datafile = HDF(filename)
+        vs =  datafile.vstart()
+        # List of required variable names
+        names = vs.vdatainfo()
+        names = zip(*names)
+        names = names[0]
+        vs.end()
+        datafile.close()
+    return names
     
