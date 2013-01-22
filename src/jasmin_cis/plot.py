@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
-              'ylabel' : plt.ylabel } 
+              'ylabel' : plt.ylabel,
+              'fontsize' : plt.rcParams.update } 
 
 class plot_type(object):
     def __init__(self, expected_no_of_variables, variable_dimensions, plot_method, is_map):
@@ -27,6 +28,12 @@ default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
 def format_plot(data, options, plot_type):
+    if options["fontsize"] is None:
+        options.pop("fontsize")
+    else:
+        options["fontsize"] = { "font.size" : float(options["fontsize"]) }     
+            
+    
     # If any of the options have not been specified, then use the defaults
     if options["title"] is None:
         options["title"] = ""
@@ -39,7 +46,7 @@ def format_plot(data, options, plot_type):
         options["ylabel"] = data.long_name.title()
     
     for option, value in options.iteritems():        
-        plot_options[option](value)    
+        plot_options[option](value)       
     
     if plot_types[plot_type].is_map:
         # Try and add the coast lines if the map supports it

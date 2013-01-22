@@ -29,8 +29,9 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
     parser.add_argument("--linestyle", metavar = "The line style", nargs = "?", default = "solid", help = "The style of the line, one of: " + str(line_styles))
-    parser.add_argument("--linewidth", metavar = "The line width", nargs = "?", default = "solid", help = "The width of the line")
+    parser.add_argument("--linewidth", metavar = "The line width", nargs = "?", help = "The width of the line")
     parser.add_argument("--color", metavar = "The line colour", nargs = "?", help = "The colour of the line")    
+    parser.add_argument("--fontsize", metavar = "The font size", nargs = "?", help = "The size of the font")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -57,15 +58,22 @@ def validate_plot_args(arguments, parser):
     if arguments.linestyle not in line_styles:
         parser.error("'" + arguments.linestyle + "' is not a valid line style, please use one of: " + str(line_styles))
     
-    try:
-        float(arguments.linewidth)
-    except ValueError:
-        parser.error("'" + arguments.linewidth + "' is not a valid line width")
+    if arguments.linewidth is not None:
+        try:
+            float(arguments.linewidth)
+        except ValueError:
+            parser.error("'" + arguments.linewidth + "' is not a valid line width")
         
     from matplotlib.colors import cnames
     arguments.color = arguments.color.lower()
     if (arguments.color not in cnames) and arguments.color != "grey":
         parser.error("'" + arguments.color + "' is not a valid colour")
+        
+    if arguments.fontsize is not None:
+        try:
+            float(arguments.fontsize)
+        except ValueError:
+            parser.error("'" + arguments.fontsize + "' is not a valid font size")
         
         
 def validate_info_args(arguments, parser):
