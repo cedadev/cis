@@ -20,9 +20,10 @@ def plot_cmd(main_arguments):
     data = []
     # This currently assumes the variable is in each of the filenames specified,
     #  this may change in the future.
+    filenames = main_arguments.pop("filenames")
     try:
-        for variable in main_arguments.variables:
-            data.append(read_variable(main_arguments.filenames, variable))
+        for variable in main_arguments.pop("variables"):
+            data.append(read_variable(filenames, variable))
     except IrisError as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)
@@ -33,9 +34,13 @@ def plot_cmd(main_arguments):
     except ex.InvalidVariableError as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)
-        
+    
+    
+    plot_type = main_arguments.pop("type")
+    output = main_arguments.pop("output")
+    
     try:
-        plot(data, main_arguments.type, main_arguments.output, **main_arguments.plot_format_args)
+        plot(data, plot_type, output, **main_arguments)
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError) as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)
@@ -94,8 +99,10 @@ if __name__ ==  '__main__':
     
     arguments = parse_args()
     
+    command = arguments.pop("command")
+    
     # Log the input arguments so that the user can trace how a plot was created
-    logging.info(datetime.now().strftime("%Y-%m-%d %H:%M")+ ": CIS "+ arguments.command + " got the following arguments: ")
+    logging.info(datetime.now().strftime("%Y-%m-%d %H:%M")+ ": CIS "+ command + " got the following arguments: ")
     logging.info(arguments)
     
-    commands[arguments.command](arguments) 
+    commands[command](arguments) 
