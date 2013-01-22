@@ -17,7 +17,7 @@ def delete_file_if_exists():
         os.remove(out_filename)
 
 def make_cube(filename, variable = None):
-    if variable == None:
+    if variable is None:
         variable = iris.AttributeConstraint(name = valid_variable_in_valid_filename)
     cube = iris.load_cube(filename, variable) 
     cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]

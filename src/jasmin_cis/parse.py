@@ -43,10 +43,10 @@ def validate_plot_args(arguments, parser):
         if not os.path.isfile(filename):
             parser.error("'" + filename + "' is not a valid filename")
     # Check at least one variable is specified        
-    if arguments.variables == None:
+    if arguments.variables is None:
         parser.error("At least one variable must be specified") 
     # Check plot type is valid option for number of variables if specified
-    if (arguments.type != None):
+    if (arguments.type is not None):
         if (arguments.type in plot_types.keys()):
             if plot_types[arguments.type].expected_no_of_variables != len(arguments.variables):
                 parser.error("Invalid number of variables for plot type")        
@@ -72,7 +72,7 @@ def parse_args(arguments = None):
     Parse the arguments given. If no arguments are given, then used the command line arguments.
     '''
     parser = initialise_top_parser()
-    if arguments == None:
+    if arguments is None:
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)

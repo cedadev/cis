@@ -58,7 +58,7 @@ def info_cmd(main_arguments):
     from data_io.read import get_netcdf_file_variables
     file_variables = get_netcdf_file_variables(main_arguments.filename)
     
-    if main_arguments.variables != None:
+    if main_arguments.variables is not None:
         for variable in main_arguments.variables:
             try:
                 print file_variables[variable]

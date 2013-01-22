@@ -28,14 +28,14 @@ default_plot_types = { 1 : 'line',
 
 def format_plot(data, options, plot_type):
     # If any of the options have not been specified, then use the defaults
-    if options["title"] == None:
+    if options["title"] is None:
         options["title"] = ""
-    if options["xlabel"] == None:
+    if options["xlabel"] is None:
         for dim in xrange(len(data.shape)):
             for coord in data.coords(contains_dimension=dim, dim_coords=True):
                 xlabel = coord.name()
         options["xlabel"] = xlabel.capitalize()
-    if options["ylabel"] == None:
+    if options["ylabel"] is None:
         options["ylabel"] = data.long_name.title()
     
     for option, value in options.iteritems():        
@@ -82,7 +82,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     elif plot_types[plot_type].variable_dimensions != variable_dim:
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
     
-    if plot_type != "line" or kwargs["color"] == None:
+    if plot_type != "line" or kwargs["color"] is None:
         kwargs.pop("color")
 
     if plot_types[plot_type].expected_no_of_variables != num_variables:
@@ -96,7 +96,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     
     format_plot(data, options, plot_type)
          
-    if out_filename == None:
+    if out_filename is None:
         plt.show()  
     else:
         # Will overwrite if file already exists
