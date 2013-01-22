@@ -18,7 +18,8 @@ def delete_file_if_exists():
 
 def make_cube(filename, variable = None):
     if variable is None:
-        variable = iris.AttributeConstraint(name = valid_variable_in_valid_filename)
+        variable = valid_variable_in_valid_filename
+    variable = iris.AttributeConstraint(name = variable)
     cube = iris.load_cube(filename, variable) 
     cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
     return cube       
@@ -91,7 +92,7 @@ def should_raise_io_error_with_invalid_filename():
     plot([cube], "line", "/")
    
 @istest
-@raises(InvalidDimensionError)
+@raises(InvalidPlotTypeError)
 def should_raise_error_when_variable_is_not_1D():
     delete_file_if_exists()
     cube = make_cube(valid_1d_filename, not1Dvariable)

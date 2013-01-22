@@ -126,7 +126,11 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
     
     if plot_type != "line":
-        kwargs.pop("color")
+        # Remove color if specified for plot where type is not line
+        try:
+            kwargs.pop("color")
+        except KeyError:
+            pass
 
     if plot_types[plot_type].expected_no_of_variables != num_variables:
         raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
