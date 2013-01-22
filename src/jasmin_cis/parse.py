@@ -65,10 +65,11 @@ def validate_plot_args(arguments, parser):
         except ValueError:
             parser.error("'" + arguments.linewidth + "' is not a valid line width")
         
-    from matplotlib.colors import cnames
-    arguments.color = arguments.color.lower()
-    if (arguments.color not in cnames) and arguments.color != "grey":
-        parser.error("'" + arguments.color + "' is not a valid colour")
+    if arguments.color is not None:
+        from matplotlib.colors import cnames
+        arguments.color = arguments.color.lower()
+        if (arguments.color not in cnames) and arguments.color != "grey":
+            parser.error("'" + arguments.color + "' is not a valid colour")
         
     if arguments.fontsize is not None:
         try:
