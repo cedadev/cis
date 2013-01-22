@@ -29,12 +29,14 @@ def add_info_parser_arguments(parser):
     parser.add_argument("filename", metavar = "Filename", help = "The filename of the file to inspect")
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
     return parser
-    
+
 def initialise_plot_format_parser():
+    line_styles = ["solid", "dashed", "dash-dot", "dotted"]
     parser = argparse.ArgumentParser("Read and plot NetCDF files")
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")
+    parser.add_argument("--linestyle", metavar = "The line style", nargs = "?", default = "solid", help = "The style of the line, one of: " + str(line_styles))
     return parser
 
 def parse_plot_format_args(arguments):

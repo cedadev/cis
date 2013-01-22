@@ -81,10 +81,10 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
             raise ex.InvalidPlotTypeError("There is no valid plot type for this variable - check its dimensions")
     elif plot_types[plot_type].variable_dimensions != variable_dim:
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
-    
+
     if plot_types[plot_type].expected_no_of_variables != num_variables:
-        raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")   
-    
+        raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
+
     try:
         plot_types[plot_type].plot_method(data, *args, **kwargs)
     except KeyError:
