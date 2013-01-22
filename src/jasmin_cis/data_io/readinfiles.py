@@ -11,8 +11,8 @@ import math
 from gridding import *
 from progressbar import *
 
-# Radius of the earth in Km?
-R_E = 6378
+# Radius of the earth in km
+R_E = 6378.1
 
 ########################################################################
 # Functions for reading in Satellite data, related to cloudsat
@@ -36,6 +36,38 @@ def dictkeysappend(dict1,dict2):
 
 
 #Cloudsat Data
+
+def read_satelite_data(folder,day,year,sds,orbits=None,outdata=None,vdata=False): 
+    '''
+    Reads in data from General satelie Level2 data files. 
+    Also reads in some geolocation data (lat,lon,TAI time) into the output dictionary. 
+    Setting outdata allows the data to be read into an already exisiting dictionary.
+    '''   
+    day = str(day).rjust(3,'0')
+    if orbits is None:
+        filenames = glob(folder + str(year) + '/' + str(day) + '/*')
+        filenames = np.sort(filenames)
+    else:
+        filenames = []
+        for orbit in orbits:
+            filenames.append(glob(folder + str(year) + '/' + str(day) + '/*_' + str(orbit) + '_*.hdf')[0])
+    names = sds+['Latitude','Longitude','TAI_start','Profile_time']
+    if outdata is None:
+        outdata = {}
+    for filename in filenames:
+        try:
+            data = hdf.read_hdf4(filename,names,vdata)
+            data['Profile_time'] = data['Profile_time'] + data['TAI_start']
+            for name in data.keys():
+                try:
+                    outdata[name] = np.hstack((outdata[name],data[name]))
+                except KeyError:
+                    #print KeyError, ' in readin_cloudsat_precip'
+                    outdata[name] = data[name]
+        except HDF4Error:
+            print HDF4Error, ' in readin_cloudsat_precip', file
+    return outdata
+
 def readin_cloudsat_precip(day,year,sds,orbits=None,outdata=None): 
     '''Reads in data from CloudSat 2C-PRECIP-COLUMN files. Also reads in some geolocation data (lat,lon,TAI time) into the output dictionary. Setting outdata allows the data to be read into an already exisiting dictionary'''   
     day = str(day).rjust(3,'0')
@@ -96,7 +128,6 @@ def readin_cloudsat_cwc_rvod(day,year,sds,orbits=None,outdata=None):
             print HDF4Error, ' in readin_cloudsat_cwc_rvod', file
     return outdata
 
-
 def readin_cloudsat_geoprof(day,year,sds,orbits=None,outdata=None,cloudmask=False): #2B-GEOPROF
     '''Reads in Cloudsat 2B-GEOPROF data including geolocation data.  Will create a cloudtop height product if cloudmask is set to True. Setting outdata allows the data to be read into an already exisiting dictionary'''
     day = str(day).rjust(3,'0')
@@ -138,9 +169,6 @@ def readin_cloudsat_geoprof(day,year,sds,orbits=None,outdata=None,cloudmask=Fals
         except HDF4Error:
             print HDF4Error, ' in readin_cloudsat_precip', file
     return outdata
-
-
-
 
 def readin_cloudsat_reflectivity(day,year,orbits=None,outdata=None): #2B-GEOPROF
     '''Reads in Cloudsat 2B-GEOPROF radar reflectivity data. Setting outdata allows the data to be read into an already exisiting dictionary'''
@@ -338,16 +366,6 @@ def readin_MODIS_L3(day,year,sds,outdata=None,sat='aqua',col='5'):
         print HDF4Error, datafilename
     return outdata
 
-def MODIS_L3_regrid(MODISdata,cloudsatlat,cloudsatlon): #Assumes global L3 daily data
-    newgrid = setup_yxbin(cloudsatlat,cloudsatlon,yg=[-90,90,1],xg=[-180,180,1])
-    MODISdata = np.flipud(MODISdata)
-    return MODISdata[newgrid['ry'],newgrid['rx']]
-
-
-
-
-#Reading in from MODIS cloudsat footprint L2
-
 def readin_MODIS_csfp(day,year,sds,outdata = None):
     '''Reads in MODIS cloud data on the cloudsat footprint.'''
     day = str(day).rjust(3,'0')
@@ -402,7 +420,7 @@ def geoloc_interpolate(geoloc):
         for y in range(0,5):
             geolocexpand[5*x + y] = geoloc[x] + (geoloc[x+1] - geoloc[x])/5 * y
             if (geoloc[x+1] - geoloc[x]) > dtln_flag:
-               geolocexpand[5*x + y] = geoloc[x] + (geoloc[x+1] - geoloc[x] -360)/5 * y 
+                geolocexpand[5*x + y] = geoloc[x] + (geoloc[x+1] - geoloc[x] -360)/5 * y 
     x = x+1
     for y in range(0,5):
             geolocexpand[5*x + y] = geoloc[x] + (geoloc[x] - geoloc[x-1])/5 * y
@@ -489,7 +507,7 @@ def readin_ECMWF(day,year,sds,orbits = None, outdata=None):
         try:
             print file
             try:
-                data = hdf.read_hdf4(file,names,vdata=None)
+                data = hdf.read_hdf4(file,names,vdata=False)
                 dictkeysappend(outdata,data)
             except:
                 surfdata = hdf.read_hdf4(file,names,vdata=True)
@@ -516,7 +534,7 @@ def readin_ECMWF_LTSS(day,year,orbits = None, outdata=None):
     for file in filename:
         try:
             print file
-            data = hdf.read_hdf4(file,names,vdata=None)
+            data = hdf.read_hdf4(file,names,vdata=False)
             surfdata = hdf.read_hdf4(file,names=['Surface_pressure','Temperature_2m','EC_height','Latitude','Longitude'],vdata=True)
             LTSS_data = np.zeros(data['Temperature'].shape[0])
             height270 = np.zeros(data['Temperature'].shape[0])

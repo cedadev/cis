@@ -5,7 +5,7 @@ from pyhdf import SD
 from pyhdf import HDF
 import numpy as np
 
-def read_hdf4(filename, names=None, calipso_scaling=None, vdata=None, datadict=None):
+def read_hdf4(filename, names=None, calipso_scaling=False, vdata=False, datadict=None):
     """
     Reads data from a HDF4 file into a dictionary. Automatically applies the
     scaling factors and offsets to the data arrays often found in NASA HDF-EOS
@@ -66,12 +66,11 @@ def read_hdf4(filename, names=None, calipso_scaling=None, vdata=None, datadict=N
             data = data * wfill_mask
             offset  = attributes.get('add_offset', 0)   # Offsets and scaling.
             scalefactor = attributes.get('scale_factor', 1)
-            if calipso_scaling is None:
-                data = (data - offset) * scalefactor    # MODIS.
-            else:
+            if calipso_scaling:
                 data = (data/scalefactor) + offset      # Calipso.
+            else:
+                data = (data - offset) * scalefactor    # MODIS.
             datadict[name] = data
-        
     else:
         # CloudSatPRECIP data
         # Open file
