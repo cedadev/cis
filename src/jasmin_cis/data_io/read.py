@@ -1,5 +1,5 @@
 '''
-Module for reading data.
+Module for reading data
 '''
 
 def get_netcdf_file_variables(filename):
