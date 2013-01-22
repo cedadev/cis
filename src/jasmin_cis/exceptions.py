@@ -22,3 +22,6 @@ class InvalidPlotFormatError(CISError):
 
 class InvalidFileExtensionError(CISError):
     pass
+
+class FileIOError(CISError):
+    pass
