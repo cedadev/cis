@@ -55,7 +55,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     Note: Data must be a list of cubes
     '''
     import jasmin_cis.exceptions as ex
-
+        
     # Unpack the data list if there is only one element, otherwise the whole list
     # gets passed to the plot function. This could be done with unpacking in the 
     # plot method call but we already unpack the args list.
@@ -81,6 +81,9 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
             raise ex.InvalidPlotTypeError("There is no valid plot type for this variable - check its dimensions")
     elif plot_types[plot_type].variable_dimensions != variable_dim:
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
+    
+    if plot_type != "line" or kwargs["color"] == None:
+        kwargs.pop("color")
 
     if plot_types[plot_type].expected_no_of_variables != num_variables:
         raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
@@ -89,6 +92,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         plot_types[plot_type].plot_method(data, *args, **kwargs)
     except KeyError:
         raise ex.InvalidPlotTypeError(plot_type)
+        
     
     format_plot(data, options, plot_type)
          
