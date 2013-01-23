@@ -162,13 +162,24 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
     
     valrange = kwargs.pop("valrange", None)
-
+    
+    if plot_type != "line":
+        try:
+            kwargs["vmin"] = valrange.pop("ymin")
+        except (KeyError, AttributeError):
+            pass
+        try:
+            kwargs["vmax"] = valrange.pop("ymax")
+        except (KeyError, AttributeError):
+            pass
+        
     try:
         plot_types[plot_type].plot_method(data, *args, **kwargs)
     except KeyError:
         raise ex.InvalidPlotTypeError(plot_type)
     
-    plt.ylim(**valrange)
+    if plot_type == "line":
+        plt.ylim(**valrange)
         
     if options is not None:
         format_plot(data, options, plot_type)
