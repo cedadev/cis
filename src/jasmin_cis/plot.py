@@ -126,11 +126,17 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         raise ex.InvalidPlotTypeError("The plot type is not valid for this variable, the dimensions do not match")
     
     if plot_type != "line":
-        # Remove color if specified for plot where type is not line
-        try:
-            kwargs.pop("color")
-        except KeyError:
-            pass
+        # Remove color if specified for plot where type is not line    
+        arg = kwargs.pop("color", None)
+        import logging
+        if arg is not None:
+            logging.warn("Cannot specify a line colour for plot type '" + plot_type + "', did you mean to use cmap?")
+    else:
+        arg = kwargs.pop("cmap", None)
+        import logging
+        if arg is not None:
+            logging.warn("Cannot specify a colour map for plot type '" + plot_type + "', did you mean to use color?")
+    
 
     if plot_types[plot_type].expected_no_of_variables != num_variables:
         raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
@@ -147,7 +153,4 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         plt.show()  
     else:
         # Will overwrite if file already exists
-        try:
-            plt.savefig(out_filename)
-        except ValueError as e:            
-            raise ex.InvalidFileExtensionError(str(e))        
+        plt.savefig(out_filename)        
