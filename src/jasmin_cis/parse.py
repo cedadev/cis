@@ -27,14 +27,17 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to plot")
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")    
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(plot_types.keys()))
-    parser.add_argument("-x", "--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
-    parser.add_argument("-y", "--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
+    parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
+    parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
     parser.add_argument("--linestyle", metavar = "The line style", nargs = "?", default = "solid", help = "The style of the line, one of: " + str(line_styles))
     parser.add_argument("--linewidth", metavar = "The line width", nargs = "?", help = "The width of the line")
     parser.add_argument("--color", metavar = "The line colour", nargs = "?", help = "The colour of the line")    
     parser.add_argument("--fontsize", metavar = "The font size", nargs = "?", help = "The size of the font")
     parser.add_argument("--cmap", metavar = "The colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
+    parser.add_argument("--height", metavar = "The height", nargs = "?", help = "The height of the plot in inches")
+    parser.add_argument("--width", metavar = "The width", nargs = "?", help = "The width of the plot in inches")
+    parser.add_argument("--valrange", metavar = "The range of values", nargs = "?", help = "The range of values to plot")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -53,40 +56,75 @@ def check_file_exists(filename, parser):
     if not os.path.isfile(filename):
         parser.error("'" + filename + "' is not a valid filename")
         
-def validate_plot_args(arguments, parser):    
-    for filename in arguments.filenames:
+def parse_float(arg, name, parser):
+    if arg:
+        try:
+            arg = float(arg)
+        except ValueError:
+            parser.error("'" + arg + "' is not a valid " + name)
+    return arg
+
+def check_filenames(filenames, parser):
+    for filename in filenames:
         check_file_exists(filename, parser)
-    # Check at least one variable is specified        
-    if arguments.variables is None:
+
+def check_variables(variables, parser):
+    if variables is None:
         parser.error("At least one variable must be specified") 
+
+def check_plot_type(plot_type, variables, parser):
     # Check plot type is valid option for number of variables if specified
-    if (arguments.type is not None):
-        if (arguments.type in plot_types.keys()):
-            if plot_types[arguments.type].expected_no_of_variables != len(arguments.variables):
+    if plot_type is not None:
+        if plot_type in plot_types.keys():
+            if plot_types[plot_type].expected_no_of_variables != len(variables):
                 parser.error("Invalid number of variables for plot type")        
         else:        
-            parser.error("'" + arguments.type + "' is not a valid plot type, please use one of: " + str(plot_types.keys()))
-    
-    if arguments.linestyle not in line_styles:
-        parser.error("'" + arguments.linestyle + "' is not a valid line style, please use one of: " + str(line_styles))
-    
-    if arguments.linewidth is not None:
-        try:
-            float(arguments.linewidth)
-        except ValueError:
-            parser.error("'" + arguments.linewidth + "' is not a valid line width")
-        
-    if arguments.color is not None:
+            parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(plot_types.keys()))
+
+def check_line_style(linestyle, parser):
+    if linestyle not in line_styles:
+        parser.error("'" + linestyle + "' is not a valid line style, please use one of: " + str(line_styles))   
+
+def check_color(color, parser):
+    if color is not None:
         from matplotlib.colors import cnames
-        arguments.color = arguments.color.lower()
-        if (arguments.color not in cnames) and arguments.color != "grey":
-            parser.error("'" + arguments.color + "' is not a valid colour")
-        
-    if arguments.fontsize is not None:
-        try:
-            float(arguments.fontsize)
-        except ValueError:
-            parser.error("'" + arguments.fontsize + "' is not a valid font size")
+        color = color.lower()
+        if (color not in cnames) and color != "grey":
+            parser.error("'" + color + "' is not a valid colour")   
+
+def check_val_range(valrange, parser):
+    if valrange is not None:
+        if ":" in valrange:
+            split_range = valrange.split(":")
+            if len(split_range) == 2:
+                ymin = parse_float(split_range[0], "min", parser)
+                ymax = parse_float(split_range[1], "max", parser)
+                valrange = {}
+                if ymin:
+                    valrange["ymin"] = ymin
+                if ymax:
+                    valrange["ymax"] = ymax
+                if ymin and ymax and ymin > ymax:
+                    parser.error("Range must be in the format 'min:max'")
+            else:
+                parser.error("Range must be in the format 'min:max'")
+        else:
+            parser.error("Range must be in the format 'min:max'")
+    return valrange
+                   
+def validate_plot_args(arguments, parser):    
+    check_filenames(arguments.filenames, parser)        
+    check_variables(arguments.variables, parser)
+    check_plot_type(arguments.type, arguments.variables, parser)
+    check_line_style(arguments.linestyle, parser)    
+    check_color(arguments.color, parser)
+    arguments.valrange = check_val_range(arguments.valrange, parser)
+    # Try and parse numbers
+    arguments.linewidth = parse_float(arguments.linewidth, "line width", parser)   
+    arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)
+    arguments.height = parse_float(arguments.height, "height", parser)
+    arguments.width = parse_float(arguments.width, "width", parser) 
+    
     return arguments
                 
 def validate_info_args(arguments, parser):
