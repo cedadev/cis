@@ -81,9 +81,19 @@ def info_cmd(main_arguments):
         for item in file_variables:
             print item
 
-
+def col_cmd(main_arguments):
+    '''
+    Main routine for handling calls to the 'col' command. 
+        
+    args:
+        main_arguments:    The command line arguments (minus the col command)         
+    '''    
+    for key in main_arguments.keys():
+        print key + ": " + str(main_arguments[key])
+        
 commands = { 'plot' : plot_cmd,
-             'info' : info_cmd}
+             'info' : info_cmd,
+             'col'  : col_cmd}
 
 def setup_logging(log_file, log_level):
     '''
