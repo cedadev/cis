@@ -88,13 +88,35 @@ def format_plot(data, options, plot_type):
             pass
  
     plt.legend(loc="upper left")
+
+def set_width_and_height(kwargs):
+    height = None
+    width = None
+    
+    if kwargs["height"] is not None:
+        height = float(kwargs.pop("height"))
+        if kwargs["width"] is not None:            
+            width = kwargs.pop("width")
+        else:
+            width = height * (4.0 / 3.0)
+    elif kwargs["width"] is not None:
+        width = float(kwargs.pop("width"))
+        height = width * (3.0 / 4.0)
         
+    if height is not None and width is not None:
+        plt.figure(figsize = (float(width), float(height)))
+        
+    return kwargs
+
 def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     '''
     Note: Data must be a list of cubes
     '''
     import jasmin_cis.exceptions as ex
-        
+    import logging
+    
+    kwargs = set_width_and_height(kwargs)    
+    
     # Unpack the data list if there is only one element, otherwise the whole list
     # gets passed to the plot function. This could be done with unpacking in the 
     # plot method call but we already unpack the args list.
@@ -127,13 +149,11 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     
     if plot_type != "line":
         # Remove color if specified for plot where type is not line    
-        arg = kwargs.pop("color", None)
-        import logging
+        arg = kwargs.pop("color", None)        
         if arg is not None:
             logging.warn("Cannot specify a line colour for plot type '" + plot_type + "', did you mean to use cmap?")
     else:
         arg = kwargs.pop("cmap", None)
-        import logging
         if arg is not None:
             logging.warn("Cannot specify a colour map for plot type '" + plot_type + "', did you mean to use color?")
     
@@ -148,7 +168,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         
     if options is not None:
         format_plot(data, options, plot_type)
-         
+      
     if out_filename is None:
         plt.show()  
     else:
