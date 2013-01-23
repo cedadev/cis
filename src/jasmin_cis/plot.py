@@ -94,17 +94,17 @@ def set_width_and_height(kwargs):
     width = None
     
     if kwargs["height"] is not None:
-        height = float(kwargs.pop("height"))
+        height = kwargs.pop("height")
         if kwargs["width"] is not None:            
             width = kwargs.pop("width")
         else:
             width = height * (4.0 / 3.0)
     elif kwargs["width"] is not None:
-        width = float(kwargs.pop("width"))
+        width = kwargs.pop("width")
         height = width * (3.0 / 4.0)
         
     if height is not None and width is not None:
-        plt.figure(figsize = (float(width), float(height)))
+        plt.figure(figsize = (width, height))
         
     return kwargs
 
@@ -160,11 +160,15 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
 
     if plot_types[plot_type].expected_no_of_variables != num_variables:
         raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
+    
+    valrange = kwargs.pop("valrange", None)
 
     try:
         plot_types[plot_type].plot_method(data, *args, **kwargs)
     except KeyError:
         raise ex.InvalidPlotTypeError(plot_type)
+    
+    plt.ylim(**valrange)
         
     if options is not None:
         format_plot(data, options, plot_type)
