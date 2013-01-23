@@ -104,10 +104,12 @@ def check_val_range(valrange, parser):
                     valrange["ymin"] = ymin
                 if ymax:
                     valrange["ymax"] = ymax
+                if ymin and ymax and ymin > ymax:
+                    parser.error("Range must be in the format 'min:max'")
             else:
-                parser.error("Range must be in the format 'width:height'")
+                parser.error("Range must be in the format 'min:max'")
         else:
-            parser.error("Range must be in the format 'width:height'")
+            parser.error("Range must be in the format 'min:max'")
     return valrange
                    
 def validate_plot_args(arguments, parser):    
