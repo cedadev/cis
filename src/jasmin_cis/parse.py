@@ -18,6 +18,8 @@ def initialise_top_parser():
     plot_parser = add_plot_parser_arguments(plot_parser)
     info_parser = subparsers.add_parser("info", help = "Get information about a file")
     info_parser = add_info_parser_arguments(info_parser)
+    col_parser = subparsers.add_parser("col", help = "Perform colocation")
+    col_parser = add_col_parser_arguments(col_parser)
     return parser
 
 def add_plot_parser_arguments(parser):    
@@ -40,11 +42,20 @@ def add_info_parser_arguments(parser):
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
     return parser
 
+def add_col_parser_arguments(parser):
+    parser.add_argument("samplefilename", metavar = "SampleFilename", help = "The filename of the sample file")
+    parser.add_argument("datafiles", metavar = "DataFiles", nargs = "+", help = "Files to colocate with variable names and other options split by a colon")
+    parser.add_argument("--variable", metavar = "DefaultVariable", nargs = "?", help = "The default variable to use for the data files unless explicitly overridden")
+    parser.add_argument("--method", metavar = "DefaultMethod", nargs = "?", help = "The default method to use for the data files unless explicitly overridden")
+    return parser
+
+def check_file_exists(filename, parser):
+    if not os.path.isfile(filename):
+        parser.error("'" + filename + "' is not a valid filename")
+        
 def validate_plot_args(arguments, parser):    
-    # Check input files exist
     for filename in arguments.filenames:
-        if not os.path.isfile(filename):
-            parser.error("'" + filename + "' is not a valid filename")
+        check_file_exists(filename, parser)
     # Check at least one variable is specified        
     if arguments.variables is None:
         parser.error("At least one variable must be specified") 
@@ -76,12 +87,39 @@ def validate_plot_args(arguments, parser):
             float(arguments.fontsize)
         except ValueError:
             parser.error("'" + arguments.fontsize + "' is not a valid font size")
-        
-        
+    return arguments
+                
 def validate_info_args(arguments, parser):
-    # Check file exists
-    if not os.path.isfile(arguments.filename):
-        parser.error("'" + arguments.filename + "' is not a valid filename")
+    check_file_exists(arguments.filename, parser)
+    return arguments
+
+def validate_col_args(arguments, parser):
+    check_file_exists(arguments.samplefilename, parser)
+    
+    for i, datafile in enumerate(arguments.datafiles):
+        split_args = datafile.split(":")
+        if len(split_args) == 3:    
+            split_args = {"filename" : split_args[0],
+                          "variable" : split_args[1],
+                          "method"   : split_args[2]}
+                
+            check_file_exists(split_args["filename"], parser)
+            
+            if not split_args["variable"] and arguments.variable is not None:
+                split_args["variable"] = arguments.variable
+                
+            if not split_args["method"] and arguments.method is not None:
+                split_args["method"] = arguments.method
+            
+            arguments.datafiles[i] = split_args
+        else:
+            parser.error("Data files must be of the format dataf:var:method, where var and method are optional, but the colons are required")
+    
+    return arguments
+
+validators = { 'plot' : validate_plot_args,
+               'info' : validate_info_args,
+               'col'  : validate_col_args}
 
 def parse_args(arguments = None):
     '''
@@ -92,9 +130,6 @@ def parse_args(arguments = None):
         #sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)
-    if main_args.command == 'plot':
-        validate_plot_args(main_args, parser)
-    elif main_args.command == 'info':
-        validate_info_args(main_args, parser)
+    main_args = validators[main_args.command](main_args, parser)
         
     return vars(main_args)
