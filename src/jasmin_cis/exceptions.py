@@ -25,3 +25,6 @@ class InvalidFileExtensionError(CISError):
 
 class FileIOError(CISError):
     pass
+
+class InvalidDataTypeError(CISError):
+    pass
