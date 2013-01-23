@@ -69,6 +69,8 @@ def info_cmd(main_arguments):
     if variables is not None:
         for variable in variables:
             try:
+                # For hdf files this prints:
+                # dimension names, dimension lengths, data type and number of variables
                 print file_variables[variable]
             except KeyError:
                 print("Variable '{0}' not found".format(variable))
