@@ -23,16 +23,14 @@ def initialise_top_parser():
     return parser
 
 def add_plot_parser_arguments(parser):    
-    parser.add_argument("filenames", metavar = "Input filename(s)", nargs = "+", help = "The filename(s) of the file(s) to be plotted")
-    parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to plot")
+    parser.add_argument("datafiles", metavar = "Input datafiles", nargs = "+", help = "The datafiles to be plotted, in the format: filename:variable:label:colour:style, where the last three arguments are optional")
+    parser.add_argument("-v", "--variable", metavar = "Variable", nargs = "?", help = "The default variable to plot if not otherwise specified in the filename")
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")    
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(plot_types.keys()))
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
-    parser.add_argument("--linestyle", metavar = "The line style", nargs = "?", default = "solid", help = "The style of the line, one of: " + str(line_styles))
-    parser.add_argument("--linewidth", metavar = "The line width", nargs = "?", help = "The width of the line")
-    parser.add_argument("--color", metavar = "The line colour", nargs = "?", help = "The colour of the line")    
+    parser.add_argument("--linewidth", metavar = "The line width", nargs = "?", help = "The width of the line")   
     parser.add_argument("--fontsize", metavar = "The font size", nargs = "?", help = "The size of the font")
     parser.add_argument("--cmap", metavar = "The colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar = "The height", nargs = "?", help = "The height of the plot in inches")
@@ -65,12 +63,49 @@ def parse_float(arg, name, parser):
     return arg
 
 def check_filenames(filenames, parser):
+    from collections import namedtuple
+    overlay_plots = []
+    OverlayOptions = namedtuple('OverlayOptions',['filename', "variable", "label", "color", "linestyle"])
+    overlay_options = OverlayOptions(check_file_exists, check_nothing, check_nothing, check_color, check_line_style)
+    
     for filename in filenames:
-        check_file_exists(filename, parser)
+        split_filename = filename.split(":")
+        overlay_plot = {}
+        
+        for i, option in enumerate(overlay_options._asdict().keys()):
+            try:
+                current_option = split_filename[i]
+                if current_option:
+                    overlay_options[i](current_option, parser) 
+                    overlay_plot[option] = split_filename[i]
+                else:
+                    overlay_plot[option] = None
+            except IndexError:
+                overlay_plot[option] = None
+        
+        overlay_plots.append(overlay_plot)
+    return overlay_plots
 
-def check_variables(variables, parser):
-    if variables is None:
-        parser.error("At least one variable must be specified") 
+def check_variable(variable, datafiles, parser):
+    if variable is None:
+        raise_error = False
+        if not datafiles:
+            raise_error = True
+        else:
+            for overlay_plot in datafiles:
+                if overlay_plot["variable"] is None:
+                    raise_error = True
+                    break
+        if raise_error:
+            parser.error("A variable must be specified")
+    elif datafiles:
+        for overlay_plot in datafiles:
+            if overlay_plot["variable"] is None:
+                overlay_plot["variable"] = variable
+    return datafiles
+
+def check_nothing(item, parser):
+    pass
 
 def check_plot_type(plot_type, variables, parser):
     # Check plot type is valid option for number of variables if specified
@@ -113,11 +148,9 @@ def check_val_range(valrange, parser):
     return valrange
                    
 def validate_plot_args(arguments, parser):    
-    check_filenames(arguments.filenames, parser)        
-    check_variables(arguments.variables, parser)
-    check_plot_type(arguments.type, arguments.variables, parser)
-    check_line_style(arguments.linestyle, parser)    
-    check_color(arguments.color, parser)
+    arguments.datafiles = check_filenames(arguments.datafiles, parser)        
+    arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
+    check_plot_type(arguments.type, arguments.variable, parser) 
     arguments.valrange = check_val_range(arguments.valrange, parser)
     # Try and parse numbers
     arguments.linewidth = parse_float(arguments.linewidth, "line width", parser)   
@@ -136,6 +169,7 @@ def validate_col_args(arguments, parser):
     
     for i, datafile in enumerate(arguments.datafiles):
         split_args = datafile.split(":")
+        # Change this to only require the necessary amount of colons
         if len(split_args) == 3:    
             split_args = {"filename" : split_args[0],
                           "variable" : split_args[1],
