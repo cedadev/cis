@@ -116,14 +116,13 @@ class UngriddedData(object):
         Constructor
         
         args:
-            data:    The data handler for the specific data type, or a numpy array of data
-                        In principle this could be a list of handlers which only get concatenated
-                        when the data is read. It's unclear what the metadata should be in this case and may break
+            data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
+                        This can be a list of data handlers, or a single data handler, but 
+                        if no metadata is specified the metadata from the first handler is used
             data_type: The type of ungridded data being passed - valid options are
                         the keys in static_mappings
             metadata: Any associated metadata
         '''
-        from types import MethodType 
         from jasmin_cis.exceptions import InvalidDataTypeError
         
         if isinstance(data, np.ndarray):
@@ -133,20 +132,22 @@ class UngriddedData(object):
                 raise InvalidDataTypeError
         else:
             self._data = None
-            self._data_manager = data
+            # Although the data can be a list or a single item it's useful to cast it
+            #  to a list here to make accessing it consistent
+            if isinstance(data, list):
+                self._data_manager = data
+            else:
+                self._data_manager = [ data ]
         
             if data_type in static_mappings:
-                #self.data_type = data_type
-                self.map = static_mappings[data_type]._asdict()
-                #self.map = static_mappings[data_type]
-                # Perform the function mapping
-                #for func, map in static_mappings[data_type]._asdict().items():
-                #    self.func = MethodType(map, self, UngriddedData)
+                # Store the mappings in a private variable for use in getarr
+                self._map = static_mappings[data_type]._asdict()
             else:
                 raise InvalidDataTypeError
             
         if metadata is None:
             if self._data_manager is not None:
+                # Retrieve metadata for the first variabel - assume this is the variable of interest
                 self.metadata = self.get_metadata(self._data_manager[0])
             else:
                 self.metadata = None
@@ -157,7 +158,11 @@ class UngriddedData(object):
 #        self.metadata = self.map.get_metadata(self._data)    
     
     def __getattr__(self,attr):
-        return self.map[attr]
+        '''
+            This little method actually provides the mapping between the method calls.
+            It overrides the default getattr method.
+        '''
+        return self._map[attr]
     
     @property
     def data(self):
@@ -167,14 +172,11 @@ class UngriddedData(object):
         '''
         if self._data is None:
             try:
-                if isinstance(self._data_manager,list):
-                    # If we ere given a list of data managers then we need to concatenate them now...
-                    self._data=self.retrieve_raw_data(self._data_manager[0])
-                    if len(self._data_manager) > 1:
-                        for manager in self._data_manager[1:]:
-                            self._data = np.hstack(self._data,self.retrieve_raw_data(manager))
-                else:
-                    self._data = self.retrieve_raw_data(self._data_manager)
+                # If we ere given a list of data managers then we need to concatenate them now...
+                self._data=self.retrieve_raw_data(self._data_manager[0])
+                if len(self._data_manager) > 1:
+                    for manager in self._data_manager[1:]:
+                        self._data = np.hstack(self._data,self.retrieve_raw_data(manager))
             except MemoryError:
                 raise MemoryError(
                   "Failed to read the ungridded data as there was not enough memory available.\n" 
