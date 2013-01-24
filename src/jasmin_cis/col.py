@@ -5,7 +5,13 @@ import numpy as np
 from collections import namedtuple
 R_E = 6378
 
-LatLonPoint = namedtuple('LatLonPoint',['lat','lon'])
+HyperPointT = namedtuple('HyperPoint',['lat','lon','alt','t','val'])
+
+def HyperPoint(lat=None, lon=None, alt=None, t=None, val=None):
+    '''
+        Small constructor for the HyperPoint named tuple to allow optional arguments
+    '''
+    return HyperPointT(lat,lon,alt,t,val)
 
 def compdist(ref_p,p1,p2):
     '''Compares the distance from reference point ref_p to p1 and p2. Returns True if p2 is closer to ref_p than p1'''
@@ -25,12 +31,20 @@ def haversine(lat1,lon1,lat2,lon2):
     return arclen*R_E
 
 def col_nn(points, data):
-    new_data = np.array(points, np.zeros(points.size()),2)
-    for point in new_data:
-        nearest_point = LatLonPoint(0,0)
-        for data_point in data:
-            if compdist(data_point,nearest_point,point): nearest_point = point
-        point.val = nearest_point.val
+    '''
+        Colocation using nearest neighbours without any constraints.
+         This is just a skeleton at the moment - we need to define hoe
+         the data will come in
+    '''
+    pass
+    # This doesn't quite work yet - I think we need to create a set of points with the same coordinates
+    #  as the sample points but without any values - these are what we're trying to fill in...
+#    new_data = np.array(points, np.zeros(points.shape,2))
+#    for point in new_data:
+#        nearest_point = LatLonPoint(0,0)
+#        for data_point in data:
+#            if compdist(data_point,nearest_point,point): nearest_point = point
+#        point.val = nearest_point.val
     
         
 def col_li(points, data):
