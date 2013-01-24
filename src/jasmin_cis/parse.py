@@ -64,27 +64,37 @@ def parse_float(arg, name, parser):
 
 def check_filenames(filenames, parser):
     from collections import namedtuple
-    overlay_plots = []
-    OverlayOptions = namedtuple('OverlayOptions',['filename', "variable", "label", "color", "linestyle"])
-    overlay_options = OverlayOptions(check_file_exists, check_nothing, check_nothing, check_color, check_line_style)
+    DatafileOptions = namedtuple('OverlayOptions',['filename', "variable", "label", "color", "linestyle"])
+    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing, check_color, check_line_style)    
     
-    for filename in filenames:
-        split_filename = filename.split(":")
-        overlay_plot = {}
+    return parse_colonic_arguments(filenames, parser, datafile_options)
+
+def parse_colonic_arguments(inputs, parser, options):
+    '''
+    args:
+        inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
+        parser:    The parser used to raise an error if one occurs
+        options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    '''
+    input_dicts = []
+    
+    for input_string in inputs:
+        split_input = input_string.split(":")
+        input_dict = {}
         
-        for i, option in enumerate(overlay_options._asdict().keys()):
+        for i, option in enumerate(options._asdict().keys()):
             try:
-                current_option = split_filename[i]
+                current_option = split_input[i]
                 if current_option:
-                    overlay_options[i](current_option, parser) 
-                    overlay_plot[option] = split_filename[i]
+                    options[i](current_option, parser) 
+                    input_dict[option] = split_input[i]
                 else:
-                    overlay_plot[option] = None
+                    input_dict[option] = None
             except IndexError:
-                overlay_plot[option] = None
+                input_dict[option] = None
         
-        overlay_plots.append(overlay_plot)
-    return overlay_plots
+        input_dicts.append(input_dict)
+    return input_dicts
 
 def check_variable(variable, datafiles, parser):
     if variable is None:
@@ -167,25 +177,22 @@ def validate_info_args(arguments, parser):
 def validate_col_args(arguments, parser):
     check_file_exists(arguments.samplefilename, parser)
     
-    for i, datafile in enumerate(arguments.datafiles):
-        split_args = datafile.split(":")
-        # Change this to only require the necessary amount of colons
-        if len(split_args) == 3:    
-            split_args = {"filename" : split_args[0],
-                          "variable" : split_args[1],
-                          "method"   : split_args[2]}
-                
-            check_file_exists(split_args["filename"], parser)
-            
-            if not split_args["variable"] and arguments.variable is not None:
-                split_args["variable"] = arguments.variable
-                
-            if not split_args["method"] and arguments.method is not None:
-                split_args["method"] = arguments.method
-            
-            arguments.datafiles[i] = split_args
-        else:
-            parser.error("Data files must be of the format dataf:var:method, where var and method are optional, but the colons are required")
+    from collections import namedtuple
+    DatafileOptions = namedtuple('ColocateOptions',['filename', "variable", "method"])
+    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing)    
+    
+    arguments =  parse_colonic_arguments(arguments.datafiles, parser, datafile_options)
+    for arg in arguments:
+        if not arg["variable"]:
+            if arguments.variable is not None:
+                arg["variable"] = arguments.variable
+            else:
+                parser.error("Please enter a valid colocation variable for each datafile, or specify a default variable")
+        if not arg["method"]:
+            if arguments.method is not None:
+                arg["method"] = arguments.method
+            else:
+                parser.error("Please enter a valid colocation method for each datafile, or specify a default method")
     
     return arguments
 
