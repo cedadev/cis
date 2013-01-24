@@ -59,8 +59,8 @@ def read_satelite_data(folder,day,year,sds,orbits=None,vdata=False):
 Mapping = namedtuple('Mapping',['get_metadata', 'get_data'])
 
 # This defines the actual mappings for each of the ungridded data types
-static_mappings = { 'HDF_SD' : Mapping(get_hdf_SD_file_variables,get_hdf4_SD_data),
-             'HDF_VD' : Mapping(get_hdf_VD_file_variables,get_hdf4_VD_data),
+static_mappings = { 'HDF_SD' : Mapping(get_hdf_SD_file_variables, get_hdf4_SD_data),
+             'HDF_VD' : Mapping(get_hdf_VD_file_variables, get_hdf4_VD_data),
              'HDF5'   : '',
              'netCDF' : '' }
 
