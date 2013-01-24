@@ -28,3 +28,6 @@ class FileIOError(CISError):
 
 class InvalidDataTypeError(CISError):
     pass
+
+class InvalidColocationMethodError(CISError):
+    pass
