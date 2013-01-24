@@ -19,26 +19,23 @@ def plot_cmd(main_arguments):
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     
-    main_arguments.pop("variable")
+    main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
-    # This currently assumes the variable is in each of the filenames specified,
-    #  this may change in the future.
     if len(main_arguments["datafiles"]) > MAXIMUM_NUMBER_OF_VARIABLES:
         sys.stderr.write("Number of variables must be less than or equal to " + str(MAXIMUM_NUMBER_OF_VARIABLES) + "\n")
         exit(1)
     
-    data = []
-    try:
-        for datafile in main_arguments["datafiles"]:
-            data.append(read_variable(datafile["filename"], datafile["variable"]))
+    try:        
+        data = [read_variable(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
     except IrisError as e:
-        sys.stderr.write(str(e) + "\n")
-        exit(1)
+        error_occurred = True
     except IOError as e:
         print "There was an error reading one of the files: "
-        sys.stderr.write(str(e) + "\n")
-        exit(1)
+        error_occurred = True
     except ex.InvalidVariableError as e:
+        error_occurred = True
+        
+    if error_occurred:
         sys.stderr.write(str(e) + "\n")
         exit(1)
     
@@ -49,9 +46,11 @@ def plot_cmd(main_arguments):
     try:
         plot(data, plot_type, output, **main_arguments)
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError) as e:
-        sys.stderr.write(str(e) + "\n")
-        exit(1)
+        error_occurred = True
     except ValueError as e:
+        error_occurred = True
+        
+    if error_occurred:
         sys.stderr.write(str(e) + "\n")
         exit(1)
 
@@ -83,7 +82,7 @@ def info_cmd(main_arguments):
                 # dimension names, dimension lengths, data type and number of variables
                 print file_variables[variable]
             except KeyError:
-                print("Variable '{0}' not found".format(variable))
+                sys.stderr.write("Variable '" + variable +  "' not found \n")
     else:
         for item in file_variables:
             print item
