@@ -28,7 +28,6 @@ def make_1d_cube():
 def make_2d_cube():
     pass
 
-
 @istest
 def can_col_gridded_to_ungridded_using_nn_in_1d():
     cube = make_1d_cube()
