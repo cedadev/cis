@@ -4,6 +4,8 @@ Main driver script for the Climate Intercomparison Suite
 '''
 import sys
 
+MAXIMUM_NUMBER_OF_VARIABLES = 10
+
 def plot_cmd(main_arguments):
     '''
     Main routine for handling calls to the 'plot' command. 
@@ -20,10 +22,13 @@ def plot_cmd(main_arguments):
     data = []
     # This currently assumes the variable is in each of the filenames specified,
     #  this may change in the future.
-    filenames = main_arguments.pop("filenames")
+    if len(main_arguments["datafiles"]) > MAXIMUM_NUMBER_OF_VARIABLES:
+        sys.stderr.write("Number of variables must be less than or equal to " + str(MAXIMUM_NUMBER_OF_VARIABLES) + "\n")
+        exit(1)
+    
     try:
-        for variable in main_arguments.pop("variables"):
-            data.append(read_variable(filenames, variable))
+        for datafile in main_arguments["datafiles"]:
+            data.append(read_variable(datafile["filename"], datafile["variable"]))
     except IrisError as e:
         sys.stderr.write(str(e) + "\n")
         exit(1)

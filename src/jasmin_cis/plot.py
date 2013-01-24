@@ -7,15 +7,16 @@ import iris.quickplot as qplt
 import iris.plot as iplt
 import matplotlib.pyplot as plt
 import iris.coords as crds
+from cis import MAXIMUM_NUMBER_OF_VARIABLES
 
-plot_options = { #'title' : plt.title,
+plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
               'ylabel' : plt.ylabel,
               'fontsize' : plt.rcParams.update } 
 
 class plot_type(object):
-    def __init__(self, expected_no_of_variables, variable_dimensions, plot_method, is_map):
-        self.expected_no_of_variables = expected_no_of_variables
+    def __init__(self, maximum_number_of_expected_no_of_variables, variable_dimensions, plot_method, is_map):
+        self.maximum_number_of_expected_no_of_variables = maximum_number_of_expected_no_of_variables
         self.variable_dimensions = variable_dimensions
         self.plot_method = plot_method
         self.is_map = is_map
@@ -53,8 +54,8 @@ def my_contour(cube, *args, **kwargs):
     m.drawcoastlines()
     plt.show()
 
-plot_types = {'line' : plot_type(1, 1, qplt.plot, False),
-                'scatter' : plot_type(1, 2, qplt.points, False), 
+plot_types = {'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot, False),
+                'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points, False), 
                 'heatmap' : plot_type(1, 2, qplt.pcolormesh, True),
                 'contour' : plot_type(1, 2, qplt.contour, True),
                 'contourf' : plot_type(1, 2, qplt.contourf, True)}
@@ -62,7 +63,7 @@ plot_types = {'line' : plot_type(1, 1, qplt.plot, False),
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
-def format_plot(data, options, plot_type):    
+def format_plot(data, options, plot_type, datafiles):    
     if options["fontsize"] is not None:
         options["fontsize"] = { "font.size" : float(options["fontsize"]) }   
     else:
@@ -70,12 +71,25 @@ def format_plot(data, options, plot_type):
     
     # If any of the options have not been specified, then use the defaults
     if options["xlabel"] is None:
-        for dim in xrange(len(data.shape)):
-            for coord in data.coords(contains_dimension=dim, dim_coords=True):
+        for dim in xrange(len(data[0].shape)):
+            for coord in data[0].coords(contains_dimension=dim, dim_coords=True):
                 xlabel = coord.name()
         options["xlabel"] = xlabel.capitalize()
     if options["ylabel"] is None:
-        options["ylabel"] = data.long_name.title()
+        if len(data) == 1:
+            options["ylabel"] = data[0].long_name.title()
+        else:
+            options["ylabel"] = str(data[0].units)
+    
+    legend_titles = []
+    for i, item in enumerate(data):
+        if datafiles is not None and datafiles[i]["label"]:
+            legend_titles.append(datafiles[i]["label"])
+        else:
+            legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+        
+    if not options["title"]:
+        options["title"] = ""
     
     for option, value in options.iteritems():        
         plot_options[option](value)       
@@ -86,21 +100,17 @@ def format_plot(data, options, plot_type):
             plt.gca().coastlines()
         except AttributeError:
             pass
- 
-    plt.legend(loc="upper left")
+    
+    plt.legend(legend_titles, loc="best")
 
 def set_width_and_height(kwargs):
-    height = None
-    width = None
+    height = kwargs.pop("height", None)
+    width = kwargs.pop("width", None)
     
-    if kwargs["height"] is not None:
-        height = kwargs.pop("height")
-        if kwargs["width"] is not None:            
-            width = kwargs.pop("width")
-        else:
+    if height is not None:
+        if width is None:            
             width = height * (4.0 / 3.0)
-    elif kwargs["width"] is not None:
-        width = kwargs.pop("width")
+    elif width is not None:
         height = width * (3.0 / 4.0)
         
     if height is not None and width is not None:
@@ -108,7 +118,7 @@ def set_width_and_height(kwargs):
         
     return kwargs
 
-def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
+def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
     '''
     Note: Data must be a list of cubes
     '''
@@ -120,7 +130,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     # Unpack the data list if there is only one element, otherwise the whole list
     # gets passed to the plot function. This could be done with unpacking in the 
     # plot method call but we already unpack the args list.
-    variable_dim = len(data[0].shape)
+    variable_dim = len(cubes[0].shape)
     
     for key in kwargs.keys():
         if kwargs[key] is None:
@@ -130,14 +140,14 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     for key in plot_options.keys():
         options[key] = kwargs.pop(key, None)
             
-    num_variables = len(data)
+    num_variables = len(cubes)
     
-    if num_variables == 1:
-        data = data[0]
-    else:
-        for item in data:
-            if len(item.shape) != variable_dim:
-                raise ex.InconsistentDimensionsError("Number of dimensions must be consistent across variables")
+    #if num_variables == 1:
+        #data = data[0]
+    #else:
+    for cube in cubes:
+        if len(cube.shape) != variable_dim:
+            raise ex.InconsistentDimensionsError("Number of dimensions must be consistent across variables")
         
     if plot_type is None:
         try:
@@ -158,32 +168,43 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
             logging.warn("Cannot specify a colour map for plot type '" + plot_type + "', did you mean to use color?")
     
 
-    if plot_types[plot_type].expected_no_of_variables != num_variables:
+    if num_variables > plot_types[plot_type].maximum_number_of_expected_no_of_variables:
         raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
     
     valrange = kwargs.pop("valrange", None)
     
-    if plot_type != "line":
-        try:
-            kwargs["vmin"] = valrange.pop("ymin")
-        except (KeyError, AttributeError):
-            pass
-        try:
-            kwargs["vmax"] = valrange.pop("ymax")
-        except (KeyError, AttributeError):
-            pass
+    if plot_type != "line" and valrange is not None:
+        kwargs["vmin"] = valrange.pop("ymin")
+        kwargs["vmax"] = valrange.pop("ymax")
+    
+    datafiles = kwargs.pop("datafiles")    
         
     try:
-        plot_types[plot_type].plot_method(data, *args, **kwargs)
+        for i, cube in enumerate(cubes):
+            # Temporarily add args to kwargs
+            if plot_type == "line":
+                if datafiles[i]["linestyle"]:
+                    kwargs["linestyle"] = datafiles[i]["linestyle"]
+                if datafiles[i]["color"]:
+                    kwargs["color"] = datafiles[i]["color"]
+                    
+            plot_types[plot_type].plot_method(cube, *args, **kwargs)
+            
+            # Remove temp args
+            if plot_type == "line":
+                if datafiles[i]["linestyle"]:
+                    kwargs.pop("linestyle")
+                if datafiles[i]["color"]:
+                    kwargs.pop("color")
     except KeyError:
         raise ex.InvalidPlotTypeError(plot_type)
     
-    if plot_type == "line":
+    if plot_type == "line" and valrange is not None:
         plt.ylim(**valrange)
         
     if options is not None:
-        format_plot(data, options, plot_type)
-      
+        format_plot(cubes, options, plot_type, datafiles)
+ 
     if out_filename is None:
         plt.show()  
     else:
