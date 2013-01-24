@@ -6,34 +6,29 @@ import hdf
 import numpy as np
 from glob import glob
 from collections import namedtuple
-from hdf import get_hdf4_SD_data, get_hdf4_VD_data, get_hdf_SD_file_variables, get_hdf_VD_file_variables
+from hdf import get_hdf4_SD_data, get_hdf4_VD_data, read_hdf4_SD_metadata, get_hdf_VD_file_variables
 
 def read_ungridded_data(filenames, variables):
     '''
-    Read ungridded data from a file
+    Read ungridded data from a file. Just a wrapper that calls the appropriate class method based on
+        whether in the inputs are lists or not
     
     args:
         filenames:    List of filenames of files to read
         variables:    List of variables to read from the files
     '''
-    from jasmin_cis.exceptions import FileIOError
-    
-    outdata = {}
-    for filename in filenames:
-        try:
-            data = hdf.read_hdf4_SD(filename,variables)
-            data['Profile_time'] = data['Profile_time'] + data['TAI_start']
-            for name in data.keys():
-                try:
-                    outdata[name] = np.hstack((outdata[name],data[name]))
-                except KeyError:
-                    #print KeyError, ' in readin_cloudsat_precip'
-                    outdata[name] = data[name]
-        except HDF4Error as e:
-            raise FileIOError(str(e)+' for file: '+filename)
-    return outdata
+    if isinstance(filenames,list):
+        if isinstance(variables, list):
+            return UngriddedData.load_ungridded_data_list(filenames, variables)
+        else:
+            return UngriddedData.load_ungridded_data(filenames, variables)
+    else:
+        if isinstance(variables, list):
+            return UngriddedData.load_ungridded_data_list([filenames], variables)
+        else:
+            return UngriddedData.load_ungridded_data([filenames], variables)             
 
-def read_satelite_data(folder,day,year,sds,orbits=None,vdata=False): 
+def read_satelite_data(folder,day,year,variable,orbits=None): 
     '''
     Reads in data from General satelie Level2 data files. 
     Also reads in some geolocation data (lat,lon,TAI time) into the output dictionary. 
@@ -48,18 +43,18 @@ def read_satelite_data(folder,day,year,sds,orbits=None,vdata=False):
         filenames = []
         for orbit in orbits:
             filenames.append(glob(folder + str(year) + '/' + str(day) + '/*_' + str(orbit) + '_*.hdf')[0])
-    names = sds+['Latitude','Longitude','TAI_start','Profile_time']
+    names = variable+['Latitude','Longitude','TAI_start','Profile_time']
     
-    return read_ungridded_data(filenames, names, vdata)
+    return read_ungridded_data(filenames, names)
 
 
 # Define the names of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
 #  by just dropping the mapping into the instance namespace dynamically...
-Mapping = namedtuple('Mapping',['get_metadata', 'get_data'])
+Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 
 # This defines the actual mappings for each of the ungridded data types
-static_mappings = { 'HDF_SD' : Mapping(get_hdf_SD_file_variables, get_hdf4_SD_data),
+static_mappings = { 'HDF_SD' : Mapping(read_hdf4_SD_metadata, get_hdf4_SD_data),
              'HDF_VD' : Mapping(get_hdf_VD_file_variables, get_hdf4_VD_data),
              'HDF5'   : '',
              'netCDF' : '' }
@@ -70,51 +65,120 @@ class UngriddedData(object):
     '''
     
     @classmethod
-    def load(filenames, variables):
+    def load_ungridded_data_list(cls, filenames, variables):
         '''
-            Return a list of UngriddedData objects
+            Return a dictionary of UngriddedData objects, one for each variable - the key is the variable name
+                This si quicker than calling load_ungridded_data as we read multiple variables per file read
+        args:
+            filenames:    List of filenames of files to read
+            variables:    List of variables to read from the files
         '''
-        pass
+        from jasmin_cis.exceptions import FileIOError
+        
+        outdata = {}
+        for filename in filenames:
+            try:
+                data = hdf.read_hdf4_SD(filename,variables)
+                for name in data.keys():
+                    try:
+                        outdata[name].append(data[name])
+                    except KeyError:
+                        #print KeyError, ' in readin_cloudsat_precip'
+                        outdata[name] = data[name]
+            except HDF4Error as e:
+                raise FileIOError(str(e)+' for file: '+filename)
+        for variable in outdata.keys():
+            outdata[variable] = cls(outdata[variable],'HDF_SD')
+        return outdata
     
     @classmethod
-    def load_ungridded_data(filenames, variable):
+    def load_ungridded_data(cls, filenames, variable):
         '''
-            Return an UngriddedData object
+            Return an UngriddedData object, for the specified input variable
+        
+        args:
+            filenames:    List of filenames of files to read
+            variable:    Variable to read from the files
         '''
-        pass
+        from jasmin_cis.exceptions import FileIOError
+        
+        data = []
+        for filename in filenames:
+            try:
+                data.append(hdf.read_hdf4_SD_variable(filename, variable))
+            except HDF4Error as e:
+                raise FileIOError(str(e)+' for file: '+filename)
+        return cls(data,'HDF_SD')
     
-    
-    def __init__(self, data_ref, data_type, metadata=None):
+
+    def __init__(self, data, data_type=None, metadata=None):
         '''
         Constructor
         
         args:
-            data:    The data handler for the specific data type - NOT the data itself
+            data:    The data handler for the specific data type, or a numpy array of data
+                        In principle this could be a list of handlers which only get concatenated
+                        when the data is read. It's unclear what the metadata should be in this case and may break
             data_type: The type of ungridded data being passed - valid options are
-                        the keys in 
+                        the keys in static_mappings
             metadata: Any associated metadata
         '''
+        from types import MethodType 
         from jasmin_cis.exceptions import InvalidDataTypeError
         
-        self._data = data_ref
-        
-        if data_type in static_mappings:
-            self.data_type = data_type
-            #self.map = static_mappings[data_type]
-            # Perform the function mapping
-            for func, map in static_mappings[data_type]._asdict().items():
-                self.func = map
+        if isinstance(data, np.ndarray):
+            self._data = data
+            self._data_manager = None
+            if data_type is not None:
+                raise InvalidDataTypeError
         else:
-            raise InvalidDataTypeError
+            self._data = None
+            self._data_manager = data
         
+            if data_type in static_mappings:
+                #self.data_type = data_type
+                self.map = static_mappings[data_type]._asdict()
+                #self.map = static_mappings[data_type]
+                # Perform the function mapping
+                #for func, map in static_mappings[data_type]._asdict().items():
+                #    self.func = MethodType(map, self, UngriddedData)
+            else:
+                raise InvalidDataTypeError
+            
         if metadata is None:
-            self.metadata = self.get_metadata(self._data)
+            if self._data_manager is not None:
+                self.metadata = self.get_metadata(self._data_manager[0])
+            else:
+                self.metadata = None
         else:
             self.metadata = metadata
         
 #    def _find_metadata(self):
 #        self.metadata = self.map.get_metadata(self._data)    
     
+    def __getattr__(self,attr):
+        return self.map[attr]
+    
     @property
     def data(self):
-        pass
+        '''
+            This is a getter for the data property. It caches the raw data if it has not already been read.
+             Throws a MemoryError when reading for the first time if the data is too large.
+        '''
+        if self._data is None:
+            try:
+                if isinstance(self._data_manager,list):
+                    # If we ere given a list of data managers then we need to concatenate them now...
+                    self._data=self.retrieve_raw_data(self._data_manager[0])
+                    if len(self._data_manager) > 1:
+                        for manager in self._data_manager[1:]:
+                            self._data = np.hstack(self._data,self.retrieve_raw_data(manager))
+                else:
+                    self._data = self.retrieve_raw_data(self._data_manager)
+            except MemoryError:
+                raise MemoryError(
+                  "Failed to read the ungridded data as there was not enough memory available.\n" 
+                  "Consider freeing up variables or indexing the cube before getting its data.")
+        return self._data
+    
+    
