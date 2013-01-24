@@ -55,6 +55,15 @@ def check_file_exists(filename, parser):
         parser.error("'" + filename + "' is not a valid filename")
         
 def parse_float(arg, name, parser):
+    '''
+    Tries to parse a string as a float.
+    args:
+        arg:    The arg to parse as a float
+        name:   A description of the argument used for error messages
+        parser: The parser used to report an error message
+    Returns:
+        The parsed float if succeeds or the original argument if fails
+    '''
     if arg:
         try:
             arg = float(arg)
@@ -62,12 +71,20 @@ def parse_float(arg, name, parser):
             parser.error("'" + arg + "' is not a valid " + name)
     return arg
 
-def check_filenames(filenames, parser):
+def check_datafiles(datafiles, parser):
+    '''
+    args:
+        datafiles:    A list of datafiles (possibly containing colons)
+        parser:       The parser used to report errors
+    
+    returns:
+        The parsed datafiles as a list of dictionaries
+    '''
     from collections import namedtuple
     DatafileOptions = namedtuple('OverlayOptions',['filename', "variable", "label", "color", "linestyle"])
     datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing, check_color, check_line_style)    
     
-    return parse_colonic_arguments(filenames, parser, datafile_options)
+    return parse_colonic_arguments(datafiles, parser, datafile_options)
 
 def parse_colonic_arguments(inputs, parser, options):
     '''
@@ -75,6 +92,9 @@ def parse_colonic_arguments(inputs, parser, options):
         inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
         parser:    The parser used to raise an error if one occurs
         options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    
+    returns:
+        A list of dictionaries containing the parsed arguments
     '''
     input_dicts = []
     
@@ -97,6 +117,9 @@ def parse_colonic_arguments(inputs, parser, options):
     return input_dicts
 
 def check_variable(variable, datafiles, parser):
+    '''
+    Checks that a variable was specified, and assigns the default variable (if specified) to any datafiles with an unspecified variable
+    '''
     if variable is None:
         raise_error = False
         if not datafiles:
@@ -118,7 +141,9 @@ def check_nothing(item, parser):
     pass
 
 def check_plot_type(plot_type, variables, parser):
-    # Check plot type is valid option for number of variables if specified
+    '''
+    Checks plot type is valid option for number of variables if specified
+    '''
     if plot_type is not None:
         if plot_type in plot_types.keys():
             if plot_types[plot_type].expected_no_of_variables != len(variables):
@@ -138,6 +163,9 @@ def check_color(color, parser):
             parser.error("'" + color + "' is not a valid colour")   
 
 def check_val_range(valrange, parser):
+    '''
+    If a val range was specified, checks that they are valid numbers and the min is less than the max
+    '''
     if valrange is not None:
         if ":" in valrange:
             split_range = valrange.split(":")
@@ -158,7 +186,7 @@ def check_val_range(valrange, parser):
     return valrange
                    
 def validate_plot_args(arguments, parser):    
-    arguments.datafiles = check_filenames(arguments.datafiles, parser)        
+    arguments.datafiles = check_datafiles(arguments.datafiles, parser)        
     arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
     check_plot_type(arguments.type, arguments.variable, parser) 
     arguments.valrange = check_val_range(arguments.valrange, parser)
@@ -175,6 +203,10 @@ def validate_info_args(arguments, parser):
     return arguments
 
 def validate_col_args(arguments, parser):
+    '''
+    Checks that the filenames are valid and that variables and methods have been specified.
+    Assigns default method/variable to datafiles with unspecified method/variable if default is specified
+    '''
     check_file_exists(arguments.samplefilename, parser)
     
     from collections import namedtuple
@@ -203,6 +235,7 @@ validators = { 'plot' : validate_plot_args,
 def parse_args(arguments = None):
     '''
     Parse the arguments given. If no arguments are given, then used the command line arguments.
+    Returns a dictionary contains the parsed arguments
     '''
     parser = initialise_top_parser()
     if arguments is None:

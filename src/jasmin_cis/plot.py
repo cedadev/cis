@@ -63,7 +63,11 @@ plot_types = {'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot, Fals
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
-def format_plot(data, options, plot_type, datafiles):    
+def format_plot(data, options, plot_type, datafiles): 
+    '''
+    Sets the fontsize, xlabel, ylabel, title, legend and coastlines where appropriate.
+    Tries to assign default value if value not specified
+    '''   
     if options["fontsize"] is not None:
         options["fontsize"] = { "font.size" : float(options["fontsize"]) }   
     else:
@@ -109,6 +113,10 @@ def format_plot(data, options, plot_type, datafiles):
         plt.legend(legend_titles, loc="best")
 
 def set_width_and_height(kwargs):
+    '''
+    Sets the width and height of the plot
+    Uses an aspect ratio of 4:3 if only one of width and height are specified
+    '''
     height = kwargs.pop("height", None)
     width = kwargs.pop("width", None)
     
@@ -126,15 +134,13 @@ def set_width_and_height(kwargs):
 def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
     '''
     Note: Data must be a list of cubes
+    This method needs commenting
     '''
     import jasmin_cis.exceptions as ex
     import logging
     
     kwargs = set_width_and_height(kwargs)    
     
-    # Unpack the data list if there is only one element, otherwise the whole list
-    # gets passed to the plot function. This could be done with unpacking in the 
-    # plot method call but we already unpack the args list.
     variable_dim = len(cubes[0].shape)
     
     for key in kwargs.keys():
@@ -147,9 +153,6 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
             
     num_variables = len(cubes)
     
-    #if num_variables == 1:
-        #data = data[0]
-    #else:
     for cube in cubes:
         if len(cube.shape) != variable_dim:
             raise ex.InconsistentDimensionsError("Number of dimensions must be consistent across variables")
