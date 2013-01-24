@@ -67,7 +67,7 @@ def info_cmd(main_arguments):
     try:
         file_variables = get_netcdf_file_variables(filename)
     except RuntimeError:
-        file_variables = get_hdf_SD_file_variables(filename, False)
+        file_variables = get_hdf_SD_file_variables(filename)
     
     if variables is not None:
         for variable in variables:
@@ -87,9 +87,29 @@ def col_cmd(main_arguments):
         
     args:
         main_arguments:    The command line arguments (minus the col command)         
-    '''    
+    '''
+    from data_io.read import read_variable
+    import jasmin_cis.exceptions as ex
+    from iris.exceptions import IrisError
+    from col import col
+    
     for key in main_arguments.keys():
         print key + ": " + str(main_arguments[key])
+        
+    sample = main_arguments.pop("samplefilename")
+    sample_data = read_variable(sample, 'rain')
+    
+    print sample_data
+    
+    for datafile in main_arguments.pop("datafiles"):
+        data = read_variable(datafile['filename'],datafile['variable'])
+        
+        print data
+        print data.data
+        
+        col_data = col(sample_data, data, datafile['method'])
+
+    # output col_data > ?
         
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd,
