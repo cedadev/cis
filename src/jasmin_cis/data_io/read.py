@@ -34,14 +34,14 @@ def read_variable(filenames, variable):
     from jasmin_cis.exceptions import CISError
     try:
         data = read_gridded_data_file_variable(filenames, variable)
-    except IrisError as e:
+    except (IrisError, ValueError) as e:
         # Unable to create Cube, trying Ungridded data
         try:
             data = read_ungridded_data(filenames, variable)
-        except CISError:
+        except CISError as ug_e:
             # This is not yet implemented so just rethrows the original
             #  iris error
-            raise e
+            raise ug_e
         except IOError:
             # This can't be thrown yet as it's not implemented
             pass
