@@ -86,23 +86,23 @@ def check_filenames(filenames, parser):
         overlay_plots.append(overlay_plot)
     return overlay_plots
 
-def check_variable(variable, overlay_plots, parser):
+def check_variable(variable, datafiles, parser):
     if variable is None:
         raise_error = False
-        if not overlay_plots:
+        if not datafiles:
             raise_error = True
         else:
-            for overlay_plot in overlay_plots:
+            for overlay_plot in datafiles:
                 if overlay_plot["variable"] is None:
                     raise_error = True
                     break
         if raise_error:
             parser.error("A variable must be specified")
-    elif overlay_plots:
-        for overlay_plot in overlay_plots:
+    elif datafiles:
+        for overlay_plot in datafiles:
             if overlay_plot["variable"] is None:
                 overlay_plot["variable"] = variable
-    return overlay_plots
+    return datafiles
 
 def check_nothing(item, parser):
     pass

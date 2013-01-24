@@ -19,13 +19,15 @@ def plot_cmd(main_arguments):
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     
-    data = []
+    main_arguments.pop("variable")
+    
     # This currently assumes the variable is in each of the filenames specified,
     #  this may change in the future.
     if len(main_arguments["datafiles"]) > MAXIMUM_NUMBER_OF_VARIABLES:
         sys.stderr.write("Number of variables must be less than or equal to " + str(MAXIMUM_NUMBER_OF_VARIABLES) + "\n")
         exit(1)
     
+    data = []
     try:
         for datafile in main_arguments["datafiles"]:
             data.append(read_variable(datafile["filename"], datafile["variable"]))

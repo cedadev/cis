@@ -90,6 +90,10 @@ def format_plot(data, options, plot_type, datafiles):
         
     if not options["title"]:
         options["title"] = ""
+        
+    if plot_type != "line":
+        if not options["title"]:
+            options["title"] = data[0].long_name.title()            
     
     for option, value in options.iteritems():        
         plot_options[option](value)       
@@ -101,7 +105,8 @@ def format_plot(data, options, plot_type, datafiles):
         except AttributeError:
             pass
     
-    plt.legend(legend_titles, loc="best")
+    if plot_type == "line":
+        plt.legend(legend_titles, loc="best")
 
 def set_width_and_height(kwargs):
     height = kwargs.pop("height", None)
@@ -174,8 +179,15 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
     valrange = kwargs.pop("valrange", None)
     
     if plot_type != "line" and valrange is not None:
-        kwargs["vmin"] = valrange.pop("ymin")
-        kwargs["vmax"] = valrange.pop("ymax")
+        try:
+            kwargs["vmin"] = valrange.pop("ymin")
+        except KeyError:
+            pass
+        
+        try:
+            kwargs["vmax"] = valrange.pop("ymax")
+        except KeyError:
+            pass
     
     datafiles = kwargs.pop("datafiles")    
         
