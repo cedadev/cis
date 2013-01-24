@@ -181,16 +181,16 @@ def validate_col_args(arguments, parser):
     DatafileOptions = namedtuple('ColocateOptions',['filename', "variable", "method"])
     datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing)    
     
-    arguments =  parse_colonic_arguments(arguments.datafiles, parser, datafile_options)
-    for arg in arguments:
-        if not arg["variable"]:
-            if arguments.variable is not None:
-                arg["variable"] = arguments.variable
+    arguments.datafiles =  parse_colonic_arguments(arguments.datafiles, parser, datafile_options)
+    for datafile in arguments.datafiles:
+        if not datafile["variable"]:
+            if arguments.variable:
+                datafile["variable"] = arguments.variable
             else:
                 parser.error("Please enter a valid colocation variable for each datafile, or specify a default variable")
-        if not arg["method"]:
-            if arguments.method is not None:
-                arg["method"] = arguments.method
+        if not datafile["method"]:
+            if arguments.method:
+                datafile["method"] = arguments.method
             else:
                 parser.error("Please enter a valid colocation method for each datafile, or specify a default method")
     
