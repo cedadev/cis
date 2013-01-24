@@ -3,6 +3,26 @@ Module containing hdf file functions
 """
 import numpy as np
 
+def read_hdf4_SD_variable(filename, name):
+    """
+    Reads a single SD from an HDF4 file. 
+    
+    Returns:
+        A single SDS instance 
+        
+    Arguments:
+        filename    -- The name (with path) of the HDF file to read.
+        name       -- A variable (dataset) name to read from the
+                       file. The names must appear exactly as in in the HDF file.
+    """
+    from pyhdf import SD
+
+    # Open the file.
+    datafile = SD.SD(filename)
+    sds = datafile.select(name) # SDS object.
+    
+    return sds
+
 def read_hdf4_SD(filename, names=None, datadict=None):
     """
     Reads SD from a HDF4 file into a dictionary. 
