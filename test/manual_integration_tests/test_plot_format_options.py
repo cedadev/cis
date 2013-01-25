@@ -28,7 +28,7 @@ def should_raise_value_error_with_invalid_colour():
 @nottest # Jenkins can't plot to file or screen
 def should_not_raise_error_if_colour_is_specified_for_invalid_chart_type(): # Simply discard the colour specified 
     cube = make_cube(valid_2d_filename)
-    plot([cube], out_filename = out_filename, **{"color" : "greenn"})  
+    plot([cube], out_filename = out_filename, **{"color" : "green"})  
     
 @nottest # Jenkins can't plot to file or screen
 def can_set_line_width_to_valid_width():   
@@ -42,6 +42,11 @@ def can_set_line_style_to_valid_style():
     
 @nottest # Jenkins can't plot to file or screen
 def can_set_colour_map_to_valid_colour():   
+    cube = make_cube(valid_2d_filename)
+    plot([cube], out_filename = out_filename, **{"cmap" : "RdBu"})
+    
+@nottest # Jenkins can't plot to file or screen
+def should_raise_error_with_invalid_colour_map():   
     cube = make_cube(valid_2d_filename)
     plot([cube], out_filename = out_filename, **{"cmap" : "RdBu"})
 
