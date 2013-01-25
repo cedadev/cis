@@ -1,9 +1,9 @@
 '''
 Module to test the plot formatting options
+These tests have to be run manually
 '''
 from jasmin_cis.plot import plot
-from jasmin_cis.parse import parse_args
-from nose.tools import istest, raises, nottest
+from nose.tools import raises, nottest
 import iris
 from test_files.data import *
 

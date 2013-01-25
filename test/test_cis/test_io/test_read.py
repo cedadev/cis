@@ -1,5 +1,6 @@
 '''
 Module to test the reading of NetCDF files
+More tests for reading can be found in the manual_integration_tests package
 '''
 from nose.tools import istest, raises, nottest
 from test_files.data import *
@@ -34,16 +35,6 @@ def should_raise_runtimeerror_with_file_that_is_not_netcdf_when_reading_variable
 @raises(ValueError, FileIOError)
 def should_raise_valueerror_or_fileioerror_with_file_that_is_not_a_recognised_format_when_loading():    
     filename = non_netcdf_file    
-    cis_read.read_variable(filename, valid_variable_in_valid_filename)
-
-@nottest # Too big to store in Git repository, can still be run manually
-def can_read_15GB_file_when_reading_variables():
-    filename = large_15GB_file_filename
-    cis_read.get_netcdf_file_variables(filename)
-
-@nottest # Too big to store in Git repository, can still be run manually
-def can_read_15GB_file_when_loading_a_cube():
-    filename = large_15GB_file_filename
     cis_read.read_variable(filename, valid_variable_in_valid_filename)
 
 @istest
