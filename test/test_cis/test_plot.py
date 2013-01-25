@@ -88,7 +88,7 @@ def can_plot_contourf_to_screen():
 @istest
 @raises(IOError)
 def should_raise_io_error_with_invalid_filename():     
-    cube = make_cube(valid_1d_filename)
+    cube = make_cube("/")
     plot([cube], "line", "/")
    
 @istest
