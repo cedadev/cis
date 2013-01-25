@@ -25,6 +25,8 @@ def plot_cmd(main_arguments):
         sys.stderr.write("Number of variables must be less than or equal to " + str(MAXIMUM_NUMBER_OF_VARIABLES) + "\n")
         exit(1)
     
+    error_occurred = False
+    
     try:        
         data = [read_variable(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
     except IrisError as e:
@@ -37,8 +39,7 @@ def plot_cmd(main_arguments):
         
     if error_occurred:
         sys.stderr.write(str(e) + "\n")
-        exit(1)
-    
+        exit(1)    
     
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
