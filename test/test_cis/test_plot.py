@@ -2,7 +2,7 @@
 Module to test the one-dimensional plotting of NetCDF files
 '''
 from jasmin_cis.plot import plot
-from nose.tools import istest, raises
+from nose.tools import istest, raises, nottest
 from test_files.data import *
 import iris
 import os.path
@@ -24,7 +24,7 @@ def make_cube(filename, variable = None):
     cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
     return cube       
 
-@istest
+@nottest # Jenkins can't plot to file or screen
 def can_plot_line_graph_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_1d_filename)
@@ -32,11 +32,13 @@ def can_plot_line_graph_to_file():
     assert(os.path.isfile(out_filename))
 
 # Not an automated test   
+
+@nottest # Jenkins can't plot to file or screen
 def can_plot_line_graph_to_screen():    
     cube = make_cube(valid_1d_filename)       
     plot([cube], "line")
-    
-@istest
+
+@nottest # Jenkins can't plot to file or screen    
 def can_plot_scatter_graph_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_2d_filename)
@@ -44,11 +46,13 @@ def can_plot_scatter_graph_to_file():
     assert(os.path.isfile(out_filename))
     
 # Not an automated test    
+
+@nottest # Jenkins can't plot to file or screen
 def can_plot_scatter_graph_to_screen():    
     cube = make_cube(valid_2d_filename)       
     plot([cube], "scatter")
 
-@istest
+@nottest # Jenkins can't plot to file or screen
 def can_plot_heatmap_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_2d_filename)
@@ -56,34 +60,35 @@ def can_plot_heatmap_to_file():
     assert(os.path.isfile(out_filename))
    
 # Not an automated test   
+
+@nottest # Jenkins can't plot to file or screen
 def can_plot_heatmap_to_screen():    
     cube = make_cube(valid_2d_filename)       
     plot([cube], "heatmap")
     
-@istest
+@nottest # Jenkins can't plot to file or screen
 def can_plot_contour_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_2d_filename)
     plot([cube], "contour", out_filename)   
     assert(os.path.isfile(out_filename))
    
-# Not an automated test   
+@nottest # Jenkins can't plot to file or screen
 def can_plot_contour_to_screen():    
     cube = make_cube(valid_2d_filename)       
     plot([cube], "contour")
 
-@istest
+@nottest # Jenkins can't plot to file or screen
 def can_plot_contourf_to_file():    
     delete_file_if_exists()
     cube = make_cube(valid_2d_filename)
     plot([cube], "contourf", out_filename)   
     assert(os.path.isfile(out_filename))
    
-# Not an automated test   
+@nottest # Jenkins can't plot to file or screen
 def can_plot_contourf_to_screen():    
     cube = make_cube(valid_2d_filename)       
     plot([cube], "contourf")
-
     
 @istest
 @raises(IOError)
@@ -107,3 +112,9 @@ if __name__ == "__main__":
     can_plot_heatmap_to_screen()
     can_plot_contour_to_screen()
     can_plot_contourf_to_screen()
+    
+    can_plot_line_graph_to_file()
+    can_plot_scatter_graph_to_file()
+    can_plot_heatmap_to_file()
+    can_plot_contour_to_file()
+    can_plot_contourf_to_file()
