@@ -5,7 +5,7 @@ Each test therefore ignores SystemExit exceptions with code 2 as they are expect
 '''
 from nose.tools import istest
 from jasmin_cis.parse import parse_args
-from data import *
+from test_files.data import *
 from jasmin_cis.plot import plot_types
 
 @istest
@@ -65,7 +65,7 @@ def should_raise_error_with_more_than_one_chart_type():
 
 @istest
 def can_specify_more_than_one_variable():
-    args = ["plot", valid_1d_filename, "-v", valid_variable, valid_variable]
+    args = ["plot", valid_1d_filename + ":" + valid_variable, valid_1d_filename + ":" + valid_variable]
     parse_args(args)
     
 @istest

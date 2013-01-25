@@ -192,27 +192,24 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
         except KeyError:
             pass
     
-    datafiles = kwargs.pop("datafiles")    
+    datafiles = kwargs.pop("datafiles", None)    
         
-    try:
-        for i, cube in enumerate(cubes):
-            # Temporarily add args to kwargs
-            if plot_type == "line":
-                if datafiles[i]["linestyle"]:
-                    kwargs["linestyle"] = datafiles[i]["linestyle"]
-                if datafiles[i]["color"]:
-                    kwargs["color"] = datafiles[i]["color"]
-                    
-            plot_types[plot_type].plot_method(cube, *args, **kwargs)
-            
-            # Remove temp args
-            if plot_type == "line":
-                if datafiles[i]["linestyle"]:
-                    kwargs.pop("linestyle")
-                if datafiles[i]["color"]:
-                    kwargs.pop("color")
-    except KeyError:
-        raise ex.InvalidPlotTypeError(plot_type)
+    for i, cube in enumerate(cubes):
+        # Temporarily add args to kwargs
+        if plot_type == "line" and datafiles is not None:
+            if datafiles[i]["linestyle"]:
+                kwargs["linestyle"] = datafiles[i]["linestyle"]
+            if datafiles[i]["color"]:
+                kwargs["color"] = datafiles[i]["color"]
+                
+        plot_types[plot_type].plot_method(cube, *args, **kwargs)
+        
+        # Remove temp args
+        if plot_type == "line" and datafiles is not None:
+            if datafiles[i]["linestyle"]:
+                kwargs.pop("linestyle")
+            if datafiles[i]["color"]:
+                kwargs.pop("color")
     
     if plot_type == "line" and valrange is not None:
         plt.ylim(**valrange)

@@ -5,7 +5,7 @@ from jasmin_cis.plot import plot
 from jasmin_cis.parse import parse_args
 from nose.tools import istest, raises
 import iris
-from data import *
+from test_files.data import *
 
 def make_cube(filename, variable = None):
     if variable is None:

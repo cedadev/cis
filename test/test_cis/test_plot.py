@@ -3,7 +3,7 @@ Module to test the one-dimensional plotting of NetCDF files
 '''
 from jasmin_cis.plot import plot
 from nose.tools import istest, raises
-from test_cis.data import *
+from test_files.data import *
 import iris
 import os.path
 from jasmin_cis.exceptions import *

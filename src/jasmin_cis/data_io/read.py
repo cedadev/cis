@@ -42,7 +42,4 @@ def read_variable(filenames, variable):
             # This is not yet implemented so just rethrows the original
             #  iris error
             raise ug_e
-        except IOError:
-            # This can't be thrown yet as it's not implemented
-            pass
     return data

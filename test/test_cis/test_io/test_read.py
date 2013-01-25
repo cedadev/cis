@@ -1,9 +1,8 @@
 '''
 Module to test the reading of NetCDF files
 '''
-from nose.tools import istest, raises
-import iris
-from test_cis.data import *
+from nose.tools import istest, raises, nottest
+from test_files.data import *
 from jasmin_cis.exceptions import *
 import jasmin_cis.data_io.read as cis_read
     
@@ -32,17 +31,17 @@ def should_raise_runtimeerror_with_file_that_is_not_netcdf_when_reading_variable
     cis_read.get_netcdf_file_variables(filename)
 
 @istest
-@raises(ValueError)
-def should_raise_valueerror_with_file_that_is_not_netcdf_when_loading_a_cube():    
+@raises(ValueError, FileIOError)
+def should_raise_valueerror_or_fileioerror_with_file_that_is_not_a_recognised_format_when_loading():    
     filename = non_netcdf_file    
     cis_read.read_variable(filename, valid_variable_in_valid_filename)
 
-@istest
+@nottest # Too big to store in Git repository, can still be run manually
 def can_read_15GB_file_when_reading_variables():
     filename = large_15GB_file_filename
     cis_read.get_netcdf_file_variables(filename)
 
-@istest
+@nottest # Too big to store in Git repository, can still be run manually
 def can_read_15GB_file_when_loading_a_cube():
     filename = large_15GB_file_filename
     cis_read.read_variable(filename, valid_variable_in_valid_filename)
@@ -76,8 +75,8 @@ def should_raise_runtimeerror_with_file_that_has_netcdf_extension_but_is_not_net
     cis_read.get_netcdf_file_variables(filename)
      
 @istest
-@raises(ValueError)
-def should_raise_valueerror_with_file_that_has_netcdf_extension_but_is_not_netcdf_when_loading_a_cube():
+@raises(FileIOError)
+def should_raise_fileioerror_with_file_that_has_netcdf_extension_but_is_not_netcdf_when_loading_a_cube():
     filename = non_netcdf_file_with_netcdf_file_extension       
     cis_read.read_variable(filename, valid_variable_in_valid_filename)        
 

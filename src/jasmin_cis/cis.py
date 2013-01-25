@@ -7,6 +7,12 @@ import sys
 MAXIMUM_NUMBER_OF_VARIABLES = 10
 
 def error_occurred(e):
+    '''
+    Method used to print error messages when errors occur
+    
+    args:
+        An error object or any string
+    '''
     sys.stderr.write(str(e) + "\n")
     exit(1)
 
@@ -33,8 +39,7 @@ def plot_cmd(main_arguments):
     except IrisError as e:
         error_occurred(e)
     except IOError as e:
-        print "There was an error reading one of the files: "
-        error_occurred(e)
+        error_occurred("There was an error reading one of the files: \n" + e)
     except ex.InvalidVariableError as e:
         error_occurred(e)
     
