@@ -106,7 +106,6 @@ def should_raise_error_when_variable_is_not_1D():
     
     
 if __name__ == "__main__":
-    # Call the methods to plot to screen instead of the plot to file ones
     can_plot_line_graph_to_screen()
     can_plot_scatter_graph_to_screen()
     can_plot_heatmap_to_screen()
