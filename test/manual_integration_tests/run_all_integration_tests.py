@@ -1,4 +1,4 @@
-import test_plot_format_options
+'''import test_plot_format_options
 import test_plot
 import test_io.test_read
 
@@ -18,4 +18,4 @@ def call_all_methods_in_module(module):
 
 call_all_methods_in_module(test_plot_format_options)
 call_all_methods_in_module(test_plot)
-call_all_methods_in_module(test_io.test_read)
+call_all_methods_in_module(test_io.test_read)'''
