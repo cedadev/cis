@@ -129,8 +129,7 @@ def get_netcdf_file_coordinates(filename):
 
 def get_netcdf_file_coordinates_points(filename):
     from jasmin_cis.col import HyperPoint
-    import numpy as np
-    
+        
     dims = get_netcdf_file_coordinates(filename)
     
     # Pack the data into a list of x,y, val points to be passed to col
@@ -142,7 +141,4 @@ def get_netcdf_file_coordinates_points(filename):
                 for time_p in dims.time[:]:
                     points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
 
-    for (x,y), value in np.ndenumerate(data_dict[variable].data[1,:,:]):
-        lat = data_dict['Latitude'].data[x,y]
-        lon = data_dict['Longitude'].data[x,y]
-        points.append(HyperPoint(lat,lon, val=value))
+    return points

@@ -30,6 +30,8 @@ def get_netcdf_file_coordinates_points(filename):
         lat = lat[x,y]
         lon = lon[x,y]
         points.append(HyperPoint(lat,lon, val=value))
+        
+    return points
 
 def read_ungridded_data(filenames, variables):
     '''
