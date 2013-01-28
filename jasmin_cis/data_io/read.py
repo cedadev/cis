@@ -1,6 +1,7 @@
 '''
 Module for reading data.
 '''
+from jasmin_cis.data_io.hdf import get_hdf_VD_file_variables
 
 def read_all_variables_from_file(filename):
     '''
@@ -21,6 +22,7 @@ def read_all_variables_from_file(filename):
         file_variables = get_netcdf_file_variables(filename)
     except RuntimeError:
         file_variables = get_hdf_SD_file_variables(filename)
+        file_variables.update(get_hdf_VD_file_variables(filename))
     
     return file_variables
 
@@ -35,7 +37,7 @@ def read_variable_from_files(filenames, variable):
         variable:    The variable to read from the files
         
     returns:
-        A cube containing the specified data with unnecessary dimensions removed    
+        The specified data with unnecessary dimensions removed    
     '''
     from read_ungridded import read_ungridded_data
     from read_gridded import read_gridded_data_file_variable
