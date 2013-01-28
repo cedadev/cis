@@ -76,11 +76,15 @@ def info_cmd(main_arguments):
         main_arguments:    The command line arguments (minus the info command)         
     '''    
     from data_io.read import read_file_variables
+    from pyhdf.error import HDF4Error
 
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
     
-    file_variables = read_file_variables(filename)
+    try:
+        file_variables = read_file_variables(filename)
+    except HDF4Error as e:
+        __error_occurred(e)
     
     if variables is not None:
         for variable in variables:
