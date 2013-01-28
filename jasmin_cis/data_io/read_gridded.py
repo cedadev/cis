@@ -38,7 +38,10 @@ def read_gridded_data_file_variable(filenames, variable):
     
     return sub_cube
 
-def unpack_cube(cube):  
+def unpack_cube(cube): 
+    '''
+    To be commented
+    ''' 
     if type(cube) is Cube:
         no_of_dims = len(cube.shape)
         import numpy as np
@@ -79,6 +82,7 @@ def unpack_cube(cube):
         return { "data": data, "x" : x, "y" : y }
     else:
         return cube
+    
 def get_netcdf_file_variables(filename):
     '''
     Get all the variables from a NetCDF file
