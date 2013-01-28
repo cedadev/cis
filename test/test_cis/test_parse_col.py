@@ -5,7 +5,7 @@ Each test therefore ignores SystemExit exceptions with code 2 as they are expect
 '''
 from nose.tools import istest, eq_
 from jasmin_cis.parse import parse_args
-from data import *
+from test_files.data import *
 
 @istest
 def can_specify_one_valid_samplefile_and_one_complete_datafile():
@@ -15,25 +15,25 @@ def can_specify_one_valid_samplefile_and_one_complete_datafile():
     eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
     
 @istest
-def can_specify_one_valid_samplefile_and_one_datafile_without_a_method():
-    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:"]
+def can_specify_one_valid_samplefile_and_one_datafile_without_a_method_if_default_set():
+    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:", "--method", "method"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : ""}], args["datafiles"])
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
     
 @istest
-def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable():
-    args = ["col", valid_1d_filename, valid_1d_filename + "::method"]
+def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_if_default_set():
+    args = ["col", valid_1d_filename, valid_1d_filename + "::method", "--variable", "variable"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "", "method" : "method"}], args["datafiles"])
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
     
 @istest
-def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_or_method():
-    args = ["col", valid_1d_filename, valid_1d_filename + "::"]
+def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_or_method_if_default_set():
+    args = ["col", valid_1d_filename, valid_1d_filename + "::", "--variable", "variable", "--method", "method"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "", "method" : ""}], args["datafiles"])
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
     
 @istest
 def can_specify_one_valid_samplefile_and_many_datafiles():
@@ -41,13 +41,14 @@ def can_specify_one_valid_samplefile_and_many_datafiles():
             valid_1d_filename + "::", 
             valid_1d_filename + "::", 
             valid_1d_filename + "::", 
-            valid_1d_filename + "::"]
+            valid_1d_filename + "::",
+            "--variable", "variable", "--method", "method"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "", "method" : ""},
-         {"filename" : valid_1d_filename, "variable" : "", "method" : ""},
-         {"filename" : valid_1d_filename, "variable" : "", "method" : ""},
-         {"filename" : valid_1d_filename, "variable" : "", "method" : ""}], 
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], 
         args["datafiles"])
     
 @istest
@@ -56,12 +57,13 @@ def can_specify_one_valid_samplefile_and_many_datafiles_with_varying_specificati
             valid_1d_filename + "::", 
             valid_1d_filename + ":variable:", 
             valid_1d_filename + "::method", 
-            valid_1d_filename + ":variable:method"]
+            valid_1d_filename + ":variable:method",
+            "--variable", "variable", "--method", "method"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "", "method" : ""},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : ""},
-         {"filename" : valid_1d_filename, "variable" : "", "method" : "method"},
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
          {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], 
         args["datafiles"])
     
@@ -81,22 +83,6 @@ def can_specify_default_variable_and_method():
          {"filename" : valid_1d_filename, "variable" : "defaultVariable", "method" : "method"},
          {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], 
         args["datafiles"])
-    
-@istest
-def should_raise_error_with_missing_colons():
-    try:
-        args = ["col", valid_1d_filename, 
-            valid_1d_filename + "::", 
-            valid_1d_filename + ":variable:", 
-            valid_1d_filename + ":method", 
-            valid_1d_filename + ":variable:method",
-            "--variable", "defaultVariable",
-            "--method", "defaultMethod"]
-        args = parse_args(args)
-        assert False
-    except SystemExit as e:
-        if e.code != 2:
-            raise e
 
 @istest
 def should_raise_error_with_missing_arguments():

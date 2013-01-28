@@ -1,3 +1,14 @@
+/test/manual_integration_tests/cube_image.png
+/test/manual_integration_tests/test_plot.pyc
+/test/manual_integration_tests/test_io/__init__.pyc
+/test/manual_integration_tests/test_plot_format_options.pyc
+/test/manual_integration_tests/test_io/test_read.pyc
+/test/manual_integration_tests/run_all_integration_tests.pyc
+/test/manual_integration_tests/__init__.pyc
+/test/test_cis/test_col.pyc
+/test/test_files/data.pyc
+/test/test_files/__init__.pyc
+/test/test_cis/cube_image.png
 /src/jasmin_cis/col.pyc
 /src/jasmin_cis/cis.pyc
 /test/test_cis/test_parse_col.pyc

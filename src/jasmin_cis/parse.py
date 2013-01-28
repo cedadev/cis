@@ -24,7 +24,7 @@ def initialise_top_parser():
 
 def add_plot_parser_arguments(parser):    
     parser.add_argument("datafiles", metavar = "Input datafiles", nargs = "+", help = "The datafiles to be plotted, in the format: filename:variable:label:colour:style, where the last three arguments are optional")
-    parser.add_argument("-v", "--variable", metavar = "Variable", nargs = "?", help = "The default variable to plot if not otherwise specified in the filename")
+    parser.add_argument("-v", "--variable", metavar = "Default variable", nargs = "?", help = "The default variable to plot if not otherwise specified in the filename")
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")    
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(plot_types.keys()))
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
@@ -117,6 +117,7 @@ def parse_colonic_arguments(inputs, parser, options):
     return input_dicts
 
 def check_variable(variable, datafiles, parser):
+    # TODO: Rename overlay|_plot to datafile
     '''
     Checks that a variable was specified, and assigns the default variable (if specified) to any datafiles with an unspecified variable
     '''
@@ -125,28 +126,28 @@ def check_variable(variable, datafiles, parser):
         if not datafiles:
             raise_error = True
         else:
-            for overlay_plot in datafiles:
-                if overlay_plot["variable"] is None:
+            for datafile in datafiles:
+                if datafile["variable"] is None:
                     raise_error = True
                     break
         if raise_error:
             parser.error("A variable must be specified")
     elif datafiles:
-        for overlay_plot in datafiles:
-            if overlay_plot["variable"] is None:
-                overlay_plot["variable"] = variable
+        for datafile in datafiles:
+            if datafile["variable"] is None:
+                datafile["variable"] = variable
     return datafiles
 
 def check_nothing(item, parser):
     pass
 
-def check_plot_type(plot_type, variables, parser):
+def check_plot_type(plot_type, datafiles, parser):
     '''
     Checks plot type is valid option for number of variables if specified
     '''
     if plot_type is not None:
         if plot_type in plot_types.keys():
-            if plot_types[plot_type].expected_no_of_variables != len(variables):
+            if plot_types[plot_type].maximum_number_of_expected_no_of_variables < len(datafiles):
                 parser.error("Invalid number of variables for plot type")        
         else:        
             parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(plot_types.keys()))
@@ -188,7 +189,7 @@ def check_val_range(valrange, parser):
 def validate_plot_args(arguments, parser):    
     arguments.datafiles = check_datafiles(arguments.datafiles, parser)        
     arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
-    check_plot_type(arguments.type, arguments.variable, parser) 
+    check_plot_type(arguments.type, arguments.datafiles, parser) 
     arguments.valrange = check_val_range(arguments.valrange, parser)
     # Try and parse numbers
     arguments.linewidth = parse_float(arguments.linewidth, "line width", parser)   
