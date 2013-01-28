@@ -78,6 +78,7 @@ def unpack_cube(cube):
         return { "data": data, "x" : x, "y" : y }
     else:
         return cube
+
 def get_netcdf_file_variables(filename):
     '''
     Get all the variables from a NetCDF file
