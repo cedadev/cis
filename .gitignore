@@ -1,1 +1,6 @@
+/jasmin_cis/cis.log
+/.project
+/.pydevproject
+/src/jasmin_cis/cis.log
+/test/manual_integration_tests/cube_image.png
 *.pyc

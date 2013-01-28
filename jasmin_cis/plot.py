@@ -4,45 +4,14 @@ Also contains dictionaries for the valid plot types and formatting options
 '''
 
 import iris.quickplot as qplt
-import iris.plot as iplt
 import matplotlib.pyplot as plt
-import iris.coords
 from cis import MAXIMUM_NUMBER_OF_VARIABLES
+from data_io.read_gridded import unpack_cube
 
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
               'ylabel' : plt.ylabel,
               'fontsize' : plt.rcParams.update } 
-
-def unpack_cube(cube):
-    import numpy as np
-    from mpl_toolkits.basemap import addcyclic
-    
-    plot_defn = iplt._get_plot_defn(cube, iris.coords.POINT_MODE, ndims = 2)
-    data = cube.data #ndarray
-    if plot_defn.transpose:
-        data = data.T
-    
-    # Obtain U and V coordinates
-    v_coord, u_coord = plot_defn.coords
-    if u_coord:
-        u = u_coord.points
-    else:
-        u = np.arange(data.shape[1])
-    if v_coord:
-        v = v_coord.points
-    else:
-        v = np.arange(data.shape[0])
-    
-    if plot_defn.transpose:
-        u = u.T
-        v = v.T
-    
-    data, u = addcyclic(data, u)
-    
-    x, y = np.meshgrid(u, v)
-    
-    return data, x, y
 
 def plot_heatmap(cube, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap

@@ -2,6 +2,8 @@
 Module for ungridded data utilities. Gridded data is generally
 stored in cubes
 '''
+import iris.plot as iplt
+import iris
 
 def read_gridded_data_file_variable(filenames, variable):
     '''
@@ -34,6 +36,35 @@ def read_gridded_data_file_variable(filenames, variable):
     
     return sub_cube
 
+def unpack_cube(cube):
+    import numpy as np
+    from mpl_toolkits.basemap import addcyclic
+    
+    plot_defn = iplt._get_plot_defn(cube, iris.coords.POINT_MODE, ndims = 2)
+    data = cube.data #ndarray
+    if plot_defn.transpose:
+        data = data.T
+    
+    # Obtain U and V coordinates
+    v_coord, u_coord = plot_defn.coords
+    if u_coord:
+        u = u_coord.points
+    else:
+        u = np.arange(data.shape[1])
+    if v_coord:
+        v = v_coord.points
+    else:
+        v = np.arange(data.shape[0])
+    
+    if plot_defn.transpose:
+        u = u.T
+        v = v.T
+    
+    data, u = addcyclic(data, u)
+    
+    x, y = np.meshgrid(u, v)
+    
+    return data, x, y
 
 def get_netcdf_file_variables(filename):
     '''
