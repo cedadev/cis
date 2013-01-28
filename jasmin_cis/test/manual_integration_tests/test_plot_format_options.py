@@ -6,7 +6,7 @@ These tests have to be run manually
 from jasmin_cis.plot import plot
 from nose.tools import raises, nottest
 import iris
-from test_files.data import *
+from jasmin_cis.test.test_files.data import *
 
 def make_cube(filename, variable = None):
     if variable is None:
