@@ -64,7 +64,7 @@ def read_file_coordinates(filename):
     returns:
         A list of HyperPoints  
     '''
-    from read_ungridded import read_ungridded_data_coordinates
+    from read_ungridded import get_netcdf_file_coordinates_points
     from read_gridded import get_netcdf_file_coordinates
     from iris.exceptions import IrisError
     from jasmin_cis.exceptions import CISError
@@ -74,7 +74,7 @@ def read_file_coordinates(filename):
     except:
         # Unable to read netcdf file, trying Ungridded data
         try:
-            coords = read_ungridded_data_coordinates(filename)
+            coords = get_netcdf_file_coordinates_points(filename)
         except CISError as ug_e:
             raise ug_e
        
