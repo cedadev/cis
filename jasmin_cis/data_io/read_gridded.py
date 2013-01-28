@@ -48,3 +48,21 @@ def get_netcdf_file_variables(filename):
     from netCDF4 import Dataset    
     f = Dataset(filename)
     return f.variables
+
+def get_netcdf_file_coordinates(filename):
+    '''
+    Get all of the coordinate variables from a NetCDF file
+    
+    args:
+        filename: The filename of the file to get the variables from
+    
+    returns:
+        A list of coordinate variables
+    '''
+    from netCDF4 import Dataset    
+    f = Dataset(filename)
+    lat = f.variables['latitude']
+    lon = f.variables['longitude']
+    alt = f.variables['altitude']
+    time = f.variables['t']
+    return [lat, lon, alt, time]
