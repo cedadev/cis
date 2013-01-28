@@ -4,8 +4,6 @@ Main driver script for the Climate Intercomparison Suite
 '''
 import sys
 
-MAXIMUM_NUMBER_OF_VARIABLES = 10
-
 def error_occurred(e):
     '''
     Method used to print error messages when errors occur
@@ -30,9 +28,6 @@ def plot_cmd(main_arguments):
     from iris.exceptions import IrisError
     
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
-    
-    if len(main_arguments["datafiles"]) > MAXIMUM_NUMBER_OF_VARIABLES:
-        error_occurred("Number of variables must be less than or equal to " + str(MAXIMUM_NUMBER_OF_VARIABLES))
     
     try:        
         data = [read_variable(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]

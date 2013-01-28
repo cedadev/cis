@@ -3,7 +3,6 @@ Module for plotting graphs.
 Also contains dictionaries for the valid plot types and formatting options
 '''
 
-import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 from cis import MAXIMUM_NUMBER_OF_VARIABLES
 from data_io.read_gridded import unpack_cube
@@ -13,40 +12,42 @@ plot_options = { 'title' : plt.title,
               'ylabel' : plt.ylabel,
               'fontsize' : plt.rcParams.update } 
 
+def plot_line(cube, *args, **kwargs):
+    data, x = unpack_cube(cube, 1) 
+    plt.plot(x, data)
+
 def plot_heatmap(cube, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap
-    data, x, y = unpack_cube(cube) 
+    data, x, y = unpack_cube(cube, 2) 
     basemap = Basemap()    
     basemap.pcolormesh(x, y, data, latlon = True)
     basemap.drawcoastlines()   
     
 def plot_contour(cube, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap
-    data, x, y = unpack_cube(cube) 
+    data, x, y = unpack_cube(cube, 2) 
     basemap = Basemap()    
     basemap.contour(x, y, data, latlon = True)
     basemap.drawcoastlines()    
     
 def plot_contourf(cube, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap
-    data, x, y = unpack_cube(cube) 
+    data, x, y = unpack_cube(cube, 2) 
     basemap = Basemap()    
     basemap.contourf(x, y, data, latlon = True)
     basemap.drawcoastlines()  
 
 class plot_type(object):
-    def __init__(self, maximum_number_of_expected_no_of_variables, variable_dimensions, plot_method):
-        self.maximum_number_of_expected_no_of_variables = maximum_number_of_expected_no_of_variables
+    def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
+        self.maximum_no_of_expected_variables = maximum_no_of_expected_variables
         self.variable_dimensions = variable_dimensions
         self.plot_method = plot_method
         
-plot_types = {'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot),
-                'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points), 
-                #'heatmap' : plot_type(1, 2, qplt.pcolormesh),
+plot_types = {'line' : plot_type(None, 1, plot_line),
+              #'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot),
+                #'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points), 
                 'heatmap' : plot_type(1, 2, plot_heatmap),
-                #'contour' : plot_type(1, 2, qplt.contour),
                 'contour' : plot_type(1, 2, plot_contour),
-                #'contourf' : plot_type(1, 2, qplt.contourf)
                 'contourf' : plot_type(1, 2, plot_contourf)}
 
 default_plot_types = { 1 : 'line',
@@ -119,7 +120,7 @@ def set_width_and_height(kwargs):
 
 def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
     '''
-    Note: Data must be a list of cubes
+    Note: Data must be a list
     This method needs commenting
     '''
     import jasmin_cis.exceptions as ex
@@ -162,8 +163,10 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
             logging.warn("Cannot specify a colour map for plot type '" + plot_type + "', did you mean to use color?")
     
 
-    if num_variables > plot_types[plot_type].maximum_number_of_expected_no_of_variables:
-        raise ex.InvalidPlotTypeError("The plot type is not valid for these variables")
+    if plot_types[plot_type].maximum_no_of_expected_variables is not None:
+        if num_variables > plot_types[plot_type].maximum_no_of_expected_variables:
+            raise ex.InvalidPlotTypeError("The plot type is not valid for this number of variables")
+    # else: There are an unlimited number of variables for this plot type
     
     valrange = kwargs.pop("valrange", None)
     
