@@ -8,6 +8,31 @@ from glob import glob
 from collections import namedtuple
 from hdf import get_hdf4_SD_data, get_hdf4_VD_data, read_hdf4_SD_metadata, get_hdf_VD_file_variables
 
+def read_ungridded_data_coordinates(filename):
+    '''
+        Read in coordinate variables and pass back arrays for lat, lon and vals
+    '''
+    pass
+
+def get_netcdf_file_coordinates_points(filename):
+    '''
+        Convert coordinate arrays into a list of points for colocation sampling
+        
+    '''
+    from jasmin_cis.col import HyperPoint
+    
+    lat, lon, vals = read_ungridded_data_coordinates(filename)
+    
+    # Pack the data into a list of x,y, val points to be passed to col
+    points = []    
+    
+    for (x,y), value in np.ndenumerate(vals):
+        lat = lat[x,y]
+        lon = lon[x,y]
+        points.append(HyperPoint(lat,lon, val=value))
+        
+    return points
+
 def read_ungridded_data(filenames, variables):
     '''
     Read ungridded data from a file. Just a wrapper that calls the appropriate class method based on

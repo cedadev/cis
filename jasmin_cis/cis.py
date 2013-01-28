@@ -106,46 +106,18 @@ def col_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the col command)         
     '''
-    from data_io.read import read_variable
-
-    from data_io.read_gridded import get_netcdf_file_coordinates
-    import jasmin_cis.exceptions as ex
-    from iris.exceptions import IrisError
+    from data_io.read import read_file_coordinates, read_variable
     from col import col, HyperPoint
     import numpy as np
     
-    sample = main_arguments.pop("samplefilename")
-    #sample_data = read_variable(sample, 'rain')
-    
-    #coords = get_netcdf_file_coordinates(sample)
-    #for coord in coords:
-    #    print coord[:]
-    
+    sample_ponts = read_file_coordinates(main_arguments.pop("samplefilename"))
    
     for datafile in main_arguments.pop("datafiles"):
         variable = datafile['variable']
         filename = datafile['filename']
         data_dict = read_variable(filename,[variable]+['Latitude','Longitude'])
-        
-#        print data_dict
-#        for key, val in data_dict.items():
-#            print key
-#            print val.data.shape
-#            print val.data[:,:]
-#            print val.data[1,1]
 
-        # Pack the data into a list of x,y, val points to be passed to col
-        points = []
-        for (x,y), value in np.ndenumerate(data_dict[variable].data[1,:,:]):
-            lat = data_dict['Latitude'].data[x,y]
-            lon = data_dict['Longitude'].data[x,y]
-            points.append(HyperPoint(lat,lon, val=value))
-            
-        #for point in points:
-        #    print point.lat, point.lon, point.val
-    
-        #col_data = col(sample_data, points, datafile['method'])
-
+    #col_data = col(sample_ponts, data_dict[], datafile['method'])
         
 
 commands = { 'plot' : plot_cmd,

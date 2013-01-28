@@ -115,18 +115,34 @@ def get_netcdf_file_coordinates(filename):
     try:
         lat = f.variables['latitude']
     except KeyError:
-        lat=None
+        lat=[]
     try:
         lon = f.variables['longitude']
     except KeyError:
-        lon=None
+        lon=[]
     try:
         alt = f.variables['altitude']
     except KeyError:
-        alt=None
+        alt=[]
     try:
         time = f.variables['t']
     except KeyError:
-        time=None
+        time=[]
         
     return GriddedCoordsT(lat,lon,alt,time)
+
+def get_netcdf_file_coordinates_points(filename):
+    from jasmin_cis.col import HyperPoint
+        
+    dims = get_netcdf_file_coordinates(filename)
+    
+    # Pack the data into a list of x,y, val points to be passed to col
+    points = []    
+    
+    for lat_p in dims.lat[:]:
+        for lon_p in dims.lon[:]:
+            for alt_p in dims.alt[:]:
+                for time_p in dims.time[:]:
+                    points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
+
+    return points
