@@ -2,6 +2,9 @@
 Module for ungridded data utilities. Gridded data is generally
 stored in cubes
 '''
+import iris.plot as iplt
+import iris
+from iris.cube import Cube
 
 def read_gridded_data_file_variable(filenames, variable):
     '''
@@ -34,6 +37,50 @@ def read_gridded_data_file_variable(filenames, variable):
     
     return sub_cube
 
+def unpack_cube(cube, no_of_dims):
+    '''
+    args:
+        no_of_dims:    1 if line, otherwise 2
+    '''
+    if type(cube) is Cube:
+        import numpy as np
+        from mpl_toolkits.basemap import addcyclic
+        
+        plot_defn = iplt._get_plot_defn(cube, iris.coords.POINT_MODE, ndims = no_of_dims)
+        data = cube.data #ndarray
+        if plot_defn.transpose:
+            data = data.T
+        
+        if no_of_dims == 1:
+            u_coord, = plot_defn.coords
+            if u_coord:
+                x = u_coord.points
+            else:
+                x = np.arange(data.shape[0])
+        elif no_of_dims == 2:
+            # Obtain U and V coordinates
+            v_coord, u_coord = plot_defn.coords
+            if u_coord:
+                u = u_coord.points
+            else:
+                u = np.arange(data.shape[1])
+            if v_coord:
+                v = v_coord.points
+            else:
+                v = np.arange(data.shape[0])
+            
+        if plot_defn.transpose:
+            u = u.T
+            v = v.T
+        
+        if no_of_dims == 2:
+            data, u = addcyclic(data, u)    
+            x, y = np.meshgrid(u, v)
+        
+        if no_of_dims == 1:
+            return data, x
+        else:
+            return data, x, y
 
 def get_netcdf_file_variables(filename):
     '''
@@ -48,3 +95,21 @@ def get_netcdf_file_variables(filename):
     from netCDF4 import Dataset    
     f = Dataset(filename)
     return f.variables
+
+def get_netcdf_file_coordinates(filename):
+    '''
+    Get all of the coordinate variables from a NetCDF file
+    
+    args:
+        filename: The filename of the file to get the variables from
+    
+    returns:
+        A list of coordinate variables
+    '''
+    from netCDF4 import Dataset    
+    f = Dataset(filename)
+    lat = f.variables['latitude']
+    lon = f.variables['longitude']
+    alt = f.variables['altitude']
+    time = f.variables['t']
+    return [lat, lon, alt, time]
