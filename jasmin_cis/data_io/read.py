@@ -1,6 +1,7 @@
 '''
 Module for reading data.
 '''
+from jasmin_cis.data_io.hdf import get_hdf_VD_file_variables
 
 def read_file_variables(filename):
     '''
@@ -21,6 +22,7 @@ def read_file_variables(filename):
         file_variables = get_netcdf_file_variables(filename)
     except RuntimeError:
         file_variables = get_hdf_SD_file_variables(filename)
+        file_variables.update(get_hdf_VD_file_variables(filename))
     
     return file_variables
 
