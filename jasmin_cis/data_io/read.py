@@ -2,7 +2,7 @@
 Module for reading data.
 '''
 
-def read_file_variables(filename):
+def read_all_variables_from_file(filename):
     '''
     Read data from a NetCDF file
     Used for both gridded and ungridded data
@@ -25,7 +25,7 @@ def read_file_variables(filename):
     return file_variables
 
         
-def read_variable(filenames, variable):
+def read_variable_from_files(filenames, variable):
     '''
     Read data from a NetCDF file
     Used for both gridded and ungridded data
@@ -41,14 +41,13 @@ def read_variable(filenames, variable):
     from read_gridded import read_gridded_data_file_variable
     from iris.exceptions import IrisError
     from jasmin_cis.exceptions import CISError
+    
     try:
         data = read_gridded_data_file_variable(filenames, variable)
     except (IrisError, ValueError) as e:
-        # Unable to create Cube, trying Ungridded data
+        # Unable to create Cube, trying Ungridded data instead
         try:
             data = read_ungridded_data(filenames, variable)
-        except CISError as ug_e:
-            # This is not yet implemented so just rethrows the original
-            #  iris error
-            raise ug_e
+        except CISError as e:
+            raise e
     return data

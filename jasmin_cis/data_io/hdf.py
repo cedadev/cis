@@ -172,7 +172,6 @@ def get_hdf_SD_file_variables(filename):
     # List of required variable names.
     return datafile.datasets()
     
-    
 def get_hdf_VD_file_variables(filename):
     '''
     Get all the variables from an HDF VD file
@@ -183,8 +182,7 @@ def get_hdf_VD_file_variables(filename):
     returns:
         An OrderedDict containing the variables from the file
     '''
-    from pyhdf.HDF import *
-    from pyhdf.VS import *
+    from pyhdf.HDF import HDF
     
     # Open file
     datafile = HDF(filename)
@@ -200,7 +198,6 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
         
-
 def read_hdf4_SD_metadata(sds):
     "Retrieves long name and units from an sds instance"
 

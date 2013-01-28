@@ -39,14 +39,14 @@ def plot_cmd(main_arguments):
         main_arguments:    The command line arguments (minus the plot command)        
     '''
     from plot import plot
-    from data_io.read import read_variable 
+    from data_io.read import read_variable_from_files 
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
     try:        
-        data = [read_variable(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
+        data = [read_variable_from_files(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
     except IrisError as e:
         __error_occurred(e)
     except IOError as e:
@@ -75,12 +75,12 @@ def info_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the info command)         
     '''    
-    from data_io.read import read_file_variables
+    from data_io.read import read_all_variables_from_file
 
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
     
-    file_variables = read_file_variables(filename)
+    file_variables = read_all_variables_from_file(filename)
     
     if variables is not None:
         for variable in variables:
@@ -102,7 +102,7 @@ def col_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the col command)         
     '''
-    from data_io.read import read_variable
+    from data_io.read import read_variable_from_files
 
     from data_io.read_gridded import get_netcdf_file_coordinates
     import jasmin_cis.exceptions as ex
@@ -111,7 +111,7 @@ def col_cmd(main_arguments):
     import numpy as np
     
     sample = main_arguments.pop("samplefilename")
-    #sample_data = read_variable(sample, 'rain')
+    #sample_data = read_variable_from_files(sample, 'rain')
     
     #coords = get_netcdf_file_coordinates(sample)
     #for coord in coords:
@@ -121,7 +121,7 @@ def col_cmd(main_arguments):
     for datafile in main_arguments.pop("datafiles"):
         variable = datafile['variable']
         filename = datafile['filename']
-        data_dict = read_variable(filename,[variable]+['Latitude','Longitude'])
+        data_dict = read_variable_from_files(filename,[variable]+['Latitude','Longitude'])
         
 #        print data_dict
 #        for key, val in data_dict.items():
