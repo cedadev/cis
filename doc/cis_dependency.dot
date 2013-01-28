@@ -1,0 +1,30 @@
+digraph cis {
+    cis -> iris;
+    cis -> nose;
+    cis -> netcdf;
+
+    iris -> netcdf;
+    iris -> nose;
+    iris -> numpy;
+    iris -> scipy;
+    iris -> udunits2;
+    iris -> PyKE;
+    iris -> matplotlib;
+    iris -> cartopy;
+    iris -> PythonImagingLibrary;
+    iris -> basemap;
+    iris -> shapely;
+    
+    basemap -> "proj.4";
+    basemap -> geos;
+
+    cartopy -> cython;
+    cartopy -> "proj.4";
+    cartopy -> geos;
+    cartopy -> shapely;
+    cartopy -> pyshp;
+    cartopy -> nose;
+    cartopy -> scipy;    
+
+}
+
