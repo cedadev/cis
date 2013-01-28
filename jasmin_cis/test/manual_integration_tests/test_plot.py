@@ -4,7 +4,7 @@ These tests have to be run manually
 '''
 from jasmin_cis.plot import plot
 from nose.tools import nottest
-from test_files.data import *
+from jasmin_cis.test.test_files.data import *
 import iris
 import os.path
 from jasmin_cis.exceptions import *
@@ -87,13 +87,14 @@ def can_plot_contourf_to_screen():
 
 if __name__ == "__main__":
     can_plot_line_graph_to_screen()
-    can_plot_scatter_graph_to_screen()
+    #can_plot_scatter_graph_to_screen()
     can_plot_heatmap_to_screen()
     can_plot_contour_to_screen()
     can_plot_contourf_to_screen()
     
     can_plot_line_graph_to_file()
-    can_plot_scatter_graph_to_file()
+    #can_plot_scatter_graph_to_file()
     can_plot_heatmap_to_file()
     can_plot_contour_to_file()
     can_plot_contourf_to_file()
+    print "Finished"
