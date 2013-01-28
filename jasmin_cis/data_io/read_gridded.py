@@ -37,12 +37,9 @@ def read_gridded_data_file_variable(filenames, variable):
     
     return sub_cube
 
-def unpack_cube(cube, no_of_dims):
-    '''
-    args:
-        no_of_dims:    1 if line, otherwise 2
-    '''
+def unpack_cube(cube):  
     if type(cube) is Cube:
+        no_of_dims = len(cube.shape)
         import numpy as np
         from mpl_toolkits.basemap import addcyclic
         
@@ -57,6 +54,7 @@ def unpack_cube(cube, no_of_dims):
                 x = u_coord.points
             else:
                 x = np.arange(data.shape[0])
+            y = None
         elif no_of_dims == 2:
             # Obtain U and V coordinates
             v_coord, u_coord = plot_defn.coords
@@ -77,11 +75,9 @@ def unpack_cube(cube, no_of_dims):
             data, u = addcyclic(data, u)    
             x, y = np.meshgrid(u, v)
         
-        if no_of_dims == 1:
-            return data, x
-        else:
-            return data, x, y
-
+        return { "data": data, "x" : x, "y" : y }
+    else:
+        return cube
 def get_netcdf_file_variables(filename):
     '''
     Get all the variables from a NetCDF file

@@ -4,7 +4,6 @@ Also contains dictionaries for the valid plot types and formatting options
 '''
 
 import matplotlib.pyplot as plt
-from cis import MAXIMUM_NUMBER_OF_VARIABLES
 from data_io.read_gridded import unpack_cube
 
 plot_options = { 'title' : plt.title,
@@ -12,29 +11,25 @@ plot_options = { 'title' : plt.title,
               'ylabel' : plt.ylabel,
               'fontsize' : plt.rcParams.update } 
 
-def plot_line(cube, *args, **kwargs):
-    data, x = unpack_cube(cube, 1) 
-    plt.plot(x, data)
+def plot_line(data, *args, **kwargs):
+    plt.plot(data["x"], data["data"], *args, **kwargs )
 
-def plot_heatmap(cube, *args, **kwargs):
+def plot_heatmap(data, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap
-    data, x, y = unpack_cube(cube, 2) 
     basemap = Basemap()    
-    basemap.pcolormesh(x, y, data, latlon = True)
+    basemap.pcolormesh(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()   
     
-def plot_contour(cube, *args, **kwargs):
+def plot_contour(data, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap
-    data, x, y = unpack_cube(cube, 2) 
     basemap = Basemap()    
-    basemap.contour(x, y, data, latlon = True)
+    basemap.contour(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()    
     
-def plot_contourf(cube, *args, **kwargs):
+def plot_contourf(data, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap
-    data, x, y = unpack_cube(cube, 2) 
     basemap = Basemap()    
-    basemap.contourf(x, y, data, latlon = True)
+    basemap.contourf(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()  
 
 class plot_type(object):
@@ -44,7 +39,6 @@ class plot_type(object):
         self.plot_method = plot_method
         
 plot_types = {'line' : plot_type(None, 1, plot_line),
-              #'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot),
                 #'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points), 
                 'heatmap' : plot_type(1, 2, plot_heatmap),
                 'contour' : plot_type(1, 2, plot_contour),
@@ -118,7 +112,7 @@ def set_width_and_height(kwargs):
         
     return kwargs
 
-def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
+def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     '''
     Note: Data must be a list
     This method needs commenting
@@ -128,7 +122,7 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
     
     kwargs = set_width_and_height(kwargs)    
     
-    variable_dim = len(cubes[0].shape)
+    variable_dim = len(data[0].shape)
     
     for key in kwargs.keys():
         if kwargs[key] is None:
@@ -138,10 +132,10 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
     for key in plot_options.keys():
         options[key] = kwargs.pop(key, None)
             
-    num_variables = len(cubes)
+    num_variables = len(data)
     
-    for cube in cubes:
-        if len(cube.shape) != variable_dim:
+    for item in data:
+        if len(item.shape) != variable_dim:
             raise ex.InconsistentDimensionsError("Number of dimensions must be consistent across variables")
         
     if plot_type is None:
@@ -183,15 +177,15 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
     
     datafiles = kwargs.pop("datafiles", None)    
         
-    for i, cube in enumerate(cubes):
+    for i, item in enumerate(data):
         # Temporarily add args to kwargs
         if plot_type == "line" and datafiles is not None:
             if datafiles[i]["linestyle"]:
                 kwargs["linestyle"] = datafiles[i]["linestyle"]
             if datafiles[i]["color"]:
                 kwargs["color"] = datafiles[i]["color"]
-                
-        plot_types[plot_type].plot_method(cube, *args, **kwargs)
+        item_to_plot = unpack_cube(item)        
+        plot_types[plot_type].plot_method(item_to_plot, *args, **kwargs)
         
         # Remove temp args
         if plot_type == "line" and datafiles is not None:
@@ -204,10 +198,9 @@ def plot(cubes, plot_type = None, out_filename = None, *args, **kwargs):
         plt.ylim(**valrange)
         
     if options is not None:
-        format_plot(cubes, options, plot_type, datafiles)
+        format_plot(data, options, plot_type, datafiles)
  
     if out_filename is None:
         plt.show()  
     else:
-        # Will overwrite if file already exists
-        plt.savefig(out_filename)        
+        plt.savefig(out_filename) # Will overwrite if file already exists        
