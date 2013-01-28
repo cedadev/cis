@@ -90,16 +90,20 @@ def col_cmd(main_arguments):
         main_arguments:    The command line arguments (minus the col command)         
     '''
     from data_io.read import read_variable
+    from data_io.read_gridded import get_netcdf_file_coordinates
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     from col import col, HyperPoint
     import numpy as np
     
     sample = main_arguments.pop("samplefilename")
-    sample_data = read_variable(sample, 'rain')
+    #sample_data = read_variable(sample, 'rain')
     
-    print sample_data
+    #coords = get_netcdf_file_coordinates(sample)
+    #for coord in coords:
+    #    print coord[:]
     
+   
     for datafile in main_arguments.pop("datafiles"):
         variable = datafile['variable']
         filename = datafile['filename']
@@ -119,10 +123,10 @@ def col_cmd(main_arguments):
             lon = data_dict['Longitude'].data[x,y]
             points.append(HyperPoint(lat,lon, val=value))
             
-        for point in points:
-            print point.lat, point.lon, point.val
+        #for point in points:
+        #    print point.lat, point.lon, point.val
     
-        col_data = col(sample_data, points, datafile['method'])
+        #col_data = col(sample_data, points, datafile['method'])
 
     # output col_data > ?
         
@@ -144,7 +148,7 @@ def setup_logging(log_file, log_level):
     #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
    
-if __name__ ==  '__main__':
+def main():
     '''
     The main method for the program.
     Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
@@ -164,3 +168,6 @@ if __name__ ==  '__main__':
     logging.info(arguments)
     
     commands[command](arguments) 
+   
+if __name__ ==  '__main__':
+    main()
