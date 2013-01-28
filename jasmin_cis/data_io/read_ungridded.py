@@ -28,9 +28,9 @@ def read_ungridded_data(filenames, variables):
         else:
             return UngriddedData.load_ungridded_data([filenames], variables)             
 
-def read_satelite_data(folder,day,year,variable,orbits=None): 
+def read_satelitte_data(folder,day,year,variable,orbits=None): 
     '''
-    Reads in data from General satelie Level2 data files. 
+    Reads in data from General satellite Level2 data files. 
     Also reads in some geolocation data (lat,lon,TAI time) into the output dictionary. 
     Setting outdata allows the data to be read into an already exisiting dictionary.
     '''   
