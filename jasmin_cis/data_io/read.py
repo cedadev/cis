@@ -35,7 +35,7 @@ def read_variable(filenames, variable):
         variable:    The variable to read from the files
         
     returns:
-        A cube containing the specified data with unnecessary dimensions removed    
+        The specified data with unnecessary dimensions removed    
     '''
     from read_ungridded import read_ungridded_data
     from read_gridded import read_gridded_data_file_variable
