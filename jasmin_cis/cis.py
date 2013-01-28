@@ -1,20 +1,34 @@
 #!/bin/env python2.7
 '''
-Main driver script for the Climate Intercomparison Suite
+Command line interface for the Climate Intercomparison Suite (CIS)
 '''
 import sys
 
-MAXIMUM_NUMBER_OF_VARIABLES = 10
-
-def error_occurred(e):
+def __setup_logging(log_file, log_level):
     '''
-    Method used to print error messages when errors occur
+    Set up the logging used throughout cis
+    
+    args:
+        log_file:    The filename of the file to store the logs
+        log_level:   The level at which to log 
+    '''
+    import logging
+    logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
+    # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
+    #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
+    logging.captureWarnings(True)
+
+
+def __error_occurred(e):
+    '''
+    Wrapper method used to print error messages.
     
     args:
         An error object or any string
     '''
     sys.stderr.write(str(e) + "\n")
     exit(1)
+
 
 def plot_cmd(main_arguments):
     '''
@@ -31,17 +45,14 @@ def plot_cmd(main_arguments):
     
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
-    if len(main_arguments["datafiles"]) > MAXIMUM_NUMBER_OF_VARIABLES:
-        error_occurred("Number of variables must be less than or equal to " + str(MAXIMUM_NUMBER_OF_VARIABLES))
-    
     try:        
         data = [read_variable(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
     except IrisError as e:
-        error_occurred(e)
+        __error_occurred(e)
     except IOError as e:
-        error_occurred("There was an error reading one of the files: \n" + e)
+        __error_occurred("There was an error reading one of the files: \n" + e)
     except ex.InvalidVariableError as e:
-        error_occurred(e)
+        __error_occurred(e)
     
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
@@ -49,9 +60,10 @@ def plot_cmd(main_arguments):
     try:
         plot(data, plot_type, output, **main_arguments)
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError) as e:
-        error_occurred(e)
+        __error_occurred(e)
     except ValueError as e:
-        error_occurred(e)
+        __error_occurred(e)
+
 
 def info_cmd(main_arguments):
     '''
@@ -82,16 +94,15 @@ def info_cmd(main_arguments):
         for item in file_variables:
             print item
 
+
 def col_cmd(main_arguments):
     '''
-    Main routine for handling calls to the 'col' command. 
+    Main routine for handling calls to the co-locate ('col') command. 
         
     args:
         main_arguments:    The command line arguments (minus the col command)         
     '''
     from data_io.read import read_variable
-    import jasmin_cis.exceptions as ex
-    from iris.exceptions import IrisError
     from col import col, HyperPoint
     import numpy as np
     
@@ -124,27 +135,14 @@ def col_cmd(main_arguments):
     
         col_data = col(sample_data, points, datafile['method'])
 
-    # output col_data > ?
         
+
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd,
-             'col'  : col_cmd}
+             'col'  : col_cmd} 
 
-def setup_logging(log_file, log_level):
-    '''
-    Set up the logging used throughout cis
-    
-    args:
-        log_file:    The filename of the file to store the logs
-        log_level:   The level at which to log 
-    '''
-    import logging
-    logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
-    # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
-    #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
-    logging.captureWarnings(True)
-   
-if __name__ ==  '__main__':
+ 
+def main():
     '''
     The main method for the program.
     Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
@@ -153,7 +151,7 @@ if __name__ ==  '__main__':
     import logging
     from datetime import datetime
     
-    setup_logging("cis.log", logging.INFO)
+    __setup_logging("cis.log", logging.INFO)
     
     arguments = parse_args()
     
@@ -163,4 +161,9 @@ if __name__ ==  '__main__':
     logging.info(datetime.now().strftime("%Y-%m-%d %H:%M")+ ": CIS "+ command + " got the following arguments: ")
     logging.info(arguments)
     
-    commands[command](arguments) 
+    commands[command](arguments)        
+   
+   
+   
+if __name__ ==  '__main__':
+    main()
