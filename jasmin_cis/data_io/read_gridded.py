@@ -5,6 +5,7 @@ stored in cubes
 import iris.plot as iplt
 import iris
 from iris.cube import Cube
+from collections import namedtuple
 
 def read_gridded_data_file_variable(filenames, variable):
     '''
@@ -92,6 +93,9 @@ def get_netcdf_file_variables(filename):
     f = Dataset(filename)
     return f.variables
 
+# Define a named tuple for storing vectors of coordinates from gridded data
+GriddedCoordsT = namedtuple('GriddedCoords',['lat','lon','alt','t','val'])
+
 def get_netcdf_file_coordinates(filename):
     '''
     Get all of the coordinate variables from a NetCDF file
@@ -100,12 +104,25 @@ def get_netcdf_file_coordinates(filename):
         filename: The filename of the file to get the variables from
     
     returns:
-        A list of coordinate variables
+        A GriddedCoordsT named tuple.
     '''
     from netCDF4 import Dataset    
     f = Dataset(filename)
-    lat = f.variables['latitude']
-    lon = f.variables['longitude']
-    alt = f.variables['altitude']
-    time = f.variables['t']
-    return [lat, lon, alt, time]
+    try:
+        lat = f.variables['latitude']
+    except KeyError:
+        lat=None
+    try:
+        lon = f.variables['longitude']
+    except KeyError:
+        lon=None
+    try:
+        alt = f.variables['altitude']
+    except KeyError:
+        alt=None
+    try:
+        time = f.variables['t']
+    except KeyError:
+        time=None
+        
+    return GriddedCoordsT(lat,lon,alt,time)
