@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages, Command
 from pkg_resources import require, DistributionNotFound, VersionConflict
-import sys
-import os
+from distutils.spawn import spawn, find_executable
+import sys, os, os.path
 
 # Extension classes and functions to add custom command
 #======================================================
@@ -23,7 +23,7 @@ class check_dep(Command):
     def run(self):
 
         deps = ["matplotlib>=1.2.0","pyke","cartopy","Shapely","netcdf4",
-                "numpy","scipy","nose","iris","epydoc"]
+                "numpy","scipy","nose","iris"]
         for dep in deps:
             try:
                 require(dep)
@@ -33,19 +33,34 @@ class check_dep(Command):
 
 class gen_doc(Command):
     """
-    Command to generate the API reference with epydoc
+    Command to generate the API reference using epydoc
     """
-    description = "Generates the API reference with epydoc"
+    description = "Generates the API reference using epydoc"
     user_options = []
 
     def initialize_options(self):
-        pass
+        require("epydoc")
 
     def finalize_options(self):
         pass
 
     def run(self):
-        raise NotImplementedError, "not implemented yet"       
+        #raise NotImplementedError, "not implemented yet"  
+
+        if not find_executable('epydoc'):
+            print "Could not find epydoc on system"
+            return  
+
+        # create output directory if does not exists
+        output_dir = "doc/api"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        from subprocess import call
+        call(["epydoc", "--html", "--no-sourcecode", "-o", output_dir, "*"])
+
+        import webbrowser
+        webbrowser.open(os.path.join(output_dir,"index.html"))
 
 
 # Metadata description

@@ -2,19 +2,30 @@
 Module for reading data.
 '''
 
-def get_netcdf_file_variables(filename):
+def read_file_variables(filename):
     '''
-    Get all the variables from a NetCDF file
+    Read data from a NetCDF file
+    Used for both gridded and ungridded data
     
     args:
-        filename: The filename of the file to get the variables from
-    
+        filenames:   The filenames of the files to read
+        variable:    The variable to read from the files
+        
     returns:
-        An OrderedDict containing the variables from the file
+        A cube containing the specified data with unnecessary dimensions removed    
     '''
-    from netCDF4 import Dataset    
-    f = Dataset(filename)
-    return f.variables
+    from hdf import get_hdf_SD_file_variables
+    from read_gridded import get_netcdf_file_variables
+    from iris.exceptions import IrisError
+    from jasmin_cis.exceptions import CISError
+    
+    try:
+        file_variables = get_netcdf_file_variables(filename)
+    except RuntimeError:
+        file_variables = get_hdf_SD_file_variables(filename)
+    
+    return file_variables
+
         
 def read_variable(filenames, variable):
     '''

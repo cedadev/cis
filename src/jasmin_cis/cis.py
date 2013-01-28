@@ -63,16 +63,12 @@ def info_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the info command)         
     '''    
-    from data_io.read import get_netcdf_file_variables
-    from data_io.hdf import get_hdf_SD_file_variables
+    from data_io.read import read_file_variables
 
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
     
-    try:
-        file_variables = get_netcdf_file_variables(filename)
-    except RuntimeError:
-        file_variables = get_hdf_SD_file_variables(filename)
+    file_variables = read_file_variables(filename)
     
     if variables is not None:
         for variable in variables:
