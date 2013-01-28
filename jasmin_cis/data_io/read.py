@@ -54,3 +54,30 @@ def read_variable(filenames, variable):
             #  iris error
             raise ug_e
     return data
+
+def read_file_coordinates(filename):
+    '''
+    Read coordinates from a file
+    
+    args:
+        filename:   The filename of the files to read
+        
+    returns:
+        A list of HyperPoints  
+    '''
+    from read_ungridded import read_ungridded_data_coordinates
+    from read_gridded import get_netcdf_file_coordinates
+    from iris.exceptions import IrisError
+    from jasmin_cis.exceptions import CISError
+    
+    try:
+        coords = get_netcdf_file_coordinates(filename)
+    except:
+        # Unable to read netcdf file, trying Ungridded data
+        try:
+            coords = read_ungridded_data_coordinates(filename)
+        except CISError as ug_e:
+            raise ug_e
+       
+    return coords
+
