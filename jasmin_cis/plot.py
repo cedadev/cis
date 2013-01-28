@@ -39,7 +39,7 @@ class plot_type(object):
         self.plot_method = plot_method
         
 plot_types = {'line' : plot_type(None, 1, plot_line),
-                #'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points), 
+                #'scatter' : plot_type(None, 2, qplt.points), 
                 'heatmap' : plot_type(1, 2, plot_heatmap),
                 'contour' : plot_type(1, 2, plot_contour),
                 'contourf' : plot_type(1, 2, plot_contourf)}
