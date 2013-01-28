@@ -6,7 +6,7 @@ Also contains dictionaries for the valid plot types and formatting options
 import iris.quickplot as qplt
 import iris.plot as iplt
 import matplotlib.pyplot as plt
-import iris.coords as crds
+import iris.coords
 from cis import MAXIMUM_NUMBER_OF_VARIABLES
 
 plot_options = { 'title' : plt.title,
@@ -14,21 +14,14 @@ plot_options = { 'title' : plt.title,
               'ylabel' : plt.ylabel,
               'fontsize' : plt.rcParams.update } 
 
-class plot_type(object):
-    def __init__(self, maximum_number_of_expected_no_of_variables, variable_dimensions, plot_method, is_map):
-        self.maximum_number_of_expected_no_of_variables = maximum_number_of_expected_no_of_variables
-        self.variable_dimensions = variable_dimensions
-        self.plot_method = plot_method
-        self.is_map = is_map
-        
-
-def my_contour(cube, *args, **kwargs):
-    from mpl_toolkits.basemap import Basemap
+def unpack_cube(cube):
     import numpy as np
+    from mpl_toolkits.basemap import addcyclic
     
-    data = cube.data
-    mode = crds.POINT_MODE
-    plot_defn = iplt._get_plot_defn(cube, mode, ndims=2)
+    plot_defn = iplt._get_plot_defn(cube, iris.coords.POINT_MODE, ndims = 2)
+    data = cube.data #ndarray
+    if plot_defn.transpose:
+        data = data.T
     
     # Obtain U and V coordinates
     v_coord, u_coord = plot_defn.coords
@@ -40,25 +33,52 @@ def my_contour(cube, *args, **kwargs):
         v = v_coord.points
     else:
         v = np.arange(data.shape[0])
+    
+    if plot_defn.transpose:
+        u = u.T
+        v = v.T
+    
+    data, u = addcyclic(data, u)
+    
+    x, y = np.meshgrid(u, v)
+    
+    return data, x, y
 
-    m = Basemap()
-    #m = Basemap(projection='robin',lon_0=0.5*(v[0]+v[-1]))
+def plot_heatmap(cube, *args, **kwargs):
+    from mpl_toolkits.basemap import Basemap
+    data, x, y = unpack_cube(cube) 
+    basemap = Basemap()    
+    basemap.pcolormesh(x, y, data, latlon = True)
+    basemap.drawcoastlines()   
+    
+def plot_contour(cube, *args, **kwargs):
+    from mpl_toolkits.basemap import Basemap
+    data, x, y = unpack_cube(cube) 
+    basemap = Basemap()    
+    basemap.contour(x, y, data, latlon = True)
+    basemap.drawcoastlines()    
+    
+def plot_contourf(cube, *args, **kwargs):
+    from mpl_toolkits.basemap import Basemap
+    data, x, y = unpack_cube(cube) 
+    basemap = Basemap()    
+    basemap.contourf(x, y, data, latlon = True)
+    basemap.drawcoastlines()  
 
-    x, y = m(*np.meshgrid(u,v))
-
-    #print x, np.ptp(x)
-    #print y, np.ptp(y)
-    #print data
-
-    cs = m.pcolormesh(x,y,data,latlon=True)
-    m.drawcoastlines()
-    plt.show()
-
-plot_types = {'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot, False),
-                'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points, False), 
-                'heatmap' : plot_type(1, 2, qplt.pcolormesh, True),
-                'contour' : plot_type(1, 2, qplt.contour, True),
-                'contourf' : plot_type(1, 2, qplt.contourf, True)}
+class plot_type(object):
+    def __init__(self, maximum_number_of_expected_no_of_variables, variable_dimensions, plot_method):
+        self.maximum_number_of_expected_no_of_variables = maximum_number_of_expected_no_of_variables
+        self.variable_dimensions = variable_dimensions
+        self.plot_method = plot_method
+        
+plot_types = {'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot),
+                'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points), 
+                #'heatmap' : plot_type(1, 2, qplt.pcolormesh),
+                'heatmap' : plot_type(1, 2, plot_heatmap),
+                #'contour' : plot_type(1, 2, qplt.contour),
+                'contour' : plot_type(1, 2, plot_contour),
+                #'contourf' : plot_type(1, 2, qplt.contourf)
+                'contourf' : plot_type(1, 2, plot_contourf)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
@@ -74,16 +94,20 @@ def format_plot(data, options, plot_type, datafiles):
         options.pop("fontsize")      
     
     # If any of the options have not been specified, then use the defaults
-    if options["xlabel"] is None:
-        for dim in xrange(len(data[0].shape)):
-            for coord in data[0].coords(contains_dimension=dim, dim_coords=True):
-                xlabel = coord.name()
-        options["xlabel"] = xlabel.capitalize()
-    if options["ylabel"] is None:
-        if len(data) == 1:
-            options["ylabel"] = data[0].long_name.title()
-        else:
-            options["ylabel"] = str(data[0].units)
+    if plot_type == "line":
+        if options["xlabel"] is None:
+            for dim in xrange(len(data[0].shape)):
+                for coord in data[0].coords(contains_dimension=dim, dim_coords=True):
+                    xlabel = coord.name()
+            options["xlabel"] = xlabel.capitalize()
+        if options["ylabel"] is None:
+            if len(data) == 1:
+                options["ylabel"] = data[0].long_name.title()
+            else:
+                options["ylabel"] = str(data[0].units)
+    else:
+        options["xlabel"] = ""
+        options["ylabel"] = ""
     
     legend_titles = []
     for i, item in enumerate(data):
@@ -101,13 +125,6 @@ def format_plot(data, options, plot_type, datafiles):
     
     for option, value in options.iteritems():        
         plot_options[option](value)       
-    
-    if plot_types[plot_type].is_map:
-        # Try and add the coast lines if the map supports it
-        try:
-            plt.gca().coastlines()
-        except AttributeError:
-            pass
     
     if plot_type == "line":
         plt.legend(legend_titles, loc="best")
