@@ -16,8 +16,6 @@ def read_file_variables(filename):
     '''
     from hdf import get_hdf_SD_file_variables
     from read_gridded import get_netcdf_file_variables
-    from iris.exceptions import IrisError
-    from jasmin_cis.exceptions import CISError
     
     try:
         file_variables = get_netcdf_file_variables(filename)
