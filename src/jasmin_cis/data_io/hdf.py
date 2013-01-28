@@ -183,18 +183,22 @@ def get_hdf_VD_file_variables(filename):
     returns:
         An OrderedDict containing the variables from the file
     '''
-    from pyhdf import HDF
-
+    from pyhdf.HDF import *
+    from pyhdf.VS import *
+    
     # Open file
     datafile = HDF(filename)
     vs =  datafile.vstart()
     # List of required variable names
     names = vs.vdatainfo()
-    names = zip(*names)
-    names = names[0]
+    # This returns a list of tuples, so convert into a dicitonary for easy lookup
+    variables = {}
+    for var in names:
+        variables[var[0]] = var[1:]
+    # Close file
     vs.end()
     datafile.close()
-    return names
+    return variables
         
 
 def read_hdf4_SD_metadata(sds):
