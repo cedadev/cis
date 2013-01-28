@@ -95,6 +95,7 @@ def get_netcdf_file_variables(filename):
     return f.variables
 
 # Define a named tuple for storing vectors of coordinates from gridded data
+
 GriddedCoordsT = namedtuple('GriddedCoords',['lat','lon','alt','t','val'])
 
 def get_netcdf_file_coordinates(filename):

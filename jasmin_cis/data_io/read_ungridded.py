@@ -51,6 +51,7 @@ def read_satelite_data(folder,day,year,variable,orbits=None):
 # Define the names of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
 #  by just dropping the mapping into the instance namespace dynamically...
+
 Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 
 # This defines the actual mappings for each of the ungridded data types
