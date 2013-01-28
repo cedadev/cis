@@ -43,12 +43,6 @@ def unpack_cube(cube):
     x, y = np.meshgrid(u, v)
     
     return data, x, y
-    
-def plot_scatter(cube, *args, **kwargs):
-    from mpl_toolkits.basemap import Basemap
-    data, x, y = unpack_cube(cube) 
-    basemap = Basemap()    
-    basemap.points(x, y, data, latlon = True)
 
 def plot_heatmap(cube, *args, **kwargs):
     from mpl_toolkits.basemap import Basemap
@@ -78,8 +72,7 @@ class plot_type(object):
         self.plot_method = plot_method
         
 plot_types = {'line' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 1, qplt.plot),
-                #'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points), 
-                'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, plot_scatter),
+                'scatter' : plot_type(MAXIMUM_NUMBER_OF_VARIABLES, 2, qplt.points), 
                 #'heatmap' : plot_type(1, 2, qplt.pcolormesh),
                 'heatmap' : plot_type(1, 2, plot_heatmap),
                 #'contour' : plot_type(1, 2, qplt.contour),
