@@ -132,6 +132,8 @@ def col_cmd(main_arguments):
             __error_occurred("Invalid co-location method: "+method)
         
         col.colocate()
+        
+        print col.points
 
 
 commands = { 'plot' : plot_cmd,

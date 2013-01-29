@@ -1,32 +1,10 @@
 '''
  Module to test the colocation routines
 '''
-from jasmin_cis.col import Colocator
-from nose.tools import istest, raises, nottest
-from test_files.data import *
-import iris
-import os.path
+from jasmin_cis.col import Colocator, HyperPoint
+from nose.tools import istest, raises, eq_
+from test_util import mock
 from jasmin_cis.exceptions import *
-
-#def make_cube(filename, variable = None):
-#    if variable is None:
-#        variable = valid_variable_in_valid_filename
-#    variable = iris.AttributeConstraint(name = variable)
-#    cube = iris.load_cube(filename, variable) 
-#    cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
-#    return cube
-
-def make_1d_ungridded_data():
-    pass
-
-def make_2d_ungridded_data():
-    pass
-
-def make_1d_cube():
-    pass
-
-def make_2d_cube():
-    pass
 
 def is_colocated(data1, data2):
     '''
@@ -41,11 +19,15 @@ def is_colocated(data1, data2):
                 return colocated
     return colocated
 
-#Duncan to fix
-@nottest
+@istest
+def can_get_valid_coord_tuple():
+    from jasmin_cis.col import get_coord_tuple
+    eq_(get_coord_tuple(HyperPoint(10)), [('latitude',10)])
+
+@istest
 def can_col_gridded_to_ungridded_using_nn_in_1d():
-    cube = make_1d_cube()
-    ungridded = make_1d_ungridded_data()
-    col = Colocator(cube, ungridded,'nn')
+    cube = mock.make_dummy_1d_cube()
+    sample_points = mock.make_dummy_1d_points_list(20)
+    col = Colocator(sample_points, cube,'nn')
     col.colocate()
-    assert(is_colocated(col.data, cube))
+    assert(is_colocated(col.points, sample_points))
