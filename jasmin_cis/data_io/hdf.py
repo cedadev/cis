@@ -1,5 +1,5 @@
 """
-Module containing hdf file functions
+Module containing hdf file utility functions
 """
 import numpy as np
 

@@ -1,27 +1,43 @@
 '''
-Class for ungridded data and utilities for handling it
+Module for reading ungridded data
+Assumes ungridde data are in HDF4 format
 '''
 from pyhdf.error import HDF4Error
 import hdf
 import numpy as np
-from glob import glob
 from collections import namedtuple
-from hdf import get_hdf4_SD_data, get_hdf4_VD_data, read_hdf4_SD_metadata, get_hdf_VD_file_variables
+from hdf import get_hdf4_SD_data, get_hdf4_VD_data, read_hdf4_SD_metadata,get_hdf_SD_file_variables,get_hdf_VD_file_variables
 
-def read_ungridded_data_coordinates(filename):
+def get_file_variables(filename):
     '''
-        Read in coordinate variables and pass back arrays for lat, lon and vals
+    Get all variables from a file containing ungridded data.
+    Concatenate variable from both VD and SD data
+    
+    args:
+        filename: The filename of the file to get the variables from
+    
+    '''
+    vars = get_hdf_SD_file_variables(filename)
+    vars.update(get_hdf_VD_file_variables(filename))    
+    
+    return vars
+
+
+def get_file_coordinates(filename):
+    '''
+        Read in coordinate variables and pass back arrays for lat, lon 
     '''
     pass
 
-def get_netcdf_file_coordinates_points(filename):
+
+def get_file_coordinates_points(filename):
     '''
         Convert coordinate arrays into a list of points for colocation sampling
         
     '''
     from jasmin_cis.col import HyperPoint
     
-    lat, lon, vals = read_ungridded_data_coordinates(filename)
+    lat, lon, vals = get_file_coordinates(filename)
     
     # Pack the data into a list of x,y, val points to be passed to col
     points = []    
@@ -33,7 +49,8 @@ def get_netcdf_file_coordinates_points(filename):
         
     return points
 
-def read_ungridded_data(filenames, variables):
+
+def read(filenames, variables):
     '''
     Read ungridded data from a file. Just a wrapper that calls the appropriate class method based on
         whether in the inputs are lists or not
@@ -53,27 +70,8 @@ def read_ungridded_data(filenames, variables):
         else:
             return UngriddedData.load_ungridded_data([filenames], variables)             
 
-def read_satelitte_data(folder,day,year,variable,orbits=None): 
-    '''
-    Reads in data from General satellite Level2 data files. 
-    Also reads in some geolocation data (lat,lon,TAI time) into the output dictionary. 
-    Setting outdata allows the data to be read into an already exisiting dictionary.
-    '''   
-    day = str(day).rjust(3,'0')
-    
-    if orbits is None:
-        filenames = glob(folder + str(year) + '/' + str(day) + '/*')
-        filenames = np.sort(filenames)
-    else:
-        filenames = []
-        for orbit in orbits:
-            filenames.append(glob(folder + str(year) + '/' + str(day) + '/*_' + str(orbit) + '_*.hdf')[0])
-    names = variable+['Latitude','Longitude','TAI_start','Profile_time']
-    
-    return read_ungridded_data(filenames, names)
 
-
-# Define the names of the methods that must be mapped to, these are the methods UngriddedData objects will call
+# Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
 #  by just dropping the mapping into the instance namespace dynamically...
 
