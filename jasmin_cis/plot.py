@@ -32,17 +32,17 @@ def plot_contourf(data, *args, **kwargs):
     basemap.contourf(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()  
 
-class plot_type(object):
+class PlotType(object):
     def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
         self.maximum_no_of_expected_variables = maximum_no_of_expected_variables
         self.variable_dimensions = variable_dimensions
         self.plot_method = plot_method
         
-plot_types = {'line' : plot_type(None, 1, plot_line),
+plot_types = {'line' : PlotType(None, 1, plot_line),
                 #'scatter' : plot_type(None, 2, qplt.points), 
-                'heatmap' : plot_type(1, 2, plot_heatmap),
-                'contour' : plot_type(1, 2, plot_contour),
-                'contourf' : plot_type(1, 2, plot_contourf)}
+                'heatmap' : PlotType(1, 2, plot_heatmap),
+                'contour' : PlotType(1, 2, plot_contour),
+                'contourf' : PlotType(1, 2, plot_contourf)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
@@ -168,7 +168,7 @@ def __check_number_of_variables_does_not_exceed_maximum(plot_type, num_variables
         if num_variables > plot_types[plot_type].maximum_no_of_expected_variables:
             raise InvalidPlotTypeError("The plot type is not valid for this number of variables") # else: There are an unlimited number of variables for this plot type
 
-def __prepare_val_range(**kwargs):
+def __prepare_val_range(plot_type, **kwargs):
     valrange = kwargs.pop("valrange", None)
     
     if plot_type != "line" and valrange is not None:
@@ -182,7 +182,7 @@ def __prepare_val_range(**kwargs):
         except KeyError:
             pass
         
-    return valrange
+    return valrange, kwargs
 
 def __output_to_file_or_screen(out_filename):
     if out_filename is None:
@@ -206,7 +206,6 @@ def __apply_line_graph_value_limits(plot_type, valrange):
     if plot_type == "line" and valrange is not None:
         plt.ylim(**valrange)
 
-
 def __validate_data(data, plot_type, kwargs, variable_dim):
     __check_all_data_items_are_of_same_shape(data, variable_dim)
     __check_plot_type_is_valid_for_given_variable(plot_type, variable_dim)
@@ -229,11 +228,11 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     __validate_data(data, plot_type, kwargs, variable_dim)
     
     plot_format_options = __create_plot_format_options(kwargs)
-    valrange = __prepare_val_range(**kwargs)  
+    valrange, kwargs = __prepare_val_range(plot_type, **kwargs)  
     kwargs = __set_width_and_height(kwargs)  
        
     datafiles = __do_plot(data, plot_type, args, kwargs)  
-    __apply_line_graph_value_limits(plot_type, valrange) # Is this necessary?
+    __apply_line_graph_value_limits(plot_type, valrange)
         
     __format_plot(data, plot_format_options, plot_type, datafiles) 
     
