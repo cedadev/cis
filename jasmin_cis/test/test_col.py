@@ -2,7 +2,7 @@
  Module to test the colocation routines
 '''
 from jasmin_cis.col import Colocator, HyperPoint
-from nose.tools import istest, raises
+from nose.tools import istest, raises, eq_
 from test_util import mock
 from jasmin_cis.exceptions import *
 
@@ -18,6 +18,11 @@ def is_colocated(data1, data2):
             if not colocated:
                 return colocated
     return colocated
+
+@istest
+def can_get_valid_coord_tuple():
+    from jasmin_cis.col import get_coord_tuple
+    eq_(get_coord_tuple(HyperPoint(10)), [('latitude',10)])
 
 @istest
 def can_col_gridded_to_ungridded_using_nn_in_1d():
