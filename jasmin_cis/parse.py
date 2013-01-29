@@ -36,6 +36,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--height", metavar = "Plot height", nargs = "?", help = "The height of the plot in inches")
     parser.add_argument("--width", metavar = "Plot width", nargs = "?", help = "The width of the plot in inches")
     parser.add_argument("--valrange", metavar = "Value range", nargs = "?", help = "The range of values to plot")
+    parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -162,6 +163,12 @@ def check_color(color, parser):
         if (color not in cnames) and color != "grey":
             parser.error("'" + color + "' is not a valid colour")   
 
+def check_colour_bar_orientation(orientation, parser):
+    orientation = orientation.lower()
+    if orientation != "horizontal" and orientation != "vertical":
+        parser.error("The legend orientation must either be horizontal or vertical")
+    return orientation
+
 def check_val_range(valrange, parser):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
@@ -190,6 +197,7 @@ def validate_plot_args(arguments, parser):
     arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
     check_plot_type(arguments.type, arguments.datafiles, parser) 
     arguments.valrange = check_val_range(arguments.valrange, parser)
+    arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     # Try and parse numbers
     arguments.linewidth = parse_float(arguments.linewidth, "line width", parser)   
     arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)

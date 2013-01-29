@@ -78,7 +78,7 @@ plot_types = {'line' : PlotType(None, 1, plot_line),
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
-def __format_plot(data, options, plot_type, datafiles): 
+def __format_plot(data, options, plot_type, datafiles, colour_bar_orientation): 
     '''
     Sets the fontsize, xlabel, ylabel, title, legend.
     Tries to assign default value if value not specified
@@ -125,7 +125,7 @@ def __format_plot(data, options, plot_type, datafiles):
         plt.legend(legend_titles, loc="best")
     
     if plot_type != "line" and plot_type != "scatteroverlay":
-        plt.colorbar(orientation = "horizontal")
+        plt.colorbar(orientation = colour_bar_orientation)
 
 def __set_width_and_height(kwargs):
     '''
@@ -267,10 +267,10 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     plot_format_options = __create_plot_format_options(kwargs)
     valrange, kwargs = __prepare_val_range(plot_type, **kwargs)  
     kwargs = __set_width_and_height(kwargs)  
-       
+    colour_bar_orientation = kwargs.pop("cbarorient", "horizontal")  
     datafiles = __do_plot(data, plot_type, args, kwargs)  
     __apply_line_graph_value_limits(plot_type, valrange)
         
-    __format_plot(data, plot_format_options, plot_type, datafiles) 
+    __format_plot(data, plot_format_options, plot_type, datafiles, colour_bar_orientation) 
     
     __output_to_file_or_screen(out_filename)        
