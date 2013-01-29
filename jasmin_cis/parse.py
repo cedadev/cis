@@ -203,6 +203,14 @@ def validate_info_args(arguments, parser):
     check_file_exists(arguments.filename, parser)
     return arguments
 
+def check_valid_col_method(method_name, parser):
+    '''
+        Check that if a co-location method is specified that it is a valid option
+    '''
+    from col import Colocator
+    if method_name and method_name not in Colocator.gridded_colocation_methods:
+        parser.error("'" + method_name + "' is not a valid co-location method")
+
 def validate_col_args(arguments, parser):
     '''
     Checks that the filenames are valid and that variables and methods have been specified.
@@ -210,9 +218,11 @@ def validate_col_args(arguments, parser):
     '''
     check_file_exists(arguments.samplefilename, parser)
     
+    check_valid_col_method(arguments.method, parser)
+    
     from collections import namedtuple
     DatafileOptions = namedtuple('ColocateOptions',['filename', "variable", "method"])
-    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing)    
+    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_valid_col_method)    
     
     arguments.datafiles =  parse_colonic_arguments(arguments.datafiles, parser, datafile_options)
     for datafile in arguments.datafiles:
