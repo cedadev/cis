@@ -34,7 +34,8 @@ def plot_contourf(data, *args, **kwargs):
 
 def plot_scatter(data, *args, **kwargs):
     from math import pow
-    plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("pointsize", 20), 2), c=data["data"])
+    sc = plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("pointsize", 20), 2), c=data["data"])
+    plt.colorbar(sc, orientation = "horizontal")
 
 class PlotType(object):
     def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
