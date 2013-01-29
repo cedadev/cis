@@ -32,6 +32,10 @@ def plot_contourf(data, *args, **kwargs):
     basemap.contourf(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()  
 
+def plot_scatter(data, *args, **kwargs):
+    from math import pow
+    plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("pointsize", 20), 2), c=data["data"])
+
 class PlotType(object):
     def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
         self.maximum_no_of_expected_variables = maximum_no_of_expected_variables
@@ -39,7 +43,7 @@ class PlotType(object):
         self.plot_method = plot_method
         
 plot_types = {'line' : PlotType(None, 1, plot_line),
-                #'scatter' : plot_type(None, 2, qplt.points), 
+                'scatter' : PlotType(None, 2, plot_scatter), 
                 'heatmap' : PlotType(1, 2, plot_heatmap),
                 'contour' : PlotType(1, 2, plot_contour),
                 'contourf' : PlotType(1, 2, plot_contourf)}
@@ -214,13 +218,17 @@ def __validate_data(data, plot_type, kwargs, variable_dim):
 
 def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     '''
-    Note: Data must be a list
-    This method needs commenting
+    The main plotting method
+    
+    args:
+        data:         A list of data objects (cubes or ungridded data objects)
+        plot_type:    The type of the plot to be plotted. A default will be chosen if omitted
+        out_filename: The filename of the file to save the plot to
     '''
              
     __remove_unassigned_arguments(kwargs)   
        
-    variable_dim = len(data[0].shape) # Comment
+    variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
     
     if plot_type is None:
         plot_type = __set_default_plot_type(variable_dim)
