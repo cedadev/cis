@@ -183,13 +183,14 @@ def get_hdf_VD_file_variables(filename):
         An OrderedDict containing the variables from the file
     '''
     from pyhdf.HDF import HDF
+    from pyhdf.VS import VS  
     
     # Open file
     datafile = HDF(filename)
     vs =  datafile.vstart()
     # List of required variable names
     names = vs.vdatainfo()
-    # This returns a list of tuples, so convert into a dicitonary for easy lookup
+    # This returns a list of tuples, so convert into a dictonary for easy lookup
     variables = {}
     for var in names:
         variables[var[0]] = var[1:]
