@@ -39,14 +39,14 @@ def plot_cmd(main_arguments):
         main_arguments:    The command line arguments (minus the plot command)        
     '''
     from plot import plot
-    from data_io.read import read_variable 
+    from data_io.read import read_variable_from_files 
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
     try:        
-        data = [read_variable(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
+        data = [read_variable_from_files(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
     except IrisError as e:
         __error_occurred(e)
     except IOError as e:
@@ -75,14 +75,15 @@ def info_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the info command)         
     '''    
-    from data_io.read import read_file_variables
+
+    from data_io.read import read_all_variables_from_file
     from pyhdf.error import HDF4Error
 
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
     
     try:
-        file_variables = read_file_variables(filename)
+        file_variables = read_all_variables_from_file(filename)
     except HDF4Error as e:
         __error_occurred(e)
     
@@ -106,7 +107,7 @@ def col_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the col command)         
     '''
-    from data_io.read import read_file_coordinates, read_variable
+    from data_io.read import read_file_coordinates, read_variable_from_files
     from col import col, HyperPoint
     import numpy as np
     
@@ -115,7 +116,8 @@ def col_cmd(main_arguments):
     for datafile in main_arguments.pop("datafiles"):
         variable = datafile['variable']
         filename = datafile['filename']
-        data_dict = read_variable(filename,[variable]+['Latitude','Longitude'])
+
+        data_dict = read_variable_from_files(filename,[variable]+['Latitude','Longitude'])
 
     #col_data = col(sample_ponts, data_dict[], datafile['method'])
         

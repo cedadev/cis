@@ -1,5 +1,5 @@
 """
-Module containing hdf file functions
+Module containing hdf file utility functions
 """
 import numpy as np
 
@@ -172,7 +172,6 @@ def get_hdf_SD_file_variables(filename):
     # List of required variable names.
     return datafile.datasets()
     
-    
 def get_hdf_VD_file_variables(filename):
     '''
     Get all the variables from an HDF VD file
@@ -183,15 +182,15 @@ def get_hdf_VD_file_variables(filename):
     returns:
         An OrderedDict containing the variables from the file
     '''
-    from pyhdf.HDF import *
-    from pyhdf.VS import *
+    from pyhdf.HDF import HDF
+    from pyhdf.VS import VS  
     
     # Open file
     datafile = HDF(filename)
     vs =  datafile.vstart()
     # List of required variable names
     names = vs.vdatainfo()
-    # This returns a list of tuples, so convert into a dicitonary for easy lookup
+    # This returns a list of tuples, so convert into a dictonary for easy lookup
     variables = {}
     for var in names:
         variables[var[0]] = var[1:]
@@ -200,7 +199,6 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
         
-
 def read_hdf4_SD_metadata(sds):
     "Retrieves long name and units from an sds instance"
 
