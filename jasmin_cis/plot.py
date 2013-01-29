@@ -4,7 +4,7 @@ Also contains dictionaries for the valid plot types and formatting options
 '''
 
 import matplotlib.pyplot as plt
-from data_io.read_gridded import unpack_cube
+from data_io.netcdf import unpack_cube
 
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
