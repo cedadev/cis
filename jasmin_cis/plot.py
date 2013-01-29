@@ -14,8 +14,17 @@ plot_options = { 'title' : plt.title,
 def plot_line(data, *args, **kwargs):
     plt.plot(data["x"], data["data"], *args, **kwargs )
 
+import sys
+min_data = sys.maxint
+max_data = -sys.maxint - 1
+
 def plot_heatmap(data, *args, **kwargs):
+    import numpy as np
     from mpl_toolkits.basemap import Basemap
+    global min_data
+    min_data = np.min(data["data"])
+    global max_data
+    max_data = np.max(data["data"])
     basemap = Basemap()    
     basemap.pcolormesh(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()   
@@ -34,9 +43,25 @@ def plot_contourf(data, *args, **kwargs):
 
 def plot_scatter(data, *args, **kwargs):
     from math import pow
-    sc = plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("pointsize", 20), 2), c=data["data"])
-    plt.colorbar(sc, orientation = "horizontal")
+    import numpy as np
+    minval = np.min(data["data"])
+    maxval = np.max(data["data"])
+    if min_data != sys.maxint and max_data != (-sys.maxint - 1):
+        minval = min_data
+        maxval = max_data
+    plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("pointsize", 20), 2), c = data["data"], vmin = minval, vmax = maxval)
 
+num_of_preexisting_plots = 0
+
+def plot_scatteroverlay(data, *args, **kwargs):
+    global num_of_preexisting_plots
+    if num_of_preexisting_plots == 0:
+        plot_heatmap(data, *args, **kwargs)
+        plt.colorbar(orientation = "horizontal")
+    else:
+        plot_scatter(data, *args, **kwargs)    
+    num_of_preexisting_plots += 1
+    
 class PlotType(object):
     def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
         self.maximum_no_of_expected_variables = maximum_no_of_expected_variables
@@ -47,14 +72,15 @@ plot_types = {'line' : PlotType(None, 1, plot_line),
                 'scatter' : PlotType(None, 2, plot_scatter), 
                 'heatmap' : PlotType(1, 2, plot_heatmap),
                 'contour' : PlotType(1, 2, plot_contour),
-                'contourf' : PlotType(1, 2, plot_contourf)}
+                'contourf' : PlotType(1, 2, plot_contourf),
+                'scatteroverlay' : PlotType(2, 2, plot_scatteroverlay)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
 
 def __format_plot(data, options, plot_type, datafiles): 
     '''
-    Sets the fontsize, xlabel, ylabel, title, legend and coastlines where appropriate.
+    Sets the fontsize, xlabel, ylabel, title, legend.
     Tries to assign default value if value not specified
     '''
     if options is not None:   
@@ -78,13 +104,6 @@ def __format_plot(data, options, plot_type, datafiles):
         else:
             options["xlabel"] = ""
             options["ylabel"] = ""
-        
-        legend_titles = []
-        for i, item in enumerate(data):
-            if datafiles is not None and datafiles[i]["label"]:
-                legend_titles.append(datafiles[i]["label"])
-            else:
-                legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
             
         if not options["title"]:
             options["title"] = ""
@@ -94,10 +113,19 @@ def __format_plot(data, options, plot_type, datafiles):
                 options["title"] = data[0].long_name.title()            
         
         for option, value in options.iteritems():        
-            plot_options[option](value)       
-        
-        if plot_type == "line":
-            plt.legend(legend_titles, loc="best")
+            plot_options[option](value)      
+             
+    if plot_type == "line":
+        legend_titles = []
+        for i, item in enumerate(data):
+            if datafiles is not None and datafiles[i]["label"]:
+                legend_titles.append(datafiles[i]["label"])
+            else:
+                legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+        plt.legend(legend_titles, loc="best")
+    
+    if plot_type != "line" and plot_type != "scatteroverlay":
+        plt.colorbar(orientation = "horizontal")
 
 def __set_width_and_height(kwargs):
     '''
