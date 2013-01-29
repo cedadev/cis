@@ -147,7 +147,7 @@ def check_plot_type(plot_type, datafiles, parser):
     '''
     if plot_type is not None:
         if plot_type in plot_types.keys():
-            if plot_types[plot_type].maximum_number_of_expected_no_of_variables < len(datafiles):
+            if plot_types[plot_type].maximum_no_of_expected_variables < len(datafiles):
                 parser.error("Invalid number of variables for plot type")        
         else:        
             parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(plot_types.keys()))
