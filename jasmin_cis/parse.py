@@ -30,12 +30,12 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
-    parser.add_argument("--linewidth", metavar = "The line width", nargs = "?", help = "The width of the line")   
-    parser.add_argument("--fontsize", metavar = "The font size", nargs = "?", help = "The size of the font")
-    parser.add_argument("--cmap", metavar = "The colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
-    parser.add_argument("--height", metavar = "The height", nargs = "?", help = "The height of the plot in inches")
-    parser.add_argument("--width", metavar = "The width", nargs = "?", help = "The width of the plot in inches")
-    parser.add_argument("--valrange", metavar = "The range of values", nargs = "?", help = "The range of values to plot")
+    parser.add_argument("--linewidth", metavar = "Line width", nargs = "?", help = "The width of the line")   
+    parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font")
+    parser.add_argument("--cmap", metavar = "Colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
+    parser.add_argument("--height", metavar = "Plot height", nargs = "?", help = "The height of the plot in inches")
+    parser.add_argument("--width", metavar = "Plot width", nargs = "?", help = "The width of the plot in inches")
+    parser.add_argument("--valrange", metavar = "Value range", nargs = "?", help = "The range of values to plot")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -81,7 +81,7 @@ def check_datafiles(datafiles, parser):
         The parsed datafiles as a list of dictionaries
     '''
     from collections import namedtuple
-    DatafileOptions = namedtuple('OverlayOptions',['filename', "variable", "label", "color", "linestyle"])
+    DatafileOptions = namedtuple('DatafileOptions',['filename', "variable", "label", "color", "linestyle"])
     datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing, check_color, check_line_style)    
     
     return parse_colonic_arguments(datafiles, parser, datafile_options)
@@ -117,7 +117,6 @@ def parse_colonic_arguments(inputs, parser, options):
     return input_dicts
 
 def check_variable(variable, datafiles, parser):
-    # TODO: Rename overlay|_plot to datafile
     '''
     Checks that a variable was specified, and assigns the default variable (if specified) to any datafiles with an unspecified variable
     '''
