@@ -55,10 +55,6 @@ def furthest_point_from(lat,lon):
 
 class Colocator(object):
 
-    ColocationTechniques = namedtuple('Techniques',['nn', 'li'])
-    gridded_colocation_methods = ColocationTechniques(find_nn_value_gridded, find_value_by_li)
-    ungridded_colocation_methods = ColocationTechniques(find_nn_value_ungridded, None)
-
     def __init__(self, points, data, col_method='nn', constraints=None):
         from jasmin_cis.exceptions import InvalidColocationMethodError
         from iris import cube
@@ -67,10 +63,10 @@ class Colocator(object):
         self.data = data
         self.constraints = constraints        
         
-        if isinstance(data, cube):  
-            methods = Colocator.gridded_colocation_methods
+        if isinstance(data, cube.Cube):  
+            methods = Colocator.gridded_colocation_methods._asdict()
         else:
-            methods = Colocator.ungridded_colocation_methods
+            methods = Colocator.ungridded_colocation_methods._asdict()
             
         self.method = methods[col_method]
                
@@ -79,7 +75,7 @@ class Colocator(object):
                 
     def colocate(self):
         for point in self.points:
-            point.val.append(self.method(point))
+            point.val.append(self.method(self, point))
         
     def find_nn_value(self, point):
         '''
@@ -116,3 +112,8 @@ class Colocator(object):
     
     def find_value_by_li(self, point):
         pass
+    
+    ColocationTechniques = namedtuple('Techniques',['nn', 'li'])
+    gridded_colocation_methods = ColocationTechniques(find_nn_value_gridded, find_value_by_li)
+    ungridded_colocation_methods = ColocationTechniques(find_nn_value_ungridded, None)
+
