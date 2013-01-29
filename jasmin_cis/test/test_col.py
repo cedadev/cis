@@ -1,7 +1,7 @@
 '''
  Module to test the colocation routines
 '''
-import jasmin_cis.col as col
+from jasmin_cis.col import Colocator
 from nose.tools import istest, raises, nottest
 from test_files.data import *
 import iris
@@ -28,11 +28,24 @@ def make_1d_cube():
 def make_2d_cube():
     pass
 
+def is_colocated(data1, data2):
+    '''
+        Checks wether two datasets share all of the same points, this might be useful
+        to determine if colocation is necesary or completed succesfully
+    '''
+    colocated = len(data1) == len(data2)
+    if colocated:
+        for point1 in data1:
+            colocated = all( point1 == point2 for point2 in data2 )
+            if not colocated:
+                return colocated
+    return colocated
 
 #Duncan to fix
 @nottest
 def can_col_gridded_to_ungridded_using_nn_in_1d():
     cube = make_1d_cube()
     ungridded = make_1d_ungridded_data()
-    col_data = col.col(cube, ungridded,'nn')
-    assert(col.is_colocated(col_data, cube))
+    col = Colocator(cube, ungridded,'nn')
+    col.colocate()
+    assert(is_colocated(col.data, cube))

@@ -107,26 +107,37 @@ def col_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the col command)         
     '''
+    from jasmin_cis.exceptions import InvalidColocationMethodError, CISError
     from data_io.read import read_file_coordinates, read_variable_from_files
-    from col import col, HyperPoint
-    import numpy as np
+    from col import Colocator
     
     sample_ponts = read_file_coordinates(main_arguments.pop("samplefilename"))
    
-    for datafile in main_arguments.pop("datafiles"):
-        variable = datafile['variable']
-        filename = datafile['filename']
-
-        data_dict = read_variable_from_files(filename,[variable]+['Latitude','Longitude'])
-
-    #col_data = col(sample_ponts, data_dict[], datafile['method'])
+    input_groups = main_arguments.pop("datafiles")
+   
+    for input_group in input_groups:
+        filename = input_group['filename']
+        variable = input_group['variable']
+        method = input_group['method']
         
+        #data_dict = read_variable(filename, variable)
+        try:
+            data = read_variable_from_files(filename,[variable]+['Latitude','Longitude'])
+        except CISError:
+            __error_occurred("Unable to read file: "+filename)
+        
+        try:
+            col = Colocator(sample_ponts, data, method)
+        except InvalidColocationMethodError:
+            __error_occurred("Invalid co-location method: "+method)
+        
+        col.colocate()
+
 
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd,
              'col'  : col_cmd} 
 
-   
 def main():
     '''
     The main method for the program.
