@@ -81,7 +81,7 @@ def check_datafiles(datafiles, parser):
         The parsed datafiles as a list of dictionaries
     '''
     from collections import namedtuple
-    DatafileOptions = namedtuple('OverlayOptions',['filename', "variable", "label", "color", "linestyle"])
+    DatafileOptions = namedtuple('DatafileOptions',['filename', "variable", "label", "color", "linestyle"])
     datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing, check_color, check_line_style)    
     
     return parse_colonic_arguments(datafiles, parser, datafile_options)
@@ -117,7 +117,6 @@ def parse_colonic_arguments(inputs, parser, options):
     return input_dicts
 
 def check_variable(variable, datafiles, parser):
-    # TODO: Rename overlay|_plot to datafile
     '''
     Checks that a variable was specified, and assigns the default variable (if specified) to any datafiles with an unspecified variable
     '''
