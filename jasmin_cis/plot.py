@@ -80,8 +80,15 @@ default_plot_types = { 1 : 'line',
 
 def __format_plot(data, options, plot_type, datafiles, colour_bar_orientation): 
     '''
-    Sets the fontsize, xlabel, ylabel, title, legend.
+    Sets the fontsize, xlabel, ylabel, title, legend and color bar
     Tries to assign default value if value not specified
+    
+    args:
+        data:                    A list of data objects (cubes or ungridded data)
+        options:                 A dictionary of formatting options constructed using __create_plot_format_options
+        plot_type:               The plot type (as a string, not a PlotType object)
+        datafiles:               The list of datafiles from the command line, as a dictionary, containing filename, variable, label etc
+        colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
     '''
     if options is not None:   
         if options["fontsize"] is not None:
@@ -127,7 +134,7 @@ def __format_plot(data, options, plot_type, datafiles, colour_bar_orientation):
     if plot_type != "line":# and plot_type != "scatteroverlay":
         plt.colorbar(orientation = colour_bar_orientation)
 
-def __set_width_and_height(kwargs):
+def __set_width_and_height(**kwargs):
     '''
     Sets the width and height of the plot
     Uses an aspect ratio of 4:3 if only one of width and height are specified
@@ -146,7 +153,12 @@ def __set_width_and_height(kwargs):
         
     return kwargs
 
-def __do_plot(data, plot_type, args, kwargs):
+def __do_plot(data, plot_type, *args, **kwargs):
+    '''
+    args:
+        data:        A list of data objects (cubes or ungridded data)
+        plot_type:   The plot type, as a string, not a PlotType object
+    '''
     datafiles = kwargs.pop("datafiles", None) 
     for i, item in enumerate(data):
         # Temporarily add args to kwargs
@@ -165,7 +177,10 @@ def __do_plot(data, plot_type, args, kwargs):
                 kwargs.pop("color")
     return datafiles
 
-def __warn_if_incorrect_colour_type_used(plot_type, kwargs):
+def __warn_if_incorrect_colour_type_used(plot_type, **kwargs):
+    '''
+    A 'color' should only be specified for a line graph, and 'cmap' should be specified for every other plot type
+    '''
     import logging
     if plot_type != "line": # Remove color if specified for plot where type is not line
         arg = kwargs.pop("color", None)
@@ -177,6 +192,9 @@ def __warn_if_incorrect_colour_type_used(plot_type, kwargs):
             logging.warn("Cannot specify a colour map for plot type '" + plot_type + "', did you mean to use color?")
 
 def __set_default_plot_type(variable_dim):
+    '''
+    Sets the default plot type based on the number of dimensions of the data
+    '''
     from jasmin_cis.exceptions import InvalidPlotTypeError
     try:
         plot_type = default_plot_types[variable_dim]
@@ -218,17 +236,27 @@ def __prepare_val_range(plot_type, **kwargs):
     return valrange, kwargs
 
 def __output_to_file_or_screen(out_filename):
+    '''
+    Outputs to screen unless a filename is given
+    '''
     if out_filename is None:
         plt.show()
     else:
         plt.savefig(out_filename) # Will overwrite if file already exists
 
-def __remove_unassigned_arguments(kwargs):
+def __remove_unassigned_arguments(**kwargs):
+    '''
+    Removes arguments from the kwargs if they are equal to None
+    '''
     for key in kwargs.keys():
         if kwargs[key] is None:
             kwargs.pop(key)
 
-def __create_plot_format_options(kwargs):
+def __create_plot_format_options(**kwargs):
+    '''
+    Returns:
+        A dictionary containing the kwargs where the key is contained in the plot_options dictionary
+    '''
     options = {}
     for key in plot_options.keys():
         options[key] = kwargs.pop(key, None)
@@ -239,10 +267,18 @@ def __apply_line_graph_value_limits(plot_type, valrange):
     if plot_type == "line" and valrange is not None:
         plt.ylim(**valrange)
 
-def __validate_data(data, plot_type, kwargs, variable_dim):
+def __validate_data(data, plot_type, variable_dim, **kwargs):
+    '''
+    Used to validate the data before plotting
+    
+    args:
+        data:             A list of data objects
+        plot_type:        The plot type, as a string, not as a PlotType object
+        varaiable_dim:    The number of dimensions of the data being plotted
+    '''
     __check_all_data_items_are_of_same_shape(data, variable_dim)
     __check_plot_type_is_valid_for_given_variable(plot_type, variable_dim)
-    __warn_if_incorrect_colour_type_used(plot_type, kwargs)
+    __warn_if_incorrect_colour_type_used(plot_type, **kwargs)
     __check_number_of_variables_does_not_exceed_maximum(plot_type, len(data))
 
 def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
@@ -255,20 +291,20 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         out_filename: The filename of the file to save the plot to
     '''
              
-    __remove_unassigned_arguments(kwargs)   
+    __remove_unassigned_arguments(**kwargs)   
        
     variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
     
     if plot_type is None:
         plot_type = __set_default_plot_type(variable_dim)
     
-    __validate_data(data, plot_type, kwargs, variable_dim)
+    __validate_data(data, plot_type, variable_dim, **kwargs)
     
-    plot_format_options = __create_plot_format_options(kwargs)
+    plot_format_options = __create_plot_format_options(**kwargs)
     valrange, kwargs = __prepare_val_range(plot_type, **kwargs)  
     kwargs = __set_width_and_height(kwargs)  
     colour_bar_orientation = kwargs.pop("cbarorient", "horizontal")  
-    datafiles = __do_plot(data, plot_type, args, kwargs)  
+    datafiles = __do_plot(data, plot_type, *args, **kwargs)  
     __apply_line_graph_value_limits(plot_type, valrange)
         
     __format_plot(data, plot_format_options, plot_type, datafiles, colour_bar_orientation) 
