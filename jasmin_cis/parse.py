@@ -6,8 +6,6 @@ import sys
 import os.path
 from plot import Plotter
 
-line_styles = ["solid", "dashed", "dashdot", "dotted"]
-
 def initialise_top_parser():
     '''
     The parser to which all arguments are initially passed
@@ -82,8 +80,8 @@ def check_datafiles(datafiles, parser):
         The parsed datafiles as a list of dictionaries
     '''
     from collections import namedtuple
-    DatafileOptions = namedtuple('DatafileOptions',['filename', "variable", "label", "color", "linestyle"])
-    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing, check_color, check_line_style)    
+    DatafileOptions = namedtuple('DatafileOptions',['filename', "variable", "label", "color", "itemstyle"])
+    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing, check_color, check_nothing)    
     
     return parse_colonic_arguments(datafiles, parser, datafile_options)
 
@@ -152,10 +150,6 @@ def check_plot_type(plot_type, datafiles, parser):
         else:        
             parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
 
-def check_line_style(linestyle, parser):
-    if linestyle not in line_styles:
-        parser.error("'" + linestyle + "' is not a valid line style, please use one of: " + str(line_styles))   
-
 def check_color(color, parser):
     if color is not None:
         from matplotlib.colors import cnames
@@ -192,7 +186,7 @@ def check_val_range(valrange, parser):
             parser.error("Range must be in the format 'min:max'")
     return valrange
                    
-def validate_plot_args(arguments, parser):    
+def validate_plot_args(arguments, parser): 
     arguments.datafiles = check_datafiles(arguments.datafiles, parser)        
     arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
     check_plot_type(arguments.type, arguments.datafiles, parser) 
