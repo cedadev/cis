@@ -56,17 +56,15 @@ def get_random_1d_point():
     '''
         Creates a hyper point at some random point along the Grenwich meridian (lon = 0.0)
     '''
-    import random
     from jasmin_cis.hyperpoint import HyperPoint
-    return HyperPoint(random.randrange(-90.0, 90.0))
+    return HyperPoint(gen_random_lat())
 
 def get_random_2d_point():
     '''
         Creates a random point on the surface of the globe
     '''
-    import random
     from jasmin_cis.hyperpoint import HyperPoint
-    return HyperPoint(random.randrange(-90.0, 90.0), random.randrange(0.0, 360.0))
+    return HyperPoint(gen_random_lat(), gen_random_lon())
 
 def get_random_3d_point():
     '''
@@ -74,7 +72,7 @@ def get_random_3d_point():
     '''
     import random
     from jasmin_cis.hyperpoint import HyperPoint
-    return HyperPoint(random.randrange(-90.0, 90.0), random.randrange(0.0, 360.0), random.randrange(0.0, 100.0))
+    return HyperPoint(gen_random_lat(), gen_random_lon(), random.randrange(0.0, 100.0))
 
 def make_dummy_1d_points_list(num):
     '''
@@ -112,13 +110,14 @@ class ScatterData(object):
         else:
             raise Exception("Unknown item")
 
-from random import randrange, uniform
-
-def gen_random_x():
+def gen_random_lon():
+    from random import randrange
     return randrange(-180, 180)
 
-def gen_random_y():
+def gen_random_lat():
+    from random import randrange
     return randrange(-90, 90)
 
 def gen_random_data():
+    from random import uniform
     return uniform(0, 0.000225)
