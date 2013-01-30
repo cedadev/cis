@@ -13,7 +13,7 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
              and set-up value list.
         '''
         # If no value was specified create an empty list, otherwise create a list with one entry   
-        if val is None:
+        if val is None or val == []:
             val = []
         else:
             val = [ val ]
@@ -29,7 +29,6 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
     def same_point_in_space_and_time(self, other):
         return ( self.same_point_in_space(other) and self.same_point_in_time(other) )
             
-          
     def get_coord_tuple(self):
         return [ (x, y) for x, y in self._asdict().items() if y is not None and x != 'val' ]
 
@@ -37,16 +36,16 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         '''
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
         '''
-        return (self.haversine(p1.lat,p1.lon) > self.haversine(p2.lat,p2.lon))
+        return (self.haversine(p1.latitude,p1.longitude) > self.haversine(p2.latitude,p2.longitude))
     
     def haversine(self,lat2,lon2):
         '''
             Computes the Haversine distance between two points
         '''
         import math
-        lat1 = self.lat * math.pi / 180
+        lat1 = self.latitude * math.pi / 180
         lat2 = lat2 * math.pi / 180
-        lon1 = self.lon * math.pi / 180
+        lon1 = self.longitude * math.pi / 180
         lon2 = lon2 * math.pi / 180
         arclen = 2*math.asin(math.sqrt((math.sin((lat2-lat1)/2))**2 + math.cos(lat1) * math.cos(lat2) * (math.sin((lon2-lon1)/2))**2))
         return arclen*R_E
@@ -55,12 +54,9 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         '''
             Return a point on the opposite side of the globe from this point
         '''
-        if self.lat > 0:
-            furthest_lat = self.lat - 90.0
+        furthest_lat = -self.latitude
+        if self.longitude > 180:
+            furthest_lon = self.longitude - 180.0
         else:
-            furthest_lat = self.lat + 90.0
-        if self.lon > 180:
-            furthest_lon = self.lon - 180.0
-        else:
-            furthest_lon = self.lon + 180.0
-        return HyperPoint(furthest_lat, furthest_lon, self.alt, self.time, self.val)
+            furthest_lon = self.longitude + 180.0
+        return HyperPoint(furthest_lat, furthest_lon, self.altitude, self.time, self.val)

@@ -1,7 +1,6 @@
 '''
     Colocation routines - to be implemented
 '''
-from hyperpoint import HyperPoint
 from collections import namedtuple
 
 class Colocator(object):
@@ -42,6 +41,7 @@ class Colocator(object):
         '''
             Co-location routine using nearest neighbour algorithm optimized for ungridded data
         '''
+        from hyperpoint import HyperPoint
         import numpy as np
         nearest_point = point.furthest_point_from()
         for (x,y), value in np.ndenumerate(self.data.vals):
