@@ -5,22 +5,35 @@ from collections import namedtuple
 R_E = 6378
 
 # Data type representing a point in space and time. It can contain multiple values which are stored in a list
-HyperPointT = namedtuple('HyperPoint',['latitude','longitude','altitude','time','val'])
+#HyperPointT = namedtuple('HyperPoint',['latitude','longitude','altitude','time','val'])
 
-def HyperPoint(lat=None, lon=None, alt=None, t=None, val=None):
-    '''
-        Small constructor for the HyperPoint named tuple to allow optional arguments
-         and set-up value list.
-    '''
-    # If no value was specified create an empty list, otherwise create a list with one entry   
-    if val is None:
-        val = []
-    else:
-        val = [ val ]
-    return HyperPointT(lat,lon,alt,t,val)
+class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','time','val'])):
+    
+    def __new__(cls, lat=None, lon=None, alt=None, t=None, val=None):
+        '''
+            Small constructor for the HyperPoint named tuple to allow optional arguments
+             and set-up value list.
+        '''
+        # If no value was specified create an empty list, otherwise create a list with one entry   
+        if val is None:
+            val = []
+        else:
+            val = [ val ]
+        return super(HyperPoint,cls).__new__(cls,lat,lon,alt,t,val)
 
+    def same_point_in_time(self, other):
+        return self.time == other.time
+        
+    def same_point_in_space(self, other):
+        return ( self.latitude == other.latitude and self.longitude == other.longitude and
+                 self.altitude == other.altitude )
+    
+    def same_point_in_space_and_time(self, other):
+        return ( self.same_point_in_space(other) and self.same_point_in_time(other) )
+            
+            
 def get_coord_tuple(point):
-    return [ x for x, y in point._asdict().items() if y is not None and x != 'val' ]
+    return [ (x, y) for x, y in point._asdict().items() if y is not None and x != 'val' ]
 
 def compdist(ref_p,p1,p2):
     '''Compares the distance from reference point ref_p to p1 and p2. Returns True if p2 is closer to ref_p than p1'''
