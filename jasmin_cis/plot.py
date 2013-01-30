@@ -57,7 +57,7 @@ def plot_scatteroverlay(data, *args, **kwargs):
     global num_of_preexisting_plots
     if num_of_preexisting_plots == 0:
         plot_heatmap(data, *args, **kwargs)
-        plt.colorbar(orientation = "horizontal")
+        #plt.colorbar(orientation = "horizontal")
     else:
         plot_scatter(data, *args, **kwargs)    
     num_of_preexisting_plots += 1
@@ -124,7 +124,7 @@ def __format_plot(data, options, plot_type, datafiles, colour_bar_orientation):
                 legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
         plt.legend(legend_titles, loc="best")
     
-    if plot_type != "line" and plot_type != "scatteroverlay":
+    if plot_type != "line":# and plot_type != "scatteroverlay":
         plt.colorbar(orientation = colour_bar_orientation)
 
 def __set_width_and_height(kwargs):
