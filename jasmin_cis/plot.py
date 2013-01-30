@@ -34,6 +34,7 @@ class Plotter(object):
         self.min_data = sys.maxint
         self.max_data = -sys.maxint - 1
         self.plot()
+        self.plots = []
     
     def plot_line(self, data_item):
         '''
@@ -43,6 +44,7 @@ class Plotter(object):
             data:    A dictionary containing the x coords and data as arrays
         '''
         plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs )
+        self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
     
     def plot_heatmap(self, data_item):
         '''
@@ -54,9 +56,9 @@ class Plotter(object):
         import numpy as np    
         self.min_data = np.min(data_item["data"])
         self.max_data = np.max(data_item["data"])
-        basemap = Basemap()    
-        basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs)
         basemap.drawcoastlines()   
+        self.basemap = Basemap()    
+        self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
         
     def plot_contour(self, data_item):
         '''
@@ -65,9 +67,9 @@ class Plotter(object):
         args:
             data:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        basemap = Basemap()    
-        basemap.contour(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs)
         basemap.drawcoastlines()    
+        self.basemap = Basemap()    
+        self.plots.append(self.basemap.contour(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
         
     def plot_contourf(self, data_item):
         '''
@@ -76,9 +78,9 @@ class Plotter(object):
         args:
             data:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        basemap = Basemap()    
-        basemap.contourf(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs)
         basemap.drawcoastlines()  
+        self.basemap = Basemap()    
+        self.plots.append(self.basemap.contourf(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
     
     def plot_scatter(self, data_item):
         '''
@@ -98,6 +100,7 @@ class Plotter(object):
             plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"], 2), c = data_item["data"], vmin = minval, vmax = maxval)
         else:
             plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"] , 2))
+        self.plots.append(plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"], 2), c = colour_scheme, vmin = minval, vmax = maxval, marker = mark))
     
     def plot_scatteroverlay(self, data_item):
         '''
