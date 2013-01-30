@@ -4,7 +4,7 @@ Module used for parsing
 import argparse
 import sys
 import os.path
-from plot import plot_types
+from plot import Plotter
 
 line_styles = ["solid", "dashed", "dashdot", "dotted"]
 
@@ -26,7 +26,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("datafiles", metavar = "Input datafiles", nargs = "+", help = "The datafiles to be plotted, in the format: filename:variable:label:colour:style, where the last three arguments are optional")
     parser.add_argument("-v", "--variable", metavar = "Default variable", nargs = "?", help = "The default variable to plot if not otherwise specified in the filename")
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")    
-    parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(plot_types.keys()))
+    parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
@@ -146,11 +146,11 @@ def check_plot_type(plot_type, datafiles, parser):
     Checks plot type is valid option for number of variables if specified
     '''
     if plot_type is not None:
-        if plot_type in plot_types.keys():
-            if plot_types[plot_type].maximum_no_of_expected_variables < len(datafiles):
+        if plot_type in Plotter.plot_types.keys():
+            if Plotter.plot_types[plot_type].maximum_no_of_expected_variables < len(datafiles):
                 parser.error("Invalid number of variables for plot type")        
         else:        
-            parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(plot_types.keys()))
+            parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
 
 def check_line_style(linestyle, parser):
     if linestyle not in line_styles:

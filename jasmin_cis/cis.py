@@ -38,7 +38,7 @@ def plot_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the plot command)        
     '''
-    from plot import plot
+    from plot import Plotter
     from data_io.read import read_variable_from_files 
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
@@ -58,7 +58,7 @@ def plot_cmd(main_arguments):
     output = main_arguments.pop("output")
     
     try:
-        plot(data, plot_type, output, **main_arguments)
+        Plotter(data, plot_type, output, **main_arguments)
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError) as e:
         __error_occurred(e)
     except ValueError as e:
