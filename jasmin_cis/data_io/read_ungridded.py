@@ -3,10 +3,11 @@ Module for reading ungridded data
 Assumes ungridde data are in HDF4 format
 '''
 from pyhdf.error import HDF4Error
-import hdf
+import hdf_sd
 import numpy as np
 from collections import namedtuple
-from hdf import get_hdf4_SD_data, get_hdf4_VD_data, read_hdf4_SD_metadata,get_hdf_SD_file_variables,get_hdf_VD_file_variables
+import hdf_sd
+from jasmin_cis.data_io.hdf_vd import get_hdf_VD_file_variables, read_hdf4_VD, get_hdf4_VD_data
 
 def get_file_variables(filename):
     '''
@@ -17,35 +18,39 @@ def get_file_variables(filename):
         filename: The filename of the file to get the variables from
     
     '''
-    vars = get_hdf_SD_file_variables(filename)
-    vars.update(get_hdf_VD_file_variables(filename))    
+    vars = hdf_sd.get_hdf_SD_file_datasets(filename)
+    vars.update(get_hdf_VD_file_variables(filename))
     
     return vars
 
 
 def get_file_coordinates(filename):
     '''
-        Read in coordinate variables and pass back arrays for lat, lon 
+    Read in coordinate variables and pass back tuple of lat, lon,
+    each element of tuple being a 2D numpy array
     '''
-    pass
+
+    data = read_hdf4_VD(filename,['Latitude','Longitude'])
+    lat = data['Latitude'].get()
+    long = data['Longitude'].get()
+    
+    return (lat,long)
 
 
 def get_file_coordinates_points(filename):
     '''
-        Convert coordinate arrays into a list of points for colocation sampling
-        
+    Convert coordinate arrays into a list of points
+    useful or colocation sampling   
     '''
     from jasmin_cis.col import HyperPoint
     
-    lat, lon, vals = get_file_coordinates(filename)
+    latitude, longitude = get_file_coordinates(filename)
     
-    # Pack the data into a list of x,y, val points to be passed to col
     points = []    
     
-    for (x,y), value in np.ndenumerate(vals):
-        lat = lat[x,y]
-        lon = lon[x,y]
-        points.append(HyperPoint(lat,lon, val=value))
+    for (x,y), lat in np.ndenumerate(latitude):
+        lon = longitude[x,y]
+        points.append(HyperPoint(lat,lon))
         
     return points
 
@@ -78,7 +83,7 @@ def read(filenames, variables):
 Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 
 # This defines the actual mappings for each of the ungridded data types
-static_mappings = { 'HDF_SD' : Mapping(read_hdf4_SD_metadata, get_hdf4_SD_data),
+static_mappings = { 'HDF_SD' : Mapping(hdf_sd.read_hdf4_SD_metadata, hdf_sd.get_hdf4_SD_data),
              'HDF_VD' : Mapping(get_hdf_VD_file_variables, get_hdf4_VD_data),
              'HDF5'   : '',
              'netCDF' : '' }
@@ -92,7 +97,7 @@ class UngriddedData(object):
     def load_ungridded_data_list(cls, filenames, variables):
         '''
             Return a dictionary of UngriddedData objects, one for each variable - the key is the variable name
-                This si quicker than calling load_ungridded_data as we read multiple variables per file read
+                This is quicker than calling load_ungridded_data as we read multiple variables per file read
         args:
             filenames:    List of filenames of files to read
             variables:    List of variables to read from the files
@@ -102,7 +107,7 @@ class UngriddedData(object):
         outdata = {}
         for filename in filenames:
             try:
-                data = hdf.read_hdf4_SD(filename,variables)
+                data = hdf_sd.read_hdf4_SD(filename,variables)
                 for name in data.keys():
                     try:
                         outdata[name].append(data[name])
@@ -129,7 +134,7 @@ class UngriddedData(object):
         data = []
         for filename in filenames:
             try:
-                data.append(hdf.read_hdf4_SD_variable(filename, variable))
+                data.append(hdf_sd.read_hdf4_SD_variable(filename, variable))
             except HDF4Error as e:
                 raise FileIOError(str(e)+' for file: '+filename)
         return cls(data,'HDF_SD')

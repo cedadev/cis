@@ -5,6 +5,7 @@ Assumes gridded data are in NetCDF format
 import iris
 from collections import namedtuple
 
+GriddedCoordsT = namedtuple('GriddedCoords',['lat','lon','alt','t'])
 
 def get_file_variables(filename):
     '''
@@ -18,8 +19,6 @@ def get_file_variables(filename):
     return get_netcdf_file_variables(filename)
 
 # Define a named tuple for storing vectors of coordinates from gridded data
-
-GriddedCoordsT = namedtuple('GriddedCoords',['lat','lon','alt','t'])
 
 def get_file_coordinates(filename):
     '''
