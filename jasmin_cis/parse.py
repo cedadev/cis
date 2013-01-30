@@ -30,7 +30,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
-    parser.add_argument("--linewidth", metavar = "Line width", nargs = "?", help = "The width of the line")   
+    parser.add_argument("--itemwidth", metavar = "Item width", nargs = "?", help = "The width of the item")   
     parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font")
     parser.add_argument("--cmap", metavar = "Colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar = "Plot height", nargs = "?", help = "The height of the plot in inches")
@@ -199,7 +199,7 @@ def validate_plot_args(arguments, parser):
     arguments.valrange = check_val_range(arguments.valrange, parser)
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     # Try and parse numbers
-    arguments.linewidth = parse_float(arguments.linewidth, "line width", parser)   
+    arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
     arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)
     arguments.height = parse_float(arguments.height, "height", parser)
     arguments.width = parse_float(arguments.width, "width", parser) 

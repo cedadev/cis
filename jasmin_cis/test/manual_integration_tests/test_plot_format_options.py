@@ -28,7 +28,7 @@ def should_not_raise_error_if_colour_is_specified_for_invalid_chart_type(): # Si
 @nottest # Jenkins can't plot to file or screen
 def can_set_line_width_to_valid_width():   
     cube = make_cube(valid_1d_filename)
-    plot([cube], out_filename = out_filename, **{"linewidth" : valid_width})   
+    plot([cube], out_filename = out_filename, **{"itemwidth" : valid_width})   
     
 @nottest # Jenkins can't plot to file or screen
 def can_set_line_style_to_valid_style():   

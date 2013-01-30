@@ -70,14 +70,17 @@ def plot_scatter(data, *args, **kwargs):
     args:
         data:    A dictionary containing the x coords, y coords and data as arrays
     '''
-    from math import pow
-    import numpy as np
-    minval = np.min(data["data"])
-    maxval = np.max(data["data"])
-    if min_data != sys.maxint and max_data != (-sys.maxint - 1):
-        minval = min_data
-        maxval = max_data
-    plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("pointsize", 20), 2), c = data["data"], vmin = minval, vmax = maxval)
+    from math import pow        
+    if data["data"] is not None:
+        import numpy as np
+        minval = np.min(data["data"])
+        maxval = np.max(data["data"])
+        if min_data != sys.maxint and max_data != (-sys.maxint - 1):
+            minval = min_data
+            maxval = max_data
+        plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("linewidth", 20), 2), c = data["data"], vmin = minval, vmax = maxval)
+    else:
+        plt.scatter(data["x"], data["y"], s = pow(kwargs.pop("linewidth", 20), 2))
 
 num_of_preexisting_plots = 0
 
@@ -91,7 +94,7 @@ def plot_scatteroverlay(data, *args, **kwargs):
     global num_of_preexisting_plots
     if num_of_preexisting_plots == 0:
         plot_heatmap(data, *args, **kwargs)
-        #plt.colorbar(orientation = "horizontal")
+        plt.colorbar(orientation = "horizontal")
     else:
         plot_scatter(data, *args, **kwargs)    
     num_of_preexisting_plots += 1
@@ -107,7 +110,7 @@ plot_types = {'line' : PlotType(None, 1, plot_line),
                 'heatmap' : PlotType(1, 2, plot_heatmap),
                 'contour' : PlotType(1, 2, plot_contour),
                 'contourf' : PlotType(1, 2, plot_contourf),
-                'scatteroverlay' : PlotType(2, 2, plot_scatteroverlay)}
+                'scatteroverlay' : PlotType(None, 2, plot_scatteroverlay)}
 
 default_plot_types = { 1 : 'line',
                        2 : 'heatmap'}
@@ -165,7 +168,7 @@ def __format_plot(data, options, plot_type, datafiles, colour_bar_orientation):
                 legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
         plt.legend(legend_titles, loc="best")
     
-    if plot_type != "line":# and plot_type != "scatteroverlay":
+    if plot_type != "line" and plot_type != "scatteroverlay":
         plt.colorbar(orientation = colour_bar_orientation)
 
 def __set_width_and_height(**kwargs):
@@ -327,7 +330,7 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
         plot_type:    The type of the plot to be plotted. A default will be chosen if omitted
         out_filename: The filename of the file to save the plot to
     '''
-             
+    kwargs["linewidth"] = kwargs.pop("itemwidth", None)        
     __remove_unassigned_arguments(**kwargs)   
        
     variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway

@@ -81,7 +81,7 @@ def should_raise_error_when_no_variable_is_specified():
 @istest
 def should_raise_error_with_invalid_line_width():
     try:   
-        args = ["plot", valid_1d_filename, "-v", valid_variable, "--linewidth", "4a0"]
+        args = ["plot", valid_1d_filename, "-v", valid_variable, "--itemwidth", "4a0"]
         parse_args(args) 
         assert False
     except SystemExit as e:
