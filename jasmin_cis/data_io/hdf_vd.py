@@ -2,6 +2,8 @@
 Module containing hdf file utility functions for the VD object
 """
 import numpy as np
+from pyhdf.HDF import *
+from jasmin_cis.data_io.hdf_util import __fill_missing_data
 
 def get_hdf_VD_file_variables(filename):
     '''
@@ -13,8 +15,6 @@ def get_hdf_VD_file_variables(filename):
     returns:
         An OrderedDict containing the variables from the file
     '''
-    from pyhdf.HDF import HDF
-    from pyhdf.VS import VS
 
     # Open file
     datafile = HDF(filename)
@@ -30,66 +30,30 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
 
-
-def read_hdf4_VD(filename, names=None, datadict=None):
-    """
-    Reads VD from a HDF4 file into a dictionary.
-
-    Returns:
-        A dictionary containing data references for requested variables.
-
-    Arguments:
-        filename    -- The name (with path) of the HDF file to read.
-        names       -- A sequence of variable (dataset) names to read from the
-                       file (default None, causing all variables to be read).
-                       The names must appear exactly as in in the HDF file.
-        datadic     -- Optional dictionary to add data to, otherwise a new, empty
-                       dictionary is created
-
-    """
-    from pyhdf.HDF import HDF
-
-    # Open file
+def get_hdf4_VD_data(filename, names=None, datadict=None):
     datafile = HDF(filename)
     vs =  datafile.vstart()
     # List of required variable names
-    if names is None:
+    if not names:
         names = vs.vdatainfo()
         names = zip(*names)
         names = names[0]
-    if datadict is None:
+    if datadict == None:
         datadict = {}
     for name in names:
         vd = vs.attach(name)
-        datadict[name] = vd
-        # NOTE that this doesn't now detach vs or close the file - I'm not sure where this should
-        #  happen - if at all
-
+        data = vd.read(nRec = vd.inquire()[0])
+        for x in range(0,len(data)):
+            data[x] = data[x][0]
+        data = np.array(data)
+        try: #Deal with missing data
+            missing_val = vd.attrinfo()['missing'][2]
+            data = __fill_missing_data(data,missing_val)
+        except KeyError:
+            pass
+        datadict[name] = data
+        vd.detach()
+    vs.end()
+    datafile.close()
     return datadict
 
-
-def get_hdf4_VD_data(vd):
-    """
-    Reads VD from a HDF4 file into a dictionary.
-
-    Returns:
-        A dictionary containing data for requested variables.
-        Missing data is replaced by NaN.
-
-    Arguments:
-        vd -- the data handle to read off
-
-    """
-    data = vd.read(nRec = vd.inquire()[0])
-    for x in range(0,len(data)):
-        data[x] = data[x][0]
-    data = np.array(data)
-    try: #Deal with missing data
-        missingval = vd.attrinfo()['missing'][2]
-        wfillmask = 0
-        wfillmask = np.where(data == missingval, np.nan, 1)
-        data = data * wfillmask
-    except KeyError:
-        pass
-
-    return data

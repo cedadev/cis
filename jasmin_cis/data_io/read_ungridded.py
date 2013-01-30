@@ -1,13 +1,11 @@
 '''
-Module for reading ungridded data
-Assumes ungridde data are in HDF4 format
+Module for reading ungridded data in HDF4 format
 '''
-from pyhdf.error import HDF4Error
-import hdf_sd
 import numpy as np
 from collections import namedtuple
-import hdf_sd
-from jasmin_cis.data_io.hdf_vd import get_hdf_VD_file_variables, read_hdf4_VD, get_hdf4_VD_data
+import hdf_vd as hdf_vd
+import hdf_sd as hdf_sd
+from pyhdf.error import HDF4Error
 
 def get_file_variables(filename):
     '''
@@ -18,8 +16,8 @@ def get_file_variables(filename):
         filename: The filename of the file to get the variables from
     
     '''
-    vars = hdf_sd.get_hdf_SD_file_datasets(filename)
-    vars.update(get_hdf_VD_file_variables(filename))
+    vars = hdf_sd.get_hdf_SD_file_variables(filename)
+    vars.update(hdf_vd.get_hdf_VD_file_variables(filename))
     
     return vars
 
@@ -30,7 +28,7 @@ def get_file_coordinates(filename):
     each element of tuple being a 2D numpy array
     '''
 
-    data = read_hdf4_VD(filename,['Latitude','Longitude'])
+    data = hdf_vd.read_hdf4_VD(filename,['Latitude','Longitude'])
     lat = data['Latitude'].get()
     long = data['Longitude'].get()
     
@@ -84,7 +82,7 @@ Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 
 # This defines the actual mappings for each of the ungridded data types
 static_mappings = { 'HDF_SD' : Mapping(hdf_sd.read_hdf4_SD_metadata, hdf_sd.get_hdf4_SD_data),
-             'HDF_VD' : Mapping(get_hdf_VD_file_variables, get_hdf4_VD_data),
+             'HDF_VD' : Mapping(hdf_vd.get_hdf_VD_file_variables, hdf_vd.get_hdf4_VD_data),
              'HDF5'   : '',
              'netCDF' : '' }
 
