@@ -9,7 +9,7 @@ from test_files.data import *
 
 @istest
 def can_specify_one_valid_samplefile_and_one_complete_datafile():
-    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:method"]
+    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
     eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
