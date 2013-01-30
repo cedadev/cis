@@ -94,3 +94,31 @@ def make_dummy_1d_ungridded_data():
 def make_dummy_2d_ungridded_data():
     pass
 
+class ScatterData(object):
+    def __init__(self, x, y, data, shape, long_name):
+        self.x = x
+        self.y = y
+        self.data = data
+        self.shape = shape
+        self.long_name = long_name
+        
+    def __getitem__(self, name):
+        if name == "x":
+            return self.x
+        elif name == "y":
+            return self.y
+        elif name == "data":
+            return self.data
+        else:
+            raise Exception("Unknown item")
+
+from random import randrange, uniform
+
+def gen_random_x():
+    return randrange(-180, 180)
+
+def gen_random_y():
+    return randrange(-90, 90)
+
+def gen_random_data():
+    return uniform(0, 0.000225)
