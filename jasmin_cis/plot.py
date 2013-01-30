@@ -191,6 +191,30 @@ class Plotter(object):
         if height is not None and width is not None:
             plt.figure(figsize = (width, height))
     
+    def __add_datafile_args_to_kwargs(self, datafile):
+        if self.plot_type == "line" or "scatter" in self.plot_type:
+            if datafile["itemstyle"]:
+                if self.plot_type == "line":
+                    if datafile["itemstyle"] not in Plotter.line_styles:
+                        from exceptions import InvalidLineStyleError
+                        raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(Plotter.line_styles))
+                    else:
+                        self.kwargs["linestyle"] = datafile["itemstyle"]
+                elif "scatter" in self.plot_type:
+                    self.kwargs["marker"] = datafile["itemstyle"]
+            if datafile["color"]:
+                self.kwargs["color"] = datafile["color"]
+                        
+    def __remove_datafile_args_from_kwargs(self, datafile):
+        if self.plot_type == "line" or "scatter" in self.plot_type:
+            if datafile["itemstyle"]:
+                if self.plot_type == "line":
+                    self.kwargs.pop("linestyle")
+                elif "scatter" in self.plot_type:
+                    self.kwargs.pop("marker", None)
+            if datafile["color"]:
+                self.kwargs.pop("color")
+    
     def __do_plot(self):
         '''
         args:
