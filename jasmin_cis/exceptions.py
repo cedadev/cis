@@ -31,3 +31,6 @@ class InvalidDataTypeError(CISError):
 
 class InvalidColocationMethodError(CISError):
     pass
+
+class InvalidLineStyleError(CISError):
+    pass
