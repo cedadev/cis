@@ -5,6 +5,7 @@ Also contains dictionaries for the valid plot types and formatting options
 
 import matplotlib.pyplot as plt
 from data_io.netcdf import unpack_cube
+from mpl_toolkits.basemap import Basemap
 
 plot_options = { 'title' : plt.title,
               'xlabel' : plt.xlabel, 
@@ -12,6 +13,12 @@ plot_options = { 'title' : plt.title,
               'fontsize' : plt.rcParams.update } 
 
 def plot_line(data, *args, **kwargs):
+    '''
+    Plots a line graoh
+    
+    args:
+        data:    A dictionary containing the x coords and data as arrays
+    '''
     plt.plot(data["x"], data["data"], *args, **kwargs )
 
 import sys
@@ -19,8 +26,13 @@ min_data = sys.maxint
 max_data = -sys.maxint - 1
 
 def plot_heatmap(data, *args, **kwargs):
-    import numpy as np
-    from mpl_toolkits.basemap import Basemap
+    '''
+    Plots a heatmap
+    
+    args:
+        data:    A dictionary containing the x coords, y coords and data as arrays
+    '''
+    import numpy as np    
     global min_data
     min_data = np.min(data["data"])
     global max_data
@@ -30,18 +42,34 @@ def plot_heatmap(data, *args, **kwargs):
     basemap.drawcoastlines()   
     
 def plot_contour(data, *args, **kwargs):
-    from mpl_toolkits.basemap import Basemap
+    '''
+    Plots a contour plot
+    
+    args:
+        data:    A dictionary containing the x coords, y coords and data as arrays
+    '''
     basemap = Basemap()    
     basemap.contour(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()    
     
 def plot_contourf(data, *args, **kwargs):
-    from mpl_toolkits.basemap import Basemap
+    '''
+    Plots a filled contour
+    
+    args:
+        data:    A dictionary containing the x coords, y coords and data as arrays
+    '''
     basemap = Basemap()    
     basemap.contourf(data["x"], data["y"], data["data"], latlon = True, *args, **kwargs)
     basemap.drawcoastlines()  
 
 def plot_scatter(data, *args, **kwargs):
+    '''
+    Plots a scatter plot
+    
+    args:
+        data:    A dictionary containing the x coords, y coords and data as arrays
+    '''
     from math import pow
     import numpy as np
     minval = np.min(data["data"])
@@ -54,6 +82,12 @@ def plot_scatter(data, *args, **kwargs):
 num_of_preexisting_plots = 0
 
 def plot_scatteroverlay(data, *args, **kwargs):
+    '''
+    Plots a heatmap overlayed with one or more scatter plots
+    
+    args:
+        data:    A dictionary containing the x coords, y coords and data as arrays
+    '''
     global num_of_preexisting_plots
     if num_of_preexisting_plots == 0:
         plot_heatmap(data, *args, **kwargs)
