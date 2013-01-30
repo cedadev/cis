@@ -1,8 +1,25 @@
 """
 Module containing hdf file utility functions for the SD object
 """
-from logilab.common import attrdict
-import numpy as np
+
+from jasmin_cis.data_io.hdf_util import __fill_missing_data
+
+def get_hdf_SD_file_variables(filename):
+    '''
+    Get all the variables from an HDF SD file
+
+    args:
+        filename: The filename of the file to get the variables from
+
+    returns:
+        An OrderedDict containing the variables from the file
+    '''
+    from pyhdf import SD
+
+    # Open the file.
+    datafile = SD.SD(filename)
+    # List of required variable names.
+    return datafile.datasets()
 
 def read_hdf4_SD_variable(filename, name):
     """
@@ -58,23 +75,6 @@ def read_hdf4_SD(filename, names=None, datadict=None):
     
     return datadict
 
-def get_hdf_SD_file_datasets(filename):
-    '''
-    Get all the variables from an HDF SD file
-    
-    args:
-        filename: The filename of the file to get the variables from
-    
-    returns:
-        An OrderedDict containing the variables from the file
-    '''
-    from pyhdf import SD
-    
-    # Open the file.
-    datafile = SD.SD(filename)
-    # List of required variable names.
-    return datafile.datasets()
-
 def read_hdf4_SD_metadata(sds):
     "Retrieves long name and units from an sds instance"
 
@@ -105,7 +105,8 @@ def get_hdf4_SD_data(sds, calipso_scaling=False):
     data = sds.get()
     attributes = sds.attributes()
 
-    data = __fill_missing_data(data, attributes)
+    missing_val = attributes.get('_FillValue', None)  # Missing data.
+    data = __fill_missing_data(data, missing_val)
 
     if calipso_scaling:
         data = __apply_scaling_factor_CALIPSO(data, attributes)
@@ -136,18 +137,5 @@ def __apply_scaling_factor_MODIS(data, attributes):
     offset  = attributes.get('add_offset', 0)   # Offsets and scaling.
     scale_factor = attributes.get('scale_factor', 1)
     data = (data - offset) * scale_factor
-    return data
-
-def __fill_missing_data(data, attributes):
-    '''
-    Replace missing data with NaN
-
-    @param data: raw data (numpy array) from sds instance
-    @param attributes: Attributes from sds instance
-    @return: A numpy array containing the raw data with missing data is replaced by NaN
-    '''
-    fill_value = attributes.get('_FillValue', None)  # Missing data.
-    w_fill_mask = np.where(data == fill_value, np.nan, 1)
-    data = data * w_fill_mask
     return data
 

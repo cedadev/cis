@@ -1,11 +1,11 @@
 from jasmin_cis.plot import Plotter
 from jasmin_cis.data_io.read import read_variable_from_files
-from jasmin_cis.test.test_util.mock import gen_random_data, gen_random_x, gen_random_y, ScatterData
+from jasmin_cis.test.test_util.mock import gen_random_data, gen_random_lon, gen_random_lat, ScatterData
 
-x1 = [gen_random_x(), gen_random_x(), gen_random_x(), gen_random_x(), gen_random_x()]
-x2 = [gen_random_x(), gen_random_x(), gen_random_x(), gen_random_x(), gen_random_x()]
-y1 = [gen_random_y(), gen_random_y(), gen_random_y(), gen_random_y(), gen_random_y()]
-y2 = [gen_random_y(), gen_random_y(), gen_random_y(), gen_random_y(), gen_random_y()]
+x1 = [gen_random_lon(), gen_random_lon(), gen_random_lon(), gen_random_lon(), gen_random_lon()]
+x2 = [gen_random_lon(), gen_random_lon(), gen_random_lon(), gen_random_lon(), gen_random_lon()]
+y1 = [gen_random_lat(), gen_random_lat(), gen_random_lat(), gen_random_lat(), gen_random_lat()]
+y2 = [gen_random_lat(), gen_random_lat(), gen_random_lat(), gen_random_lat(), gen_random_lat()]
 data = [gen_random_data(), gen_random_data(), gen_random_data(), gen_random_data(), gen_random_data()]
 scatter_data1 = ScatterData(x1, y1, data, (len(x1), len(y1)), "Scatter 1")
 scatter_data2 = ScatterData(x2, y2, None, (len(x2), len(y2)), "Scatter 2")
