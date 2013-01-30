@@ -163,16 +163,22 @@ class Plotter(object):
             for option, value in options.iteritems():        
                 self.plot_options[option](value)      
                  
-        if self.plot_type == "line":
+        if self.plot_type == "line" or "scatter" in self.plot_type:
             legend_titles = []
             for i, item in enumerate(self.data):
                 if datafiles is not None and datafiles[i]["label"]:
                     legend_titles.append(datafiles[i]["label"])
                 else:
                     legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
-            plt.legend(legend_titles, loc="best")
-        elif self.plot_type != "scatteroverlay":
-            plt.colorbar(orientation = colour_bar_orientation)
+            handles = self.plots
+            if self.plot_type == "scatteroverlay":
+                handles = handles[1:]
+                legend_titles = legend_titles[1:]
+            legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
+            legend.draggable(state = True)
+        else:
+            plt.colorbar(orientation = Plotter.colour_bar_orientation)
+        
         axes = []
         for dim in xrange(len(self.data[0].shape)):
             for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
