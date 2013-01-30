@@ -33,8 +33,8 @@ class Plotter(object):
         self.num_of_preexisting_plots = 0
         self.min_data = sys.maxint
         self.max_data = -sys.maxint - 1
-        self.plot()
         self.plots = []
+        self.plot() # Call main method
     
     def plot_line(self, data_item):
         '''
@@ -43,7 +43,6 @@ class Plotter(object):
         args:
             data:    A dictionary containing the x coords and data as arrays
         '''
-        plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs )
         self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
     
     def plot_heatmap(self, data_item):
@@ -56,7 +55,6 @@ class Plotter(object):
         import numpy as np    
         self.min_data = np.min(data_item["data"])
         self.max_data = np.max(data_item["data"])
-        basemap.drawcoastlines()   
         self.basemap = Basemap()    
         self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
         
@@ -67,7 +65,6 @@ class Plotter(object):
         args:
             data:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        basemap.drawcoastlines()    
         self.basemap = Basemap()    
         self.plots.append(self.basemap.contour(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
         
@@ -78,7 +75,6 @@ class Plotter(object):
         args:
             data:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        basemap.drawcoastlines()  
         self.basemap = Basemap()    
         self.plots.append(self.basemap.contourf(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
     
@@ -177,6 +173,13 @@ class Plotter(object):
             plt.legend(legend_titles, loc="best")
         elif self.plot_type != "scatteroverlay":
             plt.colorbar(orientation = colour_bar_orientation)
+        axes = []
+        for dim in xrange(len(self.data[0].shape)):
+            for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
+                axes.append(coord.name())
+        
+        if "latitude" in axes and "longitude" in axes:
+            self.basemap.drawcoastlines()
     
     def __set_width_and_height(self):
         '''
