@@ -14,7 +14,7 @@ class PlotType(object):
             self.variable_dimensions = variable_dimensions
             self.plot_method = plot_method
 
-class Plotter(object):                
+class Plotter(object):
     plot_options = { 'title' : plt.title,
                   'xlabel' : plt.xlabel, 
                   'ylabel' : plt.ylabel,
@@ -24,6 +24,7 @@ class Plotter(object):
                            2 : 'heatmap'}
     
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
+    
     def __init__(self, data, plot_type = None, out_filename = None, *args, **kwargs):
         self.data = data
         self.plot_type = plot_type
@@ -85,7 +86,11 @@ class Plotter(object):
         args:
             data:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        from math import pow        
+        from math import pow  
+        colour_scheme = self.kwargs.get("color", None)
+        minval = None
+        maxval = None   
+        mark = self.kwargs.pop("marker", "o") 
         if data_item["data"] is not None:
             import numpy as np
             minval = np.min(data_item["data"])
@@ -93,9 +98,10 @@ class Plotter(object):
             if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1):
                 minval = self.min_data
                 maxval = self.max_data
-            plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"], 2), c = data_item["data"], vmin = minval, vmax = maxval)
-        else:
-            plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"] , 2))
+            if colour_scheme is None:
+                colour_scheme = data_item["data"]
+        if colour_scheme is None:
+            colour_scheme = "b"
         self.plots.append(plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"], 2), c = colour_scheme, vmin = minval, vmax = maxval, marker = mark))
     
     def plot_scatteroverlay(self, data_item):
@@ -106,8 +112,11 @@ class Plotter(object):
             data:    A dictionary containing the x coords, y coords and data as arrays
         '''
         if self.num_of_preexisting_plots == 0:
+            self.kwargs.pop("marker", None)
+            self.kwargs["label"] = "_nolegend_"
             self.plot_heatmap(data_item)
-            plt.colorbar(orientation = "horizontal")
+            self.kwargs.pop("label")
+            plt.colorbar(orientation = Plotter.colour_bar_orientation)
         else:
             self.plot_scatter(data_item)    
         self.num_of_preexisting_plots += 1            
@@ -119,7 +128,7 @@ class Plotter(object):
                 'contourf' : PlotType(1, 2, plot_contourf),
                 'scatteroverlay' : PlotType(None, 2, plot_scatteroverlay)}
     
-    def __format_plot(self, options, datafiles, colour_bar_orientation): 
+    def __format_plot(self, options, datafiles): 
         '''
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
         Tries to assign default value if value not specified
@@ -186,6 +195,7 @@ class Plotter(object):
         
         if "latitude" in axes and "longitude" in axes:
             self.basemap.drawcoastlines()
+        
     
     def __set_width_and_height(self):
         '''
@@ -237,19 +247,13 @@ class Plotter(object):
         datafiles = self.kwargs.pop("datafiles", None) 
         for i, item in enumerate(self.data):
             # Temporarily add args to kwargs
-            if self.plot_type == "line" and datafiles is not None:
-                if datafiles[i]["linestyle"]:
-                    self.kwargs["linestyle"] = datafiles[i]["linestyle"]
-                if datafiles[i]["color"]:
-                    self.kwargs["color"] = datafiles[i]["color"]
+            if datafiles is not None:
+                self.__add_datafile_args_to_kwargs(datafiles[i])
             item_to_plot = unpack_cube(item)
             Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
             # Remove temp args
-            if self.plot_type == "line" and datafiles is not None:
-                if datafiles[i]["linestyle"]:
-                    self.kwargs.pop("linestyle")
-                if datafiles[i]["color"]:
-                    self.kwargs.pop("color")
+            if datafiles is not None:
+                self.__remove_datafile_args_from_kwargs(datafiles[i])
         return datafiles
     
     def __warn_if_incorrect_colour_type_used(self):
@@ -380,10 +384,10 @@ class Plotter(object):
         plot_format_options = self.__create_plot_format_options()
         valrange = self.__prepare_val_range()  
         self.__set_width_and_height()  
-        colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
+        Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
         datafiles = self.__do_plot()  
         self.__apply_line_graph_value_limits(valrange)
             
-        self.__format_plot(plot_format_options, datafiles, colour_bar_orientation) 
+        self.__format_plot(plot_format_options, datafiles) 
         
         self.__output_to_file_or_screen()        
