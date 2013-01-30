@@ -1,5 +1,5 @@
 '''
-Module for plotting graphs.
+Class for plotting graphs.
 Also contains dictionaries for the valid plot types and formatting options
 '''
 
@@ -128,6 +128,52 @@ class Plotter(object):
                 'contourf' : PlotType(1, 2, plot_contourf),
                 'scatteroverlay' : PlotType(None, 2, plot_scatteroverlay)}
     
+    def __set_font_size(self, options):
+        if options["fontsize"] is not None:
+            options["fontsize"] = { "font.size" : float(options["fontsize"]) }   
+        else:
+            options.pop("fontsize")
+        return options
+    
+    def __set_x_label(self, options):
+        if options["xlabel"] is None:
+            for dim in xrange(len(self.data[0].shape)):
+                for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
+                    xlabel = coord.name()
+            options["xlabel"] = xlabel.capitalize()
+        return options
+    
+    def __set_y_label(self, options):
+        if options["ylabel"] is None:
+            if len(self.data) == 1:
+                options["ylabel"] = self.data[0].long_name.title()
+            else:
+                options["ylabel"] = str(self.data[0].units)
+        return options
+    
+    def __create_legend(self, datafiles):
+        legend_titles = []
+        for i, item in enumerate(self.data):
+            if datafiles is not None and datafiles[i]["label"]:
+                legend_titles.append(datafiles[i]["label"])
+            else:
+                legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+        handles = self.plots
+        if self.plot_type == "scatteroverlay":
+            handles = handles[1:]
+            legend_titles = legend_titles[1:]
+        legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
+        legend.draggable(state = True)
+    
+    def __draw_coastlines(self):
+        axes = []
+        for dim in xrange(len(self.data[0].shape)):
+            for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
+                axes.append(coord.name())
+        
+        if "latitude" in axes and "longitude" in axes:
+            self.basemap.drawcoastlines()
+                        
     def __format_plot(self, options, datafiles): 
         '''
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
@@ -140,24 +186,12 @@ class Plotter(object):
             datafiles:               The list of datafiles from the command line, as a dictionary, containing filename, variable, label etc
             colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
-        if options is not None:   
-            if options["fontsize"] is not None:
-                options["fontsize"] = { "font.size" : float(options["fontsize"]) }   
-            else:
-                options.pop("fontsize")      
-            
+        if options is not None:  
+            options = self._set_font_size()             
             # If any of the options have not been specified, then use the defaults
             if self.plot_type == "line":
-                if options["xlabel"] is None:
-                    for dim in xrange(len(self.data[0].shape)):
-                        for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
-                            xlabel = coord.name()
-                    options["xlabel"] = xlabel.capitalize()
-                if options["ylabel"] is None:
-                    if len(self.data) == 1:
-                        options["ylabel"] = self.data[0].long_name.title()
-                    else:
-                        options["ylabel"] = str(self.data[0].units)
+                options = self.__set_x_label(options)
+                options = self.__set_y_label(options)
             else:
                 options["xlabel"] = ""
                 options["ylabel"] = ""
@@ -165,38 +199,19 @@ class Plotter(object):
             if not options["title"]:
                 options["title"] = ""
                 
-            if self.plot_type != "line":
-                if not options["title"]:
+            if self.plot_type != "line" and not options["title"]:
                     options["title"] = self.data[0].long_name.title()            
             
             for option, value in options.iteritems():        
                 self.plot_options[option](value)      
                  
         if self.plot_type == "line" or "scatter" in self.plot_type:
-            legend_titles = []
-            for i, item in enumerate(self.data):
-                if datafiles is not None and datafiles[i]["label"]:
-                    legend_titles.append(datafiles[i]["label"])
-                else:
-                    legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
-            handles = self.plots
-            if self.plot_type == "scatteroverlay":
-                handles = handles[1:]
-                legend_titles = legend_titles[1:]
-            legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
-            legend.draggable(state = True)
+            self.__create_legend(datafiles)
         else:
             plt.colorbar(orientation = Plotter.colour_bar_orientation)
         
-        axes = []
-        for dim in xrange(len(self.data[0].shape)):
-            for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
-                axes.append(coord.name())
+        self.__draw_coastlines()
         
-        if "latitude" in axes and "longitude" in axes:
-            self.basemap.drawcoastlines()
-        
-    
     def __set_width_and_height(self):
         '''
         Sets the width and height of the plot
