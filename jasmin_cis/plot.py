@@ -23,6 +23,7 @@ class Plotter(object):
     default_plot_types = { 1 : 'line',
                            2 : 'heatmap'}
     
+    line_styles = ["solid", "dashed", "dashdot", "dotted"]
     def __init__(self, data, plot_type = None, out_filename = None, *args, **kwargs):
         self.data = data
         self.plot_type = plot_type
