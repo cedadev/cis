@@ -225,13 +225,16 @@ def __warn_if_incorrect_colour_type_used(plot_type, **kwargs):
         if arg is not None:
             logging.warn("Cannot specify a colour map for plot type '" + plot_type + "', did you mean to use color?")
 
-def __set_default_plot_type(variable_dim):
+def __set_default_plot_type(variable_dim, number_of_data_objects):
     '''
     Sets the default plot type based on the number of dimensions of the data
     '''
     from jasmin_cis.exceptions import InvalidPlotTypeError
     try:
-        plot_type = default_plot_types[variable_dim]
+        if number_of_data_objects > 1 and variable_dim == 2:
+            plot_type = 'scatteroverlay'
+        else:
+            plot_type = default_plot_types[variable_dim]
     except KeyError:
         raise InvalidPlotTypeError("There is no valid plot type for this variable - check its dimensions")
     return plot_type
@@ -330,13 +333,13 @@ def plot(data, plot_type = None, out_filename = None, *args, **kwargs):
     variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
     
     if plot_type is None:
-        plot_type = __set_default_plot_type(variable_dim)
+        plot_type = __set_default_plot_type(variable_dim, len(data))
     
     __validate_data(data, plot_type, variable_dim, **kwargs)
     
     plot_format_options = __create_plot_format_options(**kwargs)
     valrange, kwargs = __prepare_val_range(plot_type, **kwargs)  
-    kwargs = __set_width_and_height(kwargs)  
+    kwargs = __set_width_and_height(**kwargs)  
     colour_bar_orientation = kwargs.pop("cbarorient", "horizontal")  
     datafiles = __do_plot(data, plot_type, *args, **kwargs)  
     __apply_line_graph_value_limits(plot_type, valrange)
