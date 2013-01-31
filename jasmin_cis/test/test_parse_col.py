@@ -23,14 +23,14 @@ def can_specify_one_valid_samplefile_and_one_datafile_without_a_method_if_defaul
     
 @istest
 def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_if_default_set():
-    args = ["col", valid_1d_filename, valid_1d_filename + "::method", "--variable", "variable"]
+    args = ["col", valid_1d_filename, valid_1d_filename + "::nn", "--variable", "variable"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
     eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
     
 @istest
 def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_or_method_if_default_set():
-    args = ["col", valid_1d_filename, valid_1d_filename + "::", "--variable", "variable", "--method", "method"]
+    args = ["col", valid_1d_filename, valid_1d_filename + "::", "--variable", "variable", "--method", "nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
     eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
@@ -56,15 +56,15 @@ def can_specify_one_valid_samplefile_and_many_datafiles_with_varying_specificati
     args = ["col", valid_1d_filename, 
             valid_1d_filename + "::", 
             valid_1d_filename + ":variable:", 
-            valid_1d_filename + "::method", 
-            valid_1d_filename + ":variable:method",
-            "--variable", "variable", "--method", "method"]
+            valid_1d_filename + "::nn", 
+            valid_1d_filename + ":variable:nn",
+            "--variable", "variable", "--method", "nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], 
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], 
         args["datafiles"])
     
 @istest
@@ -72,16 +72,16 @@ def can_specify_default_variable_and_method():
     args = ["col", valid_1d_filename, 
             valid_1d_filename + "::", 
             valid_1d_filename + ":variable:", 
-            valid_1d_filename + "::method", 
-            valid_1d_filename + ":variable:method",
+            valid_1d_filename + "::nn", 
+            valid_1d_filename + ":variable:nn",
             "--variable", "defaultVariable",
-            "--method", "defaultMethod"]
+            "--method", "nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "defaultVariable", "method" : "defaultMethod"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "defaultMethod"},
-         {"filename" : valid_1d_filename, "variable" : "defaultVariable", "method" : "method"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], 
+    eq_([{"filename" : valid_1d_filename, "variable" : "defaultVariable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "defaultVariable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], 
         args["datafiles"])
 
 @istest

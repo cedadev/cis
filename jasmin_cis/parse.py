@@ -209,7 +209,7 @@ def check_valid_col_method(method_name, parser):
         Check that if a co-location method is specified that it is a valid option
     '''
     from col import Colocator
-    if method_name and method_name not in Colocator.gridded_colocation_methods:
+    if method_name and method_name not in Colocator.ColocationTechniques._fields:
         parser.error("'" + method_name + "' is not a valid co-location method")
 
 def validate_col_args(arguments, parser):
