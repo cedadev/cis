@@ -10,9 +10,8 @@ def __setup_logging(log_file, log_level):
     '''
     Set up the logging used throughout cis
     
-    args:
-        log_file:    The filename of the file to store the logs
-        log_level:   The level at which to log 
+    @param log_file:    The filename of the file to store the logs
+    @param log_level:   The level at which to log 
     '''
     import logging
     logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
@@ -25,8 +24,7 @@ def __error_occurred(e):
     '''
     Wrapper method used to print error messages.
     
-    args:
-        An error object or any string
+    @param e: An error object or any string
     '''
     sys.stderr.write(str(e) + "\n")
     exit(1)
@@ -37,8 +35,8 @@ def plot_cmd(main_arguments):
     Main routine for handling calls to the 'plot' command. 
     Reads in the data files specified and passes the rest of the arguments to the plot function.
         
-    args:
-        main_arguments:    The command line arguments (minus the plot command)        
+
+    @param main_arguments:    The command line arguments (minus the plot command)        
     '''
     from plot import Plotter
     from data_io.read import read_variable_from_files 
@@ -70,8 +68,7 @@ def info_cmd(main_arguments):
     particular variable was specified, otherwise prints detailed information about each
     variable specified
         
-    args:
-        main_arguments:    The command line arguments (minus the info command)
+    @param main_arguments:    The command line arguments (minus the info command)
     '''    
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
@@ -86,8 +83,7 @@ def col_cmd(main_arguments):
     '''
     Main routine for handling calls to the co-locate ('col') command. 
         
-    args:
-        main_arguments:    The command line arguments (minus the col command)         
+    @param main_arguments:    The command line arguments (minus the col command)         
     '''
     from jasmin_cis.exceptions import InvalidColocationMethodError, CISError
     from data_io.read import read_file_coordinates, read_variable_from_files

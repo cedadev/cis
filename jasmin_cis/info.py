@@ -9,10 +9,9 @@ def print_variables(all_variables, user_variables=None, print_err=True):
     '''
         Short routine for printing all variables, or a specified few.
 
-        args:
-        all_variables:   All of the variables to print or search through
-        user_variables:   The user specified variables of interest
-        print_err:   Boolean for deciding to print an error if a variable isn't found
+        @param all_variables:   All of the variables to print or search through
+        @param user_variables:   The user specified variables of interest
+        @param print_err:   Boolean for deciding to print an error if a variable isn't found
 
     '''
     if user_variables is not None:
@@ -32,9 +31,8 @@ def info(filename, user_variables=None):
     File can contain either gridded and ungridded data.
     First tries to read data as gridded, if that fails, tries as ungridded.
 
-    args:
-        filenames:   The filenames of the files to read
-        user_variables:   The user specified variables of interest
+    @param filenames:   The filenames of the files to read
+    @param user_variables:   The user specified variables of interest
 
     '''
     from jasmin_cis.exceptions import CISError
