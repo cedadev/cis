@@ -3,6 +3,7 @@
 Command line interface for the Climate Intercomparison Suite (CIS)
 '''
 import sys
+from jasmin_cis.exceptions import CISError
 
 def __setup_logging(log_file, log_level):
     '''
@@ -75,30 +76,62 @@ def info_cmd(main_arguments):
     args:
         main_arguments:    The command line arguments (minus the info command)         
     '''    
-
-    from data_io.read import read_all_variables_from_file
-    from pyhdf.error import HDF4Error
-
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
     
     try:
-        file_variables = read_all_variables_from_file(filename)
-    except HDF4Error as e:
+        summarise_all_variables_from_file(filename, variables)
+    except CISError as e:
         __error_occurred(e)
     
-    if variables is not None:
-        for variable in variables:
+    
+def print_variables(all_variables, user_variables=None, print_err=True):
+    '''
+        Short routine for printing all variables, or a specified few.
+    
+        args:
+        all_variables:   All of the variables to print or search through
+        user_variables:   The user specified variables of interest
+        print_err:   Boolean for deciding to print an error if a variable isn't found
+    
+    '''
+    if user_variables is not None:
+        for user_var in user_variables:
             try:
-                # For hdf files this prints:
-                # dimension names, dimension lengths, data type and number of variables
-                print file_variables[variable]
+                print user_var+": "+str(all_variables[user_var])
             except KeyError:
-                sys.stderr.write("Variable '" + variable +  "' not found \n")
+                if print_err: sys.stderr.write("Variable '" + user_var +  "' not found \n")
     else:
-        for item in file_variables:
+        for item in all_variables:
             print item
 
+
+def summarise_all_variables_from_file(filename, user_variables=None):
+    '''
+    Read all the variables from a file and print to stdout.
+    File can contain either gridded and ungridded data.
+    First tries to read data as gridded, if that fails, tries as ungridded.
+    
+    args:
+        filenames:   The filenames of the files to read
+        user_variables:   The user specified variables of interest
+
+    '''
+    from jasmin_cis.exceptions import CISError
+    import data_io.read_gridded, data_io.read_ungridded
+    from pyhdf.error import HDF4Error
+    try:
+        file_variables = data_io.read_gridded.get_file_variables(filename)
+        print_variables(file_variables, user_variables)
+    except RuntimeError:
+        try:
+            sd_vars, vd_vars = data_io.read_ungridded.get_file_variables(filename)
+            print "SD variables:"
+            print_variables(sd_vars, user_variables, False)
+            print "VD variables:"
+            print_variables(vd_vars, user_variables, False)
+        except HDF4Error as e:
+            raise CISError(e)
 
 def col_cmd(main_arguments):
     '''

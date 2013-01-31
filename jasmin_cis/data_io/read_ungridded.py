@@ -16,10 +16,10 @@ def get_file_variables(filename):
         filename: The filename of the file to get the variables from
     
     '''
-    vars = hdf_sd.get_hdf_SD_file_variables(filename)
-    vars.update(hdf_vd.get_hdf_VD_file_variables(filename))
+    SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
+    VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
     
-    return vars
+    return SD_vars, VD_vars
 
 
 def get_file_coordinates(filename):
@@ -28,7 +28,7 @@ def get_file_coordinates(filename):
     each element of tuple being a 2D numpy array
     '''
 
-    data = hdf_vd.read_hdf4_VD(filename,['Latitude','Longitude'])
+    data = hdf_vd.get_hdf4_VD_data(filename,['Latitude','Longitude'])
     lat = data['Latitude'].get()
     long = data['Longitude'].get()
     
@@ -40,7 +40,7 @@ def get_file_coordinates_points(filename):
     Convert coordinate arrays into a list of points
     useful or colocation sampling   
     '''
-    from jasmin_cis.col import HyperPoint
+    from jasmin_cis.hyperpoint import HyperPoint
     
     latitude, longitude = get_file_coordinates(filename)
     
@@ -180,6 +180,22 @@ class UngriddedData(object):
                 self.metadata = None
         else:
             self.metadata = metadata
+        
+        self.x = [] # A numpy array
+        self.y = [] # A numpy array
+        self.data = [] # A numpy array
+        self.shape = None # A tuple
+        self.long_name = ""
+        self.units = ""
+        
+    def coords(self, optional_arg1 = None, optional_arg2 = None):
+        return [] # list of object Coord
+    
+    class Coord(object):
+        def __init__(self, name):
+            self.name = name
+        def name(self):
+            return self.name # String
         
 #    def _find_metadata(self):
 #        self.metadata = self.map.get_metadata(self._data)    

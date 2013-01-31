@@ -9,31 +9,31 @@ from test_files.data import *
 
 @istest
 def can_specify_one_valid_samplefile_and_one_complete_datafile():
-    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:method"]
+    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
     
 @istest
 def can_specify_one_valid_samplefile_and_one_datafile_without_a_method_if_default_set():
-    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:", "--method", "method"]
+    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:", "--method", "nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
     
 @istest
 def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_if_default_set():
     args = ["col", valid_1d_filename, valid_1d_filename + "::method", "--variable", "variable"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
     
 @istest
 def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_or_method_if_default_set():
     args = ["col", valid_1d_filename, valid_1d_filename + "::", "--variable", "variable", "--method", "method"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], args["datafiles"])
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
     
 @istest
 def can_specify_one_valid_samplefile_and_many_datafiles():
@@ -42,13 +42,13 @@ def can_specify_one_valid_samplefile_and_many_datafiles():
             valid_1d_filename + "::", 
             valid_1d_filename + "::", 
             valid_1d_filename + "::",
-            "--variable", "variable", "--method", "method"]
+            "--variable", "variable", "--method", "nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "method"}], 
+    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
+         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], 
         args["datafiles"])
     
 @istest
