@@ -75,9 +75,12 @@ def read_hdf4(filename,variables):
     '''
     from pyhdf.error import HDF4Error
     from jasmin_cis.exceptions import FileIOError
+
+    variables = variables + ['Latitude','Longitude','TAI_start','Profile_time']
     
     sds_dict = {}
     vds_dict = {}
+
     try:
         sds_dict = hdf_sd.read_sds(filename,variables)
     except HDF4Error as e:
