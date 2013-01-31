@@ -46,9 +46,9 @@ def info(filename, user_variables=None):
     except RuntimeError:
         try:
             sd_vars, vd_vars = data_io.read_ungridded.get_file_variables(filename)
-            print "SD variables:"
+            print "\n====== SD variables:"
             print_variables(sd_vars, user_variables, False)
-            print "VD variables:"
+            print "\n====== VD variables:"
             print_variables(vd_vars, user_variables, False)
         except HDF4Error as e:
             raise CISError(e)
