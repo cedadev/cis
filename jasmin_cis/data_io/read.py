@@ -4,31 +4,6 @@ Module for reading data.
 
 import read_gridded,read_ungridded
 
-def read_all_variables_from_file(filename):
-    from jasmin_cis.exceptions import CISError
-    from pyhdf.error import HDF4Error
-    '''
-    Read all the variables from a file.
-    File can contain either gridded and ungridded data.
-    First tries to read data as gridded, if that fails, tries as ungridded.
-    
-    args:
-        filenames:   The filenames of the files to read
-        
-    returns:
-        A list of variable objects describing the variables
-    '''
-    try:
-        file_variables = read_gridded.get_file_variables(filename)
-    except RuntimeError:
-        try:
-            file_variables = read_ungridded.get_file_variables(filename)
-        except HDF4Error as e:
-            raise CISError(e)
-    
-    return file_variables
-
-        
 def read_variable_from_files(filenames, variable):
     '''
     Read a specific variable from a list of files

@@ -3,6 +3,7 @@ Module containing hdf file utility functions for the VD object
 """
 import numpy as np
 from pyhdf.HDF import *
+from pyhdf.VS import *
 from jasmin_cis.data_io.hdf_util import __fill_missing_data
 
 def get_hdf_VD_file_variables(filename):
