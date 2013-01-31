@@ -40,7 +40,7 @@ def get_file_coordinates_points(filename):
     Convert coordinate arrays into a list of points
     useful or colocation sampling   
     '''
-    from jasmin_cis.hyperpoint import HyperPoint
+    from jasmin_cis.data_io.hyperpoint import HyperPoint
     
     latitude, longitude = get_file_coordinates(filename)
     
@@ -136,7 +136,7 @@ class UngriddedData(object):
             except HDF4Error as e:
                 raise FileIOError(str(e)+' for file: '+filename)
         return cls(data,'HDF_SD')
-    
+
 
     def __init__(self, data, data_type=None, metadata=None):
         '''

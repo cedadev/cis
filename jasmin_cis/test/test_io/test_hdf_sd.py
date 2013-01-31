@@ -41,9 +41,12 @@ def test_that_can_get_metadata_for_known_variable():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_hdf4_SD(filename)
     metadata = hdf_sd.read_hdf4_SD_metadata(dict['Latitude'])
-    eq_(metadata[0],"Geodetic Latitude")
-    eq_(metadata[1],"Degrees_north")
-    eq_(metadata[2],[-90.0, 90.0])
+    eq_(len(metadata),10)
+    eq_(metadata['_FillValue'],-999.0)
+    eq_(metadata['Parameter_Type'],"MODIS Input")
+    eq_(metadata['long_name'],"Geodetic Latitude")
+    eq_(metadata['units'],"Degrees_north")
+    eq_(metadata['valid_range'],[-90.0, 90.0])
 
 @istest
 @raises(KeyError)
@@ -51,3 +54,4 @@ def test_that_cannot_get_metadata_for_unknown_variable():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_hdf4_SD(filename)
     hdf_sd.read_hdf4_SD_metadata(dict['incognito'])
+

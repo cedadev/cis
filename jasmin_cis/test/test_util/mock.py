@@ -56,14 +56,14 @@ def get_random_1d_point():
     '''
         Creates a hyper point at some random point along the Grenwich meridian (lon = 0.0)
     '''
-    from jasmin_cis.hyperpoint import HyperPoint
+    from jasmin_cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat())
 
 def get_random_2d_point():
     '''
         Creates a random point on the surface of the globe
     '''
-    from jasmin_cis.hyperpoint import HyperPoint
+    from jasmin_cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat(), gen_random_lon())
 
 def get_random_3d_point():
@@ -71,7 +71,7 @@ def get_random_3d_point():
         Creates a random point in 3d space upto 100km above the surface of the globe
     '''
     import random
-    from jasmin_cis.hyperpoint import HyperPoint
+    from jasmin_cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat(), gen_random_lon(), random.randrange(0.0, 100.0))
 
 def make_dummy_1d_points_list(num):
