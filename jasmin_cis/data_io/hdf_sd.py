@@ -21,27 +21,7 @@ def get_hdf_SD_file_variables(filename):
     # List of required variable names.
     return datafile.datasets()
 
-def read_hdf4_SD_variable(filename, name):
-    """
-    Reads a single SD from an HDF4 file. 
-    
-    Returns:
-        A single SDS instance 
-        
-    Arguments:
-        filename    -- The name (with path) of the HDF file to read.
-        name       -- A variable (dataset) name to read from the
-                       file. The names must appear exactly as in in the HDF file.
-    """
-    from pyhdf import SD
-
-    # Open the file.
-    datafile = SD.SD(filename)
-    sds = datafile.select(name) # SDS object.
-    
-    return sds
-
-def read_hdf4_SD(filename, names=None, datadict=None):
+def read_sds(filename, names=None, datadict=None):
     """
     Reads SD from a HDF4 file into a dictionary. 
     
@@ -75,7 +55,7 @@ def read_hdf4_SD(filename, names=None, datadict=None):
     
     return datadict
 
-def read_hdf4_SD_metadata(sds):
+def get_metadata(sds):
     '''
     Retrieves all metadata
 
@@ -85,22 +65,7 @@ def read_hdf4_SD_metadata(sds):
 
     return sds.attributes()
 
-def get_metadata(filename, variables=None):
-    '''
-    Get the metadata
-    @param filename:
-    @param variables:
-    @return:
-    '''
-    sds_dict = read_hdf4_SD(filename, variables)
-
-    metadata_dict = {}
-    for variable, sds in sds_dict:
-        metadata_dict[variable] = sds.attributes()
-
-    return metadata_dict
-
-def get_hdf4_SD_data(sds, calipso_scaling=False):
+def get_data(sds, calipso_scaling=False):
     """
     Reads raw data from an SD instance. Automatically applies the
     scaling factors and offsets to the data arrays often found in NASA HDF-EOS

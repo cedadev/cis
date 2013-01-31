@@ -10,13 +10,13 @@ import numpy as np
 @istest
 def test_that_can_read_all_variables_from_hdf4_SD():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_hdf4_SD(filename)
+    dict = hdf_sd.read_sds(filename)
     eq_(len(dict),67)
 
 @istest
 def test_that_can_read_known_variables_from_hdf4_SD():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_hdf4_SD(filename,['Latitude','Longitude'])
+    dict = hdf_sd.read_sds(filename,['Latitude','Longitude'])
     eq_(len(dict),2)
 
     lat_sds = hdf_sd.read_hdf4_SD_variable(filename,'Latitude')
@@ -26,12 +26,12 @@ def test_that_can_read_known_variables_from_hdf4_SD():
 @raises(HDF4Error)
 def test_that_cannot_read_unknown_variables_from_hdf4_sd():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_hdf4_SD(filename,['athing','unechose','einding'])
+    dict = hdf_sd.read_sds(filename,['athing','unechose','einding'])
 
 @istest
 def test_that_can_get_datasets_from_hdf4_sd():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_hdf4_SD(filename)
+    dict = hdf_sd.read_sds(filename)
 
     dict2 = hdf_sd.get_hdf_SD_file_variables(filename)
     eq_(set(dict.keys()),set(dict2.keys()))
@@ -39,8 +39,8 @@ def test_that_can_get_datasets_from_hdf4_sd():
 @istest
 def test_that_can_get_metadata_for_known_variable():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_hdf4_SD(filename)
-    metadata = hdf_sd.read_hdf4_SD_metadata(dict['Latitude'])
+    dict = hdf_sd.read_sds(filename)
+    metadata = hdf_sd.get_metadata(dict['Latitude'])
     eq_(len(metadata),10)
     eq_(metadata['_FillValue'],-999.0)
     eq_(metadata['Parameter_Type'],"MODIS Input")
@@ -52,6 +52,6 @@ def test_that_can_get_metadata_for_known_variable():
 @raises(KeyError)
 def test_that_cannot_get_metadata_for_unknown_variable():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_hdf4_SD(filename)
-    hdf_sd.read_hdf4_SD_metadata(dict['incognito'])
+    dict = hdf_sd.read_sds(filename)
+    hdf_sd.get_metadata(dict['incognito'])
 
