@@ -2,34 +2,60 @@
 Module for writing data to NetCDF files
 '''
 from netCDF4 import Dataset
-    
-def create_variable(nc_file, name, v_type, dimensions, data_object = None):
-    var = nc_file.createVariable(name, v_type, dimensions)
-    
-    return var
+from numpy import shape
 
-def write_to_file(variables, filename):
+class UngriddedData(object):
+    def __init__(self, x, y, data, long_name, units, coords, v_type, short_name):
+        self.x = x # A numpy array
+        self.y = y # A numpy array
+        self.data = data # A numpy array
+        self.data_list = [x, y, data]
+        self.shape = shape(data) # A tuple
+        self.long_name = long_name # A string
+        self.units = units # A string
+        self._coords = coords
+        self.type = v_type
+        self.short_name = short_name
+        
+    def coords(self, optional_arg1 = None, optional_arg2 = None):
+        return self._coords # list of object Coord
+    
+class Coord(object):
+    def __init__(self, name):
+        self._name = name
+    def name(self):
+        return self._name
+
+def create_dimensions(nc_file, data_object):
+    dimensions = ()
+    for i, coord in enumerate(data_object.coords()):
+        nc_file.createDimension(coord.name(), len(data_object.data_list[i]))
+        dimensions = dimensions + (coord.name(),)
+        
+        var = nc_file.createVariable(coord.name(), data_object.type, coord.name())
+        var[:] = data_object.data_list[i]
+        
+    return dimensions
+
+def set_metadata(nc_file, data_object):
+    nc_file.units = data_object.units
+    nc_file.long_name = data_object.long_name
+
+def write_to_file(data_object, filename):
     # Create file
     netcdf_file = Dataset(filename, 'w')
-    # Create dimensions
-    netcdf_file.createDimension("latitude", size = 3) # Size = None or 0 = Unlimited (can be appended to)
-    netcdf_file.createDimension("longitude", size = 2)
-    netcdf_file.createDimension("time", size = 0)
-    # Create variables
-    time = create_variable(netcdf_file, "time", "d", ("time",)) # d = double
-    time.standard_name = "time"
-    time.units = "minutes since 1994-01-01 00:00:00"
-    time.long_name = "time"
-    
-    latitude = create_variable(netcdf_file, "latitude", "f", ("latitude",)) # f = float
-    latitude.standard_name = "latitude"
-    latitude.units = "degrees_north"
-    latitude.point_spacing = "even"
-    latitude.long_name = "latitude"
-    
-    longitude = create_variable(netcdf_file, "longitude", "f", ("longitude",))
-    
-    temp = netcdf_file.createVariable("temp", "f", ("time", "latitude", "longitude"))
+    dimensions = create_dimensions(netcdf_file, data_object)
+    variable = netcdf_file.createVariable(data_object.short_name, data_object.type, dimensions)
+    variable[:] = data_object.data
+    set_metadata(netcdf_file, data_object)
     netcdf_file.close()
 
-write_to_file(None, "test_netcdf_file")
+def main():
+    x = [1, 2, 3, 4, 5]
+    y = [2, 4, 6, 8]
+    data = [[0.1, 0.5, 0.6, 0.2, 0.9],[0.2, 3.5, 0.6, 2.2, 0.9],[4.1, 5.5, 2.2, 2.2, 0.2],[0.2, 5.5, 6.6, 0.7, 6.9]]
+    coords = [Coord("latitude"), Coord("longitude")]
+    data_object = UngriddedData(x, y, data, "TOTAL RAINFALL RATE: LS+CONV KG/M2/S", "kg m-2 s-1", coords, "f", "rain")
+    write_to_file(data_object, "test_netcdf_file")
+    
+main()
