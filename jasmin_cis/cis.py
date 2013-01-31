@@ -49,21 +49,17 @@ def plot_cmd(main_arguments):
     
     try:        
         data = [read_variable_from_files(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
-    except IrisError as e:
+    except (IrisError, ex.InvalidVariableError, ex.FileIOError) as e:
         __error_occurred(e)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + e)
-    except ex.InvalidVariableError as e:
-        __error_occurred(e)
-    
+        
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
     
     try:
         Plotter(data, plot_type, output, **main_arguments)
-    except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError) as e:
-        __error_occurred(e)
-    except ValueError as e:
+    except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError, ValueError) as e:
         __error_occurred(e)
 
 
