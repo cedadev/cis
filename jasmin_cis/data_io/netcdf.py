@@ -63,4 +63,4 @@ def unpack_cube(cube):
         
         return { "data": data, "x" : x, "y" : y }
     else:
-        return cube
+        return { "data": cube.data, "x" : cube.x, "y" : cube.y }

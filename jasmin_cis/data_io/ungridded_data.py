@@ -56,13 +56,29 @@ class UngriddedData(object):
                 add_element_to_list_in_dict(all_sdata,name,sdata[name])
             for name in vdata.keys():
                 add_element_to_list_in_dict(all_vdata,name,vdata[name])
+                
+
+        lat = hdf_vd.get_data(all_vdata['Latitude'])
+        lon = hdf_vd.get_data(all_vdata['Longitude'])
+        alt = hdf_sd.get_data(all_sdata['Height'])
+        time = hdf_vd.get_data(all_vdata['TAI_start']) + hdf_sd.get_data(all_sdata['Profile_time'])
+                        
         for variable in all_sdata.keys():
-            outdata[variable] = cls(all_sdata[variable],'HDF_SD')
+            outdata[variable] = cls(all_sdata[variable],lat,lon,alt,time,'HDF_SD')
         for variable in all_vdata.keys():    
-            outdata[variable] = cls(all_vdata[variable],'HDF_VD')
+            outdata[variable] = cls(all_vdata[variable],lat,lon,alt,time,'HDF_VD')
+            
+        #['Latitude','Longitude','TAI_start','Profile_time', 'Height']
+            
         return outdata
     
-    def __init__(self, data, data_type=None, metadata=None):
+    class Coord(object):
+        def __init__(self, name):
+            self.name = name
+        def name(self):
+            return self.name # String
+    
+    def __init__(self, data, lat,lon,height,time, data_type=None, metadata=None):
         '''
         Constructor
         
@@ -106,21 +122,36 @@ class UngriddedData(object):
         else:
             self.metadata = metadata
         
-        self.x = [] # A numpy array
-        self.y = [] # A numpy array
-        self.data = [] # A numpy array
-        self.shape = None # A tuple
-        self.long_name = ""
-        self.units = ""
+        self.lat = lat
+        self.lon = lon
         
-    def coords(self, optional_arg1 = None, optional_arg2 = None):
-        return [] # list of object Coord
-    
-    class Coord(object):
+        self.alt = height
+        self.time = time
+        
+        self.x = self.time # A numpy array
+        self.y = self.alt # A numpy arra    class Coord(object):
         def __init__(self, name):
             self.name = name
         def name(self):
-            return self.name # String
+            return self.name # Stringy
+
+        # coords is a list of coord objects
+        coords = [ UngriddedData.Coord('Time'), UngriddedData.Coord('Height')]
+        self._coords = coords
+        
+        self.name = self.metadata["info"][0]
+        self.shape = self.metadata["info"][2]
+        self.long_name = self.metadata["attributes"]["long_name"]
+        self.units = self.metadata["attributes"]["units"]
+        self.range = self.metadata["attributes"]["range"]
+
+        #self.type = v_type
+        #self.short_name = short_name
+        #self.data_list = [x, y, data]
+        
+        
+    def coords(self, optional_arg1 = None, optional_arg2 = None):
+        return self._coords # list of object Coord
         
 #    def _find_metadata(self):
 #        self.metadata = self.map.get_metadata(self._data)    
