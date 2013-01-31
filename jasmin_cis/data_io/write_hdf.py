@@ -1,70 +1,42 @@
-from pyhdf.SD import *
-from numpy import *
-from jasmin_cis.test.test_util.mock import gen_random_data
+from pyhdf.SD import SD, SDC 
 
-filename = "test_hdf_file"
-
-def create_variable(hdf_file, name):
-    var = hdf_file.create(name, SDC.FLOAT32, (3,3))
-    var.description = name + " 3x3 float array"
-    var.units = "blah"
+def create_variable(hdf_file, name, data):
+    '''
+    Create a variable in the given hdf file
     
-    dimension1 = var.dim(0)
-    dimension2 = var.dim(1)
-    
-    dimension1.setname("width")
-    dimension2.setname("height")
-    
-    dimension1.units = "m"
-    dimension2.units = "cm"
-    
-    var[0] = (gen_random_data(), gen_random_data(), gen_random_data())
-    var[1] = (gen_random_data(), gen_random_data(), gen_random_data())
-    var[2] = (gen_random_data(), gen_random_data(), gen_random_data())
-    
+    @param hdf_file:    The hdf file in which to create the variable
+    @param name:        The name of the variable
+    @param data:        An (numpy) array containing the data
+    '''
+    # Create the variable
+    var = hdf_file.create(name, SDC.FLOAT32, len(data))
+    # Give it a description
+    var.description = name
+    # Build up a tuple of the data points
+    t = ()
+    for point in data:
+        t = t + (point,)
+    # Assign the tuple of data points to the variable
+    var[0] = t
+    # End access to the variable
     var.endaccess()
     
-def write():
-    hdf_file = SD(filename, SDC.WRITE|SDC.CREATE)
-
-    hdf_file.author = "WALDM"
+def write(obj, filename):
+    '''
+    Writes an object to a file
     
-    create_variable(hdf_file, "rain")
-    create_variable(hdf_file, "latitude")
-    create_variable(hdf_file, "longitude")   
+    @param obj:        The ungridded data object to write
+    @param filename:   The filename of the file to be written 
+    '''
+    # Create file, open in read-write mode, and overwrite any existing data
+    hdf_file = SD(filename, SDC.WRITE|SDC.CREATE|SDC.TRUNC)
     
-    hdf_file.end()
+    # Create variables
+    create_variable(hdf_file, obj.short_name, obj.data)
+    create_variable(hdf_file, obj.coords()[0].name(), obj.x)
     
-def read():
-    # Open file in read-only mode (default)
-    hdf_file = SD(filename)
-    # Open variable 'rain'
-    rain = hdf_file.select('rain')
-    # Display variable attributes.
-    print "variable:", 'rain'
-    # Show variable values
-    print rain[:]
-    # Close variable
-    rain.endaccess()    
+    if obj.y is not None:
+        create_variable(hdf_file, obj.coords()[1].name(), obj.y)
     
-    # Open variable 'latitude'
-    latitude = hdf_file.select('latitude')
-    # Display variable attributes.
-    print "variable:", 'latitude'
-    # Show variable values
-    print latitude[:]
-    # Close variable
-    latitude.endaccess()    
-    
-    # Open variable 'longitude'
-    longitude = hdf_file.select('longitude')
-    print "variable:", 'longitude'
-    # Show variable values
-    print longitude[:]
-    # Close variable
-    longitude.endaccess()
     # Close file
     hdf_file.end()
-
-write()    
-read()
