@@ -41,37 +41,55 @@ def get_data(vds):
 def get_metadata(vds):
     pass
 
-def get_hdf4_VD_data(filename, names=None, datadict=None):
+def get_hdf4_VD_data(filename, variables=None, datadict=None):
     '''
 
     @param filename:
-    @param names:
+    @param variables:
     @param datadict:
     @return:
     '''
     datafile = HDF(filename)
     vs =  datafile.vstart()
+
     # List of required variable names
-    if not names:
-        names = vs.vdatainfo()
-        names = zip(*names)
-        names = names[0]
+    if not variables:
+        variables = vs.vdatainfo()
+        variables = zip(*variables)
+        variables = variables[0]
+
+    # initialise dictionary
     if datadict == None:
         datadict = {}
-    for name in names:
+
+    # loop over every variable names
+    for name in variables:
+
+        # get data for that variable
         vd = vs.attach(name)
         data = vd.read(nRec = vd.inquire()[0])
+
+        # create numpy array from data
         for x in range(0,len(data)):
             data[x] = data[x][0]
         data = np.array(data)
-        try: #Deal with missing data
+
+        #Deal with missing data
+        try:
             missing_val = vd.attrinfo()['missing'][2]
             data = __fill_missing_data(data,missing_val)
         except KeyError:
             pass
+
+        # put data in dictionary
         datadict[name] = data
+
+        # detach
         vd.detach()
+
+    # close
     vs.end()
     datafile.close()
+
     return datadict
 
