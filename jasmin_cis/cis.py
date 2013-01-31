@@ -48,7 +48,7 @@ def plot_cmd(main_arguments):
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
     try:        
-        data = [read_variable_from_files(datafile["filename"], datafile["variable"]) for datafile in main_arguments["datafiles"]]
+        data = [read_variable_from_files([datafile["filename"]], datafile["variable"]) for datafile in main_arguments["datafiles"]]
     except (IrisError, ex.InvalidVariableError, ex.FileIOError) as e:
         __error_occurred(e)
     except IOError as e:
