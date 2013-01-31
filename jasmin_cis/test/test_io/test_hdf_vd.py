@@ -7,19 +7,17 @@ import jasmin_cis.data_io.hdf_vd as hdf_vd
 
 
 @istest
-def test_that_can_read_all_variables_from_hdf4_VD():
+def test_that_can_read_all_variables():
     filename = valid_hdf_vd_file
     dict = hdf_vd.get_hdf_VD_file_variables(filename)
     eq_(len(dict),37)
-
-@istest
-def test_that_can_read_known_variables_from_hdf4_VD():
-    filename = valid_hdf_vd_file
-    dict = hdf_vd.get_hdf_VD_file_variables(filename)
     eq_(True,dict.has_key('Longitude'))
 
 @istest
-def test_that_can_get_data_from_hdf4_VD():
+def test_that_can_get_data():
     filename = valid_hdf_vd_file
-    data = hdf_vd.get_hdf4_VD_data(filename,'DEM_elevation')
-    eq_(37081,len(data['DEM_elevation']))
+    vds_dict = hdf_vd.read_vds(filename,'DEM_elevation')
+    eq_(37081,len(vds_dict['DEM_elevation']))
+
+    vds = vds_dict['DEM_elevation']
+    data = hdf_vd.get_data(vds)

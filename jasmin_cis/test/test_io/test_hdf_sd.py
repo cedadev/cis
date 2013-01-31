@@ -26,7 +26,7 @@ def test_that_cannot_read_unknown_variables():
     dict = hdf_sd.read_sds(filename,['athing','unechose','einding'])
 
 @istest
-def test_that_can_get_data_from():
+def test_that_can_get_data():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_sds(filename)
     data = hdf_sd.get_data(dict['Latitude'])
