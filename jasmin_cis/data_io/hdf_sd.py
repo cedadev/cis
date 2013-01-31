@@ -76,13 +76,14 @@ def read_hdf4_SD(filename, names=None, datadict=None):
     return datadict
 
 def read_hdf4_SD_metadata(sds):
-    "Retrieves long name and units from an sds instance"
+    '''
+    Retrieves all metadata
 
-    attributes = sds.attributes()
-    longName = attributes.get('long_name')
-    units = attributes.get('units')
-    validRange = attributes.get('valid_range')
-    return longName,units,validRange
+    @param sds:
+    @return:
+    '''
+
+    return sds.attributes()
 
 def get_hdf4_SD_data(sds, calipso_scaling=False):
     """

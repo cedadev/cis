@@ -136,7 +136,7 @@ class UngriddedData(object):
             except HDF4Error as e:
                 raise FileIOError(str(e)+' for file: '+filename)
         return cls(data,'HDF_SD')
-    
+    l
 
     def __init__(self, data, data_type=None, metadata=None):
         '''
