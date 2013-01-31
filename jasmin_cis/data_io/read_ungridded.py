@@ -26,10 +26,10 @@ def get_file_coordinates(filename):
     Read in coordinate variables and pass back tuple of lat, lon,
     each element of tuple being a 2D numpy array
     '''
-
-    data = hdf_vd.get_hdf4_VD_data(filename,['Latitude','Longitude'])
-    lat = data['Latitude'].get()
-    long = data['Longitude'].get()
+    vds = hdf_vd.read_vds(filename,['Latitude','Longitude'])
+    data = hdf_vd.get_data(vds)
+    lat = data['Latitude']
+    long = data['Longitude']
     
     return (lat,long)
 
@@ -37,7 +37,7 @@ def get_file_coordinates(filename):
 def get_file_coordinates_points(filename):
     '''
     Convert coordinate 2D arrays into a list of points
-    useful for colocation sampling   
+    useful for co-location sampling
     '''
     from jasmin_cis.data_io.hyperpoint import HyperPoint
     
@@ -73,19 +73,9 @@ def read_hdf4(filename,variables):
         
         @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds 
     '''
-    from pyhdf.error import HDF4Error
-    from jasmin_cis.exceptions import FileIOError
-
     variables = variables + ['Latitude','Longitude','TAI_start','Profile_time']
-    
-    sds_dict = {}
-    vds_dict = {}
 
-    try:
-        sds_dict = hdf_sd.read_sds(filename,variables)
-    except HDF4Error as e:
-        try:
-            vds_dict = hdf_vd.read_vds(filename,variables)
-        except:
-            raise FileIOError(str(e)+' for file: '+filename)
+    sds_dict = hdf_sd.read_sds(filename,variables)
+    vds_dict = hdf_vd.read_vds(filename,variables)
+
     return sds_dict, vds_dict

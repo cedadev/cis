@@ -49,12 +49,13 @@ def read_sds(filename, names=None, datadict=None):
     if datadict is None:
         datadict = {}
     # Get data.
-    for name in names:
+    for variable in names:
         try:
-            sds = datafile.select(name) # SDS object.
-            datadict[name] = sds
+            sds = datafile.select(variable) # SDS object.
+            datadict[variable] = sds
         except:
-            pass # ignore variable that failed
+            # ignore variable that failed
+            print "Could not find " + variable
     
     return datadict
 
