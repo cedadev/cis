@@ -40,15 +40,16 @@ class UngriddedData(object):
         outdata = {}
         for filename in filenames:
             try:
-                data = hdf_sd.read_hdf4_SD(filename,variables)
-                for name in data.keys():
-                    try:
-                        outdata[name].append(data[name])
-                    except KeyError:
-                        #print KeyError, ' in readin_cloudsat_precip'
-                        outdata[name] = data[name]
-            except HDF4Error as e:
-                raise FileIOError(str(e)+' for file: '+filename)
+                data = read_ungridded.read_hdf4(filename,variables)
+            except FileIOError as e:
+                # Let the unreadable file error bubble up
+                raise e
+            for name in data.keys():
+                try:
+                    outdata[name].append(data[name])
+                except KeyError:
+                    #print KeyError, ' in readin_cloudsat_precip'
+                    outdata[name] = data[name]
         for variable in outdata.keys():
             outdata[variable] = cls(outdata[variable],'HDF_SD')
         return outdata
