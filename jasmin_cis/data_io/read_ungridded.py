@@ -36,8 +36,8 @@ def get_file_coordinates(filename):
 
 def get_file_coordinates_points(filename):
     '''
-    Convert coordinate arrays into a list of points
-    useful or colocation sampling   
+    Convert coordinate 2D arrays into a list of points
+    useful for colocation sampling   
     '''
     from jasmin_cis.data_io.hyperpoint import HyperPoint
     
