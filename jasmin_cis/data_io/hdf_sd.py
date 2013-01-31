@@ -50,8 +50,11 @@ def read_sds(filename, names=None, datadict=None):
         datadict = {}
     # Get data.
     for name in names:
-        sds = datafile.select(name) # SDS object.
-        datadict[name] = sds
+        try:
+            sds = datafile.select(name) # SDS object.
+            datadict[name] = sds
+        except:
+            pass # ignore variable that failed
     
     return datadict
 

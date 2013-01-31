@@ -41,10 +41,12 @@ def read_vds(filename, variables=None, datadict=None):
     vs =  datafile.vstart()
 
     for variable in variables:
-        vd = vs.attach(variable)
-        vd.detach()
-
-        datadict[variable] = filename, variable
+        try:
+            vd = vs.attach(variable)
+            vd.detach()
+            datadict[variable] = filename, variable
+        except:
+            pass # ignore variable that failed
 
     vs.end()
     datafile.close()
