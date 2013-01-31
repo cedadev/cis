@@ -181,6 +181,22 @@ class UngriddedData(object):
         else:
             self.metadata = metadata
         
+        self.x = [] # A numpy array
+        self.y = [] # A numpy array
+        self.data = [] # A numpy array
+        self.shape = None # A tuple
+        self.long_name = ""
+        self.units = ""
+        
+    def coords(self, optional_arg1 = None, optional_arg2 = None):
+        return [] # list of object Coord
+    
+    class Coord(object):
+        def __init__(self, name):
+            self.name = name
+        def name(self):
+            return self.name # String
+        
 #    def _find_metadata(self):
 #        self.metadata = self.map.get_metadata(self._data)    
     
