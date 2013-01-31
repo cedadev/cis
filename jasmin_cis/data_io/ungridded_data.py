@@ -24,7 +24,7 @@ class UngriddedData(object):
     '''
     
     @classmethod
-    def load_ungridded_data_list(cls, filenames, variables):
+    def load_ungridded_data(cls, filenames, variables):
         '''
             Return a dictionary of UngriddedData objects, one for each variable - the key is the variable name
                 This is quicker than calling load_ungridded_data as we read multiple variables per file read
@@ -33,6 +33,9 @@ class UngriddedData(object):
             variables:    List of variables to read from the files
         '''
         from jasmin_cis.exceptions import FileIOError
+        
+        if not isinstance(variables,list): variables = [ variables ]
+        if not isinstance(filenames,list): filenames = [ filenames ]
         
         outdata = {}
         for filename in filenames:
@@ -50,26 +53,6 @@ class UngriddedData(object):
             outdata[variable] = cls(outdata[variable],'HDF_SD')
         return outdata
     
-    @classmethod
-    def load_ungridded_data(cls, filenames, variable):
-        '''
-            Return an UngriddedData object, for the specified input variable
-        
-        args:
-            filenames:    List of filenames of files to read
-            variable:    Variable to read from the files
-        '''
-        from jasmin_cis.exceptions import FileIOError
-        
-        data = []
-        for filename in filenames:
-            try:
-                data.append(hdf_sd.read_hdf4_SD_variable(filename, variable))
-            except HDF4Error as e:
-                raise FileIOError(str(e)+' for file: '+filename)
-        return cls(data,'HDF_SD')
-    
-
     def __init__(self, data, data_type=None, metadata=None):
         '''
         Constructor
