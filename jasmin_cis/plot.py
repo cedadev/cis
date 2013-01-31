@@ -187,7 +187,7 @@ class Plotter(object):
             colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
         if options is not None:  
-            options = self._set_font_size()             
+            options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
             if self.plot_type == "line":
                 options = self.__set_x_label(options)
