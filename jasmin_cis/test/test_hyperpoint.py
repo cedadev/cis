@@ -1,11 +1,8 @@
 '''
  Module to test the colocation routines
 '''
-from jasmin_cis.hyperpoint import HyperPoint, R_E
-from nose.tools import assert_almost_equal, istest, raises, eq_
-from test_util import mock
-import unittest
-from jasmin_cis.exceptions import *
+from jasmin_cis.data_io.hyperpoint import HyperPoint, R_E
+from nose.tools import assert_almost_equal, istest, eq_
 
 @istest
 def test_same_point_in_space_and_time_with_points_with_different_values():

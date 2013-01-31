@@ -39,7 +39,7 @@ def get_file_coordinates_points(filename):
     Convert coordinate arrays into a list of points
     useful or colocation sampling   
     '''
-    from jasmin_cis.hyperpoint import HyperPoint
+    from jasmin_cis.data_io.hyperpoint import HyperPoint
     
     latitude, longitude = get_file_coordinates(filename)
     
@@ -71,3 +71,4 @@ def read(filenames, variables):
             return UngriddedData.load_ungridded_data_list([filenames], variables)
         else:
             return UngriddedData.load_ungridded_data([filenames], variables)             
+

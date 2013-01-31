@@ -4,6 +4,7 @@ Command line interface for the Climate Intercomparison Suite (CIS)
 '''
 import sys
 from jasmin_cis.exceptions import CISError
+from jasmin_cis.info import  info
 
 def __setup_logging(log_file, log_level):
     '''
@@ -68,70 +69,22 @@ def plot_cmd(main_arguments):
 
 def info_cmd(main_arguments):
     '''
-    Main routine for handling calls to the 'info' command. 
+    Main routine for handling calls to the 'info' command.
     Reads in the variables from the data file specified and lists them to stdout if no
     particular variable was specified, otherwise prints detailed information about each
     variable specified
         
     args:
-        main_arguments:    The command line arguments (minus the info command)         
+        main_arguments:    The command line arguments (minus the info command)
     '''    
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
     
     try:
-        summarise_all_variables_from_file(filename, variables)
+        info(filename, variables)
     except CISError as e:
         __error_occurred(e)
-    
-    
-def print_variables(all_variables, user_variables=None, print_err=True):
-    '''
-        Short routine for priting all variables, or a specified few.
-    
-        args:
-        all_variables:   All of the variables to print or search through
-        user_variables:   The user specified variables of interest
-        print_err:   Boolean for deciding to print an error if a variable isn't found
-    
-    '''
-    if user_variables is not None:
-        for user_var in user_variables:
-            try:
-                print user_var+": "+str(all_variables[user_var])
-            except KeyError:
-                if print_err: sys.stderr.write("Variable '" + user_var +  "' not found \n")
-    else:
-        for item in all_variables:
-            print item
 
-
-def summarise_all_variables_from_file(filename, user_variables=None):
-    from jasmin_cis.exceptions import CISError
-    import data_io.read_gridded, data_io.read_ungridded
-    from pyhdf.error import HDF4Error
-    '''
-    Read all the variables from a file and print to stdout.
-    File can contain either gridded and ungridded data.
-    First tries to read data as gridded, if that fails, tries as ungridded.
-    
-    args:
-        filenames:   The filenames of the files to read
-        user_variables:   The user specified variables of interest
-
-    '''
-    try:
-        file_variables = data_io.read_gridded.get_file_variables(filename)
-        print_variables(file_variables, user_variables)
-    except RuntimeError:
-        try:
-            sd_vars, vd_vars = data_io.read_ungridded.get_file_variables(filename)
-            print "SD variables:"
-            print_variables(sd_vars, user_variables, False)
-            print "VD variables:"
-            print_variables(vd_vars, user_variables, False)
-        except HDF4Error as e:
-            raise CISError(e)
 
 def col_cmd(main_arguments):
     '''
