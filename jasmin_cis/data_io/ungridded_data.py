@@ -13,7 +13,7 @@ from pyhdf.error import HDF4Error
 Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 
 # This defines the actual mappings for each of the ungridded data types
-static_mappings = { 'HDF_SD' : Mapping(hdf_sd.get_metadata, hdf_sd.get_data),
+static_mappings = { 'HDF_SD' : Mapping(hdf_sd.read_hdf4_SD_metadata, hdf_sd.get_hdf4_SD_data),
              'HDF_VD' : Mapping(hdf_vd.get_hdf_VD_file_variables, hdf_vd.get_hdf4_VD_data),
              'HDF5'   : '',
              'netCDF' : '' }
@@ -40,15 +40,16 @@ class UngriddedData(object):
         outdata = {}
         for filename in filenames:
             try:
-                data = hdf_sd.read_sds(filename,variables)
-                for name in data.keys():
-                    try:
-                        outdata[name].append(data[name])
-                    except KeyError:
-                        #print KeyError, ' in readin_cloudsat_precip'
-                        outdata[name] = data[name]
-            except HDF4Error as e:
-                raise FileIOError(str(e)+' for file: '+filename)
+                data = read_ungridded.read_hdf4(filename,variables)
+            except FileIOError as e:
+                # Let the unreadable file error bubble up
+                raise e
+            for name in data.keys():
+                try:
+                    outdata[name].append(data[name])
+                except KeyError:
+                    #print KeyError, ' in readin_cloudsat_precip'
+                    outdata[name] = data[name]
         for variable in outdata.keys():
             outdata[variable] = cls(outdata[variable],'HDF_SD')
         return outdata

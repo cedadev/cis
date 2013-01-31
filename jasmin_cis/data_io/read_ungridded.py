@@ -63,3 +63,15 @@ def read(filenames, variables):
     '''
     return UngriddedData.load_ungridded_data(filenames, variables)           
 
+def read_hdf4(filename,variables):
+    from pyhdf.error import HDF4Error
+    from jasmin_cis.exceptions import FileIOError
+    
+    try:
+        data = hdf_sd.read_sds(filename,variables)
+    except HDF4Error as e:
+        try:
+            data = hdf_vd.read_vds(filename,variables)
+        except:
+            raise FileIOError(str(e)+' for file: '+filename)
+    return data
