@@ -121,3 +121,26 @@ def gen_random_lat():
 def gen_random_data():
     from random import uniform
     return uniform(0, 0.000225)
+
+class MockUngriddedData(object):
+    def __init__(self, x, y, data, long_name, units, coords, v_type, short_name):
+        from numpy import shape
+        self.x = x # A numpy array
+        self.y = y # A numpy array
+        self.data = data # A numpy array
+        self.data_list = [x, y, data]
+        self.shape = shape(data) # A tuple
+        self.long_name = long_name # A string
+        self.units = units # A string
+        self._coords = coords
+        self.type = v_type
+        self.short_name = short_name
+        
+    def coords(self, optional_arg1 = None, optional_arg2 = None):
+        return self._coords # list of object Coord
+    
+class MockCoord(object):
+    def __init__(self, name):
+        self._name = name
+    def name(self):
+        return self._name

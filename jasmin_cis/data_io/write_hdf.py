@@ -1,6 +1,6 @@
 from pyhdf.SD import SD, SDC 
 
-def create_variable(hdf_file, name, data):
+def __create_variable(hdf_file, name, data):
     '''
     Create a variable in the given hdf file
     
@@ -32,11 +32,11 @@ def write(obj, filename):
     hdf_file = SD(filename, SDC.WRITE|SDC.CREATE|SDC.TRUNC)
     
     # Create variables
-    create_variable(hdf_file, obj.short_name, obj.data)
-    create_variable(hdf_file, obj.coords()[0].name(), obj.x)
+    __create_variable(hdf_file, obj.short_name, obj.data)
+    __create_variable(hdf_file, obj.coords()[0].name(), obj.x)
     
     if obj.y is not None:
-        create_variable(hdf_file, obj.coords()[1].name(), obj.y)
+        __create_variable(hdf_file, obj.coords()[1].name(), obj.y)
     
     # Close file
     hdf_file.end()
