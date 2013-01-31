@@ -61,14 +61,5 @@ def read(filenames, variables):
         filenames:    List of filenames of files to read
         variables:    List of variables to read from the files
     '''
-    if isinstance(filenames,list):
-        if isinstance(variables, list):
-            return UngriddedData.load_ungridded_data_list(filenames, variables)
-        else:
-            return UngriddedData.load_ungridded_data(filenames, variables)
-    else:
-        if isinstance(variables, list):
-            return UngriddedData.load_ungridded_data_list([filenames], variables)
-        else:
-            return UngriddedData.load_ungridded_data([filenames], variables)             
+    return UngriddedData.load_ungridded_data(filenames, variables)           
 
