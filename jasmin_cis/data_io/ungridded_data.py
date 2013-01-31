@@ -4,8 +4,6 @@
 from collections import namedtuple
 import hdf_vd as hdf_vd
 import hdf_sd as hdf_sd
-from pyhdf.error import HDF4Error
-from jasmin_cis.data_io import read_ungridded
 
 # Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
@@ -29,7 +27,7 @@ class UngriddedData(object):
         '''
             Return a dictionary of UngriddedData objects, one for each variable - the key is the variable name
                 This is quicker than calling load_ungridded_data as we read multiple variables per file read
-        args:
+        @args:
             filenames:    List of filenames of files to read
             variables:    List of variables to read from the files
         '''
