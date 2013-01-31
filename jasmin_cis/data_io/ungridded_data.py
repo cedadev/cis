@@ -5,6 +5,7 @@ from collections import namedtuple
 import hdf_vd as hdf_vd
 import hdf_sd as hdf_sd
 from pyhdf.error import HDF4Error
+from jasmin_cis.data_io import read_ungridded
 
 # Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
@@ -13,8 +14,8 @@ from pyhdf.error import HDF4Error
 Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 
 # This defines the actual mappings for each of the ungridded data types
-static_mappings = { 'HDF_SD' : Mapping(hdf_sd.read_hdf4_SD_metadata, hdf_sd.get_hdf4_SD_data),
-             'HDF_VD' : Mapping(hdf_vd.get_hdf_VD_file_variables, hdf_vd.get_hdf4_VD_data),
+static_mappings = { 'HDF_SD' : Mapping(hdf_sd.get_metadata, hdf_sd.get_data),
+             'HDF_VD' : Mapping(hdf_vd.get_metadata, hdf_vd.get_data),
              'HDF5'   : '',
              'netCDF' : '' }
 
@@ -33,6 +34,7 @@ class UngriddedData(object):
             variables:    List of variables to read from the files
         '''
         from jasmin_cis.exceptions import FileIOError
+        from read_ungridded import read_hdf4
         
         if not isinstance(variables,list): variables = [ variables ]
         if not isinstance(filenames,list): filenames = [ filenames ]
@@ -40,7 +42,7 @@ class UngriddedData(object):
         outdata = {}
         for filename in filenames:
             try:
-                data = read_ungridded.read_hdf4(filename,variables)
+                data = read_hdf4(filename,variables)
             except FileIOError as e:
                 # Let the unreadable file error bubble up
                 raise e

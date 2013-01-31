@@ -32,7 +32,7 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
 
-def read_vsd(filename, names=None, datadict=None):
+def read_vds(filename, names=None, datadict=None):
     pass
 
 def get_data(vds):
