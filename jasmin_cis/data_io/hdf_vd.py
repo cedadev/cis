@@ -32,64 +32,58 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
 
-def read_vds(filename, names=None, datadict=None):
-    pass
+def read_vds(filename, variables=None, datadict=None):
 
-def get_data(vds):
-    pass
-
-def get_metadata(vds):
-    pass
-
-def get_hdf4_VD_data(filename, variables=None, datadict=None):
-    '''
-
-    @param filename:
-    @param variables:
-    @param datadict:
-    @return:
-    '''
-    datafile = HDF(filename)
-    vs =  datafile.vstart()
-
-    # List of required variable names
-    if not variables:
-        variables = vs.vdatainfo()
-        variables = zip(*variables)
-        variables = variables[0]
-
-    # initialise dictionary
     if datadict == None:
         datadict = {}
 
-    # loop over every variable names
-    for name in variables:
+    datafile = HDF(filename)
+    vs =  datafile.vstart()
 
-        # get data for that variable
-        vd = vs.attach(name)
-        data = vd.read(nRec = vd.inquire()[0])
-
-        # create numpy array from data
-        for x in range(0,len(data)):
-            data[x] = data[x][0]
-        data = np.array(data)
-
-        #Deal with missing data
+    for variable in variables:
         try:
-            missing_val = vd.attrinfo()['missing'][2]
-            data = __fill_missing_data(data,missing_val)
-        except KeyError:
-            pass
+            vd = vs.attach(variable)
+            vd.detach()
+            datadict[variable] = filename, variable
+        except:
+            pass # ignore variable that failed
 
-        # put data in dictionary
-        datadict[name] = data
-
-        # detach
-        vd.detach()
-
-    # close
     vs.end()
     datafile.close()
 
     return datadict
 
+def get_data(vds):
+
+    # get file and variable reference from tuple
+    filename = vds[0];
+    variable = vds[1];
+
+    datafile = HDF(filename)
+    vs =  datafile.vstart()
+
+    # get data for that variable
+    vd = vs.attach(variable)
+    data = vd.read(nRec = vd.inquire()[0])
+
+    # create numpy array from data
+    for x in range(0,len(data)):
+        data[x] = data[x][0]
+    data = np.array(data)
+
+    #Deal with missing data
+    try:
+        missing_val = vd.attrinfo()['missing'][2]
+        data = __fill_missing_data(data,missing_val)
+    except KeyError:
+        pass
+
+    # detach and close
+    vd.detach()
+    vs.end()
+    datafile.close()
+
+    return data
+
+def get_metadata(vds):
+    pass
