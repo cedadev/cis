@@ -32,46 +32,56 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
 
-def read_vds(filename, names=None, datadict=None):
-    pass
+def read_vds(filename, variables=None, datadict=None):
+
+    if datadict == None:
+        datadict = {}
+
+    datafile = HDF(filename)
+    vs =  datafile.vstart()
+
+    for variable in variables:
+        vd = vs.attach(variable)
+        vd.detach()
+
+        datadict[variable] = filename, variable
+
+    vs.end()
+    datafile.close()
+
+    return datadict
 
 def get_data(vds):
-    pass
+
+    # get file and variable reference from tuple
+    filename = vds[0];
+    variable = vds[1];
+
+    datafile = HDF(filename)
+    vs =  datafile.vstart()
+
+    # get data for that variable
+    vd = vs.attach(variable)
+    data = vd.read(nRec = vd.inquire()[0])
+
+    # create numpy array from data
+    for x in range(0,len(data)):
+        data[x] = data[x][0]
+    data = np.array(data)
+
+    #Deal with missing data
+    try:
+        missing_val = vd.attrinfo()['missing'][2]
+        data = __fill_missing_data(data,missing_val)
+    except KeyError:
+        pass
+
+    # detach and close
+    vd.detach()
+    vs.end()
+    datafile.close()
+
+    return data
 
 def get_metadata(vds):
     pass
-
-def get_hdf4_VD_data(filename, names=None, datadict=None):
-    '''
-
-    @param filename:
-    @param names:
-    @param datadict:
-    @return:
-    '''
-    datafile = HDF(filename)
-    vs =  datafile.vstart()
-    # List of required variable names
-    if not names:
-        names = vs.vdatainfo()
-        names = zip(*names)
-        names = names[0]
-    if datadict == None:
-        datadict = {}
-    for name in names:
-        vd = vs.attach(name)
-        data = vd.read(nRec = vd.inquire()[0])
-        for x in range(0,len(data)):
-            data[x] = data[x][0]
-        data = np.array(data)
-        try: #Deal with missing data
-            missing_val = vd.attrinfo()['missing'][2]
-            data = __fill_missing_data(data,missing_val)
-        except KeyError:
-            pass
-        datadict[name] = data
-        vd.detach()
-    vs.end()
-    datafile.close()
-    return datadict
-

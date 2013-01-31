@@ -56,12 +56,11 @@ def check_file_exists(filename, parser):
 def parse_float(arg, name, parser):
     '''
     Tries to parse a string as a float.
-    args:
-        arg:    The arg to parse as a float
-        name:   A description of the argument used for error messages
-        parser: The parser used to report an error message
-    Returns:
-        The parsed float if succeeds or the original argument if fails
+    
+    @param arg:    The arg to parse as a float
+    @param name:   A description of the argument used for error messages
+    @param parser: The parser used to report an error message
+    @return The parsed float if succeeds or the original argument if fails
     '''
     if arg:
         try:
@@ -72,12 +71,9 @@ def parse_float(arg, name, parser):
 
 def check_datafiles(datafiles, parser):
     '''
-    args:
-        datafiles:    A list of datafiles (possibly containing colons)
-        parser:       The parser used to report errors
-    
-    returns:
-        The parsed datafiles as a list of dictionaries
+    @param datafiles:    A list of datafiles (possibly containing colons)
+    @param parser:       The parser used to report errors    
+    @return The parsed datafiles as a list of dictionaries
     '''
     from collections import namedtuple
     DatafileOptions = namedtuple('DatafileOptions',['filename', "variable", "label", "color", "itemstyle"])
@@ -87,13 +83,10 @@ def check_datafiles(datafiles, parser):
 
 def parse_colonic_arguments(inputs, parser, options):
     '''
-    args:
-        inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
-        parser:    The parser used to raise an error if one occurs
-        options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
-    
-    returns:
-        A list of dictionaries containing the parsed arguments
+    @param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
+    @param parser:    The parser used to raise an error if one occurs
+    @param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    @return A list of dictionaries containing the parsed arguments
     '''
     input_dicts = []
     

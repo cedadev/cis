@@ -8,45 +8,47 @@ from pyhdf.error import HDF4Error
 import numpy as np
 
 @istest
-def test_that_can_read_all_variables_from_hdf4_SD():
+def test_that_can_read_all_variables():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_sds(filename)
     eq_(len(dict),67)
 
 @istest
-def test_that_can_read_known_variables_from_hdf4_SD():
+def test_that_can_read_known_variables():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_sds(filename,['Latitude','Longitude'])
     eq_(len(dict),2)
 
-    lat_sds = hdf_sd.read_hdf4_SD_variable(filename,'Latitude')
-    eq_(True,np.array_equal(lat_sds.get(),dict['Latitude'].get()))
-
 @istest
 @raises(HDF4Error)
-def test_that_cannot_read_unknown_variables_from_hdf4_sd():
+def test_that_cannot_read_unknown_variables():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_sds(filename,['athing','unechose','einding'])
 
 @istest
-def test_that_can_get_datasets_from_hdf4_sd():
+def test_that_can_get_data():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_sds(filename)
-
-    dict2 = hdf_sd.get_hdf_SD_file_variables(filename)
-    eq_(set(dict.keys()),set(dict2.keys()))
+    data = hdf_sd.get_data(dict['Latitude'])
+    eq_(data.shape,(203,135))
 
 @istest
 def test_that_can_get_metadata_for_known_variable():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_sds(filename)
     metadata = hdf_sd.get_metadata(dict['Latitude'])
-    eq_(len(metadata),10)
-    eq_(metadata['_FillValue'],-999.0)
-    eq_(metadata['Parameter_Type'],"MODIS Input")
-    eq_(metadata['long_name'],"Geodetic Latitude")
-    eq_(metadata['units'],"Degrees_north")
-    eq_(metadata['valid_range'],[-90.0, 90.0])
+    eq_(len(metadata),3)
+
+    info = metadata['info']
+    eq_(len(info),5)
+
+    attr = metadata['attributes']
+    eq_(len(attr),10)
+    eq_(attr['_FillValue'],-999.0)
+    eq_(attr['Parameter_Type'],"MODIS Input")
+    eq_(attr['long_name'],"Geodetic Latitude")
+    eq_(attr['units'],"Degrees_north")
+    eq_(attr['valid_range'],[-90.0, 90.0])
 
 @istest
 @raises(KeyError)

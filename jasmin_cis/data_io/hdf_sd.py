@@ -62,8 +62,12 @@ def get_metadata(sds):
     @param sds:
     @return:
     '''
+    dict = {}
+    dict['info'] = sds.info()
+    dict['dimensions'] = sds.dimensions()
+    dict['attributes'] = sds.attributes()
 
-    return sds.attributes()
+    return dict
 
 def get_data(sds, calipso_scaling=False):
     """

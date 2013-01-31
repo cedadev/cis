@@ -41,8 +41,7 @@ class Plotter(object):
         '''
         Plots a line graoh
         
-        args:
-            data:    A dictionary containing the x coords and data as arrays
+        @param data:    A dictionary containing the x coords and data as arrays
         '''
         self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
     
@@ -50,8 +49,7 @@ class Plotter(object):
         '''
         Plots a heatmap
         
-        args:
-            data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data:    A dictionary containing the x coords, y coords and data as arrays
         '''
         import numpy as np    
         self.min_data = np.min(data_item["data"])
@@ -63,8 +61,7 @@ class Plotter(object):
         '''
         Plots a contour plot
         
-        args:
-            data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.basemap = Basemap()    
         self.plots.append(self.basemap.contour(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
@@ -73,8 +70,7 @@ class Plotter(object):
         '''
         Plots a filled contour
         
-        args:
-            data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.basemap = Basemap()    
         self.plots.append(self.basemap.contourf(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
@@ -83,8 +79,7 @@ class Plotter(object):
         '''
         Plots a scatter plot
         
-        args:
-            data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data:    A dictionary containing the x coords, y coords and data as arrays
         '''
         from math import pow  
         colour_scheme = self.kwargs.get("color", None)
@@ -108,8 +103,7 @@ class Plotter(object):
         '''
         Plots a heatmap overlayed with one or more scatter plots
         
-        args:
-            data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data:    A dictionary containing the x coords, y coords and data as arrays
         '''
         if self.num_of_preexisting_plots == 0:
             self.kwargs.pop("marker", None)
@@ -179,12 +173,11 @@ class Plotter(object):
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
         Tries to assign default value if value not specified
         
-        args:
-            data:                    A list of data objects (cubes or ungridded data)
-            options:                 A dictionary of formatting options constructed using __create_plot_format_options
-            plot_type:               The plot type (as a string, not a PlotType object)
-            datafiles:               The list of datafiles from the command line, as a dictionary, containing filename, variable, label etc
-            colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
+        @param data:                    A list of data objects (cubes or ungridded data)
+        @param options:                 A dictionary of formatting options constructed using __create_plot_format_options
+        @param plot_type:               The plot type (as a string, not a PlotType object)
+        @param datafiles:               The list of datafiles from the command line, as a dictionary, containing filename, variable, label etc
+        @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
         if options is not None:  
             options = self.__set_font_size(options)             
@@ -255,9 +248,8 @@ class Plotter(object):
     
     def __do_plot(self):
         '''
-        args:
-            data:        A list of data objects (cubes or ungridded data)
-            plot_type:   The plot type, as a string, not a PlotType object
+        @param data:        A list of data objects (cubes or ungridded data)
+        @param plot_type:   The plot type, as a string, not a PlotType object
         '''
         datafiles = self.kwargs.pop("datafiles", None) 
         for i, item in enumerate(self.data):
@@ -350,8 +342,7 @@ class Plotter(object):
     
     def __create_plot_format_options(self):
         '''
-        Returns:
-            A dictionary containing the kwargs where the key is contained in the plot_options dictionary
+        @return A dictionary containing the kwargs where the key is contained in the plot_options dictionary
         '''
         options = {}
         for key in self.plot_options.keys():
@@ -367,10 +358,9 @@ class Plotter(object):
         '''
         Used to validate the data before plotting
         
-        args:
-            data:             A list of data objects
-            plot_type:        The plot type, as a string, not as a PlotType object
-            varaiable_dim:    The number of dimensions of the data being plotted
+        @param data:             A list of data objects
+        @param plot_type:        The plot type, as a string, not as a PlotType object
+        @param varaiable_dim:    The number of dimensions of the data being plotted
         '''
         self.__check_all_data_items_are_of_same_shape(variable_dim)
         self.__check_plot_type_is_valid_for_given_variable(variable_dim)
@@ -381,10 +371,9 @@ class Plotter(object):
         '''
         The main plotting method
         
-        args:
-            data:         A list of data objects (cubes or ungridded data objects)
-            plot_type:    The type of the plot to be plotted. A default will be chosen if omitted
-            out_filename: The filename of the file to save the plot to
+        @param data:         A list of data objects (cubes or ungridded data objects)
+        @param plot_type:    The type of the plot to be plotted. A default will be chosen if omitted
+        @param out_filename: The filename of the file to save the plot to
         '''
         self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", None)        
         self.__remove_unassigned_arguments()   
