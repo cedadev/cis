@@ -5,6 +5,12 @@ from collections import namedtuple
 import hdf_vd as hdf_vd
 import hdf_sd as hdf_sd
 
+def add_element_to_list_in_dict(my_dict,key,value):
+    try:
+        my_dict[key].append(value)
+    except KeyError:
+        my_dict[key] = value
+
 # Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
 #  by just dropping the mapping into the instance namespace dynamically...
@@ -25,11 +31,11 @@ class UngriddedData(object):
     @classmethod
     def load_ungridded_data(cls, filenames, variables):
         '''
-            Return a dictionary of UngriddedData objects, one for each variable - the key is the variable name
-                This is quicker than calling load_ungridded_data as we read multiple variables per file read
-        @args:
-            filenames:    List of filenames of files to read
-            variables:    List of variables to read from the files
+            Create a dictionary of ungridded data objects where the variable name is the key
+        
+            @param filenames:    List of filenames of files to read
+            @param variables:    List of variables to read from the files
+            @return A dictionary of UngriddedData objects, one for each variable - the key is the variable name
         '''
         from jasmin_cis.exceptions import FileIOError
         from read_ungridded import read_hdf4
@@ -38,20 +44,22 @@ class UngriddedData(object):
         if not isinstance(filenames,list): filenames = [ filenames ]
         
         outdata = {}
+        all_sdata = {}
+        all_vdata = {}
         for filename in filenames:
             try:
-                data = read_hdf4(filename,variables)
+                sdata, vdata = read_hdf4(filename,variables)
             except FileIOError as e:
                 # Let the unreadable file error bubble up
                 raise e
-            for name in data.keys():
-                try:
-                    outdata[name].append(data[name])
-                except KeyError:
-                    #print KeyError, ' in readin_cloudsat_precip'
-                    outdata[name] = data[name]
-        for variable in outdata.keys():
-            outdata[variable] = cls(outdata[variable],'HDF_SD')
+            for name in sdata.keys():
+                add_element_to_list_in_dict(all_sdata,name,sdata[name])
+            for name in vdata.keys():
+                add_element_to_list_in_dict(all_vdata,name,vdata[name])
+        for variable in all_sdata.keys():
+            outdata[variable] = cls(all_sdata[variable],'HDF_SD')
+        for variable in all_vdata.keys():    
+            outdata[variable] = cls(all_vdata[variable],'HDF_VD')
         return outdata
     
     def __init__(self, data, data_type=None, metadata=None):

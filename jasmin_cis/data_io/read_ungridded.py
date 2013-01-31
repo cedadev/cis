@@ -54,24 +54,35 @@ def get_file_coordinates_points(filename):
 
 def read(filenames, variables):
     '''
-    Read ungridded data from a file. Just a wrapper that calls the appropriate class method based on
-        whether in the inputs are lists or not
+    Read ungridded data from a file. Just a wrapper that calls the UngriddedData class method
     
-    args:
-        filenames:    List of filenames of files to read
-        variables:    List of variables to read from the files
+        @param filename:     A name of a file to read
+        @param variables:    List of variables to read from the files
+        
+        @return A list of ungridded data objects 
     '''
     return UngriddedData.load_ungridded_data(filenames, variables)           
 
 def read_hdf4(filename,variables):
+    '''
+        A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
+         for each VD and SD data types.
+       
+        @param filename:     A name of a file to read
+        @param variables:    List of variables to read from the files
+        
+        @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds 
+    '''
     from pyhdf.error import HDF4Error
     from jasmin_cis.exceptions import FileIOError
     
+    sds_dict = {}
+    vds_dict = {}
     try:
-        data = hdf_sd.read_sds(filename,variables)
+        sds_dict = hdf_sd.read_sds(filename,variables)
     except HDF4Error as e:
         try:
-            data = hdf_vd.read_vds(filename,variables)
+            vds_dict = hdf_vd.read_vds(filename,variables)
         except:
             raise FileIOError(str(e)+' for file: '+filename)
-    return data
+    return sds_dict, vds_dict
