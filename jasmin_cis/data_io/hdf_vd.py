@@ -32,7 +32,15 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
 
+
 def get_hdf4_VD_data(filename, names=None, datadict=None):
+    '''
+
+    @param filename:
+    @param names:
+    @param datadict:
+    @return:
+    '''
     datafile = HDF(filename)
     vs =  datafile.vstart()
     # List of required variable names

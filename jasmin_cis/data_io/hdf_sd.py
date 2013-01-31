@@ -85,6 +85,21 @@ def read_hdf4_SD_metadata(sds):
 
     return sds.attributes()
 
+def get_metadata(filename, variables=None):
+    '''
+    Get the metadata
+    @param filename:
+    @param variables:
+    @return:
+    '''
+    sds_dict = read_hdf4_SD(filename, variables)
+
+    metadata_dict = {}
+    for variable, sds in sds_dict:
+        metadata_dict[variable] = sds.attributes()
+
+    return metadata_dict
+
 def get_hdf4_SD_data(sds, calipso_scaling=False):
     """
     Reads raw data from an SD instance. Automatically applies the
@@ -106,37 +121,40 @@ def get_hdf4_SD_data(sds, calipso_scaling=False):
     data = sds.get()
     attributes = sds.attributes()
 
-    missing_val = attributes.get('_FillValue', None)  # Missing data.
+    # Missing data.
+    missing_val = attributes.get('_FillValue', None)
     data = __fill_missing_data(data, missing_val)
 
+    # Offsets and scaling.
+    offset  = attributes.get('add_offset', 0)
+    scale_factor = attributes.get('scale_factor', 1)
     if calipso_scaling:
-        data = __apply_scaling_factor_CALIPSO(data, attributes)
+        data = __apply_scaling_factor_CALIPSO(data, scale_factor, offset)
     else:
-        data = __apply_scaling_factor_MODIS(data, attributes)
+        data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
 
     return data
 
-def __apply_scaling_factor_CALIPSO(data, attributes):
+def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
     '''
     Apply scaling factor Calipso data
     @param data:
-    @param attributes:
+    @param scale_factor:
+    @param offset:
     @return:
     '''
-    offset  = attributes.get('add_offset', 0)   # Offsets and scaling.
-    scale_factor = attributes.get('scale_factor', 1)
+
     data = (data/scale_factor) + offset
     return data
 
-def __apply_scaling_factor_MODIS(data, attributes):
+def __apply_scaling_factor_MODIS(data, scale_factor, offset):
     '''
     Apply scaling factor for MODIS data
     @param data:
-    @param attributes:
+    @param scale_factor:
+    @param offset:
     @return:
     '''
-    offset  = attributes.get('add_offset', 0)   # Offsets and scaling.
-    scale_factor = attributes.get('scale_factor', 1)
     data = (data - offset) * scale_factor
     return data
 
