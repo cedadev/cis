@@ -38,8 +38,9 @@ def create_dimensions(nc_file, data_object):
     return dimensions
 
 def set_metadata(nc_file, data_object):
-    nc_file.units = data_object.units
-    nc_file.long_name = data_object.long_name
+    pass
+    #nc_file.units = data_object.units
+    #nc_file.long_name = data_object.long_name
 
 def write_to_file(data_object, filename):
     # Create file
