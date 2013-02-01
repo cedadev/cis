@@ -45,6 +45,8 @@ class UngriddedData(object):
         if not isinstance(variables,list): variables = [ variables ]
         if not isinstance(filenames,list): filenames = [ filenames ]
         
+        variables += ['Latitude','Longitude','TAI_start','Profile_time','Height']
+        
         outdata = []
         all_sdata = {}
         all_vdata = {}

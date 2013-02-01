@@ -76,7 +76,6 @@ def read_hdf4(filename,variables):
         @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds 
     '''
     from jasmin_cis.exceptions import InvalidVariableError
-    variables = variables + ['Latitude','Longitude','TAI_start','Profile_time','Height']
 
     sds_dict = hdf_sd.read_sds(filename,variables)
     vds_dict = hdf_vd.read_vds(filename,variables)
