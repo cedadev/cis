@@ -328,20 +328,20 @@ class Plotter(object):
             if len(self.data) > self.plot_types[self.plot_type].maximum_no_of_expected_variables:
                 raise InvalidPlotTypeError("The plot type is not valid for this number of variables") # else: There are an unlimited number of variables for this plot type
     
-    def __prepare_val_range(self):
-        valrange = self.kwargs.pop("valrange", None)
-        
-        if self.plot_type != "line" and valrange is not None:
-            try:
-                self.kwargs["vmin"] = valrange.pop("ymin")
+    def __prepare_range(self, axis):
+        valrange = self.kwargs.pop(axis + "range", None)     
+        if axis == "val" and self.plot_type != "line" and valrange is not None:
+            try:       
+                self.kwargs["vmin"] = valrange.pop("vmin")
             except KeyError:
                 pass
             
-            try:
-                self.kwargs["vmax"] = valrange.pop("ymax")
+            try:       
+                self.kwargs["vmax"] = valrange.pop("vmax")
             except KeyError:
                 pass
-            
+            if valrange == {}:
+                valrange = None
         return valrange
     
     def __output_to_file_or_screen(self, out_filename = None):
@@ -371,9 +371,12 @@ class Plotter(object):
         
         return options
     
-    def __apply_line_graph_value_limits(self, valrange):
-        if self.plot_type == "line" and valrange is not None:
-            plt.ylim(**valrange)
+    def __apply_axis_limits(self, valrange, axis):
+        if valrange is not None:
+            if axis == "x":
+                plt.xlim(**valrange)
+            elif axis == "y":
+                plt.ylim(**valrange)
     
     def __validate_data(self, variable_dim):
         '''
@@ -407,11 +410,14 @@ class Plotter(object):
         self.__validate_data(variable_dim)
         
         plot_format_options = self.__create_plot_format_options()
-        valrange = self.__prepare_val_range()  
+        self.__prepare_range("val")
+        x_range = self.__prepare_range("x")  
+        y_range = self.__prepare_range("y")
         self.__set_width_and_height()  
         Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
         datafiles = self.__do_plot()  
-        self.__apply_line_graph_value_limits(valrange)
+        self.__apply_axis_limits(x_range, "x")
+        self.__apply_axis_limits(y_range, "y")
             
         self.__format_plot(plot_format_options, datafiles) 
         

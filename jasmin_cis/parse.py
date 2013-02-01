@@ -33,6 +33,8 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--cmap", metavar = "Colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar = "Plot height", nargs = "?", help = "The height of the plot in inches")
     parser.add_argument("--width", metavar = "Plot width", nargs = "?", help = "The width of the plot in inches")
+    parser.add_argument("--xrange", metavar = "X range", nargs = "?", help = "The range of the x axis")
+    parser.add_argument("--yrange", metavar = "Y range", nargs = "?", help = "The range of the y axis")
     parser.add_argument("--valrange", metavar = "Value range", nargs = "?", help = "The range of values to plot")
     parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
     return parser
@@ -65,9 +67,10 @@ def parse_float(arg, name, parser):
     if arg:
         try:
             arg = float(arg)
+            return arg
         except ValueError:
             parser.error("'" + arg + "' is not a valid " + name)
-    return arg
+            return None
 
 def check_datafiles(datafiles, parser):
     '''
@@ -156,34 +159,36 @@ def check_colour_bar_orientation(orientation, parser):
         parser.error("The legend orientation must either be horizontal or vertical")
     return orientation
 
-def check_val_range(valrange, parser):
+def check_range(ax_range, parser, range_type):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
     '''
-    if valrange is not None:
-        if ":" in valrange:
-            split_range = valrange.split(":")
+    if ax_range is not None:
+        if ":" in ax_range:
+            split_range = ax_range.split(":")
             if len(split_range) == 2:
-                ymin = parse_float(split_range[0], "min", parser)
-                ymax = parse_float(split_range[1], "max", parser)
-                valrange = {}
-                if ymin:
-                    valrange["ymin"] = ymin
-                if ymax:
-                    valrange["ymax"] = ymax
-                if ymin and ymax and ymin > ymax:
+                r_min = parse_float(split_range[0], "min", parser)
+                r_max = parse_float(split_range[1], "max", parser)
+                ax_range = {}
+                if r_min is not None:
+                    ax_range[range_type + "min"] = r_min
+                if r_max is not None:
+                    ax_range[range_type + "max"] = r_max
+                if r_min and r_max and r_min > r_max:
                     parser.error("Range must be in the format 'min:max'")
             else:
                 parser.error("Range must be in the format 'min:max'")
         else:
             parser.error("Range must be in the format 'min:max'")
-    return valrange
+    return ax_range
                    
 def validate_plot_args(arguments, parser): 
     arguments.datafiles = check_datafiles(arguments.datafiles, parser)        
     arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
     check_plot_type(arguments.type, arguments.datafiles, parser) 
-    arguments.valrange = check_val_range(arguments.valrange, parser)
+    arguments.valrange = check_range(arguments.valrange, parser, "v")
+    arguments.xrange = check_range(arguments.xrange, parser, "x")
+    arguments.yrange = check_range(arguments.yrange, parser, "y")
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     # Try and parse numbers
     arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
