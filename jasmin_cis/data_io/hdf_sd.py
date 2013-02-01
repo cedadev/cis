@@ -55,7 +55,7 @@ def read_sds(filename, names=None, datadict=None):
             datadict[variable] = sds
         except:
             # ignore variable that failed
-            print "Could not find " + variable
+            pass
     
     return datadict
 

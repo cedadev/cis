@@ -36,22 +36,22 @@ class UngriddedData(object):
             @param filenames:    List of filenames of files to read
             @param variables:    List of variables to read from the files
             @return A dictionary of UngriddedData objects, one for each variable - the key is the variable name
+            
+            @raise FileIOError: Unable to read a file
+            @raise InvalidVariableError: Variable not present in file
         '''
-        from jasmin_cis.exceptions import FileIOError
         from read_ungridded import read_hdf4
         
         if not isinstance(variables,list): variables = [ variables ]
         if not isinstance(filenames,list): filenames = [ filenames ]
         
+        variables += ['Latitude','Longitude','TAI_start','Profile_time','Height']
+        
         outdata = []
         all_sdata = {}
         all_vdata = {}
         for filename in filenames:
-            try:
-                sdata, vdata = read_hdf4(filename,variables)
-            except FileIOError as e:
-                # Let the unreadable file error bubble up
-                raise e
+            sdata, vdata = read_hdf4(filename,variables)
             for name in sdata.keys():
                 add_element_to_list_in_dict(all_sdata,name,sdata[name])
             for name in vdata.keys():
@@ -126,11 +126,11 @@ class UngriddedData(object):
         self.lon = lon
         
         self.alt = height
-        self.time, temp = np.meshgrid(time,np.arange(0,len(height[1])))
-        #self.time = time
+        # Turn the time vector into an array for use with pcolormesh
+        self.time = np.meshgrid(np.arange(0,len(height[1])), time)[1]
         
-        self.x =self.time.transpose() # A numpy array
-        self.y = self.alt # A numpy arra    class Coord(object):
+        self.x =self.time # A numpy array
+        self.y = self.alt # A numpy array
 
         # coords is a list of coord objects
         coords = [ UngriddedData.Coord('Time'), UngriddedData.Coord('Height')]
@@ -141,8 +141,8 @@ class UngriddedData(object):
         self.shape = self.metadata["info"][2]
         self.long_name = self.metadata["attributes"]["long_name"]
         self.units = self.metadata["attributes"]["units"]
-        #self.range = self.metadata["attributes"]["range"]
 
+        #self.range = self.metadata["attributes"]["range"]
         #self.type = v_type
         #self.short_name = short_name
         #self.data_list = [x, y, data]

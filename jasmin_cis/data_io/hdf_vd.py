@@ -47,7 +47,7 @@ def read_vds(filename, variables=None, datadict=None):
             datadict[variable] = filename, variable
         except:
             # ignore variable that failed
-            print "--Could not find " + variable
+            pass
 
     vs.end()
     datafile.close()
