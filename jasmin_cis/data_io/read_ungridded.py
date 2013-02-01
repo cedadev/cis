@@ -82,6 +82,6 @@ def read_hdf4(filename,variables):
     
     for variable in variables:
         if variable not in sds_dict and variable not in vds_dict:
-            raise InvalidVariableError("Could not find " + variable + "in file: " + filename)
+            raise InvalidVariableError("Could not find " + variable + " in file: " + filename)
 
     return sds_dict, vds_dict
