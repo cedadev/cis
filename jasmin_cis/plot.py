@@ -4,7 +4,7 @@ Also contains dictionaries for the valid plot types and formatting options
 '''
 
 import matplotlib.pyplot as plt
-from data_io.netcdf import unpack_cube
+from data_io.netcdf import unpack_data_object
 from mpl_toolkits.basemap import Basemap
 import sys
 
@@ -268,19 +268,18 @@ class Plotter(object):
             # Temporarily add args to kwargs
             if datafiles is not None:
                 self.__add_datafile_args_to_kwargs(datafiles[i])
-            item_to_plot = unpack_cube(item)
-            num_of_lat_and_lon = 2
+            item_to_plot = unpack_data_object(item)            
             if self.plot_type == "heatmap":
+                names = []
                 for dim in xrange(len(item.shape)):
                     for coord in item.coords(contains_dimension=dim, dim_coords=True):
-                        name = coord.name().lower()
-                        if name != "latitude" and name != "longitude":
-                            num_of_lat_and_lon -= 1
-            
-            if num_of_lat_and_lon == 2:              
+                        names.append(coord.name().lower())
+                if "latitude" in names and "longitude" in names:
+                    Plotter.plot_types["heatmap"].plot_method(self, item_to_plot)
+                else:
+                    Plotter.plot_types["heatmap_nobasemap"].plot_method(self, item_to_plot)
+            else:              
                 Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
-            else:
-                Plotter.plot_types["heatmap_nobasemap"].plot_method(self, item_to_plot)
             # Remove temp args
             if datafiles is not None:
                 self.__remove_datafile_args_from_kwargs(datafiles[i])
