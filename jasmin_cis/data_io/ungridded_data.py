@@ -131,15 +131,12 @@ class UngriddedData(object):
         
         self.x =self.time.transpose() # A numpy array
         self.y = self.alt # A numpy arra    class Coord(object):
-        def __init__(self, name):
-            self.name = name
-        def name(self):
-            return self.name # Stringy
 
         # coords is a list of coord objects
         coords = [ UngriddedData.Coord('Time'), UngriddedData.Coord('Height')]
         self._coords = coords
         
+        # NOTE - it would be good to use .get on info and attributes to be able to set defaults
         self.name = self.metadata["info"][0]
         self.shape = self.metadata["info"][2]
         self.long_name = self.metadata["attributes"]["long_name"]
