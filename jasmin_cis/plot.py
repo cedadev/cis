@@ -51,9 +51,8 @@ class Plotter(object):
         
         @param data:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        import numpy as np    
-        self.min_data = np.min(data_item["data"])
-        self.max_data = np.max(data_item["data"])
+        self.min_data = data_item["data"].min()
+        self.max_data = data_item["data"].max()
         self.basemap = Basemap()    
         self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
 
@@ -63,10 +62,11 @@ class Plotter(object):
         
         @param data:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        import numpy as np    
-        self.min_data = np.min(data_item["data"])
-        self.max_data = np.max(data_item["data"])
+        self.min_data = data_item["data"].min()
+        self.max_data = data_item["data"].max()
+        
         self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        #plt.pcolormesh(data_item["x"][3000:3600,:103], data_item["y"][3000:3600,:103], data_item["data"][3000:3600,:103], vmin=0)
         
     def plot_contour(self, data_item):
         '''
@@ -98,9 +98,8 @@ class Plotter(object):
         maxval = None   
         mark = self.kwargs.pop("marker", "o") 
         if data_item["data"] is not None:
-            import numpy as np
-            minval = np.min(data_item["data"])
-            maxval = np.max(data_item["data"])
+            minval = data_item["data"].min()
+            maxval = data_item["data"].max()
             if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1):
                 minval = self.min_data
                 maxval = self.max_data
