@@ -164,11 +164,14 @@ class Plotter(object):
                     legend_titles.append(datafiles[i]["label"])
                 else:
                     legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
-            handles = self.plots
-            if self.plot_type == "scatteroverlay":
-                handles = handles[1:]
-                legend_titles = legend_titles[1:]
-            legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
+            if self.plot_type == "line":
+                legend = plt.legend(legend_titles, loc="best")
+            else:                
+                handles = self.plots
+                if self.plot_type == "scatteroverlay":
+                    handles = handles[1:]
+                    legend_titles = legend_titles[1:]
+                legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
             legend.draggable(state = True)
     
     def __draw_coastlines(self):
