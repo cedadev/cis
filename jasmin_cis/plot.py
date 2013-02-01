@@ -45,7 +45,7 @@ class Plotter(object):
         '''
         self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
     
-    def plot_heatmap_basemap(self, data_item):
+    def plot_heatmap(self, data_item):
         '''
         Plots a heatmap
         
@@ -55,9 +55,9 @@ class Plotter(object):
         self.min_data = np.min(data_item["data"])
         self.max_data = np.max(data_item["data"])
         self.basemap = Basemap()    
-        self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = False, *self.args, **self.kwargs))
+        self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
 
-    def plot_heatmap(self, data_item):
+    def plot_heatmap_nobasemap(self, data_item):
         '''
         Plots a heatmap
         
@@ -129,6 +129,7 @@ class Plotter(object):
     plot_types = {'line' : PlotType(None, 1, plot_line),
                 'scatter' : PlotType(None, 2, plot_scatter), 
                 'heatmap' : PlotType(1, 2, plot_heatmap),
+                'heatmap_nobasemap' : PlotType(1, 2, plot_heatmap_nobasemap),
                 'contour' : PlotType(1, 2, plot_contour),
                 'contourf' : PlotType(1, 2, plot_contourf),
                 'scatteroverlay' : PlotType(None, 2, plot_scatteroverlay)}
@@ -268,7 +269,18 @@ class Plotter(object):
             if datafiles is not None:
                 self.__add_datafile_args_to_kwargs(datafiles[i])
             item_to_plot = unpack_cube(item)
-            Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
+            num_of_lat_and_lon = 2
+            if self.plot_type == "heatmap":
+                for dim in xrange(len(item.shape)):
+                    for coord in item.coords(contains_dimension=dim, dim_coords=True):
+                        name = coord.name().lower()
+                        if name != "latitude" and name != "longitude":
+                            num_of_lat_and_lon -= 1
+            
+            if num_of_lat_and_lon == 2:              
+                Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
+            else:
+                Plotter.plot_types["heatmap_nobasemap"].plot_method(self, item_to_plot)
             # Remove temp args
             if datafiles is not None:
                 self.__remove_datafile_args_from_kwargs(datafiles[i])
