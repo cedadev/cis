@@ -16,7 +16,7 @@ def get_netcdf_file_variables(filename):
     return f.variables
 
 
-def unpack_cube(cube): 
+def unpack_data_object(data_object): 
     '''
     To be commented
     ''' 
@@ -24,13 +24,13 @@ def unpack_cube(cube):
     import iris.plot as iplt
     import iris
 
-    if type(cube) is Cube:
-        no_of_dims = len(cube.shape)
+    if type(data_object) is Cube:
+        no_of_dims = len(data_object.shape)
         import numpy as np
         from mpl_toolkits.basemap import addcyclic
         
-        plot_defn = iplt._get_plot_defn(cube, iris.coords.POINT_MODE, ndims = no_of_dims)
-        data = cube.data #ndarray
+        plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
+        data = data_object.data #ndarray
         if plot_defn.transpose:
             data = data.T
         
@@ -63,4 +63,4 @@ def unpack_cube(cube):
         
         return { "data": data, "x" : x, "y" : y }
     else:
-        return { "data": cube.data, "x" : cube.x, "y" : cube.y }
+        return { "data": data_object.data, "x" : data_object.x, "y" : data_object.y }
