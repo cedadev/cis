@@ -47,6 +47,7 @@ def add_col_parser_arguments(parser):
     parser.add_argument("datafiles", metavar = "DataFiles", nargs = "+", help = "Files to colocate with variable names and other options split by a colon")
     parser.add_argument("-v", "--variable", metavar = "DefaultVariable", nargs = "?", help = "The default variable to use for the data files unless explicitly overridden")
     parser.add_argument("-m", "--method", metavar = "DefaultMethod", nargs = "?", help = "The default method to use for the data files unless explicitly overridden")
+    parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     return parser
 
 def check_file_exists(filename, parser):
@@ -210,11 +211,15 @@ def validate_col_args(arguments, parser):
     Checks that the filenames are valid and that variables and methods have been specified.
     Assigns default method/variable to datafiles with unspecified method/variable if default is specified
     '''
+    from collections import namedtuple
+    
     check_file_exists(arguments.samplefilename, parser)
     
     check_valid_col_method(arguments.method, parser)
     
-    from collections import namedtuple
+    if not arguments.output:
+        parser.error("Please specify an output file using the -o flag")
+    
     DatafileOptions = namedtuple('ColocateOptions',['filename', "variable", "method"])
     datafile_options = DatafileOptions(check_file_exists, check_nothing, check_valid_col_method)    
     

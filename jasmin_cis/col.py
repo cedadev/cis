@@ -23,9 +23,22 @@ class Colocator(object):
         if self.method is None:
             raise InvalidColocationMethodError('This co-location method is invalid for this data type')
                 
+    def _update_data(self):
+        from iris import cube
+        from jasmin_cis.data_io.ungridded_data import UngriddedData
+        if isinstance(self.points, cube.Cube):
+            # Return a cube with those points - TODO
+            pass
+        else:
+            return UngriddedData.from_points_array(self.points)
+                
     def colocate(self):
+        import numpy as np
         for point in self.points:
             point.val.append(self.method(self, point))
+        new_data = self._update_data() 
+        new_data.missing_value = np.Infinity
+        return new_data
         
     def find_nn_value(self, point):
         '''

@@ -26,11 +26,8 @@ def get_file_coordinates(filename):
     Read in coordinate variables and pass back tuple of lat, lon,
     each element of tuple being a 2D numpy array
     '''
-    vds = hdf_vd.read_vds(filename,['Latitude','Longitude'])
-    data = hdf_vd.get_data(vds)
-    lat = data['Latitude']
-    long = data['Longitude']
-    
+    lat = hdf_vd.get_data((filename,'Latitude'))
+    long = hdf_vd.get_data((filename,'Longitude'))
     return (lat,long)
 
 
@@ -45,9 +42,12 @@ def get_file_coordinates_points(filename):
     
     points = []    
     
-    for (x,y), lat in np.ndenumerate(latitude):
-        lon = longitude[x,y]
-        points.append(HyperPoint(lat,lon))
+    for i, lat in enumerate(latitude):
+        points.append(HyperPoint(lat,longitude[i]))
+    
+#    for (x,y), lat in np.ndenumerate(latitude):
+#        lon = longitude[x,y]
+#        points.append(HyperPoint(lat,lon))
         
     return points
 
