@@ -157,18 +157,19 @@ class Plotter(object):
         return options
     
     def __create_legend(self, datafiles):
-        legend_titles = []
-        for i, item in enumerate(self.data):
-            if datafiles is not None and datafiles[i]["label"]:
-                legend_titles.append(datafiles[i]["label"])
-            else:
-                legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
-        handles = self.plots
-        if self.plot_type == "scatteroverlay":
-            handles = handles[1:]
-            legend_titles = legend_titles[1:]
-        legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
-        legend.draggable(state = True)
+        if len(self.plots) > 1:
+            legend_titles = []
+            for i, item in enumerate(self.data):
+                if datafiles is not None and datafiles[i]["label"]:
+                    legend_titles.append(datafiles[i]["label"])
+                else:
+                    legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+            handles = self.plots
+            if self.plot_type == "scatteroverlay":
+                handles = handles[1:]
+                legend_titles = legend_titles[1:]
+            legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
+            legend.draggable(state = True)
     
     def __draw_coastlines(self):
         axes = []
