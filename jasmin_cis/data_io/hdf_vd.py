@@ -37,6 +37,8 @@ def read_vds(filename, variables=None, datadict=None):
     if datadict == None:
         datadict = {}
 
+    if not isinstance(variables,list): variables = [ variables ]
+
     datafile = HDF(filename)
     vs =  datafile.vstart()
 

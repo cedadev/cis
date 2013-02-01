@@ -21,7 +21,7 @@ def get_hdf_SD_file_variables(filename):
     # List of required variable names.
     return datafile.datasets()
 
-def read_sds(filename, names=None, datadict=None):
+def read_sds(filename, variables=None, datadict=None):
     """
     Reads SD from a HDF4 file into a dictionary. 
     
@@ -42,14 +42,19 @@ def read_sds(filename, names=None, datadict=None):
 
     # Open the file.
     datafile = SD.SD(filename)
-    # List of required variable names.
-    if names is None:
-        names = datafile.datasets()
+
+    if not isinstance(variables,list): variables = [ variables ]
+
+# List of required variable names.
+    if variables is None:
+        variables = datafile.datasets()
+
     # Create dictionary to hold data arrays for returning.
     if datadict is None:
         datadict = {}
+
     # Get data.
-    for variable in names:
+    for variable in variables:
         try:
             sds = datafile.select(variable) # SDS object.
             datadict[variable] = sds
