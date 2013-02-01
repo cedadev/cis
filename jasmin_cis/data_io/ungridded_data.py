@@ -61,7 +61,7 @@ class UngriddedData(object):
         lat = hdf_vd.get_data(all_vdata['Latitude'])
         lon = hdf_vd.get_data(all_vdata['Longitude'])
         alt = hdf_sd.get_data(all_sdata['Height'])
-        time = hdf_vd.get_data(all_vdata['TAI_start']) + hdf_sd.get_data(all_sdata['Profile_time'])
+        time = hdf_vd.get_data(all_vdata['TAI_start']) + hdf_vd.get_data(all_vdata['Profile_time'])
                         
         for variable in all_sdata.keys():
             outdata[variable] = cls(all_sdata[variable],lat,lon,alt,time,'HDF_SD')
@@ -143,7 +143,7 @@ class UngriddedData(object):
         self.shape = self.metadata["info"][2]
         self.long_name = self.metadata["attributes"]["long_name"]
         self.units = self.metadata["attributes"]["units"]
-        self.range = self.metadata["attributes"]["range"]
+        #self.range = self.metadata["attributes"]["range"]
 
         #self.type = v_type
         #self.short_name = short_name
