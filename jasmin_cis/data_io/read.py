@@ -42,7 +42,6 @@ def read_variable_from_files(filenames, variable):
     returns:
         The specified data with unnecessary dimensions removed    
     '''
-
     from iris.exceptions import IrisError
     from jasmin_cis.exceptions import CISError
     

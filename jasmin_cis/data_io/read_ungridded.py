@@ -60,6 +60,8 @@ def read(filenames, variables):
         @param variables:    List of variables to read from the files
         
         @return A list of ungridded data objects 
+        @raise FileIOError: Unable to read a file
+        @raise InvalidVariableError: Variable not present in file
     '''
     return UngriddedData.load_ungridded_data(filenames, variables)           
 
@@ -73,9 +75,14 @@ def read_hdf4(filename,variables):
         
         @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds 
     '''
+    from jasmin_cis.exceptions import InvalidVariableError
     variables = variables + ['Latitude','Longitude','TAI_start','Profile_time','Height']
 
     sds_dict = hdf_sd.read_sds(filename,variables)
     vds_dict = hdf_vd.read_vds(filename,variables)
+    
+    for variable in variables:
+        if variable not in sds_dict and variable not in vds_dict:
+            raise InvalidVariableError("Could not find " + variable + "in file: " + filename)
 
     return sds_dict, vds_dict
