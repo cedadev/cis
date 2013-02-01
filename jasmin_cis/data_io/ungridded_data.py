@@ -43,7 +43,7 @@ class UngriddedData(object):
         if not isinstance(variables,list): variables = [ variables ]
         if not isinstance(filenames,list): filenames = [ filenames ]
         
-        outdata = {}
+        outdata = []
         all_sdata = {}
         all_vdata = {}
         for filename in filenames:
@@ -58,15 +58,15 @@ class UngriddedData(object):
                 add_element_to_list_in_dict(all_vdata,name,vdata[name])
                 
 
-        lat = hdf_vd.get_data(all_vdata['Latitude'])
-        lon = hdf_vd.get_data(all_vdata['Longitude'])
-        alt = hdf_sd.get_data(all_sdata['Height'])
-        time = hdf_vd.get_data(all_vdata['TAI_start']) + hdf_vd.get_data(all_vdata['Profile_time'])
+        lat = hdf_vd.get_data(all_vdata.pop('Latitude'))
+        lon = hdf_vd.get_data(all_vdata.pop('Longitude'))
+        alt = hdf_sd.get_data(all_sdata.pop('Height'))
+        time = hdf_vd.get_data(all_vdata.pop('TAI_start')) + hdf_vd.get_data(all_vdata.pop('Profile_time'))
                         
         for variable in all_sdata.keys():
-            outdata[variable] = cls(all_sdata[variable],lat,lon,alt,time,'HDF_SD')
+            outdata.append(cls(all_sdata[variable],lat,lon,alt,time,'HDF_SD'))
         for variable in all_vdata.keys():    
-            outdata[variable] = cls(all_vdata[variable],lat,lon,alt,time,'HDF_VD')
+            outdata.append(cls(all_vdata[variable],lat,lon,alt,time,'HDF_VD'))
             
         #['Latitude','Longitude','TAI_start','Profile_time', 'Height']
             
@@ -74,9 +74,9 @@ class UngriddedData(object):
     
     class Coord(object):
         def __init__(self, name):
-            self.name = name
+            self._name = name
         def name(self):
-            return self.name # String
+            return self._name # String
     
     def __init__(self, data, lat,lon,height,time, data_type=None, metadata=None):
         '''
@@ -126,9 +126,10 @@ class UngriddedData(object):
         self.lon = lon
         
         self.alt = height
-        self.time = time
+        self.time, temp = np.meshgrid(time,np.arange(0,len(height[1])))
+        #self.time = time
         
-        self.x = self.time # A numpy array
+        self.x =self.time.transpose() # A numpy array
         self.y = self.alt # A numpy arra    class Coord(object):
         def __init__(self, name):
             self.name = name
@@ -150,7 +151,7 @@ class UngriddedData(object):
         #self.data_list = [x, y, data]
         
         
-    def coords(self, optional_arg1 = None, optional_arg2 = None):
+    def coords(self, contains_dimension = None, dim_coords = None):
         return self._coords # list of object Coord
         
 #    def _find_metadata(self):

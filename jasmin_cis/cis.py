@@ -47,6 +47,14 @@ def plot_cmd(main_arguments):
     
     try:        
         data = [read_variable_from_files([datafile["filename"]], datafile["variable"]) for datafile in main_arguments["datafiles"]]
+        temp_data = []
+        for item in data:
+            if isinstance(item,list):
+                for thing in item:
+                    temp_data.append(thing)
+            else:
+                temp_data.append(item)
+        data = temp_data
     except (IrisError, ex.InvalidVariableError, ex.FileIOError) as e:
         __error_occurred(e)
     except IOError as e:

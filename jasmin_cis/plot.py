@@ -45,7 +45,7 @@ class Plotter(object):
         '''
         self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
     
-    def plot_heatmap(self, data_item):
+    def plot_heatmap_basemap(self, data_item):
         '''
         Plots a heatmap
         
@@ -55,7 +55,18 @@ class Plotter(object):
         self.min_data = np.min(data_item["data"])
         self.max_data = np.max(data_item["data"])
         self.basemap = Basemap()    
-        self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
+        self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = False, *self.args, **self.kwargs))
+
+    def plot_heatmap(self, data_item):
+        '''
+        Plots a heatmap
+        
+        @param data:    A dictionary containing the x coords, y coords and data as arrays
+        '''
+        import numpy as np    
+        self.min_data = np.min(data_item["data"])
+        self.max_data = np.max(data_item["data"])
+        self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         
     def plot_contour(self, data_item):
         '''
