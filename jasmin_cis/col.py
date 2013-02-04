@@ -57,7 +57,7 @@ class Colocator(object):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         import numpy as np
         nearest_point = point.furthest_point_from()
-        for (x,y), value in np.ndenumerate(self.data.vals):
+        for (x,y), value in np.ndenumerate(self.data.data):
             ug_point = HyperPoint(self.data.lat[x,y],self.data.lon[x,y],val=value)
             if point.compdist(nearest_point, ug_point): nearest_point = ug_point
             
