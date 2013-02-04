@@ -158,7 +158,10 @@ class UngriddedData(object):
             # Metadata should really be stored as a seperate object in an UngriddedData instance - even if it's just a namedtuple
             # NOTE - it would be good to use .get on info and attributes to be able to set defaults
             self.name = self._metadata["info"][0]
-            self.shape = self._metadata["info"][2]
+            if isinstance(self._metadata["info"][2], list):
+                self.shape = self._metadata["info"][2]
+            else:
+                self.shape = [ self._metadata["info"][2] ]
             self.long_name = self._metadata["attributes"]["long_name"]
             self.units = self._metadata["attributes"]["units"]
             self.missing_value = self._metadata["attributes"].get('_FillValue', None)
