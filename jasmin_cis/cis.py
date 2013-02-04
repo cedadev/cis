@@ -98,10 +98,11 @@ def col_cmd(main_arguments):
     from col import Colocator
     from data_io.write_hdf import write
     
-    sample_ponts = read_file_coordinates(main_arguments.pop("samplefilename"))
-   
+    sample_file = main_arguments.pop("samplefilename")
     input_groups = main_arguments.pop("datafiles")
     output_file = main_arguments.pop("output")
+    
+    sample_ponts = read_file_coordinates(sample_file)
    
     for input_group in input_groups:
         filename = input_group['filename']
@@ -110,7 +111,7 @@ def col_cmd(main_arguments):
         
         #data_dict = read_variable(filename, variable)
         try:
-            data = read_variable_from_files(filename, variable)
+            data = read_variable_from_files(filename, variable)[0]
         except CISError as e:
             __error_occurred(e)
         
