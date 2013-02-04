@@ -108,7 +108,11 @@ class Plotter(object):
                 colour_scheme = data_item["data"]
         if colour_scheme is None:
             colour_scheme = "b"
-        self.plots.append(plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"], 2), c = colour_scheme, vmin = minval, vmax = maxval, marker = mark))
+        if "linewidth" in self.kwargs.keys():
+            scatter_size = self.kwargs["linewidth"]
+        else:
+            scatter_size = 20 # default val
+        self.plots.append(plt.scatter(data_item["x"][:,0], data_item["data"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size))
     
     def plot_scatteroverlay(self, data_item):
         '''
