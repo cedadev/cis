@@ -83,7 +83,7 @@ def write(obj, filename):
     hdf_file = SD(filename, SDC.WRITE|SDC.CREATE|SDC.TRUNC)
     
     # Create variables
-    __create_variable(hdf_file, obj.standard_name, obj.data, _FillValue=obj.missing_value, units=str(obj.units))
+    __create_variable(hdf_file, obj.standard_name, obj.data, _FillValue=obj.missing_value, units=str(obj.units), long_name='Model Data')
     __create_variable(hdf_file, obj.coords()[0].name().title(), obj.x)
     
     if obj.y is not None:
