@@ -159,7 +159,7 @@ class Plotter(object):
         return options
     
     def __set_x_label(self, options):
-        if options["xlabel"] is None:
+        if options["xlabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
             for dim in xrange(len(self.data[0].shape)):
                 for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
                     xlabel = coord.name()
@@ -167,7 +167,7 @@ class Plotter(object):
         return options
     
     def __set_y_label(self, options):
-        if options["ylabel"] is None:
+        if options["ylabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
             if len(self.data) == 1:
                 options["ylabel"] = self.data[0].long_name.title()
             else:
@@ -215,11 +215,12 @@ class Plotter(object):
         if options is not None:  
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
-            if self.plot_type == "line":
-                options = self.__set_x_label(options)
-                options = self.__set_y_label(options)
-            else:
+            options = self.__set_x_label(options)
+            options = self.__set_y_label(options)
+        
+            if options["xlabel"] == None:
                 options["xlabel"] = ""
+            if options["ylabel"] == None:
                 options["ylabel"] = ""
                 
             if not options["title"]:
