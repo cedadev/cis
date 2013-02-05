@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from data_io.ungridded_data import UngriddedData
+from ungridded_data import UngriddedData
 
 class AProduct(object):
     """

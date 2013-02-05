@@ -1,5 +1,5 @@
 '''
-Module for reading data.
+Module for reading data. This is just an abstract layer for making the choice between gridded and ungridded - the actual reading is done elsewhere
 '''
 
 import read_gridded,read_ungridded
@@ -10,11 +10,9 @@ def read_all_variables_from_file(filename):
     File can contain either gridded and ungridded data.
     First tries to read data as gridded, if that fails, tries as ungridded.
     
-    args:
-        filenames:   The filenames of the files to read
+    @param filename:   The filename of the file to read
         
-    returns:
-        A list of variable objects describing the variables
+    @return: A list of variable objects describing the variables
     '''
     from jasmin_cis.exceptions import CISError
     from pyhdf.error import HDF4Error
@@ -35,12 +33,10 @@ def read_variable_from_files(filenames, variable):
     Files can be either gridded or ungridded but not a mix of both.
     First tries to read data as gridded, if that fails, tries as ungridded.
     
-    args:
-        filenames:   The filenames of the files to read
-        variable:    The variable to read from the files
+    @param filenames:   The filenames of the files to read
+    @param variable:    The variable to read from the files
         
-    returns:
-        The specified data with unnecessary dimensions removed    
+    @return:  The specified data with unnecessary dimensions removed
     '''
     from iris.exceptions import IrisError
     from jasmin_cis.exceptions import CISError
@@ -49,6 +45,7 @@ def read_variable_from_files(filenames, variable):
         data = read_gridded.read(filenames, variable)
     except (IrisError, ValueError) as e:
         # Unable to create Cube, trying Ungridded data instead
+        # This is the point we need to try and identify the product - from path or otherwise
         try:
             data = read_ungridded.read("Cloudsat_2B_CWC_RVOD",filenames, variable)
         except CISError as e:
@@ -62,11 +59,9 @@ def read_file_coordinates(filename):
     File can contain either gridded and ungridded data.
     First tries to read data as gridded, if that fails, tries as ungridded.
   
-    args:
-        filename:   The filename of the files to read
+    @param filename:   The filename of the files to read
         
-    returns:
-        A list of HyperPoints  
+    @return: A list of HyperPoints
     '''
     from jasmin_cis.exceptions import CISError
     
