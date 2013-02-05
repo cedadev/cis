@@ -24,11 +24,11 @@ class UngriddedData(object):
 
     @classmethod
     def from_points_array(cls, hyperpoints):
-        from numpy import array
-        '''
+        """
         Note: This method is unfinished
         @param hyperpoints:    A list of HyperPoints
-        '''
+        """
+        from numpy import array
         latitude = []
         longitude = []
         values = []
@@ -176,7 +176,7 @@ class UngriddedData(object):
 
     def copy_metadata_from(self, other_data):
         '''
-            Method to copy the metadata from one UngriddedData object to another
+            Method to copy the metadata from one UngriddedData/Cube object to another
         '''
         self._coords = other_data.coords()
         self.standard_name = other_data.standard_name
