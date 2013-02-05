@@ -52,18 +52,19 @@ def get_file_coordinates_points(filename):
     return points
 
 
-def read(filenames, variables):
+def read(product, filenames, variable):
     '''
     Read ungridded data from a file. Just a wrapper that calls the UngriddedData class method
     
-        @param filename:     A name of a file to read
-        @param variables:    List of variables to read from the files
+        @param filenames:     A list of files to read
+        @param variable:      A variable to read from the files
         
-        @return A list of ungridded data objects 
+        @return An ungridded data object
         @raise FileIOError: Unable to read a file
         @raise InvalidVariableError: Variable not present in file
     '''
-    return UngriddedData.load_ungridded_data(filenames, variables)           
+    from data_products import get_data
+    return get_data(product, filenames, variable)
 
 def read_hdf4(filename,variables):
     '''
