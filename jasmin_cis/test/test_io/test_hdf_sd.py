@@ -10,32 +10,32 @@ import numpy as np
 @istest
 def test_that_can_read_all_variables():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_sds(filename)
+    dict = hdf_sd.read(filename)
     eq_(len(dict),67)
 
 @istest
 def test_that_can_read_known_variables():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_sds(filename,['Latitude','Longitude'])
+    dict = hdf_sd.read(filename,['Latitude','Longitude'])
     eq_(len(dict),2)
 
 @istest
 @raises(HDF4Error)
 def test_that_cannot_read_unknown_variables():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_sds(filename,['athing','unechose','einding'])
+    dict = hdf_sd.read(filename,['athing','unechose','einding'])
 
 @istest
 def test_that_can_get_data():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_sds(filename)
+    dict = hdf_sd.read(filename)
     data = hdf_sd.get_data(dict['Latitude'])
     eq_(data.shape,(203,135))
 
 @istest
 def test_that_can_get_metadata_for_known_variable():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_sds(filename)
+    dict = hdf_sd.read(filename)
     metadata = hdf_sd.get_metadata(dict['Latitude'])
     eq_(len(metadata),3)
 
@@ -54,6 +54,6 @@ def test_that_can_get_metadata_for_known_variable():
 @raises(KeyError)
 def test_that_cannot_get_metadata_for_unknown_variable():
     filename = valid_hdf_sd_file
-    dict = hdf_sd.read_sds(filename)
+    dict = hdf_sd.read(filename)
     hdf_sd.get_metadata(dict['incognito'])
 

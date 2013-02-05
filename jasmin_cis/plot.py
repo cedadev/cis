@@ -327,10 +327,12 @@ class Plotter(object):
         from jasmin_cis.exceptions import InvalidPlotTypeError
         if self.plot_types[self.plot_type].maximum_no_of_expected_variables is not None:
             if len(self.data) > self.plot_types[self.plot_type].maximum_no_of_expected_variables:
-                raise InvalidPlotTypeError("The plot type is not valid for this number of variables") # else: There are an unlimited number of variables for this plot type
+                raise InvalidPlotTypeError("The plot type is not valid for this number of variables")
+            # else: There are an unlimited number of variables for this plot type
     
     def __prepare_range(self, axis):
-        valrange = self.kwargs.pop(axis + "range", None)     
+        valrange = self.kwargs.pop(axis + "range", None)
+
         if axis == "val" and self.plot_type != "line" and valrange is not None:
             try:       
                 self.kwargs["vmin"] = valrange.pop("vmin")

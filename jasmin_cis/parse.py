@@ -139,13 +139,14 @@ def check_plot_type(plot_type, datafiles, parser):
     '''
     Checks plot type is valid option for number of variables if specified
     '''
+    '''
     if plot_type is not None:
         if plot_type in Plotter.plot_types.keys():
             if Plotter.plot_types[plot_type].maximum_no_of_expected_variables < len(datafiles):
                 parser.error("Invalid number of variables for plot type")        
         else:        
             parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
-
+    '''
 def check_color(color, parser):
     if color is not None:
         from matplotlib.colors import cnames

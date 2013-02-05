@@ -16,7 +16,7 @@ def test_that_can_read_all_variables():
 @istest
 def test_that_can_get_data():
     filename = valid_hdf_vd_file
-    vds_dict = hdf_vd.read_vds(filename,'DEM_elevation')
+    vds_dict = hdf_vd.read(filename,'DEM_elevation')
     vds = vds_dict['DEM_elevation']
     data = hdf_vd.get_data(vds)
     eq_(37081,len(data))

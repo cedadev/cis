@@ -3,6 +3,7 @@ Module containing hdf file utility functions for the SD object
 """
 
 from jasmin_cis.data_io.hdf_util import __fill_missing_data
+import numpy as np
 
 def get_hdf_SD_file_variables(filename):
     '''
@@ -21,7 +22,7 @@ def get_hdf_SD_file_variables(filename):
     # List of required variable names.
     return datafile.datasets()
 
-def read_sds(filename, variables=None, datadict=None):
+def read(filename, variables=None, datadict=None):
     """
     Reads SD from a HDF4 file into a dictionary. 
     
@@ -112,6 +113,13 @@ def get_data(sds, calipso_scaling=False):
         data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
 
     return data
+
+def concatenate(sds_list):
+    array = get_data(sds_list[0])
+    if len(sds_list) > 1:
+        for sds in sds_list[1:]:
+            array = np.concatenate((array,get_data(sds)),axis=0)
+    return array
 
 def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
     '''

@@ -20,19 +20,17 @@ def get_file_variables(filename):
     
     return SD_vars, VD_vars
 
-
 def get_file_coordinates(filename):
     '''
     Read in coordinate variables and pass back tuple of lat, lon,
     each element of tuple being a 2D numpy array
     '''
-    vds = hdf_vd.read_vds(filename,['Latitude','Longitude'])
+    vds = hdf_vd.read(filename,['Latitude','Longitude'])
     data = hdf_vd.get_data(vds)
     lat = data['Latitude']
     long = data['Longitude']
     
     return (lat,long)
-
 
 def get_file_coordinates_points(filename):
     '''
@@ -51,7 +49,6 @@ def get_file_coordinates_points(filename):
         
     return points
 
-
 def read(filenames, variables):
     '''
     Read ungridded data from a file. Just a wrapper that calls the UngriddedData class method
@@ -63,7 +60,7 @@ def read(filenames, variables):
         @raise FileIOError: Unable to read a file
         @raise InvalidVariableError: Variable not present in file
     '''
-    return UngriddedData.load_ungridded_data(filenames, variables)           
+    return UngriddedData.load_ungridded_data(filenames, variables)
 
 def read_hdf4(filename,variables):
     '''
@@ -77,8 +74,8 @@ def read_hdf4(filename,variables):
     '''
     from jasmin_cis.exceptions import InvalidVariableError
 
-    sds_dict = hdf_sd.read_sds(filename,variables)
-    vds_dict = hdf_vd.read_vds(filename,variables)
+    sds_dict = hdf_sd.read(filename,variables)
+    vds_dict = hdf_vd.read(filename,variables)
     
     for variable in variables:
         if variable not in sds_dict and variable not in vds_dict:

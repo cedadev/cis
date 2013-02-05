@@ -9,7 +9,7 @@ def add_element_to_list_in_dict(my_dict,key,value):
     try:
         my_dict[key].append(value)
     except KeyError:
-        my_dict[key] = value
+        my_dict[key] = [value]
 
 # Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
@@ -27,7 +27,9 @@ class UngriddedData(object):
     '''
         Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
-    
+
+
+
     @classmethod
     def load_ungridded_data(cls, filenames, variables):
         '''
@@ -41,7 +43,7 @@ class UngriddedData(object):
             @raise InvalidVariableError: Variable not present in file
         '''
         from read_ungridded import read_hdf4
-        
+
         if not isinstance(variables,list): variables = [ variables ]
         if not isinstance(filenames,list): filenames = [ filenames ]
         
@@ -56,20 +58,25 @@ class UngriddedData(object):
                 add_element_to_list_in_dict(all_sdata,name,sdata[name])
             for name in vdata.keys():
                 add_element_to_list_in_dict(all_vdata,name,vdata[name])
-                
 
-        lat = hdf_vd.get_data(all_vdata.pop('Latitude'))
-        lon = hdf_vd.get_data(all_vdata.pop('Longitude'))
-        alt = hdf_sd.get_data(all_sdata.pop('Height'))
-        time = hdf_vd.get_data(all_vdata.pop('TAI_start')) + hdf_vd.get_data(all_vdata.pop('Profile_time'))
-                        
+        lat = hdf_vd.concatenate(all_vdata['Latitude'])
+        lon = hdf_vd.concatenate(all_vdata['Longitude'])
+
+        alt = hdf_sd.concatenate(all_sdata['Height'])
+
+        time = hdf_vd.concatenate(all_vdata['TAI_start']+all_vdata['Profile_time'])
+
+        all_vdata.pop('Latitude')
+        all_vdata.pop('Longitude')
+        all_sdata.pop('Height')
+        all_vdata.pop('TAI_start')
+        all_vdata.pop('Profile_time')
+
         for variable in all_sdata.keys():
             outdata.append(cls(all_sdata[variable],lat,lon,alt,time,'HDF_SD'))
         for variable in all_vdata.keys():    
             outdata.append(cls(all_vdata[variable],lat,lon,alt,time,'HDF_VD'))
-            
-        #['Latitude','Longitude','TAI_start','Profile_time', 'Height']
-            
+
         return outdata
     
     class Coord(object):
@@ -174,7 +181,7 @@ class UngriddedData(object):
                 self._data=self.retrieve_raw_data(self._data_manager[0])
                 if len(self._data_manager) > 1:
                     for manager in self._data_manager[1:]:
-                        self._data = np.hstack(self._data,self.retrieve_raw_data(manager))
+                        self._data = np.concatenate((self._data,self.retrieve_raw_data(manager)),axis=0)
             except MemoryError:
                 raise MemoryError(
                   "Failed to read the ungridded data as there was not enough memory available.\n" 
