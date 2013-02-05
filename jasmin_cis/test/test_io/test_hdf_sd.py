@@ -4,7 +4,6 @@ module to test the hdf4 utility function of hdf_sd.py
 from nose.tools import istest,raises, eq_
 from jasmin_cis.test.test_files.data import *
 import jasmin_cis.data_io.hdf_sd as hdf_sd
-from pyhdf.error import HDF4Error
 import numpy as np
 
 @istest
@@ -18,12 +17,6 @@ def test_that_can_read_known_variables():
     filename = valid_hdf_sd_file
     dict = hdf_sd.read_sds(filename,['Latitude','Longitude'])
     eq_(len(dict),2)
-
-@istest
-@raises(HDF4Error)
-def test_that_cannot_read_unknown_variables():
-    filename = valid_hdf_sd_file
-    dict = hdf_sd.read_sds(filename,['athing','unechose','einding'])
 
 @istest
 def test_that_can_get_data():

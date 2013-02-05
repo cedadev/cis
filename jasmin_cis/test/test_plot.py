@@ -2,7 +2,7 @@
 Module to test the one-dimensional plotting of NetCDF files
 More tests can be found in the manual_integration_tests package
 '''
-from jasmin_cis.plot import plot
+from jasmin_cis.plot import Plotter
 from nose.tools import istest, raises
 from test_files.data import *
 import iris
@@ -29,12 +29,12 @@ def make_cube(filename, variable = None):
 @raises(IOError)
 def should_raise_io_error_with_invalid_filename():     
     cube = make_cube("/")
-    plot([cube], "line", "/")
+    Plotter([cube], "line", "/")
    
 @istest
 @raises(InvalidPlotTypeError)
 def should_raise_error_when_variable_is_not_1D():
     delete_file_if_exists()
     cube = make_cube(valid_1d_filename, not1Dvariable)
-    plot([cube], "line", out_filename)   
+    Plotter([cube], "line", out_filename)
     assert(os.path.isfile(out_filename))
