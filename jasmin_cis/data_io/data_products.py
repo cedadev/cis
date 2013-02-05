@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from data_io.ungridded_data import UngriddedData
+from data_io import hdf_vd, hdf_sd
+from ungridded_data import UngriddedData
 
 class AProduct(object):
     """
@@ -43,26 +44,18 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             for name in vdata.keys():
                 add_element_to_list_in_dict(all_vdata,name,vdata[name])
 
+        lat = hdf_vd.concatenate([all_vdata['Latitude']])
+        lon = hdf_vd.concatenate([all_vdata['Longitude']])
+        alt = hdf_sd.concatenate([all_sdata['Height']])
 
-        lat = hdf_vd.get_data(all_vdata.pop('Latitude'))
-        lon = hdf_vd.get_data(all_vdata.pop('Longitude'))
-        alt = hdf_sd.get_data(all_sdata.pop('Height'))
-        time = hdf_vd.get_data(all_vdata.pop('TAI_start')) + hdf_vd.get_data(all_vdata.pop('Profile_time'))
-
-        '''
-        lat = hdf_vd.concatenate(all_vdata['Latitude'])
-        lon = hdf_vd.concatenate(all_vdata['Longitude'])
-
-        alt = hdf_sd.concatenate(all_sdata['Height'])
-
-        time = hdf_vd.concatenate(all_vdata['TAI_start']+all_vdata['Profile_time'])
+        time = hdf_vd.concatenate([all_vdata['Profile_time']]) + hdf_vd.concatenate([all_vdata['TAI_start']])
 
         all_vdata.pop('Latitude')
         all_vdata.pop('Longitude')
         all_sdata.pop('Height')
         all_vdata.pop('TAI_start')
         all_vdata.pop('Profile_time')
-        '''
+
 
         if usr_variable in all_sdata.keys():
             return UngriddedData(all_sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
