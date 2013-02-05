@@ -32,10 +32,12 @@ def get_hdf_VD_file_variables(filename):
     datafile.close()
     return variables
 
-def read_vds(filename, variables=None, datadict=None):
+def read(filename, variables=None, datadict=None):
 
     if datadict == None:
         datadict = {}
+
+    if not isinstance(variables,list): variables = [ variables ]
 
     datafile = HDF(filename)
     vs =  datafile.vstart()
@@ -88,3 +90,10 @@ def get_data(vds):
 
 def get_metadata(vds):
     pass
+
+def concatenate(vds_list):
+    data = get_data(vds_list[0])
+    if len(vds_list) > 1:
+        for vds in vds_list[1:]:
+            data = np.concatenate((data,get_data(vds)),axis=0)
+    return data

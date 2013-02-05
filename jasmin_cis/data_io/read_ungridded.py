@@ -80,8 +80,8 @@ def read_hdf4(filename,variables):
     from pyhdf.error import HDF4Error
 
     try:
-        sds_dict = hdf_sd.read_sds(filename,variables)
-        vds_dict = hdf_vd.read_vds(filename,variables)
+        sds_dict = hdf_sd.read(filename,variables)
+        vds_dict = hdf_vd.read(filename,variables)
     except HDF4Error as e:
         raise FileIOError(str(e))
     
