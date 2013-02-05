@@ -115,10 +115,13 @@ def col_cmd(main_arguments):
     from jasmin_cis.exceptions import InvalidColocationMethodError, CISError
     from data_io.read import read_file_coordinates, read_variable_from_files
     from col import Colocator
+    from data_io.write_hdf import write
     
-    sample_ponts = read_file_coordinates(main_arguments.pop("samplefilename"))
-   
+    sample_file = main_arguments.pop("samplefilename")
     input_groups = main_arguments.pop("datafiles")
+    output_file = main_arguments.pop("output")
+    
+    sample_ponts = read_file_coordinates(sample_file)
    
     for input_group in input_groups:
         filename = input_group['filename']
@@ -127,18 +130,19 @@ def col_cmd(main_arguments):
         
         #data_dict = read_variable(filename, variable)
         try:
-            data = read_variable_from_files(filename,[variable]+['Latitude','Longitude'])
-        except CISError:
-            __error_occurred("Unable to read file: "+filename)
+            data = read_variable_from_files(filename, variable)[0]
+        except CISError as e:
+            __error_occurred(e)
         
         try:
             col = Colocator(sample_ponts, data, method)
         except InvalidColocationMethodError:
             __error_occurred("Invalid co-location method: "+method)
         
-        col.colocate()
+        new_data = col.colocate()
+        new_data.copy_metadata_from(data)
         
-        print col.points
+        write(new_data, output_file)
 
 
 commands = { 'plot' : plot_cmd,

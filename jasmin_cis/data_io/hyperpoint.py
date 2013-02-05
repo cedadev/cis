@@ -60,18 +60,3 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         else:
             furthest_lon = self.longitude + 180.0
         return HyperPoint(furthest_lat, furthest_lon, self.altitude, self.time, self.val)
-
-def convert_to_array(hyperpoints):
-    from numpy import array
-    '''
-    Note: This method is unfinished
-    @param hyperpoints:    A list of HyperPoints
-    '''
-    latitude = array()
-    longitude = array()
-    
-    for hyperpoint in hyperpoints:
-        latitude.append(hyperpoint.latitude)
-        longitude.append(hyperpoint.longitude)
-        
-    return latitude, longitude

@@ -53,7 +53,7 @@ def get_file_coordinates(filename):
 
 def get_file_coordinates_points(filename):
 
-    from jasmin_cis.col import HyperPoint
+    from jasmin_cis.data_io.hyperpoint import HyperPoint
         
     dims = get_file_coordinates(filename)
     

@@ -18,7 +18,8 @@ def get_netcdf_file_variables(filename):
 
 def unpack_data_object(data_object): 
     '''
-    To be commented
+    @param data_object    A cube or an UngriddedData object
+    @return A dictionary containing x, y and data as numpy arrays
     ''' 
     from iris.cube import Cube
     import iris.plot as iplt

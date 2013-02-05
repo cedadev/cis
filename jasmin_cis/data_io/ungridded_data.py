@@ -31,6 +31,24 @@ class UngriddedData(object):
 
 
     @classmethod
+    def from_points_array(cls, hyperpoints):
+        from numpy import array
+        '''
+        Note: This method is unfinished
+        @param hyperpoints:    A list of HyperPoints
+        '''
+        latitude = []
+        longitude = []
+        values = []
+        
+        for hyperpoint in hyperpoints:
+            latitude.append(hyperpoint.latitude)
+            longitude.append(hyperpoint.longitude)
+            values.append(hyperpoint.val[0])
+            
+        return cls(array(values), array(latitude), array(longitude))
+    
+    @classmethod
     def load_ungridded_data(cls, filenames, variables):
         '''
             Create a dictionary of ungridded data objects where the variable name is the key
@@ -61,9 +79,7 @@ class UngriddedData(object):
 
         lat = hdf_vd.concatenate(all_vdata['Latitude'])
         lon = hdf_vd.concatenate(all_vdata['Longitude'])
-
         alt = hdf_sd.concatenate(all_sdata['Height'])
-
         time = hdf_vd.concatenate(all_vdata['TAI_start']+all_vdata['Profile_time'])
 
         all_vdata.pop('Latitude')
@@ -85,7 +101,7 @@ class UngriddedData(object):
         def name(self):
             return self._name # String
     
-    def __init__(self, data, lat,lon,height,time, data_type=None, metadata=None):
+    def __init__(self, data, lat=None, lon=None, height=None, time=None, data_type=None, metadata=None):
         '''
         Constructor
         
@@ -122,38 +138,58 @@ class UngriddedData(object):
             
         if metadata is None:
             if self._data_manager is not None:
-                # Retrieve metadata for the first variabel - assume this is the variable of interest
-                self.metadata = self.get_metadata(self._data_manager[0])
+                # Retrieve metadata for the first variable - assume this is the variable of interest
+                self._metadata = self.get_metadata(self._data_manager[0])
             else:
-                self.metadata = None
+                self._metadata = None
         else:
-            self.metadata = metadata
+            self._metadata = metadata
         
+        # Copy in the various coordinate arrays
         self.lat = lat
         self.lon = lon
-        
         self.alt = height
-        # Turn the time vector into an array for use with pcolormesh
-        self.time = np.meshgrid(np.arange(0,len(height[1])), time)[1]
+        # Turn the time vector into an array for use with pcolormesh - may be easier to copy
+        if time is not None:
+            self.time = np.meshgrid(np.arange(0,len(height[1])), time)[1]
+        else:
+            self.time = None
         
-        self.x =self.time # A numpy array
-        self.y = self.alt # A numpy array
-
         # coords is a list of coord objects
         coords = [ UngriddedData.Coord('Time'), UngriddedData.Coord('Height')]
         self._coords = coords
         
-        # NOTE - it would be good to use .get on info and attributes to be able to set defaults
-        self.name = self.metadata["info"][0]
-        self.shape = self.metadata["info"][2]
-        self.long_name = self.metadata["attributes"]["long_name"]
-        self.units = self.metadata["attributes"]["units"]
+        if self._metadata is not None:
+            # Metadata should really be stored as a seperate object in an UngriddedData instance - even if it's just a namedtuple
+            # NOTE - it would be good to use .get on info and attributes to be able to set defaults
+            self.name = self._metadata["info"][0]
+            if isinstance(self._metadata["info"][2], list):
+                self.shape = self._metadata["info"][2]
+            else:
+                self.shape = [ self._metadata["info"][2] ]
+            self.long_name = self._metadata["attributes"]["long_name"]
+            self.units = self._metadata["attributes"]["units"]
+            self.missing_value = self._metadata["attributes"].get('_FillValue', None)
 
         #self.range = self.metadata["attributes"]["range"]
         #self.type = v_type
         #self.short_name = short_name
         #self.data_list = [x, y, data]
         
+        
+    @property
+    def x(self):
+        if self.time is not None:
+            return self.time
+        else:
+            return self.lat 
+
+    @property
+    def y(self):
+        if self.alt is not None:
+            return self.alt
+        else:
+            return self.lon
         
     def coords(self, contains_dimension = None, dim_coords = None):
         return self._coords # list of object Coord
@@ -164,9 +200,14 @@ class UngriddedData(object):
     def __getattr__(self,attr):
         '''
             This little method actually provides the mapping between the method calls.
-            It overrides the default getattr method.
+            It overrides the default getattr method which is only called if no attributes of name 'attr'
+            can be found, hence if we don't deal with it we need to raise an AttributeError.
         '''
-        return self._map[attr]
+        if attr in self._map:
+            return self._map[attr]
+        else:
+            # Default behavior
+            raise AttributeError
     
     @property
     def data(self):
@@ -188,4 +229,14 @@ class UngriddedData(object):
                   "Consider freeing up variables or indexing the cube before getting its data.")
         return self._data
     
+    def copy_metadata_from(self, other_data):
+        '''
+            Method to copy the metadata from one UngriddedData object to another
+        '''
+        self._coords = other_data.coords()
+        self.standard_name = other_data.standard_name
+        self.shape = other_data.shape
+        self.long_name = other_data.long_name
+        self.units = other_data.units
+
     

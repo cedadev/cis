@@ -20,17 +20,16 @@ def get_file_variables(filename):
     
     return SD_vars, VD_vars
 
+
 def get_file_coordinates(filename):
     '''
     Read in coordinate variables and pass back tuple of lat, lon,
     each element of tuple being a 2D numpy array
     '''
-    vds = hdf_vd.read(filename,['Latitude','Longitude'])
-    data = hdf_vd.get_data(vds)
-    lat = data['Latitude']
-    long = data['Longitude']
-    
+    lat = hdf_vd.get_data((filename,'Latitude'))
+    long = hdf_vd.get_data((filename,'Longitude'))
     return (lat,long)
+
 
 def get_file_coordinates_points(filename):
     '''
@@ -43,11 +42,15 @@ def get_file_coordinates_points(filename):
     
     points = []    
     
-    for (x,y), lat in np.ndenumerate(latitude):
-        lon = longitude[x,y]
-        points.append(HyperPoint(lat,lon))
+    for i, lat in enumerate(latitude):
+        points.append(HyperPoint(lat,longitude[i]))
+    
+#    for (x,y), lat in np.ndenumerate(latitude):
+#        lon = longitude[x,y]
+#        points.append(HyperPoint(lat,lon))
         
     return points
+
 
 def read(filenames, variables):
     '''
@@ -60,7 +63,7 @@ def read(filenames, variables):
         @raise FileIOError: Unable to read a file
         @raise InvalidVariableError: Variable not present in file
     '''
-    return UngriddedData.load_ungridded_data(filenames, variables)
+    return UngriddedData.load_ungridded_data(filenames, variables)           
 
 def read_hdf4(filename,variables):
     '''
@@ -72,10 +75,14 @@ def read_hdf4(filename,variables):
         
         @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds 
     '''
-    from jasmin_cis.exceptions import InvalidVariableError
+    from jasmin_cis.exceptions import InvalidVariableError, FileIOError
+    from pyhdf.error import HDF4Error
 
-    sds_dict = hdf_sd.read(filename,variables)
-    vds_dict = hdf_vd.read(filename,variables)
+    try:
+        sds_dict = hdf_sd.read(filename,variables)
+        vds_dict = hdf_vd.read(filename,variables)
+    except HDF4Error as e:
+        raise FileIOError(str(e))
     
     for variable in variables:
         if variable not in sds_dict and variable not in vds_dict:

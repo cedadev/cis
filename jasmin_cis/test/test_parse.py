@@ -6,7 +6,7 @@ Each test therefore ignores SystemExit exceptions with code 2 as they are expect
 from nose.tools import istest
 from jasmin_cis.parse import parse_args
 from test_files.data import *
-from jasmin_cis.plot import plot_types
+from jasmin_cis.plot import Plotter
 
 @istest
 def can_specify_one_valid_filename():
@@ -40,7 +40,7 @@ def should_raise_error_with_a_mixture_of_valid_and_invalid_filenames():
     
 @istest
 def can_specify_valid_chart_type():
-    args = ["plot", valid_1d_filename, "-v", valid_variable, "--type", plot_types.keys()[0]]
+    args = ["plot", valid_1d_filename, "-v", valid_variable, "--type", Plotter.plot_types.keys()[0]]
     parse_args(args)
 
 @istest
@@ -56,7 +56,7 @@ def should_raise_error_with_an_invalid_chart_type():
 @istest
 def should_raise_error_with_more_than_one_chart_type():
     try:
-        args = ["plot", valid_1d_filename, "-v", valid_variable, "--type", plot_types.keys()[0], plot_types.keys()[1]]
+        args = ["plot", valid_1d_filename, "-v", valid_variable, "--type", Plotter.plot_types.keys()[0], Plotter.plot_types.keys()[1]]
         parse_args(args)
         assert False
     except SystemExit as e:

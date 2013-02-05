@@ -26,30 +26,42 @@ class Plotter(object):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
     
     def __init__(self, data, plot_type = None, out_filename = None, *args, **kwargs):
+        '''
+        Constructor for the Plotter
+        
+        @param data             A list of data objects (either Cubes or UngriddedData)
+        @param plot_type        The plot type, as a string
+        @param out_filename     The filename to save the plot to
+        @param *args            args to be passed into matplotlib
+        @param **kwargs         kwargs to be passed into matplotlib
+        '''
         self.data = data
         self.plot_type = plot_type
         self.out_filename = out_filename
         self.args = args
         self.kwargs = kwargs
         self.num_of_preexisting_plots = 0
-        self.min_data = sys.maxint
-        self.max_data = -sys.maxint - 1
-        self.plots = []
+        self.min_data = sys.maxint      # To be used for calculating the colour scheme of a scatter plotter overlayed on a heatmap
+        self.max_data = -sys.maxint - 1 # To be used for calculating the colour scheme of a scatter plotter overlayed on a heatmap
+        self.plots = [] # A list where all the plots will be stored
         self.plot() # Call main method
     
     def plot_line(self, data_item):
         '''
-        Plots a line graoh
+        Plots a line graph
+        Stores the plot in a list to be used for when adding the legend
         
-        @param data:    A dictionary containing the x coords and data as arrays
+        @param data_item:    A dictionary containing the x coords and data as arrays
         '''
         self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
     
     def plot_heatmap(self, data_item):
         '''
-        Plots a heatmap
+        Plots a heatmap using Basemap
+        Stores the min and max values of the data to be used later on for setting the colour scheme of scatter plots
+        Stores the plot in a list to be used for when adding the legend
         
-        @param data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
@@ -58,21 +70,32 @@ class Plotter(object):
 
     def plot_heatmap_nobasemap(self, data_item):
         '''
-        Plots a heatmap
+        Plots a heatmap without using basemap
+        Stores the min and max values of the data to be used later on for setting the colour scheme of scatter plots
+        Stores the plot in a list to be used for when adding the legend
         
-        @param data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
         
-        self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
-        #plt.pcolormesh(data_item["x"][3000:3600,:103], data_item["y"][3000:3600,:103], data_item["data"][3000:3600,:103], vmin=0)
+        #self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        #plt.pcolormesh(data_item["x"][3000:3600,:103], data_item["y"][3000:3600,:103], data_item["data"][3000:3600,:103])
+
+
+        print data_item["x"].shape
+        print data_item["y"].shape
+        print data_item["data"].shape
+
+
+        plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"])
         
     def plot_contour(self, data_item):
         '''
         Plots a contour plot
+        Stores the plot in a list to be used for when adding the legend
         
-        @param data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.basemap = Basemap()    
         self.plots.append(self.basemap.contour(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
@@ -80,8 +103,9 @@ class Plotter(object):
     def plot_contourf(self, data_item):
         '''
         Plots a filled contour
+        Stores the plot in a list to be used for when adding the legend
         
-        @param data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.basemap = Basemap()    
         self.plots.append(self.basemap.contourf(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
@@ -89,31 +113,37 @@ class Plotter(object):
     def plot_scatter(self, data_item):
         '''
         Plots a scatter plot
+        Stores the plot in a list to be used for when adding the legend
         
-        @param data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         from math import pow  
         colour_scheme = self.kwargs.get("color", None)
         minval = None
         maxval = None   
-        mark = self.kwargs.pop("marker", "o") 
-        if data_item["data"] is not None:
+        mark = self.kwargs.pop("marker", "o")
+        if data_item["data"] is not None: # i.e. the scatter plot is 3D
             minval = data_item["data"].min()
             maxval = data_item["data"].max()
-            if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1):
+            if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1): # If a heatmap has been already plotted
                 minval = self.min_data
                 maxval = self.max_data
             if colour_scheme is None:
                 colour_scheme = data_item["data"]
         if colour_scheme is None:
-            colour_scheme = "b"
-        self.plots.append(plt.scatter(data_item["x"], data_item["y"], s = pow(self.kwargs["linewidth"], 2), c = colour_scheme, vmin = minval, vmax = maxval, marker = mark))
+            colour_scheme = "b" # Default color scheme used by matplotlib
+        if "linewidth" in self.kwargs.keys():
+            scatter_size = self.kwargs["linewidth"]
+        else:
+            scatter_size = 20 # Default scatter size
+        self.plots.append(plt.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size))
     
     def plot_scatteroverlay(self, data_item):
         '''
         Plots a heatmap overlayed with one or more scatter plots
+        Stores the plot in a list to be used for when adding the legend
         
-        @param data:    A dictionary containing the x coords, y coords and data as arrays
+        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         if self.num_of_preexisting_plots == 0:
             self.kwargs.pop("marker", None)
@@ -141,7 +171,7 @@ class Plotter(object):
         return options
     
     def __set_x_label(self, options):
-        if options["xlabel"] is None:
+        if options["xlabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
             for dim in xrange(len(self.data[0].shape)):
                 for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
                     xlabel = coord.name()
@@ -149,7 +179,7 @@ class Plotter(object):
         return options
     
     def __set_y_label(self, options):
-        if options["ylabel"] is None:
+        if options["ylabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
             if len(self.data) == 1:
                 options["ylabel"] = self.data[0].long_name.title()
             else:
@@ -164,11 +194,14 @@ class Plotter(object):
                     legend_titles.append(datafiles[i]["label"])
                 else:
                     legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
-            handles = self.plots
-            if self.plot_type == "scatteroverlay":
-                handles = handles[1:]
-                legend_titles = legend_titles[1:]
-            legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
+            if self.plot_type == "line":
+                legend = plt.legend(legend_titles, loc="best")
+            else:                
+                handles = self.plots
+                if self.plot_type == "scatteroverlay":
+                    handles = handles[1:]
+                    legend_titles = legend_titles[1:]
+                legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
             legend.draggable(state = True)
     
     def __draw_coastlines(self):
@@ -194,11 +227,12 @@ class Plotter(object):
         if options is not None:  
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
-            if self.plot_type == "line":
-                options = self.__set_x_label(options)
-                options = self.__set_y_label(options)
-            else:
+            options = self.__set_x_label(options)
+            options = self.__set_y_label(options)
+        
+            if options["xlabel"] == None:
                 options["xlabel"] = ""
+            if options["ylabel"] == None:
                 options["ylabel"] = ""
                 
             if not options["title"]:
@@ -207,7 +241,8 @@ class Plotter(object):
             if self.plot_type != "line" and not options["title"]:
                     options["title"] = self.data[0].long_name.title()            
             
-            for option, value in options.iteritems():        
+            for option, value in options.iteritems():
+                # Call the method associated with the option        
                 self.plot_options[option](value)      
                  
         if self.plot_type == "line" or "scatter" in self.plot_type:
@@ -235,6 +270,9 @@ class Plotter(object):
             plt.figure(figsize = (width, height))
     
     def __add_datafile_args_to_kwargs(self, datafile):
+        '''
+        Add linestyle/marker and color to kwargs just before plotting
+        '''
         if self.plot_type == "line" or "scatter" in self.plot_type:
             if datafile["itemstyle"]:
                 if self.plot_type == "line":
@@ -249,6 +287,9 @@ class Plotter(object):
                 self.kwargs["color"] = datafile["color"]
                         
     def __remove_datafile_args_from_kwargs(self, datafile):
+        '''
+        Removes linestyle/marker and color from kwargs just after plotting
+        '''
         if self.plot_type == "line" or "scatter" in self.plot_type:
             if datafile["itemstyle"]:
                 if self.plot_type == "line":
@@ -260,8 +301,7 @@ class Plotter(object):
     
     def __do_plot(self):
         '''
-        @param data:        A list of data objects (cubes or ungridded data)
-        @param plot_type:   The plot type, as a string, not a PlotType object
+        Goes through all the data objects and plots them
         '''
         datafiles = self.kwargs.pop("datafiles", None) 
         for i, item in enumerate(self.data):
@@ -327,12 +367,16 @@ class Plotter(object):
         from jasmin_cis.exceptions import InvalidPlotTypeError
         if self.plot_types[self.plot_type].maximum_no_of_expected_variables is not None:
             if len(self.data) > self.plot_types[self.plot_type].maximum_no_of_expected_variables:
-                raise InvalidPlotTypeError("The plot type is not valid for this number of variables")
-            # else: There are an unlimited number of variables for this plot type
+                raise InvalidPlotTypeError("The plot type is not valid for this number of variables") # else: There are an unlimited number of variables for this plot type
     
     def __prepare_range(self, axis):
-        valrange = self.kwargs.pop(axis + "range", None)
-
+        '''
+        If the axis is for the values and the plot type is not a line graph, then adds the min and max value to the kwargs
+        otherwise just returns the valrange as a dictionary containing the min and max value
+        
+        @param axis    The axis to prepare the range for
+        '''
+        valrange = self.kwargs.pop(axis + "range", None)     
         if axis == "val" and self.plot_type != "line" and valrange is not None:
             try:       
                 self.kwargs["vmin"] = valrange.pop("vmin")
@@ -350,6 +394,8 @@ class Plotter(object):
     def __output_to_file_or_screen(self, out_filename = None):
         '''
         Outputs to screen unless a filename is given
+        
+        @param out_filename    The filename of the file to save to
         '''
         if out_filename is None:
             plt.show()
@@ -375,6 +421,10 @@ class Plotter(object):
         return options
     
     def __apply_axis_limits(self, valrange, axis):
+        '''
+        @param valrange    A dictionary containing xmin, xmax or ymin, ymax
+        @param axis        The axis to apply the limits to
+        '''
         if valrange is not None:
             if axis == "x":
                 plt.xlim(**valrange)
@@ -385,9 +435,7 @@ class Plotter(object):
         '''
         Used to validate the data before plotting
         
-        @param data:             A list of data objects
-        @param plot_type:        The plot type, as a string, not as a PlotType object
-        @param varaiable_dim:    The number of dimensions of the data being plotted
+        @param variable_dim:    The number of dimensions of the data being plotted
         '''
         self.__check_all_data_items_are_of_same_shape(variable_dim)
         self.__check_plot_type_is_valid_for_given_variable(variable_dim)
@@ -397,10 +445,6 @@ class Plotter(object):
     def plot(self):
         '''
         The main plotting method
-        
-        @param data:         A list of data objects (cubes or ungridded data objects)
-        @param plot_type:    The type of the plot to be plotted. A default will be chosen if omitted
-        @param out_filename: The filename of the file to save the plot to
         '''
         self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", None)        
         self.__remove_unassigned_arguments()   

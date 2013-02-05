@@ -123,19 +123,20 @@ def gen_random_data():
     return uniform(0, 0.000225)
 
 class MockUngriddedData(object):
-    def __init__(self, x, y, data, long_name, units, coords, v_type, short_name):
-        from numpy import shape
+    def __init__(self, x, y, data, long_name, units, coords, v_type, standard_name):
+        import numpy as np
         self.x = x # A numpy array
         self.y = y # A numpy array
         self.data = data # A numpy array
         self.data_list = [x, y, data]
-        self.shape = shape(data) # A tuple
+        self.shape = np.shape(data) # A tuple
         self.long_name = long_name # A string
         self.units = units # A string
         self._coords = coords
         self.type = v_type
-        self.short_name = short_name
-        
+        self.standard_name = standard_name
+        self.missing_value = np.nan
+
     def coords(self, optional_arg1 = None, optional_arg2 = None):
         return self._coords # list of object Coord
     
