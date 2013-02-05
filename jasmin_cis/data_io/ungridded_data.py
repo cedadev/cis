@@ -5,12 +5,6 @@ from collections import namedtuple
 import hdf_vd as hdf_vd
 import hdf_sd as hdf_sd
 
-def add_element_to_list_in_dict(my_dict,key,value):
-    try:
-        my_dict[key].append(value)
-    except KeyError:
-        my_dict[key] = value
-
 # Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
 #  by just dropping the mapping into the instance namespace dynamically...
@@ -45,50 +39,6 @@ class UngriddedData(object):
             values.append(hyperpoint.val[0])
             
         return cls(array(values), array(latitude), array(longitude))
-    
-    @classmethod
-    def load_ungridded_data(cls, filenames, variables):
-        '''
-            Create a dictionary of ungridded data objects where the variable name is the key
-        
-            @param filenames:    List of filenames of files to read
-            @param variables:    List of variables to read from the files
-            @return A dictionary of UngriddedData objects, one for each variable - the key is the variable name
-            
-            @raise FileIOError: Unable to read a file
-            @raise InvalidVariableError: Variable not present in file
-        '''
-        from read_ungridded import read_hdf4
-        
-        if not isinstance(variables,list): variables = [ variables ]
-        if not isinstance(filenames,list): filenames = [ filenames ]
-        
-        variables += ['Latitude','Longitude','TAI_start','Profile_time','Height']
-        
-        outdata = []
-        all_sdata = {}
-        all_vdata = {}
-        for filename in filenames:
-            sdata, vdata = read_hdf4(filename,variables)
-            for name in sdata.keys():
-                add_element_to_list_in_dict(all_sdata,name,sdata[name])
-            for name in vdata.keys():
-                add_element_to_list_in_dict(all_vdata,name,vdata[name])
-                
-
-        lat = hdf_vd.get_data(all_vdata.pop('Latitude'))
-        lon = hdf_vd.get_data(all_vdata.pop('Longitude'))
-        alt = hdf_sd.get_data(all_sdata.pop('Height'))
-        time = hdf_vd.get_data(all_vdata.pop('TAI_start')) + hdf_vd.get_data(all_vdata.pop('Profile_time'))
-                        
-        for variable in all_sdata.keys():
-            outdata.append(cls(all_sdata[variable],lat,lon,alt,time,'HDF_SD'))
-        for variable in all_vdata.keys():    
-            outdata.append(cls(all_vdata[variable],lat,lon,alt,time,'HDF_VD'))
-            
-        #['Latitude','Longitude','TAI_start','Profile_time', 'Height']
-            
-        return outdata
     
     class Coord(object):
         def __init__(self, name):

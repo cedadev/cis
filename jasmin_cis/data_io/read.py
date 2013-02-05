@@ -50,7 +50,7 @@ def read_variable_from_files(filenames, variable):
     except (IrisError, ValueError) as e:
         # Unable to create Cube, trying Ungridded data instead
         try:
-            data = read_ungridded.read(filenames, variable)
+            data = read_ungridded.read("Cloudsat_2B_CWC_RVOD",filenames, variable)
         except CISError as e:
             raise e
     return data
