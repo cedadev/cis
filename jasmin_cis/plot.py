@@ -81,13 +81,6 @@ class Plotter(object):
         
         #self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         #plt.pcolormesh(data_item["x"][3000:3600,:103], data_item["y"][3000:3600,:103], data_item["data"][3000:3600,:103])
-
-
-        print data_item["x"].shape
-        print data_item["y"].shape
-        print data_item["data"].shape
-
-
         plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"])
         
     def plot_contour(self, data_item):
