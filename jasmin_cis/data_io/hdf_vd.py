@@ -90,10 +90,3 @@ def get_data(vds):
 
 def get_metadata(vds):
     pass
-
-def concatenate(vds_list):
-    data = get_data(vds_list[0])
-    if len(vds_list) > 1:
-        for vds in vds_list[1:]:
-            data = np.concatenate((data,get_data(vds)),axis=0)
-    return data

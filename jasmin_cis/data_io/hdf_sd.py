@@ -114,13 +114,6 @@ def get_data(sds, calipso_scaling=False):
 
     return data
 
-def concatenate(sds_list):
-    array = get_data(sds_list[0])
-    if len(sds_list) > 1:
-        for sds in sds_list[1:]:
-            array = np.concatenate((array,get_data(sds)),axis=0)
-    return array
-
 def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
     '''
     Apply scaling factor Calipso data
