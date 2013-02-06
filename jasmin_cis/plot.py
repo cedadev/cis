@@ -441,7 +441,7 @@ class Plotter(object):
         '''
         self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", None)        
         self.__remove_unassigned_arguments()   
-           
+
         variable_dim = len(self.data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
         
         if self.plot_type is None:

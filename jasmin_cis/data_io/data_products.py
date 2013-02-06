@@ -25,41 +25,73 @@ class AProduct(object):
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
+    def concatenate_coords(self):
+        pass
+
     def create_ungridded_data(self, filenames, usr_variable):
+
         from read_ungridded import read_hdf4
         import utils
         import hdf_vd as hdf_vd
         import hdf_sd as hdf_sd
 
+        # if filenames is not a list, make it a list of 1 element
         if not isinstance(filenames,list): filenames = [ filenames ]
 
+        # list of variables we are interested in
         variables = [ usr_variable, 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
-        all_sdata = {}
-        all_vdata = {}
+        sdata = {}
+        vdata = {}
         for filename in filenames:
-            sdata, vdata = read_hdf4(filename,variables)
-            for varname in sdata.keys():
-                utils.add_element_to_list_in_dict(all_sdata,varname,sdata[varname])
-            for varname in vdata.keys():
-                utils.add_element_to_list_in_dict(all_vdata,varname,vdata[varname])
+            try:
 
-        lat = utils.concatenate(all_vdata['Latitude'],hdf_vd.get_data)
-        lon = utils.concatenate(all_vdata['Longitude'],hdf_vd.get_data)
-        alt = utils.concatenate(all_sdata['Height'],hdf_sd.get_data)
+                # reading in all variables into a 2 dictionaries:
+                # sdata, key: variable name, value: list of sds
+                # vdata, key: variable name, value: list of vds
+                sds_dict, vds_dict = read_hdf4(filename,variables)
+                for var in sds_dict.keys():
+                    utils.add_element_to_list_in_dict(sdata,var,sds_dict[var])
+                for var in vds_dict.keys():
+                    utils.add_element_to_list_in_dict(vdata,var,vds_dict[var])
 
-        time = utils.concatenate(all_vdata['Profile_time'],hdf_vd.get_data) + utils.concatenate(all_vdata['TAI_start'],hdf_vd.get_data)
+            except:
+                print 'Error while reading file ', filename
 
-        all_vdata.pop('Latitude')
-        all_vdata.pop('Longitude')
-        all_sdata.pop('Height')
-        all_vdata.pop('TAI_start')
-        all_vdata.pop('Profile_time')
 
-        if usr_variable in all_sdata.keys():
-            return UngriddedData(all_sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
-        elif usr_variable in all_vdata.keys():
-            return UngriddedData(all_vdata[usr_variable],lat,lon,alt,time,'HDF_VD')
+        # get coordinates
+        arrays = []
+        for i in vdata['Latitude']: arrays.append(hdf_vd.get_data(i))
+        lat = utils.concatenate(arrays)
+
+        arrays = []
+        for i in vdata['Longitude']: arrays.append(hdf_vd.get_data(i))
+        lon = utils.concatenate(arrays)
+
+        arrays = []
+        for i in sdata['Height']: arrays.append(hdf_sd.get_data(i))
+        alt = utils.concatenate(arrays)
+
+        arrays = []
+        for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
+            time = hdf_vd.get_data(i)
+            start = hdf_vd.get_data(j)
+            time += start
+            arrays.append(time)
+        time = utils.concatenate(arrays)
+
+
+        vdata.pop('Latitude')
+        vdata.pop('Longitude')
+        sdata.pop('Height')
+        vdata.pop('TAI_start')
+        vdata.pop('Profile_time')
+
+
+        if usr_variable in sdata.keys():
+            return UngriddedData(sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
+        elif usr_variable in vdata.keys():
+            return UngriddedData(vdata[usr_variable],lat,lon,alt,time,'HDF_VD')
 
 
 

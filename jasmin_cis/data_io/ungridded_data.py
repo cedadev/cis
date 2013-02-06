@@ -167,7 +167,7 @@ class UngriddedData(object):
                 self._data=self.retrieve_raw_data(self._data_manager[0])
                 if len(self._data_manager) > 1:
                     for manager in self._data_manager[1:]:
-                        self._data = np.hstack(self._data,self.retrieve_raw_data(manager))
+                        self._data = np.concatenate((self._data,self.retrieve_raw_data(manager)),axis=0)
             except MemoryError:
                 raise MemoryError(
                     "Failed to read the ungridded data as there was not enough memory available.\n"
