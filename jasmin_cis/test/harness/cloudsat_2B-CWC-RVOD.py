@@ -42,5 +42,11 @@ if __name__ == '__main__':
     folder = "/home/david/Data"
     filenames = glob(folder + "/*" + "CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
 
+    # read the data
     data = readin_cloudsat_cwc_rvod(filenames,['RVOD_liq_water_content','Height','RVOD_ice_water_content'])
-    print data
+
+    # print results
+    print "\nkeys are: " , data.keys()
+
+    for key, value in data.iteritems():
+        print "\n" + key + " :", value, len(value)
