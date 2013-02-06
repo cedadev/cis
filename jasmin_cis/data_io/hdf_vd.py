@@ -57,7 +57,6 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 def get_data(vds):
-
     # get file and variable reference from tuple
     filename = vds[0];
     variable = vds[1];
