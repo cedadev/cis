@@ -44,11 +44,11 @@ def read(filename, variables=None, datadict=None):
     # Open the file.
     datafile = SD.SD(filename)
 
-    if not isinstance(variables,list): variables = [ variables ]
 
-# List of required variable names.
+    # List of required variable names.
     if variables is None:
-        variables = datafile.datasets()
+        variables = datafile.datasets().keys()
+    if not isinstance(variables,list): variables = [ variables ]
 
     # Create dictionary to hold data arrays for returning.
     if datadict is None:
