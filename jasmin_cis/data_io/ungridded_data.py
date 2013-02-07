@@ -17,7 +17,7 @@ Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 static_mappings = { 'HDF_SD' : Mapping(hdf_sd.get_metadata, hdf_sd.get_data),
                     'HDF_VD' : Mapping(hdf_vd.get_metadata, hdf_vd.get_data),
                     'HDF5'   : '',
-                    'netCDF' : Mapping(netcdf.get_metadata, netcdf.hdf_vd.get_data) }
+                    'netCDF' : Mapping(netcdf.get_metadata, netcdf.get_data) }
 
 class UngriddedData(object):
     '''

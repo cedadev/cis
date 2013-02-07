@@ -42,38 +42,23 @@ def plot_cmd(main_arguments):
     from data_io.read import read_variable_from_files 
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
+    import utils
     
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
     try:
 
-
-
-        #data = [read_variable_from_files([datafile["filename"]], datafile["variable"]) for datafile in main_arguments["datafiles"]]
-
+        # create a dictionary of [key=variable, value=list of filename]
         dict={}
         for datafile in main_arguments["datafiles"]:
 
             filename = datafile["filename"]
             var = datafile["variable"]
+            utils.add_element_to_list_in_dict(dict, var, filename)
 
-            if dict.has_key(var):
-                dict[var].append(filename)
-            else:
-                dict[var] = [filename]
+        # create a list of data object
+        data = [ read_variable_from_files(files,var) for var, files in dict.iteritems() ]
 
-        data = []
-        for var in dict.keys():
-            data.append(read_variable_from_files(dict[var],var))
-
-        temp_data = []
-        for item in data:
-            if isinstance(item,list):
-                for thing in item:
-                    temp_data.append(thing)
-            else:
-                temp_data.append(item)
-        data = temp_data
     except (IrisError, ex.InvalidVariableError, ex.FileIOError) as e:
         __error_occurred(e)
     except IOError as e:
