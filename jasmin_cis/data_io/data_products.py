@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from data_io.hdf import read_hdf4
 from ungridded_data import UngriddedData
 import sys
 
@@ -30,7 +31,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def create_ungridded_data(self, filenames, usr_variable):
 
-        from read_ungridded import read_hdf4
         import utils
         import hdf_vd as hdf_vd
         import hdf_sd as hdf_sd
@@ -60,17 +60,9 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
 
         # get coordinates
-        arrays = []
-        for i in vdata['Latitude']: arrays.append(hdf_vd.get_data(i))
-        lat = utils.concatenate(arrays)
-
-        arrays = []
-        for i in vdata['Longitude']: arrays.append(hdf_vd.get_data(i))
-        lon = utils.concatenate(arrays)
-
-        arrays = []
-        for i in sdata['Height']: arrays.append(hdf_sd.get_data(i))
-        alt = utils.concatenate(arrays)
+        lat = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Latitude'] ])
+        lon = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Longitude'] ])
+        alt = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
 
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):

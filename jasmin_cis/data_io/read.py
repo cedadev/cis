@@ -27,7 +27,7 @@ def read_all_variables_from_file(filename):
     return file_variables
 
         
-def read_variable_from_files(filenames, variable):
+def read_data(filenames, variable):
     '''
     Read a specific variable from a list of files
     Files can be either gridded or ungridded but not a mix of both.
@@ -42,12 +42,12 @@ def read_variable_from_files(filenames, variable):
     from jasmin_cis.exceptions import CISError
     
     try:
-        data = read_gridded.read(filenames, variable)
+        data = read_gridded.read_data(filenames, variable)
     except (IrisError, ValueError) as e:
         # Unable to create Cube, trying Ungridded data instead
         # This is the point we need to try and identify the product - from path or otherwise
         try:
-            data = read_ungridded.read("Cloudsat_2B_CWC_RVOD",filenames, variable)
+            data = read_ungridded.read_data("Cloudsat_2B_CWC_RVOD",filenames, variable)
         except CISError as e:
             raise e
     return data

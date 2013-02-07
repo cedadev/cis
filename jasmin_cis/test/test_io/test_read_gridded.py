@@ -15,7 +15,7 @@ def can_read_netcdf_file_when_reading_variables():
 @istest
 def can_read_netcdf_file_when_loading_a_cube():
     filename = valid_1d_filename
-    cis_read.read(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 @raises(CISError)
@@ -27,7 +27,7 @@ def should_raise_ciserror_with_invalid_filename_when_reading_variables():
 @raises(IOError)
 def should_raise_ioerror_with_invalid_filename_when_loading_a_cube():
     filename = invalid_filename
-    cis_read.read(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 @raises(CISError)
@@ -39,7 +39,7 @@ def should_raise_ciserror_with_file_that_is_not_netcdf_when_reading_variables():
 @raises(ValueError, FileIOError)
 def should_raise_valueerror_or_fileioerror_with_file_that_is_not_a_recognised_format_when_loading():    
     filename = non_netcdf_file    
-    cis_read.read(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 @raises(CISError)
@@ -51,7 +51,7 @@ def should_raise_ciserror_with_file_that_does_not_have_read_permissions_when_rea
 @raises(IOError)
 def should_raise_ioerror_with_file_that_does_not_have_read_permissions_when_loading_a_cube():    
     filename = file_without_read_permissions
-    cis_read.read(filename, valid_variable_in_valid_filename)        
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 def can_read_netcdf_file_with_incorrect_file_extension_when_reading_variables():
@@ -61,7 +61,7 @@ def can_read_netcdf_file_with_incorrect_file_extension_when_reading_variables():
 @istest
 def can_read_netcdf_file_with_incorrect_file_extension_when_loading_a_cube():
     filename = netcdf_file_with_incorrect_file_extension
-    cis_read.read(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 @raises(CISError)
@@ -73,11 +73,11 @@ def should_raise_ciserror_with_file_that_has_netcdf_extension_but_is_not_netcdf_
 @raises(FileIOError)
 def should_raise_fileioerror_with_file_that_has_netcdf_extension_but_is_not_netcdf_when_loading_a_cube():
     filename = non_netcdf_file_with_netcdf_file_extension
-    cis_read.read(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 @raises(InvalidVariableError)
 def should_raise_error_when_variable_does_not_exist_in_file_when_loading_a_cube():
     filename = valid_1d_filename
     variable = invalid_variable    
-    cis_read.read([filename], variable)
+    cis_read.read_data([filename], variable)

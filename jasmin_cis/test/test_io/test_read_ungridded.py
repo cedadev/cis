@@ -2,9 +2,9 @@
 module to test the reading of ungridded data files
 '''
 from nose.tools import istest, eq_, raises
+from data_io.hdf import read_hdf4
 from jasmin_cis.test.test_files.data import *
 from jasmin_cis.data_io.read_ungridded import *
-from pyhdf.error import HDF4Error
 from jasmin_cis.exceptions import InvalidVariableError
 
 @istest

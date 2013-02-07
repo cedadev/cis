@@ -14,7 +14,7 @@ def can_read_15GB_file_when_reading_variables():
 @nottest # Too big to store in Git repository, can still be run manually
 def can_read_15GB_file_when_loading_a_cube():
     filename = large_15GB_file_filename
-    cis_read.read_variable_from_files(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 if __name__ == "__main__":
     can_read_15GB_file_when_reading_variables()

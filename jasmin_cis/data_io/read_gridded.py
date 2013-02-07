@@ -68,7 +68,7 @@ def get_file_coordinates_points(filename):
 
     return points
 
-def read(filenames, variable):
+def read_data(filenames, variable):
     '''
     Read gridded data for a given variable over multiple files.
     

@@ -1,8 +1,6 @@
 '''
 Module for reading ungridded data in HDF4 format
 '''
-import numpy as np
-from ungridded_data import UngriddedData
 import hdf_vd as hdf_vd
 import hdf_sd as hdf_sd
 
@@ -52,7 +50,7 @@ def get_file_coordinates_points(filename):
     return points
 
 
-def read(product, filenames, variable):
+def read_data(product, filenames, variable):
     '''
     Read ungridded data from a file. Just a wrapper that calls the UngriddedData class method
     
@@ -66,27 +64,4 @@ def read(product, filenames, variable):
     from data_products import get_data
     return get_data(product, filenames, variable)
 
-def read_hdf4(filename,variables):
-    '''
-        A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
-         for each VD and SD data types.
-       
-        @param filename:     A name of a file to read
-        @param variables:    List of variables to read from the files
-        
-        @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds 
-    '''
-    from jasmin_cis.exceptions import InvalidVariableError, FileIOError
-    from pyhdf.error import HDF4Error
 
-    try:
-        sds_dict = hdf_sd.read(filename,variables)
-        vds_dict = hdf_vd.read(filename,variables)
-    except HDF4Error as e:
-        raise FileIOError(str(e))
-    
-    for variable in variables:
-        if variable not in sds_dict and variable not in vds_dict:
-            raise InvalidVariableError("Could not find " + variable + " in file: " + filename)
-
-    return sds_dict, vds_dict

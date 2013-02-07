@@ -39,7 +39,7 @@ def plot_cmd(main_arguments):
     @param main_arguments:    The command line arguments (minus the plot command)        
     '''
     from plot import Plotter
-    from data_io.read import read_variable_from_files 
+    from data_io.read import read_data
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     import utils
@@ -51,13 +51,10 @@ def plot_cmd(main_arguments):
         # create a dictionary of [key=variable, value=list of filename]
         dict={}
         for datafile in main_arguments["datafiles"]:
+            utils.add_element_to_list_in_dict(dict, datafile["variable"], datafile["filename"])
 
-            filename = datafile["filename"]
-            var = datafile["variable"]
-            utils.add_element_to_list_in_dict(dict, var, filename)
-
-        # create a list of data object
-        data = [ read_variable_from_files(files,var) for var, files in dict.iteritems() ]
+        # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
+        data = [ read_data(files,var) for var, files in dict.iteritems() ]
 
     except (IrisError, ex.InvalidVariableError, ex.FileIOError) as e:
         __error_occurred(e)
@@ -98,7 +95,7 @@ def col_cmd(main_arguments):
     @param main_arguments:    The command line arguments (minus the col command)         
     '''
     from jasmin_cis.exceptions import InvalidColocationMethodError, CISError
-    from data_io.read import read_file_coordinates, read_variable_from_files
+    from data_io.read import read_file_coordinates, read_data
     from col import Colocator
     from data_io.write_hdf import write
     
@@ -115,7 +112,7 @@ def col_cmd(main_arguments):
         
         #data_dict = read_variable(filename, variable)
         try:
-            data = read_variable_from_files(filename, variable)[0]
+            data = read_data(filename, variable)[0]
         except CISError as e:
             __error_occurred(e)
         

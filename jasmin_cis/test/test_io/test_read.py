@@ -18,12 +18,12 @@ def can_read_netcdf_file_when_reading_variables():
 @istest
 def can_read_netcdf_file_when_loading_a_cube():
     filename = valid_1d_filename
-    assert(isinstance(cis_read.read_variable_from_files(filename, valid_variable_in_valid_filename), Cube))
+    assert(isinstance(cis_read.read_data(filename, valid_variable_in_valid_filename), Cube))
 
 @istest
 def can_read_gdf_file_when_loading_ungridded_data():
     filename = valid_cloudsat_RVOD_file
-    assert(isinstance(cis_read.read_variable_from_files(filename, valid_cloudsat_RVOD_variable), UngriddedData))
+    assert(isinstance(cis_read.read_data(filename, valid_cloudsat_RVOD_variable), UngriddedData))
 
 @istest
 @raises(CISError)
@@ -35,7 +35,7 @@ def should_raise_ciserror_with_invalid_filename_when_reading_variables():
 @raises(IOError)
 def should_raise_ioerror_with_invalid_filename_when_loading_a_cube():
     filename = invalid_filename
-    cis_read.read_variable_from_files(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 @raises(CISError)
@@ -47,7 +47,7 @@ def should_raise_ciserror_with_file_that_is_not_netcdf_when_reading_variables():
 @raises(ValueError, FileIOError)
 def should_raise_valueerror_or_fileioerror_with_file_that_is_not_a_recognised_format_when_loading():
     filename = non_netcdf_file
-    cis_read.read_variable_from_files(filename, valid_variable_in_valid_filename)
+    cis_read.read_data(filename, valid_variable_in_valid_filename)
 
 @istest
 def test_read_file_coordinates():

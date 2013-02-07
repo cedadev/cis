@@ -2,6 +2,10 @@ digraph cis {
     cis -> iris;
     cis -> nose;
     cis -> netcdf;
+    cis -> pyhdf;
+    cis -> numpy;
+    cis -> basemap;
+    cis -> matplotlib;
 
     iris -> netcdf;
     iris -> nose;
