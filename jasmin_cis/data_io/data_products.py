@@ -60,11 +60,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
 
         # get coordinates
-
-        import numpy as np
-        #np.set_printoptions(threshold=np.nan)
-
-
         arrays = []
         for i in vdata['Latitude']: arrays.append(hdf_vd.get_data(i))
         lat = utils.concatenate(arrays)
@@ -85,18 +80,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             arrays.append(time)
         time = utils.concatenate(arrays)
 
-        vdata.pop('Latitude')
-        vdata.pop('Longitude')
-        sdata.pop('Height')
-        vdata.pop('TAI_start')
-        vdata.pop('Profile_time')
-
-
-        if usr_variable in sdata.keys():
-            return UngriddedData(sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
-        elif usr_variable in vdata.keys():
-            return UngriddedData(vdata[usr_variable],lat,lon,alt,time,'HDF_VD')
-
+        return UngriddedData(sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
 
 
 def get_data(product, filenames, variable):
