@@ -5,7 +5,7 @@ import sys
 import jasmin_cis.data_io.read_gridded
 import jasmin_cis.data_io.read_ungridded
 
-def print_variables(all_variables, user_variables=None, print_err=True):
+def __print_variables(all_variables, user_variables=None, print_err=True):
     '''
         Short routine for printing all variables, or a specified few.
 
@@ -40,13 +40,13 @@ def info(filename, user_variables=None):
     from pyhdf.error import HDF4Error
     try:
         file_variables = data_io.read_gridded.get_file_variables(filename)
-        print_variables(file_variables, user_variables)
+        __print_variables(file_variables, user_variables)
     except RuntimeError:
         try:
             sd_vars, vd_vars = data_io.read_ungridded.get_file_variables(filename)
             print "\n====== SD variables:"
-            print_variables(sd_vars, user_variables, False)
+            __print_variables(sd_vars, user_variables, False)
             print "\n====== VD variables:"
-            print_variables(vd_vars, user_variables, False)
+            __print_variables(vd_vars, user_variables, False)
         except HDF4Error as e:
             raise CISError(e)

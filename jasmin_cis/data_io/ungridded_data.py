@@ -17,7 +17,7 @@ Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 static_mappings = { 'HDF_SD' : Mapping(hdf_sd.get_metadata, hdf_sd.get_data),
                     'HDF_VD' : Mapping(hdf_vd.get_metadata, hdf_vd.get_data),
                     'HDF5'   : '',
-                    'netCDF' : Mapping(netcdf.get_metadata, netcdf.hdf_vd.get_data) }
+                    'netCDF' : Mapping(netcdf.get_metadata, netcdf.get_data) }
 
 class UngriddedData(object):
     '''
@@ -156,14 +156,14 @@ class UngriddedData(object):
             This is a getter for the data property. It caches the raw data if it has not already been read.
              Throws a MemoryError when reading for the first time if the data is too large.
         '''
-        import numpy as np
+        import numpy.ma as ma
         if self._data is None:
             try:
                 # If we ere given a list of data managers then we need to concatenate them now...
                 self._data=self.retrieve_raw_data(self._data_manager[0])
                 if len(self._data_manager) > 1:
                     for manager in self._data_manager[1:]:
-                        self._data = np.concatenate((self._data,self.retrieve_raw_data(manager)),axis=0)
+                        self._data = ma.concatenate((self._data,self.retrieve_raw_data(manager)),axis=0)
             except MemoryError:
                 raise MemoryError(
                     "Failed to read the ungridded data as there was not enough memory available.\n"

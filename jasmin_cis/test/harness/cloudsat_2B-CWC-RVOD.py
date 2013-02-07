@@ -35,18 +35,35 @@ def readin_cloudsat_cwc_rvod(filenames,sds,outdata=None):
     return outdata
 
 
+def plot(data):
+
+    import matplotlib.pyplot as plt
+
+    plt.imshow(data['RVOD_liq_water_content'][3000:3600,:103].transpose(),vmin=0)
+    plt.yticks([0,25,50,75,100],[25,18.75,12.5,6.25,0])
+    plt.ylabel('~Height above MSL (km)')
+    plt.title('CloudSat RVOD Liquid Water Content')
+    cm = plt.colorbar()
+    cm.set_label('mg m$^{-3}$')
+    plt.show()
 
 if __name__ == '__main__':
+
+    import numpy as np
 
     # get a list of files to read
     folder = "/home/david/Data"
     filenames = glob(folder + "/*" + "CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
+    filenames = np.sort(filenames)
 
     # read the data
     data = readin_cloudsat_cwc_rvod(filenames,['RVOD_liq_water_content','Height','RVOD_ice_water_content'])
 
-    # print results
+    # print data
     print "\nkeys are: " , data.keys()
 
     for key, value in data.iteritems():
-        print "\n" + key + " :", value, len(value)
+        print "\n" + key + " :", value, len(value), np.nanmin(value), np.nanmax(value)
+
+    # plot data
+    plot(data)

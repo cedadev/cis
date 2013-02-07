@@ -80,18 +80,8 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             arrays.append(time)
         time = utils.concatenate(arrays)
 
+        return UngriddedData(sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
 
-        vdata.pop('Latitude')
-        vdata.pop('Longitude')
-        sdata.pop('Height')
-        vdata.pop('TAI_start')
-        vdata.pop('Profile_time')
-
-
-        if usr_variable in sdata.keys():
-            return UngriddedData(sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
-        elif usr_variable in vdata.keys():
-            return UngriddedData(vdata[usr_variable],lat,lon,alt,time,'HDF_VD')
 
 class NetCDF_CF(AProduct):
 

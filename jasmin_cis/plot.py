@@ -79,9 +79,9 @@ class Plotter(object):
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
         
-        #self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         #plt.pcolormesh(data_item["x"][3000:3600,:103], data_item["y"][3000:3600,:103], data_item["data"][3000:3600,:103])
-        plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"])
+        #plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"])
         
     def plot_contour(self, data_item):
         '''
