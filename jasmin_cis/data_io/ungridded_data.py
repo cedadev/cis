@@ -2,8 +2,10 @@
     Module for the UngriddedData class
 '''
 from collections import namedtuple
-import hdf_vd as hdf_vd
-import hdf_sd as hdf_sd
+import data_io.netcdf
+import hdf_vd
+import hdf_sd
+import netcdf
 
 # Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
@@ -15,7 +17,7 @@ Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
 static_mappings = { 'HDF_SD' : Mapping(hdf_sd.get_metadata, hdf_sd.get_data),
                     'HDF_VD' : Mapping(hdf_vd.get_metadata, hdf_vd.get_data),
                     'HDF5'   : '',
-                    'netCDF' : '' }
+                    'netCDF' : Mapping(netcdf.get_metadata, netcdf.hdf_vd.get_data) }
 
 class UngriddedData(object):
     '''

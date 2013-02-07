@@ -38,10 +38,3 @@ def test_that_can_get_metadata_for_known_variable():
     eq_(attr['long_name'],"Geodetic Latitude")
     eq_(attr['units'],"Degrees_north")
     eq_(attr['valid_range'],[-90.0, 90.0])
-
-@istest
-@raises(KeyError)
-def test_that_cannot_get_metadata_for_unknown_variable():
-    dict = hdf_sd.read(valid_hdf_sd_file)
-    hdf_sd.get_metadata(dict['incognito'])
-
