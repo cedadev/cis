@@ -25,6 +25,7 @@ class UngriddedData(object):
     @classmethod
     def from_points_array(cls, hyperpoints):
         """
+         A constuctor for building an UngriddedData object from a list of hyper points
         Note: This method is unfinished
         @param hyperpoints:    A list of HyperPoints
         """
@@ -62,11 +63,15 @@ class UngriddedData(object):
         import numpy as np
 
         if isinstance(data, np.ndarray):
+            # If the data input is a numpy array we can just copy it in and ignore the data_manager
             self._data = data
             self._data_manager = None
             if data_type is not None:
                 raise InvalidDataTypeError
         else:
+            # If the data input wasn't a numpy array we assume it is a data reference (e.g. SDS) and we refer
+            #  this as a 'data manager' as it is responsible for getting the actual data.
+
             self._data = None
             # Although the data can be a list or a single item it's useful to cast it
             #  to a list here to make accessing it consistent
@@ -76,11 +81,13 @@ class UngriddedData(object):
                 self._data_manager = [ data ]
 
             if data_type in static_mappings:
-                # Store the mappings in a private variable for use in getarr
-                self._map = static_mappings[data_type]._asdict()
+                # Set the method names defined in static_mappings to their mapped function names
+                for method_name, mapping in static_mappings[data_type]._asdict().iteritems():
+                    setattr(self, method_name, mapping)
             else:
                 raise InvalidDataTypeError
 
+        # Now try and read the metadata, or just set it if given
         if metadata is None:
             if self._data_manager is not None:
                 # Retrieve metadata for the first variabel - assume this is the variable of interest
@@ -116,6 +123,7 @@ class UngriddedData(object):
             self.units = self._metadata["attributes"]["units"]
             self.missing_value = self._metadata["attributes"].get('_FillValue', None)
 
+            # These properties aren't yet needed
             #self.range = self.metadata["attributes"]["range"]
             #self.type = v_type
             #self.short_name = short_name
@@ -134,25 +142,11 @@ class UngriddedData(object):
         if self.alt is not None:
             return self.alt
         else:
+
             return self.lon
 
     def coords(self, contains_dimension = None, dim_coords = None):
         return self._coords # list of object Coord
-
-    #    def _find_metadata(self):
-    #        self.metadata = self.map.get_metadata(self._data)
-
-    def __getattr__(self,attr):
-        '''
-            This little method actually provides the mapping between the method calls.
-            It overrides the default getattr method which is only called if no attributes of name 'attr'
-            can be found, hence if we don't deal with it we need to raise an AttributeError.
-        '''
-        if attr in self._map:
-            return self._map[attr]
-        else:
-            # Default behavior
-            raise AttributeError
 
     @property
     def data(self):
@@ -184,4 +178,7 @@ class UngriddedData(object):
         self.long_name = other_data.long_name
         self.units = other_data.units
 
-    
+    #def __getitem__(self, item): pass
+    # This method can be overridden to provide the ability to ask for slices of data e.g. UngridedDataObject[012:32.4:5]
+    # Actually implementing it would be very tricky as you have to keep track of the data and the coordinates without
+    #  necessarily actually reading them
