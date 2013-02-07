@@ -60,6 +60,11 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
 
         # get coordinates
+
+        import numpy as np
+        #np.set_printoptions(threshold=np.nan)
+
+
         arrays = []
         for i in vdata['Latitude']: arrays.append(hdf_vd.get_data(i))
         lat = utils.concatenate(arrays)
@@ -79,7 +84,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             time += start
             arrays.append(time)
         time = utils.concatenate(arrays)
-
 
         vdata.pop('Latitude')
         vdata.pop('Longitude')
