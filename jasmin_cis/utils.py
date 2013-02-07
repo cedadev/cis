@@ -18,6 +18,9 @@ def concatenate(arrays, axis=0):
 
     return res
 
+def create_masked_array_for_missing_data(data, missing_val):
+    import numpy.ma as ma
+    return ma.array(data,mask=data==missing_val)
 
 def unpack_data_object(data_object):
     '''
