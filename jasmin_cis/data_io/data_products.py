@@ -75,6 +75,28 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         return UngriddedData(sdata[usr_variable],lat,lon,alt,time,'HDF_SD')
 
 
+class NetCDF_CF(AProduct):
+
+    def concatenate_coords(self):
+        pass
+
+    def create_ungridded_data(self, filenames, usr_variable):
+
+        import utils
+        from data_io.netcdf import read_many_files
+
+        # if filenames is not a list, make it a list of 1 element
+        if not isinstance(filenames,list): filenames = [ filenames ]
+
+        # get variable and coords
+        var, coords = read_many_files(filenames, usr_variable)
+
+        # get coordinates
+        #coords = [ read_many_files(filenames, dim) for dim in var.dimensions ]
+
+        return UngriddedData(var, lat=coords[2], lon=coords[3], time=coords[1],'netCDF')
+
+
 def get_data(product, filenames, variable):
     """
         Top level routine for calling the correct product's create_ungridded_data routine.

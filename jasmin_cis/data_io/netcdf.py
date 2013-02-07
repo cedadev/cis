@@ -1,59 +1,63 @@
 """
 Module containing NetCDF file reading functions
 """
+
 def get_netcdf_file_variables(filename):
     '''
     Get all the variables from a NetCDF file
     
-    args:
-        filename: The filename of the file to get the variables from
-    
-    returns:
-        An OrderedDict containing the variables from the file
+    @param filename: The filename of the file to get the variables from
+    @return: An OrderedDict containing the variables from the file
     '''
     from netCDF4 import Dataset    
     f = Dataset(filename)
     return f.variables
 
-
-def read(filename, usr_variables=None, datadict=None):
+def read_many_files(filenames, usr_variable, dim=None):
     """
-    Reads Variables from a NetCDF file into a dictionary.
+    Reads a single Variable from many NetCDF files.
 
-    Returns:
-        A dictionary containing data for requested variables.
-        Missing data is masked as a masked numpy array
+        @param filenames: A list of NetCDF filenames to read, or a string with wildcards.
+        @param usr_variable: A variable (dataset) name to read from the
+                       files. The name must appear exactly as in in the NetCDF file.
+        @param dim: The name of the dimension on which to aggregate the data. None is the default
+                     which tries to aggregate over the unlimited dimension
+        @return: A Varaibale instance constructed from all of the input files
+    """
+    from netCDF4 import MFDataset
+    from jasmin_cis.exceptions import InvalidVariableError
+    datafile = MFDataset(filenames, aggdim=dim)
 
-    Arguments:
-        filename    -- The name (with path) of the NetCDF file to read.
-        names       -- A sequence of variable (dataset) names to read from the
-                       file (default None, causing all variables to be read).
-                       The names must appear exactly as in in the NetCDF file.
-        datadic     -- Optional dictionary to add data to, otherwise a new, empty
-                       dictionary is created
+    # Get data.
+    try:
+        data = datafile.variables[usr_variable]
+        coords = [ datafile.variables[dim] for dim in data.dimensions ]
+    except:
+        raise InvalidVariableError
+
+    return data, coords
+
+
+def read(filename, usr_variable):
+    """
+    Reads a Variable from a NetCDF file
+
+        @param filename: The name (with path) of the NetCDF file to read.
+        @param usr_variable: A variable (dataset) name to read from the
+                       files. The name must appear exactly as in in the NetCDF file.
+        @return: A Varaibale instance constructed from  the input file
 
     """
     from netCDF4 import Dataset
+    from jasmin_cis.exceptions import InvalidVariableError
     datafile = Dataset(filename)
 
-    # List of required variable names.
-    if usr_variables is None:
-        usr_variables = datafile.variables.keys()
-    if not isinstance(usr_variables,list): usr_variables = [ usr_variables ]
+    try:
+        data = datafile.variables[usr_variable]
+    except:
+        raise InvalidVariableError
 
-    # Create dictionary to hold data arrays for returning.
-    if datadict is None:
-        datadict = {}
-
-    # Get data.
-    for usr_variable in usr_variables:
-        try:
-            datadict[usr_variable] = datafile.variables[usr_variable]
-        except:
-            # ignore variable that failed
-            pass
-
-    return datadict
+    return data
 
 def get_metadata(var):
     '''
@@ -75,12 +79,8 @@ def get_data(var, calipso_scaling=False):
     """
     Reads raw data from a NetCDF.Variable instance.
 
-    Returns:
-        A numpy maskedarray. Missing values are False in the mask.
-
-    Arguments:
-        var        -- The specific Variable instance to read
-
+        @param var: The specific Variable instance to read
+        @return:  A numpy maskedarray. Missing values are False in the mask.
     """
     from utils import create_masked_array_for_missing_data
     data = var[:]
