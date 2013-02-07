@@ -4,9 +4,9 @@ Also contains dictionaries for the valid plot types and formatting options
 '''
 
 import matplotlib.pyplot as plt
-from data_io.netcdf import unpack_data_object
 from mpl_toolkits.basemap import Basemap
 import sys
+from utils import unpack_data_object
 
 class PlotType(object):
         def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
