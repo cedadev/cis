@@ -26,15 +26,18 @@ def test_that_can_get_data():
 def test_that_can_get_metadata_for_known_variable():
     dict = hdf_sd.read(valid_hdf_sd_file)
     metadata = hdf_sd.get_metadata(dict['Latitude'])
-    eq_(len(metadata),3)
 
-    info = metadata['info']
-    eq_(len(info),5)
+    eq_(metadata['name'],"Latitude")
+    eq_(metadata['long_name'],"Geodetic Latitude")
+    eq_(metadata['shape'],[203, 135])
+    eq_(metadata['units'],"Degrees_north")
+    eq_(metadata['range'],[-90.0, 90.0])
+    eq_(metadata['factor'],1.0)
+    eq_(metadata['offset'],0.0)
+    eq_(metadata['missing'],-999.0)
 
-    attr = metadata['attributes']
+
+    attr = metadata['misc']
     eq_(len(attr),10)
     eq_(attr['_FillValue'],-999.0)
     eq_(attr['Parameter_Type'],"MODIS Input")
-    eq_(attr['long_name'],"Geodetic Latitude")
-    eq_(attr['units'],"Degrees_north")
-    eq_(attr['valid_range'],[-90.0, 90.0])

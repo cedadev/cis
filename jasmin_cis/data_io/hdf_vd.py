@@ -89,4 +89,48 @@ def get_data(vds):
     return data
 
 def get_metadata(vds):
-    pass
+
+    # get file and variable reference from tuple
+    filename = vds[0];
+    variable = vds[1];
+
+    datafile = HDF(filename)
+    vs =  datafile.vstart()
+
+    # get data for that variable
+    vd = vs.attach(variable)
+
+
+    metadata = {}
+    metadata['name'] = variable
+    metadata['long_name'] = __get_attribute_value(vd, 'long_name')
+    metadata['shape'] = [len(vd.read(nRec = vd.inquire()[0]))] #VD data are always 1D, so the shape is simply the length of the data vector
+    metadata['units'] = __get_attribute_value(vd, 'units')
+    metadata['range'] = __get_attribute_value(vd, 'valid_range')
+    metadata['factor'] = __get_attribute_value(vd, 'factor')
+    metadata['offset'] = __get_attribute_value(vd, 'offset')
+    metadata['missing'] = __get_attribute_value(vd, 'missing')
+
+    # put the whole dictionary of attributes into 'misc'
+    # so that other metadata of interest can still be retrieved if need be
+    metadata['misc'] = vd.attrinfo()
+
+
+
+    # detach and close
+    vd.detach()
+    vs.end()
+    datafile.close()
+
+    return metadata
+
+
+def __get_attribute_value(vd, name):
+
+    val = vd.attrinfo().get(name,None)
+    # if the attribute is not present
+    if val is None:
+        return val
+    else:
+        #attrinfo() returns a tuple in which the value of interest is the 3rd item, hence the '[2]'
+        return val[2]
