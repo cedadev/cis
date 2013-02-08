@@ -221,6 +221,11 @@ class Plotter(object):
         @param datafiles:               The list of datafiles from the command line, as a dictionary, containing filename, variable, label etc
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
+        
+        # When should scientific notation be used on the axes?
+        #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^m. Use (0,0) to include all numbers.
+        plt.gca().ticklabel_format(style='sci', scilimits=(0,0), axis='y')
+        plt.gca().ticklabel_format(style='sci', scilimits=(0,0), axis='x')  
         if options is not None:  
             if options.pop("logx"):
                 plt.gca().set_xscale("log")
