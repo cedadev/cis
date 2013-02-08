@@ -38,6 +38,8 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--valrange", metavar = "Value range", nargs = "?", help = "The range of values to plot")
     parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
+    parser.add_argument("--logx", metavar = "Log scale on X axis", default = "False", nargs = "?", help = "Uses a log scale on the x axis")
+    parser.add_argument("--logy", metavar = "Log scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale on the y axis")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -187,8 +189,8 @@ def check_range(ax_range, parser, range_type):
             parser.error("Range must be in the format 'min:max'")
     return ax_range
 
-def check_no_colour_bar(no_colour_bar, parser):
-    if no_colour_bar is None or no_colour_bar != "False":
+def check_boolean_argument(argument, parser):
+    if argument is None or argument != "False":
         return True
     
 def validate_plot_args(arguments, parser): 
@@ -199,7 +201,9 @@ def validate_plot_args(arguments, parser):
     arguments.xrange = check_range(arguments.xrange, parser, "x")
     arguments.yrange = check_range(arguments.yrange, parser, "y")
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
-    arguments.nocolourbar = check_no_colour_bar(arguments.nocolourbar, parser)
+    arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar, parser)
+    arguments.logx = check_boolean_argument(arguments.logx, parser)
+    arguments.logy = check_boolean_argument(arguments.logy, parser)
     # Try and parse numbers
     arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
     arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)

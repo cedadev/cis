@@ -18,7 +18,9 @@ class Plotter(object):
     plot_options = { 'title' : plt.title,
                   'xlabel' : plt.xlabel, 
                   'ylabel' : plt.ylabel,
-                  'fontsize' : plt.rcParams.update }
+                  'fontsize' : plt.rcParams.update,
+                  'logx' : None,
+                  'logy' : None }
     
     default_plot_types = { 1 : 'line',
                            2 : 'heatmap'}
@@ -63,11 +65,12 @@ class Plotter(object):
         
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
+        #import matplotlib.colors as colors
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
         self.basemap = Basemap()    
+        #norm = colors.LogNorm,         
         self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
-
     def plot_heatmap_nobasemap(self, data_item):
         '''
         Plots a heatmap without using basemap
@@ -219,6 +222,10 @@ class Plotter(object):
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
         if options is not None:  
+            if options.pop("logx"):
+                plt.gca().set_xscale("log")
+            if options.pop("logy"):
+                plt.gca().set_yscale("log")
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
             options = self.__set_x_label(options)
