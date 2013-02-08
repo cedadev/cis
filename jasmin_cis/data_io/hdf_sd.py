@@ -65,19 +65,6 @@ def read(filename, variables=None, datadict=None):
     
     return datadict
 
-def get_metadata(sds):
-    '''
-    Retrieves all metadata
-
-    @param sds:
-    @return:
-    '''
-    dict = {}
-    dict['info'] = sds.info()
-    dict['dimensions'] = sds.dimensions()
-    dict['attributes'] = sds.attributes()
-
-    return dict
 
 def get_data(sds, calipso_scaling=False):
     """
@@ -113,6 +100,26 @@ def get_data(sds, calipso_scaling=False):
         data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
 
     return data
+
+
+def get_metadata(sds):
+
+    metadata = {}
+    metadata['name'] = sds.info()[0]
+    metadata['long_name'] = sds.attributes().get('long_name',None)
+    metadata['shape'] = sds.info()[2]
+    metadata['units'] = sds.attributes().get('units')
+    metadata['range'] = sds.attributes().get('valid_range')
+    metadata['factor'] = sds.attributes().get('scale_factor')
+    metadata['offset'] = sds.attributes().get('add_offset')
+    metadata['missing'] = sds.attributes().get('_FillValue')
+
+    # put the whole dictionary of attributes into 'misc'
+    # so that other metadata of interest can still be retrieved if need be
+    metadata['misc'] = sds.attributes()
+
+    return metadata
+
 
 def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
     '''
