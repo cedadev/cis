@@ -213,6 +213,20 @@ class Plotter(object):
         
         if "latitude" in axes and "longitude" in axes:
             self.basemap.drawcoastlines()
+    
+    def __set_log_scale(self, logx, logy):
+        from numpy import e, log
+        ax = plt.gca()
+        if logx:
+            ax.set_xscale("log", basex = logx) 
+            if logx == e:
+                xticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_xticks())]
+                ax.set_xticklabels(xticks)
+        if logy:
+            ax.set_yscale("log", basey = logy)
+            if logy == e:
+                yticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_yticks())]
+                ax.set_yticklabels(yticks)
                         
     def __format_plot(self, options, datafiles): 
         '''
@@ -232,10 +246,7 @@ class Plotter(object):
             logx = options.pop("logx")
             logy = options.pop("logy")
             if logx or logy:
-                if logx:
-                    plt.gca().set_xscale("log", basex = logx)                
-                if logy:
-                        plt.gca().set_yscale("log", basey = logy)
+                self.__set_log_scale(logx, logy)
                 
             if options.pop("grid") or logx or logy:
                 plt.grid(True, which="both")
