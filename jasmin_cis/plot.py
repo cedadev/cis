@@ -20,7 +20,8 @@ class Plotter(object):
                   'ylabel' : plt.ylabel,
                   'fontsize' : plt.rcParams.update,
                   'logx' : None,
-                  'logy' : None }
+                  'logy' : None,
+                  'grid' : None }
     
     default_plot_types = { 1 : 'line',
                            2 : 'heatmap'}
@@ -235,6 +236,8 @@ class Plotter(object):
                     plt.gca().set_xscale("log", basex = logx)                
                 if logy:
                         plt.gca().set_yscale("log", basey = logy)
+                
+            if options.pop("grid") or logx or logy:
                 plt.grid(True, which="both")
             
             options = self.__set_font_size(options)             

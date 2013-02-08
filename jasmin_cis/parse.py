@@ -42,6 +42,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--logy", metavar = "Log (base 10) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the y axis")
     parser.add_argument("--lnx", metavar = "Log (base e) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base e) on the x axis")
     parser.add_argument("--lny", metavar = "Log (base e) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base e) on the y axis")
+    parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -232,6 +233,7 @@ def validate_plot_args(arguments, parser):
     arguments.yrange = check_range(arguments.yrange, parser, "y")
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar)
+    arguments.grid = check_boolean_argument(arguments.grid)
     
     arguments = assign_logs(arguments)
     # Try and parse numbers
