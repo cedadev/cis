@@ -143,7 +143,8 @@ class Plotter(object):
             self.kwargs["label"] = "_nolegend_"
             self.plot_heatmap(data_item)
             self.kwargs.pop("label")
-            plt.colorbar(orientation = Plotter.colour_bar_orientation)
+            if not self.no_colour_bar:
+                plt.colorbar(orientation = Plotter.colour_bar_orientation)
         else:
             self.plot_scatter(data_item)    
         self.num_of_preexisting_plots += 1            
@@ -241,7 +242,8 @@ class Plotter(object):
         if self.plot_type == "line" or "scatter" in self.plot_type:
             self.__create_legend(datafiles)
         else:
-            plt.colorbar(orientation = Plotter.colour_bar_orientation)
+            if not self.no_colour_bar:
+                plt.colorbar(orientation = Plotter.colour_bar_orientation)
         
         self.__draw_coastlines()
         
@@ -455,6 +457,7 @@ class Plotter(object):
         y_range = self.__prepare_range("y")
         self.__set_width_and_height()  
         Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
+        self.no_colour_bar = self.kwargs.pop("nocolourbar", False)
         datafiles = self.__do_plot()  
         self.__apply_axis_limits(x_range, "x")
         self.__apply_axis_limits(y_range, "y")

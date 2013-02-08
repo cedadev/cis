@@ -37,6 +37,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--yrange", metavar = "Y range", nargs = "?", help = "The range of the y axis")
     parser.add_argument("--valrange", metavar = "Value range", nargs = "?", help = "The range of values to plot")
     parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
+    parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -185,7 +186,11 @@ def check_range(ax_range, parser, range_type):
         else:
             parser.error("Range must be in the format 'min:max'")
     return ax_range
-                   
+
+def check_no_colour_bar(no_colour_bar, parser):
+    if no_colour_bar is None or no_colour_bar != "False":
+        return True
+    
 def validate_plot_args(arguments, parser): 
     arguments.datafiles = check_datafiles(arguments.datafiles, parser)        
     arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
@@ -194,6 +199,7 @@ def validate_plot_args(arguments, parser):
     arguments.xrange = check_range(arguments.xrange, parser, "x")
     arguments.yrange = check_range(arguments.yrange, parser, "y")
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
+    arguments.nocolourbar = check_no_colour_bar(arguments.nocolourbar, parser)
     # Try and parse numbers
     arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
     arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)
