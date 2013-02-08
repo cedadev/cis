@@ -41,10 +41,3 @@ def test_that_can_get_metadata_for_known_variable():
     eq_(len(attr),10)
     eq_(attr['_FillValue'],-999.0)
     eq_(attr['Parameter_Type'],"MODIS Input")
-
-
-
-
-dict = hdf_sd.read(valid_hdf_sd_file)
-metadata = hdf_sd.get_metadata(dict['Latitude'])
-print metadata
