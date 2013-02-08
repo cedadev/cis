@@ -225,16 +225,18 @@ class Plotter(object):
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
         # When should scientific notation be used on the axes?
-        #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^m. Use (0,0) to include all numbers
-        plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')  
-        
+        #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^n. Use (0,0) to include all numbers          
+        plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
         if options is not None:  
             logx = options.pop("logx")
-            if logx:
-                plt.gca().set_xscale("log", basex = logx)
             logy = options.pop("logy")
-            if logy:
-                plt.gca().set_yscale("log", basey = logy)
+            if logx or logy:
+                if logx:
+                    plt.gca().set_xscale("log", basex = logx)                
+                if logy:
+                        plt.gca().set_yscale("log", basey = logy)
+                plt.grid(True, which="both")
+            
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
             options = self.__set_x_label(options)
