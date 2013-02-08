@@ -38,8 +38,10 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--valrange", metavar = "Value range", nargs = "?", help = "The range of values to plot")
     parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
-    parser.add_argument("--logx", metavar = "Log scale on X axis", default = "False", nargs = "?", help = "Uses a log scale on the x axis")
-    parser.add_argument("--logy", metavar = "Log scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale on the y axis")
+    parser.add_argument("--logx", metavar = "Log (base 10) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the x axis")
+    parser.add_argument("--logy", metavar = "Log (base 10) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the y axis")
+    parser.add_argument("--lnx", metavar = "Log (base e) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base e) on the x axis")
+    parser.add_argument("--lny", metavar = "Log (base e) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base e) on the y axis")
     return parser
 
 def add_info_parser_arguments(parser):
@@ -189,10 +191,38 @@ def check_range(ax_range, parser, range_type):
             parser.error("Range must be in the format 'min:max'")
     return ax_range
 
-def check_boolean_argument(argument, parser):
+def check_boolean_argument(argument):
     if argument is None or argument != "False":
         return True
+    else:
+        return False
     
+def assign_logs(arguments):
+    from numpy import e
+    arguments.logx = check_boolean_argument(arguments.logx)
+    arguments.logy = check_boolean_argument(arguments.logy)
+    arguments.lnx = check_boolean_argument(arguments.lnx)
+    arguments.lny = check_boolean_argument(arguments.lny)
+    
+    if arguments.logx:
+        arguments.logx = 10
+    elif arguments.lnx:
+        arguments.logx = e
+    else:
+        arguments.logx = None
+        
+    if arguments.logy:
+        arguments.logy = 10
+    elif arguments.lny:
+        arguments.logy = e
+    else:
+        arguments.logy = None   
+        
+    arguments.lnx = None
+    arguments.lny = None 
+    
+    return arguments
+
 def validate_plot_args(arguments, parser): 
     arguments.datafiles = check_datafiles(arguments.datafiles, parser)        
     arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
@@ -201,9 +231,9 @@ def validate_plot_args(arguments, parser):
     arguments.xrange = check_range(arguments.xrange, parser, "x")
     arguments.yrange = check_range(arguments.yrange, parser, "y")
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
-    arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar, parser)
-    arguments.logx = check_boolean_argument(arguments.logx, parser)
-    arguments.logy = check_boolean_argument(arguments.logy, parser)
+    arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar)
+    
+    arguments = assign_logs(arguments)
     # Try and parse numbers
     arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
     arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)

@@ -48,6 +48,9 @@ class Plotter(object):
         self.plots = [] # A list where all the plots will be stored
         self.plot() # Call main method
     
+    def __add_color_bar(self):
+        plt.colorbar(orientation = Plotter.colour_bar_orientation, format = "%.3e")
+    
     def plot_line(self, data_item):
         '''
         Plots a line graph
@@ -147,7 +150,7 @@ class Plotter(object):
             self.plot_heatmap(data_item)
             self.kwargs.pop("label")
             if not self.no_colour_bar:
-                plt.colorbar(orientation = Plotter.colour_bar_orientation)
+                self.__add_color_bar()
         else:
             self.plot_scatter(data_item)    
         self.num_of_preexisting_plots += 1            
@@ -221,16 +224,17 @@ class Plotter(object):
         @param datafiles:               The list of datafiles from the command line, as a dictionary, containing filename, variable, label etc
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
-        
         # When should scientific notation be used on the axes?
-        #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^m. Use (0,0) to include all numbers.
-        plt.gca().ticklabel_format(style='sci', scilimits=(0,0), axis='y')
-        plt.gca().ticklabel_format(style='sci', scilimits=(0,0), axis='x')  
+        #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^m. Use (0,0) to include all numbers
+        plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')  
+        
         if options is not None:  
-            if options.pop("logx"):
-                plt.gca().set_xscale("log")
-            if options.pop("logy"):
-                plt.gca().set_yscale("log")
+            logx = options.pop("logx")
+            if logx:
+                plt.gca().set_xscale("log", basex = logx)
+            logy = options.pop("logy")
+            if logy:
+                plt.gca().set_yscale("log", basey = logy)
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
             options = self.__set_x_label(options)
@@ -255,7 +259,7 @@ class Plotter(object):
             self.__create_legend(datafiles)
         else:
             if not self.no_colour_bar:
-                plt.colorbar(orientation = Plotter.colour_bar_orientation)
+                self.__add_color_bar()
         
         self.__draw_coastlines()
         
