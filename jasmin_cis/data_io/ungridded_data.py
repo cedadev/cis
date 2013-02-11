@@ -51,15 +51,11 @@ class ADelayedData(object):
 
     def __init__(self, data, metadata, data_type=None):
         '''
-        Constructor
-
-        args:
-            data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
-                        This can be a list of data handlers, or a single data handler, but
+        @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
+                        This can be a list of data handlers, or a single data handler, but 
                         if no metadata is specified the metadata from the first handler is used
-            data_type: The type of ungridded data being passed - valid options are
-                        the keys in static_mappings
-            metadata: Any associated metadata
+        @param data_type: The type of ungridded data being passed - valid options are the keys in static_mappings
+        @param metadata: Any associated metadata
         '''
         from jasmin_cis.exceptions import InvalidDataTypeError
         import numpy as np

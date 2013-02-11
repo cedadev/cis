@@ -26,6 +26,10 @@ def read_many_files(filenames, usr_variables, dim=None):
     """
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
+
+    if not isinstance(usr_variables,list):
+        usr_variables = [usr_variables]
+
     datafile = MFDataset(filenames, aggdim=dim)
 
     data = {}
