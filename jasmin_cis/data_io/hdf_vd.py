@@ -89,6 +89,7 @@ def get_data(vds):
     return data
 
 def get_metadata(vds):
+    from ungridded_data import Metadata
 
     # get file and variable reference from tuple
     filename = vds[0];
@@ -100,22 +101,20 @@ def get_metadata(vds):
     # get data for that variable
     vd = vs.attach(variable)
 
-
-    metadata = {}
-    metadata['name'] = variable
-    metadata['long_name'] = __get_attribute_value(vd, 'long_name')
-    metadata['shape'] = [len(vd.read(nRec = vd.inquire()[0]))] #VD data are always 1D, so the shape is simply the length of the data vector
-    metadata['units'] = __get_attribute_value(vd, 'units')
-    metadata['range'] = __get_attribute_value(vd, 'valid_range')
-    metadata['factor'] = __get_attribute_value(vd, 'factor')
-    metadata['offset'] = __get_attribute_value(vd, 'offset')
-    metadata['missing'] = __get_attribute_value(vd, 'missing')
+    name = variable
+    long_name = __get_attribute_value(vd, 'long_name')
+    shape = [len(vd.read(nRec = vd.inquire()[0]))] #VD data are always 1D, so the shape is simply the length of the data vector
+    units = __get_attribute_value(vd, 'units')
+    range = __get_attribute_value(vd, 'valid_range')
+    factor = __get_attribute_value(vd, 'factor')
+    offset = __get_attribute_value(vd, 'offset')
+    missing = __get_attribute_value(vd, 'missing')
 
     # put the whole dictionary of attributes into 'misc'
     # so that other metadata of interest can still be retrieved if need be
-    metadata['misc'] = vd.attrinfo()
+    misc = vd.attrinfo()
 
-
+    metadata = Metadata(name, long_name, shape, units, range, factor, offset, missing, misc)
 
     # detach and close
     vd.detach()
@@ -123,7 +122,6 @@ def get_metadata(vds):
     datafile.close()
 
     return metadata
-
 
 def __get_attribute_value(vd, name):
 

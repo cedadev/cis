@@ -13,29 +13,30 @@ def get_netcdf_file_variables(filename):
     f = Dataset(filename)
     return f.variables
 
-def read_many_files(filenames, usr_variable, dim=None):
+def read_many_files(filenames, usr_variables, dim=None):
     """
     Reads a single Variable from many NetCDF files.
 
         @param filenames: A list of NetCDF filenames to read, or a string with wildcards.
-        @param usr_variable: A variable (dataset) name to read from the
-                       files. The name must appear exactly as in in the NetCDF file.
+        @param usr_variables: A list of variable (dataset) names to read from the
+                       files. The names must appear exactly as in in the NetCDF file.
         @param dim: The name of the dimension on which to aggregate the data. None is the default
                      which tries to aggregate over the unlimited dimension
-        @return: A Varaibale instance constructed from all of the input files
+        @return: A list of variable instances constructed from all of the input files
     """
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
     datafile = MFDataset(filenames, aggdim=dim)
 
-    # Get data.
-    try:
-        data = datafile.variables[usr_variable]
-        coords = [ datafile.variables[dim] for dim in data.dimensions ]
-    except:
-        raise InvalidVariableError
+    data = {}
+    for variable in usr_variables:
+        # Get data.
+        try:
+            data[variable] = datafile.variables[variable]
+        except:
+            raise InvalidVariableError
 
-    return data, coords
+    return data
 
 
 def read(filename, usr_variable):
@@ -64,16 +65,23 @@ def get_metadata(var):
     Retrieves all metadata
 
     @param var: the Variable to read metadata from
-    @return:
+    @return: A metadata object
     '''
-    dict = {}
-    dict['info'] = str(var)
-    # A list of dimensions the variable is a function of
-    dict['dimensions'] = var.dimensions
-    # A dictionary of the attributes on the variable, including units, standard_name, long_name
-    dict['attributes'] = vars(var)
+    from ungridded_data import Metadata
+    # Use class instead of dictionary
 
-    return dict
+    metadata = Metadata()
+    metadata.copy_attributes_into(vars(var))
+
+
+    #metadata = {}
+    #metadata['info'] = str(var)
+    # A list of dimensions the variable is a function of
+    #metadata['dimensions'] = var.dimensions
+    # A dictionary of the attributes on the variable, including units, standard_name, long_name
+    #metadata['attributes'] = vars(var)
+
+    return metadata
 
 def get_data(var, calipso_scaling=False):
     """

@@ -7,6 +7,25 @@ import hdf_vd
 import hdf_sd
 import netcdf
 
+class Metadata(object):
+
+    def __init__(self, name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', misc=None):
+        self.name = name
+        self.long_name = long_name
+        self.shape = shape
+        self.units = units
+        self.range = range
+        self.factor = factor
+        self.offset = offset
+        self.missing_value = missing_value
+        if misc is None:
+            self.misc = {}
+        else:
+            self.misc = misc
+
+    def copy_attributes_into(self, obj):
+        obj.__dict__.update(self.__dict__)
+
 # Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
 #  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
 #  by just dropping the mapping into the instance namespace dynamically...

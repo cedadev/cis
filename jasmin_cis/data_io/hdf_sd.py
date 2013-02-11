@@ -103,20 +103,22 @@ def get_data(sds, calipso_scaling=False):
 
 
 def get_metadata(sds):
+    from ungridded_data import Metadata
 
-    metadata = {}
-    metadata['name'] = sds.info()[0]
-    metadata['long_name'] = sds.attributes().get('long_name',None)
-    metadata['shape'] = sds.info()[2]
-    metadata['units'] = sds.attributes().get('units')
-    metadata['range'] = sds.attributes().get('valid_range')
-    metadata['factor'] = sds.attributes().get('scale_factor')
-    metadata['offset'] = sds.attributes().get('add_offset')
-    metadata['missing'] = sds.attributes().get('_FillValue')
+    name = sds.info()[0]
+    long_name = sds.attributes().get('long_name',None)
+    shape = sds.info()[2]
+    units = sds.attributes().get('units')
+    range = sds.attributes().get('valid_range')
+    factor = sds.attributes().get('scale_factor')
+    offset = sds.attributes().get('add_offset')
+    missing = sds.attributes().get('_FillValue')
 
     # put the whole dictionary of attributes into 'misc'
     # so that other metadata of interest can still be retrieved if need be
-    metadata['misc'] = sds.attributes()
+    misc = sds.attributes()
+
+    metadata = Metadata(name, long_name, shape, units, range, factor, offset, missing, misc)
 
     return metadata
 
