@@ -129,9 +129,9 @@ class Cloud_CCI(AProduct):
 
         variables = read_many_files(filenames, [usr_variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
         coords = []
-        coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "x", data_type="netCDF"))
-        coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "y", data_type="netCDF"))
-        coords.append(Coord(variables["time"], get_metadata(variables["time"]), "t", data_type="netCDF"))
+        coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "X", data_type="netCDF"))
+        coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "Y", data_type="netCDF"))
+        coords.append(Coord(variables["time"], get_metadata(variables["time"]), "T", data_type="netCDF"))
         return UngriddedData(variables[usr_variable], coords, get_metadata(variables[usr_variable]), data_type="netCDF")
 
 def __get_class(filenames, product=None):
