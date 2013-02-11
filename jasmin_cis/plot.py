@@ -177,7 +177,7 @@ class Plotter(object):
     def __set_x_label(self, options):
         if options["xlabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
             for dim in xrange(len(self.data[0].shape)):
-                for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
+                for coord in self.data[0].coords(axis="X"):
                     xlabel = coord.name()
             options["xlabel"] = xlabel.capitalize()
         return options
@@ -211,7 +211,7 @@ class Plotter(object):
     def __draw_coastlines(self):
         axes = []
         for dim in xrange(len(self.data[0].shape)):
-            for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
+            for coord in self.data[0].coords(axis="X"):
                 axes.append(coord.name())
         
         if "latitude" in axes and "longitude" in axes:
