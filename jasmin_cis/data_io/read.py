@@ -47,7 +47,7 @@ def read_data(filenames, variable):
         # Unable to create Cube, trying Ungridded data instead
         # This is the point we need to try and identify the product - from path or otherwise
         try:
-            data = read_ungridded.read_data("Cloudsat_2B_CWC_RVOD",filenames, variable)
+            data = read_ungridded.read_data(filenames, variable)
         except CISError as e:
             raise e
     return data

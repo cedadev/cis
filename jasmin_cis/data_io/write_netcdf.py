@@ -14,7 +14,7 @@ def __create_dimensions(nc_file, data_object):
         
     return dimensions
 
-def write_to_file(data_object, filename):
+def write(data_object, filename):
     # Create file
     netcdf_file = Dataset(filename, 'w')
     dimensions = __create_dimensions(netcdf_file, data_object)

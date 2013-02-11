@@ -50,7 +50,7 @@ def get_file_coordinates_points(filename):
     return points
 
 
-def read_data(product, filenames, variable):
+def read_data(filenames, variable, product=None):
     '''
     Read ungridded data from a file. Just a wrapper that calls the UngriddedData class method
     
@@ -62,6 +62,6 @@ def read_data(product, filenames, variable):
         @raise InvalidVariableError: Variable not present in file
     '''
     from data_products import get_data
-    return get_data(product, filenames, variable)
+    return get_data(filenames, variable, product)
 
 
