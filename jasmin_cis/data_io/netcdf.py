@@ -72,10 +72,9 @@ def get_metadata(var):
     @return: A metadata object
     '''
     from ungridded_data import Metadata
-    # Use class instead of dictionary
 
-    metadata = Metadata()
-    metadata.copy_attributes_into(vars(var))
+    metadata = Metadata(var._name, var.long_name, var.units, missing_value=var._FillValue)
+
 
 
     #metadata = {}
