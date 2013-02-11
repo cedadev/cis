@@ -120,12 +120,19 @@ class NetCDF_CF(AProduct):
 
 
 class Cloud_CCI(AProduct):
+    def get_file_signature(self):
+        return [r'.*.nc'];
+
     def create_ungridded_data(self, filenames, usr_variable):
-        from data_io.netcdf import read_many_files
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.ungridded_data import Coord
 
-        var = read_many_files(filenames, [usr_variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
-
-        return UngriddedData(var[usr_variable], lat = var["lat"], lon = var["lon"], time=var["time"], data_type="netCDF")
+        variables = read_many_files(filenames, [usr_variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
+        coords = []
+        coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "x", data_type="netCDF"))
+        coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "y", data_type="netCDF"))
+        coords.append(Coord(variables["time"], get_metadata(variables["time"]), "t", data_type="netCDF"))
+        return UngriddedData(variables[usr_variable], coords, get_metadata(variables[usr_variable]), data_type="netCDF")
 
 def __get_class(filenames, product=None):
     '''
