@@ -22,7 +22,7 @@ def read_many_files(filenames, usr_variable, dim=None):
                        files. The name must appear exactly as in in the NetCDF file.
         @param dim: The name of the dimension on which to aggregate the data. None is the default
                      which tries to aggregate over the unlimited dimension
-        @return: A Varaibale instance constructed from all of the input files
+        @return: A Variable instance constructed from all of the input files
     """
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
@@ -31,11 +31,10 @@ def read_many_files(filenames, usr_variable, dim=None):
     # Get data.
     try:
         data = datafile.variables[usr_variable]
-        coords = [ datafile.variables[dim] for dim in data.dimensions ]
     except:
         raise InvalidVariableError
 
-    return data, coords
+    return data
 
 
 def read(filename, usr_variable):
@@ -66,14 +65,14 @@ def get_metadata(var):
     @param var: the Variable to read metadata from
     @return:
     '''
-    dict = {}
-    dict['info'] = str(var)
+    metadata = {}
+    metadata['info'] = str(var)
     # A list of dimensions the variable is a function of
-    dict['dimensions'] = var.dimensions
+    metadata['dimensions'] = var.dimensions
     # A dictionary of the attributes on the variable, including units, standard_name, long_name
-    dict['attributes'] = vars(var)
+    metadata['attributes'] = vars(var)
 
-    return dict
+    return metadata
 
 def get_data(var, calipso_scaling=False):
     """
