@@ -80,7 +80,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             arrays.append(time)
         time = utils.concatenate(arrays)
 
-        return UngriddedData(sdata[usr_variable],[lat,lon,alt,time],'HDF_SD')
+        return UngriddedData(sdata[usr_variable],[lat,lon,alt,time])
 
 
 class NetCDF_CF(AProduct):
@@ -102,7 +102,7 @@ class NetCDF_CF(AProduct):
         # get coordinates
         #coords = [ read_many_files(filenames, dim) for dim in var.dimensions ]
 
-        return UngriddedData(var, coords,'netCDF')
+        return UngriddedData(var, coords)
 
     '''
     def get_coords_from_variable(self):
