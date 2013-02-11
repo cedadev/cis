@@ -1,12 +1,12 @@
 '''
     Module for the UngriddedData class
 '''
-from collections import namedtuple
-from numpy import shape
-import data_io.netcdf
-import hdf_vd
-import hdf_sd
-import netcdf
+import netCDF4.Variable
+import netcdf.get_data
+from hdf_vd import get_data, VS_Container
+from pyhdf.SD import SD
+import hdf_sd.get_data
+
 
 class Metadata(object):
 
@@ -28,33 +28,20 @@ class Metadata(object):
         obj.__dict__.update(self.__dict__)
 
 
-# Remove the metadata method which removes the need for the first mapping below - this should come straight in with
-#  the data. Also we don't need the data type - we can work it out by mapping on class type
+# This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
+static_mappings = { SD : hdf_sd.get_data,
+                    VS_Container : get_data,
+                    netCDF4.Variable : netcdf.get_data }
 
-# Define the vars of the methods that must be mapped to, these are the methods UngriddedData objects will call
-#  I think this could actually define the EXTERNAL interface without creating any sub methods in the UngriddedData class
-#  by just dropping the mapping into the instance namespace dynamically...
-
-Mapping = namedtuple('Mapping',['get_metadata', 'retrieve_raw_data'])
-
-# This defines the actual mappings for each of the ungridded data types
-static_mappings = { 'HDF_SD' : Mapping(hdf_sd.get_metadata, hdf_sd.get_data),
-                    'HDF_VD' : Mapping(hdf_vd.get_metadata, hdf_vd.get_data),
-                    'HDF5'   : '',
-                    'netCDF' : Mapping(netcdf.get_metadata, netcdf.get_data) }
-
-
-class ADelayedData(object):
+class LazyData(object):
     '''
         Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
 
-    def __init__(self, data, metadata, data_type=None):
+    def __init__(self, data, metadata):
         '''
         @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
-                        This can be a list of data handlers, or a single data handler, but 
-                        if no metadata is specified the metadata from the first handler is used
-        @param data_type: The type of ungridded data being passed - valid options are the keys in static_mappings
+                        This can be a list of data handlers, or a single data handler
         @param metadata: Any associated metadata
         '''
         from jasmin_cis.exceptions import InvalidDataTypeError
@@ -64,8 +51,6 @@ class ADelayedData(object):
             # If the data input is a numpy array we can just copy it in and ignore the data_manager
             self._data = data
             self._data_manager = None
-            if data_type is not None:
-                raise InvalidDataTypeError
         else:
             # If the data input wasn't a numpy array we assume it is a data reference (e.g. SDS) and we refer
             #  this as a 'data manager' as it is responsible for getting the actual data.
@@ -78,10 +63,10 @@ class ADelayedData(object):
             else:
                 self._data_manager = [ data ]
 
-            if data_type in static_mappings:
+            # Check that we recognise the data manager and that they are all the same
+            if data[0].__class__ in static_mappings and all([d.__class__ == data[0].__class__ for d in data ]) :
                 # Set the method names defined in static_mappings to their mapped function names
-                for method_name, mapping in static_mappings[data_type]._asdict().iteritems():
-                    setattr(self, method_name, mapping)
+                setattr(self, "retrieve_raw_data", static_mappings[data[0].__class__])
             else:
                 raise InvalidDataTypeError
 
@@ -121,18 +106,25 @@ class ADelayedData(object):
         #  necessarily actually reading them
 
 
-class Coord(ADelayedData):
+class Coord(LazyData):
 
-    def __init__(self, data, metadata, axis, data_type=None):
-        super(Coord, self).__init__(data, metadata, data_type)
-        self.axis = axis
+    def __init__(self, data, metadata, axis=''):
+        """
+
+        @param data:
+        @param metadata:
+        @param axis: A string label for the axis, e.g. 'X', 'Y', 'Z', or 'T'
+        @return:
+        """
+        super(Coord, self).__init__(data, metadata)
+        self.axis = axis.upper()
         self._name = metadata.name
 
     def name(self):
         return self._name # String
 
 
-class UngriddedData(ADelayedData):
+class UngriddedData(LazyData):
     '''
         Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
@@ -156,19 +148,16 @@ class UngriddedData(ADelayedData):
 
         return cls(array(values), array(latitude), array(longitude))
 
-    def __init__(self, data, coords, metadata, data_type=None):
+    def __init__(self, data, coords, metadata):
         '''
         Constructor
 
-        args:
-            data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
-                        This can be a list of data handlers, or a single data handler, but
-                        if no metadata is specified the metadata from the first handler is used
-            data_type: The type of ungridded data being passed - valid options are
-                        the keys in static_mappings
-            metadata: Any associated metadata
+        @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
+                        This can be a list of data handlers, or a single data handler
+        @param coords: A list of the associated Coord objects
+        @param metadata: Any associated metadata
         '''
-        super(UngriddedData, self).__init__(data, metadata, data_type)
+        super(UngriddedData, self).__init__(data, metadata)
 
         self._coords = coords
 

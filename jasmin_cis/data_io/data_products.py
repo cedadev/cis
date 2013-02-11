@@ -80,7 +80,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             arrays.append(time)
         time = utils.concatenate(arrays)
 
-        return UngriddedData(sdata[usr_variable],[lat,lon,alt,time],'HDF_SD')
+        return UngriddedData(sdata[usr_variable],[lat,lon,alt,time])
 
 
 class NetCDF_CF(AProduct):
@@ -102,7 +102,7 @@ class NetCDF_CF(AProduct):
         # get coordinates
         #coords = [ read_many_files(filenames, dim) for dim in var.dimensions ]
 
-        return UngriddedData(var, lat=var["Latitude"], lon=var["Longitude"], time=var["Time"], data_type='netCDF')
+        return UngriddedData(var, lat=var["Latitude"], lon=var["Longitude"], time=var["Time"])
 
     '''
     def get_coords_from_variable(self):
@@ -129,10 +129,10 @@ class Cloud_CCI(AProduct):
 
         variables = read_many_files(filenames, [usr_variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
         coords = []
-        coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "X", data_type="netCDF"))
-        coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "Y", data_type="netCDF"))
-        coords.append(Coord(variables["time"], get_metadata(variables["time"]), "T", data_type="netCDF"))
-        return UngriddedData(variables[usr_variable], coords, get_metadata(variables[usr_variable]), data_type="netCDF")
+        coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "X"))
+        coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "Y"))
+        coords.append(Coord(variables["time"], get_metadata(variables["time"]), "T"))
+        return UngriddedData(variables[usr_variable], coords, get_metadata(variables[usr_variable]))
 
 def __get_class(filenames, product=None):
     '''
