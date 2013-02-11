@@ -63,14 +63,21 @@ def get_metadata(var):
     Retrieves all metadata
 
     @param var: the Variable to read metadata from
-    @return:
+    @return: A metadata object
     '''
-    metadata = {}
-    metadata['info'] = str(var)
+    from ungridded_data import Metadata
+    # Use class instead of dictionary
+
+    metadata = Metadata()
+    metadata.copy_attributes_into(vars(var))
+
+
+    #metadata = {}
+    #metadata['info'] = str(var)
     # A list of dimensions the variable is a function of
-    metadata['dimensions'] = var.dimensions
+    #metadata['dimensions'] = var.dimensions
     # A dictionary of the attributes on the variable, including units, standard_name, long_name
-    metadata['attributes'] = vars(var)
+    #metadata['attributes'] = vars(var)
 
     return metadata
 
