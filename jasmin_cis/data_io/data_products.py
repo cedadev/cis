@@ -96,6 +96,23 @@ class NetCDF_CF(AProduct):
 
         return UngriddedData(var, lat=coords[2], lon=coords[3], time=coords[1],'netCDF')
 
+    '''
+    def get_coords_from_variable(self):
+        coord_standard_names = [coord for coord in data.coordinates.split()]
+        coords = []
+        for standard_name in coord_standard_names:
+            for variable in datafile.variables:
+                try:
+                    if datafile.variables[variable].standard_name == standard_name:
+                        coords.append(datafile.variables[variable])
+                        break
+                except AttributeError:
+                    pass
+    '''
+
+
+class Cloud_CCI(NetCDF_CF):
+    pass
 
 def get_data(product, filenames, variable):
     """
