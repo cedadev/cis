@@ -28,3 +28,4 @@ def test__write_hdf():
     coords = [MockCoord("coord1"), MockCoord("coord2")]
     obj = MockUngriddedData(x, y, data, "long rain", "units", coords, "f", "short rain")
     write(obj, tmp_file)
+
