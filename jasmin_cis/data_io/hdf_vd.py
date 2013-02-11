@@ -4,8 +4,12 @@ Module containing hdf file utility functions for the VD object
 import numpy as np
 from pyhdf.HDF import *
 from pyhdf.VS import *
+from collections import namedtuple
 
 from jasmin_cis.data_io.hdf_util import __fill_missing_data
+
+class VS_Container(namedtuple('VS_Container',['filename','variable'])):
+    pass
 
 def get_hdf_VD_file_variables(filename):
     '''
@@ -46,7 +50,7 @@ def read(filename, variables=None, datadict=None):
         try:
             vd = vs.attach(variable)
             vd.detach()
-            datadict[variable] = filename, variable
+            datadict[variable] = VS_Container(filename, variable)
         except:
             # ignore variable that failed
             pass
@@ -59,8 +63,8 @@ def read(filename, variables=None, datadict=None):
 def get_data(vds):
 
     # get file and variable reference from tuple
-    filename = vds[0];
-    variable = vds[1];
+    filename = vds.filename;
+    variable = vds.variable;
 
     datafile = HDF(filename)
     vs =  datafile.vstart()
@@ -92,8 +96,8 @@ def get_metadata(vds):
     from ungridded_data import Metadata
 
     # get file and variable reference from tuple
-    filename = vds[0];
-    variable = vds[1];
+    filename = vds.filename;
+    variable = vds.variable;
 
     datafile = HDF(filename)
     vs =  datafile.vstart()
