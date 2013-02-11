@@ -26,6 +26,10 @@ def read_many_files(filenames, usr_variables, dim=None):
     """
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
+
+    if not isinstance(usr_variables,list):
+        usr_variables = [usr_variables]
+
     datafile = MFDataset(filenames, aggdim=dim)
 
     data = {}
@@ -68,10 +72,9 @@ def get_metadata(var):
     @return: A metadata object
     '''
     from ungridded_data import Metadata
-    # Use class instead of dictionary
 
-    metadata = Metadata()
-    metadata.copy_attributes_into(vars(var))
+    metadata = Metadata(var._name, var.long_name, var.units, missing_value=var._FillValue)
+
 
 
     #metadata = {}

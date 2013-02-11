@@ -40,12 +40,9 @@ class LazyData(object):
 
     def __init__(self, data, metadata):
         '''
-        Constructor
-
-        args:
-            data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
+        @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
                         This can be a list of data handlers, or a single data handler
-            metadata: Any associated metadata
+        @param metadata: Any associated metadata
         '''
         from jasmin_cis.exceptions import InvalidDataTypeError
         import numpy as np

@@ -96,13 +96,13 @@ class NetCDF_CF(AProduct):
         # if filenames is not a list, make it a list of 1 element
         if not isinstance(filenames,list): filenames = [ filenames ]
 
-        # get variable and coords
-        var, coords = read_many_files(filenames, usr_variable)
+        # get variable
+        var = read_many_files(filenames, [usr_variable, "Latitude", "Longitude", "Time"])
 
         # get coordinates
         #coords = [ read_many_files(filenames, dim) for dim in var.dimensions ]
 
-        return UngriddedData(var, coords)
+        return UngriddedData(var, lat=var["Latitude"], lon=var["Longitude"], time=var["Time"])
 
     '''
     def get_coords_from_variable(self):
@@ -119,8 +119,20 @@ class NetCDF_CF(AProduct):
     '''
 
 
-class Cloud_CCI(NetCDF_CF):
-    pass
+class Cloud_CCI(AProduct):
+    def get_file_signature(self):
+        return [r'.*.nc'];
+
+    def create_ungridded_data(self, filenames, usr_variable):
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.ungridded_data import Coord
+
+        variables = read_many_files(filenames, [usr_variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
+        coords = []
+        coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "x", data_type="netCDF"))
+        coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "y", data_type="netCDF"))
+        coords.append(Coord(variables["time"], get_metadata(variables["time"]), "t", data_type="netCDF"))
+        return UngriddedData(variables[usr_variable], coords, get_metadata(variables[usr_variable]))
 
 def __get_class(filenames, product=None):
     '''

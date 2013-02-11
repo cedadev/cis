@@ -224,11 +224,13 @@ class Plotter(object):
             ax.set_xscale("log", basex = logx) 
             if logx == e:
                 xticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_xticks())]
+                #xticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_xticks())]
                 ax.set_xticklabels(xticks)
         if logy:
             ax.set_yscale("log", basey = logy)
             if logy == e:
                 yticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_yticks())]
+                #yticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_yticks())]
                 ax.set_yticklabels(yticks)
                         
     def __format_plot(self, options, datafiles): 
