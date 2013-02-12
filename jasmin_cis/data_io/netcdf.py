@@ -72,8 +72,11 @@ def get_metadata(var):
     @return: A metadata object
     '''
     from ungridded_data import Metadata
-
-    metadata = Metadata(var._name, var.standard_name, var.long_name, units=var.units, missing_value=var._FillValue)
+    try:
+        standard_name = var.standard_name
+    except AttributeError:
+        standard_name = ""
+    metadata = Metadata(var._name, standard_name, var.long_name, units=var.units, missing_value=var._FillValue)
 
     return metadata
 
