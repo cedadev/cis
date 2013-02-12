@@ -37,7 +37,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
     def get_file_signature(self):
         return [r'.*2B.CWC.RVOD*'];
 
-    def create_ungridded_data(self, filenames, usr_variable):
+    def create_ungridded_data(self, filenames, variable):
 
         import utils
         import hdf_vd as hdf_vd
@@ -47,7 +47,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         if not isinstance(filenames,list): filenames = [ filenames ]
 
         # list of variables we are interested in
-        variables = [ usr_variable, 'Latitude','Longitude','TAI_start','Profile_time','Height']
+        variables = [ variable, 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
         # reading of all variables
         sdata = {}
@@ -71,20 +71,23 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
                 print 'Error while reading file ', filename
 
         # retrieve data + its metadata
-        data = sdata[usr_variable]
-        metadata = hdf_sd.get_metadata(sdata[usr_variable][0])
+        data = sdata[variable]
+        metadata = hdf_sd.get_metadata(sdata[variable][0])
 
         # retrieve coordinates
-        alt_data = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
-        alt_coord = Coord(alt_data, hdf_sd.get_metadata(sdata['Height'][0]),'Y')
+        alt_data = utils.concatenate([hdf_sd.get_data(i) for i in sdata['Height'] ])
+        alt_metadata = hdf_sd.get_metadata(sdata['Height'][0])
+        alt_coord = Coord(alt_data, alt_metadata,'Y')
 
-        lat_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Latitude'] ])
+        lat_data = utils.concatenate([hdf_vd.get_data(i) for i in vdata['Latitude'] ])
         lat_data = utils.expand_1d_to_2d_array(lat_data,len(alt_data[1]),axis=1)
-        lat_coord = Coord(lat_data, hdf_vd.get_metadata(vdata['Latitude'][0]))
+        lat_metadata = hdf_vd.get_metadata(vdata['Latitude'][0])
+        lat_coord = Coord(lat_data, lat_metadata)
 
-        lon_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Longitude'] ])
+        lon_data = utils.concatenate([hdf_vd.get_data(i) for i in vdata['Longitude'] ])
         lon_data = utils.expand_1d_to_2d_array(lon_data,len(alt_data[1]),axis=1)
-        lon_coord = Coord(lon_data, hdf_vd.get_metadata(vdata['Longitude'][0]))
+        lon_metadata = hdf_vd.get_metadata(vdata['Longitude'][0])
+        lon_coord = Coord(lon_data, lon_metadata)
 
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
@@ -94,7 +97,8 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             arrays.append(time)
         time_data = utils.concatenate(arrays)
         time_data = utils.expand_1d_to_2d_array(time_data,len(alt_data[1]),axis=1)
-        time_coord = Coord(time_data, hdf_vd.get_metadata(vdata['Profile_time'][0]),'X')
+        time_metadata = hdf_vd.get_metadata(vdata['Profile_time'][0])
+        time_coord = Coord(time_data, time_metadata,'X')
 
         coords= [lat_coord,lon_coord,alt_coord,time_coord]
 
@@ -106,7 +110,7 @@ class NetCDF_CF(AProduct):
     def get_file_signature(self):
         return [r'.*.nc'];
 
-    def create_ungridded_data(self, filenames, usr_variable):
+    def create_ungridded_data(self, filenames, variable):
 
         import utils
         from data_io.netcdf import read_many_files
@@ -115,7 +119,7 @@ class NetCDF_CF(AProduct):
         if not isinstance(filenames,list): filenames = [ filenames ]
 
         # get variable
-        var = read_many_files(filenames, [usr_variable, "Latitude", "Longitude", "Time"])
+        var = read_many_files(filenames, [variable, "Latitude", "Longitude", "Time"])
 
         # get coordinates
         #coords = [ read_many_files(filenames, dim) for dim in var.dimensions ]
@@ -141,16 +145,16 @@ class Cloud_CCI(AProduct):
     def get_file_signature(self):
         return [r'.*.nc'];
 
-    def create_ungridded_data(self, filenames, usr_variable):
+    def create_ungridded_data(self, filenames, variable):
         from data_io.netcdf import read_many_files, get_metadata
         from data_io.ungridded_data import Coord
 
-        variables = read_many_files(filenames, [usr_variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
+        variables = read_many_files(filenames, [variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
         coords = []
         coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "X"))
         coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "Y"))
         coords.append(Coord(variables["time"], get_metadata(variables["time"]), "T"))
-        return UngriddedData(variables[usr_variable], get_metadata(variables[usr_variable]), coords)
+        return UngriddedData(variables[variable], get_metadata(variables[variable]), coords)
 
 def __get_class(filenames, product=None):
     '''

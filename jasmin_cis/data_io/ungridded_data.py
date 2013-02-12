@@ -3,7 +3,7 @@
 '''
 from netCDF4 import _Variable
 from netcdf import get_data as netcdf_get_data
-from hdf_vd import get_data as hdf_vd_get_data, VS_Container
+from hdf_vd import get_data as hdf_vd_get_data, VDS
 from pyhdf.SD import SDS
 from hdf_sd import get_data as hdf_sd_get_data
 
@@ -44,7 +44,7 @@ class Metadata(object):
 
 # This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
 static_mappings = { SDS : hdf_sd_get_data,
-                    VS_Container : hdf_vd_get_data,
+                    VDS : hdf_vd_get_data,
                     _Variable : netcdf_get_data }
 
 class LazyData(object):
@@ -247,8 +247,9 @@ class UngriddedData(LazyData):
         @return: A single coord given the same arguments as L(coords).
 
         """
-        from exceptions import CoordinateNotFoundError
         coords = self.coords(name=name, standard_name=standard_name, long_name=long_name, attributes=attributes, axis=axis)
+
+        from jasmin_cis.exceptions import CoordinateNotFoundError
 
         if len(coords) > 1:
             msg = 'Expected to find exactly 1 coordinate, but found %s. They were: %s.'\

@@ -31,15 +31,14 @@ def expand_1d_to_2d_array(array_1d,length,axis=None):
     [[1 2 3 4]
      [1 2 3 4]
      [1 2 3 4]
-     [1 2 3 4]
      [1 2 3 4]]
 
     >>> a = np.array([1,2,3,4])
     >>> expand_1d_to_2d_array(a, 4, axis=1)
-    [[1 1 1 1 1]
-     [2 2 2 2 2]
-     [3 3 3 3 3]
-     [4 4 4 4 4]]
+    [[1 1 1 1]
+     [2 2 2 2]
+     [3 3 3 3]
+     [4 4 4 4]]
 
     @param array_1d:
     @param length:
@@ -52,7 +51,7 @@ def expand_1d_to_2d_array(array_1d,length,axis=None):
 
     import numpy as np
     array_2d = np.array([array_1d])
-    for i in range(length):
+    for i in range(length-1):
         array_2d = np.concatenate((array_2d,[array_1d]))
 
     if axis==1:

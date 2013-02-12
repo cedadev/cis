@@ -88,7 +88,13 @@ class Plotter(object):
         '''
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
-        
+
+        print data_item["x"].shape
+        print data_item["y"].shape
+        print data_item["data"].shape
+
+
+
         self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         #plt.pcolormesh(data_item["x"][3000:3600,:103], data_item["y"][3000:3600,:103], data_item["data"][3000:3600,:103])
         #plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"])
@@ -337,21 +343,22 @@ class Plotter(object):
         '''
         datafiles = self.kwargs.pop("datafiles", None) 
         for i, item in enumerate(self.data):
+
             # Temporarily add args to kwargs
             if datafiles is not None:
                 self.__add_datafile_args_to_kwargs(datafiles[i])
             item_to_plot = unpack_data_object(item)            
+
+            # for heatmaps, we plot the world map (with basemap)
+            # if the 'x' axis is longitude AND the 'y' axis is the latitude
             if self.plot_type == "heatmap":
-                names = []
-                for dim in xrange(len(item.shape)):
-                    for coord in item.coords(contains_dimension=dim, dim_coords=True):
-                        names.append(coord.name().lower())
-                if "latitude" in names and "longitude" in names:
+                if item.y.standard_name == "latitude" and item.x.standard_name == "longitude":
                     Plotter.plot_types["heatmap"].plot_method(self, item_to_plot)
                 else:
                     Plotter.plot_types["heatmap_nobasemap"].plot_method(self, item_to_plot)
             else:              
                 Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
+
             # Remove temp args
             if datafiles is not None:
                 self.__remove_datafile_args_from_kwargs(datafiles[i])

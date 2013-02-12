@@ -8,7 +8,7 @@ from collections import namedtuple
 
 from jasmin_cis.data_io.hdf_util import __fill_missing_data
 
-class VS_Container(namedtuple('VS_Container',['filename','variable'])):
+class VDS(namedtuple('VDS',['filename','variable'])):
     pass
 
 def get_hdf_VD_file_variables(filename):
@@ -50,7 +50,7 @@ def read(filename, variables=None, datadict=None):
         try:
             vd = vs.attach(variable)
             vd.detach()
-            datadict[variable] = VS_Container(filename, variable)
+            datadict[variable] = VDS(filename, variable)
         except:
             # ignore variable that failed
             pass
