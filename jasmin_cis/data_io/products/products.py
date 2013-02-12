@@ -6,6 +6,8 @@ import utils
 import data_io.hdf_vd as hdf_vd
 import data_io.hdf_sd as hdf_sd
 
+import logging
+
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def get_file_signature(self):
@@ -18,6 +20,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         # list of variables we are interested in
         variables = [ variable, 'Latitude','Longitude','TAI_start','Profile_time','Height']
+        logging.info("Looking for variables: " + str(variables))
 
         # reading of all variables
         sdata = {}
