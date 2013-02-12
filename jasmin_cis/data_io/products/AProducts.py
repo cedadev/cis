@@ -53,7 +53,7 @@ def __get_class(filenames, product=None):
 
     product_cls = None
 
-    for cls in AProduct.__subclasses__():
+    for cls in products.AProduct.__subclasses__():
 
         if product is None:
             # search for a pattern that matches
