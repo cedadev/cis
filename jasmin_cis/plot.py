@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import sys
 from utils import unpack_data_object
+import logging
+
 
 class PlotType(object):
         def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
@@ -432,6 +434,7 @@ class Plotter(object):
         if out_filename is None:
             plt.show()
         else:
+            logging.info("saving plot to file: " + out_filename);
             plt.savefig(out_filename) # Will overwrite if file already exists
     
     def __remove_unassigned_arguments(self):
@@ -478,6 +481,9 @@ class Plotter(object):
         '''
         The main plotting method
         '''
+
+        logging.info("Generating plot... This may take some time")
+
         self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", None)        
         self.__remove_unassigned_arguments()   
 
