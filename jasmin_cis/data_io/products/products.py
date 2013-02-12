@@ -1,4 +1,4 @@
-from data_io.Coord import Coord
+from data_io.Coord import Coord, CoordList
 from data_io.hdf import read_hdf4
 from data_io.products.AProducts import AProduct
 from data_io.ungridded_data import UngriddedData
@@ -82,6 +82,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             return coords
         else:
             # retrieve data + its metadata
+            logging.debug("retrieving data and associated metadata for variable: " + variable)
             data = sdata[variable]
             metadata = hdf_sd.get_metadata(sdata[variable][0])
             return UngriddedData(data,metadata,coords)
