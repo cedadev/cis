@@ -96,8 +96,8 @@ def get_metadata(vds):
     from ungridded_data import Metadata
 
     # get file and variable reference from tuple
-    filename = vds.filename;
-    variable = vds.variable;
+    filename = vds.filename
+    variable = vds.variable
 
     datafile = HDF(filename)
     vs =  datafile.vstart()
