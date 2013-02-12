@@ -127,7 +127,7 @@ def test_main():
     write(data_object, "ungridded_netcdf.nc")
 
 def test_read():
-    from data_io.products.AProducts import get_data
+    from data_io.products.AProduct import get_data
 
     filenames = ["ungridded_netcdf.nc"]
     data_object = get_data(filenames, 'rain',"Cloud_CCI")

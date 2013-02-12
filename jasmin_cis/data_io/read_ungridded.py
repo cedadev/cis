@@ -61,7 +61,7 @@ def read_data(filenames, variable, product=None):
         @raise FileIOError: Unable to read a file
         @raise InvalidVariableError: Variable not present in file
     '''
-    from data_io.products.AProducts import get_data
+    from data_io.products.AProduct import get_data
     return get_data(filenames, variable, product)
 
 

@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+import logging
 
 class AProduct(object):
     """
@@ -21,13 +22,13 @@ class AProduct(object):
         """
 
     @abstractmethod
-    def create_coords(self, filenames, variable=None):
+    def create_coords(self, filenames):
+        """
+        Reads the coordinates from a bunch of files
+        @param filenames: List of filenames to read coordinates from
+        @return: L{CoordList} object
         """
 
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
     @abstractmethod
     def get_file_signature(self):
         '''
@@ -40,8 +41,6 @@ class AProduct(object):
         This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
 
         '''
-        pass
-
 
 def __get_class(filenames, product=None):
     '''
@@ -64,16 +63,20 @@ def __get_class(filenames, product=None):
     for cls in products.AProduct.__subclasses__():
 
         if product is None:
-            # search for a pattern that matches
+            # search for a pattern that matches file signature
             patterns = cls().get_file_signature()
             for pattern in patterns:
                 if re.match(pattern,filenames[0],re.I) is not None:
                     product_cls = cls
+                    logging.debug("Found product class " + cls.__name__ + " matching regex pattern " + pattern)
                     break
         else:
+            # product specified directly
             if product == cls.__name__:
+                logging.debug("Selected product class " +  cls.__name__)
                 product_cls = cls
-                # break at this point too?
+                break
+
     return product_cls
 
 
@@ -91,5 +94,6 @@ def get_data(filenames, variable, product=None):
     if product_cls is None:
         raise(NotImplementedError)
     else:
+        logging.info("Using product " +  product_cls.__name__)
         data = product_cls().create_ungridded_data(filenames, variable)
     return data

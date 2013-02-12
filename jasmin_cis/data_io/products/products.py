@@ -1,6 +1,6 @@
 from data_io.Coord import Coord, CoordList
 from data_io.hdf import read_hdf4
-from data_io.products.AProducts import AProduct
+from data_io.products.AProduct import AProduct
 from data_io.ungridded_data import UngriddedData
 import utils
 import data_io.hdf_vd as hdf_vd
@@ -10,26 +10,8 @@ import logging
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
-    def get_file_signature(self):
-        return [r'.*2B.CWC.RVOD*']
+    def __read_files(self, filenames, variables):
 
-    def create_coords(self, filenames, variable = None):
-        """
-
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
-        # if filenames is not a list, make it a list of 1 element
-        if not isinstance(filenames,list): filenames = [ filenames ]
-
-        # list of variables we are interested in
-        variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
-
-        if variable is not None:
-            variables.append(variable)
-
-        # reading of all variables
         sdata = {}
         vdata = {}
         for filename in filenames:
@@ -49,8 +31,24 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             except:
                 print 'Error while reading file ', filename
 
-        # retrieve coordinates
-        logging.debug("retrieving coordinate(s)")
+        return sdata,vdata
+
+
+    def get_file_signature(self):
+        return [r'.*2B.CWC.RVOD*']
+
+    def create_coords(self, filenames):
+
+        # if filenames is not a list, make it a list of 1 element
+        if not isinstance(filenames,list): filenames = [ filenames ]
+
+        # list of coordinate variables we are interested in
+        variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
+
+        # reading the various files
+        sdata, vdata = self.__read_files(filenames,variables)
+
+        logging.debug("retrieving coordinate(s) data+metadata")
         alt_data = utils.concatenate([hdf_sd.get_data(i) for i in sdata['Height'] ])
         alt_metadata = hdf_sd.get_metadata(sdata['Height'][0])
         alt_coord = Coord(alt_data, alt_metadata,'Y')
@@ -76,57 +74,51 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         time_metadata = hdf_vd.get_metadata(vdata['Profile_time'][0])
         time_coord = Coord(time_data, time_metadata,'X')
 
-        coords = CoordList([lat_coord,lon_coord,alt_coord,time_coord])
+        return CoordList([lat_coord,lon_coord,alt_coord,time_coord])
 
-        if variable is None:
-            return coords
-        else:
-            # retrieve data + its metadata
-            logging.debug("retrieving data and associated metadata for variable: " + variable)
-            data = sdata[variable]
-            metadata = hdf_sd.get_metadata(sdata[variable][0])
-            return UngriddedData(data,metadata,coords)
 
     def create_ungridded_data(self, filenames, variable):
-        """
-            This just refers the work to create coords which has to open all the files anyway to get the coordinates
-        @param filenames:
-        @param variable:
-        @return:
-        """
-        return self.create_coords(filenames, variable)
+
+        coords = self.create_coords(filenames)
+
+        # reading of variables
+        sdata, vdata = self.__read_files(filenames, variable)
+
+        # retrieve data + its metadata
+        logging.debug("retrieving data and associated metadata for variable: " + variable)
+        data = sdata[variable]
+        metadata = hdf_sd.get_metadata(sdata[variable][0])
+
+        return UngriddedData(data,metadata,coords)
 
 
 class Cloud_CCI(AProduct):
+
     def get_file_signature(self):
-        return [r'.*.nc']
+        return [r'.*ESACCI*.nc']
 
-    def create_coords(self, filenames, variable = None):
-        """
+    def create_coords(self, filenames):
 
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
         from data_io.netcdf import read_many_files, get_metadata
         from data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
 
-        if variable is not None:
-            variables.append(variable)
-
-        data_variables = read_many_files(filenames, variables, dim="pixel_number") #i.e. datafile.variables[usr_variable]
+        data = read_many_files(filenames, variables, dim="pixel_number")
 
         coords = CoordList()
-        coords.append(Coord(data_variables["lon"], get_metadata(data_variables["lon"]), "X"))
-        coords.append(Coord(data_variables["lat"], get_metadata(data_variables["lat"]), "Y"))
-        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+        coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
+        coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
+        coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
 
-        if variable is None:
-            return coords
-        else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
+        return coords
 
     def create_ungridded_data(self, filenames, variable):
-        return self.create_coords(filenames, variable)
+
+        from data_io.netcdf import read_many_files, get_metadata
+
+        coords = self.create_coords(filenames)
+        data = read_many_files(filenames, variable, dim="pixel_number")
+        metadata = get_metadata(data[variable])
+
+        return UngriddedData(data[variable], metadata, coords)
