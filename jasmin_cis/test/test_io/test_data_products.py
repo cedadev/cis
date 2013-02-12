@@ -3,7 +3,7 @@ module to test the various subclasses of the abstract AProduct class
 '''
 from nose.tools import istest, eq_, raises
 from jasmin_cis.test.test_files.data import *
-from data_io.data_products import get_data, __get_class
+from data_io.products.AProducts import get_data, __get_class
 
 @istest
 def test_that_get_data_accepts_valid_product():
@@ -34,7 +34,7 @@ def test_that_get_data_throws_NotImplementedError_for_missing_product():
 @istest
 @raises(TypeError)
 def test_that_get_data_throws_TypeError_for_invalid_product():
-    from data_io.data_products import AProduct
+    from data_io.products.AProducts import AProduct
     # Create a class which subclasses AProduct but doesn't fully implement the interface
     class My_test_product(AProduct): pass
     get_data(valid_cloudsat_RVOD_file,[valid_cloudsat_RVOD_variable], product='My_test_product')
