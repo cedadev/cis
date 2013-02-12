@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
 
-
 class AProduct(object):
     """
         Abstract class for the various possible data products. This just defines the interface which
@@ -53,7 +52,8 @@ def __get_class(filenames, product=None):
     import re
 
     product_cls = None
-    for cls in products.AProduct.__subclasses__():
+
+    for cls in AProduct.__subclasses__():
 
         if product is None:
             # search for a pattern that matches

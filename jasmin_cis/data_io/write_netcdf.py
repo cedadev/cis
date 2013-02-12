@@ -2,16 +2,18 @@
 Module for writing data to NetCDF files
 '''
 from netCDF4 import Dataset
-from numpy import int64
+import numpy
 
 types = {float: "f",
-         int64: "i"}
+         numpy.int64: "i"}
 
-def __add_metadata(var, coord):
-    if coord._metadata.standard_name: var.standard_name = coord._metadata.standard_name
-    if coord._metadata.units: var.units = coord._metadata.units
-    if coord._metadata.long_name: var.long_name = coord._metadata.long_name
-    if coord._metadata.range : var.valid_range = coord._metadata.range
+index_name = 'pixel_number'
+
+def __add_metadata(var, data):
+    if data._metadata.standard_name: var.standard_name = data._metadata.standard_name
+    if data._metadata.units: var.units = data._metadata.units
+    if data._metadata.long_name: var.long_name = data._metadata.long_name
+    if data._metadata.range : var.valid_range = data._metadata.range
     return var
 
 def __get_missing_value(coord):
@@ -20,37 +22,81 @@ def __get_missing_value(coord):
         f = None
     return f
 
-def __create_dimensions(nc_file, data_object):
-    dimensions = ()
-    first_coord = True
-    for coord in data_object.coords():
-        if first_coord:
-            dimension = nc_file.createDimension(coord.name(), len(coord.data))
-            dimensions = dimensions + (coord.name(),)
-            first_coord = False
-        var = nc_file.createVariable(coord.name(), types[type(coord.data[0])], dimension._name, fill_value=__get_missing_value(coord))
-        var = __add_metadata(var, coord)
-        var[:] = coord.data
-        
+#def __create_dimensions(nc_file, coords):
+#    dimensions = ()
+#    first_coord = True
+#    for coord in coords:
+#        if first_coord:
+#            dimension = nc_file.createDimension(coord.name(), len(coord.data))
+#            dimensions = dimensions + (coord.name(),)
+#            first_coord = False
+#        var = nc_file.createVariable(coord.name(), types[type(coord.data[0])], dimension._name, fill_value=__get_missing_value(coord))
+#        var = __add_metadata(var, coord)
+#        var[:] = coord.data
+#
+#    return dimensions
+
+def __create_variable(nc_file, data):
+    var = nc_file.createVariable(data.name(), types[type(data.data[0])], index_name, fill_value=__get_missing_value(data))
+    var = __add_metadata(var, data)
+    var[:] = data.data
+
+    return var
+
+def __create_index(nc_file, length):
+    dimension = nc_file.createDimension(index_name, length)
+    dimensions = ( index_name, )
+    var = nc_file.createVariable(index_name, numpy.int32, dimensions)
+
+    var.valid_range = (0, length)
+    var[:] = numpy.arange(length)
+
     return dimensions
 
+
 def write(data_object, filename):
-    # Create file
+    """
+
+    @param data_object:
+    @param filename:
+    @return:
+    """
+    write_coordinates(data_object.coords(), filename)
+    add_data_to_file(data_object, filename)
+
+def write_coordinates(coords, filename):
+    """
+
+    @param coords:
+    @param filename:
+    @return:
+    """
     netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
-    dimensions = __create_dimensions(netcdf_file, data_object)
-    variable = netcdf_file.createVariable(data_object.name(), types[type(data_object.data[0])], dimensions, fill_value=__get_missing_value(data_object))
-    variable = __add_metadata(variable, data_object)
-    variable[:] = data_object.data
+    index_dim = __create_index(netcdf_file, coords[0].shape[0])
+    for data in coords:
+        coord = __create_variable(netcdf_file, data)
+    netcdf_file.close()
+
+def add_data_to_file(data_object, filename):
+    """
+
+    @param data_object:
+    @param filename:
+    @return:
+    """
+    netcdf_file = Dataset(filename, 'a', format="NETCDF4_CLASSIC")
+    var = __create_variable(netcdf_file, data_object)
     netcdf_file.close()
 
 def test_main():
-    from ungridded_data import UngriddedData, Coord, Metadata
+    from ungridded_data import UngriddedData, Metadata
+    from Coord import Coord
     from numpy import array
     coords = []
-    coords.append(Coord(array([1,2,3,4,5,6,7,8,9,10]), Metadata(name="pixel_number",
-                                                                long_name="Sinusoidal pixel index",
-                                                                shape=(10,),
-                                                                range = (0,90352))))
+#    coords.append(Coord(array([1,2,3,4,5,6,7,8,9,10]), Metadata(name="pixel_number",
+#                                                                long_name="Sinusoidal pixel index",
+#                                                                shape=(10,),
+#                                                                range = (0,90352))))
     coords.append(Coord(array([1,2,3,4,5,6,7,8,9,10]), Metadata(name="lon",
                                                                 long_name="Longitude",
                                                                 shape=(10,),
@@ -85,6 +131,8 @@ def test_read():
 
     filenames = ["ungridded_netcdf.nc"]
     data_object = get_data(filenames, 'rain',"Cloud_CCI")
+
+    print data_object.data
 
     from jasmin_cis.plot import Plotter
 

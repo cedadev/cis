@@ -47,7 +47,6 @@ def plot_cmd(main_arguments):
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
     try:
-
         # create a dictionary of [key=variable, value=list of filename]
         dict={}
         for datafile in main_arguments["datafiles"]:
@@ -97,13 +96,17 @@ def col_cmd(main_arguments):
     from jasmin_cis.exceptions import InvalidColocationMethodError, CISError
     from data_io.read import read_file_coordinates, read_data
     from col import Colocator
-    from data_io.write_hdf import write
+    from data_io.write_netcdf import write_coordinates, add_data_to_file
+    from data_io.hyperpoint import get_coordinates_points
     
     sample_file = main_arguments.pop("samplefilename")
     input_groups = main_arguments.pop("datafiles")
     output_file = main_arguments.pop("output")
     
-    sample_points = read_file_coordinates(sample_file)
+    coords = read_file_coordinates(sample_file)
+    sample_points = get_coordinates_points(coords)
+
+    write_coordinates(coords, output_file)
    
     for input_group in input_groups:
         filename = input_group['filename']
@@ -122,8 +125,8 @@ def col_cmd(main_arguments):
         
         new_data = col.colocate()
         new_data.copy_metadata_from(data)
-        
-        write(new_data, output_file)
+
+        add_data_to_file(new_data, output_file)
 
 
 commands = { 'plot' : plot_cmd,

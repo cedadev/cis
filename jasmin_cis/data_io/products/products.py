@@ -119,7 +119,7 @@ class Cloud_CCI(AProduct):
 
     def create_ungridded_data(self, filenames, variable):
         from data_io.netcdf import read_many_files, get_metadata
-        from data_io import Coord
+        from data_io.ungridded_data import Coord
 
         variables = read_many_files(filenames, [variable, "lat", "lon", "time"], dim="pixel_number") #i.e. datafile.variables[usr_variable]
         coords = []
