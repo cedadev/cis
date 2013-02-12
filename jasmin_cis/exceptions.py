@@ -37,3 +37,6 @@ class InvalidLineStyleError(CISError):
 
 class CoordinateNotFoundError(CISError):
     pass
+
+class DuplicateCoordinateError(CISError):
+    pass
