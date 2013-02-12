@@ -8,8 +8,9 @@ from jasmin_cis.test.test_files.data import *
 
 @nottest # Too big to store in Git repository, can still be run manually
 def can_read_15GB_file_when_reading_variables():
+    from jasmin_cis.info import info
     filename = large_15GB_file_filename
-    cis_read.read_all_variables_from_file(filename)
+    info(filename)
 
 @nottest # Too big to store in Git repository, can still be run manually
 def can_read_15GB_file_when_loading_a_cube():

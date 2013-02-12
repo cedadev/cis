@@ -92,7 +92,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         """
         return self.create_coords(filenames, variable)
 
-
 class Cloud_CCI(AProduct):
     def get_file_signature(self):
         return [r'.*.nc']
@@ -126,3 +125,78 @@ class Cloud_CCI(AProduct):
 
     def create_ungridded_data(self, filenames, variable):
         return self.create_coords(filenames, variable)
+
+
+class NetCDF_CF(AProduct):
+    def get_file_signature(self):
+        return [r'.*.nc']
+
+    def create_coords(self, filenames, variable = None):
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.Coord import Coord
+
+        variables = [ "latitude", "longitude", "altitude", "time" ]
+
+        if variable is not None:
+            variables += variable
+
+        data_variables = read_many_files(filenames, variables)
+
+        coords = CoordList()
+        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
+        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
+        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
+        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+
+        if variable is None:
+            return coords
+        else:
+            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
+
+    def create_ungridded_data(self, filenames, variable):
+        return self.create_coords(filenames, variable)
+
+
+class NetCDF_CF_Gridded(NetCDF_CF):
+    def get_file_signature(self):
+        return [r'.*.nc']
+
+    def create_coords(self, filenames):
+        super(NetCDF_CF_Gridded, self).create_coords(filenames)
+
+    def create_ungridded_data(self, filenames, variable):
+        '''
+        Read gridded data for a given variable over multiple files.
+
+          filenames:   The filenames of the files to read
+            variable:    The variable to read from the files
+
+        returns:
+            A cube containing the specified data with unnecessary dimensions removed
+        '''
+        from jasmin_cis.exceptions import InvalidVariableError
+        import iris
+
+        var_constraint = iris.AttributeConstraint(name=variable)
+        # Create an Attribute constraint on the name Attribute for the variable given
+
+        try:
+            cube = iris.load_cube(filenames, var_constraint)
+        except iris.exceptions.ConstraintMismatchError:
+            raise InvalidVariableError("Variable not found: " + variable +
+                                       "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
+
+        sub_cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
+        #  Ensure that there are no extra dimensions which can confuse the plotting.
+        # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
+        #  the dimension whose length is one. The above list comprehension would return a cube of
+        #  shape (145, 165)
+
+        return sub_cube
+

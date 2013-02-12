@@ -1,5 +1,19 @@
 from data_io import hdf_sd as hdf_sd, hdf_vd
 
+def get_hdf4_file_variables(filename):
+    '''
+    Get all variables from a file containing ungridded data.
+    Concatenate variable from both VD and SD data
+
+    args:
+        filename: The filename of the file to get the variables from
+
+    '''
+    SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
+    VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
+
+    return SD_vars, VD_vars
+
 def read_hdf4(filename,variables):
     '''
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
