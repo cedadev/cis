@@ -199,7 +199,7 @@ class UngriddedData(LazyData):
 
         @return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
-        return self._coords.get_coords(name=None, standard_name=None, long_name=None, attributes=None, axis=None)
+        return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
 
     def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
@@ -208,5 +208,5 @@ class UngriddedData(LazyData):
         @return: A single coord given the same arguments as L(coords).
 
         """
-        return self._coords.get_coord(name=None, standard_name=None, long_name=None, attributes=None, axis=None)
+        return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
 
