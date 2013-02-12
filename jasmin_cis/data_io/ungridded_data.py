@@ -131,19 +131,6 @@ class LazyData(object):
         #  necessarily actually reading them
 
 
-class Coord(LazyData):
-
-    def __init__(self, data, metadata, axis=''):
-        """
-
-        @param data:
-        @param metadata:
-        @param axis: A string label for the axis, e.g. 'X', 'Y', 'Z', or 'T'
-        @return:
-        """
-        super(Coord, self).__init__(data, metadata)
-        self.axis = axis.upper()
-
 class UngriddedData(LazyData):
     '''
         Wrapper (adaptor) class for the different types of possible ungridded data.
@@ -177,10 +164,19 @@ class UngriddedData(LazyData):
         @param coords: A list of the associated Coord objects
         @param metadata: Any associated metadata
         '''
+        from data_io.Coord import CoordList, Coord
+
         super(UngriddedData, self).__init__(data, metadata)
 
-        self._coords = coords
-
+        if isinstance(coords, list):
+            self._coords = CoordList(coords)
+        elif isinstance(coords, CoordList):
+            self._coords = coords
+        elif isinstance(coords, Coord):
+            self._coords = CoordList([coords])
+        else:
+            raise ValueError("Invalid Coords type")
+    
     @property
     def x(self):
         return self.coord(axis='X')
@@ -200,65 +196,17 @@ class UngriddedData(LazyData):
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
-        Return a list of coordinates in this UngriddedData object fitting the given criteria. This is deliberately very
-         similar to Cube.coords() to maintain a similar interface and because the functionality is similar. There
-          is no distrinction between dimension coordinates and auxilliary coordinates here though.
-
-        @param name:  The standard name or long name or default name of the desired coordinate.
-            If None, does not check for name. Also see, :attr:`Cube.name`.
-        @param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
-        @param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
-        @param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes.
-        @param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for axis.
-            Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
 
         @return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
-        from collections import Mapping
-        coords = self._coords
-
-        if name is not None:
-            coords = filter(lambda coord_: coord_.name() == name, coords)
-
-        if standard_name is not None:
-            coords = filter(lambda coord_: coord_.standard_name == standard_name, coords)
-
-        if long_name is not None:
-            coords = filter(lambda coord_: coord_.long_name == long_name, coords)
-
-        if axis is not None:
-            axis = axis.upper()
-            coords = filter(lambda coord_: coord_.axis == axis, coords)
-
-        if attributes is not None:
-            if not isinstance(attributes, Mapping):
-                raise ValueError('The attributes keyword was expecting a dictionary type, but got a %s instead.' % type(attributes))
-            filter_func = lambda coord_: all(k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems())
-            coords = filter(filter_func, coords)
-
-        return coords
+        return self._coords.get_coords(name=None, standard_name=None, long_name=None, attributes=None, axis=None)
 
     def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
-        Return a single coord given the same arguments as L(coords). If the arguments given do not result in precisely
-         1 coordinate being matched, a CoordinateNotFoundError is raised.
 
         @raise: CoordinateNotFoundError
         @return: A single coord given the same arguments as L(coords).
 
         """
-        coords = self.coords(name=name, standard_name=standard_name, long_name=long_name, attributes=attributes, axis=axis)
-
-        from jasmin_cis.exceptions import CoordinateNotFoundError
-
-        if len(coords) > 1:
-            msg = 'Expected to find exactly 1 coordinate, but found %s. They were: %s.'\
-                  % (len(coords), ', '.join(coord.name() for coord in coords))
-            raise CoordinateNotFoundError(msg)
-        elif len(coords) == 0:
-            bad_name = name or standard_name or long_name or ''
-            msg = 'Expected to find exactly 1 %s coordinate, but found none.' % bad_name
-            raise CoordinateNotFoundError(msg)
-
-        return coords[0]
+        return self._coords.get_coord(name=None, standard_name=None, long_name=None, attributes=None, axis=None)
 

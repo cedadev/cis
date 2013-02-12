@@ -60,3 +60,16 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         else:
             furthest_lon = self.longitude + 180.0
         return HyperPoint(furthest_lat, furthest_lon, self.altitude, self.time, self.val)
+
+
+def get_coordinates_points(coords):
+    # Pack the data into a list of x,y, val points to be passed to col
+    points = []
+
+    for lat_p in dims.lat[:]:
+        for lon_p in dims.lon[:]:
+            for alt_p in dims.alt[:]:
+                for time_p in dims.time[:]:
+                    points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
+
+    return points
