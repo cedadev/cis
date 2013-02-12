@@ -25,7 +25,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
         if variable is not None:
-            variables += variable
+            variables.append(variable)
 
         # reading of all variables
         sdata = {}
@@ -109,7 +109,7 @@ class Cloud_CCI(AProduct):
         variables = ["lat", "lon", "time"]
 
         if variable is not None:
-            variables += variable
+            variables.append(variable)
 
         data_variables = read_many_files(filenames, variables, dim="pixel_number") #i.e. datafile.variables[usr_variable]
 
