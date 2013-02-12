@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from products import *
 
 class AProduct(object):
     """
@@ -50,7 +49,7 @@ def __get_class(filenames, product=None):
     '''
 
     import re
-
+    import products
     product_cls = None
 
     for cls in AProduct.__subclasses__():
