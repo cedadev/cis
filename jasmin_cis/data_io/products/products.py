@@ -27,7 +27,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         vdata = {}
         for filename in filenames:
 
-            print filename
+            logging.info("reading file: " + filename)
 
             try:
 
@@ -44,10 +44,12 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
                 print 'Error while reading file ', filename
 
         # retrieve data + its metadata
+        logging.debug("retrieving variable(s)")
         data = sdata[variable]
         metadata = hdf_sd.get_metadata(sdata[variable][0])
 
         # retrieve coordinates
+        logging.debug("retrieving coordinate(s)")
         alt_data = utils.concatenate([hdf_sd.get_data(i) for i in sdata['Height'] ])
         alt_metadata = hdf_sd.get_metadata(sdata['Height'][0])
         alt_coord = Coord(alt_data, alt_metadata,'Y')
@@ -75,6 +77,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         coords= [lat_coord,lon_coord,alt_coord,time_coord]
 
+        logging.debug("Constructing data object")
         return UngriddedData(data,metadata,coords)
 
 
