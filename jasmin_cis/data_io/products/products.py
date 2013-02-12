@@ -122,7 +122,6 @@ class Cloud_CCI(AProduct):
         metadata = get_metadata(data[variable])
 
         return UngriddedData(data[variable], metadata, coords)
-        return self.create_coords(filenames, variable)
 
 
 class NetCDF_CF(AProduct):

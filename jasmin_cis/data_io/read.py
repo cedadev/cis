@@ -13,7 +13,7 @@ def read_data(filenames, variable, product=None):
         
     @return:  The specified data with unnecessary dimensions removed
     '''
-    from data_io.products.AProducts import get_data
+    from data_io.products.AProduct import get_data
     return get_data(filenames, variable, product)
 
 
@@ -27,6 +27,6 @@ def read_file_coordinates(filenames, product=None):
         
     @return: A list of HyperPoints
     '''
-    from data_io.products.AProducts import get_coordinates
+    from data_io.products.AProduct import get_coordinates
     return get_coordinates(filenames, product)
 

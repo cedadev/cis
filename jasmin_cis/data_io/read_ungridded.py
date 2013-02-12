@@ -25,8 +25,8 @@ def get_file_coordinates(filename):
     each element of tuple being a 2D numpy array
     '''
     lat = hdf_vd.get_data((filename,'Latitude'))
-    long = hdf_vd.get_data((filename,'Longitude'))
-    return (lat,long)
+    lon = hdf_vd.get_data((filename,'Longitude'))
+    return (lat,lon)
 
 
 def get_file_coordinates_points(filename):
@@ -61,7 +61,7 @@ def read_data(filenames, variable, product=None):
         @raise FileIOError: Unable to read a file
         @raise InvalidVariableError: Variable not present in file
     '''
-    from data_io.products.AProducts import get_data
+    from data_io.products.AProduct import get_data
     return get_data(filenames, variable, product)
 
 
