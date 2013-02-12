@@ -73,16 +73,7 @@ def get_metadata(var):
     '''
     from ungridded_data import Metadata
 
-    metadata = Metadata(var._name, var.long_name, var.units, missing_value=var._FillValue)
-
-
-
-    #metadata = {}
-    #metadata['info'] = str(var)
-    # A list of dimensions the variable is a function of
-    #metadata['dimensions'] = var.dimensions
-    # A dictionary of the attributes on the variable, including units, standard_name, long_name
-    #metadata['attributes'] = vars(var)
+    metadata = Metadata(var._name, var.standard_name, var.long_name, units=var.units, missing_value=var._FillValue)
 
     return metadata
 

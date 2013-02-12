@@ -118,7 +118,9 @@ def get_metadata(sds):
     # so that other metadata of interest can still be retrieved if need be
     misc = sds.attributes()
 
-    metadata = Metadata(name, long_name, shape, units, range, factor, offset, missing, misc)
+    metadata = Metadata( name=name, long_name=long_name, shape=shape, units=units, range=range,
+        factor=factor, offset=offset, missing_value=missing, misc=misc)
+
 
     return metadata
 
