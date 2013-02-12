@@ -72,14 +72,16 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         metadata = hdf_sd.get_metadata(sdata[usr_variable][0])
 
         # retrieve coordinates
+        alt_data = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
+        alt_coord = Coord(alt_data, hdf_sd.get_metadata(sdata['Height'][0]),'Y')
+
         lat_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Latitude'] ])
+        lat_data = utils.expand_1d_to_2d_array(lat_data,len(alt_data[1]),axis=1)
         lat_coord = Coord(lat_data, hdf_vd.get_metadata(vdata['Latitude'][0]))
 
         lon_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Longitude'] ])
+        lon_data = utils.expand_1d_to_2d_array(lon_data,len(alt_data[1]),axis=1)
         lon_coord = Coord(lon_data, hdf_vd.get_metadata(vdata['Longitude'][0]))
-
-        alt_data = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
-        alt_coord = Coord(alt_data, hdf_sd.get_metadata(sdata['Height'][0]),'Y')
 
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
@@ -88,11 +90,14 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             time += start
             arrays.append(time)
         time_data = utils.concatenate(arrays)
+        time_data = utils.expand_1d_to_2d_array(time_data,len(alt_data[1]),axis=1)
         time_coord = Coord(time_data, hdf_vd.get_metadata(vdata['Profile_time'][0]),'X')
 
         coords= [lat_coord,lon_coord,alt_coord,time_coord]
 
         return UngriddedData(data,metadata,coords)
+
+
 
 
 class NetCDF_CF(AProduct):
