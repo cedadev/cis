@@ -109,7 +109,7 @@ def get_metadata(sds):
     long_name = sds.attributes().get('long_name',None)
     shape = sds.info()[2]
     units = sds.attributes().get('units')
-    range = sds.attributes().get('valid_range')
+    valid_range = sds.attributes().get('valid_range')
     factor = sds.attributes().get('scale_factor')
     offset = sds.attributes().get('add_offset')
     missing = sds.attributes().get('_FillValue')
@@ -118,7 +118,7 @@ def get_metadata(sds):
     # so that other metadata of interest can still be retrieved if need be
     misc = sds.attributes()
 
-    metadata = Metadata( name=name, long_name=long_name, shape=shape, units=units, range=range,
+    metadata = Metadata( name=name, long_name=long_name, shape=shape, units=units, range=valid_range,
         factor=factor, offset=offset, missing_value=missing, misc=misc)
 
 
