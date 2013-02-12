@@ -65,8 +65,8 @@ class LazyData(object):
 
             # Check that we recognise the data manager and that they are all the same
             if self._data_manager[0].__class__ in static_mappings and all([d.__class__ == self._data_manager[0].__class__ for d in self._data_manager ]) :
-                # Set the method names defined in static_mappings to their mapped function names
-                setattr(self, "retrieve_raw_data", static_mappings[self._data_manager[0].__class__])
+                # Set the retrieve_raw_data method to it's mapped function name
+                self.retrieve_raw_data = static_mappings[self._data_manager[0].__class__]
             else:
                 raise InvalidDataTypeError
 
@@ -216,7 +216,7 @@ class UngriddedData(LazyData):
         @return: A single coord given the same arguments as L(coords).
 
         """
-        from iris.exceptions import CoordinateNotFoundError
+        from exceptions import CoordinateNotFoundError
         coords = self.coords(name=name, standard_name=standard_name, long_name=long_name, attributes=attributes, axis=axis)
 
         if len(coords) > 1:
