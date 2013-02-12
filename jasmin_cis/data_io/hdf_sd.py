@@ -35,7 +35,7 @@ def read(filename, variables=None, datadict=None):
         names       -- A sequence of variable (dataset) names to read from the
                        file (default None, causing all variables to be read).
                        The names must appear exactly as in in the HDF file.
-        datadic     -- Optional dictionary to add data to, otherwise a new, empty
+        datadict     -- Optional dictionary to add data to, otherwise a new, empty
                        dictionary is created
     
     """

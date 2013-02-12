@@ -70,4 +70,4 @@ def unpack_data_object(data_object):
 
         return { "data": data, "x" : x, "y" : y }
     else:
-        return { "data": data_object.data, "x" : data_object.x, "y" : data_object.y }
+        return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }

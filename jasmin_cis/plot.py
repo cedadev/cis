@@ -177,7 +177,7 @@ class Plotter(object):
     def __set_x_label(self, options):
         if options["xlabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
             for dim in xrange(len(self.data[0].shape)):
-                for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
+                for coord in self.data[0].coords(axis="X"):
                     xlabel = coord.name()
             options["xlabel"] = xlabel.capitalize()
         return options
@@ -211,7 +211,7 @@ class Plotter(object):
     def __draw_coastlines(self):
         axes = []
         for dim in xrange(len(self.data[0].shape)):
-            for coord in self.data[0].coords(contains_dimension=dim, dim_coords=True):
+            for coord in self.data[0].coords(axis="X"):
                 axes.append(coord.name())
         
         if "latitude" in axes and "longitude" in axes:
@@ -224,11 +224,13 @@ class Plotter(object):
             ax.set_xscale("log", basex = logx) 
             if logx == e:
                 xticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_xticks())]
+                #xticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_xticks())]
                 ax.set_xticklabels(xticks)
         if logy:
             ax.set_yscale("log", basey = logy)
             if logy == e:
                 yticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_yticks())]
+                #yticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_yticks())]
                 ax.set_yticklabels(yticks)
                         
     def __format_plot(self, options, datafiles): 
