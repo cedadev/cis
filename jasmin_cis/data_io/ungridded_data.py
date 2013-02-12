@@ -1,7 +1,7 @@
 '''
     Module for the UngriddedData class
 '''
-from netCDF4 import Variable
+from netCDF4 import _Variable
 from netcdf import get_data as netcdf_get_data
 from hdf_vd import get_data as hdf_vd_get_data, VS_Container
 from pyhdf.SD import SD
@@ -31,7 +31,7 @@ class Metadata(object):
 # This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
 static_mappings = { SD : hdf_sd_get_data,
                     VS_Container : hdf_vd_get_data,
-                    Variable : netcdf_get_data }
+                    _Variable : netcdf_get_data }
 
 class LazyData(object):
     '''
@@ -64,9 +64,9 @@ class LazyData(object):
                 self._data_manager = [ data ]
 
             # Check that we recognise the data manager and that they are all the same
-            if data[0].__class__ in static_mappings and all([d.__class__ == data[0].__class__ for d in data ]) :
+            if self._data_manager[0].__class__ in static_mappings and all([d.__class__ == self._data_manager[0].__class__ for d in self._data_manager ]) :
                 # Set the method names defined in static_mappings to their mapped function names
-                setattr(self, "retrieve_raw_data", static_mappings[data[0].__class__])
+                setattr(self, "retrieve_raw_data", static_mappings[self._data_manager[0].__class__])
             else:
                 raise InvalidDataTypeError
 
