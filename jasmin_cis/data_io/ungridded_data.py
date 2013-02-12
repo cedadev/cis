@@ -4,7 +4,7 @@
 from netCDF4 import _Variable
 from netcdf import get_data as netcdf_get_data
 from hdf_vd import get_data as hdf_vd_get_data, VS_Container
-from pyhdf.SD import SD
+from pyhdf.SD import SDS
 from hdf_sd import get_data as hdf_sd_get_data
 
 
@@ -29,7 +29,7 @@ class Metadata(object):
 
 
 # This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
-static_mappings = { SD : hdf_sd_get_data,
+static_mappings = { SDS : hdf_sd_get_data,
                     VS_Container : hdf_vd_get_data,
                     _Variable : netcdf_get_data }
 

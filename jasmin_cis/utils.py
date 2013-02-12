@@ -112,9 +112,3 @@ def unpack_data_object(data_object):
         return { "data": data, "x" : x, "y" : y }
     else:
         return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
-
-
-import numpy as np
-array_1d = np.array([1,2,3,4])
-array_2d = expand_1d_to_2d_array(array_1d,4,axis=0)
-print array_2d

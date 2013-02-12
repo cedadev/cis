@@ -53,6 +53,9 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         sdata = {}
         vdata = {}
         for filename in filenames:
+
+            print filename
+
             try:
 
                 # reading in all variables into a 2 dictionaries:
@@ -96,8 +99,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         coords= [lat_coord,lon_coord,alt_coord,time_coord]
 
         return UngriddedData(data,metadata,coords)
-
-
 
 
 class NetCDF_CF(AProduct):
@@ -173,8 +174,6 @@ def __get_class(filenames, product=None):
             # search for a pattern that matches
             patterns = cls().get_file_signature()
             for pattern in patterns:
-                print pattern
-                print filenames[0]
                 if re.match(pattern,filenames[0],re.I) is not None:
                     product_cls = cls
                     break
