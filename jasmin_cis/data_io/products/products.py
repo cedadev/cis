@@ -1,8 +1,10 @@
-from data_io import Coord
+from data_io.Coord import Coord
 from data_io.hdf import read_hdf4
 from data_io.products.AProducts import AProduct
 from data_io.ungridded_data import UngriddedData
-
+import utils
+import data_io.hdf_vd as hdf_vd
+import data_io.hdf_sd as hdf_sd
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -11,9 +13,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def create_ungridded_data(self, filenames, variable):
 
-        import utils
-        import data_io.hdf_vd as hdf_vd
-        import data_io.hdf_sd as hdf_sd
+
 
         # if filenames is not a list, make it a list of 1 element
         if not isinstance(filenames,list): filenames = [ filenames ]

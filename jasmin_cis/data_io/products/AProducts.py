@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-
+from products import *
 
 class AProduct(object):
     """
@@ -20,7 +20,6 @@ class AProduct(object):
         @raise FileIOError: Unable to read a file
         @raise InvalidVariableError: Variable not present in file
         """
-        pass
 
     @abstractmethod
     def get_file_signature(self):
@@ -47,6 +46,7 @@ def __get_class(filenames, product=None):
     import re
 
     product_cls = None
+
     for cls in AProduct.__subclasses__():
 
         if product is None:
