@@ -9,11 +9,9 @@ import data_io.hdf_sd as hdf_sd
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def get_file_signature(self):
-        return [r'.*2B.CWC.RVOD*'];
+        return [r'.*2B.CWC.RVOD*']
 
     def create_ungridded_data(self, filenames, variable):
-
-
 
         # if filenames is not a list, make it a list of 1 element
         if not isinstance(filenames,list): filenames = [ filenames ]
@@ -80,7 +78,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 class NetCDF_CF(AProduct):
 
     def get_file_signature(self):
-        return [r'.*.nc'];
+        return [r'.*.nc']
 
     def create_ungridded_data(self, filenames, variable):
 
@@ -114,7 +112,7 @@ class NetCDF_CF(AProduct):
 
 class Cloud_CCI(AProduct):
     def get_file_signature(self):
-        return [r'.*.nc'];
+        return [r'.*.nc']
 
     def create_ungridded_data(self, filenames, variable):
         from data_io.netcdf import read_many_files, get_metadata

@@ -24,8 +24,14 @@ class AProduct(object):
     @abstractmethod
     def get_file_signature(self):
         '''
-        TODO !!!
-        @return:
+        @return: a list of regex to match the product's file naming convention.
+
+        Example
+        -------
+
+        return [r'.*CODE*.nc']
+        This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
+
         '''
         pass
 
