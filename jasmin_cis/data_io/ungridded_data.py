@@ -10,8 +10,12 @@ from hdf_sd import get_data as hdf_sd_get_data
 
 class Metadata(object):
 
-    def __init__(self, name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', misc=None):
+    def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', misc=None):
         self._name = name
+        if standard_name:
+            self.standard_name = standard_name
+        else:
+            self.standard_name = Metadata.guess_standard_name(name)
         self.long_name = long_name
         self.shape = shape
         self.units = units
@@ -23,6 +27,16 @@ class Metadata(object):
             self.misc = {}
         else:
             self.misc = misc
+
+    @staticmethod
+    def guess_standard_name(name):
+        standard_name = ''
+        if name.lower().startswith('lat'):
+            standard_name = 'latitude'
+        elif name.lower().startswith('lon'):
+            standard_name = 'longitude'
+        return standard_name
+
 
     def copy_attributes_into(self, obj):
         obj.__dict__.update(self.__dict__)
@@ -74,7 +88,15 @@ class LazyData(object):
         metadata.copy_attributes_into(self)
 
     def name(self):
-        return self._name # String
+        """
+            This routine returns the first name property which is not empty out of: _name, standard_name and long_name
+                If they are all empty it returns an empty string
+        @return: The name of the data object as a string
+        """
+        for name in [self._name, self.standard_name, self.long_name]:
+            if name:
+                return self._name
+        return ''
 
     @property
     def data(self):
@@ -166,6 +188,15 @@ class UngriddedData(LazyData):
     @property
     def y(self):
         return self.coord(axis='Y')
+
+    @property
+    def lat(self):
+        return self.coord(standard_name='latitude')
+
+    @property
+    def lon(self):
+        return self.coord(standard_name='longitude')
+
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """

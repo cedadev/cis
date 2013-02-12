@@ -103,23 +103,22 @@ def col_cmd(main_arguments):
     input_groups = main_arguments.pop("datafiles")
     output_file = main_arguments.pop("output")
     
-    sample_ponts = read_file_coordinates(sample_file)
+    sample_points = read_file_coordinates(sample_file)
    
     for input_group in input_groups:
         filename = input_group['filename']
         variable = input_group['variable']
         method = input_group['method']
-        
-        #data_dict = read_variable(filename, variable)
+
         try:
-            data = read_data(filename, variable)[0]
+            data = read_data(filename, variable)
         except CISError as e:
             __error_occurred(e)
         
         try:
-            col = Colocator(sample_ponts, data, method)
-        except InvalidColocationMethodError:
-            __error_occurred("Invalid co-location method: "+method)
+            col = Colocator(sample_points, data, method)
+        except InvalidColocationMethodError as e:
+            __error_occurred(str(e) + "\nInvalid co-location method: "+method)
         
         new_data = col.colocate()
         new_data.copy_metadata_from(data)

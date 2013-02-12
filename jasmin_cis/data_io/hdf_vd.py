@@ -118,7 +118,8 @@ def get_metadata(vds):
     # so that other metadata of interest can still be retrieved if need be
     misc = vd.attrinfo()
 
-    metadata = Metadata(name, long_name, shape, units, range, factor, offset, missing, misc)
+    metadata = Metadata( name=name, long_name=long_name, shape=shape, units=units, range=range,
+                            factor=factor, offset=offset, missing_value=missing, misc=misc)
 
     # detach and close
     vd.detach()
