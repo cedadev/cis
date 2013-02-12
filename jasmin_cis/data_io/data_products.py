@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from data_io.hdf import read_hdf4
-from ungridded_data import UngriddedData
+from ungridded_data import UngriddedData, Coord
 import sys
 
 class AProduct(object):
@@ -49,6 +49,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # list of variables we are interested in
         variables = [ usr_variable, 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
+        # reading of all variables
         sdata = {}
         vdata = {}
         for filename in filenames:
@@ -66,11 +67,19 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             except:
                 print 'Error while reading file ', filename
 
+        # retrieve data + its metadata
+        data = sdata[usr_variable]
+        metadata = hdf_sd.get_metadata(sdata[usr_variable][0])
 
-        # get coordinates
-        lat = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Latitude'] ])
-        lon = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Longitude'] ])
-        alt = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
+        # retrieve coordinates
+        lat_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Latitude'] ])
+        lat_coord = Coord(lat_data, hdf_vd.get_metadata(vdata['Latitude'][0]))
+
+        lon_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Longitude'] ])
+        lon_coord = Coord(lon_data, hdf_vd.get_metadata(vdata['Longitude'][0]))
+
+        alt_data = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
+        alt_coord = Coord(alt_data, hdf_sd.get_metadata(sdata['Height'][0]),'Y')
 
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
@@ -78,9 +87,12 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             start = hdf_vd.get_data(j)
             time += start
             arrays.append(time)
-        time = utils.concatenate(arrays)
+        time_data = utils.concatenate(arrays)
+        time_coord = Coord(time_data, hdf_vd.get_metadata(vdata['Profile_time'][0]),'X')
 
-        return UngriddedData(sdata[usr_variable],[lat,lon,alt,time])
+        coords= [lat_coord,lon_coord,alt_coord,time_coord]
+
+        return UngriddedData(data,metadata,coords)
 
 
 class NetCDF_CF(AProduct):
@@ -102,7 +114,7 @@ class NetCDF_CF(AProduct):
         # get coordinates
         #coords = [ read_many_files(filenames, dim) for dim in var.dimensions ]
 
-        return UngriddedData(var, lat=var["Latitude"], lon=var["Longitude"], time=var["Time"])
+        return UngriddedData(var, metadata=var["Longitude"], coords=var["Latitude"])
 
     '''
     def get_coords_from_variable(self):
@@ -132,7 +144,7 @@ class Cloud_CCI(AProduct):
         coords.append(Coord(variables["lon"], get_metadata(variables["lon"]), "X"))
         coords.append(Coord(variables["lat"], get_metadata(variables["lat"]), "Y"))
         coords.append(Coord(variables["time"], get_metadata(variables["time"]), "T"))
-        return UngriddedData(variables[usr_variable], coords, get_metadata(variables[usr_variable]))
+        return UngriddedData(variables[usr_variable], get_metadata(variables[usr_variable]), coords)
 
 def __get_class(filenames, product=None):
     '''

@@ -168,7 +168,7 @@ class UngriddedData(LazyData):
 
         return cls(array(values), array(latitude), array(longitude))
 
-    def __init__(self, data, coords, metadata):
+    def __init__(self, data, metadata, coords):
         '''
         Constructor
 
