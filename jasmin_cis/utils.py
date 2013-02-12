@@ -1,3 +1,4 @@
+from numpy.core.numeric import array
 
 
 def add_element_to_list_in_dict(my_dict,key,value):
@@ -5,7 +6,6 @@ def add_element_to_list_in_dict(my_dict,key,value):
         my_dict[key].append(value)
     except KeyError:
         my_dict[key] = [value]
-
 
 def concatenate(arrays, axis=0):
     import numpy as np
@@ -17,6 +17,47 @@ def concatenate(arrays, axis=0):
             res = np.concatenate((res,array),axis)
 
     return res
+
+def expand_1d_to_2d_array(array_1d,length,axis=None):
+    '''
+    General utility routine to 'extend a 1D array into a 2D array
+    by duplicating the data along a given 'axis' (default is 0)
+    of size 'length'.
+
+    Examples
+    --------
+    >>> a = np.array([1,2,3,4])
+    >>> expand_1d_to_2d_array(a, 4, axis=0)
+    [[1 2 3 4]
+     [1 2 3 4]
+     [1 2 3 4]
+     [1 2 3 4]
+     [1 2 3 4]]
+
+    >>> a = np.array([1,2,3,4])
+    >>> expand_1d_to_2d_array(a, 4, axis=1)
+    [[1 1 1 1 1]
+     [2 2 2 2 2]
+     [3 3 3 3 3]
+     [4 4 4 4 4]]
+
+    @param array_1d:
+    @param length:
+    @param axis:
+    @return:
+    '''
+
+    if axis is None:
+        axis = 0
+
+    import numpy as np
+    array_2d = np.array([array_1d])
+    for i in range(length):
+        array_2d = np.concatenate((array_2d,[array_1d]))
+
+    if axis==1:
+        array_2d = array_2d.T
+    return array_2d
 
 def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
@@ -71,3 +112,9 @@ def unpack_data_object(data_object):
         return { "data": data, "x" : x, "y" : y }
     else:
         return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
+
+
+import numpy as np
+array_1d = np.array([1,2,3,4])
+array_2d = expand_1d_to_2d_array(array_1d,4,axis=0)
+print array_2d
