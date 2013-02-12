@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from data_io.hdf import read_hdf4
-from ungridded_data import UngriddedData
+from ungridded_data import UngriddedData, Coord
 import sys
 
 class AProduct(object):
@@ -67,10 +67,15 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
                 print 'Error while reading file ', filename
 
 
-        # get coordinates
-        lat = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Latitude'] ])
-        lon = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Longitude'] ])
-        alt = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
+        # retrieve coordinates
+        lat_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Latitude'] ])
+        lat_metadata = Coord(lat_data, hdf_vd.get_metadata(vdata['Latitude'][0]))
+
+        lon_data = utils.concatenate([ hdf_vd.get_data(i) for i in vdata['Longitude'] ])
+        lon_metadata = Coord(lon_data, hdf_vd.get_metadata(vdata['Longitude'][0]))
+
+        alt_data = utils.concatenate([ hdf_sd.get_data(i) for i in sdata['Height'] ])
+        alt_metadata = Coord(alt_data, hdf_sd.get_metadata(sdata['Height'][0]),'Y')
 
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
@@ -78,9 +83,10 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             start = hdf_vd.get_data(j)
             time += start
             arrays.append(time)
-        time = utils.concatenate(arrays)
+        time_data = utils.concatenate(arrays)
+        time_metadata = Coord(time_data, hdf_vd.get_metadata(vdata['Profile_time'][0]),'X')
 
-        return UngriddedData(sdata[usr_variable],[lat,lon,alt,time],'HDF_SD')
+        return UngriddedData(sdata[usr_variable],[lat_data,lon_data,alt_data,time_data],'HDF_SD')
 
 
 class NetCDF_CF(AProduct):
