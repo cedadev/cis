@@ -21,6 +21,14 @@ class AProduct(object):
         """
 
     @abstractmethod
+    def create_coords(self, filenames, variable=None):
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+    @abstractmethod
     def get_file_signature(self):
         '''
         @return: a list of regex to match the product's file naming convention.
@@ -65,7 +73,7 @@ def __get_class(filenames, product=None):
         else:
             if product == cls.__name__:
                 product_cls = cls
-
+                # break at this point too?
     return product_cls
 
 
