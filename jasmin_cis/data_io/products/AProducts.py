@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from products import *
 
 class AProduct(object):
     """
@@ -58,10 +57,10 @@ def __get_class(filenames, product=None):
     '''
 
     import re
-
+    import products
     product_cls = None
 
-    for cls in AProduct.__subclasses__():
+    for cls in products.AProduct.__subclasses__():
 
         if product is None:
             # search for a pattern that matches
@@ -73,7 +72,7 @@ def __get_class(filenames, product=None):
         else:
             if product == cls.__name__:
                 product_cls = cls
-
+                # break at this point too?
     return product_cls
 
 
