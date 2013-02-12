@@ -6,6 +6,9 @@ import sys
 from jasmin_cis.exceptions import CISError
 from jasmin_cis.info import  info
 
+import logging
+logger = logging.getLogger(__name__)
+
 def __setup_logging(log_file, log_level):
     '''
     Set up the logging used throughout cis
@@ -13,12 +16,12 @@ def __setup_logging(log_file, log_level):
     @param log_file:    The filename of the file to store the logs
     @param log_level:   The level at which to log 
     '''
-    import logging
+
     logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
+
     # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
     #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
-
 
 def __error_occurred(e):
     '''
@@ -139,22 +142,24 @@ def main():
     Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
     '''
     from parse import parse_args
-    import logging
+    import logging, logging.config
     from datetime import datetime
-    
-    __setup_logging("cis.log", logging.INFO)
-    
+
+    # configure logging
+    logging.config.fileConfig("logging.conf")
+    logging.captureWarnings(True) # to catch warning from 3rd party libraries
+
+    # parse command line arguments
     arguments = parse_args()
-    
     command = arguments.pop("command")
-    
-    # Log the input arguments so that the user can trace how a plot was created
-    logging.info(datetime.now().strftime("%Y-%m-%d %H:%M")+ ": CIS "+ command + " got the following arguments: ")
-    logging.info(arguments)
-    
-    commands[command](arguments)        
-   
-   
-   
+
+    logging.info("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+    logging.info("Running command: "+ command)
+    logging.info("With the following arguments: " + arguments)
+
+    # execute command
+    commands[command](arguments)
+
+
 if __name__ ==  '__main__':
     main()
