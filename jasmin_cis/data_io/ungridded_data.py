@@ -11,7 +11,7 @@ from hdf_sd import get_data as hdf_sd_get_data
 class Metadata(object):
 
     def __init__(self, name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', misc=None):
-        self.name = name
+        self._name = name
         self.long_name = long_name
         self.shape = shape
         self.units = units
@@ -73,6 +73,9 @@ class LazyData(object):
         self._metadata = metadata
         metadata.copy_attributes_into(self)
 
+    def name(self):
+        return self._name # String
+
     @property
     def data(self):
         '''
@@ -118,11 +121,6 @@ class Coord(LazyData):
         """
         super(Coord, self).__init__(data, metadata)
         self.axis = axis.upper()
-        self._name = metadata.name
-
-    def name(self):
-        return self._name # String
-
 
 class UngriddedData(LazyData):
     '''
