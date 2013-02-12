@@ -2,8 +2,6 @@
 Routines for the info command
 '''
 import sys
-import jasmin_cis.data_io.read_gridded
-import jasmin_cis.data_io.read_ungridded
 
 def __print_variables(all_variables, user_variables=None, print_err=True):
     '''
@@ -36,14 +34,15 @@ def info(filename, user_variables=None):
 
     '''
     from jasmin_cis.exceptions import CISError
-    import data_io.read_gridded, data_io.read_ungridded
+    from data_io.hdf import get_hdf4_file_variables
+    from data_io.netcdf import get_netcdf_file_variables
     from pyhdf.error import HDF4Error
     try:
-        file_variables = data_io.read_gridded.get_file_variables(filename)
+        file_variables = get_netcdf_file_variables(filename)
         __print_variables(file_variables, user_variables)
     except RuntimeError:
         try:
-            sd_vars, vd_vars = data_io.read_ungridded.get_file_variables(filename)
+            sd_vars, vd_vars = get_hdf4_file_variables(filename)
             print "\n====== SD variables:"
             __print_variables(sd_vars, user_variables, False)
             print "\n====== VD variables:"

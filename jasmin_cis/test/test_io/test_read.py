@@ -12,8 +12,9 @@ from jasmin_cis.data_io.ungridded_data import UngriddedData
 
 @istest
 def can_read_netcdf_file_when_reading_variables():
+    from jasmin_cis.info import info
     filename = valid_1d_filename
-    assert(isinstance(cis_read.read_all_variables_from_file(filename), list))
+    assert(isinstance(info(filename), list))
 
 @istest
 def can_read_netcdf_file_when_loading_a_cube():
@@ -28,8 +29,9 @@ def can_read_gdf_file_when_loading_ungridded_data():
 @istest
 @raises(CISError)
 def should_raise_ciserror_with_invalid_filename_when_reading_variables():
+    from jasmin_cis.info import info
     filename = invalid_filename
-    cis_read.read_all_variables_from_file(filename)
+    info(filename)
 
 @istest
 @raises(IOError)
@@ -40,8 +42,9 @@ def should_raise_ioerror_with_invalid_filename_when_loading_a_cube():
 @istest
 @raises(CISError)
 def should_raise_ciserror_with_file_that_is_not_netcdf_when_reading_variables():
+    from jasmin_cis.info import info
     filename = non_netcdf_file
-    cis_read.read_all_variables_from_file(filename)
+    info(filename)
 
 @istest
 @raises(ValueError, FileIOError)

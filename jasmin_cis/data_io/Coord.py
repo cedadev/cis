@@ -41,7 +41,6 @@ class CoordList(list):
         @return:
         """
         from jasmin_cis.exceptions import DuplicateCoordinateError
-        print [ other == item for item in self ]
         if any([ other == item for item in self ]):
             raise DuplicateCoordinateError()
         super(CoordList, self).append(other)

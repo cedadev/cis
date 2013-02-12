@@ -97,3 +97,20 @@ def get_data(filenames, variable, product=None):
         logging.info("Using product " +  product_cls.__name__)
         data = product_cls().create_ungridded_data(filenames, variable)
     return data
+
+
+def get_coordinates(filenames, product=None):
+    '''
+    Top level routine for calling the correct product's create_coords routine.
+    @param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
+    @param filenames: A list of filenames to read data from
+    @return: A CoordList object
+    '''
+
+    product_cls = __get_class(filenames, product)
+
+    if product_cls is None:
+        raise(NotImplementedError)
+    else:
+        data = product_cls().create_coords(filenames)
+    return data
