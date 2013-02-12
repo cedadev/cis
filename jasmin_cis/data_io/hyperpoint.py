@@ -63,13 +63,22 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
 
 
 def get_coordinates_points(coords):
-    # Pack the data into a list of x,y, val points to be passed to col
+    """
+         Pack a list of coordinates into a list of x, y, z, t points to be passed to Colocator
+    @param coords: A CoordList of Coord objects
+    @return: A list of HyperPoints
+    """
     points = []
 
-    for lat_p in dims.lat[:]:
-        for lon_p in dims.lon[:]:
-            for alt_p in dims.alt[:]:
-                for time_p in dims.time[:]:
+    lat = coords.get_coord(standard_name='latitude').data.flatten()
+    lon = coords.get_coord(standard_name='longitude').data.flatten()
+    alt = coords.get_coord(standard_name='altitude').data.flatten()
+    time = coords.get_coord(standard_name='time').data.flatten()
+
+    for lat_p in lat:
+        for lon_p in lon:
+            for alt_p in alt:
+                for time_p in time:
                     points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
 
     return points
