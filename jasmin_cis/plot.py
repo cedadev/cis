@@ -301,9 +301,9 @@ class Plotter(object):
                  
         if self.plot_type == "line" or "scatter" in self.plot_type:
             self.__create_legend(datafiles)
-        else:
-            if not self.no_colour_bar:
-                self.__add_color_bar()
+
+        if self.plot_type != "line" and not self.no_colour_bar:
+            self.__add_color_bar()
         
         self.__draw_coastlines()
         
