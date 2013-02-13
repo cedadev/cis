@@ -57,31 +57,6 @@ def __get_all_subclasses(cls):
     return subclasses
 
 
-def __find_plugins(plugin_dir, parent_class_name ):
-
-    import os, sys
-
-    logging.info("Looking for plugins... ")
-
-    plugin_files = []
-    for f in os.listdir(plugin_dir):
-
-        if f.lower().endswith(('.pyc', '__init__.py')): continue
-
-        if f.endswith(".py"):
-            plugin_files.append(f[:-3])
-
-    logging.info("importing plugin " + str(plugin_files))
-    sys.path.insert(0, plugin_dir)
-
-    for plugin in plugin_files:
-        module = __import__(plugin)
-        classes = [getattr(module, x) for x in dir(module) if isinstance(getattr(module, x), type)]
-        product_classes = [ cls for cls in classes if parent_class_name in str(cls.__bases__[0])]
-
-    return product_classes
-
-
 def __get_class(filenames, product=None):
     '''
     Identify the subclass of L{AProduct} to a given product name if specified.
@@ -96,15 +71,14 @@ def __get_class(filenames, product=None):
     '''
     import products
     import re
-
-    product_cls = None
-
-    # find plugin product classes, if any
     import os
     import cis
+    import plugin
+
+    # find plugin product classes, if any
     ENV_PATH = "_".join([cis.__name__.upper(),"PLUGIN","HOME"])
-    plugin_dir = os.environ.get(ENV_PATH)
-    plugin_classes = __find_plugins(plugin_dir,__name__)
+    plugin_dir = os.environ.get(ENV_PATH, None)
+    plugin_classes = plugin.__find_plugins(plugin_dir,__name__)
 
     # find built-in product classes, i.e. subclasses of L{AProduct}
     subclasses = __get_all_subclasses(products.AProduct)
@@ -112,6 +86,7 @@ def __get_class(filenames, product=None):
 
     logging.debug("AProduct subclasses are: " + str(product_classes))
 
+    product_cls = None
     for cls in product_classes:
 
         if product is None:

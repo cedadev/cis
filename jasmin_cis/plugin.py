@@ -6,6 +6,7 @@ def __find_plugins(plugin_dir, parent_class_name):
 
     # if plugin_dir is None, there is no plugin to import, so return an empty list
     if plugin_dir is None:
+        logging.debug
         return []
 
     logging.info("Looking for plugins... ")
