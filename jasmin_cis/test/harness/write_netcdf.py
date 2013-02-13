@@ -2,8 +2,8 @@ from data_io.write_netcdf import *
 
 
 def test_main():
-    from ungridded_data import UngriddedData, Metadata
-    from Coord import Coord
+    from data_io.ungridded_data import UngriddedData, Metadata
+    from data_io.Coord import Coord
     from numpy import array
     coords = []
     #    coords.append(Coord(array([1,2,3,4,5,6,7,8,9,10]), Metadata(name="pixel_number",
@@ -37,6 +37,7 @@ def test_main():
                         range=(0,100),
                         missing_value='-999')
     data_object = UngriddedData(data, metadata, coords)
+    print data.dtype
     write(data_object, "ungridded_netcdf.nc")
 
 def test_read():

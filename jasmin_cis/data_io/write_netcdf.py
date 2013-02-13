@@ -2,11 +2,11 @@
 Module for writing data to NetCDF files
 '''
 from netCDF4 import Dataset
-import numpy
+import numpy as np
 
 types = {float: "f",
-         numpy.int64: "i",
-         numpy.float64: "f"}
+         'int64': "i",
+         'float64': "f"}
 
 index_name = 'pixel_number'
 
@@ -38,19 +38,19 @@ def __get_missing_value(coord):
 #    return dimensions
 
 def __create_variable(nc_file, data):
-    var = nc_file.createVariable(data.name(), types[data.data.dtype], index_name, fill_value=__get_missing_value(data))
+    var = nc_file.createVariable(data.name(), types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
     var = __add_metadata(var, data)
-    var[:] = data.data
+    var[:] = data.data.flatten()
 
     return var
 
 def __create_index(nc_file, length):
     dimension = nc_file.createDimension(index_name, length)
     dimensions = ( index_name, )
-    var = nc_file.createVariable(index_name, numpy.int32, dimensions)
+    var = nc_file.createVariable(index_name, np.int32, dimensions)
 
     var.valid_range = (0, length)
-    var[:] = numpy.arange(length)
+    var[:] = np.arange(length)
 
     return dimensions
 
@@ -73,7 +73,7 @@ def write_coordinates(coords, filename):
     @return:
     """
     netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
-    index_dim = __create_index(netcdf_file, coords[0].shape[0])
+    index_dim = __create_index(netcdf_file, len(coords[0].flatten()))
     for data in coords:
         coord = __create_variable(netcdf_file, data)
     netcdf_file.close()

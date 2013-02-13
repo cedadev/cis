@@ -49,7 +49,7 @@ def __get_all_subclasses(cls):
 
     @param cls: The class to find subclasses of
     @return: A list of all subclasses
-    """
+    '''
     subclasses = []
     for subclass in cls.__subclasses__():
         subclasses += __get_all_subclasses(subclass)
