@@ -158,9 +158,9 @@ def main():
     arguments = parse_args()
     command = arguments.pop("command")
 
-    logging.info("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
-    logging.info("Running command: " + command)
-    logging.info("With the following arguments: " + str(arguments))
+    logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+    logging.debug("Running command: " + command)
+    logging.debug("With the following arguments: " + str(arguments))
 
     # execute command
     commands[command](arguments)

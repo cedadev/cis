@@ -70,6 +70,7 @@ def unpack_data_object(data_object):
     from iris.cube import Cube
     import iris.plot as iplt
     import iris
+    from jasmin_cis.exceptions import CoordinateNotFoundError
 
     if type(data_object) is Cube:
         no_of_dims = len(data_object.shape)
@@ -110,4 +111,9 @@ def unpack_data_object(data_object):
 
         return { "data": data, "x" : x, "y" : y }
     else:
-        return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
+        no_of_dims = len(data_object.shape)
+
+        try:
+            return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
+        except CoordinateNotFoundError:
+            return { "data": data_object.data, "x" : data_object.x.data}

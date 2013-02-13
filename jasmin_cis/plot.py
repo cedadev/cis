@@ -198,7 +198,10 @@ class Plotter(object):
                 if datafiles is not None and datafiles[i]["label"]:
                     legend_titles.append(datafiles[i]["label"])
                 else:
-                    legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+                    if " " in item.long_name:
+                        legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+                    else:
+                        legend_titles.append(item.long_name.title())
             if self.plot_type == "line":
                 legend = plt.legend(legend_titles, loc="best")
             else:                
@@ -247,7 +250,11 @@ class Plotter(object):
         '''
         # When should scientific notation be used on the axes?
         #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^n. Use (0,0) to include all numbers          
-        plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
+        try:
+            plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
+        except AttributeError:
+            pass
+
         if options is not None:  
             logx = options.pop("logx")
             logy = options.pop("logy")
@@ -491,8 +498,9 @@ class Plotter(object):
         
         if self.plot_type is None:
             self.__set_default_plot_type(variable_dim)
-        
-        self.__validate_data(variable_dim)
+
+        # Checks are currently not smart enough to perform correctly.
+        #self.__validate_data(variable_dim)
         
         plot_format_options = self.__create_plot_format_options()
         self.__prepare_range("val")
