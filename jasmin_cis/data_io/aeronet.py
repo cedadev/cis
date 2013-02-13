@@ -41,3 +41,13 @@ def load_aeronet(fname, keep_fields='all'):
 #        print keep_fields
         newd = mlab.rec_keep_fields(newd, keep_fields)
     return newd
+
+def get_file_metadata(filename):
+    file = open(filename)
+    from data_io.ungridded_data import Metadata
+    metadata = Metadata()
+    lines = []
+    for i in range(0, 4):
+        lines.append(file.readline().replace("\n","").split(","))
+    metadata.misc = lines
+    return metadata
