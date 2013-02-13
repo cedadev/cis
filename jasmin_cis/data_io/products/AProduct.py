@@ -42,6 +42,17 @@ class AProduct(object):
 
         '''
 
+def __get_all_subclasses(cls):
+    """
+        Recursively find all subclasses of a given class
+    @param cls: The class to find subclasses of
+    @return: A list of all subclasses
+    """
+    subclasses = cls.__subclasses__()
+    for subclass in subclasses:
+        subclasses += __get_all_subclasses(subclass)
+    return subclasses
+
 def __get_class(filenames, product=None):
     '''
     Identify the subclass of L{AProduct} to a given product name if specified.
@@ -60,7 +71,7 @@ def __get_class(filenames, product=None):
 
     product_cls = None
 
-    for cls in products.AProduct.__subclasses__():
+    for cls in __get_all_subclasses(products.AProduct):
 
         if product is None:
             # search for a pattern that matches file signature
