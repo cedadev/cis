@@ -152,7 +152,7 @@ class NetCDF_CF(AProduct):
 
 class NetCDF_CF_Gridded(NetCDF_CF):
     def get_file_signature(self):
-        return [r'.*\.nc', r'xenida.*\.nc']
+        return [r'.*xenida.*\.nc']
 
     def create_coords(self, filenames):
         # TODO Expand coordinates
