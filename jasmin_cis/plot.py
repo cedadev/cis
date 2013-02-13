@@ -162,8 +162,6 @@ class Plotter(object):
             self.kwargs["label"] = "_nolegend_"
             self.plot_heatmap(data_item)
             self.kwargs.pop("label")
-            if not self.no_colour_bar:
-                self.__add_color_bar()
         else:
             self.plot_scatter(data_item)    
         self.num_of_preexisting_plots += 1            
