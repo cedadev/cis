@@ -40,3 +40,6 @@ class CoordinateNotFoundError(CISError):
 
 class DuplicateCoordinateError(CISError):
     pass
+
+class ClassNotFoundError(CISError):
+    pass

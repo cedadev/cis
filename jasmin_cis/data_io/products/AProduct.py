@@ -74,6 +74,7 @@ def __get_class(filenames, product=None):
     import os
     import cis
     import plugin
+    from jasmin_cis.exceptions import ClassNotFoundError
 
     # find plugin product classes, if any
     ENV_PATH = "_".join([cis.__name__.upper(),"PLUGIN","HOME"])
@@ -103,7 +104,7 @@ def __get_class(filenames, product=None):
                 logging.debug("Selected product class " +  cls.__name__)
                 return cls
 
-    return None
+    raise ClassNotFoundError("Product cannot be found for given file")
 
 
 def get_data(filenames, variable, product=None):

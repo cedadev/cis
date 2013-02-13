@@ -124,7 +124,7 @@ class Cloud_CCI(AProduct):
 class NetCDF_CF_Gridded(AProduct):
 
     def get_file_signature(self):
-        return [r'xenida.*\.nc']
+        return [r'.*xenida.*\.nc']
 
     def create_coords(self, filenames):
         # TODO Expand coordinates
