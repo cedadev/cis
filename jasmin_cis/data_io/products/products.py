@@ -2,7 +2,7 @@ from data_io.Coord import Coord, CoordList
 from data_io.hdf import read_hdf4
 from data_io.products.AProduct import AProduct
 from data_io.ungridded_data import UngriddedData
-import utils
+import jasmin_cis.utils as utils
 import data_io.hdf_vd as hdf_vd
 import data_io.hdf_sd as hdf_sd
 
@@ -92,8 +92,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 class Cloud_CCI(AProduct):
 
     def get_file_signature(self):
-        #TODO Update this?
-        return [r'.*ESACCI*.nc']
+        return [r'.*ESACCI*\.nc']
 
     def create_coords(self, filenames):
 
@@ -108,6 +107,7 @@ class Cloud_CCI(AProduct):
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
         coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
+        
         return coords
 
     def create_data_object(self, filenames, variable):
@@ -155,9 +155,10 @@ class NetCDF_CF(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
+
 class NetCDF_CF_Gridded(NetCDF_CF):
     def get_file_signature(self):
-        return [r'.*.nc']
+        return [r'.*\.nc']
 
     def create_coords(self, filenames):
         super(NetCDF_CF_Gridded, self).create_coords(filenames)
@@ -193,9 +194,10 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         return sub_cube
 
 class Aeronet(AProduct):
+
     def get_file_signature(self):
         #TODO Update this
-        return [r'.*lev20']
+        return [r'\.lev20']
 
     def create_coords(self, filenames):
         """
