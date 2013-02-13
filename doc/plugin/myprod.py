@@ -8,7 +8,7 @@ import logging
 class MyProd(AProduct):
 
     def get_file_signature(self):
-        return [r'.*something*.hdf']
+        return [r'.*something*']
 
     def create_coords(self, filenames):
 
@@ -29,13 +29,13 @@ class MyProd(AProduct):
 
         return CoordList([coord1,coord2,coord3])
 
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
 
-        logging.info("gathering data for variable " + variable)
+        logging.info("gathering data for variable " + str(variable))
         for filename in filenames:
             data = []
 
-        logging.info("gatherings metadata for variable ", + variable)
+        logging.info("gatherings metadata for variable " + str(variable))
         metadata = Metadata()
 
         coords = self.create_coords(filenames)

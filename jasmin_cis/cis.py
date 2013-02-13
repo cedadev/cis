@@ -9,6 +9,11 @@ from jasmin_cis.info import  info
 import logging
 logger = logging.getLogger(__name__)
 
+__author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
+__version__ = "x"
+__status__ = "Development"
+__website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
+
 def __setup_logging(log_file, log_level):
     '''
     Set up the logging used throughout cis
