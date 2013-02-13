@@ -141,7 +141,7 @@ class NetCDF_CF(AProduct):
         variables = [ "latitude", "longitude", "altitude", "time" ]
 
         if variable is not None:
-            variables += variable
+            variables.append(variable)
 
         data_variables = read_many_files(filenames, variables)
 
