@@ -94,7 +94,7 @@ def __get_class(filenames, product=None):
             # search for a pattern that matches file signature
             patterns = cls().get_file_signature()
             for pattern in patterns:
-                # Match the pattern - re.I allows for case insensitive matchess
+                # Match the pattern - re.I allows for case insensitive matches
                 if re.match(pattern,filenames[0],re.I) is not None:
                     logging.debug("Found product class " + cls.__name__ + " matching regex pattern " + pattern)
                     return cls
