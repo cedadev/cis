@@ -235,7 +235,10 @@ class Plotter(object):
             if axis.lower().startswith("lon"): lon = True
 
         if lat and lon:
-            self.basemap.drawcoastlines()
+            try:
+                self.basemap.drawcoastlines()
+            except AttributeError:
+                pass
     
     def __set_log_scale(self, logx, logy):
         from numpy import e, log
