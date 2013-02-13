@@ -110,4 +110,9 @@ def unpack_data_object(data_object):
 
         return { "data": data, "x" : x, "y" : y }
     else:
-        return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
+        no_of_dims = len(data_object.shape)
+
+        if no_of_dims == 1:
+            return { "data": data_object.data, "x" : data_object.x.data }
+        elif no_of_dims == 2:
+            return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
