@@ -140,7 +140,14 @@ class Plotter(object):
             scatter_size = self.kwargs["linewidth"]
         else:
             scatter_size = 20 # Default scatter size
-        self.plots.append(plt.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size))
+
+        # Code review this
+        try:
+            x = self.basemap
+        except AttributeError:
+            self.basemap = Basemap()
+
+        self.plots.append(self.basemap.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size))
     
     def plot_scatteroverlay(self, data_item):
         '''
