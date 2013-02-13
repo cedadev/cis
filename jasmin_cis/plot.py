@@ -52,10 +52,11 @@ class Plotter(object):
         self.plot() # Call main method
     
     def __add_color_bar(self):
-        plt.colorbar(orientation = Plotter.colour_bar_orientation, format = "%e")
-        # format = "%.3f
-        # format = "%.3e
-        # format = "%.3g
+        # nformat = "%e"
+        # nformat = "%.3f"
+        # nformat = "%.3e"
+        nformat = "%.3g"
+        plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
     
     def plot_line(self, data_item):
         '''
