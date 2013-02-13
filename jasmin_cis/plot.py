@@ -221,11 +221,19 @@ class Plotter(object):
     
     def __draw_coastlines(self):
         axes = []
-        for dim in xrange(len(self.data[0].shape)):
-            for coord in self.data[0].coords(axis="X"):
-                axes.append(coord.name())
-        
-        if "latitude" in axes and "longitude" in axes:
+        for coord in self.data[0].coords(axis="X"):
+            axes.append(coord.name())
+        for coord in self.data[0].coords(axis="Y"):
+            axes.append(coord.name())
+
+        # Code review this
+        lat = False
+        lon = False
+        for axis in axes:
+            if axis.lower().startswith("lat"): lat = True
+            if axis.lower().startswith("lon"): lon = True
+
+        if lat and lon:
             self.basemap.drawcoastlines()
     
     def __set_log_scale(self, logx, logy):
