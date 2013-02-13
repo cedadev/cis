@@ -92,7 +92,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 class Cloud_CCI(AProduct):
 
     def get_file_signature(self):
-        return [r'.*ESACCI*\.nc']
+        return [r'.*ESACCI.*']
 
     def create_coords(self, filenames):
 
