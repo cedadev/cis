@@ -9,7 +9,7 @@ class AProduct(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
         """
         Create a an ungridded data object for a given variable from many files
 
@@ -42,6 +42,17 @@ class AProduct(object):
 
         '''
 
+def __get_all_subclasses(cls):
+    """
+        Recursively find all subclasses of a given class
+    @param cls: The class to find subclasses of
+    @return: A list of all subclasses
+    """
+    subclasses = cls.__subclasses__()
+    for subclass in subclasses:
+        subclasses += __get_all_subclasses(subclass)
+    return subclasses
+
 def __get_class(filenames, product=None):
     '''
     Identify the subclass of L{AProduct} to a given product name if specified.
@@ -60,7 +71,7 @@ def __get_class(filenames, product=None):
 
     product_cls = None
 
-    for cls in products.AProduct.__subclasses__():
+    for cls in __get_all_subclasses(products.AProduct):
 
         if product is None:
             # search for a pattern that matches file signature
@@ -95,7 +106,7 @@ def get_data(filenames, variable, product=None):
         raise(NotImplementedError)
     else:
         logging.info("Using product " +  product_cls.__name__)
-        data = product_cls().create_ungridded_data(filenames, variable)
+        data = product_cls().create_data_object(filenames, variable)
     return data
 
 
