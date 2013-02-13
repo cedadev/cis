@@ -51,12 +51,13 @@ def plot_cmd(main_arguments):
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     import utils
+    from collections import OrderedDict
     
     main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
     
     try:
         # create a dictionary of [key=variable, value=list of filename]
-        dict_of_var_and_filename={} # Cannot use dict, as unordered and need order for scatter overlay
+        dict_of_var_and_filename = OrderedDict() # Cannot use dict, as unordered and need order for scatter overlay
         for datafile in main_arguments["datafiles"]:
             utils.add_element_to_list_in_dict(dict_of_var_and_filename, datafile["variable"], datafile["filename"])
 
