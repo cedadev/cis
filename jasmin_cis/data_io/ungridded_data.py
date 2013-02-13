@@ -210,3 +210,23 @@ class UngriddedData(LazyData):
         """
         return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
 
+    def get_points(self):
+        """
+             Pack a list of coordinates into a list of x, y, z, t points
+        @param coords: A CoordList of Coord objects
+        @return: A list of HyperPoints
+        """
+        import numpy as np
+        from hyperpoint import HyperPoint
+        points = []
+
+        lat = self.coord(standard_name='latitude').data.flatten()
+        lon = self.coord(standard_name='longitude').data.flatten()
+        alt = self.coord(standard_name='altitude').data.flatten()
+        time = self.coord(standard_name='time').data.flatten()
+        data = self.data.flatten()
+
+        for x ,lat_p in np.ndenumerate(lat):
+            points.append(HyperPoint(lat_p,lon[x],alt[x],time[x],data[x]))
+
+        return points

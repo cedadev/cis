@@ -122,7 +122,7 @@ class Cloud_CCI(AProduct):
 
 class NetCDF_CF(AProduct):
     def get_file_signature(self):
-        return [r'.*.nc']
+        return [r'.*\.nc']
 
     def create_coords(self, filenames, variable = None):
         from data_io.netcdf import read_many_files, get_metadata
@@ -152,10 +152,42 @@ class NetCDF_CF(AProduct):
 
 class NetCDF_CF_Gridded(NetCDF_CF):
     def get_file_signature(self):
-        return [r'.*\.nc']
+        return [r'.*\.nc', r'xenida.*\.nc']
 
     def create_coords(self, filenames):
-        super(NetCDF_CF_Gridded, self).create_coords(filenames)
+        # TODO Expand coordinates
+        # For gridded data sets this will actually return coordinates which are too short
+        #  we need to think about how to expand them here
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        from data_io.netcdf import read, get_metadata
+        from data_io.Coord import Coord
+
+        variables = [ "latitude", "longitude", "altitude", "time" ]
+
+        data_variables = read(filenames[0], variables)
+
+        coords = CoordList()
+        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
+        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
+        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
+        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+
+        return coords
+
+        #super(NetCDF_CF_Gridded, self).create_coords(filenames)
+
+        # Something like:
+        # for lat_p in lat:
+        #     for lon_p in lon:
+        #         for alt_p in alt:
+        #             for time_p in time:
+        #                 points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
+
 
     def create_data_object(self, filenames, variable):
         from jasmin_cis.exceptions import InvalidVariableError
