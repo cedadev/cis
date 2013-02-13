@@ -100,14 +100,13 @@ def col_cmd(main_arguments):
     from data_io.read import read_file_coordinates, read_data
     from col import Colocator
     from data_io.write_netcdf import write_coordinates, add_data_to_file
-    from data_io.hyperpoint import get_coordinates_points
-    
+
     sample_file = main_arguments.pop("samplefilename")
     input_groups = main_arguments.pop("datafiles")
     output_file = main_arguments.pop("output")
-    
+
     coords = read_file_coordinates(sample_file)
-    sample_points = get_coordinates_points(coords)
+    sample_points = coords.get_coordinates_points()
 
     write_coordinates(coords, output_file)
    
@@ -127,7 +126,6 @@ def col_cmd(main_arguments):
             __error_occurred(str(e) + "\nInvalid co-location method: "+method)
         
         new_data = col.colocate()
-        new_data.copy_metadata_from(data)
 
         add_data_to_file(new_data, output_file)
 

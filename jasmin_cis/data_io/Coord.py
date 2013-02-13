@@ -27,7 +27,7 @@ class CoordList(list):
         coord_list = list.__new__(cls, list_of_coords)
 
         # Check that all items in the incoming list are coords. Note that this checking
-        # does not guarantee that a CoordList instance *always* has just cubes in its list as
+        # does not guarantee that a CoordList instance *always* has just coords in its list as
         # the append & __getitem__ methods have not been overridden.
         if not all([isinstance(coord, Coord) for coord in coord_list]):
             raise ValueError('All items in list_of_coords must be Coord instances.')
@@ -108,3 +108,22 @@ class CoordList(list):
 
         return coords[0]
 
+    def get_coordinates_points(self):
+        """
+             Pack a list of coordinates into a list of x, y, z, t points to be passed to Colocator
+        @param coords: A CoordList of Coord objects
+        @return: A list of HyperPoints
+        """
+        import numpy as np
+        from hyperpoint import HyperPoint
+        points = []
+
+        lat = self.get_coord(standard_name='latitude').data.flatten()
+        lon = self.get_coord(standard_name='longitude').data.flatten()
+        alt = self.get_coord(standard_name='altitude').data.flatten()
+        time = self.get_coord(standard_name='time').data.flatten()
+
+        for x ,lat_p in np.ndenumerate(lat):
+            points.append(HyperPoint(lat_p,lon[x],alt[x],time[x]))
+
+        return points

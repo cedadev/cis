@@ -2,6 +2,8 @@
     Colocation routines - to be implemented
 '''
 from collections import namedtuple
+from data_io.ungridded_data import LazyData
+
 
 class Colocator(object):
 
@@ -34,10 +36,11 @@ class Colocator(object):
                 
     def colocate(self):
         import numpy as np
+        vals = np.ndarray()
         for point in self.points:
-            point.val.append(self.method(self, point))
-        new_data = self._update_data() 
-        new_data.missing_value = np.Infinity
+            vals.append(self.method(self, point))
+        new_data = LazyData(vals, self.data.metadata)
+        #new_data.missing_value = np.Infinity
         return new_data
         
     def find_nn_value(self, point):

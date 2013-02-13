@@ -61,24 +61,23 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
             furthest_lon = self.longitude + 180.0
         return HyperPoint(furthest_lat, furthest_lon, self.altitude, self.time, self.val)
 
+class HyperPointList(list):
+    """All the functionality of a standard `list` with added "HyperPoint" context."""
 
-def get_coordinates_points(coords):
-    """
-         Pack a list of coordinates into a list of x, y, z, t points to be passed to Colocator
-    @param coords: A CoordList of Coord objects
-    @return: A list of HyperPoints
-    """
-    points = []
+    def __new__(cls, list_of_coords=None):
+        """
+        Given a `list` of HyperPoints, return a HyperPointList instance.
 
-    lat = coords.get_coord(standard_name='latitude').data.flatten()
-    lon = coords.get_coord(standard_name='longitude').data.flatten()
-    alt = coords.get_coord(standard_name='altitude').data.flatten()
-    time = coords.get_coord(standard_name='time').data.flatten()
+        """
+        coord_list = list.__new__(cls, list_of_coords)
 
-    for lat_p in lat:
-        for lon_p in lon:
-            for alt_p in alt:
-                for time_p in time:
-                    points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
+        # Check that all items in the incoming list are HyperPoints. Note that this checking
+        # does not guarantee that a HyperPointList instance *always* has just HyperPoints in its list as
+        # the append & __getitem__ methods have not been overridden.
+        if not all([isinstance(coord, HyperPoint) for coord in coord_list]):
+            raise ValueError('All items in list_of_coords must be Coord instances.')
+        return coord_list
 
-    return points
+    @property
+    def vals(self):
+        return [ point.val for point in self ]

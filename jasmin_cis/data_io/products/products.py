@@ -162,10 +162,21 @@ class NetCDF_CF(AProduct):
 
 class NetCDF_CF_Gridded(NetCDF_CF):
     def get_file_signature(self):
-        return [r'.*.nc']
+        return [r'.*.nc', r'xenida.*.nc']
 
     def create_coords(self, filenames):
+        # TODO Expand coordinates
+        # For gridded data sets this will actually return coordinates which are too short
+        #  we need to think about how to expand them here
         super(NetCDF_CF_Gridded, self).create_coords(filenames)
+
+        # Something like:
+        # for lat_p in lat:
+        #     for lon_p in lon:
+        #         for alt_p in alt:
+        #             for time_p in time:
+        #                 points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
+
 
     def create_data_object(self, filenames, variable):
         '''

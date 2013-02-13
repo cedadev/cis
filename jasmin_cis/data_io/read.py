@@ -20,12 +20,10 @@ def read_data(filenames, variable, product=None):
 def read_file_coordinates(filenames, product=None):
     '''
     Read the coordinates from a file
-    File can contain either gridded and ungridded data.
-    First tries to read data as gridded, if that fails, tries as ungridded.
-  
+
     @param filenames:   The filename of the files to read
         
-    @return: A list of HyperPoints
+    @return: A CoordList object
     '''
     from data_io.products.AProduct import get_coordinates
     return get_coordinates(filenames, product)
