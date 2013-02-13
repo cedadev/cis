@@ -9,6 +9,11 @@ from jasmin_cis.info import  info
 import logging
 logger = logging.getLogger(__name__)
 
+__author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
+__version__ = "x"
+__status__ = "Development"
+__website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
+
 def __setup_logging(log_file, log_level):
     '''
     Set up the logging used throughout cis
@@ -151,9 +156,9 @@ def main():
     arguments = parse_args()
     command = arguments.pop("command")
 
-    logging.info("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
-    logging.info("Running command: " + command)
-    logging.info("With the following arguments: " + str(arguments))
+    logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+    logging.debug("Running command: " + command)
+    logging.debug("With the following arguments: " + str(arguments))
 
     # execute command
     commands[command](arguments)

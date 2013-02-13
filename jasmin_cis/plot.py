@@ -52,10 +52,11 @@ class Plotter(object):
         self.plot() # Call main method
     
     def __add_color_bar(self):
-        plt.colorbar(orientation = Plotter.colour_bar_orientation, format = "%e")
-        # format = "%.3f
-        # format = "%.3e
-        # format = "%.3g
+        # nformat = "%e"
+        # nformat = "%.3f"
+        # nformat = "%.3e"
+        nformat = "%.3g"
+        plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
     
     def plot_line(self, data_item):
         '''
@@ -140,7 +141,14 @@ class Plotter(object):
             scatter_size = self.kwargs["linewidth"]
         else:
             scatter_size = 20 # Default scatter size
-        self.plots.append(plt.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size))
+
+        # Code review this
+        try:
+            x = self.basemap
+        except AttributeError:
+            self.basemap = Basemap()
+
+        self.plots.append(self.basemap.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size))
     
     def plot_scatteroverlay(self, data_item):
         '''
@@ -198,7 +206,10 @@ class Plotter(object):
                 if datafiles is not None and datafiles[i]["label"]:
                     legend_titles.append(datafiles[i]["label"])
                 else:
-                    legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+                    if " " in item.long_name:
+                        legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+                    else:
+                        legend_titles.append(item.long_name.title())
             if self.plot_type == "line":
                 legend = plt.legend(legend_titles, loc="best")
             else:                
@@ -211,11 +222,19 @@ class Plotter(object):
     
     def __draw_coastlines(self):
         axes = []
-        for dim in xrange(len(self.data[0].shape)):
-            for coord in self.data[0].coords(axis="X"):
-                axes.append(coord.name())
-        
-        if "latitude" in axes and "longitude" in axes:
+        for coord in self.data[0].coords(axis="X"):
+            axes.append(coord.name())
+        for coord in self.data[0].coords(axis="Y"):
+            axes.append(coord.name())
+
+        # Code review this
+        lat = False
+        lon = False
+        for axis in axes:
+            if axis.lower().startswith("lat"): lat = True
+            if axis.lower().startswith("lon"): lon = True
+
+        if lat and lon:
             self.basemap.drawcoastlines()
     
     def __set_log_scale(self, logx, logy):
@@ -247,7 +266,11 @@ class Plotter(object):
         '''
         # When should scientific notation be used on the axes?
         #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^n. Use (0,0) to include all numbers          
-        plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
+        try:
+            plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
+        except AttributeError:
+            pass
+
         if options is not None:  
             logx = options.pop("logx")
             logy = options.pop("logy")
@@ -279,9 +302,9 @@ class Plotter(object):
                  
         if self.plot_type == "line" or "scatter" in self.plot_type:
             self.__create_legend(datafiles)
-        else:
-            if not self.no_colour_bar:
-                self.__add_color_bar()
+
+        if self.plot_type != "line" and not self.no_colour_bar:
+            self.__add_color_bar()
         
         self.__draw_coastlines()
         
@@ -491,8 +514,9 @@ class Plotter(object):
         
         if self.plot_type is None:
             self.__set_default_plot_type(variable_dim)
-        
-        self.__validate_data(variable_dim)
+
+        # Checks are currently not smart enough to perform correctly.
+        #self.__validate_data(variable_dim)
         
         plot_format_options = self.__create_plot_format_options()
         self.__prepare_range("val")

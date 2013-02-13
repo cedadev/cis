@@ -2,7 +2,7 @@ from data_io.Coord import Coord, CoordList
 from data_io.hdf import read_hdf4
 from data_io.products.AProduct import AProduct
 from data_io.ungridded_data import UngriddedData
-import utils
+import jasmin_cis.utils as utils
 import data_io.hdf_vd as hdf_vd
 import data_io.hdf_sd as hdf_sd
 
@@ -32,7 +32,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
                 print 'Error while reading file ', filename
 
         return sdata,vdata
-
 
     def get_file_signature(self):
         return [r'.*2B.CWC.RVOD*']
@@ -90,11 +89,9 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         return UngriddedData(data,metadata,coords)
 
-
 class Cloud_CCI(AProduct):
 
     def get_file_signature(self):
-        #TODO Update this?
         return [r'.*ESACCI*\.nc']
 
     def create_coords(self, filenames):
@@ -110,7 +107,7 @@ class Cloud_CCI(AProduct):
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
         coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
-
+        
         return coords
 
     def create_data_object(self, filenames, variable):
@@ -123,25 +120,18 @@ class Cloud_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
-
 class NetCDF_CF(AProduct):
     def get_file_signature(self):
         return [r'.*\.nc']
 
     def create_coords(self, filenames, variable = None):
-        """
-
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
         from data_io.netcdf import read_many_files, get_metadata
         from data_io.Coord import Coord
 
         variables = [ "latitude", "longitude", "altitude", "time" ]
 
         if variable is not None:
-            variables += variable
+            variables.append(variable)
 
         data_variables = read_many_files(filenames, variables)
 
@@ -200,15 +190,6 @@ class NetCDF_CF_Gridded(NetCDF_CF):
 
 
     def create_data_object(self, filenames, variable):
-        '''
-        Read gridded data for a given variable over multiple files.
-
-          filenames:   The filenames of the files to read
-            variable:    The variable to read from the files
-
-        returns:
-            A cube containing the specified data with unnecessary dimensions removed
-        '''
         from jasmin_cis.exceptions import InvalidVariableError
         import iris
 
@@ -230,13 +211,36 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         return sub_cube
 
 class Aeronet(AProduct):
+
     def get_file_signature(self):
         #TODO Update this
         return [r'\.lev20']
 
     def create_coords(self, filenames):
-        pass
+        from data_io.ungridded_data import Metadata
+        from numpy import array
+        from data_io.aeronet import load_aeronet, get_file_metadata
+
+        for filename in filenames:
+            data_obj = load_aeronet(filename)
+            metadata = get_file_metadata(filename)
+            lon = metadata.misc[2][1].split("=")[1]
+            lat = metadata.misc[2][2].split("=")[1]
+
+            coords = CoordList()
+            coords.append(Coord(array([lon]), Metadata(name="Longitude", shape=(1,), units="degrees_east", range=(-180,180), missing_value=-999)))
+            coords.append(Coord(array([lat]), Metadata(name="Latitude", shape=(1,), units="degrees_north", range=(-90,90), missing_value=-999)))
+            date_time_data = data_obj["datetime"]
+            coords.append(Coord(date_time_data, Metadata(name="Date time", shape=(len(date_time_data),), units="Time_units"), "X"))
+
+        return coords
 
     def create_data_object(self, filenames, variable):
-        for filename in filenames:
-            current_file = open(filename)
+        from data_io.aeronet import load_aeronet, get_file_metadata
+        data = []
+        filename = filenames[0]
+        data_obj = load_aeronet(filename)
+        var_data = data_obj[variable]
+        metadata = get_file_metadata(filename, variable, (len(var_data),))
+        return UngriddedData(var_data, metadata, self.create_coords([filename]))
+
