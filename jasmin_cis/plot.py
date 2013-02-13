@@ -498,8 +498,9 @@ class Plotter(object):
         
         if self.plot_type is None:
             self.__set_default_plot_type(variable_dim)
-        
-        self.__validate_data(variable_dim)
+
+        # Checks are currently not smart enough to perform correctly.
+        #self.__validate_data(variable_dim)
         
         plot_format_options = self.__create_plot_format_options()
         self.__prepare_range("val")
