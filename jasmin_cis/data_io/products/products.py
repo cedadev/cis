@@ -226,10 +226,7 @@ class Aeronet(AProduct):
         data = []
         filename = filenames[0]
         data_obj = load_aeronet(filename)
-        metadata = get_file_metadata(filename)
-        metadata.name = variable
-        metadata.long_name = variable
         var_data = data_obj[variable]
-        metadata.shape = (len(var_data), )
+        metadata = get_file_metadata(filename, variable, (len(var_data),))
         return UngriddedData(var_data, metadata, self.create_coords([filename]))
 
