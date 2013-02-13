@@ -33,7 +33,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         return sdata,vdata
 
-
     def get_file_signature(self):
         return [r'.*2B.CWC.RVOD*']
 
@@ -90,7 +89,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         return UngriddedData(data,metadata,coords)
 
-
 class Cloud_CCI(AProduct):
 
     def get_file_signature(self):
@@ -110,7 +108,6 @@ class Cloud_CCI(AProduct):
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
         coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
-
         return coords
 
     def create_data_object(self, filenames, variable):
@@ -122,7 +119,6 @@ class Cloud_CCI(AProduct):
         metadata = get_metadata(data[variable])
 
         return UngriddedData(data[variable], metadata, coords)
-
 
 class NetCDF_CF(AProduct):
     def get_file_signature(self):
@@ -158,7 +154,6 @@ class NetCDF_CF(AProduct):
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
-
 
 class NetCDF_CF_Gridded(NetCDF_CF):
     def get_file_signature(self):
@@ -203,8 +198,38 @@ class Aeronet(AProduct):
         return [r'.lev20']
 
     def create_coords(self, filenames):
-        pass
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        from data_io.ungridded_data import Metadata
+        from numpy import array
+        from data_io.aeronet import load_aeronet, get_file_metadata
+
+        for filename in filenames:
+            data_obj = load_aeronet(filename)
+            metadata = get_file_metadata(filename)
+            lon = metadata.misc[2][1].split("=")[1]
+            lat = metadata.misc[2][2].split("=")[1]
+
+            coords = CoordList()
+            coords.append(Coord(array([lon]), Metadata(name="Longitude", shape=(1,), units="degrees_east", range=(-180,180), missing_value=-999)))
+            coords.append(Coord(array([lat]), Metadata(name="Latitude", shape=(1,), units="degrees_north", range=(-90,90), missing_value=-999)))
+            date_time_data = data_obj["datetime"]
+            coords.append(Coord(date_time_data, Metadata(name="Date time", shape=(len(date_time_data),), units="Time_units"), "X"))
+
+        return coords
 
     def create_data_object(self, filenames, variable):
-        for filename in filenames:
-            current_file = open(filename)
+        from data_io.aeronet import load_aeronet, get_file_metadata
+        data = []
+        filename = filenames[0]
+        data_obj = load_aeronet(filename)
+        metadata = get_file_metadata(filename)
+        metadata.name = variable
+        metadata.long_name = variable
+        var_data = data_obj[variable]
+        metadata.shape = (len(var_data), )
+        return UngriddedData(var_data, metadata, self.create_coords([filename]))
+
