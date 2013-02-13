@@ -198,7 +198,10 @@ class Plotter(object):
                 if datafiles is not None and datafiles[i]["label"]:
                     legend_titles.append(datafiles[i]["label"])
                 else:
-                    legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+                    if " " in item.long_name:
+                        legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+                    else:
+                        legend_titles.append(item.long_name.title())
             if self.plot_type == "line":
                 legend = plt.legend(legend_titles, loc="best")
             else:                
