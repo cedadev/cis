@@ -125,12 +125,6 @@ class NetCDF_CF(AProduct):
         return [r'.*.nc']
 
     def create_coords(self, filenames, variable = None):
-        """
-
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
         from data_io.netcdf import read_many_files, get_metadata
         from data_io.Coord import Coord
 
@@ -164,15 +158,6 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         super(NetCDF_CF_Gridded, self).create_coords(filenames)
 
     def create_data_object(self, filenames, variable):
-        '''
-        Read gridded data for a given variable over multiple files.
-
-          filenames:   The filenames of the files to read
-            variable:    The variable to read from the files
-
-        returns:
-            A cube containing the specified data with unnecessary dimensions removed
-        '''
         from jasmin_cis.exceptions import InvalidVariableError
         import iris
 
@@ -200,11 +185,6 @@ class Aeronet(AProduct):
         return [r'\.lev20']
 
     def create_coords(self, filenames):
-        """
-
-        @param filenames: List of filenames to read coordinates from
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
         from data_io.ungridded_data import Metadata
         from numpy import array
         from data_io.aeronet import load_aeronet, get_file_metadata
