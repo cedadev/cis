@@ -105,7 +105,7 @@ def col_cmd(main_arguments):
     input_groups = main_arguments.pop("datafiles")
     output_file = main_arguments.pop("output")
 
-    coords = read_file_coordinates(sample_file)
+    coords = read_file_coordinates([sample_file])
     sample_points = coords.get_coordinates_points()
 
     write_coordinates(coords, output_file)

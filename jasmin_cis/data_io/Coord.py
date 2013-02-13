@@ -31,6 +31,7 @@ class CoordList(list):
         # the append & __getitem__ methods have not been overridden.
         if not all([isinstance(coord, Coord) for coord in coord_list]):
             raise ValueError('All items in list_of_coords must be Coord instances.')
+
         return coord_list
 
     def append(self, other):
@@ -114,16 +115,45 @@ class CoordList(list):
         @param coords: A CoordList of Coord objects
         @return: A list of HyperPoints
         """
+        from jasmin_cis.exceptions import CoordinateNotFoundError
         import numpy as np
         from hyperpoint import HyperPoint
         points = []
 
-        lat = self.get_coord(standard_name='latitude').data.flatten()
-        lon = self.get_coord(standard_name='longitude').data.flatten()
-        alt = self.get_coord(standard_name='altitude').data.flatten()
-        time = self.get_coord(standard_name='time').data.flatten()
+        try:
+            lat = self.get_coord(standard_name='latitude').data.flatten()
+        except CoordinateNotFoundError:
+            lat = None
+        try:
+            lon = self.get_coord(standard_name='longitude').data.flatten()
+        except CoordinateNotFoundError:
+            lon = None
+        try:
+            alt = self.get_coord(standard_name='altitude').data.flatten()
+        except CoordinateNotFoundError:
+            alt = None
+        try:
+            time = self.get_coord(standard_name='time').data.flatten()
+        except CoordinateNotFoundError:
+            time = None
 
-        for x ,lat_p in np.ndenumerate(lat):
-            points.append(HyperPoint(lat_p,lon[x],alt[x],time[x]))
+        for x in xrange(len(lat)):
+            if lat is not None:
+                lat_p = lat[x]
+            else:
+                lat_p = None
+            if lon is not None:
+                lon_p = lon[x]
+            else:
+                lon_p = None
+            if alt is not None:
+                alt_p = alt[x]
+            else:
+                alt_p = None
+            if time is not None:
+                time_p = time[x]
+            else:
+                time_p = None
+            points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
 
         return points
