@@ -195,7 +195,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
 class Aeronet(AProduct):
     def get_file_signature(self):
         #TODO Update this
-        return [r'.lev20']
+        return [r'.*lev20']
 
     def create_coords(self, filenames):
         """
