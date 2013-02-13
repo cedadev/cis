@@ -82,7 +82,7 @@ def __get_class(filenames, product=None):
 
     # find built-in product classes, i.e. subclasses of L{AProduct}
     subclasses = __get_all_subclasses(products.AProduct)
-    product_classes = subclasses + plugin_classes
+    product_classes = plugin_classes + subclasses
 
     logging.debug("AProduct subclasses are: " + str(product_classes))
 

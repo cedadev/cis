@@ -34,7 +34,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         return sdata,vdata
 
     def get_file_signature(self):
-        return [r'.*2B.CWC.RVOD*']
+        return [r'.*2B.CWC.RVOD.*\.hdf']
 
     def create_coords(self, filenames):
 
@@ -120,39 +120,11 @@ class Cloud_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
-class NetCDF_CF(AProduct):
+
+class NetCDF_CF_Gridded(AProduct):
+
     def get_file_signature(self):
-        return [r'.*\.nc']
-
-    def create_coords(self, filenames, variable = None):
-        from data_io.netcdf import read_many_files, get_metadata
-        from data_io.Coord import Coord
-
-        variables = [ "latitude", "longitude", "altitude", "time" ]
-
-        if variable is not None:
-            variables.append(variable)
-
-        data_variables = read_many_files(filenames, variables)
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
-        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
-        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
-        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
-
-        if variable is None:
-            return coords
-        else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
-
-    def create_data_object(self, filenames, variable):
-        return self.create_coords(filenames, variable)
-
-
-class NetCDF_CF_Gridded(NetCDF_CF):
-    def get_file_signature(self):
-        return [r'.*\.nc', r'xenida.*\.nc']
+        return [r'xenida.*\.nc']
 
     def create_coords(self, filenames):
         # TODO Expand coordinates
@@ -209,6 +181,37 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         #  shape (145, 165)
 
         return sub_cube
+
+class NetCDF_CF(AProduct):
+
+    def get_file_signature(self):
+        return [r'.*\.nc']
+
+    def create_coords(self, filenames, variable = None):
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.Coord import Coord
+
+        variables = [ "latitude", "longitude", "altitude", "time" ]
+
+        if variable is not None:
+            variables.append(variable)
+
+        data_variables = read_many_files(filenames, variables)
+
+        coords = CoordList()
+        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
+        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
+        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
+        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+
+        if variable is None:
+            return coords
+        else:
+            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
+
+    def create_data_object(self, filenames, variable):
+        return self.create_coords(filenames, variable)
+
 
 class Aeronet(AProduct):
 
