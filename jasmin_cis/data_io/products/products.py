@@ -76,8 +76,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         return CoordList([lat_coord,lon_coord,alt_coord,time_coord])
 
-
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
 
         coords = self.create_coords(filenames)
 
@@ -113,7 +112,7 @@ class Cloud_CCI(AProduct):
 
         return coords
 
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
 
         from data_io.netcdf import read_many_files, get_metadata
 
@@ -156,7 +155,7 @@ class NetCDF_CF(AProduct):
         else:
             return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
 
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
 
@@ -167,7 +166,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
     def create_coords(self, filenames):
         super(NetCDF_CF_Gridded, self).create_coords(filenames)
 
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
         '''
         Read gridded data for a given variable over multiple files.
 

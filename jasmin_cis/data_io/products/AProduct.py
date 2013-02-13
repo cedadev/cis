@@ -9,7 +9,7 @@ class AProduct(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
         """
         Create a an ungridded data object for a given variable from many files
 
