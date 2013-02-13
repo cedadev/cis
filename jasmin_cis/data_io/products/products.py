@@ -94,6 +94,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 class Cloud_CCI(AProduct):
 
     def get_file_signature(self):
+        #TODO Update this?
         return [r'.*ESACCI*.nc']
 
     def create_coords(self, filenames):
@@ -196,3 +197,14 @@ class NetCDF_CF_Gridded(NetCDF_CF):
 
         return sub_cube
 
+class Aeronet(AProduct):
+    def get_file_signature(self):
+        #TODO Update this
+        return [r'.lev20']
+
+    def create_coords(self, filenames):
+        pass
+
+    def create_data_object(self, filenames, variable):
+        for filename in filenames:
+            current_file = open(filename)
