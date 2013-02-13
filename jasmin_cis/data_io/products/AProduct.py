@@ -48,9 +48,10 @@ def __get_all_subclasses(cls):
     @param cls: The class to find subclasses of
     @return: A list of all subclasses
     """
-    subclasses = cls.__subclasses__()
-    for subclass in subclasses:
+    subclasses = []
+    for subclass in cls.__subclasses__():
         subclasses += __get_all_subclasses(subclass)
+    subclasses += cls.__subclasses__()
     return subclasses
 
 def __get_class(filenames, product=None):
@@ -69,26 +70,23 @@ def __get_class(filenames, product=None):
     import products
     import re
 
-    product_cls = None
-
     for cls in __get_all_subclasses(products.AProduct):
 
         if product is None:
             # search for a pattern that matches file signature
             patterns = cls().get_file_signature()
             for pattern in patterns:
+                # Match the pattern - re.I allows for case insensitive matchess
                 if re.match(pattern,filenames[0],re.I) is not None:
-                    product_cls = cls
                     logging.debug("Found product class " + cls.__name__ + " matching regex pattern " + pattern)
-                    break
+                    return cls
         else:
             # product specified directly
             if product == cls.__name__:
                 logging.debug("Selected product class " +  cls.__name__)
-                product_cls = cls
-                break
+                return cls
 
-    return product_cls
+    return None
 
 
 def get_data(filenames, variable, product=None):
