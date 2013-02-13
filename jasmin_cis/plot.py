@@ -247,7 +247,11 @@ class Plotter(object):
         '''
         # When should scientific notation be used on the axes?
         #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^n. Use (0,0) to include all numbers          
-        plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
+        try:
+            plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
+        except AttributeError:
+            pass
+
         if options is not None:  
             logx = options.pop("logx")
             logy = options.pop("logy")
