@@ -9,7 +9,7 @@ class AProduct(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def create_ungridded_data(self, filenames, variable):
+    def create_data_object(self, filenames, variable):
         """
         Create a an ungridded data object for a given variable from many files
 
@@ -106,7 +106,7 @@ def get_data(filenames, variable, product=None):
         raise(NotImplementedError)
     else:
         logging.info("Using product " +  product_cls.__name__)
-        data = product_cls().create_ungridded_data(filenames, variable)
+        data = product_cls().create_data_object(filenames, variable)
     return data
 
 
