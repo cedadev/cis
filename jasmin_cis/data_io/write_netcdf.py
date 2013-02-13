@@ -5,6 +5,7 @@ from netCDF4 import Dataset
 import numpy as np
 
 types = {float: "f",
+         'int16': "i",
          'int64': "i",
          'float64': "f"}
 
@@ -73,7 +74,7 @@ def write_coordinates(coords, filename):
     @return:
     """
     netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
-    index_dim = __create_index(netcdf_file, len(coords[0].flatten()))
+    index_dim = __create_index(netcdf_file, len(coords[0].data.flatten()))
     for data in coords:
         coord = __create_variable(netcdf_file, data)
     netcdf_file.close()
