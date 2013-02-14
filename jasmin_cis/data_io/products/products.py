@@ -353,7 +353,7 @@ class Aeronet(AProduct):
             coords.append(Coord(array([lon]), Metadata(name="Longitude", shape=(1,), units="degrees_east", range=(-180,180), missing_value=-999)))
             coords.append(Coord(array([lat]), Metadata(name="Latitude", shape=(1,), units="degrees_north", range=(-90,90), missing_value=-999)))
             date_time_data = data_obj["datetime"]
-            coords.append(Coord(date_time_data, Metadata(name="Date time", shape=(len(date_time_data),), units="Time_units"), "X"))
+            coords.append(Coord(date_time_data, Metadata(name="Date time", shape=(len(date_time_data),)), "X"))
 
         return coords
 
