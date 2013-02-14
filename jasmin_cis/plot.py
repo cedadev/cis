@@ -127,7 +127,7 @@ class Plotter(object):
         minval = None
         maxval = None   
         mark = self.kwargs.pop("marker", "o")
-        if data_item["data"] is not None: # i.e. the scatter plot is 3D
+        if data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
             minval = data_item["data"].min()
             maxval = data_item["data"].max()
             if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1): # If a heatmap has been already plotted
