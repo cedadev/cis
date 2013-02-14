@@ -255,7 +255,7 @@ class Aeronet(AProduct):
 
     def get_file_signature(self):
         #TODO Update this
-        return [r'\.lev20']
+        return [r'.*\.lev20']
 
     def create_coords(self, filenames):
         from data_io.ungridded_data import Metadata

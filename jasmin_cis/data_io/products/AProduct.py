@@ -121,7 +121,7 @@ def get_data(filenames, variable, product=None):
     '''
     product_cls = __get_class(filenames[0], product)
 
-    logging.info("Retrieving data using product " +  product_cls.__name__)
+    logging.info("Retrieving data using product " +  product_cls.__name__ + ". This may take some time")
     data = product_cls().create_data_object(filenames, variable)
     return data
 

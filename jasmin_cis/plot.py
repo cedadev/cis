@@ -69,7 +69,7 @@ class Plotter(object):
     
     def plot_heatmap(self, data_item):
         '''
-        Plots a heatmap using Basemap
+        Plots a heatmap
         Stores the min and max values of the data to be used later on for setting the colour scheme of scatter plots
         Stores the plot in a list to be used for when adding the legend
         
@@ -78,22 +78,15 @@ class Plotter(object):
         #import matplotlib.colors as colors
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
-        self.basemap = Basemap()    
-        #norm = colors.LogNorm,         
-        self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
 
-    def plot_heatmap_nobasemap(self, data_item):
-        '''
-        Plots a heatmap without using basemap
-        Stores the min and max values of the data to be used later on for setting the colour scheme of scatter plots
-        Stores the plot in a list to be used for when adding the legend
-        
-        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
-        '''
-        self.min_data = data_item["data"].min()
-        self.max_data = data_item["data"].max()
-
-        self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        if self.__is_map():
+            self.basemap = Basemap()
+            plot_method = self.basemap
+            self.kwargs["latlon"] = True
+        else:
+            plot_method = plt
+        self.plots.append(plot_method.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.kwargs.pop("latlon", None)
         
     def plot_contour(self, data_item):
         '''
@@ -127,12 +120,17 @@ class Plotter(object):
         minval = None
         maxval = None   
         mark = self.kwargs.pop("marker", "o")
-        if data_item["data"] is not None: # i.e. the scatter plot is 3D
+        if data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
             minval = data_item["data"].min()
             maxval = data_item["data"].max()
             if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1): # If a heatmap has been already plotted
                 minval = self.min_data
                 maxval = self.max_data
+            else:
+                if self.kwargs.get("vmin", None) is not None:
+                    minval = self.kwargs.pop("vmin")
+                if self.kwargs.get("vmax", None) is not None:
+                    maxval = self.kwargs.pop("vmax")
             if colour_scheme is None:
                 colour_scheme = data_item["data"]
         if colour_scheme is None:
@@ -142,13 +140,21 @@ class Plotter(object):
         else:
             scatter_size = 20 # Default scatter size
 
-        # Code review this
-        try:
-            x = self.basemap
-        except AttributeError:
-            self.basemap = Basemap()
+        if self.__is_map():
+            # Code review this
+            try:
+                plot_method = self.basemap
+            except AttributeError:
+                self.basemap = Basemap()
+                plot_method = self.basemap
+        else:
+            plot_method = plt
 
-        self.plots.append(self.basemap.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none"))
+        if data_item.get("y", None) is not None:
+            self.plots.append(plot_method.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
+        else:
+            self.plot_type = "scatter2D"
+            self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
     
     def plot_scatteroverlay(self, data_item):
         '''
@@ -167,9 +173,9 @@ class Plotter(object):
         self.num_of_preexisting_plots += 1            
 
     plot_types = {'line' : PlotType(None, 1, plot_line),
-                'scatter' : PlotType(None, 2, plot_scatter), 
+                'scatter' : PlotType(None, 2, plot_scatter),
+                'scatter2D' : PlotType(None, 2, plot_scatter),
                 'heatmap' : PlotType(1, 2, plot_heatmap),
-                'heatmap_nobasemap' : PlotType(1, 2, plot_heatmap_nobasemap),
                 'contour' : PlotType(1, 2, plot_contour),
                 'contourf' : PlotType(1, 2, plot_contourf),
                 'scatteroverlay' : PlotType(None, 2, plot_scatteroverlay)}
@@ -217,8 +223,8 @@ class Plotter(object):
                     legend_titles = legend_titles[1:]
                 legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
             legend.draggable(state = True)
-    
-    def __draw_coastlines(self):
+
+    def __is_map(self):
         axes = []
         for coord in self.data[0].coords(axis="X"):
             axes.append(coord.name())
@@ -233,8 +239,19 @@ class Plotter(object):
             if axis.lower().startswith("lon"): lon = True
 
         if lat and lon:
+            return True
+        else:
+            return False
+
+    def __draw_coastlines(self):
+        from numpy import arange
+        if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
+                parallels = arange(-90, 90, 30)
+                self.basemap.drawparallels(parallels, labels=[1,0,0,0], labelstyle="+/-")
+                meridians = arange(-180, 180, 30)
+                self.basemap.drawmeridians(meridians, labels=[0,0,0,1], labelstyle="+/-")
             except AttributeError:
                 pass
     
@@ -268,7 +285,7 @@ class Plotter(object):
         # When should scientific notation be used on the axes?
         #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^n. Use (0,0) to include all numbers          
         try:
-            plt.gca().ticklabel_format(style='sci', scilimits=(0,3), axis='both')
+            plt.gca().ticklabel_format(style='sci', scilimits=(-2,2), axis='both')
         except AttributeError:
             pass
 
@@ -304,7 +321,7 @@ class Plotter(object):
         if self.plot_type == "line" or "scatter" in self.plot_type:
             self.__create_legend(datafiles)
 
-        if self.plot_type != "line" and not self.no_colour_bar:
+        if self.plot_type != "line" and self.plot_type != "scatter2D" and not self.no_colour_bar:
             self.__add_color_bar()
         
         self.__draw_coastlines()
@@ -370,13 +387,7 @@ class Plotter(object):
 
             # for heatmaps, we plot the world map (with basemap)
             # if the 'x' axis is longitude AND the 'y' axis is the latitude
-            if self.plot_type == "heatmap":
-                if item.y.standard_name == "latitude" and item.x.standard_name == "longitude":
-                    Plotter.plot_types["heatmap"].plot_method(self, item_to_plot)
-                else:
-                    Plotter.plot_types["heatmap_nobasemap"].plot_method(self, item_to_plot)
-            else:              
-                Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
+            Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
 
             # Remove temp args
             if datafiles is not None:
@@ -506,7 +517,7 @@ class Plotter(object):
         The main plotting method
         '''
 
-        logging.info("Generating plot... This may take some time")
+        logging.info("Generating plot...")
 
         self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", None)        
         self.__remove_unassigned_arguments()   
