@@ -291,9 +291,9 @@ class Xglnwa(NetCDF_CF_Gridded):
 
 
     def create_data_object(self, filenames, variable):
-        import iris.AttributeConstraint
+        from iris import AttributeConstraint
         # In this case we use the variable as a name constraint as the variable names themselves aren't obvious
-        var_constraint = iris.AttributeConstraint(name=variable)
+        var_constraint = AttributeConstraint(name=variable)
 
         return super(Xglnwa, self).create_data_object(filenames, var_constraint)
 
