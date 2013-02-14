@@ -302,10 +302,10 @@ class CisCol(AProduct):
         data_variables = read_many_files(filenames, variables)
 
         coords = CoordList()
-        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
-        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
-        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
-        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+        coords.append(Coord(data_variables["Longitude"], get_metadata(data_variables["Longitude"]), "X"))
+        coords.append(Coord(data_variables["Latitude"], get_metadata(data_variables["Latitude"]), "Y"))
+        coords.append(Coord(data_variables["Height"], get_metadata(data_variables["Height"]), "Z"))
+        coords.append(Coord(data_variables["Profile_time"], get_metadata(data_variables["Profile_time"]), "T"))
 
         if variable is None:
             return coords
