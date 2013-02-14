@@ -157,7 +157,11 @@ class Plotter(object):
         else:
             plot_method = plt
 
-        self.plots.append(self.basemap.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
+        if data_item.get("y", None) is not None:
+            self.plots.append(plot_method.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
+        else:
+            self.plot_type = "scatter2D"
+            self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
     
     def plot_scatteroverlay(self, data_item):
         '''
@@ -176,7 +180,8 @@ class Plotter(object):
         self.num_of_preexisting_plots += 1            
 
     plot_types = {'line' : PlotType(None, 1, plot_line),
-                'scatter' : PlotType(None, 2, plot_scatter), 
+                'scatter' : PlotType(None, 2, plot_scatter),
+                'scatter2D' : PlotType(None, 2, plot_scatter),
                 'heatmap' : PlotType(1, 2, plot_heatmap),
                 'heatmap_nobasemap' : PlotType(1, 2, plot_heatmap_nobasemap),
                 'contour' : PlotType(1, 2, plot_contour),
@@ -319,7 +324,7 @@ class Plotter(object):
         if self.plot_type == "line" or "scatter" in self.plot_type:
             self.__create_legend(datafiles)
 
-        if self.plot_type != "line" and not self.no_colour_bar:
+        if self.plot_type != "line" and self.plot_type != "scatter2D" and not self.no_colour_bar:
             self.__add_color_bar()
         
         self.__draw_coastlines()
