@@ -36,6 +36,7 @@ def info(filename, user_variables=None):
     from jasmin_cis.exceptions import CISError
     from data_io.hdf import get_hdf4_file_variables
     from data_io.netcdf import get_netcdf_file_variables
+    from data_io.aeronet import get_aeronet_file_variables
     from pyhdf.error import HDF4Error
     try:
         file_variables = get_netcdf_file_variables(filename)
@@ -48,4 +49,5 @@ def info(filename, user_variables=None):
             print "\n====== VD variables:"
             __print_variables(vd_vars, user_variables, False)
         except HDF4Error as e:
-            raise CISError(e)
+            file_variables = get_aeronet_file_variables(filename)
+            __print_variables(file_variables, user_variables)

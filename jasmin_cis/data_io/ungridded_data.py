@@ -10,6 +10,10 @@ from hdf_sd import get_data as hdf_sd_get_data
 
 class Metadata(object):
 
+    @classmethod
+    def from_CubeMetadata(cls, cube_meta):
+        return cls(name='',standard_name=cube_meta.standard_name,long_name=cube_meta.long_name, units=cube_meta.units, misc=cube_meta.attributes)
+
     def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', misc=None):
         self._name = name
         if standard_name:
@@ -59,6 +63,7 @@ class LazyData(object):
         @param metadata: Any associated metadata
         '''
         from jasmin_cis.exceptions import InvalidDataTypeError
+        from iris.cube import CubeMetadata
         import numpy as np
 
         if isinstance(data, np.ndarray):
@@ -84,8 +89,11 @@ class LazyData(object):
             else:
                 raise InvalidDataTypeError
 
-        self._metadata = metadata
-        metadata.copy_attributes_into(self)
+        if isinstance(metadata, CubeMetadata):
+            self._metadata = Metadata.from_CubeMetadata(metadata)
+        else:
+            self._metadata = metadata
+        self._metadata.copy_attributes_into(self)
 
     def name(self):
         """
@@ -95,7 +103,7 @@ class LazyData(object):
         """
         for name in [self._name, self.standard_name, self.long_name]:
             if name:
-                return self._name
+                return name
         return ''
 
     @property
@@ -117,6 +125,11 @@ class LazyData(object):
                     "Failed to read the ungridded data as there was not enough memory available.\n"
                     "Consider freeing up variables or indexing the cube before getting its data.")
         return self._data
+
+    @data.setter
+    def data(self, value):
+        # TODO remove this - it's only for testing colocation at the moment
+        self._data = value
 
     def copy_metadata_from(self, other_data):
         '''
