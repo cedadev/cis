@@ -16,7 +16,10 @@ def get_aeronet_file_variables(filename):
     for i in range(0, len(vars)):
         for char in defaultdeletechars:
             vars[i] = vars[i].replace(char, "")
-    return vars
+    vars_dict = {}
+    for var in vars:
+        vars_dict[var] = var
+    return vars_dict
 
 def load_aeronet(fname, keep_fields='all'):
     """loads aeronet lev 2.0 csv file.
