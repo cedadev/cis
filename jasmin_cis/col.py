@@ -81,7 +81,8 @@ class Colocator(object):
             val = nearest_neighbour_data_value(self.data, point.get_coord_tuple())
         except ValueError:
             val = self.fill_value
-    
+        return val
+
     def find_value_by_li(self, point):
         pass
     
@@ -89,3 +90,14 @@ class Colocator(object):
     gridded_colocation_methods = ColocationTechniques(find_nn_value_gridded, find_value_by_li)
     ungridded_colocation_methods = ColocationTechniques(find_nn_value_ungridded, None)
 
+def colocate(filenames, method, variable, sample_points, output_file):
+    from data_io.read import read_data
+    from data_io.write_netcdf import add_data_to_file
+
+    data = read_data(filenames, variable)
+
+    col = Colocator(sample_points, data, method)
+
+    new_data = col.colocate()
+
+    add_data_to_file(new_data, output_file)
