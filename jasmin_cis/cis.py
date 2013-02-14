@@ -64,7 +64,7 @@ def plot_cmd(main_arguments):
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
         data = [ read_data(files,var) for var, files in dict_of_var_and_filename.iteritems() ]
 
-    except (IrisError, ex.InvalidVariableError, ex.FileIOError) as e:
+    except (IrisError, ex.InvalidVariableError, ex.FileIOError, ex.ClassNotFoundError) as e:
         __error_occurred(e)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + e)
