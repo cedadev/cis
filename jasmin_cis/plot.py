@@ -222,8 +222,6 @@ class Plotter(object):
                     legend_titles = legend_titles[1:]
                 legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
             legend.draggable(state = True)
-    
-    def __draw_coastlines(self):
 
     def __is_map(self):
         axes = []
@@ -243,6 +241,9 @@ class Plotter(object):
             return True
         else:
             return False
+
+    def __draw_coastlines(self):
+        if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
             except AttributeError:
