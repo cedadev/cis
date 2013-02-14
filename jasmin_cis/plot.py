@@ -511,7 +511,7 @@ class Plotter(object):
         The main plotting method
         '''
 
-        logging.info("Generating plot... This may take some time")
+        logging.info("Generating plot...")
 
         self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", None)        
         self.__remove_unassigned_arguments()   
