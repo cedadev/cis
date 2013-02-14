@@ -10,6 +10,14 @@ import linecache
 
 __all__ = ['load_aeronet']
 
+def get_aeronet_file_variables(filename):
+    defaultdeletechars = """~!@#$%^&*()-=+~\|]}[{';: /?.>,<"""
+    vars = linecache.getline(filename, 5).split(",")
+    for i in range(0, len(vars)):
+        for char in defaultdeletechars:
+            vars[i] = vars[i].replace(char, "")
+    return vars
+
 def load_aeronet(fname, keep_fields='all'):
     """loads aeronet lev 2.0 csv file.
     fname: data file name
@@ -56,6 +64,3 @@ def get_file_metadata(filename, variable = None, shape = None):
     metadata.long_name = variable
     metadata.shape = shape
     return metadata
-
-def get_aeronet_file_variables(filename):
-    return linecache.getline(filename, 5).split(",")
