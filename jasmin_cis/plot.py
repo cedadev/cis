@@ -133,6 +133,11 @@ class Plotter(object):
             if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1): # If a heatmap has been already plotted
                 minval = self.min_data
                 maxval = self.max_data
+            else:
+                if self.kwargs.get("vmin", None) is not None:
+                    minval = self.kwargs.pop("vmin")
+                if self.kwargs.get("vmax", None) is not None:
+                    maxval = self.kwargs.pop("vmax")
             if colour_scheme is None:
                 colour_scheme = data_item["data"]
         if colour_scheme is None:
