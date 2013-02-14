@@ -104,42 +104,48 @@ def col_cmd(main_arguments):
     '''
     from jasmin_cis.exceptions import InvalidColocationMethodError, CISError
     from data_io.read import read_file_coordinates, read_data
-    from col import Colocator
+    from col import colocate
     from data_io.write_netcdf import write_coordinates, add_data_to_file
 
     sample_file = main_arguments.pop("samplefilename")
     input_groups = main_arguments.pop("datafiles")
     output_file = "cis-col-" + main_arguments.pop("output") + ".nc"
 
+    default_method = main_arguments.pop("method", None)
+    default_variable = main_arguments.pop("variable", None)
+
     coords = read_file_coordinates(sample_file)
 
-    for coord in coords:
-        print coord.data
-        coord.data = coord.data[0:10]
-        print coord.data
+    # for coord in coords:
+    #     print coord.data
+    #     coord.data = coord.data[0:10]
+    #     print coord.data
 
     sample_points = coords.get_coordinates_points()
-
     write_coordinates(coords, output_file)
-   
-    for input_group in input_groups:
-        filename = input_group['filename']
-        variable = input_group['variable']
-        method = input_group['method']
 
+    if default_variable is not None and default_method is not None:
+        filenames = [ input_group['filename'] for input_group in input_groups ]
+        # variable = input_group['variable']
+        # method = input_group['method']
         try:
-            data = read_data(filename, variable)
+            colocate(filenames, default_method, default_variable, sample_points, output_file)
         except CISError as e:
             __error_occurred(e)
-        
-        try:
-            col = Colocator(sample_points, data, method)
         except InvalidColocationMethodError as e:
-            __error_occurred(str(e) + "\nInvalid co-location method: "+method)
-        
-        new_data = col.colocate()
+            __error_occurred(str(e) + "\nInvalid co-location method: "+default_method)
+    else:
+        for input_group in input_groups:
+            filename = input_group['filename']
+            variable = input_group['variable']
+            method = input_group['method']
 
-        add_data_to_file(new_data, output_file)
+            try:
+                colocate(filename, method, variable, sample_points, output_file)
+            except CISError as e:
+                __error_occurred(e)
+            except InvalidColocationMethodError as e:
+                __error_occurred(str(e) + "\nInvalid co-location method: "+method)
 
 
 commands = { 'plot' : plot_cmd,
