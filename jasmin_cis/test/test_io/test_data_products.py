@@ -46,6 +46,11 @@ def test_that_cloudsat_file_regex_matching():
     cls = __get_class([valid_cloudsat_RVOD_file])
     eq_(cls.__name__,'Cloudsat_2B_CWC_RVOD')
 
+@istest
+def test_that_cloudsat_file_regex_matching_for_full_path():
+    cls = __get_class(['/home/duncan/2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf'])
+    eq_(cls.__name__,'Cloudsat_2B_CWC_RVOD')
+
 @nottest
 def test_that_cci_file_regex_matching():
     pass
