@@ -188,17 +188,23 @@ class Plotter(object):
         return options
     
     def __set_x_label(self, options):
-        if options["xlabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
-            xlabel = self.data[0].coord(axis="X").name()
-            options["xlabel"] = xlabel.capitalize()
+        if options["xlabel"] is None:
+            if self.__is_map():
+                options["xlabel"] = "Longitude"
+            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
+                xlabel = self.data[0].coord(axis="X").name()
+                options["xlabel"] = xlabel.capitalize()
         return options
     
     def __set_y_label(self, options):
-        if options["ylabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
-            if len(self.data) == 1:
-                options["ylabel"] = self.data[0].long_name.title()
-            else:
-                options["ylabel"] = str(self.data[0].units)
+        if options["ylabel"] is None:
+            if self.__is_map():
+                options["ylabel"] = "Latitude"
+            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
+                if len(self.data) == 1:
+                    options["ylabel"] = self.data[0].long_name.title()
+                else:
+                    options["ylabel"] = str(self.data[0].units)
         return options
     
     def __create_legend(self, datafiles):
@@ -417,7 +423,7 @@ class Plotter(object):
             else:
                 self.plot_type = self.default_plot_types[variable_dim]
         except KeyError:
-            raise InvalidPlotTypeError("Unable to determine default plot type for this variable - please specify a plot type explicitly")
+            raise InvalidPlotTypeError("There is no valid plot type for this variable - check its dimensions")
     
     def __check_plot_type_is_valid_for_given_variable(self, variable_dim):
         from jasmin_cis.exceptions import InvalidPlotTypeError
