@@ -118,67 +118,6 @@ class Cloud_CCI(AProduct):
         return UngriddedData(data[variable], metadata, coords)
 
 
-class NetCDF_CF_Gridded(AProduct):
-
-    def get_file_signature(self):
-        return [r'.*xglnwa.*\.nc', r'.*xenida.*\.nc']
-
-    def create_coords(self, filenames):
-        # TODO Expand coordinates
-        # For gridded data sets this will actually return coordinates which are too short
-        #  we need to think about how to expand them here
-        """
-
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
-        from data_io.netcdf import read, get_metadata
-        from data_io.Coord import Coord
-
-        variables = [ "latitude", "longitude", "altitude", "time" ]
-
-        data_variables = read(filenames[0], variables)
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
-        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
-        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
-        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
-
-        return coords
-
-        #super(NetCDF_CF_Gridded, self).create_coords(filenames)
-
-        # Something like:
-        # for lat_p in lat:
-        #     for lon_p in lon:
-        #         for alt_p in alt:
-        #             for time_p in time:
-        #                 points.append(HyperPoint(lat_p,lon_p,alt_p,time_p))
-
-
-    def create_data_object(self, filenames, variable):
-        from jasmin_cis.exceptions import InvalidVariableError
-        import iris
-
-        var_constraint = iris.AttributeConstraint(name=variable)
-        # Create an Attribute constraint on the name Attribute for the variable given
-
-        try:
-            cube = iris.load_cube(filenames, var_constraint)
-        except iris.exceptions.ConstraintMismatchError:
-            raise InvalidVariableError("Variable not found: " + variable +
-                                       "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
-
-        sub_cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
-        #  Ensure that there are no extra dimensions which can confuse the plotting.
-        # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
-        #  the dimension whose length is one. The above list comprehension would return a cube of
-        #  shape (145, 165)
-
-        return sub_cube
-
 class NetCDF_CF(AProduct):
 
     def get_file_signature(self):
@@ -209,6 +148,108 @@ class NetCDF_CF(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
+
+class NetCDF_CF_Gridded(NetCDF_CF):
+
+    def get_file_signature(self):
+        # We don't know of any 'standard' netCDF CF model data yet...
+        return []
+
+    def create_coords(self, filenames, variable = None):
+        # TODO Expand coordinates
+        # For gridded data sets this will actually return coordinates which are too short
+        #  we need to think about how to expand them here
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        return super(NetCDF_CF_Gridded, self).create_coords(filenames, variable)
+
+
+    def create_data_object(self, filenames, variable):
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        from jasmin_cis.exceptions import InvalidVariableError
+        import iris
+
+        try:
+            cube = iris.load_cube(filenames, variable)
+        except iris.exceptions.ConstraintMismatchError:
+            raise InvalidVariableError("Variable not found: " + variable +
+                                       "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
+
+        sub_cube = list(cube.slices([ coord for coord in cube.coords(dim_coords=True) if coord.points.size > 1]))[0]
+        #  Ensure that there are no extra dimensions which can confuse the plotting.
+        # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
+        #  the dimension whose length is one. The above list comprehension would return a cube of
+        #  shape (145, 165)
+
+        return sub_cube
+
+class Xglnwa(NetCDF_CF):
+
+    def get_file_signature(self):
+        return [r'.*xglnwa.*\.nc']
+
+    def create_coords(self, filenames, variable = None):
+        # TODO Expand coordinates
+        # For gridded data sets this will actually return coordinates which are too short
+        #  we need to think about how to expand them here
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        return super(Xglnwa, self).create_coords(filenames, variable)
+
+
+    def create_data_object(self, filenames, variable):
+        import iris.AttributeConstraint
+        # In this case we use the variable as a name constraint as the variable names themselves aren't obvious
+        var_constraint = iris.AttributeConstraint(name=variable)
+
+        return super(Xglnwa, self).create_data_object(filenames, var_constraint)
+
+
+class Xenida(NetCDF_CF_Gridded):
+
+    def get_file_signature(self):
+        return [r'.*xenida.*\.nc']
+
+    def create_coords(self, filenames, variable=None):
+        # TODO Expand coordinates
+        # For gridded data sets this will actually return coordinates which are too short
+        #  we need to think about how to expand them here
+        """
+
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        from data_io.netcdf import read, get_metadata
+        from data_io.Coord import Coord
+
+        variables = [ "latitude", "longitude", "altitude", "time" ]
+
+        data_variables = read(filenames[0], variables)
+
+        coords = CoordList()
+        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
+        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
+        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
+        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+
+        return coords
+
+    def create_data_object(self, filenames, variable):
+        return super(Xenida, self).create_data_object(filenames, variable)
 
 class Aeronet(AProduct):
 
@@ -244,3 +285,32 @@ class Aeronet(AProduct):
         metadata = get_file_metadata(filename, variable, (len(var_data),))
         return UngriddedData(var_data, metadata, self.create_coords([filename]))
 
+class CisCol(AProduct):
+
+    def get_file_signature(self):
+        return [r'cis\-col\-.*\.nc']
+
+    def create_coords(self, filenames, variable = None):
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.Coord import Coord
+
+        variables = [ "latitude", "longitude", "altitude", "time" ]
+
+        if variable is not None:
+            variables.append(variable)
+
+        data_variables = read_many_files(filenames, variables)
+
+        coords = CoordList()
+        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
+        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
+        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
+        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+
+        if variable is None:
+            return coords
+        else:
+            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
+
+    def create_data_object(self, filenames, variable):
+        return self.create_coords(filenames, variable)
