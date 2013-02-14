@@ -268,9 +268,16 @@ class Plotter(object):
         if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
-                parallels = arange(-90, 90, 30)
+                if self.y_range is not None:
+                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
+                else:
+                    parallels = arange(-90, 90, 30)
                 self.basemap.drawparallels(parallels, labels=[1,0,0,0], labelstyle="+/-")
-                meridians = arange(-180, 180, 30)
+
+                if self.x_range is not None:
+                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
+                else:
+                    meridians = arange(-180, 180, 30)
                 self.basemap.drawmeridians(meridians, labels=[0,0,0,1], labelstyle="+/-")
             except AttributeError:
                 pass
@@ -552,14 +559,14 @@ class Plotter(object):
         
         plot_format_options = self.__create_plot_format_options()
         self.__prepare_range("val")
-        x_range = self.__prepare_range("x")  
-        y_range = self.__prepare_range("y")
+        self.x_range = self.__prepare_range("x")
+        self.y_range = self.__prepare_range("y")
         self.__set_width_and_height()  
         Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
         self.no_colour_bar = self.kwargs.pop("nocolourbar", False)
         datafiles = self.__do_plot()  
-        self.__apply_axis_limits(x_range, "x")
-        self.__apply_axis_limits(y_range, "y")
+        self.__apply_axis_limits(self.x_range, "x")
+        self.__apply_axis_limits(self.y_range, "y")
             
         self.__format_plot(plot_format_options, datafiles) 
         
