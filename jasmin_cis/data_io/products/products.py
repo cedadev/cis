@@ -69,12 +69,24 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
 class MODIS_L2(AProduct):
 
+    modis_scaling = ["1km","5km","10km"]
+
     def get_file_signature(self):
 
         product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MYD04_L2','MYDATML2','MODATML2']
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 
+
+    def __get_data_scale(self, filename, variable):
+
+        from pyhdf import SD
+        meta = SD.SD(filename).datasets()[variable][0][0]
+
+        for scaling in self.modis_scaling:
+            if scaling in meta:
+                return scaling
+        return None
 
     def __field_interpolate(self,data,factor=5):
         '''
@@ -97,7 +109,7 @@ class MODIS_L2(AProduct):
         return output
 
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
 
         variables = [ 'Latitude','Longitude','Scan_Start_Time']
 
@@ -105,15 +117,18 @@ class MODIS_L2(AProduct):
 
         sdata, vdata = hdf.read(filenames,variables)
 
+        apply_interpolation = False
+        if variable is not None:
+            scale = self.__get_data_scale(filenames[0], variable)
+            apply_interpolation = True if scale is "1km" else False
+
         lat = sdata['Latitude']
-        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD"))
-        #lat_data = hdf.read_data(lat,"SD")
+        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata,'Y')
 
         lon = sdata['Longitude']
-        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD"))
-        #lon_data = hdf.read_data(lon,"SD")
+        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata,'X')
 
@@ -124,7 +139,8 @@ class MODIS_L2(AProduct):
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
-        coords = self.create_coords(filenames)
+        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
+        coords = self.create_coords(filenames, variable)
 
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
