@@ -22,7 +22,7 @@ class Metadata(object):
             self.standard_name = Metadata.guess_standard_name(name)
         self.long_name = long_name
         self.shape = shape
-        self.units = "$" + units + "$"
+        self.units = "$" + units + "$" if units else ''
         self.range = range
         self.factor = factor
         self.offset = offset
