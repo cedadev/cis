@@ -57,15 +57,15 @@ def __get_all_subclasses(cls):
     return subclasses
 
 
-def __get_class(filenames, product=None):
+def __get_class(filename, product=None):
     '''
     Identify the subclass of L{AProduct} to a given product name if specified.
     If the product name is not specified, the routine uses the signature (regex)
-    given by get_file_signature() to infer the product class from the filenames.
+    given by get_file_signature() to infer the product class from the filename.
 
     Note, only the first filename of the list is use here.
 
-    @param filenames: list of filenames
+    @param filename: A single filename
     @param product: name of the product
     @return: a subclass of L{AProduct}
     '''
@@ -75,6 +75,9 @@ def __get_class(filenames, product=None):
     import cis
     import plugin
     from jasmin_cis.exceptions import ClassNotFoundError
+
+    # Ensure the filename doesn't include the path
+    filename = os.path.basename(filename)
 
     # find plugin product classes, if any
     ENV_PATH = "_".join([cis.__name__.upper(),"PLUGIN","HOME"])
@@ -95,7 +98,7 @@ def __get_class(filenames, product=None):
             patterns = cls().get_file_signature()
             for pattern in patterns:
                 # Match the pattern - re.I allows for case insensitive matches
-                if re.match(pattern,filenames[0],re.I) is not None:
+                if re.match(pattern,filename,re.I) is not None:
                     logging.debug("Found product class " + cls.__name__ + " matching regex pattern " + pattern)
                     return cls
         else:
@@ -116,7 +119,7 @@ def get_data(filenames, variable, product=None):
     @param variable: The variable to create the UngriddedData object from
     @return: An Ungridded data variable
     '''
-    product_cls = __get_class(filenames, product)
+    product_cls = __get_class(filenames[0], product)
 
     logging.info("Retrieving data using product " +  product_cls.__name__)
     data = product_cls().create_data_object(filenames, variable)
@@ -131,7 +134,7 @@ def get_coordinates(filenames, product=None):
     @param filenames: A list of filenames to read data from
     @return: A CoordList object
     '''
-    product_cls = __get_class(filenames, product)
+    product_cls = __get_class(filenames[0], product)
 
     if product_cls is None:
         raise(NotImplementedError)
