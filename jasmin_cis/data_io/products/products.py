@@ -222,7 +222,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
 
         return sub_cube
 
-class Xglnwa(NetCDF_CF):
+class Xglnwa(NetCDF_CF_Gridded):
 
     def get_file_signature(self):
         return [r'.*xglnwa.*\.nc']
