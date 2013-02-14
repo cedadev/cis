@@ -248,10 +248,10 @@ class Plotter(object):
         if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
-                parallels = arange(-90, 90, 10)
-                self.basemap.drawparallels(parallels, labels=[1,0,0,0])
-                meridians = arange(-180, 180, 10)
-                self.basemap.drawmeridians(meridians, labels=[0,0,0,1])
+                parallels = arange(-90, 90, 30)
+                self.basemap.drawparallels(parallels, labels=[1,0,0,0], labelstyle="+/-")
+                meridians = arange(-180, 180, 30)
+                self.basemap.drawmeridians(meridians, labels=[0,0,0,1], labelstyle="+/-")
             except AttributeError:
                 pass
     
