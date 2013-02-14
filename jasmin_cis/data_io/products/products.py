@@ -287,13 +287,14 @@ class Aeronet(AProduct):
         #TODO Update this
         return [r'.*\.lev20']
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, data_obj = None):
         from data_io.ungridded_data import Metadata
         from numpy import array
         from data_io.aeronet import load_aeronet, get_file_metadata
 
         for filename in filenames:
-            data_obj = load_aeronet(filename)
+            if data_obj is None:
+                data_obj = load_aeronet(filename)
             metadata = get_file_metadata(filename)
             lon = metadata.misc[2][1].split("=")[1]
             lat = metadata.misc[2][2].split("=")[1]
@@ -313,4 +314,4 @@ class Aeronet(AProduct):
         data_obj = load_aeronet(filename)
         var_data = data_obj[variable]
         metadata = get_file_metadata(filename, variable, (len(var_data),))
-        return UngriddedData(var_data, metadata, self.create_coords([filename]))
+        return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj))
