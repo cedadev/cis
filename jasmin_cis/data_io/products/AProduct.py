@@ -118,11 +118,8 @@ def get_data(filenames, variable, product=None):
     '''
     product_cls = __get_class(filenames, product)
 
-    if product_cls is None:
-        raise(NotImplementedError)
-    else:
-        logging.info("Retrieving data using product " +  product_cls.__name__)
-        data = product_cls().create_data_object(filenames, variable)
+    logging.info("Retrieving data using product " +  product_cls.__name__)
+    data = product_cls().create_data_object(filenames, variable)
     return data
 
 
