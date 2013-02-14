@@ -11,6 +11,27 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
     def get_file_signature(self):
         return [r'.*2B.CWC.RVOD.*\.hdf']
 
+    def __generate_real_time_coord(self, filenames, xsize, ysize):
+        import numpy as np
+        from os.path import basename
+        from datetime import timedelta, time, datetime
+        from iris.unit import date2julian_day, CALENDAR_STANDARD
+        from data_io.ungridded_data import Metadata
+        # Work out a 'rough' real time for the data - for use in colocation
+        all_times = []
+        for a_file in filenames:
+            a_file = basename(a_file)
+            year = a_file[0:4]
+            day = a_file[4:7]
+            t = a_file[7:13]
+            #t = time(a_file[7:9],a_file[9:11],a_file[11:13])
+            #time_array = np.zeros() +
+            d = timedelta(days=int(day),seconds=int(a_file[11:13]),minutes=int(a_file[9:11]),hours=int(a_file[7:9]))
+            dt = datetime(int(year),1,1)+d
+            all_times.append(np.zeros((xsize, ysize)) + date2julian_day(dt, CALENDAR_STANDARD))
+        time_data = utils.concatenate(all_times)
+        real_time_coord = Coord(time_data, Metadata(name='time', standard_name='time', units='Julian days'))
+        return real_time_coord
 
     def create_coords(self, filenames):
 
@@ -37,6 +58,8 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lon_metadata = hdf.read_metadata(lon, "VD")
         lon_coord = Coord(lon_data, lon_metadata)
 
+        real_time_coord = self.__generate_real_time_coord(filenames, len(alt_data[0]), len(alt_data[1]))
+
         import data_io.hdf_vd as hdf_vd
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
@@ -49,7 +72,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
         time_coord = Coord(time_data, time_metadata,'X')
 
-        return CoordList([lat_coord,lon_coord,height_coord,time_coord])
+        return CoordList([lat_coord,lon_coord,height_coord,time_coord, real_time_coord])
 
     def create_data_object(self, filenames, variable):
 
@@ -185,9 +208,9 @@ class CisCol(AProduct):
         time = read(filenames[0], "Profile_time")
 
         coords = CoordList()
-        coords.append(Coord(lon, get_metadata(lon), "X"))
-        coords.append(Coord(lat, get_metadata(lat), "Y"))
-        coords.append(Coord(alt, get_metadata(alt), "Z"))
+        coords.append(Coord(lon, get_metadata(lon)))
+        coords.append(Coord(lat, get_metadata(lat), "X"))
+        coords.append(Coord(alt, get_metadata(alt)))
         coords.append(Coord(time, get_metadata(time), "T"))
 
         if variable is None:
@@ -329,7 +352,12 @@ class Xenida(NetCDF_CF_Gridded):
         return coords
 
     def create_data_object(self, filenames, variable):
-        return super(Xenida, self).create_data_object(filenames, variable)
+        from iris.aux_factory import HybridHeightFactory
+        cube = super(Xenida, self).create_data_object(filenames, variable)
+        cube.add_aux_factory(HybridHeightFactory(cube.coords()[5]))
+        print cube.coords('time')
+        print cube
+        return cube
 
 class Aeronet(AProduct):
 

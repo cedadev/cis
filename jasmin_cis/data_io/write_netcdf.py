@@ -17,9 +17,7 @@ def __add_metadata(var, data):
     if data._metadata.units: var.units = str(data._metadata.units)
     if data._metadata.long_name: var.long_name = data._metadata.long_name
     if data._metadata.range : var.valid_range = data._metadata.range
-    if data._metadata.missing_value :
-        var.missing_value = data._metadata.missing_value
-        var._FillValue = data._metadata.missing_value
+    if data._metadata.missing_value : var.missing_value = data._metadata.missing_value
     return var
 
 def __get_missing_value(coord):

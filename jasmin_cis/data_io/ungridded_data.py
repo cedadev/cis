@@ -39,6 +39,8 @@ class Metadata(object):
             standard_name = 'latitude'
         elif name.lower().startswith('lon'):
             standard_name = 'longitude'
+        elif name.lower().startswith('alt') or name.lower() == 'height':
+            standard_name = 'altitude'
         return standard_name
 
 
