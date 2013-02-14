@@ -148,7 +148,7 @@ class Plotter(object):
         except AttributeError:
             self.basemap = Basemap()
 
-        self.plots.append(self.basemap.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none"))
+        self.plots.append(self.basemap.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
     
     def plot_scatteroverlay(self, data_item):
         '''
