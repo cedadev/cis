@@ -224,6 +224,8 @@ class Plotter(object):
             legend.draggable(state = True)
     
     def __draw_coastlines(self):
+
+    def __is_map(self):
         axes = []
         for coord in self.data[0].coords(axis="X"):
             axes.append(coord.name())
@@ -238,6 +240,9 @@ class Plotter(object):
             if axis.lower().startswith("lon"): lon = True
 
         if lat and lon:
+            return True
+        else:
+            return False
             try:
                 self.basemap.drawcoastlines()
             except AttributeError:
