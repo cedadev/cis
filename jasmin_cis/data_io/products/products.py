@@ -38,9 +38,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def create_coords(self, filenames):
 
-        # if filenames is not a list, make it a list of 1 element
-        if not isinstance(filenames,list): filenames = [ filenames ]
-
         # list of coordinate variables we are interested in
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
