@@ -205,12 +205,8 @@ class Plotter(object):
             units = self.data[0].units
         axislabel = axis + "label"
 
-        if options[axislabel] is None:
-            if self.__is_map():
-                # for lat/lon plots, we ignore name and units
-                options[axislabel] = "Latitude" if axis=='y' else "Longitude"
-
-            elif self.plot_type == "line" or self.plot_type == "scatter":
+        if options[axislabel] is None and not self.__is_map():
+            if self.plot_type == "line" or self.plot_type == "scatter":
                 if len(self.data) == 1:
                     # only 1 data to plot, display
                     options[axislabel] = name + self.__format_units(units)
@@ -271,13 +267,13 @@ class Plotter(object):
                 if self.y_range is not None:
                     parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
                 else:
-                    parallels = arange(-90, 90, 30)
+                    parallels = arange(-90, 91, 30)
                 self.basemap.drawparallels(parallels, labels=[1,0,0,0], labelstyle="+/-")
 
                 if self.x_range is not None:
                     meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
                 else:
-                    meridians = arange(-180, 180, 30)
+                    meridians = arange(-180, 181, 30)
                 self.basemap.drawmeridians(meridians, labels=[0,0,0,1], labelstyle="+/-")
             except AttributeError:
                 pass
