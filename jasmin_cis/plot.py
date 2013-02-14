@@ -56,7 +56,8 @@ class Plotter(object):
         # nformat = "%.3f"
         # nformat = "%.3e"
         nformat = "%.3g"
-        plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
+        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
+        cbar.set_label(self.data[0].units)
     
     def plot_line(self, data_item):
         '''
@@ -186,25 +187,36 @@ class Plotter(object):
         else:
             options.pop("fontsize")
         return options
-    
-    def __set_x_label(self, options):
-        if options["xlabel"] is None:
-            if self.__is_map():
-                options["xlabel"] = "Longitude"
-            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
-                xlabel = self.data[0].coord(axis="X").name()
-                options["xlabel"] = xlabel.capitalize()
-        return options
-    
-    def __set_y_label(self, options):
-        if options["ylabel"] is None:
-            if self.__is_map():
-                options["ylabel"] = "Latitude"
-            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
+
+    def __format_units(self, units):
+        return "(" + units + ")" if units else ""
+
+    def __set_axis_label(self, axis, options):
+        from jasmin_cis.exceptions import CoordinateNotFoundError
+        axis = axis.lower()
+        try:
+            name = self.data[0].coord(axis=axis).name().title()
+        except CoordinateNotFoundError:
+            name = self.data[0].name.title()
+
+        try:
+            units = self.data[0].coord(axis=axis).units
+        except CoordinateNotFoundError:
+            units = self.data[0].units
+        axislabel = axis + "label"
+
+        if options[axislabel] is None and not self.__is_map():
+            if self.plot_type == "line" or self.plot_type == "scatter":
                 if len(self.data) == 1:
-                    options["ylabel"] = self.data[0].long_name.title()
+                    # only 1 data to plot, display
+                    options[axislabel] = name + self.__format_units(units)
                 else:
-                    options["ylabel"] = str(self.data[0].units)
+                    # if more than 1 data, legend will tell us what the name is. so just displaying units
+                    options[axislabel] = units
+            else:
+                # in general, display both name and units in brackets
+                options[axislabel] = name + self.__format_units(units)
+
         return options
     
     def __create_legend(self, datafiles):
@@ -252,9 +264,16 @@ class Plotter(object):
         if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
-                parallels = arange(-90, 90, 30)
+                if self.y_range is not None:
+                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
+                else:
+                    parallels = arange(-90, 91, 30)
                 self.basemap.drawparallels(parallels, labels=[1,0,0,0], labelstyle="+/-")
-                meridians = arange(-180, 180, 30)
+
+                if self.x_range is not None:
+                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
+                else:
+                    meridians = arange(-180, 181, 30)
                 self.basemap.drawmeridians(meridians, labels=[0,0,0,1], labelstyle="+/-")
             except AttributeError:
                 pass
@@ -304,8 +323,8 @@ class Plotter(object):
             
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
-            options = self.__set_x_label(options)
-            options = self.__set_y_label(options)
+            options = self.__set_axis_label("X",options)
+            options = self.__set_axis_label("Y", options)
         
             if options["xlabel"] == None:
                 options["xlabel"] = ""
@@ -315,7 +334,7 @@ class Plotter(object):
             if not options["title"]:
                 options["title"] = ""
                 
-            if self.plot_type != "line" and not options["title"]:
+            if self.plot_type != "line" and self.plot_type != "scatter2D" and not options["title"]:
                     options["title"] = self.data[0].long_name.title()            
             
             for option, value in options.iteritems():
@@ -536,14 +555,14 @@ class Plotter(object):
         
         plot_format_options = self.__create_plot_format_options()
         self.__prepare_range("val")
-        x_range = self.__prepare_range("x")  
-        y_range = self.__prepare_range("y")
+        self.x_range = self.__prepare_range("x")
+        self.y_range = self.__prepare_range("y")
         self.__set_width_and_height()  
         Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
         self.no_colour_bar = self.kwargs.pop("nocolourbar", False)
         datafiles = self.__do_plot()  
-        self.__apply_axis_limits(x_range, "x")
-        self.__apply_axis_limits(y_range, "y")
+        self.__apply_axis_limits(self.x_range, "x")
+        self.__apply_axis_limits(self.y_range, "y")
             
         self.__format_plot(plot_format_options, datafiles) 
         

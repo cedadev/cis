@@ -1,37 +1,12 @@
 from data_io.Coord import Coord, CoordList
-from data_io.hdf import read_hdf4
 from data_io.products.AProduct import AProduct
 from data_io.ungridded_data import UngriddedData
 import jasmin_cis.utils as utils
-import data_io.hdf_vd as hdf_vd
-import data_io.hdf_sd as hdf_sd
+import data_io.hdf as hdf
 
 import logging
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
-
-    def __read_files(self, filenames, variables):
-
-        sdata = {}
-        vdata = {}
-        for filename in filenames:
-
-            logging.info("reading file: " + filename)
-
-            try:
-                # reading in all variables into a 2 dictionaries:
-                # sdata, key: variable name, value: list of sds
-                # vdata, key: variable name, value: list of vds
-                sds_dict, vds_dict = read_hdf4(filename,variables)
-                for var in sds_dict.keys():
-                    utils.add_element_to_list_in_dict(sdata,var,sds_dict[var])
-                for var in vds_dict.keys():
-                    utils.add_element_to_list_in_dict(vdata,var,vds_dict[var])
-
-            except:
-                print 'Error while reading file ', filename
-
-        return sdata,vdata
 
     def get_file_signature(self):
         return [r'.*2B.CWC.RVOD.*\.hdf']
@@ -63,26 +38,29 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # list of coordinate variables we are interested in
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
+        logging.debug("Listing coordinates: " + str(variables))
+
         # reading the various files
-        sdata, vdata = self.__read_files(filenames,variables)
+        sdata, vdata = hdf.read(filenames,variables)
 
-        logging.debug("retrieving coordinate(s) data+metadata")
-        alt_data = utils.concatenate([hdf_sd.get_data(i) for i in sdata['Height'] ])
-        alt_metadata = hdf_sd.get_metadata(sdata['Height'][0])
-        alt_coord = Coord(alt_data, alt_metadata,'Y')
+        height = sdata['Height']
+        height_data = hdf.read_data(height, "SD")
+        height_metadata = hdf.read_metadata(height, "SD")
+        height_coord = Coord(height_data, height_metadata,'Y')
 
-        lat_data = utils.concatenate([hdf_vd.get_data(i) for i in vdata['Latitude'] ])
-        lat_data = utils.expand_1d_to_2d_array(lat_data,len(alt_data[1]),axis=1)
-        lat_metadata = hdf_vd.get_metadata(vdata['Latitude'][0])
+        lat = vdata['Latitude']
+        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[1]),axis=1)
+        lat_metadata = hdf.read_metadata(lat,"VD")
         lat_coord = Coord(lat_data, lat_metadata)
 
-        lon_data = utils.concatenate([hdf_vd.get_data(i) for i in vdata['Longitude'] ])
-        lon_data = utils.expand_1d_to_2d_array(lon_data,len(alt_data[1]),axis=1)
-        lon_metadata = hdf_vd.get_metadata(vdata['Longitude'][0])
+        lon = vdata['Longitude']
+        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[1]),axis=1)
+        lon_metadata = hdf.read_metadata(lon, "VD")
         lon_coord = Coord(lon_data, lon_metadata)
 
         real_time_coord = self.__generate_real_time_coord(filenames, len(alt_data[0]), len(alt_data[1]))
 
+        import data_io.hdf_vd as hdf_vd
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
             time = hdf_vd.get_data(i)
@@ -90,25 +68,96 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             time += start
             arrays.append(time)
         time_data = utils.concatenate(arrays)
-        time_data = utils.expand_1d_to_2d_array(time_data,len(alt_data[1]),axis=1)
-        time_metadata = hdf_vd.get_metadata(vdata['Profile_time'][0])
+        time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[1]),axis=1)
+        time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
         time_coord = Coord(time_data, time_metadata,'X')
 
-        return CoordList([lat_coord,lon_coord,alt_coord,time_coord, real_time_coord])
+        return CoordList([lat_coord,lon_coord,height_coord,time_coord, real_time_coord])
 
     def create_data_object(self, filenames, variable):
 
+        logging.debug("Creating data object for variable " + variable)
+
+        # reading coordinates
         coords = self.create_coords(filenames)
 
         # reading of variables
-        sdata, vdata = self.__read_files(filenames, variable)
+        sdata, vdata = hdf.read(filenames, variable)
 
         # retrieve data + its metadata
-        logging.debug("retrieving data and associated metadata for variable: " + variable)
-        data = sdata[variable]
-        metadata = hdf_sd.get_metadata(sdata[variable][0])
+        var = sdata[variable]
+        metadata = hdf.read_metadata(var,"SD")
 
-        return UngriddedData(data,metadata,coords)
+        return UngriddedData(var,metadata,coords)
+
+class MODIS_L2(AProduct):
+
+    def get_file_signature(self):
+
+        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MYD04_L2','MYDATML2','MODATML2']
+        regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
+        return regex_list
+
+
+    def __field_interpolate(self,data,factor=5):
+        '''
+        Interpolates the given 2D field by the factor,
+        edge pixels are defined by the ones in the centre,
+        odd factords only!
+        '''
+        import numpy as np
+
+        logging.debug("Performing interpolation...")
+
+        output = np.zeros((factor*data.shape[0],factor*data.shape[1]))*np.nan
+        output[int(factor/2)::factor,int(factor/2)::factor] = data
+        for i in range(1,factor+1):
+            output[(int(factor/2)+i):(-1*factor/2+1):factor,:] = i*((output[int(factor/2)+factor::factor,:]-output[int(factor/2):(-1*factor):factor,:])
+                                                                    /float(factor))+output[int(factor/2):(-1*factor):factor,:]
+        for i in range(1,factor+1):
+            output[:,(int(factor/2)+i):(-1*factor/2+1):factor] = i*((output[:,int(factor/2)+factor::factor]-output[:,int(factor/2):(-1*factor):factor])
+                                                                    /float(factor))+output[:,int(factor/2):(-1*factor):factor]
+        return output
+
+
+    def create_coords(self, filenames):
+
+        variables = [ 'Latitude','Longitude','Scan_Start_Time']
+
+        logging.debug("Listing coordinates: " + str(variables))
+
+        sdata, vdata = hdf.read(filenames,variables)
+
+        lat = sdata['Latitude']
+        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD"))
+        #lat_data = hdf.read_data(lat,"SD")
+        lat_metadata = hdf.read_metadata(lat, "SD")
+        lat_coord = Coord(lat_data, lat_metadata,'Y')
+
+        lon = sdata['Longitude']
+        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD"))
+        #lon_data = hdf.read_data(lon,"SD")
+        lon_metadata = hdf.read_metadata(lon,"SD")
+        lon_coord = Coord(lon_data, lon_metadata,'X')
+
+        return CoordList([lat_coord,lon_coord])
+
+    def create_data_object(self, filenames, variable):
+
+        logging.debug("Creating data object for variable " + variable)
+
+        # reading coordinates
+        coords = self.create_coords(filenames)
+
+        # reading of variables
+        sdata, vdata = hdf.read(filenames, variable)
+
+        # retrieve data + its metadata
+        var = sdata[variable]
+        metadata = hdf.read_metadata(var, "SD")
+
+        return UngriddedData(var, metadata, coords)
+
 
 class Cloud_CCI(AProduct):
 
@@ -246,7 +295,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
 
         return sub_cube
 
-class Xglnwa(NetCDF_CF):
+class Xglnwa(NetCDF_CF_Gridded):
 
     def get_file_signature(self):
         return [r'.*xglnwa.*\.nc']
@@ -265,9 +314,9 @@ class Xglnwa(NetCDF_CF):
 
 
     def create_data_object(self, filenames, variable):
-        import iris.AttributeConstraint
+        from iris import AttributeConstraint
         # In this case we use the variable as a name constraint as the variable names themselves aren't obvious
-        var_constraint = iris.AttributeConstraint(name=variable)
+        var_constraint = AttributeConstraint(name=variable)
 
         return super(Xglnwa, self).create_data_object(filenames, var_constraint)
 
@@ -316,13 +365,14 @@ class Aeronet(AProduct):
         #TODO Update this
         return [r'.*\.lev20']
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, data_obj = None):
         from data_io.ungridded_data import Metadata
         from numpy import array
         from data_io.aeronet import load_aeronet, get_file_metadata
 
         for filename in filenames:
-            data_obj = load_aeronet(filename)
+            if data_obj is None:
+                data_obj = load_aeronet(filename)
             metadata = get_file_metadata(filename)
             lon = metadata.misc[2][1].split("=")[1]
             lat = metadata.misc[2][2].split("=")[1]
@@ -331,15 +381,19 @@ class Aeronet(AProduct):
             coords.append(Coord(array([lon]), Metadata(name="Longitude", shape=(1,), units="degrees_east", range=(-180,180), missing_value=-999)))
             coords.append(Coord(array([lat]), Metadata(name="Latitude", shape=(1,), units="degrees_north", range=(-90,90), missing_value=-999)))
             date_time_data = data_obj["datetime"]
-            coords.append(Coord(date_time_data, Metadata(name="Date time", shape=(len(date_time_data),), units="Time_units"), "X"))
+            coords.append(Coord(date_time_data, Metadata(name="Date time", shape=(len(date_time_data),)), "X"))
 
         return coords
 
     def create_data_object(self, filenames, variable):
         from data_io.aeronet import load_aeronet, get_file_metadata
+        from jasmin_cis.exceptions import InvalidVariableError
         data = []
         filename = filenames[0]
         data_obj = load_aeronet(filename)
-        var_data = data_obj[variable]
+        try:
+            var_data = data_obj[variable]
+        except ValueError:
+            raise InvalidVariableError(variable + " does not exist in file " + filename)
         metadata = get_file_metadata(filename, variable, (len(var_data),))
-        return UngriddedData(var_data, metadata, self.create_coords([filename]))
+        return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj))
