@@ -27,14 +27,14 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         height_metadata = hdf.read_metadata(height, "SD")
         height_coord = Coord(height_data, height_metadata,'Y')
 
-        lat_data = hdf.read_data(vdata['Latitude'], "VD")
-        lat_data = utils.expand_1d_to_2d_array(lat_data,len(height_data[1]),axis=1)
-        lat_metadata = hdf.read_metadata(vdata['Latitude'],"VD")
+        lat = vdata['Latitude']
+        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[1]),axis=1)
+        lat_metadata = hdf.read_metadata(lat,"VD")
         lat_coord = Coord(lat_data, lat_metadata)
 
-        lon_data = hdf.read_data(vdata['Longitude'], "VD")
-        lon_data = utils.expand_1d_to_2d_array(lon_data,len(height_data[1]),axis=1)
-        lon_metadata = hdf.read_metadata(vdata['Longitude'], "VD")
+        lon = vdata['Longitude']
+        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[1]),axis=1)
+        lon_metadata = hdf.read_metadata(lon, "VD")
         lon_coord = Coord(lon_data, lon_metadata)
 
         import data_io.hdf_vd as hdf_vd
@@ -106,14 +106,12 @@ class MODIS_L2(AProduct):
         sdata, vdata = hdf.read(filenames,variables)
 
         lat = sdata['Latitude']
-        lat_data = hdf.read_data(lat,"SD")
-        lat_data = self.__field_interpolate(lat_data)
+        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD"))
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata,'Y')
 
         lon = sdata['Longitude']
-        lon_data = hdf.read_data(lon,"SD")
-        lon_data = self.__field_interpolate(lon_data)
+        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD"))
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata,'X')
 
