@@ -357,9 +357,13 @@ class Aeronet(AProduct):
 
     def create_data_object(self, filenames, variable):
         from data_io.aeronet import load_aeronet, get_file_metadata
+        from jasmin_cis.exceptions import InvalidVariableError
         data = []
         filename = filenames[0]
         data_obj = load_aeronet(filename)
-        var_data = data_obj[variable]
+        try:
+            var_data = data_obj[variable]
+        except ValueError:
+            raise InvalidVariableError(variable + " does not exist in file " + filename)
         metadata = get_file_metadata(filename, variable, (len(var_data),))
         return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj))
