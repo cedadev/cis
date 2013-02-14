@@ -71,8 +71,11 @@ if __name__ ==  '__main__':
     # This is a very simple interpolation linear scheme which could do with some improvement.
     latitude_1km = field_interpolate(L2_data['Latitude'])
     longitude_1km = field_interpolate(L2_data['Longitude'])
+    #latitude_1km = L2_data['Latitude']
+    #longitude_1km = L2_data['Longitude']
 
-    #The last four bins in the across scan direction are truncated (According to P. Hubanks
+
+#The last four bins in the across scan direction are truncated (According to P. Hubanks
     # at NASA), I can't find this mentionned anywhere in the documentation though, and it is probably
     # not true for all datasets
     plt_lwp = L2_data['Cloud_Water_Path'][:,:-4]
