@@ -189,19 +189,20 @@ class Plotter(object):
         return options
 
     def __format_units(self, units):
-        return "(" + units + ")" if units else ""
+        return " (" + str(units) + ")" if units else ""
 
     def __set_axis_label(self, axis, options):
-        from jasmin_cis.exceptions import CoordinateNotFoundError
+        import jasmin_cis.exceptions as cisex
+        import iris.exceptions as irisex
         axis = axis.lower()
         try:
             name = self.data[0].coord(axis=axis).name().title()
-        except CoordinateNotFoundError:
-            name = self.data[0].name.title()
+        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+            name = self.data[0].name().title()
 
         try:
             units = self.data[0].coord(axis=axis).units
-        except CoordinateNotFoundError:
+        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
             units = self.data[0].units
         axislabel = axis + "label"
 
