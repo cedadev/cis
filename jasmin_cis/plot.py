@@ -188,28 +188,38 @@ class Plotter(object):
             options.pop("fontsize")
         return options
 
-    def __set_axis_label(self, axis, options):
+    def __format_units(self, units):
+        return "(" + units + ")" if units else ""
 
+    def __set_axis_label(self, axis, options):
+        from jasmin_cis.exceptions import CoordinateNotFoundError
         axis = axis.lower()
-        name = self.data[0].coord(axis=axis).name().title()
-        units = self.data[0].coord(axis=axis).units
+        try:
+            name = self.data[0].coord(axis=axis).name().title()
+        except CoordinateNotFoundError:
+            name = self.data[0].name.title()
+
+        try:
+            units = self.data[0].coord(axis=axis).units
+        except CoordinateNotFoundError:
+            units = self.data[0].units
         axislabel = axis + "label"
 
         if options[axislabel] is None:
             if self.__is_map():
-                # for lat/on plots, we ignore name and units
+                # for lat/lon plots, we ignore name and units
                 options[axislabel] = "Latitude" if axis=='y' else "Longitude"
 
             elif self.plot_type == "line" or self.plot_type == "scatter":
                 if len(self.data) == 1:
                     # only 1 data to plot, display
-                    options[axislabel] = name + " (" + units + ")"
+                    options[axislabel] = name + self.__format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     options[axislabel] = units
             else:
                 # in general, display both name and units in brackets
-                options[axislabel] = name + " (" + units + ")"
+                options[axislabel] = name + self.__format_units(units)
 
         return options
     
@@ -321,7 +331,7 @@ class Plotter(object):
             if not options["title"]:
                 options["title"] = ""
                 
-            if self.plot_type != "line" and not options["title"]:
+            if self.plot_type != "line" and self.plot_type != "scatter2D" and not options["title"]:
                     options["title"] = self.data[0].long_name.title()            
             
             for option, value in options.iteritems():
