@@ -69,7 +69,7 @@ class Plotter(object):
     
     def plot_heatmap(self, data_item):
         '''
-        Plots a heatmap using Basemap
+        Plots a heatmap
         Stores the min and max values of the data to be used later on for setting the colour scheme of scatter plots
         Stores the plot in a list to be used for when adding the legend
         
@@ -78,22 +78,15 @@ class Plotter(object):
         #import matplotlib.colors as colors
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
-        self.basemap = Basemap()    
-        #norm = colors.LogNorm,         
-        self.plots.append(self.basemap.pcolormesh(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
 
-    def plot_heatmap_nobasemap(self, data_item):
-        '''
-        Plots a heatmap without using basemap
-        Stores the min and max values of the data to be used later on for setting the colour scheme of scatter plots
-        Stores the plot in a list to be used for when adding the legend
-        
-        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
-        '''
-        self.min_data = data_item["data"].min()
-        self.max_data = data_item["data"].max()
-
-        self.plots.append(plt.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        if self.__is_map():
+            self.basemap = Basemap()
+            plot_method = self.basemap
+            self.kwargs["latlon"] = True
+        else:
+            plot_method = plt
+        self.plots.append(plot_method.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.kwargs.pop("latlon", None)
         
     def plot_contour(self, data_item):
         '''
@@ -183,7 +176,6 @@ class Plotter(object):
                 'scatter' : PlotType(None, 2, plot_scatter),
                 'scatter2D' : PlotType(None, 2, plot_scatter),
                 'heatmap' : PlotType(1, 2, plot_heatmap),
-                'heatmap_nobasemap' : PlotType(1, 2, plot_heatmap_nobasemap),
                 'contour' : PlotType(1, 2, plot_contour),
                 'contourf' : PlotType(1, 2, plot_contourf),
                 'scatteroverlay' : PlotType(None, 2, plot_scatteroverlay)}
@@ -395,13 +387,7 @@ class Plotter(object):
 
             # for heatmaps, we plot the world map (with basemap)
             # if the 'x' axis is longitude AND the 'y' axis is the latitude
-            if self.plot_type == "heatmap":
-                if item.y.standard_name == "latitude" and item.x.standard_name == "longitude":
-                    Plotter.plot_types["heatmap"].plot_method(self, item_to_plot)
-                else:
-                    Plotter.plot_types["heatmap_nobasemap"].plot_method(self, item_to_plot)
-            else:              
-                Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
+            Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
 
             # Remove temp args
             if datafiles is not None:
