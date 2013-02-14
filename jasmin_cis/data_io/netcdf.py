@@ -76,7 +76,18 @@ def get_metadata(var):
         standard_name = var.standard_name
     except AttributeError:
         standard_name = ""
-    metadata = Metadata(var._name, standard_name, var.long_name, units=var.units, missing_value=var._FillValue, shape=(var._recLen[0],))
+    try:
+        missing_value = var.missing_value
+    except AttributeError:
+        try:
+            missing_value = var._FillValue
+        except AttributeError:
+            missing_value = ""
+    try:
+        shape=(var._recLen[0],)
+    except AttributeError:
+        shape = ()
+    metadata = Metadata(var._name, standard_name, var.long_name, units=var.units, missing_value=missing_value, shape=shape)
 
     return metadata
 

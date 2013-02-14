@@ -1,7 +1,7 @@
 '''
     Module for the UngriddedData class
 '''
-from netCDF4 import _Variable
+from netCDF4 import _Variable, Variable
 from netcdf import get_data as netcdf_get_data
 from hdf_vd import get_data as hdf_vd_get_data, VDS
 from pyhdf.SD import SDS
@@ -49,6 +49,7 @@ class Metadata(object):
 # This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
 static_mappings = { SDS : hdf_sd_get_data,
                     VDS : hdf_vd_get_data,
+                    Variable : netcdf_get_data,
                     _Variable : netcdf_get_data }
 
 class LazyData(object):

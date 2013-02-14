@@ -117,6 +117,36 @@ class Cloud_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
+class CisCol(AProduct):
+
+    def get_file_signature(self):
+        return [r'cis\-col\-.*\.nc']
+
+    def create_coords(self, filenames, variable = None):
+        from data_io.netcdf import read, get_metadata
+        from data_io.Coord import Coord
+
+        if variable is not None:
+            var = read(filenames[0], variable)
+
+        lon = read(filenames[0], "Longitude")
+        lat = read(filenames[0], "Latitude")
+        alt = read(filenames[0], "Height")
+        time = read(filenames[0], "Profile_time")
+
+        coords = CoordList()
+        coords.append(Coord(lon, get_metadata(lon), "X"))
+        coords.append(Coord(lat, get_metadata(lat), "Y"))
+        coords.append(Coord(alt, get_metadata(alt), "Z"))
+        coords.append(Coord(time, get_metadata(time), "T"))
+
+        if variable is None:
+            return coords
+        else:
+            return UngriddedData(var, get_metadata(var), coords)
+
+    def create_data_object(self, filenames, variable):
+        return self.create_coords(filenames, variable)
 
 class NetCDF_CF(AProduct):
 
@@ -284,33 +314,3 @@ class Aeronet(AProduct):
         var_data = data_obj[variable]
         metadata = get_file_metadata(filename, variable, (len(var_data),))
         return UngriddedData(var_data, metadata, self.create_coords([filename]))
-
-class CisCol(AProduct):
-
-    def get_file_signature(self):
-        return [r'cis\-col\-.*\.nc']
-
-    def create_coords(self, filenames, variable = None):
-        from data_io.netcdf import read_many_files, get_metadata
-        from data_io.Coord import Coord
-
-        variables = [ "latitude", "longitude", "altitude", "time" ]
-
-        if variable is not None:
-            variables.append(variable)
-
-        data_variables = read_many_files(filenames, variables)
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["Longitude"], get_metadata(data_variables["Longitude"]), "X"))
-        coords.append(Coord(data_variables["Latitude"], get_metadata(data_variables["Latitude"]), "Y"))
-        coords.append(Coord(data_variables["Height"], get_metadata(data_variables["Height"]), "Z"))
-        coords.append(Coord(data_variables["Profile_time"], get_metadata(data_variables["Profile_time"]), "T"))
-
-        if variable is None:
-            return coords
-        else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
-
-    def create_data_object(self, filenames, variable):
-        return self.create_coords(filenames, variable)
