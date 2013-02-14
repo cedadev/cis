@@ -252,9 +252,14 @@ class Plotter(object):
             return False
 
     def __draw_coastlines(self):
+        from numpy import arange
         if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
+                parallels = arange(-90, 90, 10)
+                self.basemap.drawparallels(parallels, labels=[1,0,0,0])
+                meridians = arange(-180, 180, 10)
+                self.basemap.drawmeridians(meridians, labels=[0,0,0,1])
             except AttributeError:
                 pass
     
