@@ -6,6 +6,7 @@ License: GNU GPL v3
 from datetime import datetime, timedelta
 import numpy as np
 from matplotlib import mlab
+import linecache
 
 __all__ = ['load_aeronet']
 
@@ -55,3 +56,6 @@ def get_file_metadata(filename, variable = None, shape = None):
     metadata.long_name = variable
     metadata.shape = shape
     return metadata
+
+def get_aeronet_file_variables(filename):
+    return linecache.getline(filename, 5).split(",")
