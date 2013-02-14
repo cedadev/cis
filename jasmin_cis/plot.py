@@ -188,19 +188,25 @@ class Plotter(object):
         return options
     
     def __set_x_label(self, options):
-        if options["xlabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
-            for dim in xrange(len(self.data[0].shape)):
-                for coord in self.data[0].coords(axis="X"):
-                    xlabel = coord.name()
-            options["xlabel"] = xlabel.capitalize()
+        if options["xlabel"] is None:
+            if self.__is_map():
+                options["xlabel"] = "Longitude"
+            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
+                for dim in xrange(len(self.data[0].shape)):
+                    for coord in self.data[0].coords(axis="X"):
+                        xlabel = coord.name()
+                options["xlabel"] = xlabel.capitalize()
         return options
     
     def __set_y_label(self, options):
-        if options["ylabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
-            if len(self.data) == 1:
-                options["ylabel"] = self.data[0].long_name.title()
-            else:
-                options["ylabel"] = str(self.data[0].units)
+        if options["ylabel"] is None:
+            if self.__is_map():
+                options["ylabel"] = "Latitude"
+            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
+                if len(self.data) == 1:
+                    options["ylabel"] = self.data[0].long_name.title()
+                else:
+                    options["ylabel"] = str(self.data[0].units)
         return options
     
     def __create_legend(self, datafiles):
