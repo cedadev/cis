@@ -3,17 +3,21 @@
 '''
 from collections import namedtuple
 from data_io.ungridded_data import LazyData
-
+import numpy as np
 
 class Colocator(object):
 
-    def __init__(self, points, data, col_method='nn', constraints=None):
+    def __init__(self, points, data, col_method='nn', constraints=None, fill_value=None):
         from jasmin_cis.exceptions import InvalidColocationMethodError
         from iris import cube
         
         self.points = points
         self.data = data
-        self.constraints = constraints        
+        self.constraints = constraints
+        if fill_value is None:
+            self.fill_value = np.Infinity
+        else:
+            self.fill_value = fill_value
         
         if isinstance(data, cube.Cube):  
             methods = Colocator.gridded_colocation_methods._asdict()
@@ -35,12 +39,11 @@ class Colocator(object):
             return UngriddedData.from_points_array(self.points)
                 
     def colocate(self):
-        import numpy as np
-        vals = np.ndarray()
-        for point in self.points:
-            vals.append(self.method(self, point))
-        new_data = LazyData(vals, self.data.metadata)
-        #new_data.missing_value = np.Infinity
+        values = np.zeros(len(self.points))
+        for i, point in enumerate(self.points):
+            values[i] = self.method(self, point)
+        new_data = LazyData(values, self.data.metadata)
+        new_data.missing_value = self.fill_value
         return new_data
         
     def find_nn_value(self, point):
@@ -58,7 +61,6 @@ class Colocator(object):
             Co-location routine using nearest neighbour algorithm optimized for ungridded data
         '''
         from jasmin_cis.data_io.hyperpoint import HyperPoint
-        import numpy as np
         nearest_point = point.furthest_point_from()
         for (x,y), value in np.ndenumerate(self.data.data):
             ug_point = HyperPoint(self.data.lat[x,y],self.data.lon[x,y],val=value)
@@ -75,7 +77,10 @@ class Colocator(object):
              This calls out to iris to do the work.
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
-        return nearest_neighbour_data_value(self.data, point.get_coord_tuple())
+        try:
+            val = nearest_neighbour_data_value(self.data, point.get_coord_tuple())
+        except ValueError:
+            val = self.fill_value
     
     def find_value_by_li(self, point):
         pass

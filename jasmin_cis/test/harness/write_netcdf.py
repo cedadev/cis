@@ -30,7 +30,7 @@ def test_main():
                                                                       missing_value=0), "T"))
 
     data = array([6,43,86,25,86,12,95,45,73,87])
-    metadata = Metadata(name='rain',
+    metadata = Metadata(name='mass_fraction_of_cloud_liquid_water_in_air',
                         long_name='Long Rain',
                         shape=(10,),
                         units='Rain units',
@@ -44,7 +44,7 @@ def test_read():
     from data_io.products.AProduct import get_data
 
     filenames = ["ungridded_netcdf.nc"]
-    data_object = get_data(filenames, 'rain',"Cloud_CCI")
+    data_object = get_data(filenames, 'mass_fraction_of_cloud_liquid_water_in_air',"Cloud_CCI")
 
     print data_object.data
 
