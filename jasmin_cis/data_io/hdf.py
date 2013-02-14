@@ -1,4 +1,6 @@
 from data_io import hdf_sd as hdf_sd, hdf_vd
+import utils
+import logging
 
 def get_hdf4_file_variables(filename):
     '''
@@ -14,7 +16,7 @@ def get_hdf4_file_variables(filename):
 
     return SD_vars, VD_vars
 
-def read_hdf4(filename,variables):
+def __read_hdf4(filename,variables):
     '''
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
          for each VD and SD data types.
@@ -40,3 +42,42 @@ def read_hdf4(filename,variables):
             raise InvalidVariableError("Could not find " + variable + " in file: " + filename)
 
     return sds_dict, vds_dict
+
+
+def read(filenames,variables):
+
+    sdata = {}
+    vdata = {}
+
+    for filename in filenames:
+
+        logging.debug("reading file: " + filename)
+
+        try:
+            # reading in all variables into a 2 dictionaries:
+            # sdata, key: variable name, value: list of sds
+            # vdata, key: variable name, value: list of vds
+            sds_dict, vds_dict = __read_hdf4(filename,variables)
+            for var in sds_dict.keys():
+                utils.add_element_to_list_in_dict(sdata,var,sds_dict[var])
+            for var in vds_dict.keys():
+                utils.add_element_to_list_in_dict(vdata,var,vds_dict[var])
+
+        except:
+            print 'Error while reading file ', filename
+
+    return sdata,vdata
+
+def read_data(data_dict, data_type):
+    if data_type=='VD':
+        out =  utils.concatenate([hdf_vd.get_data(i) for i in data_dict ])
+    if data_type=='SD':
+        out =  utils.concatenate([hdf_sd.get_data(i) for i in data_dict ])
+    return out
+
+def read_metadata(data_dict, data_type):
+    if data_type=='VD':
+        out = hdf_vd.get_metadata(data_dict[0])
+    if data_type=='SD':
+        out = hdf_sd.get_metadata(data_dict[0])
+    return out

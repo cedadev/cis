@@ -1,64 +1,43 @@
 from data_io.Coord import Coord, CoordList
-from data_io.hdf import read_hdf4
 from data_io.products.AProduct import AProduct
 from data_io.ungridded_data import UngriddedData
 import jasmin_cis.utils as utils
-import data_io.hdf_vd as hdf_vd
-import data_io.hdf_sd as hdf_sd
+import data_io.hdf as hdf
 
 import logging
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
-    def __read_files(self, filenames, variables):
-
-        sdata = {}
-        vdata = {}
-        for filename in filenames:
-
-            logging.info("reading file: " + filename)
-
-            try:
-                # reading in all variables into a 2 dictionaries:
-                # sdata, key: variable name, value: list of sds
-                # vdata, key: variable name, value: list of vds
-                sds_dict, vds_dict = read_hdf4(filename,variables)
-                for var in sds_dict.keys():
-                    utils.add_element_to_list_in_dict(sdata,var,sds_dict[var])
-                for var in vds_dict.keys():
-                    utils.add_element_to_list_in_dict(vdata,var,vds_dict[var])
-
-            except:
-                print 'Error while reading file ', filename
-
-        return sdata,vdata
-
     def get_file_signature(self):
         return [r'.*2B.CWC.RVOD.*\.hdf']
+
 
     def create_coords(self, filenames):
 
         # list of coordinate variables we are interested in
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
+        logging.debug("Listing coordinates: " + str(variables))
+
         # reading the various files
-        sdata, vdata = self.__read_files(filenames,variables)
+        sdata, vdata = hdf.read(filenames,variables)
 
-        logging.debug("retrieving coordinate(s) data+metadata")
-        alt_data = utils.concatenate([hdf_sd.get_data(i) for i in sdata['Height'] ])
-        alt_metadata = hdf_sd.get_metadata(sdata['Height'][0])
-        alt_coord = Coord(alt_data, alt_metadata,'Y')
+        height = sdata['Height']
+        height_data = hdf.read_data(height, "SD")
+        height_metadata = hdf.read_metadata(height, "SD")
+        height_coord = Coord(height_data, height_metadata,'Y')
 
-        lat_data = utils.concatenate([hdf_vd.get_data(i) for i in vdata['Latitude'] ])
-        lat_data = utils.expand_1d_to_2d_array(lat_data,len(alt_data[1]),axis=1)
-        lat_metadata = hdf_vd.get_metadata(vdata['Latitude'][0])
+        lat = vdata['Latitude']
+        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[1]),axis=1)
+        lat_metadata = hdf.read_metadata(lat,"VD")
         lat_coord = Coord(lat_data, lat_metadata)
 
-        lon_data = utils.concatenate([hdf_vd.get_data(i) for i in vdata['Longitude'] ])
-        lon_data = utils.expand_1d_to_2d_array(lon_data,len(alt_data[1]),axis=1)
-        lon_metadata = hdf_vd.get_metadata(vdata['Longitude'][0])
+        lon = vdata['Longitude']
+        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[1]),axis=1)
+        lon_metadata = hdf.read_metadata(lon, "VD")
         lon_coord = Coord(lon_data, lon_metadata)
 
+        import data_io.hdf_vd as hdf_vd
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
             time = hdf_vd.get_data(i)
@@ -66,25 +45,94 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             time += start
             arrays.append(time)
         time_data = utils.concatenate(arrays)
-        time_data = utils.expand_1d_to_2d_array(time_data,len(alt_data[1]),axis=1)
-        time_metadata = hdf_vd.get_metadata(vdata['Profile_time'][0])
+        time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[1]),axis=1)
+        time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
         time_coord = Coord(time_data, time_metadata,'X')
 
-        return CoordList([lat_coord,lon_coord,alt_coord,time_coord])
+        return CoordList([lat_coord,lon_coord,height_coord,time_coord])
 
     def create_data_object(self, filenames, variable):
 
+        logging.debug("Creating data object for variable " + variable)
+
+        # reading coordinates
         coords = self.create_coords(filenames)
 
         # reading of variables
-        sdata, vdata = self.__read_files(filenames, variable)
+        sdata, vdata = hdf.read(filenames, variable)
 
         # retrieve data + its metadata
-        logging.debug("retrieving data and associated metadata for variable: " + variable)
-        data = sdata[variable]
-        metadata = hdf_sd.get_metadata(sdata[variable][0])
+        var = sdata[variable]
+        metadata = hdf.read_metadata(var,"SD")
 
-        return UngriddedData(data,metadata,coords)
+        return UngriddedData(var,metadata,coords)
+
+class MODIS_L2(AProduct):
+
+    def get_file_signature(self):
+
+        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MYD04_L2','MYDATML2','MODATML2']
+        regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
+        return regex_list
+
+
+    def __field_interpolate(self,data,factor=5):
+        '''
+        Interpolates the given 2D field by the factor,
+        edge pixels are defined by the ones in the centre,
+        odd factords only!
+        '''
+        import numpy as np
+
+        logging.debug("Performing interpolation...")
+
+        output = np.zeros((factor*data.shape[0],factor*data.shape[1]))*np.nan
+        output[int(factor/2)::factor,int(factor/2)::factor] = data
+        for i in range(1,factor+1):
+            output[(int(factor/2)+i):(-1*factor/2+1):factor,:] = i*((output[int(factor/2)+factor::factor,:]-output[int(factor/2):(-1*factor):factor,:])
+                                                                    /float(factor))+output[int(factor/2):(-1*factor):factor,:]
+        for i in range(1,factor+1):
+            output[:,(int(factor/2)+i):(-1*factor/2+1):factor] = i*((output[:,int(factor/2)+factor::factor]-output[:,int(factor/2):(-1*factor):factor])
+                                                                    /float(factor))+output[:,int(factor/2):(-1*factor):factor]
+        return output
+
+
+    def create_coords(self, filenames):
+
+        variables = [ 'Latitude','Longitude','Scan_Start_Time']
+
+        logging.debug("Listing coordinates: " + str(variables))
+
+        sdata, vdata = hdf.read(filenames,variables)
+
+        lat = sdata['Latitude']
+        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD"))
+        lat_metadata = hdf.read_metadata(lat, "SD")
+        lat_coord = Coord(lat_data, lat_metadata,'Y')
+
+        lon = sdata['Longitude']
+        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD"))
+        lon_metadata = hdf.read_metadata(lon,"SD")
+        lon_coord = Coord(lon_data, lon_metadata,'X')
+
+        return CoordList([lat_coord,lon_coord])
+
+    def create_data_object(self, filenames, variable):
+
+        logging.debug("Creating data object for variable " + variable)
+
+        # reading coordinates
+        coords = self.create_coords(filenames)
+
+        # reading of variables
+        sdata, vdata = hdf.read(filenames, variable)
+
+        # retrieve data + its metadata
+        var = sdata[variable]
+        metadata = hdf.read_metadata(var, "SD")
+
+        return UngriddedData(var, metadata, coords)
+
 
 class Cloud_CCI(AProduct):
 
