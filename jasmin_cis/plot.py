@@ -147,11 +147,15 @@ class Plotter(object):
         else:
             scatter_size = 20 # Default scatter size
 
-        # Code review this
-        try:
-            x = self.basemap
-        except AttributeError:
-            self.basemap = Basemap()
+        if self.__is_map():
+            # Code review this
+            try:
+                plot_method = self.basemap
+            except AttributeError:
+                self.basemap = Basemap()
+                plot_method = self.basemap
+        else:
+            plot_method = plt
 
         self.plots.append(self.basemap.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
     
