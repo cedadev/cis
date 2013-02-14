@@ -109,9 +109,15 @@ def col_cmd(main_arguments):
 
     sample_file = main_arguments.pop("samplefilename")
     input_groups = main_arguments.pop("datafiles")
-    output_file = main_arguments.pop("output")
+    output_file = "cis-col-" + main_arguments.pop("output") + ".nc"
 
     coords = read_file_coordinates(sample_file)
+
+    for coord in coords:
+        print coord.data
+        coord.data = coord.data[0:10]
+        print coord.data
+
     sample_points = coords.get_coordinates_points()
 
     write_coordinates(coords, output_file)
