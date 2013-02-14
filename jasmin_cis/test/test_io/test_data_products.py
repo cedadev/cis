@@ -5,6 +5,7 @@ from nose.tools import istest, eq_, raises, nottest
 import re
 from jasmin_cis.test.test_files.data import *
 from data_io.products.AProduct import get_data, __get_class
+from jasmin_cis.exceptions import ClassNotFoundError
 from data_io.products.products import *
 
 @istest
@@ -17,20 +18,20 @@ def test_automatic_detection_of_product_for_existing_product():
     eq_(product_cls.__name__,'Cloudsat_2B_CWC_RVOD')
 
     product_cls = __get_class([valid_1d_filename])
-    eq_(product_cls.__name__,'NetCDF_CF')
+    eq_(product_cls.__name__,'NetCDF_CF_Gridded')
 
     # only the first file name is used for automatic detection
     product_cls = __get_class([valid_1d_filename, valid_cloudsat_RVOD_file])
-    eq_(product_cls.__name__,'NetCDF_CF')
+    eq_(product_cls.__name__,'NetCDF_CF_Gridded')
 
 @istest
-def test_automatic_detection_of_product_for_non_existing_product():
+@raises(ClassNotFoundError)
+def test_that_get_class_raises_ClassNotFoundError_for_non_existing_product():
     product_cls = __get_class(['some_file_that_does_not_match_anything'])
-    eq_(product_cls,None)
 
 @istest
-@raises(NotImplementedError)
-def test_that_get_data_throws_NotImplementedError_for_missing_product():
+@raises(ClassNotFoundError)
+def test_that_get_data_raises_ClassNotFoundError_for_missing_product():
     get_data(valid_cloudsat_RVOD_file,[valid_cloudsat_RVOD_variable], product='Product_Not_Yet_Implemented')
 
 @istest
