@@ -107,11 +107,13 @@ class MODIS_L2(AProduct):
 
         lat = sdata['Latitude']
         lat_data = self.__field_interpolate(hdf.read_data(lat,"SD"))
+        #lat_data = hdf.read_data(lat,"SD")
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata,'Y')
 
         lon = sdata['Longitude']
         lon_data = self.__field_interpolate(hdf.read_data(lon,"SD"))
+        #lon_data = hdf.read_data(lon,"SD")
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata,'X')
 

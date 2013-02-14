@@ -56,7 +56,8 @@ class Plotter(object):
         # nformat = "%.3f"
         # nformat = "%.3e"
         nformat = "%.3g"
-        plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
+        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
+        cbar.set_label(self.data[0].units)
     
     def plot_line(self, data_item):
         '''
@@ -186,25 +187,30 @@ class Plotter(object):
         else:
             options.pop("fontsize")
         return options
-    
-    def __set_x_label(self, options):
-        if options["xlabel"] is None:
+
+    def __set_axis_label(self, axis, options):
+
+        axis = axis.lower()
+        name = self.data[0].coord(axis=axis).name().title()
+        units = self.data[0].coord(axis=axis).units
+        axislabel = axis + "label"
+
+        if options[axislabel] is None:
             if self.__is_map():
-                options["xlabel"] = "Longitude"
-            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
-                xlabel = self.data[0].coord(axis="X").name()
-                options["xlabel"] = xlabel.capitalize()
-        return options
-    
-    def __set_y_label(self, options):
-        if options["ylabel"] is None:
-            if self.__is_map():
-                options["ylabel"] = "Latitude"
-            elif self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
+                # for lat/on plots, we ignore name and units
+                options[axislabel] = "Latitude" if axis=='y' else "Longitude"
+
+            elif self.plot_type == "line" or self.plot_type == "scatter":
                 if len(self.data) == 1:
-                    options["ylabel"] = self.data[0].long_name.title()
+                    # only 1 data to plot, display
+                    options[axislabel] = name + " (" + units + ")"
                 else:
-                    options["ylabel"] = str(self.data[0].units)
+                    # if more than 1 data, legend will tell us what the name is. so just displaying units
+                    options[axislabel] = units
+            else:
+                # in general, display both name and units in brackets
+                options[axislabel] = name + " (" + units + ")"
+
         return options
     
     def __create_legend(self, datafiles):
@@ -304,8 +310,8 @@ class Plotter(object):
             
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
-            options = self.__set_x_label(options)
-            options = self.__set_y_label(options)
+            options = self.__set_axis_label("X",options)
+            options = self.__set_axis_label("Y", options)
         
             if options["xlabel"] == None:
                 options["xlabel"] = ""
