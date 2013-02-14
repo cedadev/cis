@@ -189,9 +189,7 @@ class Plotter(object):
     
     def __set_x_label(self, options):
         if options["xlabel"] is None and self.plot_type != "heatmap" and self.plot_type != "scatteroverlay":
-            for dim in xrange(len(self.data[0].shape)):
-                for coord in self.data[0].coords(axis="X"):
-                    xlabel = coord.name()
+            xlabel = self.data[0].coord(axis="X").name()
             options["xlabel"] = xlabel.capitalize()
         return options
     
@@ -419,7 +417,7 @@ class Plotter(object):
             else:
                 self.plot_type = self.default_plot_types[variable_dim]
         except KeyError:
-            raise InvalidPlotTypeError("There is no valid plot type for this variable - check its dimensions")
+            raise InvalidPlotTypeError("Unable to determine default plot type for this variable - please specify a plot type explicitly")
     
     def __check_plot_type_is_valid_for_given_variable(self, variable_dim):
         from jasmin_cis.exceptions import InvalidPlotTypeError
