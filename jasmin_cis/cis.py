@@ -67,7 +67,7 @@ def plot_cmd(main_arguments):
     except (IrisError, ex.InvalidVariableError, ex.FileIOError, ex.ClassNotFoundError) as e:
         __error_occurred(e)
     except IOError as e:
-        __error_occurred("There was an error reading one of the files: \n" + e)
+        __error_occurred("There was an error reading one of the files: \n" + str(e))
         
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")

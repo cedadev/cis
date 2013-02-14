@@ -167,6 +167,36 @@ class Cloud_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
+class CisCol(AProduct):
+
+    def get_file_signature(self):
+        return [r'cis\-col\-.*\.nc']
+
+    def create_coords(self, filenames, variable = None):
+        from data_io.netcdf import read, get_metadata
+        from data_io.Coord import Coord
+
+        if variable is not None:
+            var = read(filenames[0], variable)
+
+        lon = read(filenames[0], "Longitude")
+        lat = read(filenames[0], "Latitude")
+        alt = read(filenames[0], "Height")
+        time = read(filenames[0], "Profile_time")
+
+        coords = CoordList()
+        coords.append(Coord(lon, get_metadata(lon), "X"))
+        coords.append(Coord(lat, get_metadata(lat), "Y"))
+        coords.append(Coord(alt, get_metadata(alt), "Z"))
+        coords.append(Coord(time, get_metadata(time), "T"))
+
+        if variable is None:
+            return coords
+        else:
+            return UngriddedData(var, get_metadata(var), coords)
+
+    def create_data_object(self, filenames, variable):
+        return self.create_coords(filenames, variable)
 
 class NetCDF_CF(AProduct):
 
@@ -242,7 +272,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
 
         return sub_cube
 
-class Xglnwa(NetCDF_CF):
+class Xglnwa(NetCDF_CF_Gridded):
 
     def get_file_signature(self):
         return [r'.*xglnwa.*\.nc']
@@ -307,13 +337,14 @@ class Aeronet(AProduct):
         #TODO Update this
         return [r'.*\.lev20']
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, data_obj = None):
         from data_io.ungridded_data import Metadata
         from numpy import array
         from data_io.aeronet import load_aeronet, get_file_metadata
 
         for filename in filenames:
-            data_obj = load_aeronet(filename)
+            if data_obj is None:
+                data_obj = load_aeronet(filename)
             metadata = get_file_metadata(filename)
             lon = metadata.misc[2][1].split("=")[1]
             lat = metadata.misc[2][2].split("=")[1]
@@ -333,34 +364,4 @@ class Aeronet(AProduct):
         data_obj = load_aeronet(filename)
         var_data = data_obj[variable]
         metadata = get_file_metadata(filename, variable, (len(var_data),))
-        return UngriddedData(var_data, metadata, self.create_coords([filename]))
-
-class CisCol(AProduct):
-
-    def get_file_signature(self):
-        return [r'cis\-col\-.*\.nc']
-
-    def create_coords(self, filenames, variable = None):
-        from data_io.netcdf import read_many_files, get_metadata
-        from data_io.Coord import Coord
-
-        variables = [ "latitude", "longitude", "altitude", "time" ]
-
-        if variable is not None:
-            variables.append(variable)
-
-        data_variables = read_many_files(filenames, variables)
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["Longitude"], get_metadata(data_variables["Longitude"]), "X"))
-        coords.append(Coord(data_variables["Latitude"], get_metadata(data_variables["Latitude"]), "Y"))
-        coords.append(Coord(data_variables["Height"], get_metadata(data_variables["Height"]), "Z"))
-        coords.append(Coord(data_variables["Profile_time"], get_metadata(data_variables["Profile_time"]), "T"))
-
-        if variable is None:
-            return coords
-        else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
-
-    def create_data_object(self, filenames, variable):
-        return self.create_coords(filenames, variable)
+        return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj))
