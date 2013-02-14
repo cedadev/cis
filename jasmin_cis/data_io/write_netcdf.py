@@ -3,6 +3,7 @@ Module for writing data to NetCDF files
 '''
 from netCDF4 import Dataset
 import numpy as np
+import logging
 
 types = {float: "f",
          'int16': "i",
@@ -13,7 +14,7 @@ index_name = 'pixel_number'
 
 def __add_metadata(var, data):
     if data._metadata.standard_name: var.standard_name = data._metadata.standard_name
-    if data._metadata.units: var.units = data._metadata.units
+    if data._metadata.units: var.units = str(data._metadata.units)
     if data._metadata.long_name: var.long_name = data._metadata.long_name
     if data._metadata.range : var.valid_range = data._metadata.range
     return var
@@ -39,6 +40,7 @@ def __get_missing_value(coord):
 #    return dimensions
 
 def __create_variable(nc_file, data):
+    logging.info("Creating variable: " + data.name() + "("+index_name+")" + " " + types[str(data.data.dtype)])
     var = nc_file.createVariable(data.name(), types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
     var = __add_metadata(var, data)
     var[:] = data.data.flatten()
