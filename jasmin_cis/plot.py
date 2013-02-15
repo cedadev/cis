@@ -231,7 +231,7 @@ class Plotter(object):
         return options
     
     def __create_legend(self, datafiles):
-        if len(self.plots) > 1:
+        if len(self.plots) > 1 and not (self.plot_type == "scatteroverlay" and len(self.plots) == 2):
             legend_titles = []
             for i, item in enumerate(self.data):
                 if datafiles is not None and datafiles[i]["label"]:
