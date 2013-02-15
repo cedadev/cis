@@ -265,12 +265,7 @@ class Plotter(object):
         label_format = "{0:.0f}"
         labels = []
         for tick in tick_array:
-            if tick < 0:
-                if axis == "x":
-                    labels.append(label_format.format(tick) + "W")
-                else:
-                    labels.append(label_format.format(tick) + "S")
-            elif tick == 0:
+            if tick == 0:
                 labels.append(0)
             else:
                 if axis == "x":
