@@ -310,7 +310,7 @@ class Plotter(object):
         # When should scientific notation be used on the axes?
         #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^n. Use (0,0) to include all numbers          
         try:
-            plt.gca().ticklabel_format(style='sci', scilimits=(-2,2), axis='both')
+            plt.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
         except AttributeError:
             pass
 
@@ -325,7 +325,7 @@ class Plotter(object):
             
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
-            options = self.__set_axis_label("X",options)
+            options = self.__set_axis_label("X", options)
             options = self.__set_axis_label("Y", options)
         
             if options["xlabel"] == None:
