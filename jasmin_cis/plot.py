@@ -361,7 +361,7 @@ class Plotter(object):
                 options["title"] = ""
                 
             if self.plot_type != "line" and self.plot_type != "scatter2D" and not options["title"]:
-                    options["title"] = self.data[0].long_name.title()            
+                    options["title"] = self.data[0].long_name
             
             for option, value in options.iteritems():
                 # Call the method associated with the option        
