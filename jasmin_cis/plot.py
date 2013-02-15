@@ -197,27 +197,30 @@ class Plotter(object):
         axis = axis.lower()
         axislabel = axis + "label"
 
-        if options[axislabel] is None and not self.__is_map():
-            try:
-                name = self.data[0].coord(axis=axis).name().title()
-            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                name = self.data[0].name().title()
-
-            try:
-                units = self.data[0].coord(axis=axis).units
-            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                units = self.data[0].units
-
-            if self.plot_type == "line" or self.plot_type == "scatter":
-                if len(self.data) == 1:
-                    # only 1 data to plot, display
-                    options[axislabel] = name + self.__format_units(units)
-                else:
-                    # if more than 1 data, legend will tell us what the name is. so just displaying units
-                    options[axislabel] = units
+        if options[axislabel] is None:
+            if self.__is_map():
+                options[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
-                # in general, display both name and units in brackets
-                options[axislabel] = name + self.__format_units(units)
+                try:
+                    name = self.data[0].coord(axis=axis).name()
+                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                    name = self.data[0].name()
+
+                try:
+                    units = self.data[0].coord(axis=axis).units
+                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                    units = self.data[0].units
+
+                if self.plot_type == "line" or self.plot_type == "scatter":
+                    if len(self.data) == 1:
+                        # only 1 data to plot, display
+                        options[axislabel] = name + self.__format_units(units)
+                    else:
+                        # if more than 1 data, legend will tell us what the name is. so just displaying units
+                        options[axislabel] = units
+                else:
+                    # in general, display both name and units in brackets
+                    options[axislabel] = name + self.__format_units(units)
 
         return options
     
