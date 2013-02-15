@@ -163,7 +163,7 @@ def main():
     from datetime import datetime
 
     # configure logging
-    logging.config.fileConfig( os.path.abspath(__file__)  + "logging.conf")
+    logging.config.fileConfig( os.path.join(os.path.dirname(__file__), "logging.conf"))
     logging.captureWarnings(True) # to catch warning from 3rd party libraries
 
     # parse command line arguments
