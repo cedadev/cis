@@ -280,7 +280,7 @@ class Plotter(object):
     def __draw_coastlines(self):
         from numpy import arange, append
         if self.__is_map():
-            try:
+            #try:
                 self.basemap.drawcoastlines()
 
                 if self.y_range is not None:
@@ -288,7 +288,12 @@ class Plotter(object):
                     parallels = append(parallels, 0)
                     parallels.sort()
                 else:
-                    parallels = arange(-90, 91, 30)
+                    try:
+                        parallels = arange(self.valrange["y"]["ymin"], self.valrange["y"]["ymax"]+1, (self.valrange["y"]["ymax"]-self.valrange["y"]["ymin"])/10)
+                        parallels = append(parallels, 0)
+                        parallels.sort()
+                    except AttributeError:
+                        parallels = arange(-90, 91, 30)
                 self.basemap.drawparallels(parallels)
 
                 if self.x_range is not None:
@@ -296,7 +301,12 @@ class Plotter(object):
                     meridians = append(meridians, 0)
                     meridians.sort()
                 else:
-                    meridians = arange(-180, 181, 30)
+                    try:
+                        meridians = arange(self.valrange["x"]["xmin"], self.valrange["x"]["xmax"]+1, (self.valrange["x"]["xmax"]-self.valrange["x"]["xmin"])/10)
+                        meridians = append(meridians, 0)
+                        meridians.sort()
+                    except AttributeError:
+                        meridians = arange(-180, 181, 30)
                 self.basemap.drawmeridians(meridians)
 
                 #meridians = filter(lambda m: meridians.index(m) % 2 == 0, meridians)
@@ -307,8 +317,9 @@ class Plotter(object):
 
                 plt.xticks(meridians, meridian_labels)
                 plt.yticks(parallels, parallel_labels)
-            except AttributeError:
-                pass
+            #except AttributeError as e:
+            #    print str(e)
+            #    pass
     
     def __set_log_scale(self, logx, logy):
         from numpy import e, log
@@ -550,12 +561,27 @@ class Plotter(object):
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
+        from iris.exceptions import CoordinateNotFoundError
+        from numpy.ma import MaskedArray
+        import numpy
+        if valrange is None and self.__is_map():
+            valrange = {}
+            try:
+                valrange[axis + "min"] = MaskedArray.min(self.data[0].coord(axis=axis).data)
+                valrange[axis + "max"] = MaskedArray.max(self.data[0].coord(axis=axis).data)
+                try:
+                    self.valrange[axis] = valrange
+                except AttributeError:
+                    self.valrange = {}
+                    self.valrange[axis] = valrange
+            except (CoordinateNotFoundError, AttributeError):
+                pass
         if valrange is not None:
             if axis == "x":
                 plt.xlim(**valrange)
             elif axis == "y":
                 plt.ylim(**valrange)
-    
+
     def __validate_data(self, variable_dim):
         '''
         Used to validate the data before plotting
