@@ -90,16 +90,69 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         return UngriddedData(var,metadata,coords)
 
+class MODIS_L3(AProduct):
+
+
+    def get_file_signature(self):
+        product_names = ['MYD08_D3','MOD08_D3']
+        regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
+        return regex_list
+
+
+    def create_coords(self, filenames):
+
+        variables = ['XDim','YDim']
+        logging.debug("Listing coordinates: " + str(variables))
+
+        sdata, vdata = hdf.read(filenames,variables)
+
+        lat = sdata['YDim']
+        lat_data = hdf.read_data(lat,"SD")
+        lat_metadata = hdf.read_metadata(lat, "SD")
+
+        lon = sdata['XDim']
+        lon_data = hdf.read_data(lon,"SD")
+        lon_metadata = hdf.read_metadata(lon, "SD")
+
+        # to make sure "Latitude" and "Longitude", i.e. the standard_name is displayed instead of "YDim"and "XDim"
+        lat_metadata.standard_name = "latitude"
+        lat_metadata._name = ""
+        lon_metadata.standard_name = "longitude"
+        lon_metadata._name = ""
+
+        coords = CoordList()
+        coords.append(Coord(lon_data, lon_metadata,'X'))
+        coords.append(Coord(lat_data, lat_metadata,'Y'))
+
+        return coords
+
+
+    def create_data_object(self, filenames, variable):
+
+        logging.debug("Creating data object for variable " + variable)
+
+        # reading coordinates
+        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
+        coords = self.create_coords(filenames)
+
+        # reading of variables
+        sdata, vdata = hdf.read(filenames, variable)
+
+        # retrieve data + its metadata
+        var = sdata[variable]
+        metadata = hdf.read_metadata(var, "SD")
+
+        return UngriddedData(var, metadata, coords)
+
+
 class MODIS_L2(AProduct):
 
     modis_scaling = ["1km","5km","10km"]
 
     def get_file_signature(self):
-
         product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MYD04_L2','MYDATML2','MODATML2']
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
-
 
     def __get_data_scale(self, filename, variable):
 
