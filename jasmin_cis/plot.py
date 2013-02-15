@@ -301,7 +301,7 @@ class Plotter(object):
 
                 if self.x_range is not None:
                     meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/6)
-                    meridians = append(meridians, 0)
+                    #meridians = append(meridians, 0)
                     meridians.sort()
                 else:
                     try:
