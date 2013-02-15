@@ -4,6 +4,8 @@
 from collections import namedtuple
 from data_io.ungridded_data import LazyData
 import numpy as np
+from time import time
+import logging
 
 class Colocator(object):
 
@@ -39,9 +41,16 @@ class Colocator(object):
             return UngriddedData.from_points_array(self.points)
                 
     def colocate(self):
+        import math
         values = np.zeros(len(self.points))
+        times = np.zeros(len(self.points))
         for i, point in enumerate(self.points):
+            t1 = time()
             values[i] = self.method(self, point)
+            times[i] = time() - t1
+            #frac, rem = math.modf(i/1000.0)
+            #if frac == 0: print str(i)+" took: "+str(times[i])
+        logging.info("Average time per point: " + np.sum(times)/len(self.points))
         new_data = LazyData(values, self.data.metadata)
         new_data.missing_value = self.fill_value
         return new_data
@@ -84,7 +93,15 @@ class Colocator(object):
         return val
 
     def find_value_by_li(self, point):
-        pass
+        '''
+            Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
+        '''
+        from iris.analysis.interpolate import linear
+        try:
+            val = linear(self.data, point.get_coord_tuple())
+        except ValueError:
+            val = self.fill_value
+        return val
     
     ColocationTechniques = namedtuple('Techniques',['nn', 'li'])
     gridded_colocation_methods = ColocationTechniques(find_nn_value_gridded, find_value_by_li)
@@ -94,10 +111,15 @@ def colocate(filenames, method, variable, sample_points, output_file):
     from data_io.read import read_data
     from data_io.write_netcdf import add_data_to_file
 
+    logging.info("Reading data for: "+variable)
     data = read_data(filenames, variable)
 
     col = Colocator(sample_points, data, method)
 
+    logging.info("Colocating, this could take a while...")
+    t1 = time()
     new_data = col.colocate()
+
+    logging.info("Completed. Total time taken: " + time()-t1)
 
     add_data_to_file(new_data, output_file)
