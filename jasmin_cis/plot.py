@@ -290,12 +290,12 @@ class Plotter(object):
                 self.basemap.drawcoastlines()
 
                 if self.y_range is not None:
-                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/10)
+                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
                     parallels = append(parallels, 0)
                     parallels.sort()
                 else:
                     try:
-                        parallels = arange(self.valrange["y"]["ymin"], self.valrange["y"]["ymax"]+1, (self.valrange["y"]["ymax"]-self.valrange["y"]["ymin"])/10)
+                        parallels = arange(self.valrange["y"]["ymin"], self.valrange["y"]["ymax"]+1, (self.valrange["y"]["ymax"]-self.valrange["y"]["ymin"])/5)
                         parallels = append(parallels, 0)
                         parallels.sort()
                     except AttributeError:
@@ -303,12 +303,12 @@ class Plotter(object):
                 self.basemap.drawparallels(parallels)
 
                 if self.x_range is not None:
-                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/10)
+                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
                     meridians = append(meridians, 0)
                     meridians.sort()
                 else:
                     try:
-                        meridians = arange(self.valrange["x"]["xmin"], self.valrange["x"]["xmax"]+1, (self.valrange["x"]["xmax"]-self.valrange["x"]["xmin"])/10)
+                        meridians = arange(self.valrange["x"]["xmin"], self.valrange["x"]["xmax"]+1, (self.valrange["x"]["xmax"]-self.valrange["x"]["xmin"])/5)
                         meridians = append(meridians, 0)
                         meridians.sort()
                     except AttributeError:
