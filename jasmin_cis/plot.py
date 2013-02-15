@@ -57,7 +57,7 @@ class Plotter(object):
         # nformat = "%.3e"
         nformat = "%.3g"
         cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
-        cbar.set_label(self.data[0].units)
+        cbar.set_label(self.__format_units(self.data[0].units))
     
     def plot_line(self, data_item):
         '''
