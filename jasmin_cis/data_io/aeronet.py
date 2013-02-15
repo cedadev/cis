@@ -57,13 +57,9 @@ def load_aeronet(fname, keep_fields='all'):
 def get_file_metadata(filename, variable = None, shape = None):
     file = open(filename)
     from data_io.ungridded_data import Metadata
-    metadata = Metadata()
+    metadata = Metadata(name = variable, long_name = variable, shape = shape)
     lines = []
     for i in range(0, 4):
         lines.append(file.readline().replace("\n","").split(","))
     metadata.misc = lines
-
-    metadata.name = variable
-    metadata.long_name = variable
-    metadata.shape = shape
     return metadata

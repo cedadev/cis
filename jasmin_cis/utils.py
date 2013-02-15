@@ -62,6 +62,14 @@ def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
     return ma.array(data, mask=data==missing_val, fill_value=missing_val)
 
+def __get_coord(axis, data_object):
+    from iris.exceptions import CoordinateNotFoundError
+    try:
+        coord = data_object.coord(axis=axis)
+        return coord.points
+    except CoordinateNotFoundError:
+        return None
+
 def unpack_data_object(data_object):
     '''
     @param data_object    A cube or an UngriddedData object
@@ -83,12 +91,21 @@ def unpack_data_object(data_object):
             data = data.T
 
         if no_of_dims == 1:
+            x = __get_coord("x", data_object)
+            y = __get_coord("y", data_object)
+
+            if x is None and y is not None:
+                x = data
+                data = y
+                y = None
+
+            '''
             u_coord, = plot_defn.coords
             if u_coord:
                 x = u_coord.points
             else:
                 x = np.arange(data.shape[0])
-            y = None
+            y = None'''
         elif no_of_dims == 2:
             # Obtain U and V coordinates
             v_coord, u_coord = plot_defn.coords

@@ -159,12 +159,13 @@ def main():
     The main method for the program.
     Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
     '''
+    import os
     from parse import parse_args
     import logging, logging.config
     from datetime import datetime
 
     # configure logging
-    logging.config.fileConfig("logging.conf")
+    logging.config.fileConfig( os.path.join(os.path.dirname(__file__), "logging.conf"))
     logging.captureWarnings(True) # to catch warning from 3rd party libraries
 
     # parse command line arguments
