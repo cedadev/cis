@@ -277,10 +277,7 @@ class Plotter(object):
             if tick == 0:
                 labels.append(0)
             else:
-                if axis == "x":
-                    labels.append(label_format.format(tick) + "E")
-                else:
-                    labels.append(label_format.format(tick) + "N")
+                labels.append(label_format.format(tick))
         return labels
 
     def __draw_coastlines(self):
