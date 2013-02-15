@@ -50,7 +50,7 @@ class Colocator(object):
             times[i] = time() - t1
             #frac, rem = math.modf(i/1000.0)
             #if frac == 0: print str(i)+" took: "+str(times[i])
-        logging.info("Average time per point: " + np.sum(times)/len(self.points))
+        logging.info("Average time per point: " + str(np.sum(times)/len(self.points)))
         new_data = LazyData(values, self.data.metadata)
         new_data.missing_value = self.fill_value
         return new_data
@@ -98,8 +98,8 @@ class Colocator(object):
         '''
         from iris.analysis.interpolate import linear
         try:
-            val = linear(self.data, point.get_coord_tuple())
-        except ValueError:
+            val = linear(self.data, point.get_coord_tuple()).data
+        except ValueError as e:
             val = self.fill_value
         return val
     
@@ -120,6 +120,6 @@ def colocate(filenames, method, variable, sample_points, output_file):
     t1 = time()
     new_data = col.colocate()
 
-    logging.info("Completed. Total time taken: " + time()-t1)
+    logging.info("Completed. Total time taken: " + str(time()-t1))
 
     add_data_to_file(new_data, output_file)

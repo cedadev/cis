@@ -277,9 +277,9 @@ class CisCol(AProduct):
         time = read(filenames[0], "Profile_time")
 
         coords = CoordList()
-        coords.append(Coord(lon, get_metadata(lon)))
-        coords.append(Coord(lat, get_metadata(lat), "X"))
-        coords.append(Coord(alt, get_metadata(alt), "Y"))
+        coords.append(Coord(lon, get_metadata(lon), "X"))
+        coords.append(Coord(lat, get_metadata(lat), "Y"))
+        coords.append(Coord(alt, get_metadata(alt)))
         coords.append(Coord(time, get_metadata(time), "T"))
 
         if variable is None:
