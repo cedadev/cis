@@ -195,18 +195,19 @@ class Plotter(object):
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
-        try:
-            name = self.data[0].coord(axis=axis).name().title()
-        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-            name = self.data[0].name().title()
-
-        try:
-            units = self.data[0].coord(axis=axis).units
-        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-            units = self.data[0].units
         axislabel = axis + "label"
 
         if options[axislabel] is None and not self.__is_map():
+            try:
+                name = self.data[0].coord(axis=axis).name().title()
+            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                name = self.data[0].name().title()
+
+            try:
+                units = self.data[0].coord(axis=axis).units
+            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                units = self.data[0].units
+
             if self.plot_type == "line" or self.plot_type == "scatter":
                 if len(self.data) == 1:
                     # only 1 data to plot, display
