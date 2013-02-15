@@ -278,24 +278,30 @@ class Plotter(object):
         return labels
 
     def __draw_coastlines(self):
-        from numpy import arange
+        from numpy import arange, append
         if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
 
                 if self.y_range is not None:
-                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
+                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/10)
+                    parallels = append(parallels, 0)
+                    parallels.sort()
                 else:
                     parallels = arange(-90, 91, 30)
                 self.basemap.drawparallels(parallels)
 
                 if self.x_range is not None:
-                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
+                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/10)
+                    meridians = append(meridians, 0)
+                    meridians.sort()
                 else:
                     meridians = arange(-180, 181, 30)
                 self.basemap.drawmeridians(meridians)
 
+                #meridians = filter(lambda m: meridians.index(m) % 2 == 0, meridians)
                 meridian_labels = self.__format_map_ticks(meridians, "x")
+                #parallels = filter(lambda p: parallels.index(p) % 2 == 0, parallels)
                 parallel_labels = self.__format_map_ticks(parallels, "y")
 
 
