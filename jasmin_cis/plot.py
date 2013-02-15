@@ -261,22 +261,48 @@ class Plotter(object):
         else:
             return False
 
+    def __format_map_ticks(self, tick_array, axis):
+        label_format = "{0:.0f}"
+        labels = []
+        for tick in tick_array:
+            if tick < 0:
+                if axis == "x":
+                    labels.append(label_format.format(tick) + "W")
+                else:
+                    labels.append(label_format.format(tick) + "S")
+            elif tick == 0:
+                labels.append(0)
+            else:
+                if axis == "x":
+                    labels.append(label_format.format(tick) + "E")
+                else:
+                    labels.append(label_format.format(tick) + "N")
+        return labels
+
     def __draw_coastlines(self):
         from numpy import arange
         if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
+
                 if self.y_range is not None:
                     parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
                 else:
                     parallels = arange(-90, 91, 30)
-                self.basemap.drawparallels(parallels, labels=[1,0,0,0], labelstyle="+/-")
+                self.basemap.drawparallels(parallels)
 
                 if self.x_range is not None:
                     meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
                 else:
                     meridians = arange(-180, 181, 30)
-                self.basemap.drawmeridians(meridians, labels=[0,0,0,1], labelstyle="+/-")
+                self.basemap.drawmeridians(meridians)
+
+                meridian_labels = self.__format_map_ticks(meridians, "x")
+                parallel_labels = self.__format_map_ticks(parallels, "y")
+
+
+                plt.xticks(meridians, meridian_labels)
+                plt.yticks(parallels, parallel_labels)
             except AttributeError:
                 pass
     
