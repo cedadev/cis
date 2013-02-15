@@ -37,7 +37,7 @@ def make_square_3x3_2d_cube():
     
     latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(15)+1,(5,3))
+    data = np.reshape(np.arange(15)+1.0,(5,3))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
     
     return cube
