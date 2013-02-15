@@ -189,7 +189,13 @@ class Plotter(object):
         return options
 
     def __format_units(self, units):
-        return " (" + str(units) + ")" if units else ""
+        if units:
+            units = str(units)
+            if units[0] != "$" and units[-1] != "$":
+                units = "$" + units + "$"
+            return " (" + units + ")"
+        else:
+            return ""
 
     def __set_axis_label(self, axis, options):
         import jasmin_cis.exceptions as cisex
