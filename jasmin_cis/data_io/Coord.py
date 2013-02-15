@@ -1,4 +1,5 @@
 from ungridded_data import LazyData
+import logging
 
 class Coord(LazyData):
 
@@ -119,6 +120,8 @@ class CoordList(list):
         import numpy as np
         from hyperpoint import HyperPoint
         points = []
+
+        logging.info("Converting coordinates to a list of HyperPoints")
 
         try:
             lat = self.get_coord(standard_name='latitude').data.flatten()

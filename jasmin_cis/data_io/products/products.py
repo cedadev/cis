@@ -49,16 +49,16 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         height_coord = Coord(height_data, height_metadata,'Y')
 
         lat = vdata['Latitude']
-        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[1]),axis=1)
+        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
-        lat_coord = Coord(lat_data, lat_metadata)
+        lat_coord = Coord(lat_data, lat_metadata, "X")
 
         lon = vdata['Longitude']
-        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[1]),axis=1)
+        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[0]),axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
         lon_coord = Coord(lon_data, lon_metadata)
 
-        real_time_coord = self.__generate_real_time_coord(filenames, len(alt_data[0]), len(alt_data[1]))
+        real_time_coord = self.__generate_real_time_coord(filenames, len(height_data[:,0]), len(height_data[0]))
 
         import data_io.hdf_vd as hdf_vd
         arrays = []
@@ -68,9 +68,9 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             time += start
             arrays.append(time)
         time_data = utils.concatenate(arrays)
-        time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[1]),axis=1)
+        time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
         time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
-        time_coord = Coord(time_data, time_metadata,'X')
+        time_coord = Coord(time_data, time_metadata)
 
         return CoordList([lat_coord,lon_coord,height_coord,time_coord, real_time_coord])
 
@@ -226,7 +226,7 @@ class CisCol(AProduct):
         coords = CoordList()
         coords.append(Coord(lon, get_metadata(lon)))
         coords.append(Coord(lat, get_metadata(lat), "X"))
-        coords.append(Coord(alt, get_metadata(alt)))
+        coords.append(Coord(alt, get_metadata(alt), "Y"))
         coords.append(Coord(time, get_metadata(time), "T"))
 
         if variable is None:
@@ -371,8 +371,6 @@ class Xenida(NetCDF_CF_Gridded):
         from iris.aux_factory import HybridHeightFactory
         cube = super(Xenida, self).create_data_object(filenames, variable)
         cube.add_aux_factory(HybridHeightFactory(cube.coords()[5]))
-        print cube.coords('time')
-        print cube
         return cube
 
 class Aeronet(AProduct):
