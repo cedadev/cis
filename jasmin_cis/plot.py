@@ -232,9 +232,9 @@ class Plotter(object):
                     legend_titles.append(datafiles[i]["label"])
                 else:
                     if " " in item.long_name:
-                        legend_titles.append(" ".join(item.long_name.title().split()[:-1]))
+                        legend_titles.append(" ".join(item.long_name.split()[:-1]))
                     else:
-                        legend_titles.append(item.long_name.title())
+                        legend_titles.append(item.long_name)
             if self.plot_type == "line":
                 legend = plt.legend(legend_titles, loc="best")
             else:                
