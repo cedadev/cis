@@ -58,7 +58,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lon_metadata = hdf.read_metadata(lon, "VD")
         lon_coord = Coord(lon_data, lon_metadata)
 
-        real_time_coord = self.__generate_real_time_coord(filenames, len(alt_data[0]), len(alt_data[1]))
+        real_time_coord = self.__generate_real_time_coord(filenames, len(height_data[0]), len(height_data[1]))
 
         import data_io.hdf_vd as hdf_vd
         arrays = []
