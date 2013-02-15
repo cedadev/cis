@@ -195,18 +195,19 @@ class Plotter(object):
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
-        try:
-            name = self.data[0].coord(axis=axis).name().title()
-        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-            name = self.data[0].name().title()
-
-        try:
-            units = self.data[0].coord(axis=axis).units
-        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-            units = self.data[0].units
         axislabel = axis + "label"
 
         if options[axislabel] is None and not self.__is_map():
+            try:
+                name = self.data[0].coord(axis=axis).name().title()
+            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                name = self.data[0].name().title()
+
+            try:
+                units = self.data[0].coord(axis=axis).units
+            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                units = self.data[0].units
+
             if self.plot_type == "line" or self.plot_type == "scatter":
                 if len(self.data) == 1:
                     # only 1 data to plot, display
@@ -260,22 +261,48 @@ class Plotter(object):
         else:
             return False
 
+    def __format_map_ticks(self, tick_array, axis):
+        label_format = "{0:.0f}"
+        labels = []
+        for tick in tick_array:
+            if tick < 0:
+                if axis == "x":
+                    labels.append(label_format.format(tick) + "W")
+                else:
+                    labels.append(label_format.format(tick) + "S")
+            elif tick == 0:
+                labels.append(0)
+            else:
+                if axis == "x":
+                    labels.append(label_format.format(tick) + "E")
+                else:
+                    labels.append(label_format.format(tick) + "N")
+        return labels
+
     def __draw_coastlines(self):
         from numpy import arange
         if self.__is_map():
             try:
                 self.basemap.drawcoastlines()
+
                 if self.y_range is not None:
                     parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
                 else:
                     parallels = arange(-90, 91, 30)
-                self.basemap.drawparallels(parallels, labels=[1,0,0,0], labelstyle="+/-")
+                self.basemap.drawparallels(parallels)
 
                 if self.x_range is not None:
                     meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
                 else:
                     meridians = arange(-180, 181, 30)
-                self.basemap.drawmeridians(meridians, labels=[0,0,0,1], labelstyle="+/-")
+                self.basemap.drawmeridians(meridians)
+
+                meridian_labels = self.__format_map_ticks(meridians, "x")
+                parallel_labels = self.__format_map_ticks(parallels, "y")
+
+
+                plt.xticks(meridians, meridian_labels)
+                plt.yticks(parallels, parallel_labels)
             except AttributeError:
                 pass
     
@@ -309,7 +336,7 @@ class Plotter(object):
         # When should scientific notation be used on the axes?
         #(m, n), pair of integers; scientific notation will be used for numbers outside the range 10^m to 10^n. Use (0,0) to include all numbers          
         try:
-            plt.gca().ticklabel_format(style='sci', scilimits=(-2,2), axis='both')
+            plt.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
         except AttributeError:
             pass
 
@@ -324,7 +351,7 @@ class Plotter(object):
             
             options = self.__set_font_size(options)             
             # If any of the options have not been specified, then use the defaults
-            options = self.__set_axis_label("X",options)
+            options = self.__set_axis_label("X", options)
             options = self.__set_axis_label("Y", options)
         
             if options["xlabel"] == None:
