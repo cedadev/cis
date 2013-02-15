@@ -432,7 +432,7 @@ class Aeronet(AProduct):
         #TODO Update this
         return [r'.*\.lev20']
 
-    def create_coords(self, filenames, data_obj = None):
+    def create_coords(self, filenames, data_obj = None, variable = None):
         from data_io.ungridded_data import Metadata
         from numpy import array
         from data_io.aeronet import load_aeronet, get_file_metadata
@@ -440,7 +440,7 @@ class Aeronet(AProduct):
         for filename in filenames:
             if data_obj is None:
                 data_obj = load_aeronet(filename)
-            metadata = get_file_metadata(filename)
+            metadata = get_file_metadata(filename, variable)
             lon = metadata.misc[2][1].split("=")[1]
             lat = metadata.misc[2][2].split("=")[1]
 
@@ -463,4 +463,4 @@ class Aeronet(AProduct):
         except ValueError:
             raise InvalidVariableError(variable + " does not exist in file " + filename)
         metadata = get_file_metadata(filename, variable, (len(var_data),))
-        return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj))
+        return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj, variable))
