@@ -99,7 +99,7 @@ class Colocator(object):
         from iris.analysis.interpolate import linear
         try:
             val = linear(self.data, point.get_coord_tuple()).data
-        except:
+        except ValueError as e:
             val = self.fill_value
         return val
     
