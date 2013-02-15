@@ -287,42 +287,36 @@ class Plotter(object):
                 self.basemap.drawcoastlines()
 
                 if self.y_range is not None:
-                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
-                    parallels = append(parallels, 0)
+                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/6)
+                    #parallels = append(parallels, 0)
                     parallels.sort()
                 else:
                     try:
-                        parallels = arange(self.valrange["y"]["ymin"], self.valrange["y"]["ymax"]+1, (self.valrange["y"]["ymax"]-self.valrange["y"]["ymin"])/5)
-                        parallels = append(parallels, 0)
+                        parallels = arange(self.valrange["y"]["ymin"], self.valrange["y"]["ymax"]+1, (self.valrange["y"]["ymax"]-self.valrange["y"]["ymin"])/6)
+                        #parallels = append(parallels, 0)
                         parallels.sort()
                     except AttributeError:
                         parallels = arange(-90, 91, 30)
                 self.basemap.drawparallels(parallels)
 
                 if self.x_range is not None:
-                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
+                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/6)
                     meridians = append(meridians, 0)
                     meridians.sort()
                 else:
                     try:
-                        meridians = arange(self.valrange["x"]["xmin"], self.valrange["x"]["xmax"]+1, (self.valrange["x"]["xmax"]-self.valrange["x"]["xmin"])/5)
-                        meridians = append(meridians, 0)
+                        meridians = arange(self.valrange["x"]["xmin"], self.valrange["x"]["xmax"]+1, (self.valrange["x"]["xmax"]-self.valrange["x"]["xmin"])/6)
+                        #meridians = append(meridians, 0)
                         meridians.sort()
                     except AttributeError:
                         meridians = arange(-180, 181, 30)
                 self.basemap.drawmeridians(meridians)
 
-                #meridians = filter(lambda m: meridians.index(m) % 2 == 0, meridians)
                 meridian_labels = self.__format_map_ticks(meridians, "x")
-                #parallels = filter(lambda p: parallels.index(p) % 2 == 0, parallels)
                 parallel_labels = self.__format_map_ticks(parallels, "y")
-
 
                 plt.xticks(meridians, meridian_labels)
                 plt.yticks(parallels, parallel_labels)
-            #except AttributeError as e:
-            #    print str(e)
-            #    pass
     
     def __set_log_scale(self, logx, logy):
         from numpy import e, log
