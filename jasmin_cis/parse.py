@@ -173,10 +173,11 @@ def check_range(ax_range, parser, range_type):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
     '''
+    error_message = "Range must be in the format 'min:max:stepsize'"
     if ax_range is not None:
         if ":" in ax_range:
             split_range = ax_range.split(":")
-            if len(split_range) == 2:
+            if len(split_range) == 2 or len(split_range) == 3:
                 r_min = parse_float(split_range[0], "min", parser)
                 r_max = parse_float(split_range[1], "max", parser)
                 ax_range = {}
@@ -185,11 +186,15 @@ def check_range(ax_range, parser, range_type):
                 if r_max is not None:
                     ax_range[range_type + "max"] = r_max
                 if r_min and r_max and r_min > r_max:
-                    parser.error("Range must be in the format 'min:max'")
+                    parser.error(error_message)
+                if len(split_range) == 3:
+                    r_step = parse_float(split_range[2], "step", parser)
+                    if r_step is not None:
+                        ax_range[range_type + "step"] = r_step
             else:
-                parser.error("Range must be in the format 'min:max'")
+                parser.error(error_message)
         else:
-            parser.error("Range must be in the format 'min:max'")
+            parser.error(error_message)
     return ax_range
 
 def check_boolean_argument(argument):
