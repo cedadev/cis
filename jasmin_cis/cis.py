@@ -116,13 +116,6 @@ def col_cmd(main_arguments):
 
     coords = read_file_coordinates(sample_file)
 
-    # for coord in coords:
-    #     print coord.data
-    #     coord.data = coord.data[0:10]
-    #     print coord.data
-
-    coords.get_coord(standard_name='altitude').data = coords.get_coord(standard_name='altitude').data[50:103]
-
     sample_points = coords.get_coordinates_points()
     write_coordinates(coords, output_file)
 
