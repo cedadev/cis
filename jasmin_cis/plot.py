@@ -273,11 +273,16 @@ class Plotter(object):
     def __format_map_ticks(self, tick_array, axis):
         label_format = "{0:.0f}"
         labels = []
+        i = 0
         for tick in tick_array:
-            if tick == 0:
-                labels.append(0)
+            if i % 4 == 0 or tick == 0:
+                if tick == 0:
+                    labels.append(0)
+                else:
+                    labels.append(label_format.format(tick))
             else:
-                labels.append(label_format.format(tick))
+                labels.append("")
+            i += 1
         return labels
 
     def __draw_coastlines(self):
