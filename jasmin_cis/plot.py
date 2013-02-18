@@ -273,52 +273,69 @@ class Plotter(object):
     def __format_map_ticks(self, tick_array, axis):
         label_format = "{0:.0f}"
         labels = []
+        i = 0
         for tick in tick_array:
-            if tick == 0:
-                labels.append(0)
+            if i % 4 == 0 or tick == 0:
+                if tick == 0:
+                    labels.append(0)
+                else:
+                    labels.append(label_format.format(tick))
             else:
-                labels.append(label_format.format(tick))
+                labels.append("")
+            i += 1
         return labels
 
     def __draw_coastlines(self):
         from numpy import arange, append
         if self.__is_map():
-            #try:
-                self.basemap.drawcoastlines()
+            self.basemap.drawcoastlines()
 
-                if self.y_range is not None:
-                    parallels = arange(self.y_range["ymin"], self.y_range["ymax"]+1, (self.y_range["ymax"]-self.y_range["ymin"])/5)
-                    parallels = append(parallels, 0)
-                    parallels.sort()
-                else:
-                    try:
-                        parallels = arange(self.valrange["y"]["ymin"], self.valrange["y"]["ymax"]+1, (self.valrange["y"]["ymax"]-self.valrange["y"]["ymin"])/5)
-                        parallels = append(parallels, 0)
-                        parallels.sort()
-                    except AttributeError:
-                        parallels = arange(-90, 91, 30)
-                self.basemap.drawparallels(parallels)
+            parallels = None
+            if self.y_range is not None: #If the user has specified a y_range
+                ymin = self.y_range["ymin"]
+                ymax = self.y_range["ymax"]
+                ystep = self.y_range.get("ystep", None)
+            else:
+                try:
+                    ymin = self.valrange["y"]["ymin"]
+                    ymax = self.valrange["y"]["ymax"]
+                    ystep = None
+                except AttributeError:
+                    parallels = arange(-90, 91, 15)
 
-                if self.x_range is not None:
-                    meridians = arange(self.x_range["xmin"], self.x_range["xmax"]+1, (self.x_range["xmax"]-self.x_range["xmin"])/5)
-                    meridians = append(meridians, 0)
-                    meridians.sort()
-                else:
-                    try:
-                        meridians = arange(self.valrange["x"]["xmin"], self.valrange["x"]["xmax"]+1, (self.valrange["x"]["xmax"]-self.valrange["x"]["xmin"])/5)
-                        meridians = append(meridians, 0)
-                        meridians.sort()
-                    except AttributeError:
-                        meridians = arange(-180, 181, 30)
-                self.basemap.drawmeridians(meridians)
+            if parallels is None:
+                if ystep is None: ystep = (ymax-ymin)/24
+                parallels = arange(ymin, ymax+1, ystep)
+                if ymin < 0 and ymax > 0: parallels = append(parallels, 0)
+                parallels.sort()
+            self.basemap.drawparallels(parallels)
 
-                #meridians = filter(lambda m: meridians.index(m) % 2 == 0, meridians)
-                meridian_labels = self.__format_map_ticks(meridians, "x")
-                #parallels = filter(lambda p: parallels.index(p) % 2 == 0, parallels)
-                parallel_labels = self.__format_map_ticks(parallels, "y")
 
-                plt.xticks(meridians, meridian_labels)
-                plt.yticks(parallels, parallel_labels)
+            meridians = None
+            if self.x_range is not None: #If the user has specified an x_range
+                xmin = self.x_range["xmin"]
+                xmax = self.x_range["xmax"]
+                xstep = self.x_range.get("xstep", None)
+            else:
+                try:
+                    xmin = self.valrange["x"]["xmin"]
+                    xmax = self.valrange["x"]["xmax"]
+                    xstep = None
+                except AttributeError:
+                    meridians = arange(-180, 181, 15)
+
+            if meridians is None:
+                if xstep is None: xstep = (xmax-xmin)/24
+                meridians = arange(xmin, xmax+1, xstep)
+                if xmin < 0 and xmax > 0: meridians = append(meridians, 0)
+                meridians.sort()
+            self.basemap.drawmeridians(meridians)
+
+            meridian_labels = self.__format_map_ticks(meridians, "x")
+            parallel_labels = self.__format_map_ticks(parallels, "y")
+
+            plt.xticks(meridians, meridian_labels)
+            plt.yticks(parallels, parallel_labels)
     
     def __set_log_scale(self, logx, logy):
         from numpy import e, log
@@ -577,9 +594,13 @@ class Plotter(object):
                 pass
         if valrange is not None:
             if axis == "x":
+                step = valrange.pop("xstep", None)
                 plt.xlim(**valrange)
+                if step is not None: valrange["xstep"] = step
             elif axis == "y":
+                step = valrange.pop("ystep", None)
                 plt.ylim(**valrange)
+                if step is not None: valrange["ystep"] = step
 
     def __validate_data(self, variable_dim):
         '''
