@@ -121,6 +121,8 @@ def col_cmd(main_arguments):
     #     coord.data = coord.data[0:10]
     #     print coord.data
 
+    coords.get_coord(standard_name='altitude').data = coords.get_coord(standard_name='altitude').data[50:103]
+
     sample_points = coords.get_coordinates_points()
     write_coordinates(coords, output_file)
 

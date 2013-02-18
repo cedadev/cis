@@ -191,7 +191,7 @@ class Plotter(object):
     def __format_units(self, units):
         if units:
             units = str(units)
-            if units[0] != "$" and units[-1] != "$":
+            if not units.startswith("$") and not units.endswith("$"):
                 units = "$" + units + "$"
             return " (" + units + ")"
         else:
@@ -277,10 +277,7 @@ class Plotter(object):
             if tick == 0:
                 labels.append(0)
             else:
-                if axis == "x":
-                    labels.append(label_format.format(tick) + "E")
-                else:
-                    labels.append(label_format.format(tick) + "N")
+                labels.append(label_format.format(tick))
         return labels
 
     def __draw_coastlines(self):
@@ -315,17 +312,13 @@ class Plotter(object):
                         meridians = arange(-180, 181, 30)
                 self.basemap.drawmeridians(meridians)
 
-                #meridians = filter(lambda m: list(meridians == m).index(m) % 2 == 0, meridians)
+                #meridians = filter(lambda m: meridians.index(m) % 2 == 0, meridians)
                 meridian_labels = self.__format_map_ticks(meridians, "x")
-                #parallels = filter(lambda p: list(parallels == p).index(p) % 2 == 0, parallels)
+                #parallels = filter(lambda p: parallels.index(p) % 2 == 0, parallels)
                 parallel_labels = self.__format_map_ticks(parallels, "y")
-
 
                 plt.xticks(meridians, meridian_labels)
                 plt.yticks(parallels, parallel_labels)
-            #except AttributeError as e:
-            #    print str(e)
-            #    pass
     
     def __set_log_scale(self, logx, logy):
         from numpy import e, log
