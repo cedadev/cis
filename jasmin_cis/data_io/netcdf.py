@@ -50,7 +50,7 @@ def read(filename, usr_variable):
         @param filename: The name (with path) of the NetCDF file to read.
         @param usr_variable: A variable (dataset) name to read from the
                        files. The name must appear exactly as in in the NetCDF file.
-        @return: A Varaibale instance constructed from  the input file
+        @return: A Variable instance constructed from  the input file
 
     """
     from netCDF4 import Dataset

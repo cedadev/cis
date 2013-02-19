@@ -126,6 +126,7 @@ class Plotter(object):
             maxval = data_item["data"].max()
             if self.min_data != sys.maxint and self.max_data != (-sys.maxint - 1): # If a heatmap has been already plotted
                 minval = self.min_data
+                # Heatmap overlay minval = 0.00004
                 maxval = self.max_data
             else:
                 if self.kwargs.get("vmin", None) is not None:
@@ -151,12 +152,26 @@ class Plotter(object):
         else:
             plot_method = plt
 
+        '''
+        Heatmap overlay
+        import matplotlib.cm as cm
+        #thecm = cm.get_cmap("Accent")
+        thecm = cm.get_cmap("Greys")
+        thecm._init()
+
+        import numpy as np
+        alphas = np.arange(256)/256.0
+        thecm._lut[:-3,-1] = alphas
+        '''
+
         if data_item.get("y", None) is not None:
+            # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["y"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
             self.plots.append(plot_method.scatter(data_item["x"], data_item["y"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
         else:
             self.plot_type = "scatter2D"
+            # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
             self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
-    
+
     def plot_scatteroverlay(self, data_item):
         '''
         Plots a heatmap overlayed with one or more scatter plots
@@ -169,6 +184,7 @@ class Plotter(object):
             self.kwargs["label"] = "_nolegend_"
             self.plot_heatmap(data_item)
             self.kwargs.pop("label")
+            # Heatmap overlay self.__add_color_bar()
         else:
             self.plot_scatter(data_item)    
         self.num_of_preexisting_plots += 1            
@@ -542,17 +558,17 @@ class Plotter(object):
                 valrange = None
         return valrange
     
-    def __output_to_file_or_screen(self, out_filename = None):
+    def __output_to_file_or_screen(self):
         '''
         Outputs to screen unless a filename is given
         
         @param out_filename    The filename of the file to save to
         '''
-        if out_filename is None:
+        if self.out_filename is None:
             plt.show()
         else:
-            logging.info("saving plot to file: " + out_filename);
-            plt.savefig(out_filename) # Will overwrite if file already exists
+            logging.info("saving plot to file: " + self.out_filename);
+            plt.savefig(self.out_filename) # Will overwrite if file already exists
     
     def __remove_unassigned_arguments(self):
         '''

@@ -144,7 +144,6 @@ class MODIS_L3(AProduct):
 
         return UngriddedData(var, metadata, coords)
 
-
 class MODIS_L2(AProduct):
 
     modis_scaling = ["1km","5km","10km"]
@@ -184,7 +183,6 @@ class MODIS_L2(AProduct):
                                                                     /float(factor))+output[:,int(factor/2):(-1*factor):factor]
         return output
 
-
     def create_coords(self, filenames, variable=None):
 
         variables = [ 'Latitude','Longitude','Scan_Start_Time']
@@ -211,7 +209,6 @@ class MODIS_L2(AProduct):
         return CoordList([lat_coord,lon_coord])
 
     def create_data_object(self, filenames, variable):
-
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -227,11 +224,43 @@ class MODIS_L2(AProduct):
 
         return UngriddedData(var, metadata, coords)
 
-
 class Cloud_CCI(AProduct):
 
     def get_file_signature(self):
-        return [r'.*ESACCI.*']
+        return [r'..*ESACCI.*CLOUD.*']
+
+    def create_coords(self, filenames):
+
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.Coord import Coord
+
+        variables = ["lat", "lon", "time"]
+
+        data = read_many_files(filenames, variables, dim="across_track")
+        #data = read_many_files(filenames, variables)
+        #data = read_many_files(filenames, variables, dim="time")
+
+        coords = CoordList()
+        coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
+        coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
+        coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
+
+        return coords
+
+    def create_data_object(self, filenames, variable):
+
+        from data_io.netcdf import read_many_files, get_metadata
+
+        coords = self.create_coords(filenames)
+        data = read_many_files(filenames, variable, dim="across_track")
+        metadata = get_metadata(data[variable])
+
+        return UngriddedData(data[variable], metadata, coords)
+
+class Aerosol_CCI(AProduct):
+
+    def get_file_signature(self):
+        return [r'.*ESACCI.*AEROSOL.*']
 
     def create_coords(self, filenames):
 
@@ -258,6 +287,52 @@ class Cloud_CCI(AProduct):
         metadata = get_metadata(data[variable])
 
         return UngriddedData(data[variable], metadata, coords)
+
+class Caliop(AProduct):
+
+    def get_file_signature(self):
+        return [r'CAL.*hdf']
+
+    def create_coords(self, filenames, variable=None):
+        variables = [ 'Latitude','Longitude']
+
+        logging.debug("Listing coordinates: " + str(variables))
+
+        sdata, vdata = hdf.read(filenames,variables)
+
+        apply_interpolation = False
+        if variable is not None:
+            pass
+            #scale = self.__get_data_scale(filenames[0], variable)
+            #apply_interpolation = True if scale is "1km" else False
+
+        lat = sdata['Latitude']
+        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
+        lat_metadata = hdf.read_metadata(lat, "SD")
+        lat_coord = Coord(lat_data, lat_metadata,'Y')
+
+        lon = sdata['Longitude']
+        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
+        lon_metadata = hdf.read_metadata(lon,"SD")
+        lon_coord = Coord(lon_data, lon_metadata,'X')
+
+        return CoordList([lat_coord,lon_coord])
+
+    def create_data_object(self, filenames, variable):
+        logging.debug("Creating data object for variable " + variable)
+
+        # reading coordinates
+        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
+        coords = self.create_coords(filenames, variable)
+
+        # reading of variables
+        sdata, vdata = hdf.read(filenames, variable)
+
+        # retrieve data + its metadata
+        var = sdata[variable]
+        metadata = hdf.read_metadata(var, "SD")
+
+        return UngriddedData(var, metadata, coords)
 
 class CisCol(AProduct):
 
@@ -338,7 +413,6 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         return super(NetCDF_CF_Gridded, self).create_coords(filenames, variable)
-
 
     def create_data_object(self, filenames, variable):
         """

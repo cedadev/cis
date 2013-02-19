@@ -30,11 +30,3 @@ def make_cube(filename, variable = None):
 def should_raise_io_error_with_invalid_filename():     
     cube = make_cube("/")
     Plotter([cube], "line", "/")
-   
-@istest
-@raises(InvalidPlotTypeError)
-def should_raise_error_when_variable_is_not_1D():
-    delete_file_if_exists()
-    cube = make_cube(valid_1d_filename, not1Dvariable)
-    Plotter([cube], "line", out_filename)
-    assert(os.path.isfile(out_filename))

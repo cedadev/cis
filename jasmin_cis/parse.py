@@ -166,7 +166,7 @@ def check_color(color, parser):
 def check_colour_bar_orientation(orientation, parser):
     orientation = orientation.lower()
     if orientation != "horizontal" and orientation != "vertical":
-        parser.error("The legend orientation must either be horizontal or vertical")
+        parser.error("The colour bar orientation must either be horizontal or vertical")
     return orientation
 
 def check_range(ax_range, parser, range_type):
