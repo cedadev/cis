@@ -10,7 +10,6 @@ def delete_tmp_file():
 
 @with_setup(teardown=delete_tmp_file)
 def test__write_netcdf():
-    #FIX ME
     from jasmin_cis.data_io.write_netcdf import write
     x = [1, 2, 3, 4, 5]
     y = [2, 4, 6, 8]
@@ -21,7 +20,6 @@ def test__write_netcdf():
 
 @with_setup(teardown=delete_tmp_file)
 def test__write_hdf():
-    #FIX ME
     from numpy import array
     from jasmin_cis.data_io.write_hdf import write
     x = array((gen_random_data(), gen_random_data(), gen_random_data(), gen_random_data()))

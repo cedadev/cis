@@ -1,6 +1,7 @@
 '''
 Module for creating mock, dummies and fakes
 '''
+
 def make_dummy_2d_cube():
     '''
         Makes a dummy cube filled with random datapoints of shape 19x36
@@ -90,7 +91,14 @@ def make_dummy_1d_ungridded_data():
     pass
 
 def make_dummy_2d_ungridded_data():
-    pass
+    from data_io.Coord import CoordList, Coord
+    from data_io.ungridded_data import UngriddedData, Metadata
+
+    x = Coord(gen_random_lat_array((5,5)), Metadata('latitude'),'x')
+    y = Coord(gen_random_lon_array((5,5)), Metadata('longitude'),'y')
+    coords = CoordList([x, y])
+    data = gen_random_data_array((5,5),4.0,1.0)
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1"), coords)
 
 class ScatterData(object):
     def __init__(self, x, y, data, shape, long_name):
@@ -111,37 +119,22 @@ class ScatterData(object):
             raise Exception("Unknown item")
 
 def gen_random_lon():
-    from random import randrange
-    return randrange(-180, 180)
+    return gen_random_lon_array((1,))
 
 def gen_random_lat():
-    from random import randrange
-    return randrange(-90, 90)
+    return gen_random_lat_array((1,))
 
 def gen_random_data():
-    from random import uniform
-    return uniform(0, 0.000225)
+    return gen_random_data_array((1,), 0.000225, 0.0001)
 
-class MockUngriddedData(object):
-    def __init__(self, x, y, data, long_name, units, coords, v_type, standard_name):
-        import numpy as np
-        self.x = x # A numpy array
-        self.y = y # A numpy array
-        self.data = data # A numpy array
-        self.data_list = [x, y, data]
-        self.shape = np.shape(data) # A tuple
-        self.long_name = long_name # A string
-        self.units = units # A string
-        self._coords = coords
-        self.type = v_type
-        self.standard_name = standard_name
-        self.missing_value = np.nan
+def gen_random_lon_array(shape):
+    from numpy.random import rand
+    return 360.0 * rand(*shape) - 180.0
 
-    def coords(self, optional_arg1 = None, optional_arg2 = None):
-        return self._coords # list of object Coord
-    
-class MockCoord(object):
-    def __init__(self, name):
-        self._name = name
-    def name(self):
-        return self._name
+def gen_random_lat_array(shape):
+    from numpy.random import rand
+    return 180.0 * rand(*shape) - 90.0
+
+def gen_random_data_array(shape, mean=0.0, var=1.0):
+    from numpy.random import randn
+    return var*randn(*shape) + mean
