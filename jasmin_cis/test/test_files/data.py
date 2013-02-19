@@ -13,6 +13,8 @@ valid_cloudsat_RVOD_variable = "RVOD_liq_water_content"
 valid_hdf_sd_file = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
+valid_cis_col_file = make_pathname("cis-col-short.nc")
+
 large_15GB_file_filename = "/run/media/daniel/Storage/xglnwa.pm.k8dec-k9nov.nc"
 invalid_filename = "invalidfilename"
 non_netcdf_file = make_pathname("notanetcdffile")
