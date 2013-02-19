@@ -353,7 +353,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         try:
             cube = iris.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
-            raise InvalidVariableError("Variable not found: " + variable +
+            raise InvalidVariableError("Variable not found: " + str(variable) +
                                        "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
 
         sub_cube = list(cube.slices([ coord for coord in cube.coords(dim_coords=True) if coord.points.size > 1]))[0]
@@ -363,6 +363,39 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         #  shape (145, 165)
 
         return sub_cube
+
+class Xglnwa_vprof(NetCDF_CF_Gridded):
+
+    def get_file_signature(self):
+        return [r'.*xglnwa.*vprof.*\.nc']
+
+    def create_coords(self, filenames, variable = None):
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.Coord import Coord
+
+        variables = [ "latitude" ]
+
+        if variable is not None:
+            variables.append(variable)
+
+        data_variables = read_many_files(filenames, variables)
+
+        coords = CoordList()
+        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "X"))
+
+        if variable is None:
+            return coords
+        else:
+            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
+
+
+    def create_data_object(self, filenames, variable):
+        from iris import AttributeConstraint
+        # In this case we use the variable as a name constraint as the variable names themselves aren't obvious
+        var_constraint = AttributeConstraint(name=variable)
+
+        return super(Xglnwa_vprof, self).create_data_object(filenames, var_constraint)
+
 
 class Xglnwa(NetCDF_CF_Gridded):
 

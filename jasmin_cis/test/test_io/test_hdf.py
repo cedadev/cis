@@ -1,20 +1,7 @@
-'''
-module to test the reading of ungridded data files
-'''
-from nose.tools import istest, eq_, raises
+from nose.tools import eq_, istest, raises
 from data_io.hdf import __read_hdf4
-from jasmin_cis.test.test_files.data import *
-from jasmin_cis.data_io.read_ungridded import *
 from jasmin_cis.exceptions import InvalidVariableError
-
-@istest
-def test_that_can_get_coordinates_from_file():
-    filename = valid_hdf_sd_file
-    data = get_file_coordinates(filename)
-    
-    eq_(data[0].shape,data[1].shape)
-    eq_(data[0].shape,(203,135))
-    eq_(data[1].shape,(203,135))
+from test.test_files.data import valid_hdf_sd_file
 
 @istest
 def test_read_hdf4():

@@ -36,3 +36,9 @@ def test_that_can_get_metadata_for_known_variable():
     eq_(attr['long_name'],"TOTAL RAINFALL RATE: LS+CONV KG/M2/S")
     eq_(attr['units'],"kg m-2 s-1")
     eq_(attr['source'],"Unified Model Output (Vn 7.3):")
+
+@istest
+@raises(IOError)
+def should_raise_ioerror_with_file_that_does_not_have_read_permissions():
+    read(file_without_read_permissions, valid_variable_in_valid_filename)
+
