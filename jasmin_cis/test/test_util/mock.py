@@ -98,7 +98,7 @@ def make_dummy_2d_ungridded_data():
     y = Coord(gen_random_lon_array((5,5)), Metadata('longitude'),'y')
     coords = CoordList([x, y])
     data = gen_random_data_array((5,5),4.0,1.0)
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1"), coords)
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
 class ScatterData(object):
     def __init__(self, x, y, data, shape, long_name):
