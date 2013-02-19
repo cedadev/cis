@@ -262,7 +262,7 @@ class Cloud_CCI(AProduct):
 class Aerosol_CCI(AProduct):
 
     def get_file_signature(self):
-        return [r'..*ESACCI.*AEROSOL.*']
+        return [r'.*ESACCI.*AEROSOL.*']
 
     def create_coords(self, filenames):
 
