@@ -227,11 +227,42 @@ class MODIS_L2(AProduct):
 
         return UngriddedData(var, metadata, coords)
 
-
 class Cloud_CCI(AProduct):
 
     def get_file_signature(self):
-        return [r'.*ESACCI.*']
+        return [r'..*ESACCI.*CLOUD.*']
+
+    def create_coords(self, filenames):
+
+        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.Coord import Coord
+
+        variables = ["lat", "lon", "time"]
+
+        #data = read_many_files(filenames, variables, dim="along_track")
+        data = read_many_files(filenames, variables, dim="time")
+
+        coords = CoordList()
+        coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
+        coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
+        coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
+
+        return coords
+
+    def create_data_object(self, filenames, variable):
+
+        from data_io.netcdf import read_many_files, get_metadata
+
+        coords = self.create_coords(filenames)
+        data = read_many_files(filenames, variable, dim="pixel_number")
+        metadata = get_metadata(data[variable])
+
+        return UngriddedData(data[variable], metadata, coords)
+
+class Aerosol_CCI(AProduct):
+
+    def get_file_signature(self):
+        return [r'..*ESACCI.*AEROSOL.*']
 
     def create_coords(self, filenames):
 
