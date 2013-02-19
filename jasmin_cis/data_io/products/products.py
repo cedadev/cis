@@ -290,6 +290,16 @@ class Aerosol_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
+class Caliop(AProduct):
+
+    def get_file_signature(self):
+        return [r'CAL.*hdf']
+
+    def create_coords(self, filenames):
+        pass
+
+    def create_data_object(self, filenames, variable):
+        pass
 class CisCol(AProduct):
 
     def get_file_signature(self):
