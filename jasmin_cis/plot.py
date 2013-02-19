@@ -542,17 +542,17 @@ class Plotter(object):
                 valrange = None
         return valrange
     
-    def __output_to_file_or_screen(self, out_filename = None):
+    def __output_to_file_or_screen(self):
         '''
         Outputs to screen unless a filename is given
         
         @param out_filename    The filename of the file to save to
         '''
-        if out_filename is None:
+        if self.out_filename is None:
             plt.show()
         else:
-            logging.info("saving plot to file: " + out_filename);
-            plt.savefig(out_filename) # Will overwrite if file already exists
+            logging.info("saving plot to file: " + self.out_filename);
+            plt.savefig(self.out_filename) # Will overwrite if file already exists
     
     def __remove_unassigned_arguments(self):
         '''
