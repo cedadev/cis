@@ -134,3 +134,12 @@ def unpack_data_object(data_object):
             return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
         except CoordinateNotFoundError:
             return { "data": data_object.data, "x" : data_object.x.data}
+
+def copy_attributes(source, dest):
+    '''
+     Copy all attributes from one object to another
+    @param source: Object to copy attributes from
+    @param dest: Object to copy attributes to
+    @return: None
+    '''
+    dest.__dict__.update(source.__dict__)

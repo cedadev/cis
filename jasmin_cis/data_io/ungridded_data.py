@@ -44,10 +44,6 @@ class Metadata(object):
         return standard_name
 
 
-    def copy_attributes_into(self, obj):
-        obj.__dict__.update(self.__dict__)
-
-
 # This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
 static_mappings = { SDS : hdf_sd_get_data,
                     VDS : hdf_vd_get_data,
@@ -68,6 +64,7 @@ class LazyData(object):
         from jasmin_cis.exceptions import InvalidDataTypeError
         from iris.cube import CubeMetadata
         import numpy as np
+        from utils import copy_attributes
 
         if isinstance(data, np.ndarray):
             # If the data input is a numpy array we can just copy it in and ignore the data_manager
@@ -96,7 +93,7 @@ class LazyData(object):
             self._metadata = Metadata.from_CubeMetadata(metadata)
         else:
             self._metadata = metadata
-        self._metadata.copy_attributes_into(self)
+        copy_attributes(self._metadata, self)
 
     def name(self):
         """
