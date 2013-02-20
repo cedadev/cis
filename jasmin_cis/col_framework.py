@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
-import logging
 
-class Colocate(object):
+class Colocator(object):
     '''
     Class which provides a method for performing colocation. This just defines the interface which
     the subclasses must implement.
@@ -9,9 +8,14 @@ class Colocate(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def colocate(self):
+    def colocate(self, points, data, constraint, kernel):
         '''
-        @return: a list of regex to match the product's file naming convention.
+
+        @param points:
+        @param data:
+        @param constraint:
+        @param kernel:
+        @return:
 
         Example
         -------
@@ -29,7 +33,7 @@ class Kernel(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def kernel(self):
+    def kernel(self, point, data):
         '''
         @return: a list of regex to match the product's file naming convention.
 
@@ -48,8 +52,12 @@ class Constraint(object):
     '''
     __metaclass__ = ABCMeta
 
+    def __init__(self):
+        import numpy as np
+        self.fill_value = np.Infinity
+
     @abstractmethod
-    def constraint(self):
+    def constraint(self, point, data):
         '''
         @return: a list of regex to match the product's file naming convention.
 
@@ -76,8 +84,9 @@ def __get_class(parent_class, name=None):
     '''
     import plugin
     from jasmin_cis.exceptions import ClassNotFoundError
+    import logging
 
-    all_classes = plugin.find_plugin_classes
+    all_classes = plugin.find_plugin_classes(parent_class, 'jasmin_cis.col_implementation')
     product_cls = None
     for cls in all_classes:
 
@@ -93,7 +102,7 @@ def __get_class(parent_class, name=None):
     raise ClassNotFoundError("Method cannot be found")
 
 
-def get_constraint_fn(method=None):
+def get_constraint(method=None):
     '''
     Top level routine for calling the correct product's create_ungridded_data routine.
 
@@ -103,7 +112,7 @@ def get_constraint_fn(method=None):
     @return: An Ungridded data variable
     '''
     constraint_cls = __get_class(Constraint, method)
-    return constraint_cls.constraint
+    return constraint_cls()
 
 def get_kernel(method=None):
     '''
@@ -115,9 +124,9 @@ def get_kernel(method=None):
     @return: An Ungridded data variable
     '''
     kernel_cls = __get_class(Kernel, method)
-    return kernel_cls.kernel
+    return kernel_cls()
 
-def get_constraint_fn(method=None):
+def get_colocator(method=None):
     '''
     Top level routine for calling the correct product's create_ungridded_data routine.
 
@@ -126,5 +135,5 @@ def get_constraint_fn(method=None):
     @param variable: The variable to create the UngriddedData object from
     @return: An Ungridded data variable
     '''
-    colocate_cls = __get_class(Colocate, method)
-    return colocate_cls.colocate
+    colocate_cls = __get_class(Colocator, method)
+    return colocate_cls()
