@@ -294,7 +294,7 @@ class Caliop(AProduct):
         return [r'CAL.*hdf']
 
     def create_coords(self, filenames, variable=None):
-        variables = [ 'Latitude','Longitude']
+        variables = [ 'Latitude','Longitude', "Profile_Time", "Pressure"]
 
         logging.debug("Listing coordinates: " + str(variables))
 
@@ -309,14 +309,26 @@ class Caliop(AProduct):
         lat = sdata['Latitude']
         lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
         lat_metadata = hdf.read_metadata(lat, "SD")
-        lat_coord = Coord(lat_data, lat_metadata,'Y')
+        lat_coord = Coord(lat_data, lat_metadata)
 
         lon = sdata['Longitude']
         lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
         lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_coord = Coord(lon_data, lon_metadata,'X')
+        lon_coord = Coord(lon_data, lon_metadata)
 
-        return CoordList([lat_coord,lon_coord])
+        #profile time, x
+        profile_time = sdata['Profile_Time']
+        profile_time_data = self.__field_interpolate(hdf.read_data(profile_time,"SD")) if apply_interpolation else hdf.read_data(profile_time,"SD")
+        profile_time_metadata = hdf.read_metadata(profile_time,"SD")
+        profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
+
+        # height y
+        pressure = sdata['Pressure']
+        pressure_data = self.__field_interpolate(hdf.read_data(pressure,"SD")) if apply_interpolation else hdf.read_data(pressure,"SD")
+        pressure_metadata = hdf.read_metadata(pressure,"SD")
+        pressure_coord = Coord(pressure_data, pressure_metadata, "Y")
+
+        return CoordList([lat_coord, lon_coord, profile_time_coord, pressure_coord])
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
