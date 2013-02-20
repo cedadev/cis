@@ -114,6 +114,8 @@ def colocate(filenames, method, variable, sample_points, output_file):
     logging.info("Reading data for: "+variable)
     data = read_data(filenames, variable)
 
+    # Find colocator, constraint_fn and kernel to use
+
     col = Colocator(sample_points, data, method)
 
     logging.info("Colocating, this could take a while...")
