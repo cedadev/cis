@@ -44,7 +44,7 @@ def read(filename, variables=None, datadict=None):
     if not isinstance(variables,list): variables = [ variables ]
 
     datafile = HDF(filename)
-    vs =  datafile.vstart()
+    vs = datafile.vstart()
 
     for variable in variables:
         try:
@@ -60,18 +60,22 @@ def read(filename, variables=None, datadict=None):
 
     return datadict
 
-def get_data(vds):
-
+def get_data(vds, first_record = False):
     # get file and variable reference from tuple
     filename = vds.filename
     variable = vds.variable
 
     datafile = HDF(filename)
-    vs =  datafile.vstart()
+    vs = datafile.vstart()
 
-    # get data for that variable
-    vd = vs.attach(variable)
-    data = vd.read(nRec = vd.inquire()[0])
+    if first_record:
+        vd = vs.attach(vs.next(-1))
+        vd.setfields(variable)
+        data = vd.read()
+    else:
+        # get data for that variable
+        vd = vs.attach(variable)
+        data = vd.read(nRec = vd.inquire()[0])
 
     # create numpy array from data
     data = np.array(data).flatten()
