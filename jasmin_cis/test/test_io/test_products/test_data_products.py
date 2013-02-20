@@ -4,12 +4,17 @@ module to test the various subclasses of the abstract AProduct class
 from nose.tools import istest, eq_, raises
 from data_io.products.products import *
 from jasmin_cis.exceptions import FileIOError, InvalidVariableError
-from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.test_files.data import non_netcdf_file
+
 
 def check_regex_matching(cls_name, filename):
     from data_io.products.AProduct import __get_class
     cls = __get_class(filename)
     eq_(cls.__name__,cls_name)
+
+invalid_variable = "im_an_invalid_variable"
+invalid_filename = "im_an_invalid_file"
+invalid_format = non_netcdf_file
 
 class ProductTests():
 
@@ -30,30 +35,27 @@ class ProductTests():
         self.product().create_coords([self.filename])
 
     @istest
-    @raises(IOError)
+    @raises(FileIOError)
     def should_raise_ioerror_with_invalid_filename(self):
-        self.product().create_data_object([self.invalid_filename], self.valid_variable)
+        self.product().create_data_object([invalid_filename], self.valid_variable)
 
     @istest
     @raises(ValueError, FileIOError)
     def should_raise_valueerror_or_fileioerror_with_file_that_is_not_a_recognised_format(self):
-        self.product().create_data_object([self.invalid_format], self.valid_variable)
+        self.product().create_data_object([invalid_format], self.valid_variable)
 
     @istest
     @raises(InvalidVariableError)
     def should_raise_error_when_variable_does_not_exist_in_file(self):
-        self.product().create_data_object([self.filename], self.invalid_variable)
+        self.product().create_data_object([self.filename], invalid_variable)
 
 
 class TestCloudsat(ProductTests):
 
     def __init__(self):
+        from test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_variable
         self.filename = valid_cloudsat_RVOD_file
-        self.invalid_filename = "im_an_invalid_file"
-        self.invalid_format = non_netcdf_file
         self.valid_variable = valid_cloudsat_RVOD_variable
-        self.invalid_variable = "im_an_invalid_variable"
-        self.file_without_read_permissions = file_without_read_permissions
         self.product = Cloudsat_2B_CWC_RVOD
 
 
@@ -67,8 +69,13 @@ class TestCloudsat(ProductTests):
 # class TestCloud_CCI(ProductTests):
 #     pass
 #
-# class TestCisCol(ProductTests):
-#     pass
+class TestCisCol(ProductTests):
+
+    def __init__(self):
+        from test.test_files.data import valid_cis_col_file
+        self.filename = valid_cis_col_file
+        self.valid_variable = 'mass_fraction_of_cloud_liquid_water_in_air'
+        self.product = CisCol
 
 # class TestXglnwa(ProductTests):
 #
@@ -84,12 +91,9 @@ class TestCloudsat(ProductTests):
 class TestXglnwa_vprof(ProductTests):
 
     def __init__(self):
+        from test.test_files.data import valid_1d_filename, valid_variable_in_valid_filename
         self.filename = valid_1d_filename
-        self.invalid_filename = "im_an_invalid_file"
-        self.invalid_format = non_netcdf_file
         self.valid_variable = valid_variable_in_valid_filename
-        self.invalid_variable = "im_an_invalid_variable"
-        self.file_without_read_permissions = file_without_read_permissions
         self.product = Xglnwa_vprof
 
 

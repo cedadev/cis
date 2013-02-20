@@ -2,6 +2,7 @@
 Module containing NetCDF file reading functions
 """
 
+
 def get_netcdf_file_variables(filename):
     '''
     Get all the variables from a NetCDF file
@@ -54,8 +55,12 @@ def read(filename, usr_variable):
 
     """
     from netCDF4 import Dataset
-    from jasmin_cis.exceptions import InvalidVariableError
-    datafile = Dataset(filename)
+    from jasmin_cis.exceptions import InvalidVariableError, FileIOError
+
+    try:
+        datafile = Dataset(filename)
+    except RuntimeError as e:
+        raise FileIOError(str(e))
 
     try:
         data = datafile.variables[usr_variable]
