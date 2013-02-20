@@ -63,7 +63,7 @@ def __get_class(filename, product=None):
     # Ensure the filename doesn't include the path
     filename = os.path.basename(filename)
 
-    product_classes = plugin.find_plugin_classes(AProduct)
+    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products')
 
     for cls in product_classes:
 

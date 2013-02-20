@@ -1,15 +1,16 @@
 import logging
 
-def get_all_subclasses(cls):
+def get_all_subclasses(cls, module):
     '''
     Recursively find all subclasses of a given class
 
     @param cls: The class to find subclasses of
     @return: A list of all subclasses
     '''
+    __import__(module)
     subclasses = []
     for subclass in cls.__subclasses__():
-        subclasses += get_all_subclasses(subclass)
+        subclasses += get_all_subclasses(subclass, module)
     subclasses += cls.__subclasses__()
     return subclasses
 
@@ -42,7 +43,7 @@ def find_plugins(plugin_dir, parent_class_name):
 
     return product_classes
 
-def find_plugin_classes(parent_class):
+def find_plugin_classes(parent_class, built_in_module):
     import os
     import cis
     # find plugin classes, if any
@@ -51,7 +52,7 @@ def find_plugin_classes(parent_class):
     plugin_classes = find_plugins(plugin_dir, parent_class)
 
     # find built-in classes, i.e. subclasses of parent_class
-    subclasses = get_all_subclasses(parent_class)
+    subclasses = get_all_subclasses(parent_class, built_in_module)
     all_classes = plugin_classes + subclasses
 
     logging.debug(parent_class.__name__+" subclasses are: " + str(all_classes))
