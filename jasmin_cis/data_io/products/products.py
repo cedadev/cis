@@ -231,31 +231,33 @@ class Cloud_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.netcdf import read, get_metadata
         from data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
 
-        data = read_many_files(filenames, variables, dim="across_track")
+        lon_data = read(filenames[0], "lon")#, dim="across_track")
+        lat_data = read(filenames[0], "lat")
+        time_data = read(filenames[0], "time")
         #data = read_many_files(filenames, variables)
         #data = read_many_files(filenames, variables, dim="time")
 
         coords = CoordList()
-        coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
-        coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
-        coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
+        coords.append(Coord(lon_data, get_metadata(lon_data), "X"))
+        coords.append(Coord(lat_data, get_metadata(lat_data), "Y"))
+        coords.append(Coord(time_data, get_metadata(time_data), "T"))
 
         return coords
 
     def create_data_object(self, filenames, variable):
 
-        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.netcdf import get_metadata, read
 
         coords = self.create_coords(filenames)
-        data = read_many_files(filenames, variable, dim="across_track")
-        metadata = get_metadata(data[variable])
+        data = read(filenames[0], variable)#, dim="across_track")
+        metadata = get_metadata(data)
 
-        return UngriddedData(data[variable], metadata, coords)
+        return UngriddedData(data, metadata, coords)
 
 class Aerosol_CCI(AProduct):
 
@@ -294,7 +296,7 @@ class Caliop(AProduct):
         return [r'CAL.*hdf']
 
     def create_coords(self, filenames, variable=None):
-        variables = [ 'Latitude','Longitude']
+        variables = [ 'Latitude','Longitude', "Profile_Time", "Pressure"]
 
         logging.debug("Listing coordinates: " + str(variables))
 
@@ -309,14 +311,26 @@ class Caliop(AProduct):
         lat = sdata['Latitude']
         lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
         lat_metadata = hdf.read_metadata(lat, "SD")
-        lat_coord = Coord(lat_data, lat_metadata,'Y')
+        lat_coord = Coord(lat_data, lat_metadata)
 
         lon = sdata['Longitude']
         lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
         lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_coord = Coord(lon_data, lon_metadata,'X')
+        lon_coord = Coord(lon_data, lon_metadata)
 
-        return CoordList([lat_coord,lon_coord])
+        #profile time, x
+        profile_time = sdata['Profile_Time']
+        profile_time_data = self.__field_interpolate(hdf.read_data(profile_time,"SD")) if apply_interpolation else hdf.read_data(profile_time,"SD")
+        profile_time_metadata = hdf.read_metadata(profile_time,"SD")
+        profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
+
+        # height y
+        pressure = sdata['Pressure']
+        pressure_data = self.__field_interpolate(hdf.read_data(pressure,"SD")) if apply_interpolation else hdf.read_data(pressure,"SD")
+        pressure_metadata = hdf.read_metadata(pressure,"SD")
+        pressure_coord = Coord(pressure_data, pressure_metadata, "Y")
+
+        return CoordList([lat_coord, lon_coord, profile_time_coord, pressure_coord])
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
