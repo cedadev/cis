@@ -11,9 +11,9 @@ class DefaultColocator(Colocator):
         times = np.zeros(len(points))
         for i, point in enumerate(points):
             t1 = time()
-            con_points = constraint.constraint(point, data)
+            con_points = constraint.constrain_points(point, data)
             try:
-                values[i] = kernel.kernel(point, con_points)
+                values[i] = kernel.get_value(point, con_points)
             except ValueError:
                 values[i] = constraint.fill_value
             times[i] = time() - t1
@@ -24,13 +24,13 @@ class DefaultColocator(Colocator):
 
 class DefaultConstraint(Constraint):
 
-    def constraint(self, point, data):
+    def constrain_points(self, point, data):
         # This is a null constraint - all of the points just get passed back
         return data
 
 class find_nn_value(Kernel):
 
-    def kernel(self, point, data):
+    def get_value(self, point, data):
         '''
             Colocation using nearest neighbours without any constraints where both points and
               data are a list of HyperPoints
@@ -42,7 +42,7 @@ class find_nn_value(Kernel):
 
 class find_nn_value_ungridded(Kernel):
 
-    def kernel(self, point, data):
+    def get_value(self, point, data):
         '''
             Co-location routine using nearest neighbour algorithm optimized for ungridded data
         '''
@@ -56,7 +56,7 @@ class find_nn_value_ungridded(Kernel):
         return nearest_point.val
 
 class find_nn_value_gridded(Kernel):
-    def kernel(self, point, data):
+    def get_value(self, point, data):
         '''
             Co-location routine using nearest neighbour algorithm optimized for gridded data.
              This calls out to iris to do the work.
@@ -65,7 +65,7 @@ class find_nn_value_gridded(Kernel):
         return nearest_neighbour_data_value(data, point.get_coord_tuple())
 
 class find_value_by_li(Kernel):
-    def kernel(self, point, data):
+    def get_value(self, point, data):
         '''
             Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
         '''

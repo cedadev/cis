@@ -11,44 +11,34 @@ class Colocator(object):
     def colocate(self, points, data, constraint, kernel):
         '''
 
-        @param points:
-        @param data:
-        @param constraint:
-        @param kernel:
-        @return:
-
-        Example
-        -------
-
-        return [r'.*CODE*.nc']
-        This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
+        @param points: A set of points onto which we will colocate some other 'data'
+        @param data: Some other data to be colocated onto the 'points'
+        @param constraint: A Constraint instance which provides a fill_value and constrain method
+        @param kernel: A Kernel instance which provides a kernel method
+        @return: One or more LazyData objects whose coordinates lie on the points defined above
 
         '''
 
 class Kernel(object):
     '''
-    Class which provides a method for performing colocation. This just defines the interface which
-    the subclasses must implement.
+    Class which provides a method for taking a number of points and returning one value. This could be a nearest neighbour algorithm
+     or some sort of algorithm. This just defines the interface which the subclasses must implement.
     '''
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def kernel(self, point, data):
+    def get_value(self, point, data):
         '''
-        @return: a list of regex to match the product's file naming convention.
-
-        Example
-        -------
-
-        return [r'.*CODE*.nc']
-        This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
+        @param point: A single HyperPoint
+        @param data: A set of data points to reduce to a single value
+        @return: A single value (number) which represents some operation on the points provided
 
         '''
 
 class Constraint(object):
     '''
-    Class which provides a method for performing colocation. This just defines the interface which
-    the subclasses must implement.
+    Class which provides a method for constraining a set of points. A single HyperPoint is given as a reference but the data points to be
+     be reduced ultimately may be of any type. This just defines the interface which the subclasses must implement.
     '''
     __metaclass__ = ABCMeta
 
@@ -57,30 +47,26 @@ class Constraint(object):
         self.fill_value = np.Infinity
 
     @abstractmethod
-    def constraint(self, point, data):
+    def constrain_points(self, point, data):
         '''
-        @return: a list of regex to match the product's file naming convention.
 
-        Example
-        -------
-
-        return [r'.*CODE*.nc']
-        This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
+        @param point: A single HyperPoint
+        @param data: A set of data points to be reduced
+        @return: A reduced set of data points
 
         '''
 
 
 def __get_class(parent_class, name=None):
     '''
-    Identify the subclass of L{AProduct} to a given product name if specified.
-    If the product name is not specified, the routine uses the signature (regex)
-    given by get_file_signature() to infer the product class from the filename.
+    Identify the subclass of parent_class to a given name, if specified.
+    If the name is not specified, the routine picks a default.
 
     Note, only the first filename of the list is use here.
 
-    @param filename: A single filename
-    @param product: name of the product
-    @return: a subclass of L{AProduct}
+    @param parent_class: A base class
+    @param name: name of the class to find
+    @return: a subclass of the parent_class
     '''
     import plugin
     from jasmin_cis.exceptions import ClassNotFoundError
@@ -104,36 +90,30 @@ def __get_class(parent_class, name=None):
 
 def get_constraint(method=None):
     '''
-    Top level routine for calling the correct product's create_ungridded_data routine.
+    Top level routine for instantiating the correct Constraint object.
 
-    @param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
-    @param filenames: A list of filenames to read data from
-    @param variable: The variable to create the UngriddedData object from
-    @return: An Ungridded data variable
+    @param method: The constraint method to find - this should be a string which matches the name of one of the subclasses of Constraint
+    @return: An instance of one of Constraint's subclasses
     '''
     constraint_cls = __get_class(Constraint, method)
     return constraint_cls()
 
 def get_kernel(method=None):
     '''
-    Top level routine for calling the correct product's create_ungridded_data routine.
+    Top level routine for instantiating the correct Kernel object.
 
-    @param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
-    @param filenames: A list of filenames to read data from
-    @param variable: The variable to create the UngriddedData object from
-    @return: An Ungridded data variable
+    @param method: The kernel method to find - this should be a string which matches the name of one of the subclasses of Kernel
+    @return: An instance of one of Kernel's subclasses
     '''
     kernel_cls = __get_class(Kernel, method)
     return kernel_cls()
 
 def get_colocator(method=None):
     '''
-    Top level routine for calling the correct product's create_ungridded_data routine.
+    Top level routine for instantiating the correct Colocator object.
 
-    @param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
-    @param filenames: A list of filenames to read data from
-    @param variable: The variable to create the UngriddedData object from
-    @return: An Ungridded data variable
+    @param method: The colocate method to find - this should be a string which matches the name of one of the subclasses of Colocator
+    @return: An instance of one of Colocator's subclasses
     '''
     colocate_cls = __get_class(Colocator, method)
     return colocate_cls()
