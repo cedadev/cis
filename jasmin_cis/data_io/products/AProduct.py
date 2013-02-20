@@ -43,20 +43,6 @@ class AProduct(object):
         '''
 
 
-def __get_all_subclasses(cls):
-    '''
-    Recursively find all subclasses of a given class
-
-    @param cls: The class to find subclasses of
-    @return: A list of all subclasses
-    '''
-    subclasses = []
-    for subclass in cls.__subclasses__():
-        subclasses += __get_all_subclasses(subclass)
-    subclasses += cls.__subclasses__()
-    return subclasses
-
-
 def __get_class(filename, product=None):
     '''
     Identify the subclass of L{AProduct} to a given product name if specified.
@@ -69,28 +55,16 @@ def __get_class(filename, product=None):
     @param product: name of the product
     @return: a subclass of L{AProduct}
     '''
-    import products
     import re
     import os
-    import cis
     import plugin
     from jasmin_cis.exceptions import ClassNotFoundError
 
     # Ensure the filename doesn't include the path
     filename = os.path.basename(filename)
 
-    # find plugin product classes, if any
-    ENV_PATH = "_".join([cis.__name__.upper(),"PLUGIN","HOME"])
-    plugin_dir = os.environ.get(ENV_PATH, None)
-    plugin_classes = plugin.__find_plugins(plugin_dir,__name__)
+    product_classes = plugin.find_plugin_classes(AProduct)
 
-    # find built-in product classes, i.e. subclasses of L{AProduct}
-    subclasses = __get_all_subclasses(products.AProduct)
-    product_classes = plugin_classes + subclasses
-
-    logging.debug("AProduct subclasses are: " + str(product_classes))
-
-    product_cls = None
     for cls in product_classes:
 
         if product is None:
@@ -136,9 +110,6 @@ def get_coordinates(filenames, product=None):
     '''
     product_cls = __get_class(filenames[0], product)
 
-    if product_cls is None:
-        raise(NotImplementedError)
-    else:
-        logging.info("Retrieving coordinates using product " +  product_cls.__name__)
-        coord = product_cls().create_coords(filenames)
+    logging.info("Retrieving coordinates using product " +  product_cls.__name__)
+    coord = product_cls().create_coords(filenames)
     return coord
