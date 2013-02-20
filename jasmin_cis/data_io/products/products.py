@@ -231,31 +231,33 @@ class Cloud_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.netcdf import read, get_metadata
         from data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
 
-        data = read_many_files(filenames, variables, dim="across_track")
+        lon_data = read(filenames[0], "lon")#, dim="across_track")
+        lat_data = read(filenames[0], "lat")
+        time_data = read(filenames[0], "time")
         #data = read_many_files(filenames, variables)
         #data = read_many_files(filenames, variables, dim="time")
 
         coords = CoordList()
-        coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
-        coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
-        coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
+        coords.append(Coord(lon_data, get_metadata(lon_data), "X"))
+        coords.append(Coord(lat_data, get_metadata(lat_data), "Y"))
+        coords.append(Coord(time_data, get_metadata(time_data), "T"))
 
         return coords
 
     def create_data_object(self, filenames, variable):
 
-        from data_io.netcdf import read_many_files, get_metadata
+        from data_io.netcdf import get_metadata, read
 
         coords = self.create_coords(filenames)
-        data = read_many_files(filenames, variable, dim="across_track")
-        metadata = get_metadata(data[variable])
+        data = read(filenames[0], variable)#, dim="across_track")
+        metadata = get_metadata(data)
 
-        return UngriddedData(data[variable], metadata, coords)
+        return UngriddedData(data, metadata, coords)
 
 class Aerosol_CCI(AProduct):
 
