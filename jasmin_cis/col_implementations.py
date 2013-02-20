@@ -36,7 +36,7 @@ class find_nn_value(Kernel):
               data are a list of HyperPoints
         '''
         nearest_point = point.furthest_point_from()
-        for data_point in self.data:
+        for data_point in data:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val
 
