@@ -9,4 +9,4 @@ data_object = get_data(filenames, 'stemp', "Cloud_CCI")
 
 from jasmin_cis.plot import Plotter
 
-Plotter([data_object], plot_type="heatmap")#"scatter")
+Plotter([data_object], plot_type="scatter")#"heatmap")

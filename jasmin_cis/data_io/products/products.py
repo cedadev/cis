@@ -296,11 +296,23 @@ class Caliop(AProduct):
         return [r'CAL.*hdf']
 
     def create_coords(self, filenames, variable=None):
-        variables = [ 'Latitude','Longitude', "Profile_Time", "Pressure"]
+        from data_io.hdf_vd import get_data
+        from data_io.hdf_vd import VDS
+        from data_io.hdf_sd import read as sdread
+        from jasmin_cis.utils import add_element_to_list_in_dict
+        variables = [ 'Latitude','Longitude', "Profile_Time"]
 
         logging.debug("Listing coordinates: " + str(variables))
 
-        sdata, vdata = hdf.read(filenames,variables)
+        sdata = {}
+        vdata = {}
+
+        for filename in filenames:
+            sds_dict = sdread(filename, variables)
+            for var in sds_dict.keys():
+                utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
+
+            alt_data = get_data(VDS(filename,"Lidar_Data_Altitudes"), True)
 
         apply_interpolation = False
         if variable is not None:
@@ -318,19 +330,30 @@ class Caliop(AProduct):
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata)
 
-        #profile time, x
-        profile_time = sdata['Profile_Time']
-        profile_time_data = self.__field_interpolate(hdf.read_data(profile_time,"SD")) if apply_interpolation else hdf.read_data(profile_time,"SD")
-        profile_time_metadata = hdf.read_metadata(profile_time,"SD")
-        profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
+#        alt = vdata['Lidar_Data_Altitudes']
+        #alt_data = utils.expand_1d_to_2d_array(hdf.read_data(alt, "VD"),len(height_data[0]),axis=1)
+      #  alt_metadata = hdf.read_metadata(alt, "VD")
+        from data_io.ungridded_data import Metadata
+        alt_metadata = Metadata()
+        alt_coord = Coord(alt_data, alt_metadata, "Y")
 
+        '''
         # height y
         pressure = sdata['Pressure']
         pressure_data = self.__field_interpolate(hdf.read_data(pressure,"SD")) if apply_interpolation else hdf.read_data(pressure,"SD")
         pressure_metadata = hdf.read_metadata(pressure,"SD")
-        pressure_coord = Coord(pressure_data, pressure_metadata, "Y")
+        pressure_coord = Coord(pressure_data, pressure_metadata, "Y")'''
 
-        return CoordList([lat_coord, lon_coord, profile_time_coord, pressure_coord])
+        #profile time, x
+        profile_time = sdata['Profile_Time']
+        profile_time_data = self.__field_interpolate(hdf.read_data(profile_time,"SD")) if apply_interpolation else hdf.read_data(profile_time,"SD")
+        profile_time_data = utils.expand_1d_to_2d_array(profile_time_data,len(alt_data),axis=1)
+        profile_time_metadata = hdf.read_metadata(profile_time,"SD")
+        profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
+
+
+
+        return CoordList([lat_coord, lon_coord, profile_time_coord, alt_coord])
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
