@@ -108,10 +108,14 @@ def get_data(var, calipso_scaling=False):
         @return:  A numpy maskedarray. Missing values are False in the mask.
     """
     from utils import create_masked_array_for_missing_data
-    data = var[:]
+    data = var[:] # Note that this will automatically apply any specified scalings
 
     # Missing data.
     missing_val = getattr(var, '_FillValue', None)
+    scale_factor = getattr(var, 'scale_factor', 1)
+    if missing_val is not None:
+        # Fill value needs to be scaled in order to work
+        missing_val = missing_val * scale_factor
     data = create_masked_array_for_missing_data(data, missing_val)
 
     return data
