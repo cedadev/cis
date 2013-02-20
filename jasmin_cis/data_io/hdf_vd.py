@@ -74,9 +74,7 @@ def get_data(vds):
     data = vd.read(nRec = vd.inquire()[0])
 
     # create numpy array from data
-    for x in range(0,len(data)):
-        data[x] = data[x][0]
-    data = np.array(data)
+    data = np.array(data).flatten()
 
     #Deal with missing data
     try:
