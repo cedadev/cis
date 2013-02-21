@@ -89,6 +89,7 @@ class Plotter(object):
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
 
+        self.plots.append(self.__get_plot_method().pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         self.kwargs.pop("latlon", None)
         
     def plot_contour(self, data_item):
