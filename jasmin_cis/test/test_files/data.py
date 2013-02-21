@@ -14,6 +14,10 @@ valid_hdf_sd_file = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf"
 valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc")
 valid_cloud_cci_variable = "stemp"
 
+valid_aeronet_filename = make_pathname("920801_091128_Agoufou.lev20")
+valid_aeronet_variable = "AOT_440"
+
+
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 valid_cis_col_file = make_pathname("cis-col-short.nc")
