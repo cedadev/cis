@@ -31,7 +31,10 @@ def read_many_files(filenames, usr_variables, dim=None):
     if not isinstance(usr_variables,list):
         usr_variables = [usr_variables]
 
-    datafile = MFDataset(filenames, aggdim=dim)
+    try:
+        datafile = MFDataset(filenames, aggdim=dim)
+    except RuntimeError as e:
+        raise IOError(e)
 
     data = {}
     for variable in usr_variables:
@@ -55,12 +58,12 @@ def read(filename, usr_variable):
 
     """
     from netCDF4 import Dataset
-    from jasmin_cis.exceptions import InvalidVariableError, FileIOError
+    from jasmin_cis.exceptions import InvalidVariableError
 
     try:
         datafile = Dataset(filename)
     except RuntimeError as e:
-        raise FileIOError(str(e))
+        raise IOError(str(e))
 
     try:
         data = datafile.variables[usr_variable]

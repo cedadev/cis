@@ -39,7 +39,11 @@ def load_aeronet(fname, keep_fields='all'):
     def daynum_seconds2datetime(daynum, seconds):
         return std_day + timedelta(days=int(daynum), seconds=int(seconds))
 
-    rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, converters={0:date2daynum, 1:time2seconds})
+    try:
+        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, converters={0:date2daynum, 1:time2seconds})
+    except StopIteration as e:
+        raise IOError(e)
+
     lend = len(rawd)
     dates = np.zeros(len(rawd), dtype='O')
     for i in range(lend):
