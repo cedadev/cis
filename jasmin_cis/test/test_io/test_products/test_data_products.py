@@ -66,9 +66,20 @@ class TestCloudsat(ProductTests):
 # class TestMODIS_L2(ProductTests):
 #     pass
 #
-# class TestCloud_CCI(ProductTests):
-#     pass
-#
+class TestCloud_CCI(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
+        self.filename = valid_cloud_cci_filename
+        self.valid_variable = valid_cloud_cci_variable
+        self.product = Cloud_CCI
+
+class TestAerosol_CCI(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_aerosol_cci_filename, valid_aerosol_cci_variable
+        self.filename = valid_aerosol_cci_filename
+        self.valid_variable = valid_aerosol_cci_variable
+        self.product = Aerosol_CCI
+
 class TestCisCol(ProductTests):
 
     def __init__(self):
@@ -100,5 +111,9 @@ class TestXglnwa_vprof(ProductTests):
 # class TestXenida(ProductTests):
 #     pass
 #
-# class TestAeronet(ProductTests):
-#     pass
+class TestAeronet(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable
+        self.filename = valid_aeronet_filename
+        self.valid_variable = valid_aeronet_variable
+        self.product = Aeronet
