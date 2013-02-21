@@ -394,8 +394,9 @@ class Plotter(object):
             logy = options.pop("logy")
             if logx or logy:
                 self.__set_log_scale(logx, logy)
-                
-            if options.pop("grid") or logx or logy:
+
+            draw_grid = options.pop("grid")
+            if draw_grid:
                 plt.grid(True, which="both")
             
             options = self.__set_font_size(options)             
@@ -424,7 +425,7 @@ class Plotter(object):
         if self.plot_type != "line" and self.plot_type != "scatter2D" and not self.no_colour_bar:
             self.__add_color_bar()
         
-        self.__draw_coastlines()
+        self.__draw_coastlines(draw_grid)
         
     def __set_width_and_height(self):
         '''
