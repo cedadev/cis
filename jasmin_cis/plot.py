@@ -56,7 +56,20 @@ class Plotter(object):
         # nformat = "%.3f"
         # nformat = "%.3e"
         nformat = "%.3g"
-        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
+
+        try:
+            step = self.v_range.get("vstep", (self.max_data-self.min_data) / 5)
+        except AttributeError:
+            step = (self.max_data-self.min_data) / 5
+        ticks = []
+        tick = self.min_data
+        while tick <= self.max_data:
+            ticks.append(tick)
+            tick = tick + step
+
+
+        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, ticks = ticks, format = nformat)
+
         cbar.set_label(self.__format_units(self.data[0].units))
     
     def plot_line(self, data_item):
@@ -86,8 +99,8 @@ class Plotter(object):
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         #import matplotlib.colors as colors
-        self.min_data = data_item["data"].min()
-        self.max_data = data_item["data"].max()
+        self.min_data = self.kwargs.get("vmin", data_item["data"].min())
+        self.max_data = self.kwargs.get("vmax", data_item["data"].max())
 
         self.plots.append(self.__get_plot_method().pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         self.kwargs.pop("latlon", None)
@@ -630,7 +643,7 @@ class Plotter(object):
         #self.__validate_data(variable_dim)
         
         plot_format_options = self.__create_plot_format_options()
-        self.__prepare_range("val")
+        self.v_range = self.__prepare_range("val")
         self.x_range = self.__prepare_range("x")
         self.y_range = self.__prepare_range("y")
         self.__set_width_and_height()  
