@@ -303,51 +303,47 @@ class Plotter(object):
             i += 1
         return labels
 
-    def __draw_coastlines(self):
-        from numpy import arange, append
+    def __create_map_grid_lines(self):
+        def __create_set_of_grid_lines(axis, range_dict):
+            from numpy import arange, append
+            lines = None
+            grid_spacing = 15 # in degrees
+            if range_dict is not None: #If the user has specified range
+                min_val = range_dict[axis + "min"]
+                max_val = range_dict[axis + "max"]
+                step = range_dict.get(axis + "step", None)
+            else:
+                try:
+                    min_val = self.valrange[axis][axis + "min"]
+                    max_val = self.valrange[axis][axis + "max"]
+                    step = None
+                except AttributeError:
+                    if axis == "y":
+                        lines = arange(-90, 91, grid_spacing)
+                    elif axis == "x":
+                        lines = arange(-180, 181, grid_spacing)
+
+            if lines is None:
+                if step is None: step = (max_val-min_val)/24
+                lines = arange(min_val, max_val+1, step)
+                if min_val < 0 and max_val > 0: lines = append(lines, 0)
+                lines.sort()
+
+            return lines
+
+        parallels = __create_set_of_grid_lines("y", self.y_range)
+        meridians = __create_set_of_grid_lines("x", self.x_range)
+
+        return parallels, meridians
+
+    def __draw_coastlines(self, draw_grid = False):
         if self.__is_map():
             self.basemap.drawcoastlines()
 
-            parallels = None
-            if self.y_range is not None: #If the user has specified a y_range
-                ymin = self.y_range["ymin"]
-                ymax = self.y_range["ymax"]
-                ystep = self.y_range.get("ystep", None)
-            else:
-                try:
-                    ymin = self.valrange["y"]["ymin"]
-                    ymax = self.valrange["y"]["ymax"]
-                    ystep = None
-                except AttributeError:
-                    parallels = arange(-90, 91, 15)
-
-            if parallels is None:
-                if ystep is None: ystep = (ymax-ymin)/24
-                parallels = arange(ymin, ymax+1, ystep)
-                if ymin < 0 and ymax > 0: parallels = append(parallels, 0)
-                parallels.sort()
-            self.basemap.drawparallels(parallels)
-
-
-            meridians = None
-            if self.x_range is not None: #If the user has specified an x_range
-                xmin = self.x_range["xmin"]
-                xmax = self.x_range["xmax"]
-                xstep = self.x_range.get("xstep", None)
-            else:
-                try:
-                    xmin = self.valrange["x"]["xmin"]
-                    xmax = self.valrange["x"]["xmax"]
-                    xstep = None
-                except AttributeError:
-                    meridians = arange(-180, 181, 15)
-
-            if meridians is None:
-                if xstep is None: xstep = (xmax-xmin)/24
-                meridians = arange(xmin, xmax+1, xstep)
-                if xmin < 0 and xmax > 0: meridians = append(meridians, 0)
-                meridians.sort()
-            self.basemap.drawmeridians(meridians)
+            parallels, meridians = self.__create_map_grid_lines()
+            if draw_grid:
+                self.basemap.drawparallels(parallels)
+                self.basemap.drawmeridians(meridians)
 
             meridian_labels = self.__format_map_ticks(meridians, "x")
             parallel_labels = self.__format_map_ticks(parallels, "y")
