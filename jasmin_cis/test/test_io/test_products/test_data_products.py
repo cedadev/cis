@@ -35,13 +35,13 @@ class ProductTests():
         self.product().create_coords([self.filename])
 
     @istest
-    @raises(FileIOError)
+    @raises(IOError)
     def should_raise_ioerror_with_invalid_filename(self):
         self.product().create_data_object([invalid_filename], self.valid_variable)
 
     @istest
-    @raises(ValueError, FileIOError)
-    def should_raise_valueerror_or_fileioerror_with_file_that_is_not_a_recognised_format(self):
+    @raises(IOError)
+    def should_raise_ioerror_with_file_that_is_not_a_recognised_format(self):
         self.product().create_data_object([invalid_format], self.valid_variable)
 
     @istest
@@ -57,7 +57,6 @@ class TestCloudsat(ProductTests):
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_variable
         self.product = Cloudsat_2B_CWC_RVOD
-
 
 #
 # class TestMODIS_L3(ProductTests):
