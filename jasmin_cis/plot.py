@@ -139,10 +139,8 @@ class Plotter(object):
                 colour_scheme = data_item["data"]
         if colour_scheme is None:
             colour_scheme = "b" # Default color scheme used by matplotlib
-        if "linewidth" in self.kwargs.keys():
-            scatter_size = self.kwargs["linewidth"]
-        else:
-            scatter_size = 20 # Default scatter size
+
+        scatter_size = self.kwargs.get("linewidth", 1)
 
         plot_method = self.__get_plot_method()
         self.kwargs.pop("latlon", None)
