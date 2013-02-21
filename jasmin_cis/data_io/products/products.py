@@ -335,7 +335,7 @@ class Caliop(AProduct):
       #  alt_metadata = hdf.read_metadata(alt, "VD")
         from data_io.ungridded_data import Metadata
         alt_metadata = Metadata()
-        alt_coord = Coord(alt_data, alt_metadata, "Y")
+
 
         '''
         # height y
@@ -347,10 +347,11 @@ class Caliop(AProduct):
         #profile time, x
         profile_time = sdata['Profile_Time']
         profile_time_data = self.__field_interpolate(hdf.read_data(profile_time,"SD")) if apply_interpolation else hdf.read_data(profile_time,"SD")
-        profile_time_data = utils.expand_1d_to_2d_array(profile_time_data,len(alt_data),axis=1)
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
         profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
 
+        alt_data = utils.expand_1d_to_2d_array(alt_data,len(profile_time_data))
+        alt_coord = Coord(alt_data, alt_metadata, "Y")
 
 
         return CoordList([lat_coord, lon_coord, profile_time_coord, alt_coord])
