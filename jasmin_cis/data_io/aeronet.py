@@ -54,9 +54,10 @@ def load_aeronet(fname, keep_fields='all'):
         newd = mlab.rec_keep_fields(newd, keep_fields)
     return newd
 
-def get_file_metadata(filename, variable = None, shape = None):
+def get_file_metadata(filename, variable = '', shape = None):
     file = open(filename)
     from data_io.ungridded_data import Metadata
+    if variable is None: variable = ''
     metadata = Metadata(name = variable, long_name = variable, shape = shape)
     lines = []
     for i in range(0, 4):
