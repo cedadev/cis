@@ -231,33 +231,60 @@ class Cloud_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from data_io.netcdf import read, get_metadata
+        from data_io.netcdf import read, get_metadata, get_data
         from data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
 
-        lon_data = read(filenames[0], "lon")#, dim="across_track")
-        lat_data = read(filenames[0], "lat")
-        time_data = read(filenames[0], "time")
+        lon = []
+        lon_data = []
+        lat = []
+        lat_data = []
+        time = []
+        time_data = []
+
+        for filename in filenames:
+            current = read(filename, "lon")
+            lon.append(current)#, dim="across_track")
+            lon_data.append(get_data(current))
+
+            current = read(filename, "lat")
+            lat.append(current)
+            lat_data.append(get_data(current))
+
+            current = read(filename, "time")
+            time.append(current)
+            time_data.append(get_data(current))
+
+        lon_data = utils.concatenate(lon_data)
+        lat_data = utils.concatenate(lat_data)
+        time_data = utils.concatenate(time_data)
         #data = read_many_files(filenames, variables)
         #data = read_many_files(filenames, variables, dim="time")
 
         coords = CoordList()
-        coords.append(Coord(lon_data, get_metadata(lon_data), "X"))
-        coords.append(Coord(lat_data, get_metadata(lat_data), "Y"))
-        coords.append(Coord(time_data, get_metadata(time_data), "T"))
+        coords.append(Coord(lon_data, get_metadata(lon[0]), "X"))
+        coords.append(Coord(lat_data, get_metadata(lat[0]), "Y"))
+        coords.append(Coord(time_data, get_metadata(time[0]), "T"))
 
         return coords
 
     def create_data_object(self, filenames, variable):
 
-        from data_io.netcdf import get_metadata, read
+        from data_io.netcdf import get_metadata, read, get_data
 
         coords = self.create_coords(filenames)
-        data = read(filenames[0], variable)#, dim="across_track")
-        metadata = get_metadata(data)
+        var = []
+        var_data = []
+        for filename in filenames:
+            current = read(filename, variable)#, dim="across_track")
+            var.append(current)
+            var_data.append(get_data(current))
 
-        return UngriddedData(data, metadata, coords)
+        var_data = utils.concatenate(var_data)
+        metadata = get_metadata(var[0])
+
+        return UngriddedData(var_data, metadata, coords)
 
 class Aerosol_CCI(AProduct):
 
@@ -433,7 +460,6 @@ class NetCDF_CF(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
-
 class NetCDF_CF_Gridded(NetCDF_CF):
 
     def get_file_signature(self):
@@ -515,7 +541,6 @@ class Xglnwa_vprof(NetCDF_CF_Gridded):
 
         return super(Xglnwa_vprof, self).create_data_object(filenames, var_constraint)
 
-
 class Xglnwa(NetCDF_CF_Gridded):
 
     def get_file_signature(self):
@@ -540,7 +565,6 @@ class Xglnwa(NetCDF_CF_Gridded):
         var_constraint = AttributeConstraint(name=variable)
 
         return super(Xglnwa, self).create_data_object(filenames, var_constraint)
-
 
 class Xenida(NetCDF_CF_Gridded):
 
@@ -590,6 +614,7 @@ class Aeronet(AProduct):
         from data_io.aeronet import load_aeronet, get_file_metadata
 
         for filename in filenames:
+            #TODO Can this cope with many files?
             if data_obj is None:
                 data_obj = load_aeronet(filename)
             metadata = get_file_metadata(filename, variable)

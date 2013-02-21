@@ -67,7 +67,16 @@ class Plotter(object):
         @param data_item:    A dictionary containing the x coords and data as arrays
         '''
         self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
-    
+
+    def __get_plot_method(self):
+        if self.__is_map():
+            self.basemap = Basemap()
+            plot_method = self.basemap
+            self.kwargs["latlon"] = True
+        else:
+            plot_method = plt
+        return plot_method
+
     def plot_heatmap(self, data_item):
         '''
         Plots a heatmap
@@ -80,13 +89,6 @@ class Plotter(object):
         self.min_data = data_item["data"].min()
         self.max_data = data_item["data"].max()
 
-        if self.__is_map():
-            self.basemap = Basemap()
-            plot_method = self.basemap
-            self.kwargs["latlon"] = True
-        else:
-            plot_method = plt
-        self.plots.append(plot_method.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         self.kwargs.pop("latlon", None)
         
     def plot_contour(self, data_item):
@@ -96,8 +98,8 @@ class Plotter(object):
         
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        self.basemap = Basemap()    
-        self.plots.append(self.basemap.contour(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
+        self.plots.append(self.__get_plot_method().contour(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.kwargs.pop("latlon", None)
         
     def plot_contourf(self, data_item):
         '''
@@ -106,8 +108,8 @@ class Plotter(object):
         
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        self.basemap = Basemap()    
-        self.plots.append(self.basemap.contourf(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
+        self.plots.append(self.__get_plot_method().contourf(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.kwargs.pop("latlon", None)
     
     def plot_scatter(self, data_item):
         '''
@@ -142,15 +144,7 @@ class Plotter(object):
         else:
             scatter_size = 20 # Default scatter size
 
-        if self.__is_map():
-            # Code review this
-            try:
-                plot_method = self.basemap
-            except AttributeError:
-                self.basemap = Basemap()
-                plot_method = self.basemap
-        else:
-            plot_method = plt
+        plot_method = self.__get_plot_method()
 
         '''
         Heatmap overlay
@@ -171,6 +165,7 @@ class Plotter(object):
             self.plot_type = "scatter2D"
             # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
             self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
+        self.kwargs.pop("latlon", None)
 
     def plot_scatteroverlay(self, data_item):
         '''
@@ -352,20 +347,11 @@ class Plotter(object):
             plt.yticks(parallels, parallel_labels)
     
     def __set_log_scale(self, logx, logy):
-        from numpy import e, log
         ax = plt.gca()
         if logx:
-            ax.set_xscale("log", basex = logx) 
-            if logx == e:
-                xticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_xticks())]
-                #xticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_xticks())]
-                ax.set_xticklabels(xticks)
+            ax.set_xscale("log", basex = logx)
         if logy:
             ax.set_yscale("log", basey = logy)
-            if logy == e:
-                yticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_yticks())]
-                #yticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_yticks())]
-                ax.set_yticklabels(yticks)
                         
     def __format_plot(self, options, datafiles): 
         '''
@@ -482,8 +468,7 @@ class Plotter(object):
                 self.__add_datafile_args_to_kwargs(datafiles[i])
             item_to_plot = unpack_data_object(item)            
 
-            # for heatmaps, we plot the world map (with basemap)
-            # if the 'x' axis is longitude AND the 'y' axis is the latitude
+            # Plot the data item using the specified plot type
             Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
 
             # Remove temp args
