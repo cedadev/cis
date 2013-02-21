@@ -145,7 +145,7 @@ class Plotter(object):
             scatter_size = 20 # Default scatter size
 
         plot_method = self.__get_plot_method()
-
+        self.kwargs.pop("latlon", None)
         '''
         Heatmap overlay
         import matplotlib.cm as cm
@@ -165,7 +165,6 @@ class Plotter(object):
             self.plot_type = "scatter2D"
             # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
             self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
-        self.kwargs.pop("latlon", None)
 
     def plot_scatteroverlay(self, data_item):
         '''
@@ -638,6 +637,9 @@ class Plotter(object):
         self.__set_width_and_height()  
         Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
         self.no_colour_bar = self.kwargs.pop("nocolourbar", False)
+        if self.kwargs.pop("logv", None) is not None:
+            from matplotlib import colors
+            self.kwargs["norm"] = colors.LogNorm()
         datafiles = self.__do_plot()  
         self.__apply_axis_limits(self.x_range, "x")
         self.__apply_axis_limits(self.y_range, "y")
