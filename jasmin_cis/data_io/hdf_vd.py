@@ -111,7 +111,7 @@ def get_metadata(vds):
     long_name = __get_attribute_value(vd, 'long_name')
     shape = [len(vd.read(nRec = vd.inquire()[0]))] #VD data are always 1D, so the shape is simply the length of the data vector
     units = __get_attribute_value(vd, 'units')
-    range = __get_attribute_value(vd, 'valid_range')
+    valid_range = __get_attribute_value(vd, 'valid_range')
     factor = __get_attribute_value(vd, 'factor')
     offset = __get_attribute_value(vd, 'offset')
     missing = __get_attribute_value(vd, 'missing')
@@ -120,7 +120,7 @@ def get_metadata(vds):
     # so that other metadata of interest can still be retrieved if need be
     misc = vd.attrinfo()
 
-    metadata = Metadata( name=name, long_name=long_name, shape=shape, units=units, range=range,
+    metadata = Metadata( name=name, long_name=long_name, shape=shape, units=units, range=valid_range,
                             factor=factor, offset=offset, missing_value=missing, misc=misc)
 
     # detach and close

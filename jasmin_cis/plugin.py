@@ -49,7 +49,7 @@ def find_plugin_classes(parent_class, built_in_module):
     # find plugin classes, if any
     ENV_PATH = "_".join([cis.__name__.upper(),"PLUGIN","HOME"])
     plugin_dir = os.environ.get(ENV_PATH, None)
-    plugin_classes = find_plugins(plugin_dir, parent_class)
+    plugin_classes = find_plugins(plugin_dir, parent_class.__name__)
 
     # find built-in classes, i.e. subclasses of parent_class
     subclasses = get_all_subclasses(parent_class, built_in_module)

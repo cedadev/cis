@@ -2,10 +2,6 @@
 module to test the reading of ungridded data files
 '''
 from nose.tools import istest, eq_, raises, nottest
-from jasmin_cis.test.test_files.data import *
-from jasmin_cis.data_io.read_ungridded import *
-from pyhdf.error import HDF4Error
-from jasmin_cis.exceptions import InvalidVariableError
 
 @nottest
 def from_points_array_returns_valid_ungridded_data_object():
