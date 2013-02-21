@@ -321,12 +321,12 @@ class Caliop(AProduct):
             #apply_interpolation = True if scale is "1km" else False
 
         lat = sdata['Latitude']
-        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
+        lat_data = hdf.read_data(lat,"SD")
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata)
 
         lon = sdata['Longitude']
-        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
+        lon_data = hdf.read_data(lon,"SD")
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata)
 
@@ -346,7 +346,7 @@ class Caliop(AProduct):
 
         #profile time, x
         profile_time = sdata['Profile_Time']
-        profile_time_data = self.__field_interpolate(hdf.read_data(profile_time,"SD")) if apply_interpolation else hdf.read_data(profile_time,"SD")
+        profile_time_data = hdf.read_data(profile_time,"SD")
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
         profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
 
