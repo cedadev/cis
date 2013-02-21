@@ -3,13 +3,43 @@ from time import time
 import logging
 
 class DefaultColocator(Colocator):
-
     def colocate(self, points, data, constraint, kernel):
+        '''
+            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
+             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
+             for the output LazyData object is copied from the input data object.
+        @param points: A list of HyperPoints
+        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+                            based on it's internal parameters
+        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
+        @return: A single LazyData object
+        '''
         from data_io.ungridded_data import LazyData
         import numpy as np
         values = np.zeros(len(points))
-        times = np.zeros(len(points))
         for i, point in enumerate(points):
+            con_points = constraint.constrain_points(point, data)
+            try:
+                values[i] = kernel.get_value(point, con_points)
+            except ValueError:
+                values[i] = constraint.fill_value
+        new_data = LazyData(values, data.metadata)
+        new_data.missing_value = constraint.fill_value
+        return new_data
+
+class DebugColocator(Colocator):
+
+    def colocate(self, points, data, constraint, kernel):
+        # This is the same colocate method as above with extra logging and timing steps. This is useful for debugging
+        #  but will be slower than the default colocator.
+        from data_io.ungridded_data import LazyData
+        import numpy as np
+        import math
+        short_points = points if len(points)<1000 else points[:999]
+        values = np.zeros(len(short_points))
+        times = np.zeros(len(short_points))
+        for i, point in enumerate(short_points):
             t1 = time()
             con_points = constraint.constrain_points(point, data)
             try:
@@ -17,10 +47,13 @@ class DefaultColocator(Colocator):
             except ValueError:
                 values[i] = constraint.fill_value
             times[i] = time() - t1
-        logging.info("Average time per point: " + str(np.sum(times)/len(self.points)))
+            frac, rem = math.modf(i/10.0)
+            if frac == 0: print str(i)+" took: "+str(times[i])
+        logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
         new_data = LazyData(values, data.metadata)
         new_data.missing_value = constraint.fill_value
         return new_data
+
 
 class DefaultConstraint(Constraint):
 
@@ -28,7 +61,7 @@ class DefaultConstraint(Constraint):
         # This is a null constraint - all of the points just get passed back
         return data
 
-class find_nn_value(Kernel):
+class nn(Kernel):
 
     def get_value(self, point, data):
         '''
@@ -40,7 +73,7 @@ class find_nn_value(Kernel):
             if point.compdist(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val
 
-class find_nn_value_ungridded(Kernel):
+class nn_ungridded(Kernel):
 
     def get_value(self, point, data):
         '''
@@ -55,7 +88,7 @@ class find_nn_value_ungridded(Kernel):
 
         return nearest_point.val
 
-class find_nn_value_gridded(Kernel):
+class nn_gridded(Kernel):
     def get_value(self, point, data):
         '''
             Co-location routine using nearest neighbour algorithm optimized for gridded data.
@@ -64,7 +97,7 @@ class find_nn_value_gridded(Kernel):
         from iris.analysis.interpolate import nearest_neighbour_data_value
         return nearest_neighbour_data_value(data, point.get_coord_tuple())
 
-class find_value_by_li(Kernel):
+class li(Kernel):
     def get_value(self, point, data):
         '''
             Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.

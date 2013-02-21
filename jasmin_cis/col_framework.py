@@ -85,7 +85,7 @@ def __get_class(parent_class, name=None):
                 logging.debug("Selected class " +  cls.__name__)
                 return cls
 
-    raise ClassNotFoundError("Method cannot be found")
+    raise ClassNotFoundError("Specified "+parent_class.__name__+" subclass cannot be found")
 
 
 def get_constraint(method=None):

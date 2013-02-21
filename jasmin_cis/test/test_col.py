@@ -1,7 +1,7 @@
 '''
  Module to test the colocation routines
 '''
-from jasmin_cis.col import Colocator
+from jasmin_cis.col import Colocate
 from nose.tools import istest, eq_, assert_almost_equal
 from test_util import mock
 
@@ -22,7 +22,7 @@ def is_colocated(data1, data2):
 def can_col_gridded_to_ungridded_using_nn_in_1d():
     cube = mock.make_dummy_1d_cube()
     sample_points = mock.make_dummy_1d_points_list(20)
-    col = Colocator(sample_points, cube,'nn')
+    col = Colocate(sample_points, cube,'nn')
     col.colocate()
     assert(is_colocated(col.points, sample_points))
     
@@ -30,7 +30,7 @@ def can_col_gridded_to_ungridded_using_nn_in_1d():
 def can_col_gridded_to_ungridded_using_nn_in_2d():
     cube = mock.make_dummy_2d_cube()
     sample_points = mock.make_dummy_2d_points_list(20)
-    col = Colocator(sample_points, cube,'nn')
+    col = Colocate(sample_points, cube,'nn')
     col.colocate()
     assert(is_colocated(col.points, sample_points))
     
@@ -39,7 +39,7 @@ def test_basic_col_gridded_to_ungridded_using_nn_in_2d():
     from jasmin_cis.data_io.hyperpoint import HyperPoint
     cube = mock.make_square_3x3_2d_cube()
     sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
-    col = Colocator(sample_points, cube,'nn')
+    col = Colocate(sample_points, cube,'nn')
     new_data = col.colocate()
     eq_(new_data.data[0], 8.0)
     eq_(new_data.data[1], 12.0)
@@ -51,7 +51,7 @@ def test_already_colocated_in_col_gridded_to_ungridded_using_nn_in_2d():
     cube = mock.make_square_3x3_2d_cube()
     # This point already exists on the cube with value 5 - which shouldn't be a problem
     sample_points = [ HyperPoint(0.0, 0.0) ]
-    col = Colocator(sample_points, cube,'nn')
+    col = Colocate(sample_points, cube,'nn')
     new_data = col.colocate()
     eq_(new_data.data[0], 8.0)
     
@@ -66,7 +66,7 @@ def test_coordinates_exactly_between_points_in_col_gridded_to_ungridded_using_nn
     from jasmin_cis.data_io.hyperpoint import HyperPoint
     cube = mock.make_square_3x3_2d_cube()
     sample_points = [ HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5) ]
-    col = Colocator(sample_points, cube,'nn')
+    col = Colocate(sample_points, cube,'nn')
     new_data = col.colocate()
     eq_(new_data.data[0], 8.0)
     eq_(new_data.data[1], 5.0)
@@ -78,7 +78,7 @@ def test_coordinates_outside_grid_in_col_gridded_to_ungridded_using_nn_in_2d():
     from jasmin_cis.data_io.hyperpoint import HyperPoint
     cube = mock.make_square_3x3_2d_cube()
     sample_points = [ HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5) ]
-    col = Colocator(sample_points, cube,'nn')
+    col = Colocate(sample_points, cube,'nn')
     new_data = col.colocate()
     eq_(new_data.data[0], 12.0)
     eq_(new_data.data[1], 6.0)
@@ -89,7 +89,7 @@ def test_coordinates_outside_grid_in_col_gridded_to_ungridded_using_nn_in_2d():
 def can_col_gridded_to_ungridded_using_li_in_2d():
     cube = mock.make_dummy_2d_cube()
     sample_points = mock.make_dummy_2d_points_list(20)
-    col = Colocator(sample_points, cube,'li')
+    col = Colocate(sample_points, cube,'li')
     col.colocate()
     assert(is_colocated(col.points, sample_points))
 
@@ -98,7 +98,7 @@ def test_basic_col_gridded_to_ungridded_using_li_in_2d():
     from jasmin_cis.data_io.hyperpoint import HyperPoint
     cube = mock.make_square_3x3_2d_cube()
     sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
-    col = Colocator(sample_points, cube,'li')
+    col = Colocate(sample_points, cube,'li')
     new_data = col.colocate()
     assert_almost_equal(new_data.data[0], 8.8)
     assert_almost_equal(new_data.data[1], 11.2)

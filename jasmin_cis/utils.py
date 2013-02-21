@@ -62,14 +62,6 @@ def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
     return ma.array(data, mask=data==missing_val, fill_value=missing_val)
 
-def __get_coord(axis, data_object):
-    from iris.exceptions import CoordinateNotFoundError
-    try:
-        coord = data_object.coord(axis=axis)
-        return coord.points
-    except CoordinateNotFoundError:
-        return None
-
 def unpack_data_object(data_object):
     '''
     @param data_object    A cube or an UngriddedData object
@@ -79,6 +71,14 @@ def unpack_data_object(data_object):
     import iris.plot as iplt
     import iris
     from jasmin_cis.exceptions import CoordinateNotFoundError
+
+    def __get_coord(axis, data_object):
+        from iris.exceptions import CoordinateNotFoundError
+        try:
+            coord = data_object.coord(axis=axis)
+            return coord.points
+        except CoordinateNotFoundError:
+            return None
 
     if type(data_object) is Cube:
         no_of_dims = len(data_object.shape)
@@ -143,3 +143,15 @@ def copy_attributes(source, dest):
     @return: None
     '''
     dest.__dict__.update(source.__dict__)
+
+def add_file_prefix(prefix, filepath):
+    '''
+        Add a prefix to a filename taking into account any path that might be present before that actual filename
+    @param prefix: A string to prefix the filename with
+    @param filepath: Filename, optionally including path
+    @return: A string with the full path to the prefixed file
+    '''
+    import os.path
+    filename = os.path.basename(filepath)
+    path = os.path.dirname(filepath)
+    return os.path.join(path,prefix+filename)

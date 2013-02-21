@@ -102,45 +102,35 @@ def col_cmd(main_arguments):
         
     @param main_arguments:    The command line arguments (minus the col command)         
     '''
-    from jasmin_cis.exceptions import InvalidColocationMethodError, CISError
-    from data_io.read import read_file_coordinates, read_data
-    from col import colocate
-    from data_io.write_netcdf import write_coordinates, add_data_to_file
+    from jasmin_cis.exceptions import ClassNotFoundError, CISError
+    from col import Colocate
+    from utils import add_file_prefix
 
     sample_file = main_arguments.pop("samplefilename")
     input_groups = main_arguments.pop("datafiles")
-    output_file = "cis-col-" + main_arguments.pop("output") + ".nc"
 
-    default_method = main_arguments.pop("method", None)
-    default_variable = main_arguments.pop("variable", None)
+    # Add a prefix to the output file so that we have a signature to use when we read it in again
+    output_file = add_file_prefix("cis-col-", main_arguments.pop("output") + ".nc")
 
-    coords = read_file_coordinates(sample_file)
+    col = Colocate(sample_file, output_file)
 
-    sample_points = coords.get_coordinates_points()
-    write_coordinates(coords, output_file)
+    for input_group in input_groups:
+        filenames = input_group['filename']
+        variable = input_group['variable']
+        con_options = input_group['con_options']
+        kern_options = input_group['kern_options']
+        col_options = input_group['col_options']
 
-    if default_variable is not None and default_method is not None:
-        filenames = [ input_group['filename'] for input_group in input_groups ]
-        # variable = input_group['variable']
-        # method = input_group['method']
+        col_name = col_options.pop('name')
+        con_name = con_options.pop('name')
+        kern_name = kern_options.pop('name')
+
         try:
-            colocate(filenames, default_method, default_variable, sample_points, output_file)
+            col.colocate(variable, filenames, col_name, con_name, con_options, kern_name, kern_options)
         except CISError as e:
             __error_occurred(e)
-        except InvalidColocationMethodError as e:
-            __error_occurred(str(e) + "\nInvalid co-location method: "+default_method)
-    else:
-        for input_group in input_groups:
-            filename = input_group['filename']
-            variable = input_group['variable']
-            method = input_group['method']
-
-            try:
-                colocate(filename, method, variable, sample_points, output_file)
-            except CISError as e:
-                __error_occurred(e)
-            except InvalidColocationMethodError as e:
-                __error_occurred(str(e) + "\nInvalid co-location method: "+method)
+        except ClassNotFoundError as e:
+            __error_occurred(str(e) + "\nInvalid co-location option.")
 
 
 commands = { 'plot' : plot_cmd,
