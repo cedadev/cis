@@ -11,6 +11,9 @@ valid_hdf_vd_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANU
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_RVOD_variable = "RVOD_liq_water_content"
 valid_hdf_sd_file = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
+valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc")
+valid_cloud_cci_variable = "stemp"
+
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 valid_cis_col_file = make_pathname("cis-col-short.nc")
