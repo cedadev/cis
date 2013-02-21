@@ -10,13 +10,13 @@ from jasmin_cis.plot import Plotter
 
 @istest
 def can_specify_one_valid_filename():
-    args = ["plot", valid_1d_filename, "-v", valid_variable_in_valid_filename]
+    args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename]
     parse_args(args)
     
 @istest
 def should_raise_error_with_one_invalid_filename():
     try:
-        args = ["plot", invalid_filename, "-v", valid_variable_in_valid_filename]
+        args = ["plot", valid_variable_in_valid_filename+":"+invalid_filename]
         parse_args(args)
         assert False
     except SystemExit as e:
@@ -25,13 +25,13 @@ def should_raise_error_with_one_invalid_filename():
     
 @istest
 def can_specify_more_than_one_valid_filename():
-    args = ["plot", valid_1d_filename, netcdf_file_with_incorrect_file_extension, "-v", valid_variable_in_valid_filename]
+    args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename+','+netcdf_file_with_incorrect_file_extension]
     parse_args(args)
     
 @istest
 def should_raise_error_with_a_mixture_of_valid_and_invalid_filenames():
     try:
-        args = ["plot", valid_1d_filename, invalid_filename, "-v", valid_variable_in_valid_filename]
+        args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename+','+invalid_filename]
         parse_args(args)
         assert False
     except SystemExit as e:
@@ -40,13 +40,13 @@ def should_raise_error_with_a_mixture_of_valid_and_invalid_filenames():
     
 @istest
 def can_specify_valid_chart_type():
-    args = ["plot", valid_1d_filename, "-v", valid_variable_in_valid_filename, "--type", Plotter.plot_types.keys()[0]]
+    args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename, "--type", Plotter.plot_types.keys()[0]]
     parse_args(args)
 
 @istest
 def should_raise_error_with_an_invalid_chart_type():
     try:
-        args = ["plot", valid_1d_filename, "-v", valid_variable_in_valid_filename, "--type", "dfgdfgdfgdfgdfgdf"]
+        args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename, "--type", "dfgdfgdfgdfgdfgdf"]
         parse_args(args)
         assert False
     except SystemExit as e:
@@ -56,7 +56,7 @@ def should_raise_error_with_an_invalid_chart_type():
 @istest
 def should_raise_error_with_more_than_one_chart_type():
     try:
-        args = ["plot", valid_1d_filename, "-v", valid_variable_in_valid_filename, "--type", Plotter.plot_types.keys()[0], Plotter.plot_types.keys()[1]]
+        args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename, "--type", Plotter.plot_types.keys()[0], Plotter.plot_types.keys()[1]]
         parse_args(args)
         assert False
     except SystemExit as e:
@@ -65,7 +65,7 @@ def should_raise_error_with_more_than_one_chart_type():
 
 @istest
 def can_specify_more_than_one_variable():
-    args = ["plot", valid_1d_filename + ":" + valid_variable_in_valid_filename, valid_1d_filename + ":" + valid_variable_in_valid_filename]
+    args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename, valid_variable_in_valid_filename+":"+valid_1d_filename]
     parse_args(args)
     
 @istest
@@ -81,7 +81,7 @@ def should_raise_error_when_no_variable_is_specified():
 @istest
 def should_raise_error_with_invalid_line_width():
     try:   
-        args = ["plot", valid_1d_filename, "-v", valid_variable_in_valid_filename, "--itemwidth", "4a0"]
+        args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename, "--itemwidth", "4a0"]
         parse_args(args) 
         assert False
     except SystemExit as e:
@@ -91,7 +91,7 @@ def should_raise_error_with_invalid_line_width():
 @istest
 def should_raise_error_with_invalid_line_style():   
     try:   
-        args = ["plot", valid_1d_filename, "-v", valid_variable_in_valid_filename, "--linestyle", "4a0"]
+        args = ["plot", valid_variable_in_valid_filename+":"+valid_1d_filename, "--linestyle", "4a0"]
         parse_args(args) 
         assert False
     except SystemExit as e:

@@ -58,7 +58,7 @@ def plot_cmd(main_arguments):
     try:
         # create a dictionary of [key=variable, value=list of filename]
         dict_of_var_and_filename = OrderedDict() # Cannot use dict, as unordered and need order for scatter overlay
-        for datafile in main_arguments["datafiles"]:
+        for datafile in main_arguments["datagroups"]:
             utils.add_element_to_list_in_dict(dict_of_var_and_filename, datafile["variable"], datafile["filename"])
 
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
@@ -107,7 +107,7 @@ def col_cmd(main_arguments):
     from utils import add_file_prefix
 
     sample_file = main_arguments.pop("samplefilename")
-    input_groups = main_arguments.pop("datafiles")
+    input_groups = main_arguments.pop("datagroups")
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-col-", main_arguments.pop("output") + ".nc")

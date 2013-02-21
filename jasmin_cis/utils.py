@@ -155,3 +155,22 @@ def add_file_prefix(prefix, filepath):
     filename = os.path.basename(filepath)
     path = os.path.dirname(filepath)
     return os.path.join(path,prefix+filename)
+
+
+def parse_key_val_list(arguments, seperator=','):
+    '''
+        Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and values
+        NOTE - if a key has no value, the key is stored and given the value True
+    @param arguments: A string which is a seperated list of keyword value pairs
+    @param seperator: Optional, a string which is the seperating character in the input list
+    @return: A dictionary of the keywords and values
+    '''
+    input_list = arguments.split(seperator)
+    key_val_dict = {}
+    for element in input_list:
+        key_value = element.split('=')
+        key = key_value[0]
+        value = key_value[1] if len(key_value) > 1 else True
+        key_val_dict[key] = value
+
+    return key_val_dict
