@@ -290,8 +290,10 @@ class Plotter(object):
         label_format = "{0:.0f}"
         labels = []
         i = 0
+        label_every_nth_tick = 4
         for tick in tick_array:
-            if i % 4 == 0 or tick == 0:
+            # Label every nth tick, the 0 tick, and the last tick
+            if i % label_every_nth_tick == 0 or tick == 0 or i == len(tick_array) - 1:
                 if tick == 0:
                     labels.append(0)
                 else:
