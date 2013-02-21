@@ -482,8 +482,7 @@ class Plotter(object):
                 self.__add_datafile_args_to_kwargs(datafiles[i])
             item_to_plot = unpack_data_object(item)            
 
-            # for heatmaps, we plot the world map (with basemap)
-            # if the 'x' axis is longitude AND the 'y' axis is the latitude
+            # Plot the data item using the specified plot type
             Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
 
             # Remove temp args
