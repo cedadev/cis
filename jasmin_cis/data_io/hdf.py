@@ -2,20 +2,24 @@ from data_io import hdf_sd as hdf_sd, hdf_vd
 import jasmin_cis.utils as utils
 import logging
 
-def get_hdf4_file_variables(filename):
-    '''
+def get_hdf4_file_variables(filename, data_type):
+    """
     Get all variables from a file containing ungridded data.
     Concatenate variable from both VD and SD data
 
-    args:
-        filename: The filename of the file to get the variables from
+    @param filename: The filename of the file to get the variables from
+    @param data_type: String representing the HDF data type, i.e. 'VD' or 'SD'. if None, both are computed.
+    """
 
-    '''
-    SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
-    #VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
+    SD_vars = VD_vars = None
 
-    #return SD_vars, VD_vars
-    return SD_vars, None
+    if data_type.lower() == 'SD'.lower() or data_type.lower() == "all".lower():
+        SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
+
+    if data_type.lower() == 'VD'.lower() or data_type.lower() == "all".lower():
+        VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
+
+    return SD_vars, VD_vars
 
 def __read_hdf4(filename,variables):
     '''

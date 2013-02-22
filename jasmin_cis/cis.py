@@ -89,9 +89,10 @@ def info_cmd(main_arguments):
     '''    
     variables = main_arguments.pop('variables', None)
     filename = main_arguments.pop('filename')
+    data_type = main_arguments.pop('type', None)
     
     try:
-        info(filename, variables)
+        info(filename, variables, data_type)
     except CISError as e:
         __error_occurred(e)
 

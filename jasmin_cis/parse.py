@@ -47,6 +47,7 @@ def add_plot_parser_arguments(parser):
 def add_info_parser_arguments(parser):
     parser.add_argument("filename", metavar = "Filename", help = "The filename of the file to inspect")
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
+    parser.add_argument("--type", metavar = "type of HDF data", nargs="?", help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
 
 def add_col_parser_arguments(parser):
@@ -134,7 +135,7 @@ def check_variable(variable, datafiles, parser):
             parser.error("A variable must be specified")
     elif datafiles:
         for datafile in datafiles:
-            if datafile["variable"] is None:
+            if datafile["variable": SD or VD] is None:
                 datafile["variable"] = variable
     return datafiles
 
