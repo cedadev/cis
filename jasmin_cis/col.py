@@ -30,7 +30,7 @@ class Colocate(object):
         data = read_data(filenames, variable)
 
         if con_method is None:
-            con_method = 'DefaultConstraint'
+            con_method = 'DummyConstraint'
         con_fn = get_constraint(con_method)
 
         if kern is None:

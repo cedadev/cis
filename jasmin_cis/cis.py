@@ -69,6 +69,7 @@ def plot_cmd(main_arguments):
         __error_occurred("There was an error reading one of the files: \n" + str(e))
 
     main_arguments = vars(main_arguments)
+    main_arguments.pop('command') # Remove the command argument now it is not needed
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
     
@@ -107,17 +108,20 @@ def col_cmd(main_arguments):
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
 
-    col = Colocate(main_arguments.sample_file, output_file)
+    col = Colocate(main_arguments.samplefilename, output_file)
 
     for input_group in main_arguments.datagroups:
-        filenames = input_group['filename']
         variable = input_group['variable']
-        con_options = input_group['con_options']
-        kern_options = input_group['kern_options']
-        col_options = input_group['col_options']
+        filenames = input_group['filenames']
+        col_name = input_group['colocator'][0] if  input_group['colocator'] is not None else None
+        col_options = input_group['colocator'][1:] if  input_group['colocator'] is not None else None
+        con_name = input_group['constraint'][0] if  input_group['constraint'] is not None else None
+        con_options = input_group['constraint'][1:] if  input_group['constraint'] is not None else None
+        kern_name = input_group['kernel'][0] if  input_group['kernel'] is not None else None
+        kern_options = input_group['kernel'][1:] if  input_group['kernel'] is not None else None
 
         try:
-            col.colocate(variable, filenames, col_options[0], con_options[0], con_options[1:], kern_options[0], kern_options[1:])
+            col.colocate(variable, filenames, col_name, con_name, con_options, kern_name, kern_options)
         except CISError as e:
             __error_occurred(e)
         except ClassNotFoundError as e:
@@ -146,7 +150,6 @@ def main():
     # parse command line arguments
     arguments = parse_args()
     command = arguments.command
-    delattr(arguments, command) # Remove the command argument now it is not needed
 
     logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
     logging.debug("Running command: " + command)

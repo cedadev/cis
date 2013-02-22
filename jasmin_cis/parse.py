@@ -64,7 +64,7 @@ def expand_file_list(filenames, parser):
 
     @param filenames: A string which is a comma seperated list of filenames, wildcarded filenames or directories
     @param parser: A reference parser for raising errors on
-    @return: A flat set of files which exist - with no duplicate
+    @return: A flat list of files which exist - with no duplicate
     '''
     from glob import glob
     if not filenames:
@@ -87,7 +87,8 @@ def expand_file_list(filenames, parser):
     # Check we matched at least one file
     if not file_set:
         parser.error("No files found which match: "+filenames)
-    return file_set
+    # Cast set to a list to make it easier to index etc. later on
+    return list(file_set)
 
 
 def check_file_exists(filename, parser):

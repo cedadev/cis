@@ -72,7 +72,7 @@ def __get_class(parent_class, name=None):
     from jasmin_cis.exceptions import ClassNotFoundError
     import logging
 
-    all_classes = plugin.find_plugin_classes(parent_class, 'jasmin_cis.col_implementation')
+    all_classes = plugin.find_plugin_classes(parent_class, 'jasmin_cis.col_implementations')
     product_cls = None
     for cls in all_classes:
 
