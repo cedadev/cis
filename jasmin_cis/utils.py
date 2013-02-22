@@ -193,3 +193,17 @@ def parse_key_val_list(input_list):
         key_val_dict[key] = value
 
     return key_val_dict
+
+
+def haversine(lat, lon, lat2, lon2):
+    '''
+        Computes the Haversine distance between two points
+    '''
+    import math
+    R_E = 6378 # Radius of the earth in km
+    lat1 = math.radians(lat)
+    lat2 = math.radians(lat2)
+    lon1 = math.radians(lon)
+    lon2 = math.radians(lon2)
+    arclen = 2*math.asin(math.sqrt((math.sin((lat2-lat1)/2))**2 + math.cos(lat1) * math.cos(lat2) * (math.sin((lon2-lon1)/2))**2))
+    return arclen*R_E

@@ -1,7 +1,7 @@
 '''
  Module to test the colocation routines
 '''
-from jasmin_cis.data_io.hyperpoint import HyperPoint, R_E
+from jasmin_cis.data_io.hyperpoint import HyperPoint
 from nose.tools import assert_almost_equal, istest, eq_
 
 @istest
@@ -46,11 +46,11 @@ def check_furthest_point():
 
 @istest
 def check_dist_between_2d_points_on_equator():
-    assert_almost_equal(HyperPoint(0,0).haversine(0, 1),111.317,places=3)
+    assert_almost_equal(HyperPoint(0,0).haversine_dist(HyperPoint(0, 1)),111.317,places=3)
     
 @istest
 def check_dist_between_2d_points_at_pole():
-    assert_almost_equal(HyperPoint(90,0).haversine(90, 1),0.0000,places=5)
+    assert_almost_equal(HyperPoint(90,0).haversine_dist(HyperPoint(90, 1)),0.0000,places=5)
         
 @istest
 def check_dist_between_opposite_2d_points():
@@ -58,10 +58,11 @@ def check_dist_between_opposite_2d_points():
         The distance between two points on opposite sides of the globe should be half the circumfrence of the globe
     '''
     import math
+    R_E = 6378 # Radius of the earth in km
     max_dist = math.pi*R_E
-    assert_almost_equal(HyperPoint(0,0).haversine(0, 180), max_dist, places=3)
-    assert_almost_equal(HyperPoint(90,0).haversine(-90, 0), max_dist, places=3)
-    assert_almost_equal(HyperPoint(51,0).haversine(-51, 180), max_dist, places=3)
+    assert_almost_equal(HyperPoint(0,0).haversine_dist(HyperPoint(0, 180)), max_dist, places=3)
+    assert_almost_equal(HyperPoint(90,0).haversine_dist(HyperPoint(-90, 0)), max_dist, places=3)
+    assert_almost_equal(HyperPoint(51,0).haversine_dist(HyperPoint(-51, 180)), max_dist, places=3)
     
 def check_compdist_returns_true_when_p2_is_closer_than_p1():
     assert(HyperPoint(0,0).compdist(HyperPoint(4,4), HyperPoint(3,3)))

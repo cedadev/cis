@@ -4,7 +4,6 @@ Command line interface for the Climate Intercomparison Suite (CIS)
 '''
 import sys
 from jasmin_cis.exceptions import CISError
-from jasmin_cis.info import  info
 
 import logging
 logger = logging.getLogger(__name__)
@@ -87,8 +86,8 @@ def info_cmd(main_arguments):
     variable specified
         
     @param main_arguments:    The command line arguments (minus the info command)
-    '''    
-
+    '''
+    from jasmin_cis.info import  info
     try:
         info(main_arguments.filename, main_arguments.variables)
     except CISError as e:
