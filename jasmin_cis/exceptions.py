@@ -40,3 +40,7 @@ class DuplicateCoordinateError(CISError):
 
 class ClassNotFoundError(CISError):
     pass
+
+class InvalidCommandLineOptionError(CISError):
+    pass
+

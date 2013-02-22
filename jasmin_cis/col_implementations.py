@@ -2,6 +2,7 @@ from col_framework import Colocator, Constraint, Kernel
 from time import time
 import logging
 
+
 class DefaultColocator(Colocator):
     def colocate(self, points, data, constraint, kernel):
         '''
@@ -27,6 +28,7 @@ class DefaultColocator(Colocator):
         new_data = LazyData(values, data.metadata)
         new_data.missing_value = constraint.fill_value
         return new_data
+
 
 class DebugColocator(Colocator):
 
@@ -55,11 +57,43 @@ class DebugColocator(Colocator):
         return new_data
 
 
-class DefaultConstraint(Constraint):
+class DummyColocator(Colocator):
+
+    def colocate(self, points, data, constraint, kernel):
+        '''
+            This colocator does no colocation at all - it just returns the original data values. This might be useful
+            if the input data for one variable is already known to be on the same grid as points. This routine could
+            check the coordinates are the same but currently does no such check.
+        @param points: A list of HyperPoints
+        @param data: An UngriddedData object or Cube
+        @param constraint: Unused
+        @param kernel: Unused
+        @return: A single LazyData object
+        '''
+        from data_io.ungridded_data import LazyData
+        new_data = LazyData(data.data, data.metadata)
+        return new_data
+
+
+class DummyConstraint(Constraint):
 
     def constrain_points(self, point, data):
         # This is a null constraint - all of the points just get passed back
         return data
+
+
+class SepConstraint(Constraint):
+
+    def constrain_points(self, ref_point, data):
+        con_points = []
+        for point in data:
+            checks = [point.haversine_dist(ref_point) < self.h_sep,
+                      point.time_sep < self.t_sep,
+                      point.alt_sep < self.a_sep]
+            if all(checks):
+                con_points.append(point)
+        return con_points
+
 
 class nn(Kernel):
 
@@ -72,6 +106,7 @@ class nn(Kernel):
         for data_point in data:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val
+
 
 class nn_ungridded(Kernel):
 
@@ -88,6 +123,7 @@ class nn_ungridded(Kernel):
 
         return nearest_point.val
 
+
 class nn_gridded(Kernel):
     def get_value(self, point, data):
         '''
@@ -96,6 +132,7 @@ class nn_gridded(Kernel):
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
         return nearest_neighbour_data_value(data, point.get_coord_tuple())
+
 
 class li(Kernel):
     def get_value(self, point, data):

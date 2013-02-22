@@ -6,6 +6,7 @@ import sys
 import os.path
 from plot import Plotter
 
+
 def initialise_top_parser():
     '''
     The parser to which all arguments are initially passed
@@ -13,17 +14,17 @@ def initialise_top_parser():
     parser = argparse.ArgumentParser("CIS")
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help = "Create plots")
-    plot_parser = add_plot_parser_arguments(plot_parser)
+    add_plot_parser_arguments(plot_parser)
     info_parser = subparsers.add_parser("info", help = "Get information about a file")
-    info_parser = add_info_parser_arguments(info_parser)
+    add_info_parser_arguments(info_parser)
     col_parser = subparsers.add_parser("col", help = "Perform colocation")
-    col_parser = add_col_parser_arguments(col_parser)
+    add_col_parser_arguments(col_parser)
     return parser
 
+
 def add_plot_parser_arguments(parser):    
-    parser.add_argument("datafiles", metavar = "Input datafiles", nargs = "+", help = "The datafiles to be plotted, in the format: filename:variable:label:colour:style, where the last three arguments are optional")
-    parser.add_argument("-v", "--variable", metavar = "Default variable", nargs = "?", help = "The default variable to plot if not otherwise specified in the filename")
-    parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")    
+    parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+", help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label, where the last three arguments are optional")
+    parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
@@ -44,19 +45,51 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
     return parser
 
+
 def add_info_parser_arguments(parser):
     parser.add_argument("filename", metavar = "Filename", help = "The filename of the file to inspect")
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
     parser.add_argument("--type", metavar = "type of HDF data", nargs="?", help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
 
+
 def add_col_parser_arguments(parser):
     parser.add_argument("samplefilename", metavar = "SampleFilename", help = "The filename of the sample file")
-    parser.add_argument("datafiles", metavar = "DataFiles", nargs = "+", help = "Files to colocate with variable names and other options split by a colon")
-    parser.add_argument("-v", "--variable", metavar = "DefaultVariable", nargs = "?", help = "The default variable to use for the data files unless explicitly overridden")
-    parser.add_argument("-m", "--method", metavar = "DefaultMethod", nargs = "?", help = "The default method to use for the data files unless explicitly overridden")
+    parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variable to colocate with filenames and other options split by a colon")
     parser.add_argument("-o", "--output", metavar = "Output filename", default = "out", nargs = "?", help = "The filename of the output file for the plot image")
     return parser
+
+
+def expand_file_list(filenames, parser):
+    '''
+
+    @param filenames: A string which is a comma seperated list of filenames, wildcarded filenames or directories
+    @param parser: A reference parser for raising errors on
+    @return: A flat set of files which exist - with no duplicate
+    '''
+    from glob import glob
+    if not filenames:
+        parser.error("Please specify at least one filename")
+    input_list = filenames.split(',')
+    # Ensure we don't get duplicates by making file_set a set
+    file_set = set()
+    for element in input_list:
+        if any(wildcard in element for wildcard in ['*', '?',']','}']):
+            file_set.update(glob(element))
+        elif os.path.isdir(element):
+            for a_file in os.listdir(element):
+                full_file = os.path.join(element, a_file)
+                if os.path.isfile(full_file):
+                    file_set.add(full_file)
+        elif os.path.isfile(element):
+            file_set.add(element)
+        else:
+            parser.error("'" + element + "' is not a valid filename")
+    # Check we matched at least one file
+    if not file_set:
+        parser.error("No files found which match: "+filenames)
+    return file_set
+
 
 def check_file_exists(filename, parser):
     if not os.path.isfile(filename):
@@ -135,7 +168,7 @@ def check_variable(variable, datafiles, parser):
             parser.error("A variable must be specified")
     elif datafiles:
         for datafile in datafiles:
-            if datafile["variable": SD or VD] is None:
+            if datafile["variable"] is None:
                 datafile["variable"] = variable
     return datafiles
 

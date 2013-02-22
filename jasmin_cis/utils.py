@@ -1,4 +1,3 @@
-from numpy.core.numeric import array
 
 
 def add_element_to_list_in_dict(my_dict,key,value):
@@ -6,6 +5,7 @@ def add_element_to_list_in_dict(my_dict,key,value):
         my_dict[key].append(value)
     except KeyError:
         my_dict[key] = [value]
+
 
 def concatenate(arrays, axis=0):
     from numpy.ma import MaskedArray
@@ -22,6 +22,7 @@ def concatenate(arrays, axis=0):
             res = concatenate((res,array),axis)
 
     return res
+
 
 def expand_1d_to_2d_array(array_1d,length,axis=None):
     '''
@@ -63,9 +64,11 @@ def expand_1d_to_2d_array(array_1d,length,axis=None):
         array_2d = array_2d.T
     return array_2d
 
+
 def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
     return ma.array(data, mask=data==missing_val, fill_value=missing_val)
+
 
 def unpack_data_object(data_object):
     '''
@@ -140,6 +143,7 @@ def unpack_data_object(data_object):
         except CoordinateNotFoundError:
             return { "data": data_object.data, "x" : data_object.x.data}
 
+
 def copy_attributes(source, dest):
     '''
      Copy all attributes from one object to another
@@ -148,6 +152,7 @@ def copy_attributes(source, dest):
     @return: None
     '''
     dest.__dict__.update(source.__dict__)
+
 
 def add_file_prefix(prefix, filepath):
     '''
@@ -160,3 +165,45 @@ def add_file_prefix(prefix, filepath):
     filename = os.path.basename(filepath)
     path = os.path.dirname(filepath)
     return os.path.join(path,prefix+filename)
+
+
+def parse_key_val_string(arguments, seperator):
+    '''
+        Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and values
+    @param arguments: A string which is a seperated list of keyword value pairs
+    @param seperator: String which is used to split the string into a list
+    @return: A dictionary of the keywords and values
+    '''
+    input_list = arguments.split(seperator)
+    return parse_key_val_list(input_list)
+
+
+def parse_key_val_list(input_list):
+    '''
+     Takes list of keyword value strings (seperated by =) and returns a dictionary with those keys and values
+        NOTE - if a key has no value, the key is stored and given the value True
+    @param input_list: A list of strings which are keyword value pairs seperated by =
+    @return: A dictionary of the keywords and values
+    '''
+    key_val_dict = {}
+    for element in input_list:
+        key_value = element.split('=')
+        key = key_value[0]
+        value = key_value[1] if len(key_value) > 1 else True
+        key_val_dict[key] = value
+
+    return key_val_dict
+
+
+def haversine(lat, lon, lat2, lon2):
+    '''
+        Computes the Haversine distance between two points
+    '''
+    import math
+    R_E = 6378 # Radius of the earth in km
+    lat1 = math.radians(lat)
+    lat2 = math.radians(lat2)
+    lon1 = math.radians(lon)
+    lon2 = math.radians(lon2)
+    arclen = 2*math.asin(math.sqrt((math.sin((lat2-lat1)/2))**2 + math.cos(lat1) * math.cos(lat2) * (math.sin((lon2-lon1)/2))**2))
+    return arclen*R_E
