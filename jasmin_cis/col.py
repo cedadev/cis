@@ -3,6 +3,7 @@
 '''
 import logging
 
+
 class Colocate(object):
 
     def __init__(self, sample_file, output_file):
@@ -16,7 +17,6 @@ class Colocate(object):
 
         self.sample_points = sample_points
         self.output_file = output_file
-
 
     def colocate(self, variable, filenames, col='DefaultColocator', con_method=None, con_params=None, kern=None, kern_params=None):
         from data_io.read import read_data

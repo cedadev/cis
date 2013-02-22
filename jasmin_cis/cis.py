@@ -14,6 +14,7 @@ __version__ = "x"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
+
 def __setup_logging(log_file, log_level):
     '''
     Set up the logging used throughout cis
@@ -27,6 +28,7 @@ def __setup_logging(log_file, log_level):
     # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
     #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
+
 
 def __error_occurred(e):
     '''
@@ -125,7 +127,8 @@ def col_cmd(main_arguments):
 
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd,
-             'col'  : col_cmd} 
+             'col'  : col_cmd }
+
 
 def main():
     '''

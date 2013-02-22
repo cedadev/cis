@@ -28,6 +28,7 @@ class DefaultColocator(Colocator):
         new_data.missing_value = constraint.fill_value
         return new_data
 
+
 class DebugColocator(Colocator):
 
     def colocate(self, points, data, constraint, kernel):
@@ -61,6 +62,7 @@ class DefaultConstraint(Constraint):
         # This is a null constraint - all of the points just get passed back
         return data
 
+
 class nn(Kernel):
 
     def get_value(self, point, data):
@@ -72,6 +74,7 @@ class nn(Kernel):
         for data_point in data:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val
+
 
 class nn_ungridded(Kernel):
 
@@ -88,6 +91,7 @@ class nn_ungridded(Kernel):
 
         return nearest_point.val
 
+
 class nn_gridded(Kernel):
     def get_value(self, point, data):
         '''
@@ -96,6 +100,7 @@ class nn_gridded(Kernel):
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
         return nearest_neighbour_data_value(data, point.get_coord_tuple())
+
 
 class li(Kernel):
     def get_value(self, point, data):

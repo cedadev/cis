@@ -6,6 +6,7 @@ import sys
 import os.path
 from plot import Plotter
 
+
 def initialise_top_parser():
     '''
     The parser to which all arguments are initially passed
@@ -19,6 +20,7 @@ def initialise_top_parser():
     col_parser = subparsers.add_parser("col", help = "Perform colocation")
     add_col_parser_arguments(col_parser)
     return parser
+
 
 def add_plot_parser_arguments(parser):    
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+", help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label, where the last three arguments are optional")
@@ -43,16 +45,19 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
     return parser
 
+
 def add_info_parser_arguments(parser):
     parser.add_argument("filename", metavar = "Filename", help = "The filename of the file to inspect")
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
     return parser
+
 
 def add_col_parser_arguments(parser):
     parser.add_argument("samplefilename", metavar = "SampleFilename", help = "The filename of the sample file")
     parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variable to colocate with filenames and other options split by a colon")
     parser.add_argument("-o", "--output", metavar = "Output filename", default = "out", nargs = "?", help = "The filename of the output file for the plot image")
     return parser
+
 
 def expand_file_list(filenames, parser):
     '''
@@ -84,10 +89,12 @@ def expand_file_list(filenames, parser):
         parser.error("No files found which match: "+filenames)
     return file_set
 
+
 def check_file_exists(filename, parser):
     if not os.path.isfile(filename):
         parser.error("'" + filename + "' is not a valid filename")
-        
+
+
 def parse_float(arg, name, parser):
     '''
     Tries to parse a string as a float.
@@ -104,6 +111,7 @@ def parse_float(arg, name, parser):
         except ValueError:
             parser.error("'" + arg + "' is not a valid " + name)
             return None
+
 
 def get_plot_datagroups(datagroups, parser):
     '''
@@ -157,6 +165,7 @@ def parse_colonic_arguments(inputs, parser, options, min_args=1):
         input_dicts.append(input_dict)
     return input_dicts
 
+
 def extract_method_and_args(arguments, parser):
     from utils import parse_key_val_list
     if not arguments:
@@ -168,13 +177,17 @@ def extract_method_and_args(arguments, parser):
         method_and_args = ( method_name, parse_key_val_list(args) )
     return method_and_args
 
+
 def check_nothing(item, parser):
     return item
+
 
 def check_is_not_empty(item, parser):
     if not item:
         parser.error("Non optional argument not specified in datagroup")
     return item
+
+
 
 def check_plot_type(plot_type, datagroups, parser):
     '''
@@ -195,11 +208,13 @@ def check_color(color, parser):
         color = None
     return color
 
+
 def check_colour_bar_orientation(orientation, parser):
     orientation = orientation.lower()
     if orientation != "horizontal" and orientation != "vertical":
         parser.error("The colour bar orientation must either be horizontal or vertical")
     return orientation
+
 
 def check_range(ax_range, parser, range_type):
     '''
@@ -229,12 +244,14 @@ def check_range(ax_range, parser, range_type):
             parser.error(error_message)
     return ax_range
 
+
 def check_boolean_argument(argument):
     if argument is None or argument != "False":
         return True
     else:
         return False
-    
+
+
 def assign_logs(arguments):
     arguments.logx = check_boolean_argument(arguments.logx)
     arguments.logy = check_boolean_argument(arguments.logy)
@@ -257,6 +274,7 @@ def assign_logs(arguments):
     
     return arguments
 
+
 def validate_plot_args(arguments, parser): 
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
     check_plot_type(arguments.type, arguments.datagroups, parser) 
@@ -275,10 +293,12 @@ def validate_plot_args(arguments, parser):
     arguments.width = parse_float(arguments.width, "width", parser) 
     
     return arguments
-                
+
+
 def validate_info_args(arguments, parser):
     check_file_exists(arguments.filename, parser)
     return arguments
+
 
 def validate_col_args(arguments, parser):
     '''
@@ -292,9 +312,11 @@ def validate_col_args(arguments, parser):
 
     return arguments
 
+
 validators = { 'plot' : validate_plot_args,
                'info' : validate_info_args,
                'col'  : validate_col_args}
+
 
 def parse_args(arguments = None):
     '''

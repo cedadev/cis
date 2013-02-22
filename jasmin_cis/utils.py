@@ -1,4 +1,3 @@
-from numpy.core.numeric import array
 
 
 def add_element_to_list_in_dict(my_dict,key,value):
@@ -6,6 +5,7 @@ def add_element_to_list_in_dict(my_dict,key,value):
         my_dict[key].append(value)
     except KeyError:
         my_dict[key] = [value]
+
 
 def concatenate(arrays, axis=0):
     from numpy.ma import MaskedArray
@@ -22,6 +22,7 @@ def concatenate(arrays, axis=0):
             res = concatenate((res,array),axis)
 
     return res
+
 
 def expand_1d_to_2d_array(array_1d,length,axis=None):
     '''
@@ -63,9 +64,11 @@ def expand_1d_to_2d_array(array_1d,length,axis=None):
         array_2d = array_2d.T
     return array_2d
 
+
 def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
     return ma.array(data, mask=data==missing_val, fill_value=missing_val)
+
 
 def unpack_data_object(data_object):
     '''
@@ -140,6 +143,7 @@ def unpack_data_object(data_object):
         except CoordinateNotFoundError:
             return { "data": data_object.data, "x" : data_object.x.data}
 
+
 def copy_attributes(source, dest):
     '''
      Copy all attributes from one object to another
@@ -148,6 +152,7 @@ def copy_attributes(source, dest):
     @return: None
     '''
     dest.__dict__.update(source.__dict__)
+
 
 def add_file_prefix(prefix, filepath):
     '''
@@ -161,6 +166,7 @@ def add_file_prefix(prefix, filepath):
     path = os.path.dirname(filepath)
     return os.path.join(path,prefix+filename)
 
+
 def parse_key_val_string(arguments, seperator):
     '''
         Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and values
@@ -170,6 +176,7 @@ def parse_key_val_string(arguments, seperator):
     '''
     input_list = arguments.split(seperator)
     return parse_key_val_list(input_list)
+
 
 def parse_key_val_list(input_list):
     '''
