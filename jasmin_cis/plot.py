@@ -56,7 +56,20 @@ class Plotter(object):
         # nformat = "%.3f"
         # nformat = "%.3e"
         nformat = "%.3g"
-        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
+
+        try:
+            step = self.v_range.get("vstep", (self.max_data-self.min_data) / 5)
+        except AttributeError:
+            step = (self.max_data-self.min_data) / 5
+        ticks = []
+        tick = self.min_data
+        while tick <= self.max_data:
+            ticks.append(tick)
+            tick = tick + step
+
+
+        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, ticks = ticks, format = nformat)
+
         cbar.set_label(self.__format_units(self.data[0].units))
     
     def plot_line(self, data_item):
@@ -86,9 +99,10 @@ class Plotter(object):
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         #import matplotlib.colors as colors
-        self.min_data = data_item["data"].min()
-        self.max_data = data_item["data"].max()
+        self.min_data = self.kwargs.get("vmin", data_item["data"].min())
+        self.max_data = self.kwargs.get("vmax", data_item["data"].max())
 
+        self.plots.append(self.__get_plot_method().pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         self.kwargs.pop("latlon", None)
         
     def plot_contour(self, data_item):
@@ -139,13 +153,11 @@ class Plotter(object):
                 colour_scheme = data_item["data"]
         if colour_scheme is None:
             colour_scheme = "b" # Default color scheme used by matplotlib
-        if "linewidth" in self.kwargs.keys():
-            scatter_size = self.kwargs["linewidth"]
-        else:
-            scatter_size = 20 # Default scatter size
+
+        scatter_size = self.kwargs.get("linewidth", 1)
 
         plot_method = self.__get_plot_method()
-
+        self.kwargs.pop("latlon", None)
         '''
         Heatmap overlay
         import matplotlib.cm as cm
@@ -165,7 +177,6 @@ class Plotter(object):
             self.plot_type = "scatter2D"
             # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
             self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
-        self.kwargs.pop("latlon", None)
 
     def plot_scatteroverlay(self, data_item):
         '''
@@ -632,12 +643,15 @@ class Plotter(object):
         #self.__validate_data(variable_dim)
         
         plot_format_options = self.__create_plot_format_options()
-        self.__prepare_range("val")
+        self.v_range = self.__prepare_range("val")
         self.x_range = self.__prepare_range("x")
         self.y_range = self.__prepare_range("y")
         self.__set_width_and_height()  
         Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
         self.no_colour_bar = self.kwargs.pop("nocolourbar", False)
+        if self.kwargs.pop("logv", None) is not None:
+            from matplotlib import colors
+            self.kwargs["norm"] = colors.LogNorm()
         datafiles = self.__do_plot()  
         self.__apply_axis_limits(self.x_range, "x")
         self.__apply_axis_limits(self.y_range, "y")

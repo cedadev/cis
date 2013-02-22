@@ -508,21 +508,20 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         @param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
         @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
-        from jasmin_cis.exceptions import InvalidVariableError, FileIOError
+        from jasmin_cis.exceptions import InvalidVariableError
         import iris
 
-        # checking if the files given actually exists and raise FileIOError when not.
+        # checking if the files given actually exist
         for filename in filenames:
-            try:
-                with open(filename) as f: pass
-            except IOError as e:
-                raise FileIOError(str(e))
+            with open(filename) as f: pass
 
         try:
             cube = iris.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
             raise InvalidVariableError("Variable not found: " + str(variable) +
                                        "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
+        except ValueError as e:
+            raise IOError(e)
 
         sub_cube = list(cube.slices([ coord for coord in cube.coords(dim_coords=True) if coord.points.size > 1]))[0]
         #  Ensure that there are no extra dimensions which can confuse the plotting.
