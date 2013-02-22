@@ -39,8 +39,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
     parser.add_argument("--logx", metavar = "Log (base 10) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the x axis")
     parser.add_argument("--logy", metavar = "Log (base 10) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the y axis")
-    parser.add_argument("--lnx", metavar = "Log (base e) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base e) on the x axis")
-    parser.add_argument("--lny", metavar = "Log (base e) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base e) on the y axis")
+    parser.add_argument("--logv", metavar = "Log (base 10) scale for values", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the colour bar")
     parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
     return parser
 
@@ -243,28 +242,24 @@ def check_boolean_argument(argument):
         return False
     
 def assign_logs(arguments):
-    from numpy import e
     arguments.logx = check_boolean_argument(arguments.logx)
     arguments.logy = check_boolean_argument(arguments.logy)
-    arguments.lnx = check_boolean_argument(arguments.lnx)
-    arguments.lny = check_boolean_argument(arguments.lny)
+    arguments.logv = check_boolean_argument(arguments.logv)
     
     if arguments.logx:
         arguments.logx = 10
-    elif arguments.lnx:
-        arguments.logx = e
     else:
         arguments.logx = None
         
     if arguments.logy:
         arguments.logy = 10
-    elif arguments.lny:
-        arguments.logy = e
     else:
-        arguments.logy = None   
-        
-    arguments.lnx = None
-    arguments.lny = None 
+        arguments.logy = None
+
+    if arguments.logv:
+        arguments.logv = 10
+    else:
+        arguments.logv = None
     
     return arguments
 

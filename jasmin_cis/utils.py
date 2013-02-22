@@ -8,13 +8,18 @@ def add_element_to_list_in_dict(my_dict,key,value):
         my_dict[key] = [value]
 
 def concatenate(arrays, axis=0):
-    import numpy as np
+    from numpy.ma import MaskedArray
+    from numpy import ndarray
+    if isinstance(arrays[0], MaskedArray):
+        from numpy.ma import concatenate
+    elif isinstance(arrays[0], ndarray):
+        from numpy import concatenate
 
     res = arrays[0]
 
     if len(arrays) > 1:
         for array in arrays[1:]:
-            res = np.concatenate((res,array),axis)
+            res = concatenate((res,array),axis)
 
     return res
 

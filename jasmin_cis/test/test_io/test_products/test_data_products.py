@@ -3,7 +3,7 @@ module to test the various subclasses of the abstract AProduct class
 '''
 from nose.tools import istest, eq_, raises
 from data_io.products.products import *
-from jasmin_cis.exceptions import FileIOError, InvalidVariableError
+from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file
 
 
@@ -35,13 +35,13 @@ class ProductTests():
         self.product().create_coords([self.filename])
 
     @istest
-    @raises(FileIOError)
+    @raises(IOError)
     def should_raise_ioerror_with_invalid_filename(self):
         self.product().create_data_object([invalid_filename], self.valid_variable)
 
     @istest
-    @raises(ValueError, FileIOError)
-    def should_raise_valueerror_or_fileioerror_with_file_that_is_not_a_recognised_format(self):
+    @raises(IOError)
+    def should_raise_ioerror_with_file_that_is_not_a_recognised_format(self):
         self.product().create_data_object([invalid_format], self.valid_variable)
 
     @istest
@@ -58,7 +58,6 @@ class TestCloudsat(ProductTests):
         self.valid_variable = valid_cloudsat_RVOD_variable
         self.product = Cloudsat_2B_CWC_RVOD
 
-
 #
 # class TestMODIS_L3(ProductTests):
 #     pass
@@ -66,9 +65,20 @@ class TestCloudsat(ProductTests):
 # class TestMODIS_L2(ProductTests):
 #     pass
 #
-# class TestCloud_CCI(ProductTests):
-#     pass
-#
+class TestCloud_CCI(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
+        self.filename = valid_cloud_cci_filename
+        self.valid_variable = valid_cloud_cci_variable
+        self.product = Cloud_CCI
+
+class TestAerosol_CCI(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_aerosol_cci_filename, valid_aerosol_cci_variable
+        self.filename = valid_aerosol_cci_filename
+        self.valid_variable = valid_aerosol_cci_variable
+        self.product = Aerosol_CCI
+
 class TestCisCol(ProductTests):
 
     def __init__(self):
@@ -100,5 +110,9 @@ class TestXglnwa_vprof(ProductTests):
 # class TestXenida(ProductTests):
 #     pass
 #
-# class TestAeronet(ProductTests):
-#     pass
+class TestAeronet(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable
+        self.filename = valid_aeronet_filename
+        self.valid_variable = valid_aeronet_variable
+        self.product = Aeronet

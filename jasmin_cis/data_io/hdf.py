@@ -26,7 +26,7 @@ def __read_hdf4(filename,variables):
 
         @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds
     '''
-    from jasmin_cis.exceptions import InvalidVariableError, FileIOError
+    from jasmin_cis.exceptions import InvalidVariableError
     from pyhdf.error import HDF4Error
 
     if not isinstance(variables,list): variables = [ variables ]
@@ -35,7 +35,7 @@ def __read_hdf4(filename,variables):
         sds_dict = hdf_sd.read(filename,variables)
         vds_dict = hdf_vd.read(filename,variables)
     except HDF4Error as e:
-        raise FileIOError(str(e))
+        raise IOError(str(e))
 
     for variable in variables:
         if variable not in sds_dict and variable not in vds_dict:

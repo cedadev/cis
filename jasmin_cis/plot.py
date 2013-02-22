@@ -56,7 +56,20 @@ class Plotter(object):
         # nformat = "%.3f"
         # nformat = "%.3e"
         nformat = "%.3g"
-        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, format = nformat)
+
+        try:
+            step = self.v_range.get("vstep", (self.max_data-self.min_data) / 5)
+        except AttributeError:
+            step = (self.max_data-self.min_data) / 5
+        ticks = []
+        tick = self.min_data
+        while tick <= self.max_data:
+            ticks.append(tick)
+            tick = tick + step
+
+
+        cbar = plt.colorbar(orientation = Plotter.colour_bar_orientation, ticks = ticks, format = nformat)
+
         cbar.set_label(self.__format_units(self.data[0].units))
     
     def plot_line(self, data_item):
@@ -67,7 +80,16 @@ class Plotter(object):
         @param data_item:    A dictionary containing the x coords and data as arrays
         '''
         self.plots.append(plt.plot(data_item["x"], data_item["data"], *self.args, **self.kwargs ))
-    
+
+    def __get_plot_method(self):
+        if self.__is_map():
+            self.basemap = Basemap()
+            plot_method = self.basemap
+            self.kwargs["latlon"] = True
+        else:
+            plot_method = plt
+        return plot_method
+
     def plot_heatmap(self, data_item):
         '''
         Plots a heatmap
@@ -77,16 +99,10 @@ class Plotter(object):
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         #import matplotlib.colors as colors
-        self.min_data = data_item["data"].min()
-        self.max_data = data_item["data"].max()
+        self.min_data = self.kwargs.get("vmin", data_item["data"].min())
+        self.max_data = self.kwargs.get("vmax", data_item["data"].max())
 
-        if self.__is_map():
-            self.basemap = Basemap()
-            plot_method = self.basemap
-            self.kwargs["latlon"] = True
-        else:
-            plot_method = plt
-        self.plots.append(plot_method.pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.plots.append(self.__get_plot_method().pcolormesh(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
         self.kwargs.pop("latlon", None)
         
     def plot_contour(self, data_item):
@@ -96,8 +112,8 @@ class Plotter(object):
         
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        self.basemap = Basemap()    
-        self.plots.append(self.basemap.contour(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
+        self.plots.append(self.__get_plot_method().contour(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.kwargs.pop("latlon", None)
         
     def plot_contourf(self, data_item):
         '''
@@ -106,8 +122,8 @@ class Plotter(object):
         
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        self.basemap = Basemap()    
-        self.plots.append(self.basemap.contourf(data_item["x"], data_item["y"], data_item["data"], latlon = True, *self.args, **self.kwargs))
+        self.plots.append(self.__get_plot_method().contourf(data_item["x"], data_item["y"], data_item["data"], *self.args, **self.kwargs))
+        self.kwargs.pop("latlon", None)
     
     def plot_scatter(self, data_item):
         '''
@@ -137,21 +153,11 @@ class Plotter(object):
                 colour_scheme = data_item["data"]
         if colour_scheme is None:
             colour_scheme = "b" # Default color scheme used by matplotlib
-        if "linewidth" in self.kwargs.keys():
-            scatter_size = self.kwargs["linewidth"]
-        else:
-            scatter_size = 20 # Default scatter size
 
-        if self.__is_map():
-            # Code review this
-            try:
-                plot_method = self.basemap
-            except AttributeError:
-                self.basemap = Basemap()
-                plot_method = self.basemap
-        else:
-            plot_method = plt
+        scatter_size = self.kwargs.get("linewidth", 1)
 
+        plot_method = self.__get_plot_method()
+        self.kwargs.pop("latlon", None)
         '''
         Heatmap overlay
         import matplotlib.cm as cm
@@ -352,20 +358,11 @@ class Plotter(object):
             plt.yticks(parallels, parallel_labels)
     
     def __set_log_scale(self, logx, logy):
-        from numpy import e, log
         ax = plt.gca()
         if logx:
-            ax.set_xscale("log", basex = logx) 
-            if logx == e:
-                xticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_xticks())]
-                #xticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_xticks())]
-                ax.set_xticklabels(xticks)
+            ax.set_xscale("log", basex = logx)
         if logy:
             ax.set_yscale("log", basey = logy)
-            if logy == e:
-                yticks = [("e^" + "{0:.0f}".format(x)) for x in log(ax.get_yticks())]
-                #yticks = [("$\mathrm{e^(" + "{0:.0f}".format(x) + ")}$") for x in log(ax.get_yticks())]
-                ax.set_yticklabels(yticks)
                         
     def __format_plot(self, options, datafiles): 
         '''
@@ -482,8 +479,7 @@ class Plotter(object):
                 self.__add_datafile_args_to_kwargs(datafiles[i])
             item_to_plot = unpack_data_object(item)            
 
-            # for heatmaps, we plot the world map (with basemap)
-            # if the 'x' axis is longitude AND the 'y' axis is the latitude
+            # Plot the data item using the specified plot type
             Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
 
             # Remove temp args
@@ -647,12 +643,15 @@ class Plotter(object):
         #self.__validate_data(variable_dim)
         
         plot_format_options = self.__create_plot_format_options()
-        self.__prepare_range("val")
+        self.v_range = self.__prepare_range("val")
         self.x_range = self.__prepare_range("x")
         self.y_range = self.__prepare_range("y")
         self.__set_width_and_height()  
         Plotter.colour_bar_orientation = self.kwargs.pop("cbarorient", "horizontal")  
         self.no_colour_bar = self.kwargs.pop("nocolourbar", False)
+        if self.kwargs.pop("logv", None) is not None:
+            from matplotlib import colors
+            self.kwargs["norm"] = colors.LogNorm()
         datafiles = self.__do_plot()  
         self.__apply_axis_limits(self.x_range, "x")
         self.__apply_axis_limits(self.y_range, "y")
