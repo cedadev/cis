@@ -44,10 +44,12 @@ def info(filename, user_variables=None):
     except RuntimeError:
         try:
             sd_vars, vd_vars = get_hdf4_file_variables(filename)
-            print "\n====== SD variables:"
-            __print_variables(sd_vars, user_variables, False)
-            print "\n====== VD variables:"
-            __print_variables(vd_vars, user_variables, False)
+            if sd_vars is not None:
+                print "\n====== SD variables:"
+                __print_variables(sd_vars, user_variables, False)
+            if vd_vars is not None:
+                print "\n====== VD variables:"
+                __print_variables(vd_vars, user_variables, False)
         except HDF4Error as e:
             file_variables = get_aeronet_file_variables(filename)
             __print_variables(file_variables, user_variables)

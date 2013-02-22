@@ -12,9 +12,10 @@ def get_hdf4_file_variables(filename):
 
     '''
     SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
-    VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
+    #VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
 
-    return SD_vars, VD_vars
+    #return SD_vars, VD_vars
+    return SD_vars, None
 
 def __read_hdf4(filename,variables):
     '''

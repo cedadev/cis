@@ -349,7 +349,6 @@ class Caliop(AProduct):
 
         # reading data from files
         sdata = {}
-        vdata = {}
         alt_data_arr = []
         for filename in filenames:
 
@@ -361,11 +360,11 @@ class Caliop(AProduct):
 
         # work out size of data arrays
         # the coordinate variable will be reshape to match that.
-        alt_data = utils.concatenate(alt_data_arr)
+        len_x = utils.concatenate(alt_data_arr).shape[0]
         len_y = hdf.read_data(sdata['Latitude'],"SD").shape[0]
-        len_x = alt_data.shape[0]
 
-        # altitude coordinate
+        # altitude
+        alt_data = utils.concatenate(alt_data_arr)
         alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
         alt_metadata = Metadata()
         alt_metadata.standard_name = "Altitude"
@@ -373,6 +372,7 @@ class Caliop(AProduct):
         alt_coord = Coord(alt_data,alt_metadata,"Y")
 
         # latitude
+        hdf.read_data(sdata['Latitude'],"SD")
         lat = sdata['Latitude']
         lat_data = hdf.read_data(lat,"SD")
         lat_data = utils.expand_1d_to_2d_array(lat_data[:,1],len_x,axis=1)
