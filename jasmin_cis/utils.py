@@ -109,7 +109,7 @@ def unpack_data_object(data_object):
             if u_coord:
                 x = u_coord.points
             else:
-                x = np.arange(data.shape[0])
+                x = np.arange(data.metadata.shape[0])
             y = None'''
         elif no_of_dims == 2:
             # Obtain U and V coordinates

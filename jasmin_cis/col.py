@@ -46,10 +46,10 @@ import logging
 class Colocate(object):
 
     def __init__(self, sample_file, output_file):
-        from data_io.read import read_file_coordinates
+        from data_io.read import read_coordinates
         from data_io.write_netcdf import write_coordinates
 
-        coords = read_file_coordinates(sample_file)
+        coords = read_coordinates(sample_file)
 
         sample_points = coords.get_coordinates_points()
         write_coordinates(coords, output_file)

@@ -14,6 +14,7 @@ class Metadata(object):
     def from_CubeMetadata(cls, cube_meta):
         return cls(name='',standard_name=cube_meta.standard_name,long_name=cube_meta.long_name, units=str(cube_meta.units), misc=cube_meta.attributes)
 
+
     def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', misc=None):
         self._name = name
         if standard_name:
@@ -64,7 +65,8 @@ class LazyData(object):
         from jasmin_cis.exceptions import InvalidDataTypeError
         from iris.cube import CubeMetadata
         import numpy as np
-        from utils import copy_attributes
+
+        self.metadata = Metadata.from_CubeMetadata(metadata) if isinstance(metadata, CubeMetadata) else metadata
 
         if isinstance(data, np.ndarray):
             # If the data input is a numpy array we can just copy it in and ignore the data_manager
@@ -89,22 +91,40 @@ class LazyData(object):
             else:
                 raise InvalidDataTypeError
 
-        if isinstance(metadata, CubeMetadata):
-            self._metadata = Metadata.from_CubeMetadata(metadata)
-        else:
-            self._metadata = metadata
-        copy_attributes(self._metadata, self)
-
     def name(self):
         """
             This routine returns the first name property which is not empty out of: _name, standard_name and long_name
                 If they are all empty it returns an empty string
         @return: The name of the data object as a string
         """
-        for name in [self._name, self.standard_name, self.long_name]:
+        for name in [self.metadata._name, self.metadata.standard_name, self.metadata.long_name]:
             if name:
                 return name
         return ''
+
+    @property
+    def shape(self):
+        return self.metadata.shape
+
+    @shape.setter
+    def shape(self, shape):
+        self.metadata.shape = shape
+
+    @property
+    def long_name(self):
+        return self.metadata.long_name
+
+    @long_name.setter
+    def long_name(self, long_name):
+        self.metadata.long_name = long_name
+
+    @property
+    def units(self):
+        return self.metadata.units
+
+    @units.setter
+    def units(self, units):
+        self.metadata.units = units
 
     @property
     def data(self):
@@ -136,7 +156,7 @@ class LazyData(object):
             Method to copy the metadata from one UngriddedData/Cube object to another
         '''
         self._coords = other_data.coords()
-        self._metadata = other_data._metadata
+        self.metadata = other_data._metadata
 
         #def __getitem__(self, item): pass
         # This method can be overridden to provide the ability to ask for slices of data e.g. UngridedDataObject[012:32.4:5]
