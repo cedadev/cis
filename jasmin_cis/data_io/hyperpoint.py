@@ -1,12 +1,11 @@
 from collections import namedtuple
-# Radius of the earth in Km
-R_E = 6378
-
-# Data type representing a point in space and time. It can contain multiple values which are stored in a list
-#HyperPointT = namedtuple('HyperPoint',['latitude','longitude','altitude','time','val'])
 
 class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','time','val'])):
-    
+    '''
+     Data type representing a point in space and time. It can contain multiple values which are stored in a list.
+      We don't specify a reference time yet but when we do it should probably be here
+    '''
+
     def __new__(cls, lat=None, lon=None, alt=None, t=None, val=None):
         '''
             Small constructor for the HyperPoint named tuple to allow optional arguments
@@ -21,14 +20,14 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
 
     def same_point_in_time(self, other):
         return self.time == other.time
-        
+
     def same_point_in_space(self, other):
         return ( self.latitude == other.latitude and self.longitude == other.longitude and
                  self.altitude == other.altitude )
-    
+
     def same_point_in_space_and_time(self, other):
         return ( self.same_point_in_space(other) and self.same_point_in_time(other) )
-            
+
     def get_coord_tuple(self):
         # This returns a sorted tuple of coorinate names and values. It is sorted to fix an iris bug when doing
         #  linear interpolation. It's linear interpolation routine calls itself recursively and recreates the cube each time,
@@ -40,20 +39,27 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         '''
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
         '''
-        return (self.haversine(p1.latitude,p1.longitude) > self.haversine(p2.latitude,p2.longitude))
-    
-    def haversine(self,lat2,lon2):
+        return (self.haversine_dist(p1) > self.haversine_dist(p2))
+
+    def haversine_dist(self,point2):
         '''
             Computes the Haversine distance between two points
         '''
-        import math
-        lat1 = self.latitude * math.pi / 180
-        lat2 = lat2 * math.pi / 180
-        lon1 = self.longitude * math.pi / 180
-        lon2 = lon2 * math.pi / 180
-        arclen = 2*math.asin(math.sqrt((math.sin((lat2-lat1)/2))**2 + math.cos(lat1) * math.cos(lat2) * (math.sin((lon2-lon1)/2))**2))
-        return arclen*R_E
-    
+        from utils import haversine
+        return haversine(self.latitude, self.longitude, point2.latitude, point2.longitude)
+
+    def time_sep(self,point2):
+        '''
+            Computes the time seperation between two points
+        '''
+        return abs(self.time - point2.time)
+
+    def alt_sep(self,point2):
+        '''
+            Computes the height seperation between two points
+        '''
+        return abs(self.altitude - point2.altitude)
+
     def furthest_point_from(self):
         '''
             Return a point on the opposite side of the globe from this point
@@ -64,6 +70,7 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         else:
             furthest_lon = self.longitude + 180.0
         return HyperPoint(furthest_lat, furthest_lon, self.altitude, self.time, self.val)
+
 
 class HyperPointList(list):
     """All the functionality of a standard `list` with added "HyperPoint" context."""
