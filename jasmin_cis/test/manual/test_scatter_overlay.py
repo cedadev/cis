@@ -6,7 +6,7 @@ from nose.tools import nottest
 
 @nottest # Jenkins can't plot to file or screen
 def can_plot_scatter_overlay():
-    from jasmin_cis.plot import Plotter
+    from plotting.plot import Plotter
     from jasmin_cis.data_io.read import read_data
     from jasmin_cis.test.test_util.mock import gen_random_data, gen_random_lon, gen_random_lat, ScatterData
     from numpy import array

@@ -7,6 +7,6 @@ data_object3 = get_data(filenames, 'AOT_675',"Aeronet")
 data_object4 = get_data(filenames, 'AOT_500',"Aeronet")
 data_object5 = get_data(filenames, 'Watercm',"Aeronet")
 
-from jasmin_cis.plot import Plotter
+from plotting.plot import Plotter
 
 Plotter([data_object1, data_object2, data_object3, data_object4, data_object5])

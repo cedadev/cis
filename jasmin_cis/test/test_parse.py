@@ -6,7 +6,7 @@ Each test therefore ignores SystemExit exceptions with code 2 as they are expect
 from nose.tools import istest
 from jasmin_cis.parse import parse_args
 from test_files.data import *
-from jasmin_cis.plot import Plotter
+from plotting.plot import Plotter
 
 @istest
 def can_specify_one_valid_filename():

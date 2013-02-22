@@ -3,10 +3,11 @@
 Command line interface for the Climate Intercomparison Suite (CIS)
 '''
 import sys
+import logging
+
 from jasmin_cis.exceptions import CISError
 from jasmin_cis.info import  info
 
-import logging
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
@@ -46,7 +47,7 @@ def plot_cmd(main_arguments):
 
     @param main_arguments:    The command line arguments (minus the plot command)        
     '''
-    from plot import Plotter
+    from plotting.plot import Plotter
     from data_io.read import read_data
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError

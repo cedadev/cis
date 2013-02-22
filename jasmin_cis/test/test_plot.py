@@ -2,12 +2,14 @@
 Module to test the one-dimensional plotting of NetCDF files
 More tests can be found in the manual_integration_tests package
 '''
-from jasmin_cis.plot import Plotter
-from nose.tools import istest, raises
-from test_files.data import *
-import iris
 import os.path
-from jasmin_cis.exceptions import *
+
+from nose.tools import istest, raises
+import iris
+
+from plotting.plot import Plotter
+from test_files.data import *
+
 
 def delete_file_if_exists():
     '''

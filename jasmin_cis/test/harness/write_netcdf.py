@@ -48,7 +48,7 @@ def test_read():
 
     print data_object.data
 
-    from jasmin_cis.plot import Plotter
+    from plotting.plot import Plotter
 
     Plotter([data_object])
 

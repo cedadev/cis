@@ -3,10 +3,12 @@ Module to test the plot formatting options
 Don't need to test things that would be caught in the parser, e.g. invalid font size
 These tests have to be run manually
 '''
-from jasmin_cis.plot import Plotter
 from nose.tools import raises, nottest
 import iris
+
+from plotting.plot import Plotter
 from jasmin_cis.test.test_files.data import *
+
 
 def make_cube(filename, variable = None):
     if variable is None:
