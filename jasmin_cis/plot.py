@@ -213,8 +213,8 @@ class Plotter(object):
     def __format_units(self, units):
         if units:
             units = str(units)
-            if not units.startswith("$") and not units.endswith("$"):
-                units = "$" + units + "$"
+            #if not units.startswith("$") and not units.endswith("$"):
+            #    units = "$" + units + "$"
             return " (" + units + ")"
         else:
             return ""

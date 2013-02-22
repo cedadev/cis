@@ -87,10 +87,15 @@ def info_cmd(main_arguments):
     variable specified
         
     @param main_arguments:    The command line arguments (minus the info command)
-    '''
+    '''    
+    variables = main_arguments.pop('variables', None)
+    filename = main_arguments.pop('filename')
+    data_type = main_arguments.pop('type', None)
+
     from jasmin_cis.info import  info
+    
     try:
-        info(main_arguments.filename, main_arguments.variables)
+        info(filename, variables, data_type)
     except CISError as e:
         __error_occurred(e)
 
@@ -130,8 +135,7 @@ def col_cmd(main_arguments):
 
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd,
-             'col'  : col_cmd }
-
+             'col'  : col_cmd} 
 
 def main():
     '''

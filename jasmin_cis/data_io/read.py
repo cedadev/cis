@@ -21,7 +21,7 @@ def read_data(filenames, variable, product=None):
     return get_data(filenames, variable, product)
 
 
-def read_file_coordinates(filenames, product=None):
+def read_coordinates(filenames, product=None):
     '''
     Read the coordinates from a file
 

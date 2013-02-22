@@ -1,6 +1,6 @@
 from data_io.Coord import Coord, CoordList
 from data_io.products.AProduct import AProduct
-from data_io.ungridded_data import UngriddedData
+from data_io.ungridded_data import UngriddedData, Metadata
 import jasmin_cis.utils as utils
 import data_io.hdf as hdf
 
@@ -10,6 +10,16 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def get_file_signature(self):
         return [r'.*2B.CWC.RVOD.*\.hdf']
+
+    def _generate_time_array(self, vdata):
+
+        import data_io.hdf_vd as hdf_vd
+        arrays = []
+        for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
+            time = hdf_vd.get_data(i)
+            start = hdf_vd.get_data(j)
+            time += start
+            arrays.append(time)
 
     def __generate_real_time_coord(self, filenames, xsize, ysize):
         import numpy as np
@@ -43,36 +53,43 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # reading the various files
         sdata, vdata = hdf.read(filenames,variables)
 
+        # altitude coordinate
         height = sdata['Height']
         height_data = hdf.read_data(height, "SD")
         height_metadata = hdf.read_metadata(height, "SD")
         height_coord = Coord(height_data, height_metadata,'Y')
 
+        # latitude
         lat = vdata['Latitude']
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
         lat_coord = Coord(lat_data, lat_metadata, "X")
 
+        # longitude
         lon = vdata['Longitude']
         lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[0]),axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
         lon_coord = Coord(lon_data, lon_metadata)
 
-        real_time_coord = self.__generate_real_time_coord(filenames, len(height_data[:,0]), len(height_data[0]))
-
-        import data_io.hdf_vd as hdf_vd
-        arrays = []
-        for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
-            time = hdf_vd.get_data(i)
-            start = hdf_vd.get_data(j)
-            time += start
-            arrays.append(time)
+        # time coordinate
+        arrays = self._generate_time_array(vdata)
         time_data = utils.concatenate(arrays)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
         time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
         time_coord = Coord(time_data, time_metadata)
 
-        return CoordList([lat_coord,lon_coord,height_coord,time_coord, real_time_coord])
+        # real time coordinate
+        real_time_coord = self.__generate_real_time_coord(filenames, len(height_data[:,0]), len(height_data[0]))
+
+        # create object containing list of coordinates
+        coords = CoordList()
+        coords.append(lat_coord)
+        coords.append(lon_coord)
+        coords.append(height_coord)
+        coords.append(time_coord)
+        coords.append(real_time_coord)
+
+        return coords
 
     def create_data_object(self, filenames, variable):
 
@@ -322,73 +339,79 @@ class Caliop(AProduct):
     def get_file_signature(self):
         return [r'CAL.*hdf']
 
-    def create_coords(self, filenames, variable=None):
+    def create_coords(self, filenames):
+
         from data_io.hdf_vd import get_data
         from data_io.hdf_vd import VDS
-        from data_io.hdf_sd import read as sdread
-        from jasmin_cis.utils import add_element_to_list_in_dict
+        from data_io import hdf_sd
+
         variables = [ 'Latitude','Longitude', "Profile_Time"]
 
-        logging.debug("Listing coordinates: " + str(variables))
-
+        # reading data from files
         sdata = {}
-        vdata = {}
-
+        alt_data_arr = []
         for filename in filenames:
-            sds_dict = sdread(filename, variables)
+
+            sds_dict = hdf_sd.read(filename, variables)
             for var in sds_dict.keys():
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
-            alt_data = get_data(VDS(filename,"Lidar_Data_Altitudes"), True)
+            alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
 
-        apply_interpolation = False
-        if variable is not None:
-            pass
-            #scale = self.__get_data_scale(filenames[0], variable)
-            #apply_interpolation = True if scale is "1km" else False
+        # work out size of data arrays
+        # the coordinate variable will be reshape to match that.
+        len_x = utils.concatenate(alt_data_arr).shape[0]
+        len_y = hdf.read_data(sdata['Latitude'],"SD").shape[0]
 
+        # altitude
+        alt_data = utils.concatenate(alt_data_arr)
+        alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
+        alt_metadata = Metadata()
+        alt_metadata.standard_name = "Altitude"
+        alt_metadata.shape = [alt_data.shape[0],alt_data.shape[1]]
+        alt_coord = Coord(alt_data,alt_metadata,"Y")
+
+        # latitude
+        hdf.read_data(sdata['Latitude'],"SD")
         lat = sdata['Latitude']
         lat_data = hdf.read_data(lat,"SD")
+        lat_data = utils.expand_1d_to_2d_array(lat_data[:,1],len_x,axis=1)
         lat_metadata = hdf.read_metadata(lat, "SD")
+        lat_metadata.shape = [lat_data.shape[0],lat_data.shape[1]]
         lat_coord = Coord(lat_data, lat_metadata)
 
+        # longitude
         lon = sdata['Longitude']
         lon_data = hdf.read_data(lon,"SD")
+        lon_data = utils.expand_1d_to_2d_array(lon_data[:,1],len_x,axis=1)
         lon_metadata = hdf.read_metadata(lon,"SD")
+        lon_metadata.shape = [lon_data.shape[0],lon_data.shape[1]]
         lon_coord = Coord(lon_data, lon_metadata)
-
-#        alt = vdata['Lidar_Data_Altitudes']
-        #alt_data = utils.expand_1d_to_2d_array(hdf.read_data(alt, "VD"),len(height_data[0]),axis=1)
-      #  alt_metadata = hdf.read_metadata(alt, "VD")
-        from data_io.ungridded_data import Metadata
-        alt_metadata = Metadata()
-
-
-        '''
-        # height y
-        pressure = sdata['Pressure']
-        pressure_data = self.__field_interpolate(hdf.read_data(pressure,"SD")) if apply_interpolation else hdf.read_data(pressure,"SD")
-        pressure_metadata = hdf.read_metadata(pressure,"SD")
-        pressure_coord = Coord(pressure_data, pressure_metadata, "Y")'''
 
         #profile time, x
         profile_time = sdata['Profile_Time']
         profile_time_data = hdf.read_data(profile_time,"SD")
+        profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
+        profile_time_metadata.shape = [profile_time_data.shape[0],profile_time_data.shape[1]]
         profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
 
-        alt_data = utils.expand_1d_to_2d_array(alt_data,len(profile_time_data))
-        alt_coord = Coord(alt_data, alt_metadata, "Y")
+        # create the object containing all coordinates
+        coords = CoordList()
+        coords.append(lat_coord)
+        coords.append(lon_coord)
+        coords.append(profile_time_coord)
+        coords.append(alt_coord)
 
+        return coords
 
-        return CoordList([lat_coord, lon_coord, profile_time_coord, alt_coord])
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
         # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self.create_coords(filenames, variable)
+        coords = self.create_coords(filenames)
 
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
