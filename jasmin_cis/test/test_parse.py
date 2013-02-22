@@ -3,10 +3,47 @@ Module to test the parser
 The parse raises a SystemExit exception with code 2 if it fails to parse.
 Each test therefore ignores SystemExit exceptions with code 2 as they are expected.
 '''
-from nose.tools import istest
-from jasmin_cis.parse import parse_args
+import argparse
+from nose.tools import istest, eq_
+from jasmin_cis.parse import parse_args, expand_file_list
 from test_files.data import *
 from jasmin_cis.plot import Plotter
+
+@istest
+def can_specify_one_valid_filename_and_a_directory():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(valid_1d_filename+','+test_directory, parser)
+    eq_(len(files),4)
+
+@istest
+def can_specify_a_directory():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(test_directory, parser)
+    eq_(len(files),3)
+
+@istest
+def can_specify_a_file_with_wildcards():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(os.path.join(test_directory,'test_*'), parser)
+    eq_(len(files),3)
+    files = expand_file_list(os.path.join(test_directory,'*_1'), parser)
+    eq_(len(files),1)
+    files = expand_file_list(os.path.join(test_directory,'test_?'), parser)
+    eq_(len(files),3)
+    files = expand_file_list(os.path.join(test_directory,'test_[0-9]'), parser)
+    eq_(len(files),3)
+
+@istest
+def can_specify_one_valid_filename_and_a_wildcarded_file():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(valid_1d_filename+','+os.path.join(test_directory,'test_[0-9]'), parser)
+    eq_(len(files),4)
+
+@istest
+def duplicate_files_are_not_returned_from_expand_file_list():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(os.path.join(test_directory,'test_1')+','+os.path.join(test_directory,'test_[0-9]'), parser)
+    eq_(len(files),3)
 
 @istest
 def can_specify_one_valid_filename():

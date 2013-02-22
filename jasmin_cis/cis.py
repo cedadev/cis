@@ -52,14 +52,12 @@ def plot_cmd(main_arguments):
     from iris.exceptions import IrisError
     import utils
     from collections import OrderedDict
-    
-    main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
-    
+
     try:
         # create a dictionary of [key=variable, value=list of filename]
         dict_of_var_and_filename = OrderedDict() # Cannot use dict, as unordered and need order for scatter overlay
-        for datafile in main_arguments["datagroups"]:
-            utils.add_element_to_list_in_dict(dict_of_var_and_filename, datafile["variable"], datafile["filename"])
+        for datafile in main_arguments.datagroups:
+            utils.add_element_to_list_in_dict(dict_of_var_and_filename, datafile.variable, datafile.filename)
 
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
         data = [ read_data(files,var) for var, files in dict_of_var_and_filename.iteritems() ]
@@ -68,7 +66,8 @@ def plot_cmd(main_arguments):
         __error_occurred(e)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
-        
+
+    main_arguments = vars(main_arguments)
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
     
@@ -87,11 +86,9 @@ def info_cmd(main_arguments):
         
     @param main_arguments:    The command line arguments (minus the info command)
     '''    
-    variables = main_arguments.pop('variables', None)
-    filename = main_arguments.pop('filename')
-    
+
     try:
-        info(filename, variables)
+        info(main_arguments.filename, main_arguments.variables)
     except CISError as e:
         __error_occurred(e)
 
@@ -106,27 +103,20 @@ def col_cmd(main_arguments):
     from col import Colocate
     from utils import add_file_prefix
 
-    sample_file = main_arguments.pop("samplefilename")
-    input_groups = main_arguments.pop("datagroups")
-
     # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-col-", main_arguments.pop("output") + ".nc")
+    output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
 
-    col = Colocate(sample_file, output_file)
+    col = Colocate(main_arguments.sample_file, output_file)
 
-    for input_group in input_groups:
+    for input_group in main_arguments.datagroups:
         filenames = input_group['filename']
         variable = input_group['variable']
         con_options = input_group['con_options']
         kern_options = input_group['kern_options']
         col_options = input_group['col_options']
 
-        col_name = col_options.pop('name')
-        con_name = con_options.pop('name')
-        kern_name = kern_options.pop('name')
-
         try:
-            col.colocate(variable, filenames, col_name, con_name, con_options, kern_name, kern_options)
+            col.colocate(variable, filenames, col_options[0], con_options[0], con_options[1:], kern_options[0], kern_options[1:])
         except CISError as e:
             __error_occurred(e)
         except ClassNotFoundError as e:
@@ -153,7 +143,8 @@ def main():
 
     # parse command line arguments
     arguments = parse_args()
-    command = arguments.pop("command")
+    command = arguments.command
+    delattr(arguments, command) # Remove the command argument now it is not needed
 
     logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
     logging.debug("Running command: " + command)

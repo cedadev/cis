@@ -51,9 +51,6 @@ def add_info_parser_arguments(parser):
 def add_col_parser_arguments(parser):
     parser.add_argument("samplefilename", metavar = "SampleFilename", help = "The filename of the sample file")
     parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variable to colocate with filenames and other options split by a colon")
-    parser.add_argument("--constraint", metavar = "DefaultConstraint", nargs = "?", help = "The default constraint to use for the data groups unless explicitly overridden")
-    parser.add_argument("--kernel", metavar = "DefaultKernel", nargs = "?", help = "The default method to use for the data files unless explicitly overridden")
-    parser.add_argument("--colocator", metavar = "DefaultColocator", nargs = "?", help = "The default method to use for the data files unless explicitly overridden")
     parser.add_argument("-o", "--output", metavar = "Output filename", default = "out", nargs = "?", help = "The filename of the output file for the plot image")
     return parser
 
@@ -62,23 +59,30 @@ def expand_file_list(filenames, parser):
 
     @param filenames: A string which is a comma seperated list of filenames, wildcarded filenames or directories
     @param parser: A reference parser for raising errors on
-    @return: A flat list of files which exist
+    @return: A flat set of files which exist - with no duplicate
     '''
     from glob import glob
     if not filenames:
         parser.error("Please specify at least one filename")
     input_list = filenames.split(',')
-    file_list = []
+    # Ensure we don't get duplicates by making file_set a set
+    file_set = set()
     for element in input_list:
-        if any(wildcard in element for wildcard in ['*', '?']):
-            file_list += glob(element)
+        if any(wildcard in element for wildcard in ['*', '?',']','}']):
+            file_set.update(glob(element))
         elif os.path.isdir(element):
-            [ file_list.append(os.path.join(element,a_file)) for a_file in os.listdir(element) if os.path.isfile(a_file) ]
+            for a_file in os.listdir(element):
+                full_file = os.path.join(element, a_file)
+                if os.path.isfile(full_file):
+                    file_set.add(full_file)
         elif os.path.isfile(element):
-            file_list.append(element)
+            file_set.add(element)
         else:
             parser.error("'" + element + "' is not a valid filename")
-    return file_list
+    # Check we matched at least one file
+    if not file_set:
+        parser.error("No files found which match: "+filenames)
+    return file_set
 
 def check_file_exists(filename, parser):
     if not os.path.isfile(filename):
@@ -121,9 +125,8 @@ def get_col_datagroups(datagroups, parser):
     @return The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    from utils import parse_key_val_list
     DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "colocator", "constraint", "kernel"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, parse_key_val_list, parse_key_val_list, parse_key_val_list)
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, extract_method_and_args, extract_method_and_args, extract_method_and_args)
 
     return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
 
@@ -154,25 +157,16 @@ def parse_colonic_arguments(inputs, parser, options, min_args=1):
         input_dicts.append(input_dict)
     return input_dicts
 
-def apply_default_values(datagroups, variable, default_val):
-    '''
-    Checks each datagroup for the the given variable, if it is empty either apply the default value or raise an error
-
-    @param datagroups: A list of datagroups
-    @param variable: The variable to check
-    @param default_val: The default value to apply
-    @return: An updated list of datagroups with defaults applied
-
-    @raise InvalidCommandLineOptionError
-    '''
-    from jasmin_cis.exceptions import InvalidCommandLineOptionError
-    for datafile in datagroups:
-        if datafile[variable] is None:
-            if default_val is not None:
-                datafile[variable] = default_val
-            else:
-                raise InvalidCommandLineOptionError
-    return datagroups
+def extract_method_and_args(arguments, parser):
+    from utils import parse_key_val_list
+    if not arguments:
+        method_and_args = None
+    else:
+        elements = arguments.split(',')
+        method_name = elements[0]
+        args = elements[1:] if len(elements) > 1 else []
+        method_and_args = ( method_name, parse_key_val_list(args) )
+    return method_and_args
 
 def check_nothing(item, parser):
     return item
@@ -292,11 +286,9 @@ def validate_col_args(arguments, parser):
     Assigns default method/variable to datagroups with unspecified method/variable if default is specified
     '''
 
-    arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
+    check_file_exists(arguments.samplefilename, parser)
 
-    arguments.datagroups = apply_default_values(arguments.datagroups, 'colocator', arguments.colocator)
-    arguments.datagroups = apply_default_values(arguments.datagroups, 'constraint', arguments.constraint)
-    arguments.datagroups = apply_default_values(arguments.datagroups, 'kernel', arguments.kernel)
+    arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
 
     return arguments
 
@@ -316,4 +308,4 @@ def parse_args(arguments = None):
     main_args = parser.parse_args(arguments)
     main_args = validators[main_args.command](main_args, parser)
         
-    return vars(main_args)
+    return main_args
