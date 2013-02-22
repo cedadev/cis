@@ -2,6 +2,7 @@ from col_framework import Colocator, Constraint, Kernel
 from time import time
 import logging
 
+
 class DefaultColocator(Colocator):
     def colocate(self, points, data, constraint, kernel):
         '''
@@ -53,6 +54,24 @@ class DebugColocator(Colocator):
         logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
         new_data = LazyData(values, data.metadata)
         new_data.missing_value = constraint.fill_value
+        return new_data
+
+
+class DummyColocator(Colocator):
+
+    def colocate(self, points, data, constraint, kernel):
+        '''
+            This colocator does no colocation at all - it just returns the original data values. This might be useful
+            if the input data for one variable is already known to be on the same grid as points. This routine could
+            check the coordinates are the same but currently does no such check.
+        @param points: A list of HyperPoints
+        @param data: An UngriddedData object or Cube
+        @param constraint: Unused
+        @param kernel: Unused
+        @return: A single LazyData object
+        '''
+        from data_io.ungridded_data import LazyData
+        new_data = LazyData(data.data, data.metadata)
         return new_data
 
 
