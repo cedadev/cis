@@ -95,7 +95,6 @@ def info_cmd(main_arguments):
     
     try:
         info(filename, variables, data_type)
-        info(main_arguments.filename, main_arguments.variables)
     except CISError as e:
         __error_occurred(e)
 
