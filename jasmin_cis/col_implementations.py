@@ -75,11 +75,24 @@ class DummyColocator(Colocator):
         return new_data
 
 
-class DefaultConstraint(Constraint):
+class DummyConstraint(Constraint):
 
     def constrain_points(self, point, data):
         # This is a null constraint - all of the points just get passed back
         return data
+
+
+class SepConstraint(Constraint):
+
+    def constrain_points(self, ref_point, data):
+        con_points = []
+        for point in data:
+            checks = [point.haversine_dist(ref_point) < self.h_sep,
+                      point.time_sep < self.t_sep,
+                      point.alt_sep < self.a_sep]
+            if all(checks):
+                con_points.append(point)
+        return con_points
 
 
 class nn(Kernel):
