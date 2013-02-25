@@ -65,22 +65,22 @@ class Plotter(object):
         for i, item in enumerate(self.packed_data_items):
             # Plot the data item using the specified plot type
             plot = self.plot_types[plot_type](item, v_range, len(self.packed_data_items), plot_args, *args, **kwargs)
-            plots.append(plot.plot(plot_args["datafiles"][i]))
+            plots.append(plot.plot(plot_args["datagroups"][i]))
             plot.format_plot(plot_args)
 
         self.apply_axis_limits(plot_args["x_range"], "x")
         self.apply_axis_limits(plot_args["y_range"], "y")
 
         #self.format_plot(self.plot_format_options)
-        if len(plots) > 1:  self.create_legend(plot_args["datafiles"])
+        if len(plots) > 1:  self.create_legend(plot_args["datagroups"])
 
         self.output_to_file_or_screen()
 
-    def create_legend(self, datafiles):
+    def create_legend(self, datagroups):
         legend_titles = []
         for i, item in enumerate(self.packed_data_items):
-            if datafiles is not None and datafiles[i]["label"]:
-                legend_titles.append(datafiles[i]["label"])
+            if datagroups is not None and datagroups[i]["label"]:
+                legend_titles.append(datagroups[i]["label"])
             else:
                 legend_titles.append(item.long_name)
         legend = mpl.legend(legend_titles, loc="best")

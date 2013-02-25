@@ -99,7 +99,7 @@ class Generic_Plot(object):
     def set_axis_label(self, axis, options, data):
         raise NotImplementedError()
 
-    def create_legend(self, data, datafiles):
+    def create_legend(self, data, datagroups):
         raise NotImplementedError()
 
 
@@ -227,7 +227,7 @@ class Generic_Plot(object):
         @param data:                    A list of data objects (cubes or ungridded data)
         @param options:                 A dictionary of formatting options constructed using __create_plot_format_options
         @param plot_type:               The plot type (as a string, not a PlotType object)
-        @param datafiles:               The list of datafiles from the command line, as a dictionary, containing filename, variable, label etc
+        @param datagroups:               The list of datagroups from the command line, as a dictionary, containing filename, variable, label etc
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
 

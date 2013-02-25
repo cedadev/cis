@@ -22,7 +22,7 @@ def can_specify_one_valid_samplefile_and_one_datafile_without_other_options():
     eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : None}], args.datagroups)
 
 @istest
-def can_specify_one_valid_samplefile_and_many_datafiles():
+def can_specify_one_valid_samplefile_and_many_datagroups():
     args = ["col", valid_1d_filename, 
             "variable:"+valid_1d_filename,
             "variable:"+valid_1d_filename+':col',

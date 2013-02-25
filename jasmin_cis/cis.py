@@ -69,7 +69,7 @@ def plot_cmd(main_arguments):
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
-    plot_args = {"datafiles" : main_arguments.pop("datafiles", None),
+    plot_args = {"datagroups" : main_arguments.pop("datagroups", None),
                  "nocolourbar" : main_arguments.pop("nocolourbar", False),
                  "logv" : main_arguments.pop("logv", False),
                  "x_range" : main_arguments.pop("x_range", None),

@@ -71,11 +71,11 @@ class Scatter_Plot(Generic_Plot):
 
         return options
 
-    def create_legend(self, datafiles):
+    def create_legend(self, datagroups):
         legend_titles = []
         for i, item in enumerate(self.data):
-            if datafiles is not None and datafiles[i]["label"]:
-                legend_titles.append(datafiles[i]["label"])
+            if datagroups is not None and datagroups[i]["label"]:
+                legend_titles.append(datagroups[i]["label"])
             else:
                 if " " in item.long_name:
                     legend_titles.append(" ".join(item.long_name.split()[:-1]))
