@@ -6,6 +6,7 @@ import sys
 import os.path
 from plotting.plot import Plotter
 
+
 def initialise_top_parser():
     '''
     The parser to which all arguments are initially passed
@@ -13,17 +14,17 @@ def initialise_top_parser():
     parser = argparse.ArgumentParser("CIS")
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help = "Create plots")
-    plot_parser = add_plot_parser_arguments(plot_parser)
+    add_plot_parser_arguments(plot_parser)
     info_parser = subparsers.add_parser("info", help = "Get information about a file")
-    info_parser = add_info_parser_arguments(info_parser)
+    add_info_parser_arguments(info_parser)
     col_parser = subparsers.add_parser("col", help = "Perform colocation")
-    col_parser = add_col_parser_arguments(col_parser)
+    add_col_parser_arguments(col_parser)
     return parser
 
+
 def add_plot_parser_arguments(parser):    
-    parser.add_argument("datafiles", metavar = "Input datafiles", nargs = "+", help = "The datafiles to be plotted, in the format: filename:variable:label:colour:style, where the last three arguments are optional")
-    parser.add_argument("-v", "--variable", metavar = "Default variable", nargs = "?", help = "The default variable to plot if not otherwise specified in the filename")
-    parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")    
+    parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+", help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label, where the last three arguments are optional")
+    parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
@@ -44,23 +45,58 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
     return parser
 
+
 def add_info_parser_arguments(parser):
     parser.add_argument("filename", metavar = "Filename", help = "The filename of the file to inspect")
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
+    parser.add_argument("--type", metavar = "type of HDF data", nargs="?", help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
+
 
 def add_col_parser_arguments(parser):
     parser.add_argument("samplefilename", metavar = "SampleFilename", help = "The filename of the sample file")
-    parser.add_argument("datafiles", metavar = "DataFiles", nargs = "+", help = "Files to colocate with variable names and other options split by a colon")
-    parser.add_argument("-v", "--variable", metavar = "DefaultVariable", nargs = "?", help = "The default variable to use for the data files unless explicitly overridden")
-    parser.add_argument("-m", "--method", metavar = "DefaultMethod", nargs = "?", help = "The default method to use for the data files unless explicitly overridden")
+    parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variable to colocate with filenames and other options split by a colon")
     parser.add_argument("-o", "--output", metavar = "Output filename", default = "out", nargs = "?", help = "The filename of the output file for the plot image")
     return parser
+
+
+def expand_file_list(filenames, parser):
+    '''
+
+    @param filenames: A string which is a comma seperated list of filenames, wildcarded filenames or directories
+    @param parser: A reference parser for raising errors on
+    @return: A flat list of files which exist - with no duplicate
+    '''
+    from glob import glob
+    if not filenames:
+        parser.error("Please specify at least one filename")
+    input_list = filenames.split(',')
+    # Ensure we don't get duplicates by making file_set a set
+    file_set = set()
+    for element in input_list:
+        if any(wildcard in element for wildcard in ['*', '?',']','}']):
+            file_set.update(glob(element))
+        elif os.path.isdir(element):
+            for a_file in os.listdir(element):
+                full_file = os.path.join(element, a_file)
+                if os.path.isfile(full_file):
+                    file_set.add(full_file)
+        elif os.path.isfile(element):
+            file_set.add(element)
+        else:
+            parser.error("'" + element + "' is not a valid filename")
+    # Check we matched at least one file
+    if not file_set:
+        parser.error("No files found which match: "+filenames)
+    # Cast set to a list to make it easier to index etc. later on
+    return list(file_set)
+
 
 def check_file_exists(filename, parser):
     if not os.path.isfile(filename):
         parser.error("'" + filename + "' is not a valid filename")
-        
+
+
 def parse_float(arg, name, parser):
     '''
     Tries to parse a string as a float.
@@ -78,95 +114,108 @@ def parse_float(arg, name, parser):
             parser.error("'" + arg + "' is not a valid " + name)
             return None
 
-def check_datafiles(datafiles, parser):
+
+def get_plot_datagroups(datagroups, parser):
     '''
-    @param datafiles:    A list of datafiles (possibly containing colons)
+    @param datagroups:    A list of datagroups (possibly containing colons)
     @param parser:       The parser used to report errors    
-    @return The parsed datafiles as a list of dictionaries
+    @return The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatafileOptions = namedtuple('DatafileOptions',['filename', "variable", "label", "color", "itemstyle"])
-    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_nothing, check_color, check_nothing)    
-    
-    return parse_colonic_arguments(datafiles, parser, datafile_options)
+    DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "itemstyle", "label"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_nothing, check_nothing)
+    return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
 
-def parse_colonic_arguments(inputs, parser, options):
+
+def get_col_datagroups(datagroups, parser):
+    '''
+    @param datagroups:    A list of datagroups (possibly containing colons)
+    @param parser:       The parser used to report errors
+    @return The parsed datagroups as a list of dictionaries
+    '''
+    from collections import namedtuple
+    DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "colocator", "constraint", "kernel"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, extract_method_and_args, extract_method_and_args, extract_method_and_args)
+
+    return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
+
+
+def parse_colonic_arguments(inputs, parser, options, min_args=1):
     '''
     @param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
     @param parser:    The parser used to raise an error if one occurs
     @param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    @param min_args:   The minimum number of arguments to expect - we can't say which arguments are compulsory, just how many are
     @return A list of dictionaries containing the parsed arguments
     '''
     input_dicts = []
     
     for input_string in inputs:
         split_input = input_string.split(":")
+        if len(split_input) < min_args:
+            parser.error("A mandatory data group option is missing")
         input_dict = {}
         
         for i, option in enumerate(options._asdict().keys()):
             try:
                 current_option = split_input[i]
-                if current_option:
-                    options[i](current_option, parser) 
-                    input_dict[option] = split_input[i]
-                else:
-                    input_dict[option] = None
+                input_dict[option] = options[i](current_option, parser)
             except IndexError:
                 input_dict[option] = None
         
         input_dicts.append(input_dict)
     return input_dicts
 
-def check_variable(variable, datafiles, parser):
-    '''
-    Checks that a variable was specified, and assigns the default variable (if specified) to any datafiles with an unspecified variable
-    '''
-    if variable is None:
-        raise_error = False
-        if not datafiles:
-            raise_error = True
-        else:
-            for datafile in datafiles:
-                if datafile["variable"] is None:
-                    raise_error = True
-                    break
-        if raise_error:
-            parser.error("A variable must be specified")
-    elif datafiles:
-        for datafile in datafiles:
-            if datafile["variable"] is None:
-                datafile["variable"] = variable
-    return datafiles
+
+def extract_method_and_args(arguments, parser):
+    from jasmin_cis.utils import parse_key_val_list
+    if not arguments:
+        method_and_args = None
+    else:
+        elements = arguments.split(',')
+        method_name = elements[0]
+        args = elements[1:] if len(elements) > 1 else []
+        method_and_args = ( method_name, parse_key_val_list(args) )
+    return method_and_args
+
 
 def check_nothing(item, parser):
-    pass
+    return item
 
-def check_plot_type(plot_type, datafiles, parser):
+
+def check_is_not_empty(item, parser):
+    if not item:
+        parser.error("Non optional argument not specified in datagroup")
+    return item
+
+
+
+def check_plot_type(plot_type, datagroups, parser):
     '''
     Checks plot type is valid option for number of variables if specified
     '''
 
     if plot_type is not None:
-        if plot_type in Plotter.plot_types.keys():
-            '''
-            if Plotter.plot_types[plot_type].maximum_no_of_expected_variables < len(datafiles):
-                parser.error("Invalid number of variables for plot type")
-            '''
-        else:        
+        if plot_type not in Plotter.plot_types.keys():
             parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
 
 def check_color(color, parser):
-    if color is not None:
+    if color:
         from matplotlib.colors import cnames
         color = color.lower()
         if (color not in cnames) and color != "grey":
-            parser.error("'" + color + "' is not a valid colour")   
+            parser.error("'" + color + "' is not a valid colour")
+    else:
+        color = None
+    return color
+
 
 def check_colour_bar_orientation(orientation, parser):
     orientation = orientation.lower()
     if orientation != "horizontal" and orientation != "vertical":
         parser.error("The colour bar orientation must either be horizontal or vertical")
     return orientation
+
 
 def check_range(ax_range, parser, range_type):
     '''
@@ -196,12 +245,14 @@ def check_range(ax_range, parser, range_type):
             parser.error(error_message)
     return ax_range
 
+
 def check_boolean_argument(argument):
     if argument is None or argument != "False":
         return True
     else:
         return False
-    
+
+
 def assign_logs(arguments):
     arguments.logx = check_boolean_argument(arguments.logx)
     arguments.logy = check_boolean_argument(arguments.logy)
@@ -224,10 +275,10 @@ def assign_logs(arguments):
     
     return arguments
 
-def validate_plot_args(arguments, parser): 
-    arguments.datafiles = check_datafiles(arguments.datafiles, parser)        
-    arguments.datafiles = check_variable(arguments.variable, arguments.datafiles, parser)
-    check_plot_type(arguments.type, arguments.datafiles, parser) 
+
+def validate_plot_args(arguments, parser):
+    arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
+    check_plot_type(arguments.type, arguments.datagroups, parser)
     arguments.valrange = check_range(arguments.valrange, parser, "v")
     arguments.xrange = check_range(arguments.xrange, parser, "x")
     arguments.yrange = check_range(arguments.yrange, parser, "y")
@@ -243,51 +294,30 @@ def validate_plot_args(arguments, parser):
     arguments.width = parse_float(arguments.width, "width", parser) 
     
     return arguments
-                
+
+
 def validate_info_args(arguments, parser):
     check_file_exists(arguments.filename, parser)
     return arguments
 
-def check_valid_col_method(method_name, parser):
-    '''
-        Check that if a co-location method is specified that it is a valid option
-    '''
-    from col import Colocate
-    if method_name and method_name not in Colocate.ColocationTechniques._fields:
-        parser.error("'" + method_name + "' is not a valid co-location method")
 
 def validate_col_args(arguments, parser):
     '''
     Checks that the filenames are valid and that variables and methods have been specified.
-    Assigns default method/variable to datafiles with unspecified method/variable if default is specified
+    Assigns default method/variable to datagroups with unspecified method/variable if default is specified
     '''
-    from collections import namedtuple
-    
+
     check_file_exists(arguments.samplefilename, parser)
-    
-    check_valid_col_method(arguments.method, parser)
-    
-    DatafileOptions = namedtuple('ColocateOptions',['filename', "variable", "method"])
-    datafile_options = DatafileOptions(check_file_exists, check_nothing, check_valid_col_method)    
-    
-    arguments.datafiles =  parse_colonic_arguments(arguments.datafiles, parser, datafile_options)
-    for datafile in arguments.datafiles:
-        if not datafile["variable"]:
-            if arguments.variable:
-                datafile["variable"] = arguments.variable
-            else:
-                parser.error("Please enter a valid colocation variable for each datafile, or specify a default variable")
-        if not datafile["method"]:
-            if arguments.method:
-                datafile["method"] = arguments.method
-            else:
-                parser.error("Please enter a valid colocation method for each datafile, or specify a default method")
-    
+
+    arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
+
     return arguments
+
 
 validators = { 'plot' : validate_plot_args,
                'info' : validate_info_args,
                'col'  : validate_col_args}
+
 
 def parse_args(arguments = None):
     '''
@@ -301,4 +331,4 @@ def parse_args(arguments = None):
     main_args = parser.parse_args(arguments)
     main_args = validators[main_args.command](main_args, parser)
         
-    return vars(main_args)
+    return main_args

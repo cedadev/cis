@@ -2,13 +2,13 @@
 module to test the various subclasses of the abstract AProduct class
 '''
 from nose.tools import istest, eq_, raises
-from data_io.products.products import *
+from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file
 
 
 def check_regex_matching(cls_name, filename):
-    from data_io.products.AProduct import __get_class
+    from jasmin_cis.data_io.products.AProduct import __get_class
     cls = __get_class(filename)
     eq_(cls.__name__,cls_name)
 
@@ -53,7 +53,7 @@ class ProductTests():
 class TestCloudsat(ProductTests):
 
     def __init__(self):
-        from test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_variable
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_variable
         self.product = Cloudsat_2B_CWC_RVOD
@@ -82,7 +82,7 @@ class TestAerosol_CCI(ProductTests):
 class TestCisCol(ProductTests):
 
     def __init__(self):
-        from test.test_files.data import valid_cis_col_file
+        from jasmin_cis.test.test_files.data import valid_cis_col_file
         self.filename = valid_cis_col_file
         self.valid_variable = 'mass_fraction_of_cloud_liquid_water_in_air'
         self.product = CisCol
@@ -101,7 +101,7 @@ class TestCisCol(ProductTests):
 class TestXglnwa_vprof(ProductTests):
 
     def __init__(self):
-        from test.test_files.data import valid_1d_filename, valid_variable_in_valid_filename
+        from jasmin_cis.test.test_files.data import valid_1d_filename, valid_variable_in_valid_filename
         self.filename = valid_1d_filename
         self.valid_variable = valid_variable_in_valid_filename
         self.product = Xglnwa_vprof

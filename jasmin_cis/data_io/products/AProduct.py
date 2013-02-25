@@ -57,7 +57,7 @@ def __get_class(filename, product=None):
     '''
     import re
     import os
-    import plugin
+    import jasmin_cis.plugin as plugin
     from jasmin_cis.exceptions import ClassNotFoundError
 
     # Ensure the filename doesn't include the path

@@ -5,7 +5,9 @@ More tests can be found in the manual_integration_tests package
 import os.path
 
 from nose.tools import istest, raises
+from jasmin_cis.test.test_files.data import *
 import iris
+import os.path
 
 from plotting.plot import Plotter
 from test_files.data import *

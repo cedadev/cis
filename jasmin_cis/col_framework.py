@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+
 class Colocator(object):
     '''
     Class which provides a method for performing colocation. This just defines the interface which
@@ -19,6 +20,7 @@ class Colocator(object):
 
         '''
 
+
 class Kernel(object):
     '''
     Class which provides a method for taking a number of points and returning one value. This could be a nearest neighbour algorithm
@@ -34,6 +36,7 @@ class Kernel(object):
         @return: A single value (number) which represents some operation on the points provided
 
         '''
+
 
 class Constraint(object):
     '''
@@ -68,12 +71,11 @@ def __get_class(parent_class, name=None):
     @param name: name of the class to find
     @return: a subclass of the parent_class
     '''
-    import plugin
+    from plugin import find_plugin_classes
     from jasmin_cis.exceptions import ClassNotFoundError
     import logging
 
-    all_classes = plugin.find_plugin_classes(parent_class, 'jasmin_cis.col_implementation')
-    product_cls = None
+    all_classes = find_plugin_classes(parent_class, 'jasmin_cis.col_implementations')
     for cls in all_classes:
 
         if name is None:

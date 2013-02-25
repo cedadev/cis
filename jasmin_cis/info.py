@@ -23,7 +23,7 @@ def __print_variables(all_variables, user_variables=None, print_err=True):
             print item
 
 
-def info(filename, user_variables=None):
+def info(filename, user_variables=None, data_type=None):
     '''
     Read all the variables from a file and print to stdout.
     File can contain either gridded and ungridded data.
@@ -31,23 +31,31 @@ def info(filename, user_variables=None):
 
     @param filenames:   The filenames of the files to read
     @param user_variables:   The user specified variables of interest
+    @param data_type:   String representing the type of HDF data to read, i.e. 'VD' or 'SD'
 
     '''
-    from jasmin_cis.exceptions import CISError
-    from data_io.hdf import get_hdf4_file_variables
-    from data_io.netcdf import get_netcdf_file_variables
-    from data_io.aeronet import get_aeronet_file_variables
+    from jasmin_cis.data_io.hdf import get_hdf4_file_variables
+    from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
+    from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
     from pyhdf.error import HDF4Error
+
     try:
+
         file_variables = get_netcdf_file_variables(filename)
         __print_variables(file_variables, user_variables)
+
     except RuntimeError:
+
         try:
-            sd_vars, vd_vars = get_hdf4_file_variables(filename)
-            print "\n====== SD variables:"
-            __print_variables(sd_vars, user_variables, False)
-            print "\n====== VD variables:"
-            __print_variables(vd_vars, user_variables, False)
+            sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
+
+            if sd_vars is not None:
+                print "\n====== SD variables:"
+                __print_variables(sd_vars, user_variables, False)
+            if vd_vars is not None:
+                print "\n====== VD variables:"
+                __print_variables(vd_vars, user_variables, False)
+
         except HDF4Error as e:
             file_variables = get_aeronet_file_variables(filename)
             __print_variables(file_variables, user_variables)

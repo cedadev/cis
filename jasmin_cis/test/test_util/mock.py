@@ -97,8 +97,8 @@ def make_dummy_1d_ungridded_data():
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
 def make_dummy_2d_ungridded_data():
-    from data_io.Coord import CoordList, Coord
-    from data_io.ungridded_data import UngriddedData, Metadata
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 
     x = Coord(gen_random_lat_array((5,5)), Metadata('latitude'),'x')
     y = Coord(gen_random_lon_array((5,5)), Metadata('longitude'),'y')

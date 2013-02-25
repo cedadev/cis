@@ -6,7 +6,6 @@ import sys
 import logging
 
 from jasmin_cis.exceptions import CISError
-from jasmin_cis.info import  info
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +13,7 @@ __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
 __version__ = "x"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
+
 
 def __setup_logging(log_file, log_level):
     '''
@@ -28,6 +28,7 @@ def __setup_logging(log_file, log_level):
     # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
     #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
+
 
 def __error_occurred(e):
     '''
@@ -48,28 +49,23 @@ def plot_cmd(main_arguments):
     @param main_arguments:    The command line arguments (minus the plot command)        
     '''
     from plotting.plot import Plotter
-    from data_io.read import read_data
+    from jasmin_cis.data_io.read import read_data
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
-    import utils
+    import jasmin_cis.utils as utils
     from collections import OrderedDict
-    
-    main_arguments.pop("variable") # Pop off default variable as will have already been assigned where necessary
-    
-    try:
-        # create a dictionary of [key=variable, value=list of filename]
-        dict_of_var_and_filename = OrderedDict() # Cannot use dict, as unordered and need order for scatter overlay
-        for datafile in main_arguments["datafiles"]:
-            utils.add_element_to_list_in_dict(dict_of_var_and_filename, datafile["variable"], datafile["filename"])
 
+    try:
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
-        data = [ read_data(files,var) for var, files in dict_of_var_and_filename.iteritems() ]
+        data = [ read_data(datagroup['filenames'],datagroup['variable']) for datagroup in main_arguments.datagroups ]
 
     except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError) as e:
         __error_occurred(e)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
-        
+
+    main_arguments = vars(main_arguments)
+    main_arguments.pop('command') # Remove the command argument now it is not needed
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
@@ -95,11 +91,14 @@ def info_cmd(main_arguments):
         
     @param main_arguments:    The command line arguments (minus the info command)
     '''    
-    variables = main_arguments.pop('variables', None)
-    filename = main_arguments.pop('filename')
+    variables = main_arguments.variables
+    filename = main_arguments.filename
+    data_type = main_arguments.type
+
+    from jasmin_cis.info import  info
     
     try:
-        info(filename, variables)
+        info(filename, variables, data_type)
     except CISError as e:
         __error_occurred(e)
 
@@ -111,27 +110,23 @@ def col_cmd(main_arguments):
     @param main_arguments:    The command line arguments (minus the col command)         
     '''
     from jasmin_cis.exceptions import ClassNotFoundError, CISError
-    from col import Colocate
-    from utils import add_file_prefix
-
-    sample_file = main_arguments.pop("samplefilename")
-    input_groups = main_arguments.pop("datafiles")
+    from jasmin_cis.col import Colocate
+    from jasmin_cis.utils import add_file_prefix
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-col-", main_arguments.pop("output") + ".nc")
+    output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
 
-    col = Colocate(sample_file, output_file)
+    col = Colocate(main_arguments.samplefilename, output_file)
 
-    for input_group in input_groups:
-        filenames = input_group['filename']
+    for input_group in main_arguments.datagroups:
         variable = input_group['variable']
-        con_options = input_group['con_options']
-        kern_options = input_group['kern_options']
-        col_options = input_group['col_options']
-
-        col_name = col_options.pop('name')
-        con_name = con_options.pop('name')
-        kern_name = kern_options.pop('name')
+        filenames = input_group['filenames']
+        col_name = input_group['colocator'][0] if  input_group['colocator'] is not None else None
+        col_options = input_group['colocator'][1] if  input_group['colocator'] is not None else None
+        con_name = input_group['constraint'][0] if  input_group['constraint'] is not None else None
+        con_options = input_group['constraint'][1] if  input_group['constraint'] is not None else None
+        kern_name = input_group['kernel'][0] if  input_group['kernel'] is not None else None
+        kern_options = input_group['kernel'][1] if  input_group['kernel'] is not None else None
 
         try:
             col.colocate(variable, filenames, col_name, con_name, con_options, kern_name, kern_options)
@@ -161,7 +156,7 @@ def main():
 
     # parse command line arguments
     arguments = parse_args()
-    command = arguments.pop("command")
+    command = arguments.command
 
     logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
     logging.debug("Running command: " + command)

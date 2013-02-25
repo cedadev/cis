@@ -27,6 +27,8 @@ valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
 valid_cis_col_file = make_pathname("cis-col-short.nc")
 
+test_directory = make_pathname('test_dir')
+
 large_15GB_file_filename = "/run/media/daniel/Storage/xglnwa.pm.k8dec-k9nov.nc"
 invalid_filename = "invalidfilename"
 non_netcdf_file = make_pathname("notanetcdffile")

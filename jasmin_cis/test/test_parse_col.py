@@ -1,88 +1,51 @@
 '''
 Module to test the col command of the parser
 The parse raises a SystemExit exception with code 2 if it fails to parse.
-Each test therefore ignores SystemExit exceptions with code 2 as they are expected.
+Some tests therefore ignore SystemExit exceptions with code 2 if they are expected.
 '''
 from nose.tools import istest, eq_
 from jasmin_cis.parse import parse_args
-from test_files.data import *
+from jasmin_cis.test.test_files.data import *
 
 @istest
-def can_specify_one_valid_samplefile_and_one_complete_datafile():
-    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:nn"]
+def can_specify_one_valid_samplefile_and_one_complete_datagroup():
+    args = ["col", valid_1d_filename, "variable:"+valid_1d_filename+":col:con:nn"]
     args = parse_args(args)
-    eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
-    
+    eq_(valid_1d_filename, args.samplefilename)
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : ("col",{}), "constraint" : ("con",{}), "kernel" : ("nn",{}) }], args.datagroups)
+
 @istest
-def can_specify_one_valid_samplefile_and_one_datafile_without_a_method_if_default_set():
-    args = ["col", valid_1d_filename, valid_1d_filename + ":variable:", "--method", "nn"]
+def can_specify_one_valid_samplefile_and_one_datafile_without_other_options():
+    args = ["col", valid_1d_filename, "variable:"+valid_1d_filename]
     args = parse_args(args)
-    eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
-    
-@istest
-def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_if_default_set():
-    args = ["col", valid_1d_filename, valid_1d_filename + "::nn", "--variable", "variable"]
-    args = parse_args(args)
-    eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
-    
-@istest
-def can_specify_one_valid_samplefile_and_one_datafile_without_a_variable_or_method_if_default_set():
-    args = ["col", valid_1d_filename, valid_1d_filename + "::", "--variable", "variable", "--method", "nn"]
-    args = parse_args(args)
-    eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], args["datafiles"])
-    
+    eq_(valid_1d_filename, args.samplefilename)
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : None}], args.datagroups)
+
 @istest
 def can_specify_one_valid_samplefile_and_many_datafiles():
     args = ["col", valid_1d_filename, 
-            valid_1d_filename + "::", 
-            valid_1d_filename + "::", 
-            valid_1d_filename + "::", 
-            valid_1d_filename + "::",
-            "--variable", "variable", "--method", "nn"]
+            "variable:"+valid_1d_filename,
+            "variable:"+valid_1d_filename+':col',
+            "variable:"+valid_1d_filename+'::con',
+            "variable:"+valid_1d_filename+':::nn',
+            "variable:"+valid_1d_filename+':col::nn']
     args = parse_args(args)
-    eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], 
-        args["datafiles"])
-    
+    eq_(valid_1d_filename, args.samplefilename)
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : None},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : ('col',{}), "constraint" : None, "kernel" : None},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : ('con',{}), "kernel" : None},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : ('nn',{})},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : ('col',{}), "constraint" : None, "kernel" : ('nn',{})}], args.datagroups)
+
+
 @istest
-def can_specify_one_valid_samplefile_and_many_datafiles_with_varying_specifications():
-    args = ["col", valid_1d_filename, 
-            valid_1d_filename + "::", 
-            valid_1d_filename + ":variable:", 
-            valid_1d_filename + "::nn", 
-            valid_1d_filename + ":variable:nn",
-            "--variable", "variable", "--method", "nn"]
+def can_specify_one_valid_samplefile_and_one_datafile_with_internal_options():
+    args = ["col", valid_1d_filename, "variable:"+valid_1d_filename+"::SepConstraint,h_sep=1500,v_sep=22000,t_sep=5000:nn"]
     args = parse_args(args)
-    eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], 
-        args["datafiles"])
-    
-@istest
-def can_specify_default_variable_and_method():
-    args = ["col", valid_1d_filename, 
-            valid_1d_filename + "::", 
-            valid_1d_filename + ":variable:", 
-            valid_1d_filename + "::nn", 
-            valid_1d_filename + ":variable:nn",
-            "--variable", "defaultVariable",
-            "--method", "nn"]
-    args = parse_args(args)
-    eq_(valid_1d_filename, args["samplefilename"])
-    eq_([{"filename" : valid_1d_filename, "variable" : "defaultVariable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "defaultVariable", "method" : "nn"},
-         {"filename" : valid_1d_filename, "variable" : "variable", "method" : "nn"}], 
-        args["datafiles"])
+    eq_(valid_1d_filename, args.samplefilename)
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None,
+          "constraint" : ('SepConstraint',{'h_sep':'1500','v_sep':'22000','t_sep':'5000'}), "kernel" : ('nn',{})}], args.datagroups)
+
 
 @istest
 def should_raise_error_with_missing_arguments():

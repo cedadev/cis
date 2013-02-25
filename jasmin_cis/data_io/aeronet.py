@@ -60,7 +60,7 @@ def load_aeronet(fname, keep_fields='all'):
 
 def get_file_metadata(filename, variable = '', shape = None):
     file = open(filename)
-    from data_io.ungridded_data import Metadata
+    from jasmin_cis.data_io.ungridded_data import Metadata
     if variable is None: variable = ''
     metadata = Metadata(name = variable, long_name = variable, shape = shape)
     lines = []

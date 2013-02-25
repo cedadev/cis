@@ -1,5 +1,5 @@
 from ungridded_data import LazyData
-import logging
+import logging, collections
 
 class Coord(LazyData):
 
@@ -15,7 +15,7 @@ class Coord(LazyData):
         self.axis = axis.upper()
 
     def __eq__(self, other):
-        return other.standard_name == self.standard_name and self.standard_name != ''
+        return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
 class CoordList(list):
     """All the functionality of a standard `list` with added "Coord" context."""

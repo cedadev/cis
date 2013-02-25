@@ -3,7 +3,7 @@ Module containing hdf file utility functions for the SD object
 """
 
 from jasmin_cis.data_io.hdf_util import __fill_missing_data
-import numpy as np
+import logging
 
 def get_hdf_SD_file_variables(filename):
     '''
@@ -17,10 +17,16 @@ def get_hdf_SD_file_variables(filename):
     '''
     from pyhdf import SD
 
-    # Open the file.
-    datafile = SD.SD(filename)
-    # List of required variable names.
-    return datafile.datasets()
+    try:
+        variables = None
+        # Open the file.
+        datafile = SD.SD(filename)
+        # List of required variable names.
+        variables = datafile.datasets()
+    except:
+        logging.error("Error while reading SD data")
+
+    return variables
 
 def read(filename, variables=None, datadict=None):
     """

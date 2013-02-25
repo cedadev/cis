@@ -5,6 +5,7 @@ import numpy as np
 from pyhdf.HDF import *
 from pyhdf.VS import *
 from collections import namedtuple
+import logging
 
 from jasmin_cis.data_io.hdf_util import __fill_missing_data
 
@@ -21,19 +22,23 @@ def get_hdf_VD_file_variables(filename):
     returns:
         An OrderedDict containing the variables from the file
     '''
+    variables = None
+    try:
+        # Open file
+        datafile = HDF(filename)
+        vs =  datafile.vstart()
+        # List of required variable names
+        names = vs.vdatainfo()
+        # This returns a list of tuples, so convert into a dictionary for easy lookup
+        variables = {}
+        for var in names:
+            variables[var[0]] = var[1:]
+        # Close file
+        vs.end()
+        datafile.close()
+    except:
+        logging.error("Error while reading VD data")
 
-    # Open file
-    datafile = HDF(filename)
-    vs =  datafile.vstart()
-    # List of required variable names
-    names = vs.vdatainfo()
-    # This returns a list of tuples, so convert into a dictionary for easy lookup
-    variables = {}
-    for var in names:
-        variables[var[0]] = var[1:]
-    # Close file
-    vs.end()
-    datafile.close()
     return variables
 
 def read(filename, variables=None, datadict=None):
