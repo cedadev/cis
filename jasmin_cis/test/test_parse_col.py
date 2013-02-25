@@ -12,14 +12,14 @@ def can_specify_one_valid_samplefile_and_one_complete_datagroup():
     args = ["col", valid_1d_filename, "variable:"+valid_1d_filename+":col:con:nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args.samplefilename)
-    eq_([{"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : ("col",{}), "constraint" : ("con",{}), "kernel" : ("nn",{}) }], args.datagroups)
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : ("col",{}), "constraint" : ("con",{}), "kernel" : ("nn",{}) }], args.datagroups)
 
 @istest
 def can_specify_one_valid_samplefile_and_one_datafile_without_other_options():
     args = ["col", valid_1d_filename, "variable:"+valid_1d_filename]
     args = parse_args(args)
     eq_(valid_1d_filename, args.samplefilename)
-    eq_([{"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : None}], args.datagroups)
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : None}], args.datagroups)
 
 @istest
 def can_specify_one_valid_samplefile_and_many_datafiles():
@@ -31,11 +31,11 @@ def can_specify_one_valid_samplefile_and_many_datafiles():
             "variable:"+valid_1d_filename+':col::nn']
     args = parse_args(args)
     eq_(valid_1d_filename, args.samplefilename)
-    eq_([{"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : None},
-         {"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : ('col',{}), "constraint" : None, "kernel" : None},
-         {"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : None, "constraint" : ('con',{}), "kernel" : None},
-         {"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : ('nn',{})},
-         {"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : ('col',{}), "constraint" : None, "kernel" : ('nn',{})}], args.datagroups)
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : None},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : ('col',{}), "constraint" : None, "kernel" : None},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : ('con',{}), "kernel" : None},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None, "constraint" : None, "kernel" : ('nn',{})},
+         {"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : ('col',{}), "constraint" : None, "kernel" : ('nn',{})}], args.datagroups)
 
 
 @istest
@@ -43,7 +43,7 @@ def can_specify_one_valid_samplefile_and_one_datafile_with_internal_options():
     args = ["col", valid_1d_filename, "variable:"+valid_1d_filename+"::SepConstraint,h_sep=1500,v_sep=22000,t_sep=5000:nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args.samplefilename)
-    eq_([{"filenames" : {valid_1d_filename}, "variable" : "variable", "colocator" : None,
+    eq_([{"filenames" : [valid_1d_filename], "variable" : "variable", "colocator" : None,
           "constraint" : ('SepConstraint',{'h_sep':'1500','v_sep':'22000','t_sep':'5000'}), "kernel" : ('nn',{})}], args.datagroups)
 
 
