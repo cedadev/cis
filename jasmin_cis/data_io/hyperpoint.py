@@ -45,7 +45,7 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         '''
             Computes the Haversine distance between two points
         '''
-        from utils import haversine
+        from jasmin_cis.utils import haversine
         return haversine(self.latitude, self.longitude, point2.latitude, point2.longitude)
 
     def time_sep(self,point2):

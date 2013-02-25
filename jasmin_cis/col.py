@@ -21,8 +21,8 @@ class Colocate(object):
     def colocate(self, variable, filenames, col='DefaultColocator', con_method=None, con_params=None, kern=None, kern_params=None):
         from jasmin_cis.data_io.read import read_data
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
-        from col_framework import get_constraint, get_kernel, get_colocator
-        from utils import copy_attributes
+        from jasmin_cis.col_framework import get_constraint, get_kernel, get_colocator
+        from jasmin_cis.utils import copy_attributes
         from time import time
         from iris import cube
 

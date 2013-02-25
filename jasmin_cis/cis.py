@@ -51,7 +51,7 @@ def plot_cmd(main_arguments):
     from jasmin_cis.data_io.read import read_data
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
-    import utils
+    import jasmin_cis.utils as utils
     from collections import OrderedDict
 
     try:
@@ -107,8 +107,8 @@ def col_cmd(main_arguments):
     @param main_arguments:    The command line arguments (minus the col command)         
     '''
     from jasmin_cis.exceptions import ClassNotFoundError, CISError
-    from col import Colocate
-    from utils import add_file_prefix
+    from jasmin_cis.col import Colocate
+    from jasmin_cis.utils import add_file_prefix
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")

@@ -36,7 +36,7 @@ class Test_nn_gridded(KernelTests):
     @istest
     def test_basic_col_gridded_to_ungridded_using_nn_in_2d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
-        from col_implementations import DefaultColocator, nn_gridded, DummyConstraint
+        from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
         col = DefaultColocator()
@@ -48,7 +48,7 @@ class Test_nn_gridded(KernelTests):
     @istest
     def test_already_colocated_in_col_gridded_to_ungridded_using_nn_in_2d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
-        from col_implementations import DefaultColocator, nn_gridded, DummyConstraint
+        from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_3x3_2d_cube()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = [ HyperPoint(0.0, 0.0) ]
@@ -65,7 +65,7 @@ class Test_nn_gridded(KernelTests):
                 which divides the grid.
         '''
         from jasmin_cis.data_io.hyperpoint import HyperPoint
-        from col_implementations import DefaultColocator, nn_gridded, DummyConstraint
+        from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5) ]
         col = DefaultColocator()
@@ -78,7 +78,7 @@ class Test_nn_gridded(KernelTests):
     @istest
     def test_coordinates_outside_grid_in_col_gridded_to_ungridded_using_nn_in_2d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
-        from col_implementations import DefaultColocator, nn_gridded, DummyConstraint
+        from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5) ]
         col = DefaultColocator()
@@ -93,7 +93,7 @@ class Test_li(KernelTests):
 
     @istest
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
-        from col_implementations import DefaultColocator, li, DummyConstraint
+        from jasmin_cis.col_implementations import DefaultColocator, li, DummyConstraint
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
