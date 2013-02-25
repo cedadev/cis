@@ -119,6 +119,14 @@ class LazyData(object):
         self.metadata.long_name = long_name
 
     @property
+    def standard_name(self):
+        return self.metadata.standard_name
+
+    @standard_name.setter
+    def standard_name(self, standard_name):
+        self.metadata.standard_name = standard_name
+
+    @property
     def units(self):
         return self.metadata.units
 
