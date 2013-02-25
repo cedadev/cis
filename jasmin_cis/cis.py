@@ -72,9 +72,16 @@ def plot_cmd(main_arguments):
         
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
-    
+
+    plot_args = {"datafiles" : main_arguments.pop("datafiles", None),
+                 "nocolourbar" : main_arguments.pop("nocolourbar", False),
+                 "logv" : main_arguments.pop("logv", False),
+                 "x_range" : main_arguments.pop("x_range", None),
+                 "y_range" : main_arguments.pop("y_range", None),
+                 "cbarorient" : main_arguments.pop("cbarorient", "horizontal")}
+
     try:
-        Plotter(data, plot_type, output, **main_arguments)
+        Plotter(data, plot_args, plot_type, output, **main_arguments)
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError, ValueError) as e:
         __error_occurred(e)
 
