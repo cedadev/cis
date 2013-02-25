@@ -1,4 +1,4 @@
-from data_io import hdf_sd as hdf_sd, hdf_vd
+from jasmin_cis.data_io import hdf_sd as hdf_sd, hdf_vd
 import jasmin_cis.utils as utils
 import logging
 

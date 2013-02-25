@@ -7,8 +7,8 @@ import logging
 class Colocate(object):
 
     def __init__(self, sample_file, output_file):
-        from data_io.read import read_coordinates
-        from data_io.write_netcdf import write_coordinates
+        from jasmin_cis.data_io.read import read_coordinates
+        from jasmin_cis.data_io.write_netcdf import write_coordinates
 
         coords = read_coordinates(sample_file)
 
@@ -19,8 +19,8 @@ class Colocate(object):
         self.output_file = output_file
 
     def colocate(self, variable, filenames, col='DefaultColocator', con_method=None, con_params=None, kern=None, kern_params=None):
-        from data_io.read import read_data
-        from data_io.write_netcdf import add_data_to_file
+        from jasmin_cis.data_io.read import read_data
+        from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from col_framework import get_constraint, get_kernel, get_colocator
         from utils import copy_attributes
         from time import time

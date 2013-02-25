@@ -8,7 +8,7 @@ from jasmin_cis.test.test_files.data import non_netcdf_file
 
 
 def check_regex_matching(cls_name, filename):
-    from data_io.products.AProduct import __get_class
+    from jasmin_cis.data_io.products.AProduct import __get_class
     cls = __get_class(filename)
     eq_(cls.__name__,cls_name)
 

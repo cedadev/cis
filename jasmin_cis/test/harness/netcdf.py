@@ -1,4 +1,4 @@
-from data_io.netcdf import *
+from jasmin_cis.data_io.netcdf import *
 
 if __name__ == '__main__':
 # get a list of files to read

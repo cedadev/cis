@@ -205,7 +205,7 @@ class UngriddedData(LazyData):
         @param coords: A list of the associated Coord objects
         @param metadata: Any associated metadata
         '''
-        from data_io.Coord import CoordList, Coord
+        from jasmin_cis.data_io.Coord import CoordList, Coord
 
         super(UngriddedData, self).__init__(data, metadata)
 
