@@ -151,7 +151,8 @@ def copy_attributes(source, dest):
     @param dest: Object to copy attributes to
     @return: None
     '''
-    dest.__dict__.update(source.__dict__)
+    if source:
+        dest.__dict__.update(source.__dict__)
 
 
 def add_file_prefix(prefix, filepath):
