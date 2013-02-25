@@ -1,4 +1,4 @@
-from col_framework import Colocator, Constraint, Kernel
+from jasmin_cis.col_framework import Colocator, Constraint, Kernel
 from time import time
 import logging
 
