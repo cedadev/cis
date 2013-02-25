@@ -20,6 +20,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             start = hdf_vd.get_data(j)
             time += start
             arrays.append(time)
+        return arrays
 
     def __generate_real_time_coord(self, filenames, xsize, ysize):
         import numpy as np
