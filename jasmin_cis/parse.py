@@ -124,7 +124,6 @@ def get_plot_datagroups(datagroups, parser):
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "itemstyle", "label"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_nothing, check_nothing)
-
     return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
 
 

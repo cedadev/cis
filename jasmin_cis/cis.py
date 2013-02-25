@@ -119,11 +119,11 @@ def col_cmd(main_arguments):
         variable = input_group['variable']
         filenames = input_group['filenames']
         col_name = input_group['colocator'][0] if  input_group['colocator'] is not None else None
-        col_options = input_group['colocator'][1:] if  input_group['colocator'] is not None else None
+        col_options = input_group['colocator'][1] if  input_group['colocator'] is not None else None
         con_name = input_group['constraint'][0] if  input_group['constraint'] is not None else None
-        con_options = input_group['constraint'][1:] if  input_group['constraint'] is not None else None
+        con_options = input_group['constraint'][1] if  input_group['constraint'] is not None else None
         kern_name = input_group['kernel'][0] if  input_group['kernel'] is not None else None
-        kern_options = input_group['kernel'][1:] if  input_group['kernel'] is not None else None
+        kern_options = input_group['kernel'][1] if  input_group['kernel'] is not None else None
 
         try:
             col.colocate(variable, filenames, col_name, con_name, con_options, kern_name, kern_options)
