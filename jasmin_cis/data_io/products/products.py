@@ -370,7 +370,7 @@ class Caliop(AProduct):
         alt_metadata = Metadata()
         alt_metadata.standard_name = "Altitude"
         alt_metadata.shape = [alt_data.shape[0],alt_data.shape[1]]
-        alt_coord = Coord(alt_data,alt_metadata,"Y")
+        alt_coord = Coord(alt_data,alt_metadata, "Y")
 
         # latitude
         hdf.read_data(sdata['Latitude'],"SD")
@@ -379,7 +379,7 @@ class Caliop(AProduct):
         lat_data = utils.expand_1d_to_2d_array(lat_data[:,1],len_x,axis=1)
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_metadata.shape = [lat_data.shape[0],lat_data.shape[1]]
-        lat_coord = Coord(lat_data, lat_metadata, "X")
+        lat_coord = Coord(lat_data, lat_metadata)
 
         # longitude
         lon = sdata['Longitude']
@@ -395,7 +395,7 @@ class Caliop(AProduct):
         profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
         profile_time_metadata.shape = [profile_time_data.shape[0],profile_time_data.shape[1]]
-        profile_time_coord = Coord(profile_time_data, profile_time_metadata)
+        profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
 
         # create the object containing all coordinates
         coords = CoordList()
