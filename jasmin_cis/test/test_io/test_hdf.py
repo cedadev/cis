@@ -3,7 +3,7 @@ from jasmin_cis.data_io.hdf import __read_hdf4
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import valid_hdf_sd_file
 
-@nottest
+@istest
 def test_read_hdf4():
     filename = valid_hdf_sd_file
     sds, vds = __read_hdf4(filename,['Solution_Ocean','Path_Radiance_Land','Mean_Reflectance_Land'])
