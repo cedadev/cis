@@ -169,7 +169,7 @@ def parse_colonic_arguments(inputs, parser, options, min_args=1):
 
 
 def extract_method_and_args(arguments, parser):
-    from utils import parse_key_val_list
+    from jasmin_cis.utils import parse_key_val_list
     if not arguments:
         method_and_args = None
     else:

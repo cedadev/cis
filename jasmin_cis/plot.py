@@ -6,7 +6,7 @@ Also contains dictionaries for the valid plot types and formatting options
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import sys
-from utils import unpack_data_object
+from jasmin_cis.utils import unpack_data_object
 import logging
 
 
