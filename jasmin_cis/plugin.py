@@ -1,17 +1,24 @@
 import logging
 
-def get_all_subclasses(cls, module):
-    '''
-    Recursively find all subclasses of a given class
 
-    @param cls: The class to find subclasses of
-    @return: A list of all subclasses
+def get_all_subclasses(parent_class, mod):
     '''
-    __import__(module)
+        This will recursively find subclasses of parent_class in mod.
+        The use of importlib allows mod to be of the form package.module
+        Take extreme care when changing the function as it has been known to break!
+    @param parent_class: The class to find subclasses of
+    @param mod: The module to find subclasses in
+    @return: A list of subclasses
+    '''
+    import inspect
+    import importlib
+    module = importlib.import_module(mod)
     subclasses = []
-    for subclass in cls.__subclasses__():
-        subclasses += get_all_subclasses(subclass, module)
-    subclasses += cls.__subclasses__()
+    for name, cls in inspect.getmembers(module):
+        if inspect.isclass(cls):
+            if cls in parent_class.__subclasses__():
+                subclasses += get_all_subclasses(cls, mod)
+                subclasses += [ cls ]
     return subclasses
 
 
@@ -43,11 +50,11 @@ def find_plugins(plugin_dir, parent_class_name):
 
     return product_classes
 
+
 def find_plugin_classes(parent_class, built_in_module):
     import os
-    import cis
     # find plugin classes, if any
-    ENV_PATH = "_".join([cis.__name__.upper(),"PLUGIN","HOME"])
+    ENV_PATH = "CIS_PLUGIN_HOME"
     plugin_dir = os.environ.get(ENV_PATH, None)
     plugin_classes = find_plugins(plugin_dir, parent_class.__name__)
 
