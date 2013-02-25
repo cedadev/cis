@@ -671,7 +671,7 @@ class ASCII_Hyperpoints(AProduct):
         return [r'.*\.txt']
 
     def create_coords(self, filenames, variable = None):
-        from data_io.ungridded_data import Metadata
+        from jasmin_cis.data_io.ungridded_data import Metadata
         from numpy import array, loadtxt
         from jasmin_cis.exceptions import InvalidVariableError
 
