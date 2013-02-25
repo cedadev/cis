@@ -8,5 +8,5 @@ data_obj = read_data(filenames, "Backscatter_Coefficient_1064", "Caliop")
 print data_obj.metadata.shape
 print data_obj.data
 
-Plotter([data_obj])
+Plotter([data_obj],plot_type="heatmap")
 
