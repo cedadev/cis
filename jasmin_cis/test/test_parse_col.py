@@ -5,7 +5,7 @@ Some tests therefore ignore SystemExit exceptions with code 2 if they are expect
 '''
 from nose.tools import istest, eq_
 from jasmin_cis.parse import parse_args
-from test_files.data import *
+from jasmin_cis.test.test_files.data import *
 
 @istest
 def can_specify_one_valid_samplefile_and_one_complete_datagroup():
