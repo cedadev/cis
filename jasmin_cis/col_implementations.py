@@ -16,7 +16,7 @@ class DefaultColocator(Colocator):
         @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
         @return: A single LazyData object
         '''
-        from data_io.ungridded_data import LazyData
+        from jasmin_cis.data_io.ungridded_data import LazyData
         import numpy as np
         values = np.zeros(len(points))
         for i, point in enumerate(points):
@@ -35,7 +35,7 @@ class DebugColocator(Colocator):
     def colocate(self, points, data, constraint, kernel):
         # This is the same colocate method as above with extra logging and timing steps. This is useful for debugging
         #  but will be slower than the default colocator.
-        from data_io.ungridded_data import LazyData
+        from jasmin_cis.data_io.ungridded_data import LazyData
         import numpy as np
         import math
         short_points = points if len(points)<1000 else points[:999]
@@ -70,7 +70,7 @@ class DummyColocator(Colocator):
         @param kernel: Unused
         @return: A single LazyData object
         '''
-        from data_io.ungridded_data import LazyData
+        from jasmin_cis.data_io.ungridded_data import LazyData
         new_data = LazyData(data.data, data.metadata)
         return new_data
 

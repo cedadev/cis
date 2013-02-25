@@ -1,9 +1,9 @@
-from data_io.write_netcdf import *
+from jasmin_cis.data_io.write_netcdf import *
 
 
 def test_main():
-    from data_io.ungridded_data import UngriddedData, Metadata
-    from data_io.Coord import Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    from jasmin_cis.data_io.Coord import Coord
     from numpy import array
     coords = []
     #    coords.append(Coord(array([1,2,3,4,5,6,7,8,9,10]), Metadata(name="pixel_number",
@@ -41,7 +41,7 @@ def test_main():
     write(data_object, "ungridded_netcdf.nc")
 
 def test_read():
-    from data_io.products.AProduct import get_data
+    from jasmin_cis.data_io.products.AProduct import get_data
 
     filenames = ["ungridded_netcdf.nc"]
     data_object = get_data(filenames, 'mass_fraction_of_cloud_liquid_water_in_air',"Cloud_CCI")

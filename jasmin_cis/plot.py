@@ -589,13 +589,11 @@ class Plotter(object):
         @param axis        The axis to apply the limits to
         '''
         from iris.exceptions import CoordinateNotFoundError
-        from numpy.ma import MaskedArray
-        import numpy
         if valrange is None and self.__is_map():
             valrange = {}
             try:
-                valrange[axis + "min"] = MaskedArray.min(self.data[0].coord(axis=axis).data)
-                valrange[axis + "max"] = MaskedArray.max(self.data[0].coord(axis=axis).data)
+                valrange[axis + "min"] = self.data[0].coord(axis=axis).data.min()
+                valrange[axis + "max"] = self.data[0].coord(axis=axis).data.max()
                 try:
                     self.valrange[axis] = valrange
                 except AttributeError:

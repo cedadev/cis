@@ -1,8 +1,8 @@
-from data_io.Coord import Coord, CoordList
-from data_io.products.AProduct import AProduct
-from data_io.ungridded_data import UngriddedData, Metadata
+from jasmin_cis.data_io.Coord import Coord, CoordList
+from jasmin_cis.data_io.products.AProduct import AProduct
+from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 import jasmin_cis.utils as utils
-import data_io.hdf as hdf
+import jasmin_cis.data_io.hdf as hdf
 
 import logging
 
@@ -13,7 +13,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def _generate_time_array(self, vdata):
 
-        import data_io.hdf_vd as hdf_vd
+        import jasmin_cis.data_io.hdf_vd as hdf_vd
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
             time = hdf_vd.get_data(i)
@@ -27,7 +27,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         from os.path import basename
         from datetime import timedelta, time, datetime
         from iris.unit import date2julian_day, CALENDAR_STANDARD
-        from data_io.ungridded_data import Metadata
+        from jasmin_cis.data_io.ungridded_data import Metadata
         # Work out a 'rough' real time for the data - for use in colocation
         all_times = []
         for a_file in filenames:
@@ -249,8 +249,8 @@ class Cloud_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from data_io.netcdf import read, get_metadata, get_data
-        from data_io.Coord import Coord
+        from jasmin_cis.data_io.netcdf import read, get_metadata, get_data
+        from jasmin_cis.data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
 
@@ -289,7 +289,7 @@ class Cloud_CCI(AProduct):
 
     def create_data_object(self, filenames, variable):
 
-        from data_io.netcdf import get_metadata, read, get_data
+        from jasmin_cis.data_io.netcdf import get_metadata, read, get_data
 
         coords = self.create_coords(filenames)
         var = []
@@ -311,8 +311,8 @@ class Aerosol_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from data_io.netcdf import read_many_files, get_metadata
-        from data_io.Coord import Coord
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
+        from jasmin_cis.data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
 
@@ -327,7 +327,7 @@ class Aerosol_CCI(AProduct):
 
     def create_data_object(self, filenames, variable):
 
-        from data_io.netcdf import read_many_files, get_metadata
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
 
         coords = self.create_coords(filenames)
         data = read_many_files(filenames, variable, dim="pixel_number")
@@ -342,9 +342,9 @@ class Caliop(AProduct):
 
     def create_coords(self, filenames):
 
-        from data_io.hdf_vd import get_data
-        from data_io.hdf_vd import VDS
-        from data_io import hdf_sd
+        from jasmin_cis.data_io.hdf_vd import get_data
+        from jasmin_cis.data_io.hdf_vd import VDS
+        from jasmin_cis.data_io import hdf_sd
 
         variables = [ 'Latitude','Longitude', "Profile_Time"]
 
@@ -370,7 +370,7 @@ class Caliop(AProduct):
         alt_metadata = Metadata()
         alt_metadata.standard_name = "Altitude"
         alt_metadata.shape = [alt_data.shape[0],alt_data.shape[1]]
-        alt_coord = Coord(alt_data,alt_metadata,"Y")
+        alt_coord = Coord(alt_data,alt_metadata, "Y")
 
         # latitude
         hdf.read_data(sdata['Latitude'],"SD")
@@ -429,8 +429,8 @@ class CisCol(AProduct):
         return [r'cis\-col\-.*\.nc']
 
     def create_coords(self, filenames, variable = None):
-        from data_io.netcdf import read, get_metadata
-        from data_io.Coord import Coord
+        from jasmin_cis.data_io.netcdf import read, get_metadata
+        from jasmin_cis.data_io.Coord import Coord
 
         if variable is not None:
             var = read(filenames[0], variable)
@@ -460,8 +460,8 @@ class NetCDF_CF(AProduct):
         return [r'.*\.nc']
 
     def create_coords(self, filenames, variable = None):
-        from data_io.netcdf import read_many_files, get_metadata
-        from data_io.Coord import Coord
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
+        from jasmin_cis.data_io.Coord import Coord
 
         variables = [ "latitude", "longitude", "altitude", "time" ]
 
@@ -538,8 +538,8 @@ class Xglnwa_vprof(NetCDF_CF_Gridded):
         return [r'.*xglnwa.*vprof.*\.nc']
 
     def create_coords(self, filenames, variable = None):
-        from data_io.netcdf import read_many_files, get_metadata
-        from data_io.Coord import Coord
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
+        from jasmin_cis.data_io.Coord import Coord
 
         variables = [ "latitude" ]
 
@@ -604,8 +604,8 @@ class Xenida(NetCDF_CF_Gridded):
         @param variable: Optional variable to read while we're reading the coordinates
         @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
-        from data_io.netcdf import read, get_metadata
-        from data_io.Coord import Coord
+        from jasmin_cis.data_io.netcdf import read, get_metadata
+        from jasmin_cis.data_io.Coord import Coord
 
         variables = [ "latitude", "longitude", "altitude", "time" ]
 
@@ -632,9 +632,9 @@ class Aeronet(AProduct):
         return [r'.*\.lev20']
 
     def create_coords(self, filenames, data_obj = None, variable = None):
-        from data_io.ungridded_data import Metadata
+        from jasmin_cis.data_io.ungridded_data import Metadata
         from numpy import array
-        from data_io.aeronet import load_aeronet, get_file_metadata
+        from jasmin_cis.data_io.aeronet import load_aeronet, get_file_metadata
 
         for filename in filenames:
             #TODO Can this cope with many files?
@@ -653,7 +653,7 @@ class Aeronet(AProduct):
         return coords
 
     def create_data_object(self, filenames, variable):
-        from data_io.aeronet import load_aeronet, get_file_metadata
+        from jasmin_cis.data_io.aeronet import load_aeronet, get_file_metadata
         from jasmin_cis.exceptions import InvalidVariableError
         data = []
         filename = filenames[0]

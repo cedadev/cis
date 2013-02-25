@@ -4,10 +4,9 @@ More tests can be found in the manual_integration_tests package
 '''
 from jasmin_cis.plot import Plotter
 from nose.tools import istest, raises
-from test_files.data import *
+from jasmin_cis.test.test_files.data import *
 import iris
 import os.path
-from jasmin_cis.exceptions import *
 
 def delete_file_if_exists():
     '''

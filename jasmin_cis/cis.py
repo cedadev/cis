@@ -48,7 +48,7 @@ def plot_cmd(main_arguments):
     @param main_arguments:    The command line arguments (minus the plot command)        
     '''
     from plot import Plotter
-    from data_io.read import read_data
+    from jasmin_cis.data_io.read import read_data
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
     import utils
@@ -88,9 +88,9 @@ def info_cmd(main_arguments):
         
     @param main_arguments:    The command line arguments (minus the info command)
     '''    
-    variables = main_arguments.pop('variables', None)
-    filename = main_arguments.pop('filename')
-    data_type = main_arguments.pop('type', None)
+    variables = main_arguments.variables
+    filename = main_arguments.filename
+    data_type = main_arguments.type
 
     from jasmin_cis.info import  info
     

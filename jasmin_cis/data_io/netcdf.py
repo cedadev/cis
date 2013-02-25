@@ -110,7 +110,7 @@ def get_data(var, calipso_scaling=False):
         @param var: The specific Variable instance to read
         @return:  A numpy maskedarray. Missing values are False in the mask.
     """
-    from utils import create_masked_array_for_missing_data
+    from jasmin_cis.utils import create_masked_array_for_missing_data
     data = var[:] # Note that this will automatically apply any specified scalings
 
     # Missing data.
