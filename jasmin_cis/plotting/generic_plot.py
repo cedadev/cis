@@ -191,10 +191,13 @@ class Generic_Plot(object):
     def format_2d_plot(self, plot_format_options):
         from jasmin_cis.plotting.plot import plot_options
         #BEGIN FORMAT PLOT
-        self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
-        logx = plot_format_options.pop("logx", False)
-        logy = plot_format_options.pop("logy", False)
-        if logx or logy: self.set_log_scale(logx, logy)
+
+        logx = plot_format_options.get("logx", False)
+        logy = plot_format_options.get("logy", False)
+        if logx or logy:
+            self.set_log_scale(logx, logy)
+        else:
+            self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
 
         draw_grid = plot_format_options.pop("grid", False)
         if draw_grid: self.matplotlib.grid(True, which="both")
@@ -218,7 +221,7 @@ class Generic_Plot(object):
 
         #END FORMAT PLOT
 
-    def format_3d_plot(self, options):
+    def format_3d_plot(self, plot_format_options):
         from jasmin_cis.plotting.plot import plot_options
         '''
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
@@ -231,12 +234,12 @@ class Generic_Plot(object):
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
 
-        if options is not None:
-            logx = options.pop("logx")
-            logy = options.pop("logy")
-            draw_grid = options.pop("grid")
+        if plot_format_options is not None:
+            logx = plot_format_options.pop("logx")
+            logy = plot_format_options.pop("logy")
+            draw_grid = plot_format_options.pop("grid")
 
-            options = self.set_font_size(options)
+            options = self.set_font_size(plot_format_options)
             # If any of the options have not been specified, then use the defaults
             options = self.set_axis_label("X", options)
             options = self.set_axis_label("Y", options)
@@ -248,9 +251,10 @@ class Generic_Plot(object):
 
             if not options["title"]: options["title"] = self.packed_data_item.long_name
 
-            for option, value in options.iteritems():
-                # Call the method associated with the option
-                plot_options[option](value)
+            for key in plot_options.keys():
+            # Call the method associated with the option
+                if key in plot_format_options.keys():
+                    plot_options[key](plot_format_options[key])
 
         if not self.plot_args["nocolourbar"]: self.add_color_bar(self.plot_args["logv"], self.kwargs["vmin"], self.kwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_item.units)
 

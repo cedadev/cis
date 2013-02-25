@@ -53,7 +53,7 @@ class Plotter(object):
         v_range = self.prepare_range("val")
         self.out_filename = out_filename
 
-        if plot_args.pop("logv", False):
+        if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
             self.kwargs["norm"] = LogNorm()
 
