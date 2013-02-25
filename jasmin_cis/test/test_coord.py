@@ -1,7 +1,7 @@
 from nose.tools import istest, raises
 import numpy
-from data_io.Coord import Coord, CoordList
-from data_io.ungridded_data import Metadata
+from jasmin_cis.data_io.Coord import Coord, CoordList
+from jasmin_cis.data_io.ungridded_data import Metadata
 from jasmin_cis.exceptions import DuplicateCoordinateError
 
 def create_dummy_coordinates_list():

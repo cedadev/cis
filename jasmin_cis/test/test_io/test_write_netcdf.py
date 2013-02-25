@@ -1,6 +1,6 @@
 from nose import with_setup
 import os
-from test.test_util.mock import make_dummy_2d_ungridded_data
+from jasmin_cis.test.test_util.mock import make_dummy_2d_ungridded_data
 
 tmp_file = "tmp_file"
 

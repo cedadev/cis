@@ -73,7 +73,6 @@ def __get_class(parent_class, name=None):
     import logging
 
     all_classes = plugin.find_plugin_classes(parent_class, 'jasmin_cis.col_implementations')
-    product_cls = None
     for cls in all_classes:
 
         if name is None:
