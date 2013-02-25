@@ -55,13 +55,8 @@ def plot_cmd(main_arguments):
     from collections import OrderedDict
 
     try:
-        # create a dictionary of [key=variable, value=list of filename]
-        dict_of_var_and_filename = OrderedDict() # Cannot use dict, as unordered and need order for scatter overlay
-        for datafile in main_arguments.datagroups:
-            utils.add_element_to_list_in_dict(dict_of_var_and_filename, datafile.variable, datafile.filename)
-
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
-        data = [ read_data(files,var) for var, files in dict_of_var_and_filename.iteritems() ]
+        data = [ read_data(datagroup['filenames'],datagroup['variable']) for datagroup in main_arguments.datagroups ]
 
     except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError) as e:
         __error_occurred(e)
