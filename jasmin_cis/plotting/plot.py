@@ -102,11 +102,10 @@ class Plotter(object):
 
     def zoom_in_on_heatmap(self, axis):
         from iris.exceptions import CoordinateNotFoundError
-        from numpy.ma import MaskedArray
         valrange = {}
         try:
-            valrange[axis + "min"] = MaskedArray.min(self.packed_data_items[0].coord(axis=axis).data)
-            valrange[axis + "max"] = MaskedArray.max(self.packed_data_items[0].coord(axis=axis).data)
+            valrange[axis + "min"] = self.packed_data_items[0].coord(axis=axis).data.min()
+            valrange[axis + "max"] = self.packed_data_items[0].coord(axis=axis).data.max()
             try:
                 self.valrange[axis] = valrange
             except AttributeError:
