@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
+from generic_plot import Generic_Plot
 
-class Scatter_Plot(object):
+class Scatter_Plot(Generic_Plot):
     #'scatter' : PlotType(None, 2, plot_scatter),
-    def plot(self, data_item, datafile, *args, **kwargs):
+    def plot(self, datafile, *args, **kwargs):
         '''
         Plots a scatter plot
         Stores the plot in a list to be used for when adding the legend
@@ -14,63 +14,60 @@ class Scatter_Plot(object):
         if datafile["color"]:
             kwargs["color"] = datafile["color"]
 
-
-
-
-
-
         colour_scheme = kwargs.get("color", None)
         mark = kwargs.pop("marker", "o")
         if colour_scheme is None:
-            if data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
-                colour_scheme = data_item["data"]
+            if self.unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
+                colour_scheme = self.unpacked_data_item["data"]
             else:
                 colour_scheme = "b" # Default color scheme used by matplotlib
 
         scatter_size = kwargs.get("linewidth", 1)
 
-        #plot_method = self.__get_plot_method()
-        from mpl_toolkits.basemap import Basemap
-        basemap = Basemap()
-        plot_method = basemap
-        kwargs["latlon"] = True
-
-        kwargs.pop("latlon", None)
-
-        if data_item.get("y", None) is not None:
-            return plot_method.scatter(data_item["x"], data_item["y"], c = colour_scheme, marker = mark, s = scatter_size, edgecolors = "none", *args, **kwargs)
+        if self.unpacked_data_item.get("y", None) is not None:
+            #3D
+            self.scatter_type = "3D"
+            y_coords = self.unpacked_data_item["y"]
         else:
-            #self.plot_type = "scatter2D"
-            return plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, marker = mark, s = scatter_size, edgecolors = "none", *args, **kwargs)
+            #2D
+            self.scatter_type = "2D"
+            y_coords = self.unpacked_data_item["data"]
 
-    def set_axis_label(self, axis, options, data):
+        self.plot_method.scatter(self.unpacked_data_item["x"], y_coords, c = colour_scheme, marker = mark, s = scatter_size, edgecolors = "none", *args, **kwargs)
+
+    def format_plot(self, options):
+        if self.scatter_type == "3D":
+            self.format_3d_plot(options)
+        elif self.scatter_type == "2D":
+            self.format_2d_plot(options)
+
+    def set_axis_label(self, axis, options):
+        from generic_plot import is_map
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
         axislabel = axis + "label"
 
         if options[axislabel] is None:
-            #if self.__is_map():
+            if is_map(self.packed_data_item):
                 options[axislabel] = "Longitude" if axis == "x" else "Latitude"
-                '''
+            else:
+                try:
+                    name = self.packed_data_item.coord(axis=axis).name()
+                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                    name = self.packed_data_item.name()
+
+                try:
+                    units = self.packed_data_item.coord(axis=axis).units
+                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                    units = self.packed_data_item.units
+
+                if self.number_of_data_items == 1:
+                    # only 1 data to plot, display
+                    options[axislabel] = name + self.__format_units(units)
                 else:
-                    try:
-                        name = data[0].coord(axis=axis).name()
-                    except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                        name = data[0].name()
-
-                    try:
-                        units = data[0].coord(axis=axis).units
-                    except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                        units = data[0].units
-
-                    if len(data) == 1:
-                        # only 1 data to plot, display
-                        options[axislabel] = name + self.__format_units(units)
-                    else:
-                        # if more than 1 data, legend will tell us what the name is. so just displaying units
-                        options[axislabel] = units
-                        '''
+                    # if more than 1 data, legend will tell us what the name is. so just displaying units
+                    options[axislabel] = units
 
         return options
 
@@ -87,27 +84,3 @@ class Scatter_Plot(object):
         handles = self.plots
         legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
         legend.draggable(state = True)
-
-    def add_color_bar(self, logv, vmin, vmax, v_range, colour_bar_orientation, units):
-        from plot import format_units
-        # nformat = "%e"
-        # nformat = "%.3f"
-        # nformat = "%.3e"
-        nformat = "%.3g"
-
-        if not logv:
-            try:
-                step = v_range.get("vstep", (vmax-vmin) / 5)
-            except AttributeError:
-                step = (vmax-vmin) / 5
-            ticks = []
-            tick = vmin
-            while tick <= vmax:
-                ticks.append(tick)
-                tick = tick + step
-        else:
-            ticks = None
-
-        cbar = plt.colorbar(orientation = colour_bar_orientation, ticks = ticks, format = nformat)
-
-        cbar.set_label(format_units(units))

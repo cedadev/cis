@@ -1,65 +1,21 @@
-import matplotlib.pyplot as plt
+from generic_plot import Generic_Plot
 
-class PlotType(object):
-    def __init__(self, maximum_no_of_expected_variables, variable_dimensions, plot_method):
-        self.maximum_no_of_expected_variables = maximum_no_of_expected_variables
-        self.variable_dimensions = variable_dimensions
-        self.plot_method = plot_method
-
-class Line_Plot(object):
+class Line_Plot(Generic_Plot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
     #'line' : PlotType(None, 1, plot_line),
-    def add_color_bar(self):
-        pass
 
-    def set_axis_label(self, axis, options, data):
-        from plot import format_units
-        import jasmin_cis.exceptions as cisex
-        import iris.exceptions as irisex
-        axis = axis.lower()
-        axislabel = axis + "label"
-
-        if options[axislabel] is None:
-            try:
-                name = data[0].coord(axis=axis).name()
-            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                name = data[0].name()
-
-            try:
-                units = data[0].coord(axis=axis).units
-            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                units = data[0].units
-
-            if len(data) == 1:
-                # only 1 data to plot, display
-                options[axislabel] = name + format_units(units)
-            else:
-                # if more than 1 data, legend will tell us what the name is. so just displaying units
-                options[axislabel] = units
-
-        return options
-
-    def create_legend(self, datafiles):
-        legend_titles = []
-        for i, item in enumerate(self.data):
-            if datafiles is not None and datafiles[i]["label"]:
-                legend_titles.append(datafiles[i]["label"])
-            else:
-                legend_titles.append(item.long_name)
-        legend = plt.legend(legend_titles, loc="best")
-        legend.draggable(state = True)
-
-    def plot(self, data_item, datafile, *args, **kwargs):
+    def plot(self, datafile):
         '''
         Plots a line graph
         Stores the plot in a list to be used for when adding the legend
 
         @param data_item:    A dictionary containing the x coords and data as arrays
         '''
+        self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", 1)
 
-        new_kwargs = kwargs
-        new_kwargs.pop("vmin", None)
-        new_kwargs.pop("vmax", None)
+        self.kwargs.pop("vmax", None)
+        self.kwargs.pop("vmin", None)
+
         if datafile["itemstyle"]:
             if datafile["itemstyle"] not in Line_Plot.line_styles:
                 from exceptions import InvalidLineStyleError
@@ -69,8 +25,37 @@ class Line_Plot(object):
         if datafile["color"]:
             self.kwargs["color"] = datafile["color"]
 
-        return plt.plot(data_item["x"], data_item["data"], *args, **kwargs )
+        self.matplotlib.plot(self.unpacked_data_item["x"], self.unpacked_data_item["data"], *self.args, **self.kwargs ) #TODO append to list
 
-    def add_color_bar(self, logv, vmin, vmax, v_range, colour_bar_orientation, units):
-        pass
+
+    def format_plot(self, options):
+        self.format_2d_plot(options)
+
+
+    def set_default_axis_label(self, axis, options):
+        from plot import format_units
+        import jasmin_cis.exceptions as cisex
+        import iris.exceptions as irisex
+        axis = axis.lower()
+        axislabel = axis + "label"
+
+        if options[axislabel] is None:
+            try:
+                name = self.packed_data_item.coord(axis=axis).name()
+            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                name = self.packed_data_item.name()
+
+            try:
+                units = self.packed_data_item.coord(axis=axis).units
+            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                units = self.packed_data_item.units
+
+            if self.number_of_data_items == 1:
+                # only 1 data to plot, display
+                options[axislabel] = name + format_units(units)
+            else:
+                # if more than 1 data, legend will tell us what the name is. so just displaying units
+                options[axislabel] = units
+
+        return options
 
