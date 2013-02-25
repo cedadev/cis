@@ -18,13 +18,13 @@ def test_read_hdf4():
     eq_(True,sds.has_key('Mean_Reflectance_Land'))
     eq_(False,vds.has_key('Mean_Reflectance_Land'))
 
-@istest
+@nottest
 @raises(InvalidVariableError)
 def test_that_cannot_read_unknown_variables():
     filename = valid_hdf_sd_file
     sds, vds = __read_hdf4(filename,['athing','unechose','einding'])
 
-@istest
+@nottest
 @raises(InvalidVariableError)
 def test_that_cannot_read_unknown_variables_and_valid_variables():
     filename = valid_hdf_sd_file
