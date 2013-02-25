@@ -664,3 +664,38 @@ class Aeronet(AProduct):
             raise InvalidVariableError(variable + " does not exist in file " + filename)
         metadata = get_file_metadata(filename, variable, (len(var_data),))
         return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj, variable))
+
+class ASCII_Hyperpoints(AProduct):
+
+    def get_file_signature(self):
+        return [r'.*\.txt']
+
+    def create_coords(self, filenames, variable = None):
+        from data_io.ungridded_data import Metadata
+        from numpy import array, loadtxt
+        from jasmin_cis.exceptions import InvalidVariableError
+
+        array_list = []
+        for filename in filenames:
+            array_list.append(loadtxt(filename, delimiter=','))
+
+        array = utils.concatenate(array_list)
+        n_elements = len(array[0,:])
+
+        coords = CoordList()
+        coords.append(Coord(array[1,:], Metadata(name="Longitude", shape=(n_elements,), units="degrees_east")))
+        coords.append(Coord(array[0,:], Metadata(name="Latitude", shape=(n_elements,), units="degrees_north")))
+        coords.append(Coord(array[3,:], Metadata(name="Time", shape=(n_elements,), units="seconds")))
+        coords.append(Coord(array[2,:], Metadata(name="Altitude", shape=(n_elements,), units="meters")))
+
+        if variable is not None:
+            try:
+                data = UngriddedData(array[variable,:], Metadata(name="Altitude", shape=(n_elements,), units="meters"), coords)
+            except:
+                InvalidVariableError(variable + " does not exist in file " + filename)
+            return data
+        else:
+            return coords
+
+    def create_data_object(self, filenames, variable):
+        return self.create_coords(filenames, variable)
