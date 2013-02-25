@@ -13,11 +13,15 @@ def get_hdf4_file_variables(filename, data_type):
 
     SD_vars = VD_vars = None
 
-    if data_type.lower() == 'SD'.lower() or data_type.lower() == "all".lower():
+    if data_type is None:
         SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
-
-    if data_type.lower() == 'VD'.lower() or data_type.lower() == "all".lower():
         VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
+    else:
+        if data_type.lower() == 'SD'.lower() or data_type.lower() == "all".lower():
+            SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
+
+        if data_type.lower() == 'VD'.lower() or data_type.lower() == "all".lower():
+            VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
 
     return SD_vars, VD_vars
 
