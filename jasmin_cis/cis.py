@@ -88,9 +88,9 @@ def info_cmd(main_arguments):
         
     @param main_arguments:    The command line arguments (minus the info command)
     '''    
-    variables = main_arguments.pop('variables', None)
-    filename = main_arguments.pop('filename')
-    data_type = main_arguments.pop('type', None)
+    variables = main_arguments.variables
+    filename = main_arguments.filename
+    data_type = main_arguments.type
 
     from jasmin_cis.info import  info
     
