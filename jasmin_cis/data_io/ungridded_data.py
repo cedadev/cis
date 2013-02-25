@@ -122,7 +122,7 @@ class LazyData(object):
     def standard_name(self):
         return self.metadata.standard_name
 
-    @long_name.setter
+    @standard_name.setter
     def standard_name(self, standard_name):
         self.metadata.standard_name = standard_name
 
