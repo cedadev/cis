@@ -71,10 +71,16 @@ def plot_cmd(main_arguments):
 
     plot_args = {"datagroups" : main_arguments.pop("datagroups", None),
                  "nocolourbar" : main_arguments.pop("nocolourbar", False),
+                 "logx" : main_arguments.pop("logx", False),
+                 "logy" : main_arguments.pop("logy", False),
                  "logv" : main_arguments.pop("logv", False),
                  "x_range" : main_arguments.pop("x_range", None),
                  "y_range" : main_arguments.pop("y_range", None),
-                 "cbarorient" : main_arguments.pop("cbarorient", "horizontal")}
+                 "cbarorient" : main_arguments.pop("cbarorient", "horizontal"),
+                 "grid" : main_arguments.pop("grid", False),
+                 "xlabel" : main_arguments.pop("xlabel", None),
+                 "ylabel" : main_arguments.pop("ylabel", None),
+                 "title" : main_arguments.pop("title", None)}
 
     try:
         Plotter(data, plot_args, plot_type, output, **main_arguments)
