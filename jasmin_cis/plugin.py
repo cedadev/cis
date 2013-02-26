@@ -10,15 +10,12 @@ def get_all_subclasses(parent_class, mod):
     @param mod: The module to find subclasses in
     @return: A list of subclasses
     '''
-    import inspect
     import importlib
-    module = importlib.import_module(mod)
+    importlib.import_module(mod)
     subclasses = []
-    for name, cls in inspect.getmembers(module):
-        if inspect.isclass(cls):
-            if cls in parent_class.__subclasses__():
-                subclasses += get_all_subclasses(cls, mod)
-                subclasses += [ cls ]
+    for subclass in parent_class.__subclasses__():
+        subclasses += get_all_subclasses(subclass, mod)
+    subclasses += parent_class.__subclasses__()
     return subclasses
 
 
