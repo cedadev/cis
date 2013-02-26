@@ -29,19 +29,20 @@ class Generic_Plot(object):
         else:
             self.plot_args.pop("fontsize", None)
 
-    def __init__(self, packed_data_item, v_range, number_of_data_items, plot_args, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
+        from utils import unpack_data_object
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.plot_args = plot_args
-        self.number_of_data_items = number_of_data_items
-        self.packed_data_item = packed_data_item
+        self.packed_data_items = packed_data_items
+        self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
         self.v_range = v_range
         self.calculate_min_and_max_values()
-        self.basemap = Basemap(lon_0=self.unpacked_data_item["x"].max()-180.0)
+        self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
         self.matplotlib = plt
 
 
-        if is_map(packed_data_item):
+        if is_map(packed_data_items[0]):
             self.plot_method = self.basemap
             self.mplkwargs["latlon"] = True
         else:
@@ -53,24 +54,15 @@ class Generic_Plot(object):
 
     def calculate_min_and_max_values(self):
         from sys import maxint
-        from utils import unpack_data_object
+
         vmin = self.v_range.get("vmin", maxint)
         vmax = self.v_range.get("vmax", -maxint - 1)
 
         if vmin == maxint:
-            calculate_min_data = True
-        else:
-            calculate_min_data = False
-        if vmax == -maxint - 1:
-            calculate_max_data = True
-        else:
-            calculate_max_data = False
+            vmin = min(min(unpacked_data_item["data"]) for unpacked_data_item in self.unpacked_data_items)
 
-        self.unpacked_data_item = unpack_data_object(self.packed_data_item)
-        if self.unpacked_data_item["data"].min() < vmin and calculate_min_data:
-            vmin = self.unpacked_data_item["data"].min()
-        if self.unpacked_data_item["data"].max() > vmax and calculate_max_data:
-            vmax = self.unpacked_data_item["data"].max()
+        if vmax == -maxint - 1:
+            vmax = max(max(unpacked_data_item["data"]) for unpacked_data_item in self.unpacked_data_items)
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
@@ -120,6 +112,17 @@ class Generic_Plot(object):
 
             plt.xticks(meridians, meridian_labels)
             plt.yticks(parallels, parallel_labels)
+
+    def create_legend(self):
+        legend_titles = []
+        datagroups = self.plot_args["datagroups"]
+        for i, item in enumerate(self.packed_data_items):
+            if datagroups is not None and datagroups[i]["label"]:
+                legend_titles.append(datagroups[i]["label"])
+            else:
+                legend_titles.append(item.long_name)
+        legend = self.matplotlib.legend(legend_titles, loc="best")
+        legend.draggable(state = True)
 
     def __create_map_grid_lines(self):
         def __create_set_of_grid_lines(axis, range_dict):
@@ -207,6 +210,8 @@ class Generic_Plot(object):
             # Call the method associated with the option
             if key in self.plot_args.keys():
                 plot_options[key](self.plot_args[key])
+
+        if len(self.packed_data_items) > 1: self.create_legend()
 
                         #END FORMAT PLOT
 

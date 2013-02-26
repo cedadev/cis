@@ -61,24 +61,25 @@ class Plotter(object):
 
         self.set_width_and_height()
 
-        self.plots = [] # A list where all the plots will be stored
-        for i, item in enumerate(self.packed_data_items):
-            self.plots.append(self.plot_types[plot_type](item, v_range, len(self.packed_data_items), plot_args, *mplargs, **mplkwargs))
+        canvas = self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
+        canvas.plot()
+        canvas.format_plot()
 
-
+        '''
         # Calculate mins and maxs
         vmin, vmax = self.calculate_min_and_max_values_for_all_plots()
         self.plots_for_legend = []
         for i, plot in enumerate(self.plots):
             # Plot the data item using the specified plot type
-            self.plots_for_legend.append(plot.plot(plot_args["datagroups"][i], vmin, vmax))
-            plot.format_plot(i)
+            self.plots_for_legend.append()
+
+            plot.format_plot(i)'''
 
         self.apply_axis_limits(plot_args["xrange"], "x")
         self.apply_axis_limits(plot_args["yrange"], "y")
 
         #self.format_plot(self.plot_format_options)
-        if len(self.plots) > 1: self.create_legend(plot_args["datagroups"])
+#        if len(self.plots) > 1: self.create_legend(plot_args["datagroups"])
 
         self.output_to_file_or_screen()
 
@@ -87,15 +88,7 @@ class Plotter(object):
         vmax = max([plot.mplkwargs["vmax"] for plot in self.plots])
         return vmin, vmax
 
-    def create_legend(self, datagroups):
-        legend_titles = []
-        for i, item in enumerate(self.packed_data_items):
-            if datagroups is not None and datagroups[i]["label"]:
-                legend_titles.append(datagroups[i]["label"])
-            else:
-                legend_titles.append(item.long_name)
-        legend = mpl.legend(legend_titles, loc="best")
-        legend.draggable(state = True)
+
 
     def output_to_file_or_screen(self):
         '''
