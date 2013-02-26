@@ -33,7 +33,7 @@ class Plotter(object):
                   "contourf" : Contourf_Plot,
                   "heatmap" : Heatmap,
                   "line": Line_Plot,
-                  "scatter_overlay" : Scatter_Overlay,
+                  "scatteroverlay" : Scatter_Overlay,
                   "scatter" : Scatter_Plot}
 
     def __init__(self, packed_data_items, plot_args, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
@@ -64,16 +64,6 @@ class Plotter(object):
         canvas = self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
         canvas.plot()
         canvas.format_plot()
-
-        '''
-        # Calculate mins and maxs
-        vmin, vmax = self.calculate_min_and_max_values_for_all_plots()
-        self.plots_for_legend = []
-        for i, plot in enumerate(self.plots):
-            # Plot the data item using the specified plot type
-            self.plots_for_legend.append()
-
-            plot.format_plot(i)'''
 
         self.apply_axis_limits(plot_args["xrange"], "x")
         self.apply_axis_limits(plot_args["yrange"], "y")

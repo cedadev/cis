@@ -48,7 +48,10 @@ class Generic_Plot(object):
         else:
             self.plot_method = self.matplotlib
 
-    def plot(self, datafile, vmin, vmax):
+    def plot(self):
+        raise NotImplementedError()
+
+    def format_plot(self):
         raise NotImplementedError()
 
 
@@ -59,10 +62,10 @@ class Generic_Plot(object):
         vmax = self.v_range.get("vmax", -maxint - 1)
 
         if vmin == maxint:
-            vmin = min(min(unpacked_data_item["data"]) for unpacked_data_item in self.unpacked_data_items)
+            vmin = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
 
         if vmax == -maxint - 1:
-            vmax = max(max(unpacked_data_item["data"]) for unpacked_data_item in self.unpacked_data_items)
+            vmax = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
@@ -99,7 +102,7 @@ class Generic_Plot(object):
         raise NotImplementedError()
 
     def draw_coastlines(self, draw_grid = False):
-        if is_map(self.packed_data_item):
+        if is_map(self.packed_data_items[0]):
             self.basemap.drawcoastlines()
 
             parallels, meridians = self.__create_map_grid_lines()
@@ -215,7 +218,7 @@ class Generic_Plot(object):
 
                         #END FORMAT PLOT
 
-    def format_3d_plot(self, plot_number):
+    def format_3d_plot(self):
         from jasmin_cis.plotting.plot import plot_options
         '''
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
@@ -241,16 +244,18 @@ class Generic_Plot(object):
 
             if not self.plot_args["title"]: self.plot_args["title"] = ""
 
-            if not self.plot_args["title"]: self.plot_args["title"] = self.packed_data_item.long_name
+            if not self.plot_args["title"]: self.plot_args["title"] = self.packed_data_items[0].long_name
 
             for key in plot_options.keys():
             # Call the method associated with the option
                 if key in self.plot_args.keys():
                     plot_options[key](self.plot_args[key])
 
-        if not self.plot_args["nocolourbar"] and plot_number == 0: self.add_color_bar(self.plot_args["logv"], self.mplkwargs["vmin"], self.mplkwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_item.units)
+        if not self.plot_args["nocolourbar"]: self.add_color_bar(self.plot_args["logv"], self.mplkwargs["vmin"], self.mplkwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_items[0].units)
 
         self.draw_coastlines(draw_grid)
+
+        if len(self.packed_data_items) > 1: self.create_legend()
 
     def set_3daxis_label(self, axis):
         import jasmin_cis.exceptions as cisex
@@ -259,18 +264,18 @@ class Generic_Plot(object):
         axislabel = axis + "label"
 
         if self.plot_args[axislabel] is None:
-            if is_map(self.packed_data_item):
+            if is_map(self.packed_data_items[0]):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    name = self.packed_data_item.coord(axis=axis).name()
+                    name = self.packed_data_items[0].coord(axis=axis).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                    name = self.packed_data_item.name()
+                    name = self.packed_data_items[0].name()
 
                 try:
-                    units = self.packed_data_item.coord(axis=axis).units
+                    units = self.packed_data_items[0].coord(axis=axis).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                    units = self.packed_data_item.units
+                    units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
                 self.plot_args[axislabel] = name + self.__format_units(units)

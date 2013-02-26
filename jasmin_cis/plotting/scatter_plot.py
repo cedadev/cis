@@ -2,41 +2,44 @@ from generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
     #'scatter' : PlotType(None, 2, plot_scatter),
-    def plot(self, datafile, vmin, vmax):
+    def plot(self):
         '''
         Plots a scatter plot
         Stores the plot in a list to be used for when adding the legend
 
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        self.mplkwargs["vmin"] = vmin
-        self.mplkwargs["vmax"] = vmax
-        if datafile["itemstyle"]: self.mplkwargs["marker"] = datafile["itemstyle"]
-
-        colour_scheme = self.mplkwargs.get("color", None)
-        if colour_scheme is None:
-            if self.unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
-                colour_scheme = self.unpacked_data_item["data"]
+        self.plots = []
+        scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
+        for i, unpacked_data_item in enumerate(self.unpacked_data_items):
+            datafile = self.plot_args["datagroups"][i]
+            if datafile["itemstyle"]:
+                self.mplkwargs["marker"] = datafile["itemstyle"]
             else:
-                colour_scheme = "b" # Default color scheme used by matplotlib
+                self.mplkwargs["marker"] = 'o'
 
-        scatter_size = self.plot_args.get("itemwidth", 1)
+            colour_scheme = self.mplkwargs.get("color", None)
+            if colour_scheme is None:
+                if unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
+                    colour_scheme = unpacked_data_item["data"]
+                else:
+                    colour_scheme = "b" # Default color scheme used by matplotlib
 
-        if self.unpacked_data_item.get("y", None) is not None:
-            #3D
-            self.scatter_type = "3D"
-            y_coords = self.unpacked_data_item["y"]
-        else:
-            #2D
-            self.scatter_type = "2D"
-            y_coords = self.unpacked_data_item["data"]
+            if unpacked_data_item.get("y", None) is not None:
+                #3D
+                self.scatter_type = "3D"
+                y_coords = unpacked_data_item["y"]
+            else:
+                #2D
+                self.scatter_type = "2D"
+                y_coords = unpacked_data_item["data"]
 
-        self.mplkwargs.pop("latlon", None)
-        self.plot_method.scatter(self.unpacked_data_item["x"], y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
+            self.mplkwargs.pop("latlon", None)
+            self.plots.append(self.plot_method.scatter(unpacked_data_item["x"], y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
-    def format_plot(self, i):
+    def format_plot(self):
         if self.scatter_type == "3D":
-            self.format_3d_plot(i)
+            self.format_3d_plot()
         elif self.scatter_type == "2D":
             self.format_2d_plot()
 
@@ -49,29 +52,29 @@ class Scatter_Plot(Generic_Plot):
         axislabel = axis + "label"
 
         if self.plot_args[axislabel] is None:
-            if is_map(self.packed_data_item):
+            if is_map(self.packed_data_items[0]):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    name = self.packed_data_item.coord(axis=axis).name()
+                    units = self.packed_data_items[0].coord(axis=axis).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                    name = self.packed_data_item.name()
+                    units = self.packed_data_items[0].units
 
-                try:
-                    units = self.packed_data_item.coord(axis=axis).units
-                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                    units = self.packed_data_item.units
-
-                if self.number_of_data_items == 1:
+                if len(self.packed_data_items) == 1:
                     # only 1 data to plot, display
+                    try:
+                        name = self.packed_data_items[0].coord(axis=axis).name()
+                    except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+                        name = self.packed_data_items[0].name()
                     self.plot_args[axislabel] = name + format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     self.plot_args[axislabel] = units
 
-    def create_legend(self, datagroups):
+    def create_legend(self):
         legend_titles = []
-        for i, item in enumerate(self.data):
+        datagroups = self.plot_args["datagroups"]
+        for i, item in enumerate(self.packed_data_items):
             if datagroups is not None and datagroups[i]["label"]:
                 legend_titles.append(datagroups[i]["label"])
             else:
@@ -80,5 +83,5 @@ class Scatter_Plot(Generic_Plot):
                 else:
                     legend_titles.append(item.long_name)
         handles = self.plots
-        legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
+        legend = self.matplotlib.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
         legend.draggable(state = True)

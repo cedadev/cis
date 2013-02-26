@@ -1,23 +1,21 @@
-import matplotlib.pyplot as plt
+from generic_plot import Generic_Plot
+from heatmap import Heatmap
+from scatter_plot import Scatter_Plot
 #TODO FIX
-class Scatter_Overlay(object):
+class Scatter_Overlay(Generic_Plot):
     #'scatteroverlay' : PlotType(None, 2, plot_scatteroverlay)
-    def plot(self, data_item):
+    def plot(self):
         '''
         Plots a heatmap overlayed with one or more scatter plots
         Stores the plot in a list to be used for when adding the legend
 
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        if self.num_of_preexisting_plots == 0:
-            self.mplkwargs.pop("marker", None)
-            self.mplkwargs["label"] = "_nolegend_"
-            self.plot_heatmap(data_item)
-            self.mplkwargs.pop("label")
-            # Heatmap overlay self.__add_color_bar()
-        else:
-            self.plot_scatter(data_item)
-        self.num_of_preexisting_plots += 1
+        Heatmap(self.packed_data_items, self.v_range, self.plot_args, *self.mplargs, **self.mplkwargs).plot()
+        scatter_plot_args = self.plot_args
+        scatter_plot_args["datagroups"] = self.plot_args["datagroups"][1:]
+        self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], self.v_range, self.plot_args, *self.mplargs, **self.mplkwargs)
+        self.scatter_plots.plot()
 
     def set_axis_label(self, axis, options):
         import jasmin_cis.exceptions as cisex
@@ -44,9 +42,12 @@ class Scatter_Overlay(object):
 
         return options
 
-    def create_legend(self, datagroups):
+    def create_legend(self):
+        self.scatter_plots.create_legend()
+        '''
         legend_titles = []
-        for i, item in enumerate(self.data):
+        datagroups = self.plot_args["datagroups"]
+        for i, item in enumerate(self.packed_data_items):
             if datagroups is not None and datagroups[i]["label"]:
                 legend_titles.append(datagroups[i]["label"])
             else:
@@ -57,27 +58,10 @@ class Scatter_Overlay(object):
         handles = self.plots[1:]
         legend_titles = legend_titles[1:]
         legend = plt.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
-        legend.draggable(state = True)
+        legend.draggable(state = True)'''
 
-    def add_color_bar(self):
-        # nformat = "%e"
-        # nformat = "%.3f"
-        # nformat = "%.3e"
-        nformat = "%.3g"
+    def format_plot(self):
+        self.format_3d_plot()
 
-        if not self.logv:
-            try:
-                step = self.v_range.get("vstep", (self.mplkwargs["vmax"]-self.mplkwargs["vmin"]) / 5)
-            except AttributeError:
-                step = (self.mplkwargs["vmax"]-self.mplkwargs["vmin"]) / 5
-            ticks = []
-            tick = self.mplkwargs["vmin"]
-            while tick <= self.mplkwargs["vmax"]:
-                ticks.append(tick)
-                tick = tick + step
-        else:
-            ticks = None
-
-        cbar = plt.colorbar(orientation = self.colour_bar_orientation, ticks = ticks, format = nformat)
-
-        cbar.set_label(self.__format_units(self.data[0].units))
+    def set_default_axis_label(self, axis):
+        self.set_3daxis_label(axis)
