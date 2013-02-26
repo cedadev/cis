@@ -53,4 +53,5 @@ class Colocate(object):
         logging.info("Completed. Total time taken: " + str(time()-t1))
 
         logging.info("Appending data to "+self.output_file)
-        add_data_to_file(new_data, self.output_file)
+        for data in new_data:
+            add_data_to_file(data, self.output_file)
