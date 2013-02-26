@@ -10,10 +10,10 @@ class Scatter_Overlay(object):
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         if self.num_of_preexisting_plots == 0:
-            self.kwargs.pop("marker", None)
-            self.kwargs["label"] = "_nolegend_"
+            self.mplkwargs.pop("marker", None)
+            self.mplkwargs["label"] = "_nolegend_"
             self.plot_heatmap(data_item)
-            self.kwargs.pop("label")
+            self.mplkwargs.pop("label")
             # Heatmap overlay self.__add_color_bar()
         else:
             self.plot_scatter(data_item)
@@ -67,12 +67,12 @@ class Scatter_Overlay(object):
 
         if not self.logv:
             try:
-                step = self.v_range.get("vstep", (self.kwargs["vmax"]-self.kwargs["vmin"]) / 5)
+                step = self.v_range.get("vstep", (self.mplkwargs["vmax"]-self.mplkwargs["vmin"]) / 5)
             except AttributeError:
-                step = (self.kwargs["vmax"]-self.kwargs["vmin"]) / 5
+                step = (self.mplkwargs["vmax"]-self.mplkwargs["vmin"]) / 5
             ticks = []
-            tick = self.kwargs["vmin"]
-            while tick <= self.kwargs["vmax"]:
+            tick = self.mplkwargs["vmin"]
+            while tick <= self.mplkwargs["vmax"]:
                 ticks.append(tick)
                 tick = tick + step
         else:

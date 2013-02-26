@@ -44,7 +44,7 @@ def __format_plot(self, options, datagroups):
 
     if len(self.plots) > 1 : self.__create_legend(datagroups)
 
-    if not self.no_colour_bar: self.plot_type.add_color_bar(self.logv, self.kwargs["vmin"], self.kwargs["vmax"], self.v_range, self.colour_bar_orientation, self.data[0].units)
+    if not self.no_colour_bar: self.plot_type.add_color_bar(self.logv, self.mplkwargs["vmin"], self.mplkwargs["vmax"], self.v_range, self.colour_bar_orientation, self.data[0].units)
 
     self.__draw_coastlines(draw_grid)
 
@@ -65,11 +65,11 @@ def __warn_if_incorrect_colour_type_used(self):
     A 'color' should only be specified for a line graph, and 'cmap' should be specified for every other plot type
     '''
     if self.plot_type != "line": # Remove color if specified for plot where type is not line
-        arg = self.kwargs.pop("color", None)
+        arg = self.mplkwargs.pop("color", None)
         if arg is not None:
             logging.warn("Cannot specify a line colour for plot type '" + self.plot_type + "', did you mean to use cmap?")
     else:
-        arg = self.kwargs.pop("cmap", None)
+        arg = self.mplkwargs.pop("cmap", None)
         if arg is not None:
             logging.warn("Cannot specify a colour map for plot type '" + self.plot_type + "', did you mean to use color?")
 
@@ -106,6 +106,6 @@ def __validate_data(self, variable_dim):
     alphas = np.arange(256)/256.0
     thecm._lut[:-3,-1] = alphas
 
-    # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["y"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
-    # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.args, **self.kwargs))
+    # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["y"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
+    # Heatmap overlay self.plots.append(plot_method.scatter(data_item["x"], data_item["data"], c = colour_scheme, cmap=thecm, vmin = minval, vmax = maxval, marker = mark, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
     '''

@@ -36,17 +36,17 @@ class Plotter(object):
                   "scatter_overlay" : Scatter_Overlay,
                   "scatter" : Scatter_Plot}
 
-    def __init__(self, packed_data_items, plot_args, plot_type = None, out_filename = None, *args, **kwargs):
+    def __init__(self, packed_data_items, plot_args, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
         '''
         Constructor for the Plotter
         
         @param data             A list of data objects (either Cubes or UngriddedData)
         @param plot_type        The plot type, as a string
         @param out_filename     The filename to save the plot to
-        @param *args            args to be passed into matplotlib
-        @param **kwargs         kwargs to be passed into matplotlib
+        @param *mplargs            mplargs to be passed into matplotlib
+        @param **mplkwargs         kwargs to be passed into matplotlib
         '''
-        self.kwargs = kwargs
+        self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
 
         self.packed_data_items = packed_data_items
@@ -55,7 +55,7 @@ class Plotter(object):
 
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
-            self.kwargs["norm"] = LogNorm()
+            self.mplkwargs["norm"] = LogNorm()
 
         if plot_type is None: plot_type = self.__set_default_plot_type(packed_data_items)
 
@@ -64,7 +64,7 @@ class Plotter(object):
         plots = [] # A list where all the plots will be stored
         for i, item in enumerate(self.packed_data_items):
             # Plot the data item using the specified plot type
-            plot = self.plot_types[plot_type](item, v_range, len(self.packed_data_items), plot_args, *args, **kwargs)
+            plot = self.plot_types[plot_type](item, v_range, len(self.packed_data_items), plot_args, *mplargs, **mplkwargs)
             plots.append(plot.plot(plot_args["datagroups"][i]))
             plot.format_plot(plot_args)
 
@@ -140,8 +140,8 @@ class Plotter(object):
         Sets the width and height of the plot
         Uses an aspect ratio of 4:3 if only one of width and height are specified
         '''
-        height = self.kwargs.pop("height", None)
-        width = self.kwargs.pop("width", None)
+        height = self.mplkwargs.pop("height", None)
+        width = self.mplkwargs.pop("width", None)
 
         if height is not None:
             if width is None:
@@ -150,15 +150,15 @@ class Plotter(object):
             height = width * (3.0 / 4.0)
 
         if height is not None and width is not None:
-            plt.figure(figsize = (width, height))
+            mpl.figure(figsize = (width, height))
 
     def remove_unassigned_arguments(self):
         '''
-        Removes arguments from the kwargs if they are equal to None
+        Removes arguments from the mplkwargs if they are equal to None
         '''
-        for key in self.kwargs.keys():
-            if self.kwargs[key] is None:
-                self.kwargs.pop(key)
+        for key in self.mplkwargs.keys():
+            if self.mplkwargs[key] is None:
+                self.mplkwargs.pop(key)
 
     def prepare_range(self, axis):
         '''
@@ -167,16 +167,16 @@ class Plotter(object):
 
         @param axis    The axis to prepare the range for
         '''
-        valrange = self.kwargs.pop(axis + "range", None)
+        valrange = self.mplkwargs.pop(axis + "range", None)
         '''
         if axis == "val" and self.plot_type != "line" and valrange is not None:
             try:
-                self.kwargs["vmin"] = valrange.pop("vmin")
+                self.mplkwargs["vmin"] = valrange.pop("vmin")
             except KeyError:
                 pass
 
             try:
-                self.kwargs["vmax"] = valrange.pop("vmax")
+                self.mplkwargs["vmax"] = valrange.pop("vmax")
             except KeyError:
                 pass
             if valrange == {}:

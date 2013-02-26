@@ -2,7 +2,7 @@ from generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
     #'scatter' : PlotType(None, 2, plot_scatter),
-    def plot(self, datafile, *args, **kwargs):
+    def plot(self, datafile, *mplargs, **mplkwargs):
         '''
         Plots a scatter plot
         Stores the plot in a list to be used for when adding the legend
@@ -10,19 +10,19 @@ class Scatter_Plot(Generic_Plot):
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         if datafile["itemstyle"]:
-            kwargs["marker"] = datafile["itemstyle"]
+            mplkwargs["marker"] = datafile["itemstyle"]
         if datafile["color"]:
-            kwargs["color"] = datafile["color"]
+            mplkwargs["color"] = datafile["color"]
 
-        colour_scheme = kwargs.get("color", None)
-        mark = kwargs.pop("marker", "o")
+        colour_scheme = mplkwargs.get("color", None)
+        mark = mplkwargs.pop("marker", "o")
         if colour_scheme is None:
             if self.unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
                 colour_scheme = self.unpacked_data_item["data"]
             else:
                 colour_scheme = "b" # Default color scheme used by matplotlib
 
-        scatter_size = kwargs.get("linewidth", 1)
+        scatter_size = mplkwargs.get("linewidth", 1)
 
         if self.unpacked_data_item.get("y", None) is not None:
             #3D
@@ -33,7 +33,7 @@ class Scatter_Plot(Generic_Plot):
             self.scatter_type = "2D"
             y_coords = self.unpacked_data_item["data"]
 
-        self.plot_method.scatter(self.unpacked_data_item["x"], y_coords, c = colour_scheme, marker = mark, s = scatter_size, edgecolors = "none", *args, **kwargs)
+        self.plot_method.scatter(self.unpacked_data_item["x"], y_coords, c = colour_scheme, marker = mark, s = scatter_size, edgecolors = "none", *mplargs, **mplkwargs)
 
     def format_plot(self, options):
         if self.scatter_type == "3D":

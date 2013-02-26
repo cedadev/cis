@@ -29,9 +29,9 @@ class Generic_Plot(object):
             options.pop("fontsize", None)
         return options
 
-    def __init__(self, packed_data_item, v_range, number_of_data_items, plot_args, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
+    def __init__(self, packed_data_item, v_range, number_of_data_items, plot_args, *mplargs, **mplkwargs):
+        self.mplargs = mplargs
+        self.mplkwargs = mplkwargs
         self.plot_args = plot_args
         self.number_of_data_items = number_of_data_items
         self.packed_data_item = packed_data_item
@@ -42,34 +42,34 @@ class Generic_Plot(object):
 
         if is_map(packed_data_item):
             self.plot_method = self.basemap
-            self.kwargs["latlon"] = True
+            self.mplkwargs["latlon"] = True
         else:
             self.plot_method = self.matplotlib
 
-    def plot(self, data_item, datafile, *args, **kwargs):
+    def plot(self, data_item, datafile, *mplargs, **mplkwargs):
         raise NotImplementedError()
 
 
     def calculate_min_and_max_values(self):
         from sys import maxint
         from utils import unpack_data_object
-        self.kwargs["vmin"] = self.kwargs.get("vmin", maxint)
-        self.kwargs["vmax"] = self.kwargs.get("vmax", -maxint - 1)
+        self.mplkwargs["vmin"] = self.mplkwargs.get("vmin", maxint)
+        self.mplkwargs["vmax"] = self.mplkwargs.get("vmax", -maxint - 1)
 
-        if self.kwargs["vmin"] == maxint:
+        if self.mplkwargs["vmin"] == maxint:
             calculate_min_data = True
         else:
             calculate_min_data = False
-        if self.kwargs["vmax"] == -maxint - 1:
+        if self.mplkwargs["vmax"] == -maxint - 1:
             calculate_max_data = True
         else:
             calculate_max_data = False
 
         self.unpacked_data_item = unpack_data_object(self.packed_data_item)
-        if self.unpacked_data_item["data"].min() < self.kwargs["vmin"] and calculate_min_data:
-            self.kwargs["vmin"] = self.unpacked_data_item["data"].min()
-        if self.unpacked_data_item["data"].max() > self.kwargs["vmax"] and calculate_max_data:
-            self.kwargs["vmax"] = self.unpacked_data_item["data"].max()
+        if self.unpacked_data_item["data"].min() < self.mplkwargs["vmin"] and calculate_min_data:
+            self.mplkwargs["vmin"] = self.unpacked_data_item["data"].min()
+        if self.unpacked_data_item["data"].max() > self.mplkwargs["vmax"] and calculate_max_data:
+            self.mplkwargs["vmax"] = self.unpacked_data_item["data"].max()
 
 
     def add_color_bar(self, logv, vmin, vmax, v_range, orientation, units):
@@ -256,7 +256,7 @@ class Generic_Plot(object):
                 if key in plot_format_options.keys():
                     plot_options[key](plot_format_options[key])
 
-        if not self.plot_args["nocolourbar"]: self.add_color_bar(self.plot_args["logv"], self.kwargs["vmin"], self.kwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_item.units)
+        if not self.plot_args["nocolourbar"]: self.add_color_bar(self.plot_args["logv"], self.mplkwargs["vmin"], self.mplkwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_item.units)
 
         self.draw_coastlines(draw_grid)
 

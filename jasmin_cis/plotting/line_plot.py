@@ -11,21 +11,21 @@ class Line_Plot(Generic_Plot):
 
         @param data_item:    A dictionary containing the x coords and data as arrays
         '''
-        self.kwargs["linewidth"] = self.kwargs.pop("itemwidth", 1)
+        self.mplkwargs["linewidth"] = self.mplkwargs.pop("itemwidth", 1)
 
-        self.kwargs.pop("vmax", None)
-        self.kwargs.pop("vmin", None)
+        self.mplkwargs.pop("vmax", None)
+        self.mplkwargs.pop("vmin", None)
 
         if datafile["itemstyle"]:
             if datafile["itemstyle"] not in Line_Plot.line_styles:
                 from exceptions import InvalidLineStyleError
                 raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(Plotter.line_styles))
             else:
-                self.kwargs["linestyle"] = datafile["itemstyle"]
+                self.mplkwargs["linestyle"] = datafile["itemstyle"]
         if datafile["color"]:
-            self.kwargs["color"] = datafile["color"]
+            self.mplkwargs["color"] = datafile["color"]
 
-        self.matplotlib.plot(self.unpacked_data_item["x"], self.unpacked_data_item["data"], *self.args, **self.kwargs ) #TODO append to list
+        self.matplotlib.plot(self.unpacked_data_item["x"], self.unpacked_data_item["data"], *self.mplargs, **self.mplkwargs ) #TODO append to list
 
 
     def format_plot(self, options):
