@@ -22,12 +22,12 @@ def is_map(data_item):
 
 class Generic_Plot(object):
 
-    def set_font_size(self, options):
-        if options.get("fontsize", None) is not None:
-            options["fontsize"] = { "font.size" : float(options["fontsize"]) }
+    def set_font_size(self):
+        if self.plot_args.get("fontsize", None) is not None:
+            if not isinstance(self.plot_args.get("fontsize", None), dict):
+                self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
         else:
-            options.pop("fontsize", None)
-        return options
+            self.plot_args.pop("fontsize", None)
 
     def __init__(self, packed_data_item, v_range, number_of_data_items, plot_args, *mplargs, **mplkwargs):
         self.mplargs = mplargs
@@ -37,7 +37,7 @@ class Generic_Plot(object):
         self.packed_data_item = packed_data_item
         self.v_range = v_range
         self.calculate_min_and_max_values()
-        self.basemap = Basemap()
+        self.basemap = Basemap(lon_0=self.unpacked_data_item["x"].max()-180.0)
         self.matplotlib = plt
 
 
@@ -47,7 +47,7 @@ class Generic_Plot(object):
         else:
             self.plot_method = self.matplotlib
 
-    def plot(self, data_item, datafile, *mplargs, **mplkwargs):
+    def plot(self, datafile, vmin, vmax):
         raise NotImplementedError()
 
 
@@ -100,25 +100,11 @@ class Generic_Plot(object):
 
         cbar.set_label(format_units(units))
 
-    def set_axis_label(self, axis, options, data):
+    def set_default_axis_label(self, axis):
         raise NotImplementedError()
 
     def create_legend(self, data, datagroups):
         raise NotImplementedError()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def draw_coastlines(self, draw_grid = False):
         if is_map(self.packed_data_item):
@@ -153,7 +139,7 @@ class Generic_Plot(object):
                     if axis == "y":
                         lines = arange(-90, 91, grid_spacing)
                     elif axis == "x":
-                        lines = arange(-180, 181, grid_spacing)
+                        lines = arange(0, 361, grid_spacing)
 
             if lines is None:
                 if step is None: step = (max_val-min_val)/24
@@ -192,40 +178,39 @@ class Generic_Plot(object):
         if logy:
             ax.set_yscale("log", basey = logy)
 
-    def format_2d_plot(self, plot_format_options):
+    def format_2d_plot(self):
         from jasmin_cis.plotting.plot import plot_options
         #BEGIN FORMAT PLOT
 
-        logx = plot_format_options.get("logx", False)
-        logy = plot_format_options.get("logy", False)
+        logx = self.plot_args.get("logx", False)
+        logy = self.plot_args.get("logy", False)
         if logx or logy:
             self.set_log_scale(logx, logy)
         else:
             self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
 
-        draw_grid = plot_format_options.pop("grid", False)
+        draw_grid = self.plot_args.pop("grid", False)
         if draw_grid: self.matplotlib.grid(True, which="both")
 
-        plot_format_options = self.set_font_size(plot_format_options)
-
+        self.set_font_size()
 
         # If any of the options have not been specified, then use the defaults
-        plot_format_options = self.set_default_axis_label("X", plot_format_options)
-        plot_format_options = self.set_default_axis_label("Y", plot_format_options)
+        self.set_default_axis_label("X")
+        self.set_default_axis_label("Y")
 
-        if plot_format_options["xlabel"] == None: plot_format_options["xlabel"] = ""
-        if plot_format_options["ylabel"] == None: plot_format_options["ylabel"] = ""
+        if self.plot_args["xlabel"] == None: self.plot_args["xlabel"] = ""
+        if self.plot_args["ylabel"] == None: self.plot_args["ylabel"] = ""
 
-        if not plot_format_options["title"]: plot_format_options["title"] = ""
+        if not self.plot_args["title"]: self.plot_args["title"] = ""
 
         for key in plot_options.keys():
             # Call the method associated with the option
-            if key in plot_format_options.keys():
-                plot_options[key](plot_format_options[key])
+            if key in self.plot_args.keys():
+                plot_options[key](self.plot_args[key])
 
-        #END FORMAT PLOT
+                        #END FORMAT PLOT
 
-    def format_3d_plot(self, plot_format_options):
+    def format_3d_plot(self, plot_number):
         from jasmin_cis.plotting.plot import plot_options
         '''
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
@@ -238,39 +223,39 @@ class Generic_Plot(object):
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
 
-        if plot_format_options is not None:
-            draw_grid = plot_format_options.pop("grid")
+        if self.plot_args is not None:
+            draw_grid = self.plot_args.get("grid")
 
-            options = self.set_font_size(plot_format_options)
+            self.set_font_size()
             # If any of the options have not been specified, then use the defaults
-            options = self.set_axis_label("X", options)
-            options = self.set_axis_label("Y", options)
+            self.set_default_axis_label("X")
+            self.set_default_axis_label("Y")
 
-            if options["xlabel"] == None: options["xlabel"] = ""
-            if options["ylabel"] == None: options["ylabel"] = ""
+            if self.plot_args["xlabel"] == None: self.plot_args["xlabel"] = ""
+            if self.plot_args["ylabel"] == None: self.plot_args["ylabel"] = ""
 
-            if not options["title"]: options["title"] = ""
+            if not self.plot_args["title"]: self.plot_args["title"] = ""
 
-            if not options["title"]: options["title"] = self.packed_data_item.long_name
+            if not self.plot_args["title"]: self.plot_args["title"] = self.packed_data_item.long_name
 
             for key in plot_options.keys():
             # Call the method associated with the option
-                if key in plot_format_options.keys():
-                    plot_options[key](plot_format_options[key])
+                if key in self.plot_args.keys():
+                    plot_options[key](self.plot_args[key])
 
-        if not self.plot_args["nocolourbar"]: self.add_color_bar(self.plot_args["logv"], self.mplkwargs["vmin"], self.mplkwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_item.units)
+        if not self.plot_args["nocolourbar"] and plot_number == 0: self.add_color_bar(self.plot_args["logv"], self.mplkwargs["vmin"], self.mplkwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_item.units)
 
         self.draw_coastlines(draw_grid)
 
-    def set_3daxis_label(self, axis, options):
+    def set_3daxis_label(self, axis):
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
         axislabel = axis + "label"
 
-        if options[axislabel] is None:
+        if self.plot_args[axislabel] is None:
             if is_map(self.packed_data_item):
-                options[axislabel] = "Longitude" if axis == "x" else "Latitude"
+                self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
                     name = self.packed_data_item.coord(axis=axis).name()
@@ -283,6 +268,4 @@ class Generic_Plot(object):
                     units = self.packed_data_item.units
 
                 # in general, display both name and units in brackets
-                options[axislabel] = name + self.__format_units(units)
-
-        return options
+                self.plot_args[axislabel] = name + self.__format_units(units)

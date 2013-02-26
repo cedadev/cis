@@ -2,13 +2,15 @@ from generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
     #'scatter' : PlotType(None, 2, plot_scatter),
-    def plot(self, datafile):
+    def plot(self, datafile, vmin, vmax):
         '''
         Plots a scatter plot
         Stores the plot in a list to be used for when adding the legend
 
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
+        self.mplkwargs["vmin"] = vmin
+        self.mplkwargs["vmax"] = vmax
         if datafile["itemstyle"]: self.mplkwargs["marker"] = datafile["itemstyle"]
 
         colour_scheme = self.mplkwargs.get("color", None)
@@ -29,15 +31,16 @@ class Scatter_Plot(Generic_Plot):
             self.scatter_type = "2D"
             y_coords = self.unpacked_data_item["data"]
 
+        self.mplkwargs.pop("latlon", None)
         self.plot_method.scatter(self.unpacked_data_item["x"], y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
 
-    def format_plot(self, options):
+    def format_plot(self, i):
         if self.scatter_type == "3D":
-            self.format_3d_plot(options)
+            self.format_3d_plot(i)
         elif self.scatter_type == "2D":
-            self.format_2d_plot(options)
+            self.format_2d_plot()
 
-    def set_default_axis_label(self, axis, options):
+    def set_default_axis_label(self, axis):
         from generic_plot import is_map
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
@@ -45,9 +48,9 @@ class Scatter_Plot(Generic_Plot):
         axis = axis.lower()
         axislabel = axis + "label"
 
-        if options[axislabel] is None:
+        if self.plot_args[axislabel] is None:
             if is_map(self.packed_data_item):
-                options[axislabel] = "Longitude" if axis == "x" else "Latitude"
+                self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
                     name = self.packed_data_item.coord(axis=axis).name()
@@ -61,12 +64,10 @@ class Scatter_Plot(Generic_Plot):
 
                 if self.number_of_data_items == 1:
                     # only 1 data to plot, display
-                    options[axislabel] = name + format_units(units)
+                    self.plot_args[axislabel] = name + format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
-                    options[axislabel] = units
-
-        return options
+                    self.plot_args[axislabel] = units
 
     def create_legend(self, datagroups):
         legend_titles = []

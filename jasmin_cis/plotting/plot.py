@@ -61,20 +61,31 @@ class Plotter(object):
 
         self.set_width_and_height()
 
-        plots = [] # A list where all the plots will be stored
+        self.plots = [] # A list where all the plots will be stored
         for i, item in enumerate(self.packed_data_items):
+            self.plots.append(self.plot_types[plot_type](item, v_range, len(self.packed_data_items), plot_args, *mplargs, **mplkwargs))
+
+
+        # Calculate mins and maxs
+        vmin, vmax = self.calculate_min_and_max_values_for_all_plots()
+        self.plots_for_legend = []
+        for i, plot in enumerate(self.plots):
             # Plot the data item using the specified plot type
-            plot = self.plot_types[plot_type](item, v_range, len(self.packed_data_items), plot_args, *mplargs, **mplkwargs)
-            plots.append(plot.plot(plot_args["datagroups"][i]))
-            plot.format_plot(plot_args)
+            self.plots_for_legend.append(plot.plot(plot_args["datagroups"][i], vmin, vmax))
+            plot.format_plot(i)
 
         self.apply_axis_limits(plot_args["xrange"], "x")
         self.apply_axis_limits(plot_args["yrange"], "y")
 
         #self.format_plot(self.plot_format_options)
-        if len(plots) > 1: self.create_legend(plot_args["datagroups"])
+        if len(self.plots) > 1: self.create_legend(plot_args["datagroups"])
 
         self.output_to_file_or_screen()
+
+    def calculate_min_and_max_values_for_all_plots(self):
+        vmin = min([plot.mplkwargs["vmin"] for plot in self.plots])
+        vmax = max([plot.mplkwargs["vmax"] for plot in self.plots])
+        return vmin, vmax
 
     def create_legend(self, datagroups):
         legend_titles = []
@@ -190,9 +201,6 @@ class Plotter(object):
         from jasmin_cis.exceptions import InvalidPlotTypeError
         variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
         try:
-            if len(data) > 1 and variable_dim == 2:
-                return 'scatteroverlay'
-            else:
-                return self.default_plot_types[variable_dim]
+            return self.default_plot_types[variable_dim]
         except KeyError:
             raise InvalidPlotTypeError("There is no valid plot type for this variable - check its dimensions")
