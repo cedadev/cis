@@ -2,27 +2,23 @@ from generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
     #'scatter' : PlotType(None, 2, plot_scatter),
-    def plot(self, datafile, *mplargs, **mplkwargs):
+    def plot(self, datafile):
         '''
         Plots a scatter plot
         Stores the plot in a list to be used for when adding the legend
 
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        if datafile["itemstyle"]:
-            mplkwargs["marker"] = datafile["itemstyle"]
-        if datafile["color"]:
-            mplkwargs["color"] = datafile["color"]
+        if datafile["itemstyle"]: self.mplkwargs["marker"] = datafile["itemstyle"]
 
-        colour_scheme = mplkwargs.get("color", None)
-        mark = mplkwargs.pop("marker", "o")
+        colour_scheme = self.mplkwargs.get("color", None)
         if colour_scheme is None:
             if self.unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
                 colour_scheme = self.unpacked_data_item["data"]
             else:
                 colour_scheme = "b" # Default color scheme used by matplotlib
 
-        scatter_size = mplkwargs.get("linewidth", 1)
+        scatter_size = self.plot_args.get("itemwidth", 1)
 
         if self.unpacked_data_item.get("y", None) is not None:
             #3D
@@ -33,7 +29,7 @@ class Scatter_Plot(Generic_Plot):
             self.scatter_type = "2D"
             y_coords = self.unpacked_data_item["data"]
 
-        self.plot_method.scatter(self.unpacked_data_item["x"], y_coords, c = colour_scheme, marker = mark, s = scatter_size, edgecolors = "none", *mplargs, **mplkwargs)
+        self.plot_method.scatter(self.unpacked_data_item["x"], y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
 
     def format_plot(self, options):
         if self.scatter_type == "3D":
@@ -41,10 +37,11 @@ class Scatter_Plot(Generic_Plot):
         elif self.scatter_type == "2D":
             self.format_2d_plot(options)
 
-    def set_axis_label(self, axis, options):
+    def set_default_axis_label(self, axis, options):
         from generic_plot import is_map
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
+        from plot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
 
@@ -64,7 +61,7 @@ class Scatter_Plot(Generic_Plot):
 
                 if self.number_of_data_items == 1:
                     # only 1 data to plot, display
-                    options[axislabel] = name + self.__format_units(units)
+                    options[axislabel] = name + format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     options[axislabel] = units

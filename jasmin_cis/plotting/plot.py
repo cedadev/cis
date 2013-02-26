@@ -167,7 +167,7 @@ class Plotter(object):
 
         @param axis    The axis to prepare the range for
         '''
-        valrange = self.mplkwargs.pop(axis + "range", None)
+        valrange = self.mplkwargs.pop(axis + "range", {})
         '''
         if axis == "val" and self.plot_type != "line" and valrange is not None:
             try:

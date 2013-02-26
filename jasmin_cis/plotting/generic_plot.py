@@ -54,23 +54,26 @@ class Generic_Plot(object):
     def calculate_min_and_max_values(self):
         from sys import maxint
         from utils import unpack_data_object
-        self.mplkwargs["vmin"] = self.v_range.get("vmin", maxint)
-        self.mplkwargs["vmax"] = self.v_range.get("vmax", -maxint - 1)
+        vmin = self.v_range.get("vmin", maxint)
+        vmax = self.v_range.get("vmax", -maxint - 1)
 
-        if self.mplkwargs["vmin"] == maxint:
+        if vmin == maxint:
             calculate_min_data = True
         else:
             calculate_min_data = False
-        if self.mplkwargs["vmax"] == -maxint - 1:
+        if vmax == -maxint - 1:
             calculate_max_data = True
         else:
             calculate_max_data = False
 
         self.unpacked_data_item = unpack_data_object(self.packed_data_item)
-        if self.unpacked_data_item["data"].min() < self.mplkwargs["vmin"] and calculate_min_data:
-            self.mplkwargs["vmin"] = self.unpacked_data_item["data"].min()
-        if self.unpacked_data_item["data"].max() > self.mplkwargs["vmax"] and calculate_max_data:
-            self.mplkwargs["vmax"] = self.unpacked_data_item["data"].max()
+        if self.unpacked_data_item["data"].min() < vmin and calculate_min_data:
+            vmin = self.unpacked_data_item["data"].min()
+        if self.unpacked_data_item["data"].max() > vmax and calculate_max_data:
+            vmax = self.unpacked_data_item["data"].max()
+
+        self.mplkwargs["vmin"] = vmin
+        self.mplkwargs["vmax"] = vmax
 
 
     def add_color_bar(self, logv, vmin, vmax, v_range, orientation, units):
