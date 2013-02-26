@@ -80,7 +80,8 @@ def plot_cmd(main_arguments):
                  "grid" : main_arguments.pop("grid", False),
                  "xlabel" : main_arguments.pop("xlabel", None),
                  "ylabel" : main_arguments.pop("ylabel", None),
-                 "title" : main_arguments.pop("title", None)}
+                 "title" : main_arguments.pop("title", None),
+                 "fontsize" : main_arguments.pop("fontsize", None)}
 
     try:
         Plotter(data, plot_args, plot_type, output, **main_arguments)
