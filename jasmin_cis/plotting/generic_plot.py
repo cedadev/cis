@@ -235,8 +235,6 @@ class Generic_Plot(object):
         '''
 
         if plot_format_options is not None:
-            logx = plot_format_options.pop("logx")
-            logy = plot_format_options.pop("logy")
             draw_grid = plot_format_options.pop("grid")
 
             options = self.set_font_size(plot_format_options)
