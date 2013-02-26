@@ -35,10 +35,11 @@ class Generic_Plot(object):
         self.plot_args = plot_args
         self.number_of_data_items = number_of_data_items
         self.packed_data_item = packed_data_item
+        self.v_range = v_range
         self.calculate_min_and_max_values()
         self.basemap = Basemap()
         self.matplotlib = plt
-        self.v_range = v_range
+
 
         if is_map(packed_data_item):
             self.plot_method = self.basemap
@@ -53,8 +54,8 @@ class Generic_Plot(object):
     def calculate_min_and_max_values(self):
         from sys import maxint
         from utils import unpack_data_object
-        self.mplkwargs["vmin"] = self.mplkwargs.get("vmin", maxint)
-        self.mplkwargs["vmax"] = self.mplkwargs.get("vmax", -maxint - 1)
+        self.mplkwargs["vmin"] = self.v_range.get("vmin", maxint)
+        self.mplkwargs["vmax"] = self.v_range.get("vmax", -maxint - 1)
 
         if self.mplkwargs["vmin"] == maxint:
             calculate_min_data = True
