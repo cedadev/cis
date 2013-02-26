@@ -91,6 +91,8 @@ class Generic_Plot(object):
         else:
             ticks = None
 
+        ticks = None
+
         cbar = plt.colorbar(orientation = orientation, ticks = ticks, format = nformat)
 
         cbar.set_label(format_units(units))
@@ -233,6 +235,7 @@ class Generic_Plot(object):
 
         if self.plot_args is not None:
             draw_grid = self.plot_args.get("grid")
+            if draw_grid: self.matplotlib.grid(True, which="both")
 
             self.set_font_size()
             # If any of the options have not been specified, then use the defaults
@@ -258,6 +261,7 @@ class Generic_Plot(object):
         if len(self.packed_data_items) > 1: self.create_legend()
 
     def set_3daxis_label(self, axis):
+        from plot import format_units
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
@@ -278,4 +282,4 @@ class Generic_Plot(object):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                self.plot_args[axislabel] = name + self.__format_units(units)
+                self.plot_args[axislabel] = name + format_units(units)
