@@ -159,8 +159,8 @@ class Generic_Plot(object):
 
             return lines
 
-        parallels = __create_set_of_grid_lines("y", self.plot_args["y_range"])
-        meridians = __create_set_of_grid_lines("x", self.plot_args["x_range"])
+        parallels = __create_set_of_grid_lines("y", self.plot_args["yrange"])
+        meridians = __create_set_of_grid_lines("x", self.plot_args["xrange"])
 
         return parallels, meridians
 

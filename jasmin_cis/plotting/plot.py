@@ -68,11 +68,11 @@ class Plotter(object):
             plots.append(plot.plot(plot_args["datagroups"][i]))
             plot.format_plot(plot_args)
 
-        self.apply_axis_limits(plot_args["x_range"], "x")
-        self.apply_axis_limits(plot_args["y_range"], "y")
+        self.apply_axis_limits(plot_args["xrange"], "x")
+        self.apply_axis_limits(plot_args["yrange"], "y")
 
         #self.format_plot(self.plot_format_options)
-        if len(plots) > 1:  self.create_legend(plot_args["datagroups"])
+        if len(plots) > 1: self.create_legend(plot_args["datagroups"])
 
         self.output_to_file_or_screen()
 
@@ -129,10 +129,10 @@ class Plotter(object):
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
-        if valrange is None and is_map(self.packed_data_items[0]): #Zoom in on heatmap
-            self.zoom_in_on_heatmap(axis)
-
-        if valrange is not None: # apply user specified range
+        if valrange is None:
+            if is_map(self.packed_data_items[0]): #Zoom in on heatmap
+                self.zoom_in_on_heatmap(axis)
+        else: # apply user specified range
             self.apply_user_specified_axis_limits(axis, valrange)
 
     def set_width_and_height(self):
