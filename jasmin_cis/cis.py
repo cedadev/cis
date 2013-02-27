@@ -76,14 +76,14 @@ def plot_cmd(main_arguments):
     if main_arguments['yaxis'] is not None:
         var_axis_dict[main_arguments["yaxis"].lower()] = "Y"
         logging.info("Overriding data product default variable for y axis with: " + main_arguments.pop("yaxis"))
-
+    '''
     for d in data:
         for coord in d.coords():
             if var_axis_dict.has_key(coord.standard_name.lower()):
                 coord.axis = var_axis_dict[coord.standard_name.lower()]
             if coord.name().lower() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
                 coord.axis = ''
-
+    '''
 
     plot_args = {"datagroups" : main_arguments.pop("datagroups", None),
                  "nocolourbar" : main_arguments.pop("nocolourbar", False),
