@@ -18,12 +18,12 @@ class Colocate(object):
         self.sample_points = sample_points
         self.output_file = output_file
 
-    def colocate(self, variable, filenames, col='DefaultColocator', con_method=None, con_params=None, kern=None, kern_params=None):
+    def colocate(self, variable, filenames, col=None, con_method=None, con_params=None, kern=None, kern_params=None):
         from jasmin_cis.data_io.read import read_data
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.col_framework import get_constraint, get_kernel, get_colocator
         from jasmin_cis.utils import copy_attributes
-        from time import time
+        from timeUtil import time
         from iris import cube
 
         logging.info("Reading data for: "+variable)
@@ -37,10 +37,12 @@ class Colocate(object):
             if isinstance(data, cube.Cube):
                 kern = 'nn_gridded'
             else:
-                kern = 'nn_ungridded'
+                kern = 'nn_horizontal'
         kernel = get_kernel(kern)
 
         # Find colocator, constraint_fn and kernel to use
+        if col is None:
+            col = 'DefaultColocator'
         col = get_colocator(col)
 
         if con_params is not None: copy_attributes(con_params, con_fn)

@@ -167,14 +167,18 @@ class MODIS_L2(AProduct):
     modis_scaling = ["1km","5km","10km"]
 
     def get_file_signature(self):
-        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MYD04_L2','MYDATML2','MODATML2']
+        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MOD04_L2','MYDATML2','MODATML2']
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 
     def __get_data_scale(self, filename, variable):
-
+        from jasmin_cis.exceptions import InvalidVariableError
         from pyhdf import SD
-        meta = SD.SD(filename).datasets()[variable][0][0]
+
+        try:
+            meta = SD.SD(filename).datasets()[variable][0][0]
+        except KeyError:
+            raise InvalidVariableError("Variable "+variable+" not found")
 
         for scaling in self.modis_scaling:
             if scaling in meta:
@@ -338,7 +342,7 @@ class Aerosol_CCI(AProduct):
 class Caliop(AProduct):
 
     def get_file_signature(self):
-        return [r'CAL.*hdf']
+        return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
 
     def create_coords(self, filenames):
 
@@ -393,6 +397,11 @@ class Caliop(AProduct):
         profile_time = sdata['Profile_Time']
         profile_time_data = hdf.read_data(profile_time,"SD")
         profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
+
+        import timeUtil
+        import datetime as dt
+        profile_time_data = timeUtil.convert_tai_to_obj_array(profile_time_data,dt.datetime(1993,1,1))
+
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
         profile_time_metadata.shape = [profile_time_data.shape[0],profile_time_data.shape[1]]
         profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
@@ -628,42 +637,35 @@ class Xenida(NetCDF_CF_Gridded):
 class Aeronet(AProduct):
 
     def get_file_signature(self):
-        #TODO Update this
         return [r'.*\.lev20']
 
-    def create_coords(self, filenames, data_obj = None, variable = None):
+    def create_coords(self, filenames, data = None):
         from jasmin_cis.data_io.ungridded_data import Metadata
-        from numpy import array
-        from jasmin_cis.data_io.aeronet import load_aeronet, get_file_metadata
+        from jasmin_cis.data_io.aeronet import load_multiple_aeronet
 
-        for filename in filenames:
-            #TODO Can this cope with many files?
-            if data_obj is None:
-                data_obj = load_aeronet(filename)
-            metadata = get_file_metadata(filename, variable)
-            lon = metadata.misc[2][1].split("=")[1]
-            lat = metadata.misc[2][2].split("=")[1]
+        if data is None:
+            data = load_multiple_aeronet(filenames)
 
-            coords = CoordList()
-            coords.append(Coord(array([lon]), Metadata(name="Longitude", shape=(1,), units="degrees_east", range=(-180,180), missing_value=-999)))
-            coords.append(Coord(array([lat]), Metadata(name="Latitude", shape=(1,), units="degrees_north", range=(-90,90), missing_value=-999)))
-            date_time_data = data_obj["datetime"]
-            coords.append(Coord(date_time_data, Metadata(name="Date time", shape=(len(date_time_data),)), "X"))
+        coords = CoordList()
+        coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),), units="degrees_east", range=(-180,180))))
+        coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),), units="degrees_north", range=(-90,90))))
+        coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters", range=(-90,90))))
+        coords.append(Coord(data["datetime"], Metadata(name="Date time", shape=(len(data),), units="DateTime Object"), "X"))
 
         return coords
 
     def create_data_object(self, filenames, variable):
-        from jasmin_cis.data_io.aeronet import load_aeronet, get_file_metadata
+        from jasmin_cis.data_io.aeronet import load_multiple_aeronet
         from jasmin_cis.exceptions import InvalidVariableError
-        data = []
-        filename = filenames[0]
-        data_obj = load_aeronet(filename)
+
         try:
-            var_data = data_obj[variable]
+            data_obj = load_multiple_aeronet(filenames, [variable])
         except ValueError:
-            raise InvalidVariableError(variable + " does not exist in file " + filename)
-        metadata = get_file_metadata(filename, variable, (len(var_data),))
-        return UngriddedData(var_data, metadata, self.create_coords([filename], data_obj, variable))
+            raise InvalidVariableError(variable + " does not exist in " + str(filenames))
+
+        coords = self.create_coords(filenames, data_obj)
+
+        return UngriddedData(data_obj[variable], Metadata(name=variable, long_name=variable,shape=(len(data_obj),)), coords)
 
 class ASCII_Hyperpoints(AProduct):
 

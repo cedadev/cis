@@ -17,6 +17,27 @@ class Coord(LazyData):
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
+    def convert_datetime_to_num(self):
+        from iris.unit import encode_time
+        import numpy as np
+        if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a number")
+        new_data = np.zeros(self.shape, dtype='float32')
+        for i, date_time in np.ndenumerate(self.data):
+            new_data[i] = encode_time(*date_time.timetuple()[0:6])
+        self.units = "DateTime Number"
+        self._data = new_data
+
+    def convert_num_to_datetime(self):
+        from iris.unit import decode_time
+        from datetime import datetime
+        import numpy as np
+        if self.units != "DateTime Number": raise ValueError("Time units must be DateTime Number for conversion to an Object")
+        new_data = np.zeros(self.shape, dtype='O')
+        for i, date_time in np.ndenumerate(self.data):
+            new_data[i] = decode_time(datetime(*date_time))
+        self.units = "DateTime Object"
+        self._data = new_data
+
 class CoordList(list):
     """All the functionality of a standard `list` with added "Coord" context."""
 
@@ -124,6 +145,17 @@ class CoordList(list):
 
         # Pick the length of the 0th element in the list as our length - all coordinates should have the same length anyway
         data_len = len(self[0].data.flatten())
+
+        all_coords = self.get_standard_coords(data_len)
+
+        for x in xrange(data_len):
+            points.append(HyperPoint(all_coords[0][x], all_coords[1][x], all_coords[2][x], all_coords[3][x]))
+
+        return points
+
+    def get_standard_coords(self, data_len):
+        from jasmin_cis.exceptions import CoordinateNotFoundError
+
         empty_data = [None for i in xrange(data_len)]
 
         try:
@@ -143,7 +175,5 @@ class CoordList(list):
         except CoordinateNotFoundError:
             time = empty_data
 
-        for x in xrange(data_len):
-            points.append(HyperPoint(lat[x], lon[x], alt[x], time[x]))
+        return CoordList([lat, lon, alt, time ])
 
-        return points

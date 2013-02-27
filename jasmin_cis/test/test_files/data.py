@@ -10,6 +10,9 @@ def make_pathname(filename):
 valid_hdf_vd_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")
 valid_hdf_sd_file = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
 
+valid_modis_l2_filename = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
+valid_modis_l2_variable = 'Asymmetry_Factor_Average_Ocean'
+
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_RVOD_variable = "RVOD_liq_water_content"
 

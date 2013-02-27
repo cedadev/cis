@@ -69,6 +69,7 @@ def plot_cmd(main_arguments):
 
     # overwrites which variable to used for the x and y axis
     # ignore unknown variables
+    # TODO does not work for cube!!
     var_axis_dict = {}
     if main_arguments['xaxis'] is not None:
         var_axis_dict[main_arguments["xaxis"].lower()] = "X"
