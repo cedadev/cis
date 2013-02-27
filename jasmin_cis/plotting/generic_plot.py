@@ -32,11 +32,10 @@ class Generic_Plot(object):
         self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
         self.v_range = v_range
         self.calculate_min_and_max_values()
-        self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
         self.matplotlib = plt
 
-
         if is_map(packed_data_items[0]):
+            self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
             self.plot_method = self.basemap
             self.mplkwargs["latlon"] = True
         else:
@@ -103,6 +102,8 @@ class Generic_Plot(object):
                 tick = tick + step
         else:
             ticks = None
+
+        #ticks = None
 
         cbar = plt.colorbar(orientation = orientation, ticks = ticks, format = nformat)
 
@@ -202,7 +203,6 @@ class Generic_Plot(object):
 
     def format_2d_plot(self):
         from jasmin_cis.plotting.plot import plot_options
-        #BEGIN FORMAT PLOT
 
         logx = self.plot_args.get("logx", False)
         logy = self.plot_args.get("logy", False)
@@ -232,8 +232,6 @@ class Generic_Plot(object):
 
         if len(self.packed_data_items) > 1: self.create_legend()
 
-                        #END FORMAT PLOT
-
     def format_3d_plot(self):
         '''
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
@@ -248,6 +246,11 @@ class Generic_Plot(object):
         from jasmin_cis.plotting.plot import plot_options
 
         if self.plot_args is not None:
+            logx = self.plot_args.get("logx", False)
+            logy = self.plot_args.get("logy", False)
+            if logx or logy:
+                self.set_log_scale(logx, logy)
+
             draw_grid = self.plot_args.get("grid")
             if draw_grid: self.matplotlib.grid(True, which="both")
 
