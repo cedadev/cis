@@ -6,6 +6,7 @@ from netcdf import get_data as netcdf_get_data
 from hdf_vd import get_data as hdf_vd_get_data, VDS
 from pyhdf.SD import SDS
 from hdf_sd import get_data as hdf_sd_get_data
+import logging
 
 
 class Metadata(object):
@@ -177,25 +178,6 @@ class UngriddedData(LazyData):
         Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
 
-    @classmethod
-    def from_points_array(cls, hyperpoints):
-        """
-         A constuctor for building an UngriddedData object from a list of hyper points
-        Note: This method is unfinished
-        @param hyperpoints:    A list of HyperPoints
-        """
-        from numpy import array
-        latitude = []
-        longitude = []
-        values = []
-
-        for hyperpoint in hyperpoints:
-            latitude.append(hyperpoint.latitude)
-            longitude.append(hyperpoint.longitude)
-            values.append(hyperpoint.val[0])
-
-        return cls(array(values), array(latitude), array(longitude))
-
     def __init__(self, data, metadata, coords):
         '''
         Constructor
@@ -234,6 +216,18 @@ class UngriddedData(LazyData):
     def lon(self):
         return self.coord(standard_name='longitude')
 
+    def hyper_point(self, index):
+        """
+
+        @param index: The index in the array to find the point for
+        @return: A hyperpoint representing the data at that point
+        """
+        from jasmin_cis.data_io.hyperpoint import HyperPoint
+        return HyperPoint(self.coord(standard_name='latitude').data.flat[index],
+                          self.coord(standard_name='longitude').data.flat[index],
+                          self.coord(standard_name='altitude').data.flat[index],
+                          self.coord(standard_name='time').data.flat[index],
+                          self.data.flat[index])
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
@@ -258,16 +252,59 @@ class UngriddedData(LazyData):
         @return: A list of HyperPoints
         """
         import numpy as np
-        from hyperpoint import HyperPoint
-        points = []
+        from hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.exceptions import CoordinateNotFoundError
+        points = HyperPointList()
 
-        lat = self.coord(standard_name='latitude').data.flatten()
-        lon = self.coord(standard_name='longitude').data.flatten()
-        alt = self.coord(standard_name='altitude').data.flatten()
-        time = self.coord(standard_name='time').data.flatten()
+        logging.info("Converting ungridded data to a list of HyperPoints")
+
         data = self.data.flatten()
+        data_len = len(data)
+        empty_data = [None for i in xrange(data_len)]
 
-        for x ,lat_p in np.ndenumerate(lat):
-            points.append(HyperPoint(lat_p,lon[x],alt[x],time[x],data[x]))
+        try:
+            lat = self.coord(standard_name='latitude').data.flatten()
+        except CoordinateNotFoundError:
+            lat = empty_data
+        try:
+            lon = self.coord(standard_name='longitude').data.flatten()
+        except CoordinateNotFoundError:
+            lon = empty_data
+        try:
+            alt = self.coord(standard_name='altitude').data.flatten()
+        except CoordinateNotFoundError:
+            alt = empty_data
+        try:
+            time = self.coord(standard_name='time').data.flatten()
+        except CoordinateNotFoundError:
+            time = empty_data
+
+        for x, val in enumerate(data):
+            points.append(HyperPoint(lat[x], lon[x], alt[x], time[x], val))
 
         return points
+
+    @classmethod
+    def from_points_array(cls, hyperpoints):
+        """
+         A constuctor for building an UngriddedData object from a list of hyper points
+        @param hyperpoints:    A list of HyperPoints
+        """
+        from data_io.Coord import Coord, CoordList
+        from data_io.hyperpoint import HyperPointList
+
+        if not isinstance(hyperpoints, HyperPointList):
+            hyperpoints = HyperPointList(hyperpoints)
+
+        values = hyperpoints.vals
+        latitude = hyperpoints.latitudes
+        longitude = hyperpoints.longitudes
+        altitude = hyperpoints.altitudes
+        time = hyperpoints.times
+
+        coords = CoordList( [Coord(latitude, Metadata(standard_name='latitude', units='degrees north')),
+                             Coord(longitude, Metadata(standard_name='longitude', units='degrees east')),
+                             Coord(altitude, Metadata(standard_name='altitude', units='meters')),
+                             Coord(time, Metadata(standard_name='time', units='seconds'))])
+
+        return cls(values, Metadata(), coords)

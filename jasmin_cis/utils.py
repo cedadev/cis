@@ -152,7 +152,10 @@ def copy_attributes(source, dest):
     @return: None
     '''
     if source:
-        dest.__dict__.update(source.__dict__)
+        if isinstance(source, dict):
+            dest.__dict__.update(source)
+        else:
+            dest.__dict__.update(source.__dict__)
 
 
 def add_file_prefix(prefix, filepath):

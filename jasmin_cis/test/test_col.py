@@ -40,7 +40,7 @@ class Test_nn_gridded(KernelTests):
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
         col = DefaultColocator()
-        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())
+        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
         eq_(new_data.data[1], 12.0)
         eq_(new_data.data[2], 4.0)
@@ -53,7 +53,7 @@ class Test_nn_gridded(KernelTests):
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = [ HyperPoint(0.0, 0.0) ]
         col = DefaultColocator()
-        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())
+        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
 
     @istest
@@ -69,7 +69,7 @@ class Test_nn_gridded(KernelTests):
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5) ]
         col = DefaultColocator()
-        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())
+        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
         eq_(new_data.data[1], 5.0)
         eq_(new_data.data[2], 7.0)
@@ -82,7 +82,7 @@ class Test_nn_gridded(KernelTests):
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5) ]
         col = DefaultColocator()
-        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())
+        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 12.0)
         eq_(new_data.data[1], 6.0)
         eq_(new_data.data[2], 10.0)
@@ -98,7 +98,7 @@ class Test_li(KernelTests):
         cube = mock.make_square_3x3_2d_cube()
         sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
         col = DefaultColocator()
-        new_data = col.colocate(sample_points, cube, DummyConstraint(), li())
+        new_data = col.colocate(sample_points, cube, DummyConstraint(), li())[0]
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)
         assert_almost_equal(new_data.data[2], 4.8)

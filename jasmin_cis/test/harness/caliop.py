@@ -11,6 +11,6 @@ data_obj = read_data(filenames, "Particulate_Depolarization_Ratio_Profile_532", 
 # Eds code datad = read_hdf4(filename) #DELETE ME
 from plotting.plot import Plotter
 
-Plotter([data_obj],plot_type="scatter", yrange={"ymin":0}, valrange={"vmax":0.0, "vmin":1.0})
+Plotter([data_obj],plot_type="scatter", yrange={"ymin":0}, valrange={"vmin":0.0, "vmax":1.0})
 #Plotter([data_obj],plot_type="scatter")
 

@@ -75,6 +75,8 @@ setup(
     url='http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite',
 
     packages=find_packages(),
+    package_data={'':['logging.conf']},
+
     scripts = ['bin/cis'],
     
     cmdclass={"gendoc": gen_doc, "checkdep":check_dep}

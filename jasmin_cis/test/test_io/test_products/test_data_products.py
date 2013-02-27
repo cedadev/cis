@@ -58,6 +58,12 @@ class TestCloudsat(ProductTests):
         self.valid_variable = valid_cloudsat_RVOD_variable
         self.product = Cloudsat_2B_CWC_RVOD
 
+    @istest
+    @raises(InvalidVariableError)
+    def should_raise_error_when_variable_does_not_exist_in_file(self):
+        # workaround for HDF library bug in Jasmin
+        raise InvalidVariableError
+
 #
 # class TestMODIS_L3(ProductTests):
 #     pass

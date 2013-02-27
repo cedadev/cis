@@ -41,6 +41,18 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         '''
         return (self.haversine_dist(p1) > self.haversine_dist(p2))
 
+    def compalt(self,p1,p2):
+        '''
+            Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
+        '''
+        return (self.alt_sep(p1) > self.alt_sep(p2))
+
+    def comptime(self,p1,p2):
+        '''
+            Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
+        '''
+        return (self.time_sep(p1) > self.time_sep(p2))
+
     def haversine_dist(self,point2):
         '''
             Computes the Haversine distance between two points
@@ -75,20 +87,86 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
 class HyperPointList(list):
     """All the functionality of a standard `list` with added "HyperPoint" context."""
 
-    def __new__(cls, list_of_coords=None):
+    def __new__(cls, list_of_points=None):
         """
-        Given a `list` of HyperPoints, return a HyperPointList instance.
+        Given a `list` of HyperPoints, return a HyperPointList instance. This checks that all of the items in the list
+         are HyperPoint instances but no other checks. Specifically each Hyper point should have the same shape, that is
+         if any point has a coordinate as None, then no other points should have a value for that coordinate. This is not
+         imposed here because of the potential overhead but it is assumed by other functions in CIS.
 
         """
-        coord_list = list.__new__(cls, list_of_coords)
+        point_list = list.__new__(cls, list_of_points)
 
         # Check that all items in the incoming list are HyperPoints. Note that this checking
         # does not guarantee that a HyperPointList instance *always* has just HyperPoints in its list as
         # the append & __getitem__ methods have not been overridden.
-        if not all([isinstance(coord, HyperPoint) for coord in coord_list]):
+        if not all([isinstance(point, HyperPoint) for point in point_list]):
             raise ValueError('All items in list_of_coords must be Coord instances.')
-        return coord_list
+        return point_list
 
     @property
     def vals(self):
-        return [ point.val for point in self ]
+        from numpy import zeros
+        n_points = len(self)
+
+        values = zeros(n_points)
+        for i, point in enumerate(self):
+            values[i] = point.val[0]
+
+        return values
+
+    @property
+    def longitudes(self):
+        from numpy import zeros
+
+        if self[0].longitude is not None:
+            n_points = len(self)
+
+            values = zeros(n_points)
+            for i, point in enumerate(self):
+                values[i] = point.longitude
+        else:
+            values = None
+        return values
+
+    @property
+    def latitudes(self):
+        from numpy import zeros
+
+        if self[0].longitude is not None:
+            n_points = len(self)
+
+            values = zeros(n_points)
+            for i, point in enumerate(self):
+                values[i] = point.latitude
+        else:
+            values = None
+        return values
+
+    @property
+    def altitudes(self):
+        from numpy import zeros
+
+        if self[0].longitude is not None:
+            n_points = len(self)
+
+            values = zeros(n_points)
+            for i, point in enumerate(self):
+                values[i] = point.altitude
+        else:
+            values = None
+        return values
+
+    @property
+    def times(self):
+        from numpy import zeros
+
+        if self[0].longitude is not None:
+            n_points = len(self)
+
+            values = zeros(n_points)
+            for i, point in enumerate(self):
+                values[i] = point.time
+        else:
+            values = None
+        return values
