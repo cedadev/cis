@@ -2,15 +2,16 @@
 Module for writing data to NetCDF files
 '''
 from netCDF4 import Dataset
-import numpy as np
 import logging
 
-types = {float: "f",
-         'int16': "i",
-         'int64': "i",
-         'float64': "f"}
+types = {'int16': "i2",
+         'int32': "i4",
+         'int64': "i8",
+         'float32': "f4",
+         'float64': "f8"}
 
 index_name = 'pixel_number'
+
 
 def __add_metadata(var, data):
     if data.standard_name: var.standard_name = data.standard_name
@@ -20,27 +21,17 @@ def __add_metadata(var, data):
     if data.metadata.missing_value : var.missing_value = data.metadata.missing_value
     return var
 
+
 def __get_missing_value(coord):
     f = coord.metadata.missing_value
     if not f and f !=0:
         f = None
     return f
 
-#def __create_dimensions(nc_file, coords):
-#    dimensions = ()
-#    first_coord = True
-#    for coord in coords:
-#        if first_coord:
-#            dimension = nc_file.createDimension(coord.name(), len(coord.data))
-#            dimensions = dimensions + (coord.name(),)
-#            first_coord = False
-#        var = nc_file.createVariable(coord.name(), types[type(coord.data[0])], dimension._name, fill_value=__get_missing_value(coord))
-#        var = __add_metadata(var, coord)
-#        var[:] = coord.data
-#
-#    return dimensions
 
 def __create_variable(nc_file, data):
+    if data.units == "DateTime Object":
+        data.convert_datetime_to_num()
     logging.info("Creating variable: " + data.name() + "("+index_name+")" + " " + types[str(data.data.dtype)])
     var = nc_file.createVariable(data.name(), types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
     var = __add_metadata(var, data)
@@ -48,7 +39,9 @@ def __create_variable(nc_file, data):
 
     return var
 
+
 def __create_index(nc_file, length):
+    import numpy as np
     dimension = nc_file.createDimension(index_name, length)
     dimensions = ( index_name, )
     var = nc_file.createVariable(index_name, np.int32, dimensions)
@@ -69,6 +62,7 @@ def write(data_object, filename):
     write_coordinates(data_object.coords(), filename)
     add_data_to_file(data_object, filename)
 
+
 def write_coordinates(coords, filename):
     """
 
@@ -81,6 +75,7 @@ def write_coordinates(coords, filename):
     for data in coords:
         coord = __create_variable(netcdf_file, data)
     netcdf_file.close()
+
 
 def add_data_to_file(data_object, filename):
     """

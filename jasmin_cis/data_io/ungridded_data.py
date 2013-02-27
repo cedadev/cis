@@ -247,42 +247,38 @@ class UngriddedData(LazyData):
 
     def get_points(self):
         """
-             Pack a list of coordinates into a list of x, y, z, t points
+             Pack a list of coordinates into a list of x, y, z, t points. If the internal data is a masked array then
+             only valid (unmasked) points will be returned in the list.
+
         @param coords: A CoordList of Coord objects
         @return: A list of HyperPoints
         """
         import numpy as np
         from hyperpoint import HyperPoint, HyperPointList
-        from jasmin_cis.exceptions import CoordinateNotFoundError
+
         points = HyperPointList()
 
         logging.info("Converting ungridded data to a list of HyperPoints")
 
+        # We want the data to be flat wether it's masked or not
         data = self.data.flatten()
+
+        # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
+        #  it were the full length of the array
         data_len = len(data)
-        empty_data = [None for i in xrange(data_len)]
+        all_coords = self._coords.get_standard_coords(data_len)
 
-        try:
-            lat = self.coord(standard_name='latitude').data.flatten()
-        except CoordinateNotFoundError:
-            lat = empty_data
-        try:
-            lon = self.coord(standard_name='longitude').data.flatten()
-        except CoordinateNotFoundError:
-            lon = empty_data
-        try:
-            alt = self.coord(standard_name='altitude').data.flatten()
-        except CoordinateNotFoundError:
-            alt = empty_data
-        try:
-            time = self.coord(standard_name='time').data.flatten()
-        except CoordinateNotFoundError:
-            time = empty_data
-
-        for x, val in enumerate(data):
-            points.append(HyperPoint(lat[x], lon[x], alt[x], time[x], val))
+        if isinstance(self.data, np.ma.masked_array):
+            # Loop over all of the elements in the array, so that i goes from 0 to len(data)-1, but
+            #  only access those entries which the mask is False, that is for which not the mask is True...
+            for i, val in enumerate(data[~data.mask]):
+                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
+        else:
+            for i, val in enumerate(data):
+                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
 
         return points
+
 
     @classmethod
     def from_points_array(cls, hyperpoints):
