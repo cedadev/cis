@@ -70,11 +70,18 @@ def plot_cmd(main_arguments):
 
     # overwrites which variable to used for the x and y axis
     # ignore unknown variables
-    if main_arguments['xaxis'] and main_arguments['yaxis'] is not None:
-        var_axis_dict = {main_arguments.pop("xaxis").lower():'X',main_arguments.pop("yaxis").lower():'Y'}
-        for d in data:
-            for coord in d.coords():
-                coord.axis = var_axis_dict[coord.standard_name.lower()] if var_axis_dict.has_key(coord.standard_name.lower()) else ''
+    var_axis_dict = {}
+    if main_arguments['xaxis'] is not None:
+        var_axis_dict[main_arguments.pop("xaxis").lower()] = "X"
+    if main_arguments['yaxis'] is not None:
+        var_axis_dict[main_arguments.pop("yaxis").lower()] = "Y"
+
+    for d in data:
+        for coord in d.coords():
+            if var_axis_dict.has_key(coord.standard_name.lower()):
+                coord.axis = var_axis_dict[coord.standard_name.lower()]
+            if coord.name().lower() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
+                coord.axis = ''
 
     try:
         Plotter(data, plot_type, output, **main_arguments)
