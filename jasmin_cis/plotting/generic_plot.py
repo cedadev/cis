@@ -94,7 +94,7 @@ class Generic_Plot(object):
             try:
                 step = v_range.get("vstep", (vmax-vmin) / self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS)
             except AttributeError:
-                step = (vmax-vmin) / 5
+                step = (vmax-vmin) / self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS
             ticks = []
             tick = vmin
             while tick <= vmax:
