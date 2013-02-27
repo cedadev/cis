@@ -18,6 +18,16 @@ class Comparative_Scatter(Generic_Plot):
 
         ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], color=colour, marker=marker, s=scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
 
+    def calculate_axis_limits(self, axis):
+        valrange = {}
+        if axis == "x":
+            axis_index = 0
+        elif axis == "y":
+            axis_index = 1
+
+        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[axis_index]["data"])
+        return valrange
+
     def format_plot(self):
         self.format_2d_plot()
 

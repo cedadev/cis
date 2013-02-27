@@ -89,33 +89,35 @@ class Generic_Plot(object):
         if height is not None and width is not None:
             self.matplotlib.figure(figsize = (width, height))
 
+    def calculate_min_and_max_values_of_array_including_case_of_log(self, axis, array):
+        log_axis = self.plot_args.get("log" + axis, False)
+        if log_axis:
+            from sys import maxint
+            min_val = maxint
+            max_val = -maxint - 1
+            for number in array.flatten():
+                if number > 0:
+                    if number < min_val:
+                        min_val = number
+                    if number > max_val:
+                        max_val = number
+        else:
+            min_val =  array.min()
+            max_val =  array.max()
+        return min_val, max_val
+
+    def calculate_axis_limits(self, axis):
+        valrange = {}
+        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
+        return valrange
 
     def apply_axis_limits(self, valrange, axis):
         '''
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
-        if valrange is None:
-            if is_map(self.packed_data_items[0]): #Zoom in on heatmap
-                self.zoom_in_on_heatmap(axis)
-        else: # apply user specified range
-            self.apply_user_specified_axis_limits(axis, valrange)
+        if valrange is None: valrange = self.calculate_axis_limits(axis)
 
-    def zoom_in_on_heatmap(self, axis):
-        from iris.exceptions import CoordinateNotFoundError
-        valrange = {}
-        try:
-            valrange[axis + "min"] = self.packed_data_items[0].coord(axis=axis).data.min()
-            valrange[axis + "max"] = self.packed_data_items[0].coord(axis=axis).data.max()
-            try:
-                self.valrange[axis] = valrange
-            except AttributeError:
-                self.valrange = {}
-                self.valrange[axis] = valrange
-        except (CoordinateNotFoundError, AttributeError):
-            pass
-
-    def apply_user_specified_axis_limits(self, axis, valrange):
         if axis == "x":
             step = valrange.pop("xstep", None)
             self.matplotlib.xlim(**valrange)

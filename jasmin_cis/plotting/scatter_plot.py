@@ -37,6 +37,19 @@ class Scatter_Plot(Generic_Plot):
             self.mplkwargs.pop("latlon", None)
             self.plots.append(self.plot_method.scatter(unpacked_data_item["x"], y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
+    def calculate_axis_limits(self, axis):
+        valrange = {}
+        if axis == "x":
+            coord_axis = "x"
+        elif axis == "y":
+            if self.scatter_type == "2D":
+                coord_axis = "data"
+            elif self.scatter_type == "3D":
+                coord_axis = "y"
+        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+        return valrange
+
+
     def format_plot(self):
         if self.scatter_type == "3D":
             self.format_3d_plot()
