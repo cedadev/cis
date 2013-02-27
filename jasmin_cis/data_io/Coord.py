@@ -17,6 +17,27 @@ class Coord(LazyData):
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
+    def convert_datetime_to_num(self):
+        from iris.unit import encode_time
+        import numpy as np
+        if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a number")
+        new_data = np.zeros(self.shape, dtype='float32')
+        for i, date_time in np.ndenumerate(self.data):
+            new_data[i] = encode_time(*date_time.timetuple()[0:6])
+        self.units = "DateTime Number"
+        self._data = new_data
+
+    def convert_num_to_datetime(self):
+        from iris.unit import decode_time
+        from datetime import datetime
+        import numpy as np
+        if self.units != "DateTime Number": raise ValueError("Time units must be DateTime Number for conversion to an Object")
+        new_data = np.zeros(self.shape, dtype='O')
+        for i, date_time in np.ndenumerate(self.data):
+            new_data[i] = decode_time(datetime(*date_time))
+        self.units = "DateTime Object"
+        self._data = new_data
+
 class CoordList(list):
     """All the functionality of a standard `list` with added "Coord" context."""
 
@@ -155,3 +176,4 @@ class CoordList(list):
             time = empty_data
 
         return CoordList([lat, lon, alt, time ])
+

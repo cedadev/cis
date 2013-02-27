@@ -35,6 +35,15 @@ class ProductTests():
         self.product().create_coords([self.filename])
 
     @istest
+    def test_write_coords(self):
+        from jasmin_cis.data_io.write_netcdf import write_coordinates
+        from os import remove
+        test_file = '/tmp/test_out.nc'
+        coords = self.product().create_coords([self.filename])
+        write_coordinates(coords, test_file)
+        remove(test_file)
+
+    @istest
     @raises(IOError)
     def should_raise_ioerror_with_invalid_filename(self):
         self.product().create_data_object([invalid_filename], self.valid_variable)
