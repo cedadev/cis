@@ -22,13 +22,6 @@ def is_map(data_item):
 
 class Generic_Plot(object):
 
-    def set_font_size(self):
-        if self.plot_args.get("fontsize", None) is not None:
-            if not isinstance(self.plot_args.get("fontsize", None), dict):
-                self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
-        else:
-            self.plot_args.pop("fontsize", None)
-
     def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
         from utils import unpack_data_object
         self.mplargs = mplargs
@@ -54,6 +47,26 @@ class Generic_Plot(object):
     def format_plot(self):
         raise NotImplementedError()
 
+    def set_default_axis_label(self, axis):
+        raise NotImplementedError()
+
+    def create_legend(self):
+        legend_titles = []
+        datagroups = self.plot_args["datagroups"]
+        for i, item in enumerate(self.packed_data_items):
+            if datagroups is not None and datagroups[i]["label"]:
+                legend_titles.append(datagroups[i]["label"])
+            else:
+                legend_titles.append(item.long_name)
+        legend = self.matplotlib.legend(legend_titles, loc="best")
+        legend.draggable(state = True)
+
+    def set_font_size(self):
+        if self.plot_args.get("fontsize", None) is not None:
+            if not isinstance(self.plot_args.get("fontsize", None), dict):
+                self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
+        else:
+            self.plot_args.pop("fontsize", None)
 
     def calculate_min_and_max_values(self):
         from sys import maxint
@@ -67,9 +80,8 @@ class Generic_Plot(object):
         if vmax == -maxint - 1:
             vmax = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
 
-        self.mplkwargs["vmin"] = vmin
-        self.mplkwargs["vmax"] = vmax
-
+        self.mplkwargs["vmin"] = float(vmin)
+        self.mplkwargs["vmax"] = float(vmax)
 
     def add_color_bar(self, logv, vmin, vmax, v_range, orientation, units):
         from plot import format_units
@@ -93,15 +105,9 @@ class Generic_Plot(object):
 
         ticks = None
 
-        cbar = plt.colorbar(orientation = orientation, ticks = ticks, format = nformat)
+        cbar = plt.colorbar(orientation = orientation)#, ticks = ticks, format = nformat)
 
         cbar.set_label(format_units(units))
-
-    def set_default_axis_label(self, axis):
-        raise NotImplementedError()
-
-    def create_legend(self, data, datagroups):
-        raise NotImplementedError()
 
     def draw_coastlines(self, draw_grid = False):
         if is_map(self.packed_data_items[0]):
@@ -117,17 +123,6 @@ class Generic_Plot(object):
 
             plt.xticks(meridians, meridian_labels)
             plt.yticks(parallels, parallel_labels)
-
-    def create_legend(self):
-        legend_titles = []
-        datagroups = self.plot_args["datagroups"]
-        for i, item in enumerate(self.packed_data_items):
-            if datagroups is not None and datagroups[i]["label"]:
-                legend_titles.append(datagroups[i]["label"])
-            else:
-                legend_titles.append(item.long_name)
-        legend = self.matplotlib.legend(legend_titles, loc="best")
-        legend.draggable(state = True)
 
     def __create_map_grid_lines(self):
         def __create_set_of_grid_lines(axis, range_dict):
@@ -221,7 +216,6 @@ class Generic_Plot(object):
                         #END FORMAT PLOT
 
     def format_3d_plot(self):
-        from jasmin_cis.plotting.plot import plot_options
         '''
         Sets the fontsize, xlabel, ylabel, title, legend and color bar
         Tries to assign default value if value not specified
@@ -232,6 +226,7 @@ class Generic_Plot(object):
         @param datagroups:               The list of datagroups from the command line, as a dictionary, containing filename, variable, label etc
         @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
         '''
+        from jasmin_cis.plotting.plot import plot_options
 
         if self.plot_args is not None:
             draw_grid = self.plot_args.get("grid")

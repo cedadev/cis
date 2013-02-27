@@ -2,7 +2,6 @@
 Class for plotting graphs.
 Also contains dictionaries for the valid plot types and formatting options
 '''
-import logging
 from contour_plot import Contour_Plot
 from contourf_plot import Contourf_Plot
 from heatmap import Heatmap
@@ -50,7 +49,7 @@ class Plotter(object):
         self.remove_unassigned_arguments()
 
         self.packed_data_items = packed_data_items
-        v_range = self.prepare_range("val")
+        v_range = self.mplkwargs.pop("valrange", {})
         self.out_filename = out_filename
 
         if plot_args.get("logv", False):
@@ -72,13 +71,6 @@ class Plotter(object):
 #        if len(self.plots) > 1: self.create_legend(plot_args["datagroups"])
 
         self.output_to_file_or_screen()
-
-    def calculate_min_and_max_values_for_all_plots(self):
-        vmin = min([plot.mplkwargs["vmin"] for plot in self.plots])
-        vmax = max([plot.mplkwargs["vmax"] for plot in self.plots])
-        return vmin, vmax
-
-
 
     def output_to_file_or_screen(self):
         '''
@@ -153,29 +145,6 @@ class Plotter(object):
         for key in self.mplkwargs.keys():
             if self.mplkwargs[key] is None:
                 self.mplkwargs.pop(key)
-
-    def prepare_range(self, axis):
-        '''
-        If the axis is for the values and the plot type is not a line graph, then adds the min and max value to the kwargs
-        otherwise just returns the valrange as a dictionary containing the min and max value
-
-        @param axis    The axis to prepare the range for
-        '''
-        valrange = self.mplkwargs.pop(axis + "range", {})
-        '''
-        if axis == "val" and self.plot_type != "line" and valrange is not None:
-            try:
-                self.mplkwargs["vmin"] = valrange.pop("vmin")
-            except KeyError:
-                pass
-
-            try:
-                self.mplkwargs["vmax"] = valrange.pop("vmax")
-            except KeyError:
-                pass
-            if valrange == {}:
-                valrange = None'''
-        return valrange
 
     def __set_default_plot_type(self, data):
         '''
