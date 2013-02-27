@@ -9,11 +9,18 @@ class Contour_Plot(Generic_Plot):
 
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        my_contour = self.plot_method.contour(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], *self.mplargs, **self.mplkwargs)
-        lim_dict = {}
-        lim_dict["vmin"] = self.mplkwargs["vmin"]
-        lim_dict["vmax"] = self.mplkwargs["vmax"]
-        my_contour.set_clim(**lim_dict)
+        from numpy import linspace
+        vmin = self.mplkwargs.pop("vmin")
+        vmax = self.mplkwargs.pop("vmax")
+
+        if self.v_range.get("vstep", None) is None:
+            step = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
+        else:
+            step = (vmax - vmin) / self.v_range["vstep"]
+        self.plot_method.contour(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
+
+        self.mplkwargs["vmin"] = vmin
+        self.mplkwargs["vmax"] = vmax
     def set_default_axis_label(self, axis):
         return self.set_3daxis_label(axis)
 

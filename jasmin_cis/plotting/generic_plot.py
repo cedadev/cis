@@ -21,6 +21,7 @@ def is_map(data_item):
         return False
 
 class Generic_Plot(object):
+    DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
     def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
         from utils import unpack_data_object
@@ -92,7 +93,7 @@ class Generic_Plot(object):
 
         if not logv:
             try:
-                step = v_range.get("vstep", (vmax-vmin) / 5)
+                step = v_range.get("vstep", (vmax-vmin) / self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS)
             except AttributeError:
                 step = (vmax-vmin) / 5
             ticks = []
@@ -103,9 +104,7 @@ class Generic_Plot(object):
         else:
             ticks = None
 
-        ticks = None
-
-        cbar = plt.colorbar(orientation = orientation)#, ticks = ticks, format = nformat)
+        cbar = plt.colorbar(orientation = orientation, ticks = ticks, format = nformat)
 
         cbar.set_label(format_units(units))
 
