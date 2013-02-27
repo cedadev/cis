@@ -22,7 +22,7 @@ class Line_Plot(Generic_Plot):
                 if datafile["itemstyle"] in Line_Plot.line_styles:
                     self.mplkwargs["linestyle"] = datafile["itemstyle"]
                 else:
-                    from exceptions import InvalidLineStyleError
+                    from jasmin_cis.exceptions import InvalidLineStyleError
                     raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(Plotter.line_styles))
             else:
                 self.mplkwargs["linestyle"] = "-"
