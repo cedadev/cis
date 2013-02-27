@@ -9,7 +9,7 @@ class Contourf_Plot(Generic_Plot):
 
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        self.plot_method.contourf(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], *self.mplargs, **self.mplkwargs)
+        self.contour_plot(True)
 
     def set_default_axis_label(self, axis):
         return self.set_3daxis_label(axis)

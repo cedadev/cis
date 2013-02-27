@@ -108,6 +108,26 @@ class Generic_Plot(object):
 
         cbar.set_label(format_units(units))
 
+    def contour_plot(self, filled):
+        from numpy import linspace
+        vmin = self.mplkwargs.pop("vmin")
+        vmax = self.mplkwargs.pop("vmax")
+
+        if self.v_range.get("vstep", None) is None:
+            step = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
+        else:
+            step = (vmax - vmin) / self.v_range["vstep"]
+
+        if filled:
+            contour_type = self.plot_method.contourf
+        else:
+            contour_type = self.plot_method.contour
+
+        contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
+
+        self.mplkwargs["vmin"] = vmin
+        self.mplkwargs["vmax"] = vmax
+
     def draw_coastlines(self, draw_grid = False):
         if is_map(self.packed_data_items[0]):
             self.basemap.drawcoastlines()
