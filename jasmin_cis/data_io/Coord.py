@@ -159,19 +159,19 @@ class CoordList(list):
         empty_data = [None for i in xrange(data_len)]
 
         try:
-            lat = self.coord(standard_name='latitude').data.flatten()
+            lat = self.get_coord(standard_name='latitude').data.flatten()
         except CoordinateNotFoundError:
             lat = empty_data
         try:
-            lon = self.coord(standard_name='longitude').data.flatten()
+            lon = self.get_coord(standard_name='longitude').data.flatten()
         except CoordinateNotFoundError:
             lon = empty_data
         try:
-            alt = self.coord(standard_name='altitude').data.flatten()
+            alt = self.get_coord(standard_name='altitude').data.flatten()
         except CoordinateNotFoundError:
             alt = empty_data
         try:
-            time = self.coord(standard_name='time').data.flatten()
+            time = self.get_coord(standard_name='time').data.flatten()
         except CoordinateNotFoundError:
             time = empty_data
 
