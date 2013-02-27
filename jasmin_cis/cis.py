@@ -72,9 +72,11 @@ def plot_cmd(main_arguments):
     # ignore unknown variables
     var_axis_dict = {}
     if main_arguments['xaxis'] is not None:
-        var_axis_dict[main_arguments.pop("xaxis").lower()] = "X"
+        var_axis_dict[main_arguments["xaxis"].lower()] = "X"
+        logging.info("Overriding data product default variable for x axis with: " + main_arguments.pop("xaxis"))
     if main_arguments['yaxis'] is not None:
-        var_axis_dict[main_arguments.pop("yaxis").lower()] = "Y"
+        var_axis_dict[main_arguments["yaxis"].lower()] = "Y"
+        logging.info("Overriding data product default variable for y axis with: " + main_arguments.pop("yaxis"))
 
     for d in data:
         for coord in d.coords():
