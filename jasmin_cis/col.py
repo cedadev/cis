@@ -23,7 +23,7 @@ class Colocate(object):
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.col_framework import get_constraint, get_kernel, get_colocator
         from jasmin_cis.utils import copy_attributes
-        from time import time
+        from timeUtil import time
         from iris import cube
 
         logging.info("Reading data for: "+variable)

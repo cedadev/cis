@@ -1,6 +1,6 @@
 from data_io.hyperpoint import HyperPoint
 from jasmin_cis.col_framework import Colocator, Constraint, Kernel
-from time import time
+from timeUtil import time
 import logging
 
 

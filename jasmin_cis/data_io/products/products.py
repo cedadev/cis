@@ -338,7 +338,7 @@ class Aerosol_CCI(AProduct):
 class Caliop(AProduct):
 
     def get_file_signature(self):
-        return [r'CAL.*hdf']
+        return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
 
     def create_coords(self, filenames):
 
@@ -393,6 +393,14 @@ class Caliop(AProduct):
         profile_time = sdata['Profile_Time']
         profile_time_data = hdf.read_data(profile_time,"SD")
         profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
+
+        print profile_time_data
+
+        #import time
+        #profile_time_data = time.convert_tai_to_obj(profile_time_data)
+
+
+
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
         profile_time_metadata.shape = [profile_time_data.shape[0],profile_time_data.shape[1]]
         profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
