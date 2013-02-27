@@ -1,6 +1,4 @@
-from data_io.hyperpoint import HyperPoint
 from jasmin_cis.col_framework import Colocator, Constraint, Kernel
-from time import time
 import logging
 
 
@@ -17,8 +15,13 @@ class DefaultColocator(Colocator):
         @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
         @return: A single LazyData object
         '''
-        from jasmin_cis.data_io.ungridded_data import LazyData
+        from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
         import numpy as np
+
+        # Convert ungridded data to a list of points
+        if isinstance(data, UngriddedData):
+            data_points = data.get_points()
+
         values = np.zeros(len(points))
         for i, point in enumerate(points):
             con_points = constraint.constrain_points(point, data)
@@ -39,7 +42,7 @@ class DebugColocator(Colocator):
         from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
         import numpy as np
         import math
-
+        from time import time
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
             data_points = data.get_points()
@@ -91,7 +94,8 @@ class DummyConstraint(Constraint):
 class SepConstraint(Constraint):
 
     def constrain_points(self, ref_point, data):
-        con_points = []
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
+        con_points = HyperPointList()
         for point in data:
             checks = [point.haversine_dist(ref_point) < self.h_sep,
                       point.time_sep < self.t_sep,
@@ -99,6 +103,16 @@ class SepConstraint(Constraint):
             if all(checks):
                 con_points.append(point)
         return con_points
+
+
+class mean(Kernel):
+
+    def get_value(self, point, data):
+        '''
+            Colocation using the mean of any points left after a constraint.
+        '''
+        from numpy import mean
+        return mean(data.vals)
 
 
 class nn_horizontal(Kernel):
@@ -134,8 +148,8 @@ class nn_time(Kernel):
             Colocation using nearest neighbours without any constraints where both points and
               data are a list of HyperPoints
         '''
-        nearest_point = HyperPoint(t=0.0)
-        for data_point in data:
+        nearest_point = data[0]
+        for data_point in data[1:]:
             if point.comptime(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val
 
