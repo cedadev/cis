@@ -2,8 +2,9 @@ from generic_plot import Generic_Plot
 
 class Comparative_Scatter(Generic_Plot):
     def plot(self):
+        scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         self.mplkwargs.pop("latlon", None)
-        self.matplotlib.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], c="b", s=20, edgecolors = "none", *self.mplargs, **self.mplkwargs)
+        self.matplotlib.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], s=scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
 
     def format_plot(self):
         self.format_2d_plot()
