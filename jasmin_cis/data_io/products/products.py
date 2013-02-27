@@ -378,12 +378,9 @@ class Caliop(AProduct):
         profile_time_data = hdf.read_data(profile_time,"SD")
         profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
 
-        print profile_time_data
-
-        #import time
-        #profile_time_data = time.convert_tai_to_obj(profile_time_data)
-
-
+        import timeUtil
+        import datetime as dt
+        profile_time_data = timeUtil.convert_tai_to_obj_array(profile_time_data,dt.datetime(1993,1,1))
 
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
         profile_time_metadata.shape = new_shape
