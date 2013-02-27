@@ -39,7 +39,6 @@ class AProduct(object):
 
         return [r'.*CODE*.nc']
         This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
-
         '''
 
 

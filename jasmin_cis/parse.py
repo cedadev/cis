@@ -43,6 +43,8 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--logy", metavar = "Log (base 10) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the y axis")
     parser.add_argument("--logv", metavar = "Log (base 10) scale for values", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the colour bar")
     parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
+    parser.add_argument("--xaxis", metavar = "variable on x axis", nargs="?", help="name of variable to use on the x axis")
+    parser.add_argument("--yaxis", metavar = "variable on y axis", nargs="?", help="name of variable to use on the y axis")
     return parser
 
 
