@@ -291,6 +291,8 @@ class Aerosol_CCI(AProduct):
 
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
         from jasmin_cis.data_io.Coord import Coord
+        import datetime
+        from jasmin_cis.timeUtil import convert_tai_to_obj_array
 
         variables = ["lat", "lon", "time"]
 
@@ -299,7 +301,10 @@ class Aerosol_CCI(AProduct):
         coords = CoordList()
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
+        time_data = convert_tai_to_obj_array(data["time"],datetime.datetime())
+
         time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
+
         time_coord.convert_num_to_datetime()
         coords.append(time_coord)
         
