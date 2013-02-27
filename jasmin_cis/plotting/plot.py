@@ -8,7 +8,6 @@ from heatmap import Heatmap
 from line_plot import Line_Plot
 from scatter_overlay import Scatter_Overlay
 from scatter_plot import Scatter_Plot
-from generic_plot import is_map
 from comparative_scatter import Comparative_Scatter
 import matplotlib.pyplot as mpl
 
@@ -52,7 +51,6 @@ class Plotter(object):
 
         self.packed_data_items = packed_data_items
         v_range = self.mplkwargs.pop("valrange", {})
-        self.out_filename = out_filename
 
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
@@ -60,85 +58,8 @@ class Plotter(object):
 
         if plot_type is None: plot_type = self.__set_default_plot_type(packed_data_items)
 
-        self.set_width_and_height()
-
-        canvas = self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
-        canvas.plot()
-        canvas.format_plot()
-
-        self.apply_axis_limits(plot_args["xrange"], "x")
-        self.apply_axis_limits(plot_args["yrange"], "y")
-
-        #self.format_plot(self.plot_format_options)
-#        if len(self.plots) > 1: self.create_legend(plot_args["datagroups"])
-
-        self.output_to_file_or_screen()
-
-    def output_to_file_or_screen(self):
-        '''
-        Outputs to screen unless a filename is given
-
-        @param out_filename    The filename of the file to save to
-        '''
-        import logging
-
-        if self.out_filename is None:
-            mpl.show()
-        else:
-            logging.info("saving plot to file: " + self.out_filename);
-            mpl.savefig(self.out_filename) # Will overwrite if file already exists
-
-    def zoom_in_on_heatmap(self, axis):
-        from iris.exceptions import CoordinateNotFoundError
-        valrange = {}
-        try:
-            valrange[axis + "min"] = self.packed_data_items[0].coord(axis=axis).data.min()
-            valrange[axis + "max"] = self.packed_data_items[0].coord(axis=axis).data.max()
-            try:
-                self.valrange[axis] = valrange
-            except AttributeError:
-                self.valrange = {}
-                self.valrange[axis] = valrange
-        except (CoordinateNotFoundError, AttributeError):
-            pass
-
-    def apply_user_specified_axis_limits(self, axis, valrange):
-        if axis == "x":
-            step = valrange.pop("xstep", None)
-            mpl.xlim(**valrange)
-            if step is not None: valrange["xstep"] = step
-        elif axis == "y":
-            step = valrange.pop("ystep", None)
-            mpl.ylim(**valrange)
-            if step is not None: valrange["ystep"] = step
-
-    def apply_axis_limits(self, valrange, axis):
-        '''
-        @param valrange    A dictionary containing xmin, xmax or ymin, ymax
-        @param axis        The axis to apply the limits to
-        '''
-        if valrange is None:
-            if is_map(self.packed_data_items[0]): #Zoom in on heatmap
-                self.zoom_in_on_heatmap(axis)
-        else: # apply user specified range
-            self.apply_user_specified_axis_limits(axis, valrange)
-
-    def set_width_and_height(self):
-        '''
-        Sets the width and height of the plot
-        Uses an aspect ratio of 4:3 if only one of width and height are specified
-        '''
-        height = self.mplkwargs.pop("height", None)
-        width = self.mplkwargs.pop("width", None)
-
-        if height is not None:
-            if width is None:
-                width = height * (4.0 / 3.0)
-        elif width is not None:
-            height = width * (3.0 / 4.0)
-
-        if height is not None and width is not None:
-            mpl.figure(figsize = (width, height))
+        # Do plot
+        self.plot_types[plot_type](packed_data_items, v_range, plot_args, out_filename, *mplargs, **mplkwargs)
 
     def remove_unassigned_arguments(self):
         '''

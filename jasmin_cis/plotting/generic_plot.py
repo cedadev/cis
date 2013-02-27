@@ -23,8 +23,9 @@ def is_map(data_item):
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, v_range, plot_args, out_filename = None, *mplargs, **mplkwargs):
         from utils import unpack_data_object
+        self.out_filename = out_filename
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.plot_args = plot_args
@@ -40,6 +41,16 @@ class Generic_Plot(object):
             self.mplkwargs["latlon"] = True
         else:
             self.plot_method = self.matplotlib
+
+        self.set_width_and_height()
+
+        self.plot()
+        self.format_plot()
+
+        self.apply_axis_limits(plot_args["xrange"], "x")
+        self.apply_axis_limits(plot_args["yrange"], "y")
+
+        self.output_to_file_or_screen()
 
     def plot(self):
         raise NotImplementedError()
@@ -61,12 +72,79 @@ class Generic_Plot(object):
         legend = self.matplotlib.legend(legend_titles, loc="best")
         legend.draggable(state = True)
 
+    def set_width_and_height(self):
+        '''
+        Sets the width and height of the plot
+        Uses an aspect ratio of 4:3 if only one of width and height are specified
+        '''
+        height = self.mplkwargs.pop("height", None)
+        width = self.mplkwargs.pop("width", None)
+
+        if height is not None:
+            if width is None:
+                width = height * (4.0 / 3.0)
+        elif width is not None:
+            height = width * (3.0 / 4.0)
+
+        if height is not None and width is not None:
+            self.matplotlib.figure(figsize = (width, height))
+
+
+    def apply_axis_limits(self, valrange, axis):
+        '''
+        @param valrange    A dictionary containing xmin, xmax or ymin, ymax
+        @param axis        The axis to apply the limits to
+        '''
+        if valrange is None:
+            if is_map(self.packed_data_items[0]): #Zoom in on heatmap
+                self.zoom_in_on_heatmap(axis)
+        else: # apply user specified range
+            self.apply_user_specified_axis_limits(axis, valrange)
+
+    def zoom_in_on_heatmap(self, axis):
+        from iris.exceptions import CoordinateNotFoundError
+        valrange = {}
+        try:
+            valrange[axis + "min"] = self.packed_data_items[0].coord(axis=axis).data.min()
+            valrange[axis + "max"] = self.packed_data_items[0].coord(axis=axis).data.max()
+            try:
+                self.valrange[axis] = valrange
+            except AttributeError:
+                self.valrange = {}
+                self.valrange[axis] = valrange
+        except (CoordinateNotFoundError, AttributeError):
+            pass
+
+    def apply_user_specified_axis_limits(self, axis, valrange):
+        if axis == "x":
+            step = valrange.pop("xstep", None)
+            self.matplotlib.xlim(**valrange)
+            if step is not None: valrange["xstep"] = step
+        elif axis == "y":
+            step = valrange.pop("ystep", None)
+            self.matplotlib.ylim(**valrange)
+            if step is not None: valrange["ystep"] = step
+
     def set_font_size(self):
         if self.plot_args.get("fontsize", None) is not None:
             if not isinstance(self.plot_args.get("fontsize", None), dict):
                 self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
         else:
             self.plot_args.pop("fontsize", None)
+
+    def output_to_file_or_screen(self):
+        '''
+        Outputs to screen unless a filename is given
+
+        @param out_filename    The filename of the file to save to
+        '''
+        import logging
+
+        if self.out_filename is None:
+            self.matplotlib.show()
+        else:
+            logging.info("saving plot to file: " + self.out_filename);
+            self.matplotlib.savefig(self.out_filename) # Will overwrite if file already exists
 
     def calculate_min_and_max_values(self):
         from sys import maxint
