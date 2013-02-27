@@ -195,11 +195,8 @@ class Generic_Plot(object):
         return labels
 
     def set_log_scale(self, logx, logy):
-        ax = plt.gca()
-        if logx:
-            ax.set_xscale("log", basex = logx)
-        if logy:
-            ax.set_yscale("log", basey = logy)
+        if logx: self.matplotlib.xscale("log")
+        if logy: self.matplotlib.yscale("log")
 
     def format_2d_plot(self):
         from jasmin_cis.plotting.plot import plot_options
