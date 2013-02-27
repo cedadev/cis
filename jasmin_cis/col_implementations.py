@@ -24,7 +24,7 @@ class DefaultColocator(Colocator):
 
         values = np.zeros(len(points))
         for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data)
+            con_points = constraint.constrain_points(point, data_points)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
