@@ -52,9 +52,9 @@ def plot_cmd(main_arguments):
     from jasmin_cis.data_io.read import read_data
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
-    import jasmin_cis.utils as utils
-    from collections import OrderedDict
 
+
+    data = []
     try:
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
         data = [ read_data(datagroup['filenames'],datagroup['variable']) for datagroup in main_arguments.datagroups ]
@@ -68,6 +68,15 @@ def plot_cmd(main_arguments):
     main_arguments.pop('command') # Remove the command argument now it is not needed
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
+
+    # overwrites which variable to used for the x and y axis
+    # ignore unknown variables
+    if main_arguments['xaxis'] and main_arguments['yaxis'] is not None:
+        var_axis_dict = {main_arguments.pop("xaxis").lower():'X',main_arguments.pop("yaxis").lower():'Y'}
+        for d in data:
+            for coord in d.coords():
+                coord.axis = var_axis_dict[coord.standard_name.lower()] if var_axis_dict.has_key(coord.standard_name.lower()) else ''
+
 
     plot_args = {"datagroups" : main_arguments.pop("datagroups", None),
                  "nocolourbar" : main_arguments.pop("nocolourbar", False),
@@ -96,15 +105,15 @@ def info_cmd(main_arguments):
     Reads in the variables from the data file specified and lists them to stdout if no
     particular variable was specified, otherwise prints detailed information about each
     variable specified
-        
+
     @param main_arguments:    The command line arguments (minus the info command)
-    '''    
+    '''
     variables = main_arguments.variables
     filename = main_arguments.filename
     data_type = main_arguments.type
 
     from jasmin_cis.info import  info
-    
+
     try:
         info(filename, variables, data_type)
     except CISError as e:
@@ -113,9 +122,9 @@ def info_cmd(main_arguments):
 
 def col_cmd(main_arguments):
     '''
-    Main routine for handling calls to the co-locate ('col') command. 
-        
-    @param main_arguments:    The command line arguments (minus the col command)         
+    Main routine for handling calls to the co-locate ('col') command.
+
+    @param main_arguments:    The command line arguments (minus the col command)
     '''
     from jasmin_cis.exceptions import ClassNotFoundError, CISError
     from jasmin_cis.col import Colocate
