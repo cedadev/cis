@@ -3,15 +3,11 @@ Module to test the parser
 The parse raises a SystemExit exception with code 2 if it fails to parse.
 Each test therefore ignores SystemExit exceptions with code 2 as they are expected.
 '''
-from nose.tools import istest
-from jasmin_cis.parse import parse_args
-from test_files.data import *
-from plotting.plot import Plotter
-import argparse
 from nose.tools import istest, eq_
 from jasmin_cis.parse import parse_args, expand_file_list
-from jasmin_cis.test.test_files.data import *
-from jasmin_cis.plot import Plotter
+from test_files.data import *
+from jasmin_cis.plotting.plot import Plotter
+import argparse
 
 @istest
 def can_specify_one_valid_filename_and_a_directory():

@@ -9,8 +9,7 @@ from jasmin_cis.test.test_files.data import *
 import iris
 import os.path
 
-from plotting.plot import Plotter
-from test_files.data import *
+from jasmin_cis.plotting.plot import Plotter
 
 
 def delete_file_if_exists():

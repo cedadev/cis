@@ -6,7 +6,7 @@ These tests have to be run manually
 from nose.tools import raises, nottest
 import iris
 
-from plotting.plot import Plotter
+from jasmin_cis.plotting.plot import Plotter
 from jasmin_cis.test.test_files.data import *
 
 

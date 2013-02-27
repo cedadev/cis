@@ -7,7 +7,7 @@ import os.path
 from nose.tools import nottest
 import iris
 
-from plotting.plot import Plotter
+from jasmin_cis.plotting.plot import Plotter
 from jasmin_cis.test.test_files.data import *
 
 
