@@ -471,21 +471,21 @@ class Plotter(object):
         '''
         Goes through all the data objects and plots them
         '''
-        datafiles = self.kwargs.pop("datafiles", None) 
+        datagroups = self.kwargs.pop("datagroups", None)
         for i, item in enumerate(self.data):
 
             # Temporarily add args to kwargs
-            if datafiles is not None:
-                self.__add_datafile_args_to_kwargs(datafiles[i])
+            if datagroups is not None:
+                self.__add_datafile_args_to_kwargs(datagroups[i])
             item_to_plot = unpack_data_object(item)            
 
             # Plot the data item using the specified plot type
             Plotter.plot_types[self.plot_type].plot_method(self, item_to_plot)
 
             # Remove temp args
-            if datafiles is not None:
-                self.__remove_datafile_args_from_kwargs(datafiles[i])
-        return datafiles
+            if datagroups is not None:
+                self.__remove_datafile_args_from_kwargs(datagroups[i])
+        return datagroups
     
     def __warn_if_incorrect_colour_type_used(self):
         '''
