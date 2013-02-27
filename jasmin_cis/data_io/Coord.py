@@ -124,26 +124,34 @@ class CoordList(list):
 
         # Pick the length of the 0th element in the list as our length - all coordinates should have the same length anyway
         data_len = len(self[0].data.flatten())
+
+        all_coords = self.get_standard_coords(data_len)
+
+        for x in xrange(data_len):
+            points.append(HyperPoint(all_coords[0][x], all_coords[1][x], all_coords[2][x], all_coords[3][x]))
+
+        return points
+
+    def get_standard_coords(self, data_len):
+        from jasmin_cis.exceptions import CoordinateNotFoundError
+
         empty_data = [None for i in xrange(data_len)]
 
         try:
-            lat = self.get_coord(standard_name='latitude').data.flatten()
+            lat = self.coord(standard_name='latitude').data.flatten()
         except CoordinateNotFoundError:
             lat = empty_data
         try:
-            lon = self.get_coord(standard_name='longitude').data.flatten()
+            lon = self.coord(standard_name='longitude').data.flatten()
         except CoordinateNotFoundError:
             lon = empty_data
         try:
-            alt = self.get_coord(standard_name='altitude').data.flatten()
+            alt = self.coord(standard_name='altitude').data.flatten()
         except CoordinateNotFoundError:
             alt = empty_data
         try:
-            time = self.get_coord(standard_name='time').data.flatten()
+            time = self.coord(standard_name='time').data.flatten()
         except CoordinateNotFoundError:
             time = empty_data
 
-        for x in xrange(data_len):
-            points.append(HyperPoint(lat[x], lon[x], alt[x], time[x]))
-
-        return points
+        return CoordList([lat, lon, alt, time ])
