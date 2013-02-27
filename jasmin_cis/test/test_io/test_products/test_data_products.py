@@ -77,9 +77,14 @@ class TestCloudsat(ProductTests):
 # class TestMODIS_L3(ProductTests):
 #     pass
 #
-# class TestMODIS_L2(ProductTests):
-#     pass
-#
+class TestMODIS_L2(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_modis_l2_filename, valid_modis_l2_variable
+        self.filename = valid_modis_l2_filename
+        self.valid_variable = valid_modis_l2_variable
+        self.product = MODIS_L2
+
+
 class TestCloud_CCI(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable

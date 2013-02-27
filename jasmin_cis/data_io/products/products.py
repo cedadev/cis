@@ -172,9 +172,13 @@ class MODIS_L2(AProduct):
         return regex_list
 
     def __get_data_scale(self, filename, variable):
-
+        from jasmin_cis.exceptions import InvalidVariableError
         from pyhdf import SD
-        meta = SD.SD(filename).datasets()[variable][0][0]
+
+        try:
+            meta = SD.SD(filename).datasets()[variable][0][0]
+        except KeyError:
+            raise InvalidVariableError("Variable "+variable+" not found")
 
         for scaling in self.modis_scaling:
             if scaling in meta:
