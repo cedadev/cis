@@ -29,7 +29,6 @@ def __setup_logging(log_file, log_level):
     #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
 
-
 def __error_occurred(e):
     '''
     Wrapper method used to print error messages.
@@ -38,7 +37,6 @@ def __error_occurred(e):
     '''
     sys.stderr.write(str(e) + "\n")
     exit(1)
-
 
 def plot_cmd(main_arguments):
     '''
