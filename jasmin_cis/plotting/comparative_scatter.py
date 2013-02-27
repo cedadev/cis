@@ -3,7 +3,7 @@ from generic_plot import Generic_Plot
 class Comparative_Scatter(Generic_Plot):
     def plot(self):
         self.mplkwargs.pop("latlon", None)
-        self.plot_method.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])#, c="b", s="20", edgecolors = "none", *self.mplargs, **self.mplkwargs)
+        self.plot_method.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], c="b", s=20, edgecolors = "none", *self.mplargs, **self.mplkwargs)
 
     def format_plot(self):
         self.format_2d_plot()
