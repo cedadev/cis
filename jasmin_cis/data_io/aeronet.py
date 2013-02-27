@@ -1,16 +1,7 @@
-'''
-From http://code.google.com/p/metamet/
-License: GNU GPL v3
-'''
 
-from datetime import datetime, timedelta
-import numpy as np
-from matplotlib import mlab
-import linecache
-
-__all__ = ['load_aeronet']
 
 def get_aeronet_file_variables(filename):
+    import linecache
     defaultdeletechars = """~!@#$%^&*()-=+~\|]}[{';: /?.>,<"""
     vars = linecache.getline(filename, 5).split(",")
     for i in range(0, len(vars)):
@@ -21,11 +12,27 @@ def get_aeronet_file_variables(filename):
         vars_dict[var] = var
     return vars_dict
 
-def load_aeronet(fname, keep_fields='all'):
-    """loads aeronet lev 2.0 csv file.
-    fname: data file name
-    keep_fields: 'all' or a list of fields
+
+def load_multiple_aeronet(fnames, variables=None):
+    from jasmin_cis.utils import concatenate
+    data = concatenate([load_aeronet(a_file, variables) for a_file in fnames])
+    return data
+
+
+def load_aeronet(fname, variables=None):
     """
+    loads aeronet lev 2.0 csv file.
+
+        Originally from http://code.google.com/p/metamet/
+        License: GNU GPL v3
+
+    @param fname: data file name
+    @param keep_fields: A list of variables to return
+    @return: A
+    """
+    import numpy as np
+    from matplotlib import mlab
+    from datetime import datetime, timedelta
 
     std_day = datetime(1900,1,1,0,0,0)
     def date2daynum(datestr):
@@ -40,23 +47,29 @@ def load_aeronet(fname, keep_fields='all'):
         return std_day + timedelta(days=int(daynum), seconds=int(seconds))
 
     try:
-        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, converters={0:date2daynum, 1:time2seconds})
+        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True,
+                             converters={0:date2daynum, 1:time2seconds}, missing_values='N/A')
     except StopIteration as e:
         raise IOError(e)
 
     lend = len(rawd)
     dates = np.zeros(len(rawd), dtype='O')
-    for i in range(lend):
+    for i in xrange(lend):
         dates[i] = daynum_seconds2datetime(rawd['Dateddmmyy'][i], rawd['Timehhmmss'][i])
 
-    newd = mlab.rec_append_fields(rawd, 'datetime', dates)
+    metadata = get_file_metadata(fname)
+    lon = np.zeros(len(rawd)) + float(metadata.misc[2][1].split("=")[1])
+    lat = np.zeros(len(rawd)) + float(metadata.misc[2][2].split("=")[1])
+    alt = np.zeros(len(rawd)) + float(metadata.misc[2][3].split("=")[1])
+
+    newd = mlab.rec_append_fields(rawd, ['datetime', 'longitude', 'latitude', 'altitude'], [dates, lon, lat, alt])
     newd = mlab.rec_drop_fields(newd, ['Dateddmmyy', 'Timehhmmss', 'Last_Processing_Date'])
 
-    if keep_fields is not 'all':
-        keep_fields = ['datetime'] + keep_fields
-#        print keep_fields
+    if variables is not None:
+        keep_fields = ['datetime', 'longitude', 'latitude', 'altitude'] + variables
         newd = mlab.rec_keep_fields(newd, keep_fields)
     return newd
+
 
 def get_file_metadata(filename, variable = '', shape = None):
     file = open(filename)
