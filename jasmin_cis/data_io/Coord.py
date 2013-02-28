@@ -42,9 +42,9 @@ class Coord(LazyData):
         self.units = "DateTime Object"
 
     def convert_TAI_time_to_datetime(self, ref):
-        from jasmin_cis.timeUtil import convert_tai_to_obj
+        from jasmin_cis.timeUtil import convert_tai_to_obj_array
         #if self.units != "TAI time": raise ValueError("Time units must be TAI time for conversion to an Object")
-        self._data = convert_tai_to_obj(self.data, ref)
+        self._data = convert_tai_to_obj_array(self.data, ref)
         self.units = "DateTime Object"
 
 
