@@ -23,9 +23,8 @@ def is_map(data_item):
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, v_range, plot_args, out_filename = None, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
         from utils import unpack_data_object
-        self.out_filename = out_filename
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.plot_args = plot_args
@@ -49,8 +48,6 @@ class Generic_Plot(object):
 
         self.apply_axis_limits(plot_args["xrange"], "x")
         self.apply_axis_limits(plot_args["yrange"], "y")
-
-        self.output_to_file_or_screen()
 
     def plot(self):
         raise NotImplementedError()
@@ -143,20 +140,6 @@ class Generic_Plot(object):
                 self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
         else:
             self.plot_args.pop("fontsize", None)
-
-    def output_to_file_or_screen(self):
-        '''
-        Outputs to screen unless a filename is given
-
-        @param out_filename    The filename of the file to save to
-        '''
-        import logging
-
-        if self.out_filename is None:
-            self.matplotlib.show()
-        else:
-            logging.info("saving plot to file: " + self.out_filename)
-            self.matplotlib.savefig(self.out_filename) # Will overwrite if file already exists
 
     def calculate_min_and_max_values(self):
         from sys import maxint
