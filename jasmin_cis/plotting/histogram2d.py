@@ -12,11 +12,7 @@ class Histogram_2D(Generic_Plot):
             if step is None:
                 number_of_bins = 10
             else:
-                print step
-                valrange = unpacked_data_item["x"].max() - unpacked_data_item["x"].min()
-                print valrange
-                number_of_bins = int(valrange/step)
-                print number_of_bins
+                number_of_bins = int((unpacked_data_item["x"].max() - unpacked_data_item["x"].min())/step)
 
             datafile = self.plot_args["datagroups"][i]
             if datafile["itemstyle"]:
