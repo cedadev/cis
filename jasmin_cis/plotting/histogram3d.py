@@ -6,7 +6,7 @@ class Histogram_3D(Generic_Plot):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        self.matplotlib.hist2d(self.unpacked_data_items[0]["x"], self.unpacked_data_items[1]["x"], *self.mplargs, **self.mplkwargs)
+        self.matplotlib.hist2d(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], *self.mplargs, **self.mplkwargs)
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax

@@ -33,8 +33,8 @@ data_object2 = UngriddedData(data2, Metadata(standard_name='snow', long_name="TO
 Plotter([data_object1, data_object2], {"xlabel" : None, "ylabel" : None, "title" : None, "fontsize" : None,
                          "grid" : False,
                          "logy" : False, "logx" : False, "logv": False,
-                         "nocolourbar" : False,
+                         "nocolourbar" : False, "cbarorient" : "horizontal",
                          "xrange" : None, "yrange" : None,
                          "datagroups" : [{"itemstyle" : "step", "color" : None, "label" : None},
                                          {"itemstyle" : "step", "color" : None, "label" : None}]},
-        plot_type="histogram2d")
+        plot_type="histogram3d")
