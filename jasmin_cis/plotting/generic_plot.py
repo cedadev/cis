@@ -23,17 +23,19 @@ def is_map(data_item):
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, plot_args, *mplargs, **mplkwargs):
         from utils import unpack_data_object
-        import matplotlib.dates as dates
-        from matplotlib import ticker
-
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
+
+        if plot_args.get("logv", False):
+            from matplotlib.colors import LogNorm
+            self.mplkwargs["norm"] = LogNorm()
+
         self.plot_args = plot_args
         self.packed_data_items = packed_data_items
         self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
-        self.v_range = v_range
+        self.v_range = self.mplkwargs.pop("valrange", {})
         self.calculate_min_and_max_values()
 
         self.matplotlib = plt
@@ -49,6 +51,9 @@ class Generic_Plot(object):
         
         self.plot()
 
+        # import matplotlib.dates as dates
+        # from matplotlib import ticker
+        # fig, ax = plt.subplots()
         # def format_date(x, pos=None):
         #     from jasmin_cis.timeUtil import convert_num_to_datetime
         #     return convert_num_to_datetime(x).strftime('%Y-%m-%d')
