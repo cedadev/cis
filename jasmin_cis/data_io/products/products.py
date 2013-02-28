@@ -1,10 +1,12 @@
+import datetime as dt
+import logging
+
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+import jasmin_cis.timeUtil as tu
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
-
-import logging
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -73,9 +75,11 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lon_coord = Coord(lon_data, lon_metadata)
 
         # time coordinate
-        arrays = self._generate_time_array(vdata)
-        time_data = utils.concatenate(arrays)
+        time_data = self._generate_time_array(vdata)
+        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime(1993,1,1,0,0,0))
+        time_data = utils.concatenate(time_data)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
+        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime())
         time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
         time_coord = Coord(time_data, time_metadata)
 
@@ -397,11 +401,7 @@ class Caliop(AProduct):
         profile_time = sdata['Profile_Time']
         profile_time_data = hdf.read_data(profile_time,"SD")
         profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
-
-        import timeUtil
-        import datetime as dt
-        profile_time_data = timeUtil.convert_tai_to_obj_array(profile_time_data,dt.datetime(1993,1,1))
-
+        profile_time_data = tu.convert_tai_to_obj_array(profile_time_data,dt.datetime(1993,1,1,0,0,0))
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
         profile_time_metadata.shape = [profile_time_data.shape[0],profile_time_data.shape[1]]
         profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
