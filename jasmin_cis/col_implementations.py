@@ -18,18 +18,20 @@ class DefaultColocator(Colocator):
         from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
         import numpy as np
 
+        metadata = data.metadata
+
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data_points = data.get_points()
+            data = data.get_points()
 
         values = np.zeros(len(points))
         for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data_points)
+            con_points = constraint.constrain_points(point, data)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
                 values[i] = constraint.fill_value
-        new_data = LazyData(values, data.metadata)
+        new_data = LazyData(values, metadata)
         new_data.missing_value = constraint.fill_value
         return [new_data]
 
@@ -43,16 +45,19 @@ class DebugColocator(Colocator):
         import numpy as np
         import math
         from time import time
+
+        metadata = data.metadata
+
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data_points = data.get_points()
+            data = data.get_points()
 
         short_points = points if len(points)<1000 else points[:999]
         values = np.zeros(len(short_points))
         times = np.zeros(len(short_points))
         for i, point in enumerate(short_points):
             t1 = time()
-            con_points = constraint.constrain_points(point, data_points)
+            con_points = constraint.constrain_points(point, data)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
@@ -61,7 +66,7 @@ class DebugColocator(Colocator):
             frac, rem = math.modf(i/10.0)
             if frac == 0: print str(i)+" took: "+str(times[i])
         logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
-        new_data = LazyData(values, data.metadata)
+        new_data = LazyData(values, metadata)
         new_data.missing_value = constraint.fill_value
         return [new_data]
 
