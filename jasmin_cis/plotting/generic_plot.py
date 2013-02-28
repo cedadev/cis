@@ -36,7 +36,6 @@ class Generic_Plot(object):
         self.v_range = v_range
         self.calculate_min_and_max_values()
 
-        fig, ax = plt.subplots()
         self.matplotlib = plt
 
         if is_map(packed_data_items[0]):
