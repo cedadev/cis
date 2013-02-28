@@ -4,7 +4,7 @@ Module used for parsing
 import argparse
 import sys
 import os.path
-from plot import Plotter
+from plotting.plot import Plotter
 
 
 def initialise_top_parser():

@@ -3,9 +3,10 @@
 Command line interface for the Climate Intercomparison Suite (CIS)
 '''
 import sys
+import logging
+
 from jasmin_cis.exceptions import CISError
 
-import logging
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
@@ -28,7 +29,6 @@ def __setup_logging(log_file, log_level):
     #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
     logging.captureWarnings(True)
 
-
 def __error_occurred(e):
     '''
     Wrapper method used to print error messages.
@@ -38,7 +38,6 @@ def __error_occurred(e):
     sys.stderr.write(str(e) + "\n")
     exit(1)
 
-
 def plot_cmd(main_arguments):
     '''
     Main routine for handling calls to the 'plot' command. 
@@ -47,7 +46,7 @@ def plot_cmd(main_arguments):
 
     @param main_arguments:    The command line arguments (minus the plot command)        
     '''
-    from plot import Plotter
+    from plotting.plot import Plotter
     from jasmin_cis.data_io.read import read_data
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
@@ -78,16 +77,32 @@ def plot_cmd(main_arguments):
     if main_arguments['yaxis'] is not None:
         var_axis_dict[main_arguments["yaxis"].lower()] = "Y"
         logging.info("Overriding data product default variable for y axis with: " + main_arguments.pop("yaxis"))
-
+    '''
     for d in data:
         for coord in d.coords():
             if var_axis_dict.has_key(coord.standard_name.lower()):
                 coord.axis = var_axis_dict[coord.standard_name.lower()]
             if coord.name().lower() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
                 coord.axis = ''
+    '''
+
+    plot_args = {"datagroups" : main_arguments.pop("datagroups", None),
+                 "nocolourbar" : main_arguments.pop("nocolourbar", False),
+                 "logx" : main_arguments.pop("logx", False),
+                 "logy" : main_arguments.pop("logy", False),
+                 "logv" : main_arguments.pop("logv", False),
+                 "xrange" : main_arguments.pop("xrange", None),
+                 "yrange" : main_arguments.pop("yrange", None),
+                 "cbarorient" : main_arguments.pop("cbarorient", "horizontal"),
+                 "grid" : main_arguments.pop("grid", False),
+                 "xlabel" : main_arguments.pop("xlabel", None),
+                 "ylabel" : main_arguments.pop("ylabel", None),
+                 "title" : main_arguments.pop("title", None),
+                 "fontsize" : main_arguments.pop("fontsize", None),
+                 "itemwidth" : main_arguments.pop("itemwidth", 1)}
 
     try:
-        Plotter(data, plot_type, output, **main_arguments)
+        Plotter(data, plot_args, plot_type, output, **main_arguments)
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError, ValueError) as e:
         __error_occurred(e)
 

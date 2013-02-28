@@ -6,7 +6,7 @@ from nose.tools import nottest
 
 @nottest # Jenkins can't plot to file or screen
 def can_plot_scatter_overlay():
-    from jasmin_cis.plot import Plotter
+    from plotting.plot import Plotter
     from jasmin_cis.data_io.read import read_data
     from jasmin_cis.test.test_util.mock import gen_random_data, gen_random_lon, gen_random_lat, ScatterData
     from numpy import array
@@ -20,7 +20,7 @@ def can_plot_scatter_overlay():
     scatter_data2 = ScatterData(x2, y2, None, (len(x2), len(y2)), "Scatter 2")
     heatmap_cube =  read_data("/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc", "rain")
 
-    Plotter([heatmap_cube, scatter_data1, scatter_data2], datafiles = [{"itemstyle" : None, "color" : None, "label": None},
+    Plotter([heatmap_cube, scatter_data1, scatter_data2], datagroups = [{"itemstyle" : None, "color" : None, "label": None},
                                                                        {"itemstyle" : "*", "color" : None, "label": "Scatter 1"},
                                                                        {"itemstyle" : "p", "color" : "black", "label": "Scatter 2"}],
                                                                          itemwidth = 15, cbarorient = "vertical", width = 10)

@@ -88,7 +88,13 @@ def make_dummy_2d_points_list(num):
     return [ get_random_2d_point() for i in xrange(0,num) ]
         
 def make_dummy_1d_ungridded_data():
-    pass
+    from data_io.Coord import CoordList, Coord
+    from data_io.ungridded_data import UngriddedData, Metadata
+
+    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'),'x')
+    coords = CoordList([x])
+    data = gen_random_data_array((5,),4.0,1.0)
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
 def make_dummy_2d_ungridded_data():
     from jasmin_cis.data_io.Coord import CoordList, Coord
