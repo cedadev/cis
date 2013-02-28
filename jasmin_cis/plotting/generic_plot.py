@@ -123,16 +123,19 @@ class Generic_Plot(object):
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
-        if valrange is None: valrange = self.calculate_axis_limits(axis)
+        try:
+            if valrange is None: valrange = self.calculate_axis_limits(axis)
 
-        if axis == "x":
-            step = valrange.pop("xstep", None)
-            self.matplotlib.xlim(**valrange)
-            if step is not None: valrange["xstep"] = step
-        elif axis == "y":
-            step = valrange.pop("ystep", None)
-            self.matplotlib.ylim(**valrange)
-            if step is not None: valrange["ystep"] = step
+            if axis == "x":
+                step = valrange.pop("xstep", None)
+                self.matplotlib.xlim(**valrange)
+                if step is not None: valrange["xstep"] = step
+            elif axis == "y":
+                step = valrange.pop("ystep", None)
+                self.matplotlib.ylim(**valrange)
+                if step is not None: valrange["ystep"] = step
+        except (AttributeError, TypeError):
+            pass # In case of date axis. TODO Fix this
 
     def set_font_size(self):
         if self.plot_args.get("fontsize", None) is not None:
