@@ -31,7 +31,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # list of coordinate variables we are interested in
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
-        logging.debug("Listing coordinates: " + str(variables))
+        logging.info("Listing coordinates: " + str(variables))
 
         # reading the various files
         sdata, vdata = hdf.read(filenames,variables)
@@ -46,7 +46,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lat = vdata['Latitude']
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
-        lat_coord = Coord(lat_data, lat_metadata, "X")
+        lat_coord = Coord(lat_data, lat_metadata)
 
         # longitude
         lon = vdata['Longitude']
@@ -56,12 +56,12 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         # time coordinate
         time_data = self._generate_time_array(vdata)
-        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime(1993,1,1,0,0,0))
         time_data = utils.concatenate(time_data)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
         time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
         time_metadata.units = "DateTime Object"
-        time_coord = Coord(time_data, time_metadata)
+        time_coord = Coord(time_data, time_metadata, "X")
+        time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
 
         # create object containing list of coordinates
         coords = CoordList()
@@ -100,7 +100,7 @@ class MODIS_L3(AProduct):
     def create_coords(self, filenames):
 
         variables = ['XDim','YDim']
-        logging.debug("Listing coordinates: " + str(variables))
+        logging.info("Listing coordinates: " + str(variables))
 
         sdata, vdata = hdf.read(filenames,variables)
 
@@ -186,8 +186,7 @@ class MODIS_L2(AProduct):
     def create_coords(self, filenames, variable=None):
 
         variables = [ 'Latitude','Longitude','Scan_Start_Time']
-
-        logging.debug("Listing coordinates: " + str(variables))
+        logging.info("Listing coordinates: " + str(variables))
 
         sdata, vdata = hdf.read(filenames,variables)
 
@@ -236,6 +235,7 @@ class Cloud_CCI(AProduct):
         from jasmin_cis.timeUtil import convert_julian_date_to_obj_array
 
         variables = ["lat", "lon", "time"]
+        logging.info("Listing coordinates: " + str(variables))
 
         lon = []
         lat = []
@@ -285,6 +285,7 @@ class Aerosol_CCI(AProduct):
         from jasmin_cis.timeUtil import convert_tai_to_obj_array
 
         variables = ["lat", "lon", "time"]
+        logging.info("Listing coordinates: " + str(variables))
 
         data = read_many_files(filenames, variables, dim="pixel_number")
 
@@ -321,6 +322,7 @@ class Caliop(AProduct):
         from jasmin_cis.data_io import hdf_sd
 
         variables = [ 'Latitude','Longitude', "Profile_Time"]
+        logging.info("Listing coordinates: " + str(variables))
 
         # reading data from files
         sdata = {}
@@ -367,11 +369,11 @@ class Caliop(AProduct):
         time = sdata['Profile_Time']
         time_data = hdf.read_data(time,"SD")
         time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
-        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime(1993,1,1))
         time_metadata = hdf.read_metadata(time,"SD")
         time_metadata.shape = new_shape
         time_metadata.units = "DateTime Object"
         time_coord = Coord(time_data, time_metadata, "X")
+        time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
 
         # create the object containing all coordinates
         coords = CoordList()
@@ -441,6 +443,7 @@ class NetCDF_CF(AProduct):
         from jasmin_cis.data_io.Coord import Coord
 
         variables = [ "latitude", "longitude", "altitude", "time" ]
+        logging.info("Listing coordinates: " + str(variables))
 
         if variable is not None:
             variables.append(variable)
@@ -519,6 +522,7 @@ class Xglnwa_vprof(NetCDF_CF_Gridded):
         from jasmin_cis.data_io.Coord import Coord
 
         variables = [ "latitude" ]
+        logging.info("Listing coordinates: " + str(variables))
 
         if variable is not None:
             variables.append(variable)
@@ -585,6 +589,7 @@ class Xenida(NetCDF_CF_Gridded):
         from jasmin_cis.data_io.Coord import Coord
 
         variables = [ "latitude", "longitude", "altitude", "time" ]
+        logging.info("Listing coordinates: " + str(variables))
 
         data_variables = read(filenames[0], variables)
 
@@ -616,6 +621,9 @@ class Aeronet(AProduct):
     def create_coords(self, filenames, data = None):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from jasmin_cis.data_io.aeronet import load_multiple_aeronet
+
+        variables = [ "latitude", "longitude", "altitude", "datetime" ]
+        logging.info("Listing coordinates: " + str(variables))
 
         if data is None:
             data = load_multiple_aeronet(filenames)
@@ -650,6 +658,10 @@ class ASCII_Hyperpoints(AProduct):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from numpy import array, loadtxt
         from jasmin_cis.exceptions import InvalidVariableError
+
+
+        variables = [ "Latitude", "Longitude", "Altitude", "Time" ]
+        logging.info("Listing coordinates: " + str(variables))
 
         array_list = []
         for filename in filenames:
