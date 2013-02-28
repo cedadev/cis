@@ -13,14 +13,14 @@ def convert_tai_to_obj(tai_time, refDate):
     from datetime import timedelta
     return timedelta(seconds=tai_time) + refDate
 
-def convert_julian_date_to_obj_array(julian_time_array, calander):
+def convert_julian_date_to_obj_array(julian_time_array, calender):
     from iris.unit import julian_day2date
 
     converted_time = np.ma.array(np.zeros(julian_time_array.shape, dtype='O'),
                                  mask=julian_time_array.mask)
     for i, t in np.ndenumerate(julian_time_array):
         if not julian_time_array.mask[i]:
-            converted_time[i] = julian_day2date(t, calander)
+            converted_time[i] = julian_day2date(t, calender)
     return converted_time
 
 def convert_obj_to_julian_date_array(time_array):
