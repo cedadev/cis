@@ -34,7 +34,7 @@ Plotter([data_object1, data_object2], {"xlabel" : None, "ylabel" : None, "title"
                          "grid" : False,
                          "logy" : False, "logx" : False, "logv": False,
                          "nocolourbar" : False, "cbarorient" : "horizontal",
-                         "xrange" : None, "yrange" : None,
+                         "xrange" : {"xstep" : 0.5},"yrange" : {"ystep" : 2},
                          "datagroups" : [{"itemstyle" : "step", "color" : None, "label" : None},
                                          {"itemstyle" : "step", "color" : None, "label" : None}]},
         plot_type="histogram3d")
