@@ -45,9 +45,6 @@ class Generic_Plot(object):
 
         self.plot()
 
-        self.apply_axis_limits(plot_args["xrange"], "x")
-        self.apply_axis_limits(plot_args["yrange"], "y")
-
     def plot(self):
         raise NotImplementedError()
 

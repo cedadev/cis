@@ -66,6 +66,8 @@ class Plotter(object):
         # Do plot
         plot = self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
         plot.format_plot()
+        plot.apply_axis_limits(plot_args["xrange"], "x")
+        plot.apply_axis_limits(plot_args["yrange"], "y")
         self.output_to_file_or_screen()
 
     def output_to_file_or_screen(self):
