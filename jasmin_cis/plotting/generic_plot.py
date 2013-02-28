@@ -91,16 +91,12 @@ class Generic_Plot(object):
 
     def calculate_min_and_max_values_of_array_including_case_of_log(self, axis, array):
         log_axis = self.plot_args.get("log" + axis, False)
+
         if log_axis:
-            from sys import maxint
-            min_val = maxint
-            max_val = -maxint - 1
-            for number in array.flatten():
-                if number > 0:
-                    if number < min_val:
-                        min_val = number
-                    if number > max_val:
-                        max_val = number
+            import numpy.ma as ma
+            positive_array = ma.array(array, mask=array<=0)
+            min_val = positive_array.min()
+            max_val = positive_array.max()
         else:
             min_val =  array.min()
             max_val =  array.max()
