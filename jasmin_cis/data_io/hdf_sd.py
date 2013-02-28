@@ -1,9 +1,8 @@
 """
 Module containing hdf file utility functions for the SD object
 """
-
-from jasmin_cis.data_io.hdf_util import __fill_missing_data
 import logging
+
 
 def get_hdf_SD_file_variables(filename):
     '''
@@ -27,6 +26,7 @@ def get_hdf_SD_file_variables(filename):
         logging.error("Error while reading SD data")
 
     return variables
+
 
 def read(filename, variables=None, datadict=None):
     """
@@ -90,12 +90,14 @@ def get_data(sds, calipso_scaling=False):
                        CALIPSO: data/scalefactor + offset.
 
     """
+    from jasmin_cis.utils import create_masked_array_for_missing_data
+
     data = sds.get()
     attributes = sds.attributes()
 
     # Missing data.
     missing_val = attributes.get('_FillValue', None)
-    data = __fill_missing_data(data, missing_val)
+    data = create_masked_array_for_missing_data(data, missing_val)
 
     # Offsets and scaling.
     offset  = attributes.get('add_offset', 0)
@@ -142,6 +144,7 @@ def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
 
     data = (data/scale_factor) + offset
     return data
+
 
 def __apply_scaling_factor_MODIS(data, scale_factor, offset):
     '''

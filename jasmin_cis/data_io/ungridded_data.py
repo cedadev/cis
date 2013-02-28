@@ -258,9 +258,9 @@ class UngriddedData(LazyData):
 
         points = HyperPointList()
 
-        logging.info("Converting ungridded data to a list of HyperPoints")
+        logging.info("Converting ungridded data to a list of HyperPoints...")
 
-        # We want the data to be flat wether it's masked or not
+        # We want the data to be flat whether it's masked or not
         data = self.data.flatten()
 
         # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
@@ -276,6 +276,8 @@ class UngriddedData(LazyData):
         else:
             for i, val in enumerate(data):
                 points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
+
+        logging.info("... done")
 
         return points
 
