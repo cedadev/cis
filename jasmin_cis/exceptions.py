@@ -32,6 +32,9 @@ class InvalidColocationMethodError(CISError):
 class InvalidLineStyleError(CISError):
     pass
 
+class InvalidHistogramStyleError(CISError):
+    pass
+
 class CoordinateNotFoundError(CISError):
     pass
 

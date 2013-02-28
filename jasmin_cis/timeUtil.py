@@ -13,9 +13,9 @@ def convert_tai_to_obj(tai_time, ref):
     return timedelta(seconds=int(tai_time)) + ref
 
 
-def convert_julian_date_to_obj_array(julian_time_array, calander='julian'):
+def convert_julian_date_to_obj_array(julian_time_array, calender='julian'):
     from iris.unit import julian_day2date
-    return convert_numpy_array(julian_time_array, 'O', julian_day2date, calander)
+    return convert_numpy_array(julian_time_array, 'O', julian_day2date, calender)
 
 
 def convert_obj_to_julian_date_array(time_array, calander='julian'):

@@ -1,12 +1,12 @@
+import datetime as dt
+import logging
+
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+import jasmin_cis.timeUtil as tu
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
-
-import logging
-from utils import concatenate
-
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -15,36 +15,16 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
     def _generate_time_array(self, vdata):
 
+        import numpy as np
         import jasmin_cis.data_io.hdf_vd as hdf_vd
+
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
             time = hdf_vd.get_data(i)
             start = hdf_vd.get_data(j)
             time += start
             arrays.append(time)
-        return arrays
-
-    def __generate_real_time_coord(self, filenames, xsize, ysize):
-        import numpy as np
-        from os.path import basename
-        from datetime import timedelta, time, datetime
-        from iris.unit import date2julian_day, CALENDAR_STANDARD
-        from jasmin_cis.data_io.ungridded_data import Metadata
-        # Work out a 'rough' real time for the data - for use in colocation
-        all_times = []
-        for a_file in filenames:
-            a_file = basename(a_file)
-            year = a_file[0:4]
-            day = a_file[4:7]
-            t = a_file[7:13]
-            #t = time(a_file[7:9],a_file[9:11],a_file[11:13])
-            #time_array = np.zeros() +
-            d = timedelta(days=int(day),seconds=int(a_file[11:13]),minutes=int(a_file[9:11]),hours=int(a_file[7:9]))
-            dt = datetime(int(year),1,1)+d
-            all_times.append(np.zeros((xsize, ysize)) + date2julian_day(dt, CALENDAR_STANDARD))
-        time_data = utils.concatenate(all_times)
-        real_time_coord = Coord(time_data, Metadata(name='time', standard_name='time', units='Julian days'))
-        return real_time_coord
+        return np.array(arrays)
 
     def create_coords(self, filenames):
 
@@ -75,14 +55,13 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lon_coord = Coord(lon_data, lon_metadata)
 
         # time coordinate
-        arrays = self._generate_time_array(vdata)
-        time_data = utils.concatenate(arrays)
+        time_data = self._generate_time_array(vdata)
+        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime(1993,1,1,0,0,0))
+        time_data = utils.concatenate(time_data)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
         time_metadata = hdf.read_metadata(vdata['Profile_time'], "VD")
+        time_metadata.units = "DateTime Object"
         time_coord = Coord(time_data, time_metadata)
-
-        # real time coordinate
-        real_time_coord = self.__generate_real_time_coord(filenames, len(height_data[:,0]), len(height_data[0]))
 
         # create object containing list of coordinates
         coords = CoordList()
@@ -90,7 +69,6 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         coords.append(lon_coord)
         coords.append(height_coord)
         coords.append(time_coord)
-        coords.append(real_time_coord)
 
         return coords
 
@@ -277,7 +255,7 @@ class Cloud_CCI(AProduct):
         coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
 
         # Julian Date, days elapsed since 12:00 January 1, 4713 BC
-        time_data = convert_julian_date_to_obj_array(concatenate(time_data), 'julian')
+        time_data = convert_julian_date_to_obj_array(utils.concatenate(time_data), 'julian')
         time_metadata = get_metadata(time[0])
         time_metadata.units = "DateTime Object"
         coords.append(Coord(time_data, time_metadata, "T"))
@@ -386,23 +364,20 @@ class Caliop(AProduct):
         lon_coord = Coord(lon_data, lon_metadata)
 
         #profile time, x
-        profile_time = sdata['Profile_Time']
-        profile_time_data = hdf.read_data(profile_time,"SD")
-        profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
-
-        import timeUtil
-        import datetime as dt
-        profile_time_data = timeUtil.convert_tai_to_obj_array(profile_time_data,dt.datetime(1993,1,1))
-
-        profile_time_metadata = hdf.read_metadata(profile_time,"SD")
-        profile_time_metadata.shape = new_shape
-        profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
+        time = sdata['Profile_Time']
+        time_data = hdf.read_data(time,"SD")
+        time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
+        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime(1993,1,1))
+        time_metadata = hdf.read_metadata(time,"SD")
+        time_metadata.shape = new_shape
+        time_metadata.units = "DateTime Object"
+        time_coord = Coord(time_data, time_metadata, "X")
 
         # create the object containing all coordinates
         coords = CoordList()
         coords.append(lat_coord)
         coords.append(lon_coord)
-        coords.append(profile_time_coord)
+        coords.append(time_coord)
         coords.append(alt_coord)
 
         return coords

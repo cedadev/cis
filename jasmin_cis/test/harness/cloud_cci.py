@@ -1,6 +1,7 @@
 #from jasmin_cis.data_io.products.AProduct import get_data
-from jasmin_cis.data_io.read import read_data
 from glob import glob
+
+from jasmin_cis.data_io.read import read_data
 
 
 filenames = glob("/home/daniel/Downloads/Fixed_CCI_Files_From_Gareth/*")
@@ -8,6 +9,6 @@ filenames = glob("/home/daniel/Downloads/Fixed_CCI_Files_From_Gareth/*")
 #filenames = [ "/home/daniel/Downloads/Fixed_CCI_Files_From_Gareth/20080620073500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc"]
 data_object = read_data(filenames, 'stemp', "Cloud_CCI")
 
-from jasmin_cis.plot import Plotter
+from plotting.plot import Plotter
 
 Plotter([data_object], valrange = {"vmin" :260, "vmax" : 340}, plot_type="scatter", itemwidth=1)
