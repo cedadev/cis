@@ -4,8 +4,15 @@ class Comparative_Scatter(Generic_Plot):
     def plot(self):
         # Add y=x line
         ax = self.matplotlib.gca()
-        min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
-        max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
+        if self.plot_args.get("logx", False) and self.plot_args.get("logy", False):
+            import numpy.ma as ma
+            positive_item0 = ma.array(self.unpacked_data_items[0]["data"], mask=self.unpacked_data_items[0]["data"]<=0)
+            positive_item1 = ma.array(self.unpacked_data_items[1]["data"], mask=self.unpacked_data_items[1]["data"]<=0)
+            min_val = min(positive_item0.min(), positive_item1.min())
+            max_val = max(positive_item0.max(), positive_item1.max())
+        else:
+            min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
+            max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
         y_equals_x_array = [min_val, max_val]
         ax.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
 
