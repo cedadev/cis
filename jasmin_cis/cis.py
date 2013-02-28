@@ -106,7 +106,6 @@ def plot_cmd(main_arguments):
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError, ValueError) as e:
         __error_occurred(e)
 
-
 def info_cmd(main_arguments):
     '''
     Main routine for handling calls to the 'info' command.
