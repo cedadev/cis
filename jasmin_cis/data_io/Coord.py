@@ -19,31 +19,31 @@ class Coord(LazyData):
 
     def convert_datetime_to_num(self):
         from jasmin_cis.timeUtil import convert_datetime_to_num_array
-        if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a number")
+        #if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a number")
         self._data = convert_datetime_to_num_array(self.data)
         self.units = "DateTime Number"
 
     def convert_num_to_datetime(self):
         from jasmin_cis.timeUtil import convert_num_to_datetime_array
-        if self.units != "DateTime Number": raise ValueError("Time units must be DateTime Number for conversion to an Object")
+        #if self.units != "DateTime Number": raise ValueError("Time units must be DateTime Number for conversion to an Object")
         self._data = convert_num_to_datetime_array(self.data)
         self.units = "DateTime Object"
 
     def convert_datetime_to_julian(self):
         from jasmin_cis.timeUtil import convert_obj_to_julian_date_array
-        if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a Julian Date")
+        #if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a Julian Date")
         self._data = convert_obj_to_julian_date_array(self.data)
         self.units = "Julian Date, days elapsed since 12:00 January 1, 4713 BC"
 
     def convert_julain_to_datetime(self, calender='julian'):
         from jasmin_cis.timeUtil import convert_julian_date_to_obj_array
-        if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")
+        #if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")
         self._data = convert_julian_date_to_obj_array(self.data, calender)
         self.units = "DateTime Object"
 
     def convert_TAI_time_to_datetime(self, ref):
         from jasmin_cis.timeUtil import convert_tai_to_obj
-        if self.units != "TAI time": raise ValueError("Time units must be TAI time for conversion to an Object")
+        #if self.units != "TAI time": raise ValueError("Time units must be TAI time for conversion to an Object")
         self._data = convert_tai_to_obj(self.data, ref)
         self.units = "DateTime Object"
 
