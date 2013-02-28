@@ -296,7 +296,10 @@ class Generic_Plot(object):
         if logx or logy:
             self.set_log_scale(logx, logy)
         else:
-            self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+            try:
+                self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+            except AttributeError:
+                pass # Can't apply scientific notation in cases of date etc
 
         draw_grid = self.plot_args.pop("grid", False)
         if draw_grid: self.matplotlib.grid(True, which="both")
