@@ -3,6 +3,15 @@ Utilities for converting time units
 """
 import numpy as np
 
+import dateutil.parser as du
+
+def parse_datetimestr_to_obj(s):
+    return du.parse(s)
+
+def parse_datetimestr_delta_to_obj():
+    pass
+
+
 def convert_time_since_to_datetime(time_array, units):
     from netcdftime import _dateparse
     units, dt = _dateparse(units)

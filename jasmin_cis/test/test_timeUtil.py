@@ -5,7 +5,7 @@ from nose.tools import istest, eq_
 import numpy as np
 import datetime as dt
 
-from jasmin_cis.timeUtil import convert_sec_since_to_obj_array
+from jasmin_cis.timeUtil import *
 
 @istest
 def test_that_can_convert_tai_to_datetime_obj():
@@ -20,3 +20,14 @@ def test_that_can_convert_tai_to_datetime_obj():
     eq_(b[1][2],dt.datetime(1993,1,1,0,0,5))
 
 
+@istest
+def test_that_needs_renaming():
+    eq_(parse_datetimestr_to_obj("2010-02-05 02:15:45"),dt.datetime(2010,02,05,02,15,45))
+    eq_(parse_datetimestr_to_obj("2010-02-05 02:15"),dt.datetime(2010,02,05,02,15,0))
+    eq_(parse_datetimestr_to_obj("2010-02-05 02"),dt.datetime(2010,02,05,02,0,0))
+    eq_(parse_datetimestr_to_obj("2010-02-05"),dt.datetime(2010,02,05,0,0,0))
+
+@istest
+def test_that_needs_renaming():
+    eq_(parse_datetimestr_to_obj("2010-02-05"),dt.datetime(2010,02,05))
+    eq_(parse_datetimestr_to_obj("2010-02"),dt.datetime(2010,02,))
