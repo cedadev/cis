@@ -24,6 +24,8 @@ valid_cloud_cci_variable = "stemp"
 valid_aeronet_filename = make_pathname("920801_091128_Agoufou.lev20")
 valid_aeronet_variable = "AOT_440"
 
+valid_xenida_filename = make_pathname("xenida.pah9440.nc")
+valid_xenida_variable = "mass_fraction_of_cloud_liquid_water_in_air"
 
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")

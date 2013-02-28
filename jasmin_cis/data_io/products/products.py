@@ -458,7 +458,8 @@ class CisCol(AProduct):
 class NetCDF_CF(AProduct):
 
     def get_file_signature(self):
-        return [r'.*\.nc']
+        # We don't know of any 'standard' netCDF CF data yet...
+        return []
 
     def create_coords(self, filenames, variable = None):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
@@ -615,7 +616,8 @@ class Xenida(NetCDF_CF_Gridded):
         coords = CoordList()
         coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
         coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
-        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
+
+        coords.append(Coord(data_variables["atmosphere_hybrid_height_coordinate_ak"], get_metadata(data_variables["atmosphere_hybrid_height_coordinate_ak"]), "Z"))
         coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
 
         return coords
@@ -679,7 +681,7 @@ class ASCII_Hyperpoints(AProduct):
         coords = CoordList()
         coords.append(Coord(array[1,:], Metadata(name="Longitude", shape=(n_elements,), units="degrees_east")))
         coords.append(Coord(array[0,:], Metadata(name="Latitude", shape=(n_elements,), units="degrees_north")))
-        coords.append(Coord(array[3,:], Metadata(name="Time", shape=(n_elements,), units="seconds")))
+        coords.append(Coord(array[3,:], Metadata(name="Time", shape=(n_elements,), units="Julian Date")).convert_julain_to_datetime())
         coords.append(Coord(array[2,:], Metadata(name="Altitude", shape=(n_elements,), units="meters")))
 
         if variable is not None:
