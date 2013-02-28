@@ -35,16 +35,20 @@ class Coord(LazyData):
         self._data = convert_obj_to_julian_date_array(self.data)
         self.units = "Julian Date, days elapsed since 12:00 January 1, 4713 BC"
 
-    def convert_julain_to_datetime(self, calender='julian'):
+    def convert_julian_to_datetime(self, calender='julian'):
         from jasmin_cis.timeUtil import convert_julian_date_to_obj_array
         #if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")
         self._data = convert_julian_date_to_obj_array(self.data, calender)
         self.units = "DateTime Object"
 
     def convert_TAI_time_to_datetime(self, ref):
-        from jasmin_cis.timeUtil import convert_tai_to_obj_array
-        #if self.units != "TAI time": raise ValueError("Time units must be TAI time for conversion to an Object")
-        self._data = convert_tai_to_obj_array(self.data, ref)
+        from jasmin_cis.timeUtil import convert_sec_since_to_obj
+        self._data = convert_sec_since_to_obj(self.data, ref)
+        self.units = "DateTime Object"
+
+    def convert_time_since_to_datetime(self, units):
+        from jasmin_cis.timeUtil import convert_time_since_to_datetime
+        self._data = convert_time_since_to_datetime(self.data, units)
         self.units = "DateTime Object"
 
 

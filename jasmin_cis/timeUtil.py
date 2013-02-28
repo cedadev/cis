@@ -3,14 +3,37 @@ Utilities for converting time units
 """
 import numpy as np
 
+def convert_time_since_to_datetime(time_array, units):
+    from netcdftime import _dateparse
+    units, dt = _dateparse(units)
+    if units == 'days':
+        new_array = convert_numpy_array(time_array, 'O', convert_days_since_to_obj, dt)
+    elif units == 'secs':
+        new_array = convert_numpy_array(time_array, 'O', convert_sec_since_to_obj, dt)
+    return new_array
 
-def convert_tai_to_obj_array(tai_time_array, ref):
-    return convert_numpy_array(tai_time_array, 'O', convert_tai_to_obj, ref)
+def convert_tai_to_mpl_array(tai_time_array, ref):
+    intermediate_array = convert_numpy_array(tai_time_array, 'O', convert_sec_since_to_obj, ref)
+    return convert_numpy_array(intermediate_array, 'int64', convert_datetime_to_num)
 
 
-def convert_tai_to_obj(tai_time, ref):
+def convert_dt_to_mpl(dt):
+    import matplotlib.dates as dates
+    return dates.date2num(dt)
+
+
+def convert_sec_since_to_obj_array(tai_time_array, ref):
+    return convert_numpy_array(tai_time_array, 'O', convert_sec_since_to_obj, ref)
+
+
+def convert_sec_since_to_obj(seconds, ref):
     from datetime import timedelta
-    return timedelta(seconds=int(tai_time)) + ref
+    return timedelta(seconds=int(seconds)) + ref
+
+
+def convert_days_since_to_obj(days, ref):
+    from datetime import timedelta
+    return timedelta(days=int(days)) + ref
 
 
 def convert_julian_date_to_obj_array(julian_time_array, calender='julian'):
@@ -31,11 +54,12 @@ def convert_datetime_to_num(dt):
 def convert_num_to_datetime(time_number):
     from iris.unit import decode_time
     from datetime import datetime
-    return datetime(*decode_time(time_number))
+    dt_tuple = decode_time(time_number)
+    return datetime(dt_tuple[0], dt_tuple[1], dt_tuple[2], dt_tuple[3], dt_tuple[4], int(dt_tuple[5]))
 
 
 def convert_datetime_to_num_array(time_array):
-    return convert_numpy_array(time_array, 'float64',convert_datetime_to_num)
+    return convert_numpy_array(time_array, 'int64',convert_datetime_to_num)
 
 
 def convert_num_to_datetime_array(num_array):

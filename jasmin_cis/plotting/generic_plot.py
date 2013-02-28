@@ -25,6 +25,9 @@ class Generic_Plot(object):
 
     def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
         from utils import unpack_data_object
+        import matplotlib.dates as dates
+        from matplotlib import ticker
+
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.plot_args = plot_args
@@ -32,6 +35,8 @@ class Generic_Plot(object):
         self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
         self.v_range = v_range
         self.calculate_min_and_max_values()
+
+        fig, ax = plt.subplots()
         self.matplotlib = plt
 
         if is_map(packed_data_items[0]):
@@ -42,8 +47,23 @@ class Generic_Plot(object):
             self.plot_method = self.matplotlib
 
         self.set_width_and_height()
-
+        
         self.plot()
+
+        # def format_date(x, pos=None):
+        #     from jasmin_cis.timeUtil import convert_num_to_datetime
+        #     return convert_num_to_datetime(x).strftime('%Y-%m-%d')
+        #
+        # def format_datetime(x, pos=None):
+        #     from jasmin_cis.timeUtil import convert_num_to_datetime
+        #     return convert_num_to_datetime(x).strftime('%Y-%m-%d %H:%M:%S')
+        #
+        # def format_time(x, pos=None):
+        #     from jasmin_cis.timeUtil import convert_num_to_datetime
+        #     return convert_num_to_datetime(x).strftime('%H:%M:%S')
+        #
+        # ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+        # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def plot(self):
         raise NotImplementedError()

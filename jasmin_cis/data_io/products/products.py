@@ -24,7 +24,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             start = hdf_vd.get_data(j)
             time += start
             arrays.append(time)
-        return np.array(arrays)
+        return utils.concatenate(arrays)
 
     def create_coords(self, filenames):
 
@@ -251,14 +251,14 @@ class Cloud_CCI(AProduct):
             time_data.append(get_data(t_var))
 
         coords = CoordList()
-        coords.append(Coord(lon, get_metadata(lon[0]), "X"))
+        coords.append(Coord(lon, get_metadata(lon[0])))
         coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
 
         # Julian Date, days elapsed since 12:00 January 1, 4713 BC
         time_data = convert_julian_date_to_obj_array(utils.concatenate(time_data), 'julian')
         time_metadata = get_metadata(time[0])
         time_metadata.units = "DateTime Object"
-        coords.append(Coord(time_data, time_metadata, "T"))
+        coords.append(Coord(time_data, time_metadata, "X"))
 
         return coords
 
@@ -282,7 +282,7 @@ class Aerosol_CCI(AProduct):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
         import datetime
-        from jasmin_cis.timeUtil import convert_tai_to_obj_array
+        from jasmin_cis.timeUtil import convert_sec_since_to_obj_array
 
         variables = ["lat", "lon", "time"]
         logging.info("Listing coordinates: " + str(variables))
@@ -293,7 +293,7 @@ class Aerosol_CCI(AProduct):
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
 
-        time_data = convert_tai_to_obj_array(get_data(data["time"]),datetime.datetime(1970,1,1))
+        time_data = convert_sec_since_to_obj_array(get_data(data["time"]),datetime.datetime(1970,1,1))
         time_metadata = get_metadata(data["time"])
         time_metadata.units = "DateTime Object"
         time_coord = Coord(time_data, time_metadata, "T")
@@ -369,6 +369,7 @@ class Caliop(AProduct):
         time = sdata['Profile_Time']
         time_data = hdf.read_data(time,"SD")
         time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
+        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime(1993,1,1))
         time_metadata = hdf.read_metadata(time,"SD")
         time_metadata.shape = new_shape
         time_metadata.units = "DateTime Object"
@@ -422,7 +423,7 @@ class CisCol(AProduct):
         coords.append(Coord(lon, get_metadata(lon), "X"))
         coords.append(Coord(lat, get_metadata(lat), "Y"))
         coords.append(Coord(alt, get_metadata(alt)))
-        coords.append(Coord(time, get_metadata(time), "T").convert_julain_to_datetime())
+        coords.append(Coord(time, get_metadata(time), "T").convert_julian_to_datetime())
 
         if variable is None:
             return coords
@@ -602,7 +603,7 @@ class Xenida(NetCDF_CF_Gridded):
 
         #days since 1979-4-1
         time = Coord(data_variables["time"], get_metadata(data_variables["time"]), "T")
-        time.convert_julain_to_datetime()
+        time.convert_time_since_to_datetime(time.units)
         coords.append()
 
         return coords
@@ -673,7 +674,7 @@ class ASCII_Hyperpoints(AProduct):
         coords = CoordList()
         coords.append(Coord(array[1,:], Metadata(name="Longitude", shape=(n_elements,), units="degrees_east")))
         coords.append(Coord(array[0,:], Metadata(name="Latitude", shape=(n_elements,), units="degrees_north")))
-        coords.append(Coord(array[3,:], Metadata(name="Time", shape=(n_elements,), units="Julian Date")).convert_julain_to_datetime())
+        coords.append(Coord(array[3,:], Metadata(name="Time", shape=(n_elements,), units="Julian Date")).convert_julian_to_datetime())
         coords.append(Coord(array[2,:], Metadata(name="Altitude", shape=(n_elements,), units="meters")))
 
         if variable is not None:
