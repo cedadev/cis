@@ -251,8 +251,9 @@ class Cloud_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from jasmin_cis.data_io.netcdf import read, get_metadata
+        from jasmin_cis.data_io.netcdf import read, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
+        from jasmin_cis.timeUtil import convert_julian_date_to_obj_array
 
         variables = ["lat", "lon", "time"]
 
@@ -268,7 +269,10 @@ class Cloud_CCI(AProduct):
         coords = CoordList()
         coords.append(Coord(lon, get_metadata(lon[0]), "X"))
         coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
-        coords.append(Coord(time, get_metadata(time[0]), "T"))
+
+        # Julian Date, days elapsed since 12:00 January 1, 4713 BC
+        time_data = convert_julian_date_to_obj_array(get_data(time), 'julian')
+        coords.append(Coord(time_data, get_metadata(time[0]), "T"))
 
         return coords
 
@@ -289,7 +293,7 @@ class Aerosol_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
         import datetime
         from jasmin_cis.timeUtil import convert_tai_to_obj_array
@@ -301,11 +305,9 @@ class Aerosol_CCI(AProduct):
         coords = CoordList()
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
-        time_data = convert_tai_to_obj_array(data["time"],datetime.datetime())
 
-        time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
-
-        time_coord.convert_num_to_datetime()
+        time_data = convert_tai_to_obj_array(get_data(data["time"]),datetime.datetime(1970,1,1))
+        time_coord = Coord(time_data, get_metadata(data["time"]), "T")
         coords.append(time_coord)
         
         return coords
