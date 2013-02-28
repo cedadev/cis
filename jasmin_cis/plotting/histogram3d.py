@@ -6,6 +6,12 @@ class Histogram_3D(Generic_Plot):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
+        # Add y=x line
+        min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
+        max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
+        y_equals_x_array = [min_val, max_val]
+        self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
+
         self.matplotlib.hist2d(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], *self.mplargs, **self.mplkwargs)
 
         self.mplkwargs["vmin"] = vmin
