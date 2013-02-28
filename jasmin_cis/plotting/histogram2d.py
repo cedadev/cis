@@ -12,7 +12,7 @@ class Histogram_2D(Generic_Plot):
             if step is None:
                 number_of_bins = 10
             else:
-                number_of_bins = int((unpacked_data_item["x"].max() - unpacked_data_item["x"].min())/step)
+                number_of_bins = int((unpacked_data_item["data"].max() - unpacked_data_item["data"].min())/step)
 
             datafile = self.plot_args["datagroups"][i]
             if datafile["itemstyle"]:
@@ -30,7 +30,7 @@ class Histogram_2D(Generic_Plot):
             else:
                 self.mplkwargs["color"] = None
 
-            self.matplotlib.hist(unpacked_data_item["x"], bins = number_of_bins, *self.mplargs, **self.mplkwargs)
+            self.matplotlib.hist(unpacked_data_item["data"], bins = number_of_bins, *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
