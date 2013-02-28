@@ -250,12 +250,7 @@ class Cloud_CCI(AProduct):
         coords = CoordList()
         coords.append(Coord(lon, get_metadata(lon[0])))
         coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
-
-        # Julian Date, days elapsed since 12:00 January 1, 4713 BC
-        time_data = convert_julian_date_to_obj_array(utils.concatenate(time_data), 'julian')
-        time_metadata = get_metadata(time[0])
-        time_metadata.units = "DateTime Object"
-        coords.append(Coord(time_data, time_metadata, "X"))
+        coords.append(Coord(time_data, get_metadata(time[0]), "X").convert_julian_to_datetime())
 
         return coords
 
@@ -289,11 +284,8 @@ class Aerosol_CCI(AProduct):
         coords = CoordList()
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
-
-        time_data = convert_sec_since_to_obj_array(get_data(data["time"]),datetime.datetime(1970,1,1))
-        time_metadata = get_metadata(data["time"])
-        time_metadata.units = "DateTime Object"
-        time_coord = Coord(time_data, time_metadata, "T")
+        time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
+        time_coord.convert_TAI_time_to_datetime(datetime.datetime(1970,1,1))
         coords.append(time_coord)
         
         return coords
@@ -366,10 +358,8 @@ class Caliop(AProduct):
         time = sdata['Profile_Time']
         time_data = hdf.read_data(time,"SD")
         time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
-        time_data = tu.convert_tai_to_obj_array(time_data,dt.datetime(1993,1,1))
         time_metadata = hdf.read_metadata(time,"SD")
         time_metadata.shape = new_shape
-        time_metadata.units = "DateTime Object"
         time_coord = Coord(time_data, time_metadata, "X")
         time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
 
