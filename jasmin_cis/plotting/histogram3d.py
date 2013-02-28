@@ -6,10 +6,37 @@ class Histogram_3D(Generic_Plot):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        self.matplotlib.hist2d(self.unpacked_data_items[0]["x"], self.unpacked_data_items[1]["x"], *self.mplargs, **self.mplkwargs)
+        xbins = self.calculate_number_of_bins("x")
+        ybins = self.calculate_number_of_bins("y")
+
+        # Add y=x line
+        min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
+        max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
+        y_equals_x_array = [min_val, max_val]
+        self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
+
+        self.matplotlib.hist2d(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], bins = [xbins, ybins], *self.mplargs, **self.mplkwargs)
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
+
+    def calculate_number_of_bins(self, axis):
+        if axis == "x":
+            axis_index = 0
+        elif axis == "y":
+            axis_index = 1
+
+        if self.plot_args[axis + "range"] is not None:
+            step = self.plot_args[axis + "range"].get(axis + "step", None)
+        else:
+            step = None
+
+        if step is None:
+            number_of_bins = 10
+        else:
+            number_of_bins = int((self.unpacked_data_items[axis_index]["data"].max() - self.unpacked_data_items[axis_index]["data"].min())/step)
+
+        return number_of_bins
 
     def format_plot(self):
         self.format_3d_plot()

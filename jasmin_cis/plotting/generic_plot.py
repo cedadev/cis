@@ -23,13 +23,11 @@ def is_map(data_item):
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, v_range, plot_args, out_filename = None, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, v_range, plot_args, *mplargs, **mplkwargs):
         from utils import unpack_data_object
         import matplotlib.dates as dates
         from matplotlib import ticker
 
-
-        self.out_filename = out_filename
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.plot_args = plot_args
@@ -70,8 +68,6 @@ class Generic_Plot(object):
 
         self.apply_axis_limits(plot_args["xrange"], "x")
         self.apply_axis_limits(plot_args["yrange"], "y")
-
-        self.output_to_file_or_screen()
 
     def plot(self):
         raise NotImplementedError()
@@ -147,16 +143,19 @@ class Generic_Plot(object):
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
-        if valrange is None: valrange = self.calculate_axis_limits(axis)
+        try:
+            if valrange is None: valrange = self.calculate_axis_limits(axis)
 
-        if axis == "x":
-            step = valrange.pop("xstep", None)
-            self.matplotlib.xlim(**valrange)
-            if step is not None: valrange["xstep"] = step
-        elif axis == "y":
-            step = valrange.pop("ystep", None)
-            self.matplotlib.ylim(**valrange)
-            if step is not None: valrange["ystep"] = step
+            if axis == "x":
+                step = valrange.pop("xstep", None)
+                self.matplotlib.xlim(**valrange)
+                if step is not None: valrange["xstep"] = step
+            elif axis == "y":
+                step = valrange.pop("ystep", None)
+                self.matplotlib.ylim(**valrange)
+                if step is not None: valrange["ystep"] = step
+        except (AttributeError, TypeError):
+            pass # In case of date axis. TODO Fix this
 
     def set_font_size(self):
         if self.plot_args.get("fontsize", None) is not None:
@@ -164,20 +163,6 @@ class Generic_Plot(object):
                 self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
         else:
             self.plot_args.pop("fontsize", None)
-
-    def output_to_file_or_screen(self):
-        '''
-        Outputs to screen unless a filename is given
-
-        @param out_filename    The filename of the file to save to
-        '''
-        import logging
-
-        if self.out_filename is None:
-            self.matplotlib.show()
-        else:
-            logging.info("saving plot to file: " + self.out_filename);
-            self.matplotlib.savefig(self.out_filename) # Will overwrite if file already exists
 
     def calculate_min_and_max_values(self):
         from sys import maxint
@@ -310,6 +295,7 @@ class Generic_Plot(object):
         if logy: self.matplotlib.yscale("log")
 
     def format_2d_plot(self):
+        import logging
         from jasmin_cis.plotting.plot import plot_options
 
         logx = self.plot_args.get("logx", False)
@@ -317,7 +303,10 @@ class Generic_Plot(object):
         if logx or logy:
             self.set_log_scale(logx, logy)
         else:
-            self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+            try:
+                self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+            except AttributeError:
+                logging.warning("Couldn't apply scientific notation to axes")
 
         draw_grid = self.plot_args.pop("grid", False)
         if draw_grid: self.matplotlib.grid(True, which="both")

@@ -49,7 +49,6 @@ class Scatter_Plot(Generic_Plot):
         valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
         return valrange
 
-
     def format_plot(self):
         if self.scatter_type == "3D":
             self.format_3d_plot()

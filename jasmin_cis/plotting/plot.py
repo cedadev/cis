@@ -50,6 +50,7 @@ class Plotter(object):
         @param *mplargs            mplargs to be passed into matplotlib
         @param **mplkwargs         kwargs to be passed into matplotlib
         '''
+        self.out_filename = out_filename
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
 
@@ -63,7 +64,23 @@ class Plotter(object):
         if plot_type is None: plot_type = self.__set_default_plot_type(packed_data_items)
 
         # Do plot
-        self.plot_types[plot_type](packed_data_items, v_range, plot_args, out_filename, *mplargs, **mplkwargs)
+        self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
+
+        self.output_to_file_or_screen()
+
+    def output_to_file_or_screen(self):
+        '''
+        Outputs to screen unless a filename is given
+
+        @param out_filename    The filename of the file to save to
+        '''
+        import logging
+        import matplotlib.pyplot as plt
+        if self.out_filename is None:
+            plt.show()
+        else:
+            logging.info("saving plot to file: " + self.out_filename)
+            plt.savefig(self.out_filename) # Will overwrite if file already exists
 
     def remove_unassigned_arguments(self):
         '''
