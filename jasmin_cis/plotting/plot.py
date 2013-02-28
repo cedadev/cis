@@ -9,6 +9,7 @@ from line_plot import Line_Plot
 from scatter_overlay import Scatter_Overlay
 from scatter_plot import Scatter_Plot
 from comparative_scatter import Comparative_Scatter
+from histogram2d import Histogram_2D
 import matplotlib.pyplot as mpl
 
 def format_units(units):
@@ -34,7 +35,8 @@ class Plotter(object):
                   "line": Line_Plot,
                   "scatteroverlay" : Scatter_Overlay,
                   "scatter" : Scatter_Plot,
-                  "comparativescatter" : Comparative_Scatter}
+                  "comparativescatter" : Comparative_Scatter,
+                  "histogram2d" : Histogram_2D}
 
     def __init__(self, packed_data_items, plot_args, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
         '''
