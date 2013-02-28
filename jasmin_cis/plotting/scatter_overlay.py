@@ -11,11 +11,10 @@ class Scatter_Overlay(Generic_Plot):
 
         @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        Heatmap(self.packed_data_items, self.v_range, self.plot_args, *self.mplargs, **self.mplkwargs).plot()
+        Heatmap(self.packed_data_items, self.v_range, self.plot_args, *self.mplargs, **self.mplkwargs)
         scatter_plot_args = self.plot_args
         scatter_plot_args["datagroups"] = self.plot_args["datagroups"][1:]
         self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], self.v_range, self.plot_args, *self.mplargs, **self.mplkwargs)
-        self.scatter_plots.plot()
 
     def set_axis_label(self, axis, options):
         import jasmin_cis.exceptions as cisex

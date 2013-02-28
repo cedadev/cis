@@ -55,17 +55,14 @@ class Plotter(object):
         self.remove_unassigned_arguments()
 
         self.packed_data_items = packed_data_items
-        v_range = self.mplkwargs.pop("valrange", {})
-
-        if plot_args.get("logv", False):
-            from matplotlib.colors import LogNorm
-            self.mplkwargs["norm"] = LogNorm()
 
         if plot_type is None: plot_type = self.__set_default_plot_type(packed_data_items)
 
         # Do plot
-        self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
-
+        plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
+        plot.format_plot()
+        plot.apply_axis_limits(plot_args["xrange"], "x")
+        plot.apply_axis_limits(plot_args["yrange"], "y")
         self.output_to_file_or_screen()
 
     def output_to_file_or_screen(self):
