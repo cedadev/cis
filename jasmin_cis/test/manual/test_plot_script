@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 source_dir="./test/test_files/"
 output_dir="./test/manual/test_plot_script_results/"
 clear
