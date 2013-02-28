@@ -420,7 +420,7 @@ class CisCol(AProduct):
         coords.append(Coord(lon, get_metadata(lon), "X"))
         coords.append(Coord(lat, get_metadata(lat), "Y"))
         coords.append(Coord(alt, get_metadata(alt)))
-        coords.append(Coord(time, get_metadata(time), "T"))
+        coords.append(Coord(time, get_metadata(time), "T").convert_julain_to_datetime())
 
         if variable is None:
             return coords
