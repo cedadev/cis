@@ -87,11 +87,8 @@ def get_data(vds, first_record = False):
     data = np.array(data).flatten()
 
     #Deal with missing data
-    try:
-        missing_val = vd.attrinfo()['missing'][2]
-        data = create_masked_array_for_missing_data(data,missing_val)
-    except KeyError:
-        pass
+    missing_val = __get_attribute_value(vd, 'missing')
+    data = create_masked_array_for_missing_data(data,missing_val)
 
     # detach and close
     vd.detach()
