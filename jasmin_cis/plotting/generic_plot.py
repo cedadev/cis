@@ -155,7 +155,7 @@ class Generic_Plot(object):
         if self.out_filename is None:
             self.matplotlib.show()
         else:
-            logging.info("saving plot to file: " + self.out_filename);
+            logging.info("saving plot to file: " + self.out_filename)
             self.matplotlib.savefig(self.out_filename) # Will overwrite if file already exists
 
     def calculate_min_and_max_values(self):
@@ -289,6 +289,7 @@ class Generic_Plot(object):
         if logy: self.matplotlib.yscale("log")
 
     def format_2d_plot(self):
+        import logging
         from jasmin_cis.plotting.plot import plot_options
 
         logx = self.plot_args.get("logx", False)
@@ -296,7 +297,10 @@ class Generic_Plot(object):
         if logx or logy:
             self.set_log_scale(logx, logy)
         else:
-            self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+            try:
+                self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+            except AttributeError:
+                logging.warning("Couldn't apply scientific notation to axes")
 
         draw_grid = self.plot_args.pop("grid", False)
         if draw_grid: self.matplotlib.grid(True, which="both")

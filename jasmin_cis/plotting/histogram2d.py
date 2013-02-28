@@ -49,17 +49,11 @@ class Histogram_2D(Generic_Plot):
 
         if self.plot_args[axislabel] is None:
             if axis == "x":
-                try:
-                    units = self.packed_data_items[0].coord(axis=axis).units
-                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                    units = self.packed_data_items[0].units
+                units = self.packed_data_items[0].units
 
 
                 if len(self.packed_data_items) == 1:
-                    try:
-                        name = self.packed_data_items[0].coord(axis=axis).name()
-                    except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                        name = self.packed_data_items[0].name()
+                    name = self.packed_data_items[0].name()
                     # only 1 data to plot, display
                     self.plot_args[axislabel] = name + format_units(units)
                 else:
@@ -67,8 +61,6 @@ class Histogram_2D(Generic_Plot):
                     self.plot_args[axislabel] = format_units(units)
             elif axis == "y":
                 self.plot_args[axislabel] = "Frequency"
-
-
 
     def calculate_axis_limits(self, axis):
         valrange = {}
