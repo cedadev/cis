@@ -127,9 +127,14 @@ class TestXglnwa_vprof(ProductTests):
         self.product = Xglnwa_vprof
 
 
-# class TestXenida(ProductTests):
-#     pass
-#
+class TestXenida(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_xenida_filename, valid_xenida_variable
+        self.filename = valid_xenida_filename
+        self.valid_variable = valid_xenida_variable
+        self.product = Xenida
+
 class TestAeronet(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable
