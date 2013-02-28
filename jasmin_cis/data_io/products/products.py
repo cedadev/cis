@@ -5,6 +5,8 @@ import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
 
 import logging
+from utils import concatenate
+
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -259,20 +261,26 @@ class Cloud_CCI(AProduct):
 
         lon = []
         lat = []
+        time_data = []
         time = []
 
         for filename in filenames:
             lon.append(read(filename, "lon"))
             lat.append(read(filename, "lat"))
-            time.append(read(filename, "time"))
+            # We need both the variable reference and the data for time later so we keep both here
+            t_var = read(filename, "time")
+            time.append(t_var)
+            time_data.append(get_data(t_var))
 
         coords = CoordList()
         coords.append(Coord(lon, get_metadata(lon[0]), "X"))
         coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
 
         # Julian Date, days elapsed since 12:00 January 1, 4713 BC
-        time_data = convert_julian_date_to_obj_array(get_data(time), 'julian')
-        coords.append(Coord(time_data, get_metadata(time[0]), "T"))
+        time_data = convert_julian_date_to_obj_array(concatenate(time_data), 'julian')
+        time_metadata = get_metadata(time[0])
+        time_metadata.units = "DateTime Object"
+        coords.append(Coord(time_data, time_metadata, "T"))
 
         return coords
 
@@ -307,7 +315,9 @@ class Aerosol_CCI(AProduct):
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
 
         time_data = convert_tai_to_obj_array(get_data(data["time"]),datetime.datetime(1970,1,1))
-        time_coord = Coord(time_data, get_metadata(data["time"]), "T")
+        time_metadata = get_metadata(data["time"])
+        time_metadata.units = "DateTime Object"
+        time_coord = Coord(time_data, time_metadata, "T")
         coords.append(time_coord)
         
         return coords
