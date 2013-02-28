@@ -44,7 +44,6 @@ class Generic_Plot(object):
         self.set_width_and_height()
 
         self.plot()
-        self.format_plot()
 
         self.apply_axis_limits(plot_args["xrange"], "x")
         self.apply_axis_limits(plot_args["yrange"], "y")

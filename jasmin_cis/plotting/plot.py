@@ -64,8 +64,8 @@ class Plotter(object):
         if plot_type is None: plot_type = self.__set_default_plot_type(packed_data_items)
 
         # Do plot
-        self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
-
+        plot = self.plot_types[plot_type](packed_data_items, v_range, plot_args, *mplargs, **mplkwargs)
+        plot.format_plot()
         self.output_to_file_or_screen()
 
     def output_to_file_or_screen(self):
