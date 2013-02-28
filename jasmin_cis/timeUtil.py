@@ -4,23 +4,23 @@ Utilities for converting time units
 import numpy as np
 
 
-def convert_tai_to_obj_array(tai_time_array,ref):
-    return convert_masked_array_type(tai_time_array, 'O', convert_tai_to_obj)
+def convert_tai_to_obj_array(tai_time_array, ref):
+    return convert_numpy_array(tai_time_array, 'O', convert_tai_to_obj, ref=ref)
 
 
 def convert_tai_to_obj(tai_time, ref):
     from datetime import timedelta
-    return timedelta(seconds=tai_time) + ref
+    return timedelta(seconds=int(tai_time)) + ref
 
 
 def convert_julian_date_to_obj_array(julian_time_array, calander='julian'):
     from iris.unit import julian_day2date
-    return convert_masked_array_type(julian_time_array, 'O', julian_day2date, calander=calander)
+    return convert_numpy_array(julian_time_array, 'O', julian_day2date, calander=calander)
 
 
 def convert_obj_to_julian_date_array(time_array):
     from iris.unit import date2julian_day
-    return convert_masked_array_type(time_array, 'float64', date2julian_day)
+    return convert_numpy_array(time_array, 'float64', date2julian_day)
 
 
 def convert_datetime_to_num(dt):
@@ -35,17 +35,30 @@ def convert_num_to_datetime(time_number):
 
 
 def convert_datetime_to_num_array(time_array):
-    return convert_masked_array_type(time_array, 'float64',convert_datetime_to_num)
+    return convert_numpy_array(time_array, 'float64',convert_datetime_to_num)
 
 
 def convert_num_to_datetime_array(num_array):
-    return convert_masked_array_type(num_array, 'O', convert_num_to_datetime)
+    return convert_numpy_array(num_array, 'O', convert_num_to_datetime)
 
 
 def convert_masked_array_type(masked_array, new_type, operation, **kwargs):
     converted_time = np.ma.array(np.zeros(masked_array.shape, dtype=new_type),
                                  mask=masked_array.mask)
     for i, val in np.ndenumerate(masked_array):
-        if not masked_array.mask[i]:
+        if val is not np.ma.masked:
             converted_time[i] = operation(val, **kwargs)
     return converted_time
+
+def convert_array_type(array, new_type, operation, **kwargs):
+    converted_time = np.zeros(array.shape, dtype=new_type)
+    for i, val in np.ndenumerate(array):
+        converted_time[i] = operation(val, **kwargs)
+    return converted_time
+
+def convert_numpy_array(array, new_type, operation, **kwargs):
+    if isinstance(array,np.ma.MaskedArray):
+        new_array = convert_masked_array_type(array, new_type, operation, **kwargs)
+    else:
+        new_array = convert_array_type(array, new_type, operation, **kwargs)
+    return new_array
