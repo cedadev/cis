@@ -129,11 +129,9 @@ class MODIS_L3(AProduct):
         sdata, vdata = hdf.read(filenames,variables)
 
         lat = sdata['YDim']
-        lat_data = hdf.read_data(lat,"SD")
         lat_metadata = hdf.read_metadata(lat, "SD")
 
         lon = sdata['XDim']
-        lon_data = hdf.read_data(lon,"SD")
         lon_metadata = hdf.read_metadata(lon, "SD")
 
         # to make sure "Latitude" and "Longitude", i.e. the standard_name is displayed instead of "YDim"and "XDim"
@@ -143,8 +141,8 @@ class MODIS_L3(AProduct):
         lon_metadata._name = ""
 
         coords = CoordList()
-        coords.append(Coord(lon_data, lon_metadata,'X'))
-        coords.append(Coord(lat_data, lat_metadata,'Y'))
+        coords.append(Coord(lon, lon_metadata,'X'))
+        coords.append(Coord(lat, lat_metadata,'Y'))
 
         return coords
 
@@ -259,58 +257,44 @@ class Cloud_CCI(AProduct):
 
         from jasmin_cis.data_io.netcdf import read, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
+        from jasmin_cis.timeUtil import convert_julian_date_to_obj_array
 
         variables = ["lat", "lon", "time"]
 
         lon = []
-        lon_data = []
         lat = []
-        lat_data = []
-        time = []
         time_data = []
+        time = []
 
         for filename in filenames:
-            current = read(filename, "lon")
-            lon.append(current)#, dim="across_track")
-            lon_data.append(get_data(current))
-
-            current = read(filename, "lat")
-            lat.append(current)
-            lat_data.append(get_data(current))
-
-            current = read(filename, "time")
-            time.append(current)
-            time_data.append(get_data(current))
-
-        lon_data = utils.concatenate(lon_data)
-        lat_data = utils.concatenate(lat_data)
-        time_data = utils.concatenate(time_data)
-        #data = read_many_files(filenames, variables)
-        #data = read_many_files(filenames, variables, dim="time")
+            lon.append(read(filename, "lon"))
+            lat.append(read(filename, "lat"))
+            # We need both the variable reference and the data for time later so we keep both here
+            t_var = read(filename, "time")
+            time.append(t_var)
+            time_data.append(get_data(t_var))
 
         coords = CoordList()
-        coords.append(Coord(lon_data, get_metadata(lon[0]), "X"))
-        coords.append(Coord(lat_data, get_metadata(lat[0]), "Y"))
-        coords.append(Coord(time_data, get_metadata(time[0]), "T"))
+        coords.append(Coord(lon, get_metadata(lon[0]), "X"))
+        coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
+
+        # Julian Date, days elapsed since 12:00 January 1, 4713 BC
+        time_data = convert_julian_date_to_obj_array(concatenate(time_data), 'julian')
+        time_metadata = get_metadata(time[0])
+        time_metadata.units = "DateTime Object"
+        coords.append(Coord(time_data, time_metadata, "T"))
 
         return coords
 
     def create_data_object(self, filenames, variable):
 
-        from jasmin_cis.data_io.netcdf import get_metadata, read, get_data
+        from jasmin_cis.data_io.netcdf import get_metadata, read
 
         coords = self.create_coords(filenames)
-        var = []
-        var_data = []
-        for filename in filenames:
-            current = read(filename, variable)#, dim="across_track")
-            var.append(current)
-            var_data.append(get_data(current))
-
-        var_data = utils.concatenate(var_data)
+        var = [read(filename, variable) for filename in filenames]
         metadata = get_metadata(var[0])
 
-        return UngriddedData(var_data, metadata, coords)
+        return UngriddedData(var, metadata, coords)
 
 class Aerosol_CCI(AProduct):
 
@@ -319,8 +303,10 @@ class Aerosol_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
+        import datetime
+        from jasmin_cis.timeUtil import convert_tai_to_obj_array
 
         variables = ["lat", "lon", "time"]
 
@@ -329,12 +315,16 @@ class Aerosol_CCI(AProduct):
         coords = CoordList()
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
-        coords.append(Coord(data["time"], get_metadata(data["time"]), "T"))
+
+        time_data = convert_tai_to_obj_array(get_data(data["time"]),datetime.datetime(1970,1,1))
+        time_metadata = get_metadata(data["time"])
+        time_metadata.units = "DateTime Object"
+        time_coord = Coord(time_data, time_metadata, "T")
+        coords.append(time_coord)
         
         return coords
 
     def create_data_object(self, filenames, variable):
-
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
 
         coords = self.create_coords(filenames)
@@ -368,25 +358,25 @@ class Caliop(AProduct):
             alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
 
         # work out size of data arrays
-        # the coordinate variable will be reshape to match that.
+        # the coordinate variables will be reshaped to match that.
         len_x = utils.concatenate(alt_data_arr).shape[0]
         len_y = hdf.read_data(sdata['Latitude'],"SD").shape[0]
+        new_shape = (len_x, len_y)
 
         # altitude
         alt_data = utils.concatenate(alt_data_arr)
         alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
         alt_metadata = Metadata()
         alt_metadata.standard_name = "Altitude"
-        alt_metadata.shape = [alt_data.shape[0],alt_data.shape[1]]
+        alt_metadata.shape = new_shape
         alt_coord = Coord(alt_data,alt_metadata, "Y")
 
         # latitude
-        hdf.read_data(sdata['Latitude'],"SD")
         lat = sdata['Latitude']
         lat_data = hdf.read_data(lat,"SD")
         lat_data = utils.expand_1d_to_2d_array(lat_data[:,1],len_x,axis=1)
         lat_metadata = hdf.read_metadata(lat, "SD")
-        lat_metadata.shape = [lat_data.shape[0],lat_data.shape[1]]
+        lat_metadata.shape = new_shape
         lat_coord = Coord(lat_data, lat_metadata)
 
         # longitude
@@ -394,16 +384,16 @@ class Caliop(AProduct):
         lon_data = hdf.read_data(lon,"SD")
         lon_data = utils.expand_1d_to_2d_array(lon_data[:,1],len_x,axis=1)
         lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_metadata.shape = [lon_data.shape[0],lon_data.shape[1]]
+        lon_metadata.shape = new_shape
         lon_coord = Coord(lon_data, lon_metadata)
 
         #profile time, x
         profile_time = sdata['Profile_Time']
         profile_time_data = hdf.read_data(profile_time,"SD")
         profile_time_data = utils.expand_1d_to_2d_array(profile_time_data[:,1],len_x,axis=1)
-        profile_time_data = tu.convert_tai_to_obj_array(profile_time_data,dt.datetime(1993,1,1,0,0,0))
+        profile_time_data = tu.convert_tai_to_obj_array(profile_time_data,dt.datetime(1993,1,1))
         profile_time_metadata = hdf.read_metadata(profile_time,"SD")
-        profile_time_metadata.shape = [profile_time_data.shape[0],profile_time_data.shape[1]]
+        profile_time_metadata.shape = new_shape
         profile_time_coord = Coord(profile_time_data, profile_time_metadata, "X")
 
         # create the object containing all coordinates

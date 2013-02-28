@@ -7,7 +7,6 @@ from pyhdf.VS import *
 from collections import namedtuple
 import logging
 
-from jasmin_cis.data_io.hdf_util import __fill_missing_data
 
 class VDS(namedtuple('VDS',['filename','variable'])):
     pass
@@ -66,6 +65,8 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 def get_data(vds, first_record = False):
+    from jasmin_cis.utils import create_masked_array_for_missing_data
+
     # get file and variable reference from tuple
     filename = vds.filename
     variable = vds.variable
@@ -88,7 +89,7 @@ def get_data(vds, first_record = False):
     #Deal with missing data
     try:
         missing_val = vd.attrinfo()['missing'][2]
-        data = __fill_missing_data(data,missing_val)
+        data = create_masked_array_for_missing_data(data,missing_val)
     except KeyError:
         pass
 

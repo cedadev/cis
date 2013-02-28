@@ -84,13 +84,9 @@ def get_metadata(var):
         standard_name = var.standard_name
     except AttributeError:
         standard_name = ""
-    try:
-        missing_value = var.missing_value
-    except AttributeError:
-        try:
-            missing_value = var._FillValue
-        except AttributeError:
-            missing_value = ""
+
+    missing_value = find_missing_value(var)
+
     try:
         shape=(var._recLen[0],)
     except AttributeError:
@@ -103,6 +99,16 @@ def get_metadata(var):
 
     return metadata
 
+def find_missing_value(var):
+    try:
+        missing_value = var.missing_value
+    except AttributeError:
+        try:
+            missing_value = var._FillValue
+        except AttributeError:
+            missing_value = None
+    return missing_value
+
 def get_data(var, calipso_scaling=False):
     """
     Reads raw data from a NetCDF.Variable instance.
@@ -111,14 +117,8 @@ def get_data(var, calipso_scaling=False):
         @return:  A numpy maskedarray. Missing values are False in the mask.
     """
     from jasmin_cis.utils import create_masked_array_for_missing_data
-    data = var[:] # Note that this will automatically apply any specified scalings
-
-    # Missing data.
-    missing_val = getattr(var, '_FillValue', None)
-    scale_factor = getattr(var, 'scale_factor', 1)
-    if missing_val is not None:
-        # Fill value needs to be scaled in order to work
-        missing_val = missing_val * scale_factor
-    data = create_masked_array_for_missing_data(data, missing_val)
+    # Note that this will automatically apply any specified scalings and
+    #  return a masked array based on _FillValue
+    data = var[:]
 
     return data
