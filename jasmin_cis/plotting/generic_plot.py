@@ -72,6 +72,20 @@ class Generic_Plot(object):
         legend = self.matplotlib.legend(legend_titles, loc="best")
         legend.draggable(state = True)
 
+    def set_default_axis_label_for_comparative_plot(self, axis):
+        from plot import format_units
+        axis = axis.lower()
+        axislabel = axis + "label"
+        if axis == 'x':
+            item_index = 0
+        elif axis == 'y':
+            item_index = 1
+
+        if self.plot_args[axislabel] is None:
+            units = self.packed_data_items[item_index].units
+            name = self.packed_data_items[item_index].name()
+            self.plot_args[axislabel] = name + format_units(units)
+
     def set_width_and_height(self):
         '''
         Sets the width and height of the plot
@@ -181,7 +195,7 @@ class Generic_Plot(object):
 
         #ticks = None
 
-        cbar = plt.colorbar(orientation = orientation, ticks = ticks, format = nformat)
+        cbar = self.matplotlib.colorbar(orientation = orientation, ticks = ticks, format = nformat)
 
         cbar.set_label(format_units(units))
 
@@ -217,8 +231,8 @@ class Generic_Plot(object):
             meridian_labels = self.__format_map_ticks(meridians, "x")
             parallel_labels = self.__format_map_ticks(parallels, "y")
 
-            plt.xticks(meridians, meridian_labels)
-            plt.yticks(parallels, parallel_labels)
+            self.matplotlib.xticks(meridians, meridian_labels)
+            self.matplotlib.yticks(parallels, parallel_labels)
 
     def __create_map_grid_lines(self):
         def __create_set_of_grid_lines(axis, range_dict):
