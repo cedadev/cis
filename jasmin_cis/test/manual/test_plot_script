@@ -2,6 +2,9 @@
 source_dir="./test/test_files/"
 output_dir="./test/manual/test_plot_script_results/"
 clear
+if [ -d $output_dir ]; then
+    rm -r $output_dir
+fi
 mkdir -p $output_dir
 echo Iris Contour
 python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type contour --cmap RdBu --xlabel "Overidden X Label" --title "Overidded Title" --height 5 --width 5 --xrange 15:45:20 --cbarorient vertical --fontsize 10 --output "${output_dir}iriscontour"
