@@ -38,7 +38,6 @@ class Line_Plot(Generic_Plot):
     def format_plot(self):
         self.format_2d_plot()
 
-
     def set_default_axis_label(self, axis):
         from plot import format_units
         import jasmin_cis.exceptions as cisex
@@ -61,5 +60,5 @@ class Line_Plot(Generic_Plot):
                 self.plot_args[axislabel] = name + format_units(units)
             else:
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
-                self.plot_args[axislabel] = units
+                self.plot_args[axislabel] = format_units(units)
 
