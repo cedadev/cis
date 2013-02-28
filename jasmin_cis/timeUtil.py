@@ -59,8 +59,3 @@ def convert_masked_array_type(masked_array, new_type, operation):
         if not masked_array.mask[i]:
             converted_time[i] = operation(val)
     return converted_time
-
-    # a = np.arange(6).reshape(2,3)
-# print a
-# b= convert_tai_to_obj_array(a,dt.datetime(1993,1,1))
-# print b
