@@ -1,18 +1,40 @@
 from generic_plot import Generic_Plot
 
 class Histogram_2D(Generic_Plot):
+    valid_histogram_styles = ["bar", "step", "stepfilled"]
     def plot(self):
-        '''
-        color
-        range x moreso than y
-        two variables
-        get rid of bar lines and not filled in
-        @return:
-        '''
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
-        for unpacked_data_item in self.unpacked_data_items:
-            self.matplotlib.hist(unpacked_data_item["x"], *self.mplargs, **self.mplkwargs)
+
+        step = self.plot_args["xrange"].get("xstep", None)
+
+        for i, unpacked_data_item in enumerate(self.unpacked_data_items):
+            if step is None:
+                number_of_bins = 10
+            else:
+                print step
+                valrange = unpacked_data_item["x"].max() - unpacked_data_item["x"].min()
+                print valrange
+                number_of_bins = int(valrange/step)
+                print number_of_bins
+
+            datafile = self.plot_args["datagroups"][i]
+            if datafile["itemstyle"]:
+                if datafile["itemstyle"] in self.valid_histogram_styles:
+                    self.mplkwargs["histtype"] = datafile["itemstyle"]
+                else:
+                    from jasmin_cis.exceptions import InvalidHistogramStyleError
+                    raise InvalidHistogramStyleError("'" + datafile["itemstyle"] + "' is not a valid histogram style, please use one of: " + str(self.valid_histogram_styles))
+
+            else:
+                self.mplkwargs["histtype"] = "bar"
+
+            if datafile["color"]:
+                self.mplkwargs["color"] = datafile["color"]
+            else:
+                self.mplkwargs["color"] = None
+
+            self.matplotlib.hist(unpacked_data_item["x"], bins = number_of_bins, *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
@@ -59,5 +81,14 @@ class Histogram_2D(Generic_Plot):
         return valrange
 
     def apply_axis_limits(self, valrange, axis):
-        pass
+        if valrange is not None:
+            if axis == "x":
+                step = valrange.pop("xstep", None)
+                self.matplotlib.xlim(**valrange)
+                if step is not None: valrange["xstep"] = step
+            elif axis == "y":
+                step = valrange.pop("ystep", None)
+                self.matplotlib.ylim(**valrange)
+                if step is not None: valrange["ystep"] = step
+
 
