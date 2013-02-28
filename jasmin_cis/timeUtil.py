@@ -3,59 +3,49 @@ Utilities for converting time units
 """
 import numpy as np
 
+
 def convert_tai_to_obj_array(tai_time_array,ref):
-    converted_time = np.zeros(tai_time_array.shape, dtype='O')
-    for i,t in np.ndenumerate(tai_time_array):
-        converted_time[i] = convert_tai_to_obj(int(t),ref)
-    return converted_time
+    return convert_masked_array_type(tai_time_array, 'O', convert_tai_to_obj, ref=ref)
+
 
 def convert_tai_to_obj(tai_time, ref):
     from datetime import timedelta
     return timedelta(seconds=tai_time) + ref
 
-def convert_julian_date_to_obj_array(julian_time_array, calander):
-    from iris.unit import julian_day2date
 
-    converted_time = np.ma.array(np.zeros(julian_time_array.shape, dtype='O'),
-                                 mask=julian_time_array.mask)
-    for i, t in np.ndenumerate(julian_time_array):
-        if not julian_time_array.mask[i]:
-            converted_time[i] = julian_day2date(t, calander)
-    return converted_time
+def convert_julian_date_to_obj_array(julian_time_array, calender='julian'):
+    from iris.unit import julian_day2date
+    return convert_masked_array_type(julian_time_array, 'O', julian_day2date, calender=calender)
+
 
 def convert_obj_to_julian_date_array(time_array):
     from iris.unit import date2julian_day
+    return convert_masked_array_type(time_array, 'float64', date2julian_day)
 
-    converted_time = np.ma.array(np.zeros(time_array.shape, dtype='float64'),
-                                 mask=time_array.mask)
-    for i, t in np.ndenumerate(time_array):
-        if not time_array.mask[i]:
-            converted_time[i] = date2julian_day(t, 'julian')
-    return converted_time
 
-def convert_datetime_to_num_array(time_array):
+def convert_datetime_to_num(dt):
     from iris.unit import encode_time
+    return encode_time(*dt.timetuple()[0:6])
 
-    converted_time = np.ma.array(np.zeros(time_array.shape, dtype='float64'),
-                                 mask=time_array.mask)
-    for i, date_time in np.ndenumerate(time_array):
-        if not time_array.mask[i]:
-            converted_time[i] = encode_time(*date_time.timetuple()[0:6])
-    return converted_time
 
-def convert_num_to_datetime_array(self):
+def convert_num_to_datetime(time_number):
     from iris.unit import decode_time
     from datetime import datetime
-    new_data = np.zeros(self.shape, dtype='O')
-    for i, date_time in np.ndenumerate(self.data):
-        new_data[i] = decode_time(datetime(*date_time))
-    self._data = new_data
+    return datetime(*decode_time(time_number))
 
 
-def convert_masked_array_type(masked_array, new_type, operation):
+def convert_datetime_to_num_array(time_array):
+    return convert_masked_array_type(time_array, 'float64',convert_datetime_to_num)
+
+
+def convert_num_to_datetime_array(num_array):
+    return convert_masked_array_type(num_array, 'O', convert_num_to_datetime)
+
+
+def convert_masked_array_type(masked_array, new_type, operation, **kwargs):
     converted_time = np.ma.array(np.zeros(masked_array.shape, dtype=new_type),
                                  mask=masked_array.mask)
     for i, val in np.ndenumerate(masked_array):
         if not masked_array.mask[i]:
-            converted_time[i] = operation(val)
+            converted_time[i] = operation(val, **kwargs)
     return converted_time
