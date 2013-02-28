@@ -260,7 +260,7 @@ class UngriddedData(LazyData):
 
         logging.info("Converting ungridded data to a list of HyperPoints...")
 
-        # We want the data to be flat wether it's masked or not
+        # We want the data to be flat whether it's masked or not
         data = self.data.flatten()
 
         # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
