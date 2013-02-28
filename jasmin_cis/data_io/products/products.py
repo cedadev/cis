@@ -616,9 +616,14 @@ class Xenida(NetCDF_CF_Gridded):
         coords = CoordList()
         coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
         coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
+        altitude = Coord(data_variables["atmosphere_hybrid_height_coordinate_ak"], get_metadata(data_variables["atmosphere_hybrid_height_coordinate_ak"]), "Z")
+        altitude.standard_name = altitude
+        coords.append(altitude)
 
-        coords.append(Coord(data_variables["atmosphere_hybrid_height_coordinate_ak"], get_metadata(data_variables["atmosphere_hybrid_height_coordinate_ak"]), "Z"))
-        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
+        #days since 1979-4-1
+        time = Coord(data_variables["time"], get_metadata(data_variables["time"]), "T")
+        time.convert_julain_to_datetime()
+        coords.append()
 
         return coords
 
