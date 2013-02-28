@@ -42,8 +42,8 @@ class Coord(LazyData):
         self.units = "DateTime Object"
 
     def convert_TAI_time_to_datetime(self, ref):
-        from jasmin_cis.timeUtil import convert_sec_since_to_obj
-        self._data = convert_sec_since_to_obj(self.data, ref)
+        from jasmin_cis.timeUtil import convert_sec_since_to_obj_array
+        self._data = convert_sec_since_to_obj_array(self.data, ref)
         self.units = "DateTime Object"
 
     def convert_time_since_to_datetime(self, units):
