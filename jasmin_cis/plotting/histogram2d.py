@@ -6,7 +6,10 @@ class Histogram_2D(Generic_Plot):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        step = self.plot_args["xrange"].get("xstep", None)
+        if self.plot_args["xrange"] is not None:
+            step = self.plot_args["xrange"].get("xstep", None)
+        else:
+            step = None
 
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
             if step is None:
