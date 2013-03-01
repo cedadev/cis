@@ -43,7 +43,7 @@ def parse_datetimestr_delta_to_obj(s):
             seconds = val
             continue
         else:
-            raise ValueError("unvalid time delta format")
+            raise ValueError("Invalid time delta format")
 
     return relativedelta(years=years,months=months,days=days,hours=hours,minutes=minutes,seconds=seconds)
 

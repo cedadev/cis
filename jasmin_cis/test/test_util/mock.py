@@ -18,7 +18,7 @@ def make_dummy_2d_cube():
 
 def make_square_3x3_2d_cube():
     '''
-        Makes a well defined cube of shape 3x3 with data as follows
+        Makes a well defined cube of shape 5x3 with data as follows
         array([[1,2,3],
                [4,5,6],
                [7,8,9],
@@ -108,7 +108,7 @@ def make_dummy_2d_ungridded_data():
 
 def make_regular_2d_ungridded_data():
     '''
-        Makes a well defined ungridded data object of shape 3x3 with data as follows
+        Makes a well defined ungridded data object of shape 5x3 with data as follows
         array([[1,2,3],
                [4,5,6],
                [7,8,9],
@@ -148,7 +148,7 @@ def make_regular_2d_ungridded_data():
 
 def make_regular_2d_with_time_ungridded_data():
     '''
-        Makes a well defined ungridded data object of shape 3x3 with data as follows
+        Makes a well defined ungridded data object of shape 5x3 with data as follows
         array([[1,2,3],
                [4,5,6],
                [7,8,9],
@@ -190,6 +190,99 @@ def make_regular_2d_with_time_ungridded_data():
     data = np.reshape(np.arange(15)+1.0,(5,3))
 
     coords = CoordList([x, y, t])
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_regular_4d_ungridded_data():
+    '''
+        Makes a well defined ungridded data object of shape 10x5 with data as follows
+
+        data:
+        [[  1.   2.   3.   4.   5.]
+         [  6.   7.   8.   9.  10.]
+         [ 11.  12.  13.  14.  15.]
+         [ 16.  17.  18.  19.  20.]
+         [ 21.  22.  23.  24.  25.]
+         [ 26.  27.  28.  29.  30.]
+         [ 31.  32.  33.  34.  35.]
+         [ 36.  37.  38.  39.  40.]
+         [ 41.  42.  43.  44.  45.]
+         [ 46.  47.  48.  49.  50.]]
+
+        latitude:
+        [[-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]
+         [-10.  -5.   0.   5.  10.]]
+
+        longitude:
+        [[-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]
+         [-5.  -2.5  0.   2.5  5. ]]
+
+        altitude:
+        [[  0.   0.   0.   0.   0.]
+         [ 10.  10.  10.  10.  10.]
+         [ 20.  20.  20.  20.  20.]
+         [ 30.  30.  30.  30.  30.]
+         [ 40.  40.  40.  40.  40.]
+         [ 50.  50.  50.  50.  50.]
+         [ 60.  60.  60.  60.  60.]
+         [ 70.  70.  70.  70.  70.]
+         [ 80.  80.  80.  80.  80.]
+         [ 90.  90.  90.  90.  90.]]
+
+        time:
+        [[1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
+         [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]]
+
+        They are shaped to represent a typical lidar type satelite data set.
+    '''
+    import numpy as np
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    import datetime
+
+    x_points = np.linspace(-10,10,5)
+    y_points = np.linspace(-5, 5, 5)
+    t0 = datetime.datetime(1984,8,27)
+    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(5)])
+
+    alt = np.linspace(0,90,10)
+
+    data = np.reshape(np.arange(50)+1.0,(10,5))
+
+    y, a = np.meshgrid(y_points,alt)
+    x, a = np.meshgrid(x_points,alt)
+    t, a = np.meshgrid(times,alt)
+
+    a = Coord(a, Metadata(standard_name='altitude', units='meters'))
+    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+    t = Coord(t, Metadata(standard_name='time', units='DateTime Object'))
+
+    coords = CoordList([x, y, a, t])
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
 
