@@ -47,12 +47,12 @@ def read_many_files(filenames, usr_variables, dim=None):
     return data
 
 
-def read(filename, usr_variable):
+def read(filename, usr_variables):
     """
     Reads a Variable from a NetCDF file
 
         @param filename: The name (with path) of the NetCDF file to read.
-        @param usr_variable: A variable (dataset) name to read from the
+        @param usr_variables: A variable (dataset) name to read from the
                        files. The name must appear exactly as in in the NetCDF file.
         @return: A Variable instance constructed from  the input file
 
@@ -60,15 +60,21 @@ def read(filename, usr_variable):
     from netCDF4 import Dataset
     from jasmin_cis.exceptions import InvalidVariableError
 
+    if not isinstance(usr_variables,list):
+        usr_variables = [usr_variables]
+
     try:
         datafile = Dataset(filename)
     except RuntimeError as e:
         raise IOError(str(e))
 
-    try:
-        data = datafile.variables[usr_variable]
-    except:
-        raise InvalidVariableError
+    data = {}
+    for variable in usr_variables:
+        # Get data.
+        try:
+            data[variable] = datafile.variables[variable]
+        except:
+            raise InvalidVariableError
 
     return data
 
