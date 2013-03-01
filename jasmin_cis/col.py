@@ -23,7 +23,8 @@ class Colocate(object):
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.col_framework import get_constraint, get_kernel, get_colocator
         from jasmin_cis.utils import copy_attributes
-        from timeUtil import time
+        from jasmin_cis.exceptions import CoordinateNotFoundError
+        from time import time
         from iris import cube
 
         logging.info("Reading data for: "+variable)
@@ -50,7 +51,11 @@ class Colocate(object):
 
         logging.info("Colocating, this could take a while...")
         t1 = time()
-        new_data = col.colocate(self.sample_points, data, con_fn, kernel)
+        try:
+            new_data = col.colocate(self.sample_points, data, con_fn, kernel)
+        except TypeError as e:
+            raise CoordinateNotFoundError('Colocator was unable to compare data points, check the dimensions of each '
+                                          'data set and the co-location methods chosen. \n'+str(e))
 
         logging.info("Completed. Total time taken: " + str(time()-t1))
 

@@ -29,7 +29,7 @@ class DefaultColocator(Colocator):
             con_points = constraint.constrain_points(point, data)
             try:
                 values[i] = kernel.get_value(point, con_points)
-            except ValueError:
+            except ValueError as e:
                 values[i] = constraint.fill_value
         new_data = LazyData(values, metadata)
         new_data.missing_value = constraint.fill_value
@@ -130,7 +130,7 @@ class nn_horizontal(Kernel):
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
-        return nearest_point.val
+        return nearest_point.val[0]
 
 
 class nn_vertical(Kernel):
@@ -143,20 +143,20 @@ class nn_vertical(Kernel):
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.compalt(nearest_point, data_point): nearest_point = data_point
-        return nearest_point.val
+        return nearest_point.val[0]
 
 
 class nn_time(Kernel):
 
     def get_value(self, point, data):
         '''
-            Colocation using nearest neighbours without any constraints where both points and
-              data are a list of HyperPoints
+            Colocation using nearest neighbours in time, where both points and
+              data are a list of HyperPoints. The default point is the first point.
         '''
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.comptime(nearest_point, data_point): nearest_point = data_point
-        return nearest_point.val
+        return nearest_point.val[0]
 
 
 class nn_gridded(Kernel):

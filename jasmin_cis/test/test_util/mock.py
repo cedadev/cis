@@ -106,6 +106,93 @@ def make_dummy_2d_ungridded_data():
     data = gen_random_data_array((5,5),4.0,1.0)
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
+def make_regular_2d_ungridded_data():
+    '''
+        Makes a well defined ungridded data object of shape 3x3 with data as follows
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+        array([[-10,-10,-10],
+               [-5,-5,-5],
+               [0,0,0],
+               [5,5,5],
+               [10,10,10]])
+        longitude:
+        array([[-5,0,5],
+               [-5,0,5],
+               [-5,0,5],
+               [-5,0,5],
+               [-5,0,5]])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x_points = np.arange(-10, 11, 5)
+    y_points = np.arange(-5, 6, 5)
+    y, x = np.meshgrid(y_points,x_points)
+
+    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+    data = np.reshape(np.arange(15)+1.0,(5,3))
+
+    coords = CoordList([x, y])
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_regular_2d_with_time_ungridded_data():
+    '''
+        Makes a well defined ungridded data object of shape 3x3 with data as follows
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+        array([[-10,-10,-10],
+               [-5,-5,-5],
+               [0,0,0],
+               [5,5,5],
+               [10,10,10]])
+        longitude:
+        array([[-5,0,5],
+               [-5,0,5],
+               [-5,0,5],
+               [-5,0,5],
+               [-5,0,5]])
+        time: np.array( [ 15 day increments from 27th August 1984 ] )
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    import datetime
+
+    x_points = np.arange(-10, 11, 5)
+    y_points = np.arange(-5, 6, 5)
+    y, x = np.meshgrid(y_points,x_points)
+
+    t0 = datetime.datetime(1984,8,27)
+
+    times = np.reshape(np.array([t0+datetime.timedelta(days=d) for d in xrange(15)]),(5,3))
+
+    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
+
+    data = np.reshape(np.arange(15)+1.0,(5,3))
+
+    coords = CoordList([x, y, t])
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+
+
 class ScatterData(object):
     def __init__(self, x, y, data, shape, long_name):
         self.x = x

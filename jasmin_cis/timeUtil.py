@@ -49,7 +49,9 @@ def parse_datetimestr_delta_to_obj(s):
 
 def convert_time_since_to_datetime(time_array, units):
     from netcdftime import _dateparse
-    units, dt = _dateparse(units)
+    import datetime
+    units, utc_offset, dt = _dateparse(units)
+    dt = datetime.datetime(*dt.timetuple()[0:6])
     if units == 'days':
         new_array = convert_numpy_array(time_array, 'O', convert_days_since_to_obj, dt)
     elif units == 'secs':
@@ -78,7 +80,7 @@ def convert_sec_since_to_obj(seconds, ref):
 
 def convert_days_since_to_obj(days, ref):
     from datetime import timedelta
-    return timedelta(days=int(days)) + ref
+    return timedelta(days=float(days)) + ref
 
 
 def convert_julian_date_to_obj_array(julian_time_array, calender='julian'):
