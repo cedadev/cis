@@ -179,31 +179,26 @@ class Generic_Plot(object):
         self.mplkwargs["vmin"] = float(vmin)
         self.mplkwargs["vmax"] = float(vmax)
 
-    def add_color_bar(self, logv, vmin, vmax, v_range, orientation, units):
+    def add_color_bar(self):
         from plot import format_units
-        # nformat = "%e"
-        # nformat = "%.3f"
-        # nformat = "%.3e"
-        nformat = "%.3g"
 
-        if not logv:
-            try:
-                step = v_range.get("vstep", (vmax-vmin) / self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS)
-            except AttributeError:
-                step = (vmax-vmin) / self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS
+        step = self.v_range.get("vstep", None)
+        if step is not None:
             ticks = []
-            tick = vmin
-            while tick <= vmax:
+            tick = self.mplkwargs["vmin"]
+            while tick <= self.mplkwargs["vmax"]:
                 ticks.append(tick)
                 tick = tick + step
         else:
             ticks = None
 
-        #ticks = None
+        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
 
-        cbar = self.matplotlib.colorbar(orientation = orientation, ticks = ticks, format = nformat)
+        cbar.formatter.set_scientific(True)
+        cbar.formatter.set_powerlimits((-3,3))
+        cbar.update_ticks()
 
-        cbar.set_label(format_units(units))
+        cbar.set_label(format_units(self.packed_data_items[0].units))
 
     def contour_plot(self, filled):
         from numpy import linspace
@@ -368,7 +363,7 @@ class Generic_Plot(object):
                 if key in self.plot_args.keys():
                     plot_options[key](self.plot_args[key])
 
-        if not self.plot_args["nocolourbar"]: self.add_color_bar(self.plot_args["logv"], self.mplkwargs["vmin"], self.mplkwargs["vmax"], self.v_range, self.plot_args["cbarorient"], self.packed_data_items[0].units)
+        if not self.plot_args["nocolourbar"]: self.add_color_bar()
 
         self.draw_coastlines(draw_grid)
 
