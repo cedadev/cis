@@ -183,14 +183,11 @@ class Generic_Plot(object):
         from plot import format_units
 
         step = self.v_range.get("vstep", None)
-        if step is not None:
-            ticks = []
-            tick = self.mplkwargs["vmin"]
-            while tick <= self.mplkwargs["vmax"]:
-                ticks.append(tick)
-                tick = tick + step
-        else:
+        if step is None:
             ticks = None
+        else:
+            from matplotlib.ticker import MultipleLocator
+            ticks = MultipleLocator(step)
 
         cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
 

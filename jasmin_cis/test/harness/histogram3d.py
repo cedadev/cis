@@ -5,6 +5,7 @@ from numpy import array, arange
 
 x = Coord(arange(10), Metadata('latitude'),'x')
 coords = CoordList([x])
+
 data1 = array([1,1.5,1,1.5,
               2,2,2.5,
               3,3.5,
@@ -30,11 +31,14 @@ data2 = array([1.5,1,1.5,1,1,
 data_object1 = UngriddedData(data1, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 data_object2 = UngriddedData(data2, Metadata(standard_name='snow', long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
-Plotter([data_object1, data_object2], {"xlabel" : None, "ylabel" : None, "title" : None, "fontsize" : None,
-                         "grid" : False,
-                         "logy" : False, "logx" : False, "logv": False,
-                         "nocolourbar" : False, "cbarorient" : "horizontal",
-                         "xrange" : {"xstep" : 0.5},"yrange" : {"ystep" : 2},
-                         "datagroups" : [{"itemstyle" : "step", "color" : None, "label" : None},
-                                         {"itemstyle" : "step", "color" : None, "label" : None}]},
+Plotter([data_object1, data_object2],
+        cmap = "RdBu",
+        ylabel = "Overidden y",
+        title = "Overidden Title",
+        xrange = {"xmin" : 4, "xmax" : 8},
+        yrange = {"ystep" : 0.5},
+        valrange = {"vmin" : 1.2, "vstep" : 0.4},
+        datagroups = [{"itemstyle" : None, "color" : None, "label" : None},
+                      {"itemstyle" : None, "color" : None, "label" : None}],
         plot_type="histogram3d")
+

@@ -15,7 +15,10 @@ def get_aeronet_file_variables(filename):
 
 def load_multiple_aeronet(fnames, variables=None):
     from jasmin_cis.utils import concatenate
-    data = concatenate([load_aeronet(a_file, variables) for a_file in fnames])
+    #data = concatenate([load_aeronet(a_file, variables) for a_file in fnames])
+    list_of_obj = [load_aeronet(a_file, variables) for a_file in fnames]
+    for obj in list_of_obj:
+
     return data
 
 
@@ -32,6 +35,7 @@ def load_aeronet(fname, variables=None):
     """
     import numpy as np
     from matplotlib import mlab
+    from numpy import ma
     from datetime import datetime, timedelta
 
     std_day = datetime(1900,1,1,0,0,0)
@@ -47,8 +51,7 @@ def load_aeronet(fname, variables=None):
         return std_day + timedelta(days=int(daynum), seconds=int(seconds))
 
     try:
-        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True,
-                             converters={0:date2daynum, 1:time2seconds}, missing_values='N/A')
+        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, converters={0:date2daynum, 1:time2seconds}, missing_values='N/A', usemask = True)
     except StopIteration as e:
         raise IOError(e)
 
@@ -62,13 +65,25 @@ def load_aeronet(fname, variables=None):
     lat = np.zeros(len(rawd)) + float(metadata.misc[2][2].split("=")[1])
     alt = np.zeros(len(rawd)) + float(metadata.misc[2][3].split("=")[1])
 
+    data_dict = {}
+    for key in variables:
+        data_dict = rawd[key]
+
+    data_dict["datetime"] = ma.array(dates)
+    data_dict["longitude"] = ma.array(lon)
+    data_dict["latitude"] = ma.array(lat)
+    data_dict["altitude"] = ma.array(alt)
+
+    '''
     newd = mlab.rec_append_fields(rawd, ['datetime', 'longitude', 'latitude', 'altitude'], [dates, lon, lat, alt])
     newd = mlab.rec_drop_fields(newd, ['Dateddmmyy', 'Timehhmmss', 'Last_Processing_Date'])
 
     if variables is not None:
         keep_fields = ['datetime', 'longitude', 'latitude', 'altitude'] + variables
         newd = mlab.rec_keep_fields(newd, keep_fields)
-    return newd
+    from numpy.ma.mrecords import MaskedRecords
+    '''
+    return data_dict
 
 
 def get_file_metadata(filename, variable = '', shape = None):

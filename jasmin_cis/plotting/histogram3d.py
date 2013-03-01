@@ -9,13 +9,17 @@ class Histogram_3D(Generic_Plot):
         xbins = self.calculate_number_of_bins("x")
         ybins = self.calculate_number_of_bins("y")
 
+        cmin = self.v_range.get("vmin", None)
+        cmax = self.v_range.get("vmax", None)
+
+
         # Add y=x line
         min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
         max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
         y_equals_x_array = [min_val, max_val]
         self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
 
-        self.matplotlib.hist2d(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], bins = [xbins, ybins], *self.mplargs, **self.mplkwargs)
+        self.matplotlib.hist2d(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], bins = [xbins, ybins], cmin = cmin, cmax = cmax, *self.mplargs, **self.mplkwargs)
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
@@ -67,13 +71,14 @@ class Histogram_3D(Generic_Plot):
     def create_legend(self):
         pass
 
-    def add_color_bar(self, logv, vmin, vmax, v_range, orientation, units):
-        # nformat = "%e"
-        # nformat = "%.3f"
-        # nformat = "%.3e"
-        nformat = "%.3g"
-
-        cbar = self.matplotlib.colorbar(orientation = orientation, format = nformat)
+    def add_color_bar(self):
+        step = self.v_range.get("vstep", None)
+        if step is None:
+            ticks = None
+        else:
+            from matplotlib.ticker import MultipleLocator
+            ticks = MultipleLocator(step)
+        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
 
         cbar.set_label("Frequency")
 

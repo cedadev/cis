@@ -33,7 +33,7 @@ class Histogram_2D(Generic_Plot):
             else:
                 self.mplkwargs["color"] = None
 
-            self.matplotlib.hist(unpacked_data_item["data"], bins = number_of_bins, *self.mplargs, **self.mplkwargs)
+            self.matplotlib.hist(unpacked_data_item["data"].compressed(), bins = number_of_bins, *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
