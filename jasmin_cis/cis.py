@@ -86,23 +86,8 @@ def plot_cmd(main_arguments):
                 coord.axis = ''
     '''
 
-    plot_args = {"datagroups" : main_arguments.pop("datagroups", None),
-                 "nocolourbar" : main_arguments.pop("nocolourbar", False),
-                 "logx" : main_arguments.pop("logx", False),
-                 "logy" : main_arguments.pop("logy", False),
-                 "logv" : main_arguments.pop("logv", False),
-                 "xrange" : main_arguments.pop("xrange", None),
-                 "yrange" : main_arguments.pop("yrange", None),
-                 "cbarorient" : main_arguments.pop("cbarorient", "horizontal"),
-                 "grid" : main_arguments.pop("grid", False),
-                 "xlabel" : main_arguments.pop("xlabel", None),
-                 "ylabel" : main_arguments.pop("ylabel", None),
-                 "title" : main_arguments.pop("title", None),
-                 "fontsize" : main_arguments.pop("fontsize", None),
-                 "itemwidth" : main_arguments.pop("itemwidth", 1)}
-
     try:
-        Plotter(data, plot_args, plot_type, output, **main_arguments)
+        Plotter(data, plot_type, output, **main_arguments)
     except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError, ValueError) as e:
         __error_occurred(e)
 

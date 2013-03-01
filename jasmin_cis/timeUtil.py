@@ -2,6 +2,50 @@
 Utilities for converting time units
 """
 import numpy as np
+import dateutil.parser as du
+from dateutil.relativedelta import *
+
+def parse_datetimestr_to_obj(s):
+    return du.parse(s)
+
+
+def parse_datetimestr_delta_to_obj(s):
+    """
+    parsing "1y2m3d4H5M6S" into a time delta represented as a relativedelta object
+    @param s: string to be parsed
+    @return: a relativedelta object
+    """
+    import re
+
+    tokens = re.findall('[0-9]*[ymdHMS]',s)
+    
+    years = months = days = hours = minutes = seconds = 0
+    for token in tokens:
+
+        val = int(token.replace('','')[:-1])
+
+        if token[-1:] == "y":
+            years = val
+            continue
+        elif token[-1:] == "m":
+            months = val
+            continue
+        elif token[-1:] == "d":
+            days = val
+            continue
+        elif token[-1:] == "H":
+            hours = val
+            continue
+        elif token[-1:] == "M":
+            minutes = val
+            continue
+        elif token[-1:] == "S":
+            seconds = val
+            continue
+        else:
+            raise ValueError("unvalid time delta format")
+
+    return relativedelta(years=years,months=months,days=days,hours=hours,minutes=minutes,seconds=seconds)
 
 def convert_time_since_to_datetime(time_array, units):
     from netcdftime import _dateparse
@@ -13,6 +57,7 @@ def convert_time_since_to_datetime(time_array, units):
     elif units == 'secs':
         new_array = convert_numpy_array(time_array, 'O', convert_sec_since_to_obj, dt)
     return new_array
+
 
 def convert_tai_to_mpl_array(tai_time_array, ref):
     intermediate_array = convert_numpy_array(tai_time_array, 'O', convert_sec_since_to_obj, ref)
@@ -76,11 +121,13 @@ def convert_masked_array_type(masked_array, new_type, operation, *args, **kwargs
             converted_time[i] = operation(val, *args, **kwargs)
     return converted_time
 
+
 def convert_array_type(array, new_type, operation, *args, **kwargs):
     converted_time = np.zeros(array.shape, dtype=new_type)
     for i, val in np.ndenumerate(array):
         converted_time[i] = operation(val, *args, **kwargs)
     return converted_time
+
 
 def convert_numpy_array(array, new_type, operation, *args, **kwargs):
     if isinstance(array,np.ma.MaskedArray):
