@@ -67,13 +67,8 @@ class Histogram_3D(Generic_Plot):
     def create_legend(self):
         pass
 
-    def add_color_bar(self, logv, vmin, vmax, v_range, orientation, units):
-        # nformat = "%e"
-        # nformat = "%.3f"
-        # nformat = "%.3e"
-        nformat = "%.3g"
-
-        cbar = self.matplotlib.colorbar(orientation = orientation, format = nformat)
+    def add_color_bar(self):
+        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"])
 
         cbar.set_label("Frequency")
 
