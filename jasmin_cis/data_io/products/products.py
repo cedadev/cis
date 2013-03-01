@@ -201,7 +201,12 @@ class MODIS_L2(AProduct):
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata,'X')
 
-        return CoordList([lat_coord,lon_coord])
+        time = sdata['Scan_Start_Time']
+        time_metadata = hdf.read_metadata(time,"SD")
+        time_coord = Coord(time,time_metadata,"T")
+        time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
+
+        return CoordList([lat_coord,lon_coord,time_coord])
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
