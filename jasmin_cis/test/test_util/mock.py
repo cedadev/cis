@@ -16,7 +16,7 @@ def make_dummy_2d_cube():
     
     return cube
 
-def make_square_3x3_2d_cube():
+def make_square_5x3_2d_cube():
     '''
         Makes a well defined cube of shape 5x3 with data as follows
         array([[1,2,3],
@@ -42,6 +42,40 @@ def make_square_3x3_2d_cube():
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
     
     return cube
+
+
+def make_square_5x3_2d_cube_with_time():
+    '''
+        Makes a well defined cube of shape 5x3 with data as follows
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+    import datetime
+
+    t0 = datetime.datetime(1984,8,27)
+    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(15)])
+
+    time = DimCoord(times, standard_name='time')
+    latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(15)+1.0,(5,3))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
 
 def make_dummy_1d_cube():
     import numpy
@@ -180,7 +214,6 @@ def make_regular_2d_with_time_ungridded_data():
     y, x = np.meshgrid(y_points,x_points)
 
     t0 = datetime.datetime(1984,8,27)
-
     times = np.reshape(np.array([t0+datetime.timedelta(days=d) for d in xrange(15)]),(5,3))
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
@@ -272,6 +305,9 @@ def make_regular_4d_ungridded_data():
     alt = np.linspace(0,90,10)
 
     data = np.reshape(np.arange(50)+1.0,(10,5))
+    print np.mean(data[:,1:3])
+    print np.mean(data[4:6,:])
+    print np.mean(data[:,2])
 
     y, a = np.meshgrid(y_points,alt)
     x, a = np.meshgrid(x_points,alt)

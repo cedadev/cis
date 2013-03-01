@@ -103,12 +103,60 @@ class SepConstraint(Constraint):
         con_points = HyperPointList()
         for point in data:
             checks = [point.haversine_dist(ref_point) < self.h_sep,
-                      point.time_sep < self.t_sep,
-                      point.alt_sep < self.a_sep]
+                      point.time_sep(ref_point) < self.t_sep,
+                      point.alt_sep(ref_point) < self.a_sep]
             if all(checks):
                 con_points.append(point)
         return con_points
 
+
+class BasicConstraint(Constraint):
+
+    def constrain_points(self, ref_point, data):
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
+        con_points = HyperPointList()
+        for point in data:
+            if self.method(point, ref_point) < self.constraint:
+                con_points.append(point)
+        return con_points
+
+
+class TimeConstraint(BasicConstraint):
+
+    def constrain_points(self, ref_point, data):
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
+        con_points = HyperPointList()
+        for point in data:
+            if point.time_sep(ref_point) < self.constraint:
+                con_points.append(point)
+        return con_points
+
+
+class AltitudeConstraint(BasicConstraint):
+
+    # def __init__(self):
+    #     from jasmin_cis.data_io.hyperpoint import HyperPoint
+    #     super(AltitudeConstraint, self).__init__()
+    #     self.method = HyperPoint.alt_sep
+
+    def constrain_points(self, ref_point, data):
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
+        con_points = HyperPointList()
+        for point in data:
+            if point.alt_sep(ref_point) < self.constraint:
+                con_points.append(point)
+        return con_points
+
+
+class HorizontalConstraint(BasicConstraint):
+
+    def constrain_points(self, ref_point, data):
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
+        con_points = HyperPointList()
+        for point in data:
+            if point.haversine_dist(ref_point) < self.constraint:
+                con_points.append(point)
+        return con_points
 
 class mean(Kernel):
 

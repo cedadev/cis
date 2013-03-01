@@ -37,7 +37,7 @@ class Test_nn_gridded(KernelTests):
     def test_basic_col_gridded_to_ungridded_in_2d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
-        cube = mock.make_square_3x3_2d_cube()
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
@@ -49,7 +49,7 @@ class Test_nn_gridded(KernelTests):
     def test_already_colocated_in_col_gridded_to_ungridded_in_2d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
-        cube = mock.make_square_3x3_2d_cube()
+        cube = mock.make_square_5x3_2d_cube()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = [ HyperPoint(0.0, 0.0) ]
         col = DefaultColocator()
@@ -66,7 +66,7 @@ class Test_nn_gridded(KernelTests):
         '''
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
-        cube = mock.make_square_3x3_2d_cube()
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = [ HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5) ]
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
@@ -79,7 +79,7 @@ class Test_nn_gridded(KernelTests):
     def test_coordinates_outside_grid_in_col_gridded_to_ungridded_in_2d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
-        cube = mock.make_square_3x3_2d_cube()
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = [ HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5) ]
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
@@ -87,6 +87,23 @@ class Test_nn_gridded(KernelTests):
         eq_(new_data.data[1], 6.0)
         eq_(new_data.data[2], 10.0)
         eq_(new_data.data[3], 4.0)
+
+    @istest
+    def test_basic_col_gridded_to_ungridded_in_2d_with_time(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
+        import datetime as dt
+        cube = mock.make_square_5x3_2d_cube_with_time()
+
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(1.0, 1.0,t=dt.datetime(1984,8,29,8,34)))
+        sample_points.append(HyperPoint(4.0,4.0,t=dt.datetime(1984,9,2,1,23)))
+        sample_points.append(HyperPoint(-4.0,-4.0,t=dt.datetime(1984,9,4,15,54)))
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
+        eq_(new_data.data[0], 3.0)
+        eq_(new_data.data[1], 7.0)
+        eq_(new_data.data[2], 10.0)
 
 
 class Test_nn_horizontal(KernelTests):
@@ -305,20 +322,9 @@ class Test_nn_altitude(KernelTests):
 class Test_mean(KernelTests):
 
     @istest
-    @raises(TypeError)
-    def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
-        from jasmin_cis.col_implementations import DefaultColocator, nn_vertical, DummyConstraint
-        ug_data = mock.make_regular_4d_ungridded_data()
-        # Make sample points with no time dimension specified
-        sample_points = [HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0)]
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_vertical())[0]
-
-    @istest
     def test_basic_col_in_4d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-        from jasmin_cis.col_implementations import DefaultColocator, nn_vertical, DummyConstraint
+        from jasmin_cis.col_implementations import DefaultColocator, mean, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
@@ -326,10 +332,8 @@ class Test_mean(KernelTests):
         sample_points.append(HyperPoint(1.0, 1.0,12.0,dt.datetime(1984,8,29,8,34)))
 
         col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_vertical())[0]
-        eq_(new_data.data[0], 6.0)
-        eq_(new_data.data[1], 16.0)
-        eq_(new_data.data[2], 46.0)
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), mean())[0]
+        eq_(new_data.data[0], 25.5)
 
 
 class Test_li(KernelTests):
@@ -338,7 +342,7 @@ class Test_li(KernelTests):
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
         from jasmin_cis.col_implementations import DefaultColocator, li, DummyConstraint
         from jasmin_cis.data_io.hyperpoint import HyperPoint
-        cube = mock.make_square_3x3_2d_cube()
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0) ]
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), li())[0]
@@ -352,13 +356,162 @@ class ConstraintTests(object):
 class TestSepConstraint(ConstraintTests):
 
     @istest
-    def test_basic_constraint_in_2d(self):
-        pass
+    def test_basic_constraint_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+
+        constraint = SepConstraint()
+
+        # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
+        #  in each direction
+        km = 1000
+        constraint.h_sep = 300*km
+        # 15m altitude seperation
+        constraint.a_sep = 15
+        # 2 days time seperation
+        constraint.t_sep = dt.timedelta(days=2.0)
+        # This should leave us with 9 points: [[ 22, 23, 24]
+        #                                      [ 27, 28, 29]
+        #                                      [ 32, 33, 34]]
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
+        eq_(new_data.data[0], 28.0)
+
+
+class TestSepConstraint(ConstraintTests):
 
     @istest
-    def test_basic_constraint_in_3d(self):
-        pass
+    def test_basic_constraint_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+
+        constraint = SepConstraint()
+
+        # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
+        #  in each direction
+        km = 1000
+        constraint.h_sep = 300*km
+        # 15m altitude seperation
+        constraint.a_sep = 15
+        # 2 days time seperation
+        constraint.t_sep = dt.timedelta(days=2.0)
+        # This should leave us with 9 points: [[ 22, 23, 24]
+        #                                      [ 27, 28, 29]
+        #                                      [ 32, 33, 34]]
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
+        eq_(new_data.data[0], 28.0)
+
+
+class TestSepConstraint(ConstraintTests):
 
     @istest
-    def test_basic_constraint_in_3d_and_time(self):
-        pass
+    def test_basic_constraint_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+
+        constraint = SepConstraint()
+
+        # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
+        #  in each direction
+        km = 1000
+        constraint.h_sep = 300*km
+        # 15m altitude seperation
+        constraint.a_sep = 15
+        # 2 days time seperation
+        constraint.t_sep = dt.timedelta(days=2.0)
+        # This should leave us with 9 points: [[ 22, 23, 24]
+        #                                      [ 27, 28, 29]
+        #                                      [ 32, 33, 34]]
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
+        eq_(new_data.data[0], 28.0)
+
+
+class TestHorizontalConstraint(ConstraintTests):
+
+    @istest
+    def test_basic_constraint_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, mean, HorizontalConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+
+        constraint = HorizontalConstraint()
+
+        # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
+        #  in each direction
+        km = 1000
+        constraint.constraint = 3.0*km
+
+        # This should leave us with 9 points: [[ 22, 23, 24]
+        #                                      [ 27, 28, 29]
+        #                                      [ 32, 33, 34]]
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
+        eq_(new_data.data[0], 28.0)
+
+
+class TestTimeConstraint(ConstraintTests):
+
+    @istest
+    def test_basic_constraint_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, mean, TimeConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+
+        constraint = TimeConstraint()
+
+        # 2 days time seperation
+        constraint.constraint = dt.timedelta(days=2)
+        # This should leave us with 30 points
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
+        eq_(new_data.data[0], 25.5)
+
+
+class TestAltConstraint(ConstraintTests):
+
+    @istest
+    def test_basic_constraint_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, mean, AltitudeConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+
+        constraint = AltitudeConstraint()
+
+        # 15m altitude seperation
+        constraint.constraint = 15
+        # This should leave us with 15 points:   [ 21.  22.  23.  24.  25.]
+        #                                       [ 26.  27.  28.  29.  30.]
+        #                                       [ 31.  32.  33.  34.  35.]
+
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
+        eq_(new_data.data[0], 28.0)
