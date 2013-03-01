@@ -143,7 +143,15 @@ class TestXenida(ProductTests):
 
 class TestAeronet(ProductTests):
     def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable
+        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
         self.filename = valid_aeronet_filename
+        self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
         self.valid_variable = valid_aeronet_variable
         self.product = Aeronet
+
+    @istest
+    def test_create_data_object_from_multiple_files(self):
+        self.product().create_data_object(self.filenames, self.valid_variable)
+    @istest
+    def test_create_data_object(self):
+        self.product().create_data_object([self.filename], self.valid_variable)

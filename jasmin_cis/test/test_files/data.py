@@ -22,6 +22,7 @@ valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRO
 valid_cloud_cci_variable = "stemp"
 
 valid_aeronet_filename = make_pathname("920801_091128_Agoufou.lev20")
+another_valid_aeronet_filename = make_pathname("920801_091128_Abracos_Hill.lev20")
 valid_aeronet_variable = "AOT_440"
 
 valid_xenida_filename = make_pathname("xenida.pah9440.nc")

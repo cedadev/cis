@@ -618,9 +618,6 @@ class Aeronet(AProduct):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from jasmin_cis.data_io.aeronet import load_multiple_aeronet
 
-        variables = [ "latitude", "longitude", "altitude", "datetime" ]
-        logging.info("Listing coordinates: " + str(variables))
-
         if data is None:
             data = load_multiple_aeronet(filenames)
 
