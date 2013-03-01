@@ -40,7 +40,7 @@ class Plotter(object):
                   "histogram2d" : Histogram_2D,
                   "histogram3d" : Histogram_3D}
 
-    def __init__(self, packed_data_items, plot_args, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
         '''
         Constructor for the Plotter
         
@@ -50,6 +50,21 @@ class Plotter(object):
         @param *mplargs            mplargs to be passed into matplotlib
         @param **mplkwargs         kwargs to be passed into matplotlib
         '''
+        plot_args = {"datagroups" : mplkwargs.pop("datagroups", None),
+                     "nocolourbar" : mplkwargs.pop("nocolourbar", False),
+                     "logx" : mplkwargs.pop("logx", False),
+                     "logy" : mplkwargs.pop("logy", False),
+                     "logv" : mplkwargs.pop("logv", False),
+                     "xrange" : mplkwargs.pop("xrange", None),
+                     "yrange" : mplkwargs.pop("yrange", None),
+                     "cbarorient" : mplkwargs.pop("cbarorient", "horizontal"),
+                     "grid" : mplkwargs.pop("grid", False),
+                     "xlabel" : mplkwargs.pop("xlabel", None),
+                     "ylabel" : mplkwargs.pop("ylabel", None),
+                     "title" : mplkwargs.pop("title", None),
+                     "fontsize" : mplkwargs.pop("fontsize", None),
+                     "itemwidth" : mplkwargs.pop("itemwidth", 1)}
+
         self.out_filename = out_filename
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
