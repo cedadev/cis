@@ -234,21 +234,19 @@ class Cloud_CCI(AProduct):
 
         lon = []
         lat = []
-        time_data = []
         time = []
 
         for filename in filenames:
             lon.append(read(filename, "lon"))
             lat.append(read(filename, "lat"))
-            # We need both the variable reference and the data for time later so we keep both here
-            t_var = read(filename, "time")
-            time.append(t_var)
-            time_data.append(get_data(t_var))
+            time.append(read(filename, "time"))
 
         coords = CoordList()
         coords.append(Coord(lon, get_metadata(lon[0])))
         coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
-        coords.append(Coord(time_data, get_metadata(time[0]), "X").convert_julian_to_datetime())
+        time_coord = Coord(time, get_metadata(time[0]), "X")
+        time_coord.convert_julian_to_datetime()
+        coords.append(time_coord)
 
         return coords
 
