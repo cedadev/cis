@@ -194,9 +194,10 @@ class Generic_Plot(object):
 
         cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
 
-        cbar.formatter.set_scientific(True)
-        cbar.formatter.set_powerlimits((-3,3))
-        cbar.update_ticks()
+        if not self.plot_args["logv"]:
+            cbar.formatter.set_scientific(True)
+            cbar.formatter.set_powerlimits((-3,3))
+            cbar.update_ticks()
 
         cbar.set_label(format_units(self.packed_data_items[0].units))
 
