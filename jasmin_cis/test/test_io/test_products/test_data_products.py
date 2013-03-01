@@ -1,7 +1,7 @@
 '''
 module to test the various subclasses of the abstract AProduct class
 '''
-from nose.tools import istest, eq_, raises
+from nose.tools import istest, eq_, raises, nottest
 from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file
@@ -134,6 +134,12 @@ class TestXenida(ProductTests):
         self.filename = valid_xenida_filename
         self.valid_variable = valid_xenida_variable
         self.product = Xenida
+
+    @nottest
+    def test_write_coords(self):
+        # This won't work for model data yet as the coordinates aren't all the same shape,
+        #  they need to be 'expanded'
+        pass
 
 class TestAeronet(ProductTests):
     def __init__(self):
