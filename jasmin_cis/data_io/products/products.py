@@ -4,7 +4,6 @@ import logging
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
-import jasmin_cis.timeUtil as tu
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
 
@@ -229,7 +228,6 @@ class Cloud_CCI(AProduct):
 
         from jasmin_cis.data_io.netcdf import read, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
-        from jasmin_cis.timeUtil import convert_julian_date_to_obj_array
 
         variables = ["lat", "lon", "time"]
         logging.info("Listing coordinates: " + str(variables))
@@ -274,7 +272,6 @@ class Aerosol_CCI(AProduct):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
         import datetime
-        from jasmin_cis.timeUtil import convert_sec_since_to_obj_array
 
         variables = ["lat", "lon", "time"]
         logging.info("Listing coordinates: " + str(variables))
