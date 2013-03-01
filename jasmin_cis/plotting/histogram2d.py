@@ -81,5 +81,8 @@ class Histogram_2D(Generic_Plot):
                 step = valrange.pop("ystep", None)
                 self.matplotlib.ylim(**valrange)
                 if step is not None: valrange["ystep"] = step
+        elif axis == "y":
+            # Need to ensure that frequency starts from 0
+            self.matplotlib.ylim(ymin = 0)
 
 
