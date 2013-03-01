@@ -1,9 +1,11 @@
-
-
-#Reading in data from MODIS L3
-from pyhdf.error import HDF4Error
-from test.harness import hdf
+"""
+Reading in data from MODIS L3
+"""
 import numpy as np
+from pyhdf.error import HDF4Error
+from pyhdf.SD import *
+from jasmin_cis.test.harness import hdf
+import re
 
 def readin_MODIS_L3(filenames,sds,outdata=None):
     '''Reads in MODIS L3 data from the collection 5 daily files on cloud'''
@@ -23,6 +25,7 @@ def readin_MODIS_L3(filenames,sds,outdata=None):
     except HDF4Error:
         print HDF4Error, filenames
     return outdata
+
 
 if __name__ ==  '__main__':
 
@@ -54,3 +57,7 @@ if __name__ ==  '__main__':
     cb.set_label('gm $^{-2}$')
 
     plt.show()
+
+
+
+

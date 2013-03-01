@@ -25,6 +25,18 @@ def get_hdf4_file_variables(filename, data_type):
 
     return SD_vars, VD_vars
 
+
+def get_hdf4_file_metadata(filename):
+    """
+    This returns a dictionary of file attributes, which often contains metadata information
+    about the whole file. The value of each attribute can simply be a big string
+    which will often need to be parsed manually thereafter.
+    @param filename
+    @return: dictionary of string attributes
+    """
+    from pyhdf.SD import *
+    return SD(filename).attributes()
+
 def __read_hdf4(filename,variables):
     '''
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
@@ -93,3 +105,7 @@ def read_metadata(data_dict, data_type):
     if data_type=='SD':
         out = hdf_sd.get_metadata(data_dict[0])
     return out
+
+
+
+

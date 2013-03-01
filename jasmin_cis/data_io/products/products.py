@@ -86,12 +86,41 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
 class MODIS_L3(AProduct):
 
+    def _parse_datetime(self,metadata_dict,keyword):
+        import re
+        res = ""
+        for s in metadata_dict.itervalues():
+            i_start = s.find(keyword)
+            ssub = s[i_start:len(s)]
+            i_end = ssub.find("END_OBJECT")
+            ssubsub = s[i_start:i_start+i_end]
+            matches = re.findall('".*"',ssubsub)
+            if len(matches) > 0:
+                res = matches[0].replace('\"','')
+                if res is not "":
+                    break
+        return res
+
+    def _get_start_date(self, filename):
+        from jasmin_cis.timeUtil import parse_datetimestr_to_obj
+        metadata_dict = hdf.get_hdf4_file_metadata(filename)
+        date = self._parse_datetime(metadata_dict,'RANGEBEGINNINGDATE')
+        time = self._parse_datetime(metadata_dict,'RANGEBEGINNINGTIME')
+        datetime_str = date + " " + time
+        return parse_datetimestr_to_obj(datetime_str)
+
+    def _get_end_date(self, filename):
+        from jasmin_cis.timeUtil import parse_datetimestr_to_obj
+        metadata_dict = hdf.get_hdf4_file_metadata(filename)
+        date = self._parse_datetime(metadata_dict,'RANGEENDINGDATE')
+        time = self._parse_datetime(metadata_dict,'RANGEENDINGTIME')
+        datetime_str = date + " " + time
+        return parse_datetimestr_to_obj(datetime_str)
 
     def get_file_signature(self):
         product_names = ['MYD08_D3','MOD08_D3']
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
-
 
     def create_coords(self, filenames):
 
@@ -115,6 +144,12 @@ class MODIS_L3(AProduct):
         coords = CoordList()
         coords.append(Coord(lon, lon_metadata,'X'))
         coords.append(Coord(lat, lat_metadata,'Y'))
+
+        for filename in filenames:
+            print self._get_start_date(filename)
+            print self._get_end_date(filename)
+
+        # TODO get array with middle date
 
         return coords
 
