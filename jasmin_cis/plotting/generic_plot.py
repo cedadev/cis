@@ -22,6 +22,7 @@ class Generic_Plot(object):
             self.mplkwargs["norm"] = LogNorm()
 
         self.plot_args = plot_args
+        if self.plot_args["valrange"] is None: self.plot_args["valrange"] = {}
         self.packed_data_items = packed_data_items
         self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
         self.calculate_min_and_max_values()
@@ -285,8 +286,8 @@ class Generic_Plot(object):
                 self.basemap.drawparallels(parallels)
                 self.basemap.drawmeridians(meridians)
 
-            meridian_labels = self.__format_map_ticks(meridians, "x")
-            parallel_labels = self.__format_map_ticks(parallels, "y")
+            meridian_labels = self.__format_map_ticks(meridians)
+            parallel_labels = self.__format_map_ticks(parallels)
 
             self.matplotlib.xticks(meridians, meridian_labels)
             self.matplotlib.yticks(parallels, parallel_labels)
@@ -304,22 +305,16 @@ class Generic_Plot(object):
                 min_val = range_dict[axis + "min"]
                 max_val = range_dict[axis + "max"]
                 step = range_dict.get(axis + "step", None)
-            else:
-                try:
-                    min_val = self.valrange[axis][axis + "min"]
-                    max_val = self.valrange[axis][axis + "max"]
-                    step = None
-                except AttributeError:
-                    if axis == "y":
-                        lines = arange(-90, 91, grid_spacing)
-                    elif axis == "x":
-                        lines = arange(0, 361, grid_spacing)
 
-            if lines is None:
-                if step is None: step = (max_val-min_val)/24
+                if step is None: step = (max_val-min_val) / 24
                 lines = arange(min_val, max_val+1, step)
                 if min_val < 0 and max_val > 0: lines = append(lines, 0)
                 lines.sort()
+            else:
+                if axis == "y":
+                    lines = arange(-90, 91, grid_spacing)
+                elif axis == "x":
+                    lines = arange(0, 361, grid_spacing)
 
             return lines
 

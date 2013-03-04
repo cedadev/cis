@@ -30,7 +30,6 @@ class Line_Plot(Generic_Plot):
 
             self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs ) #TODO append to list
 
-
     def format_plot(self):
         self.format_2d_plot()
 
