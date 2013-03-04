@@ -45,18 +45,22 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lat = vdata['Latitude']
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
+        lat_metadata = lat_data.shape
         lat_coord = Coord(lat_data, lat_metadata)
 
         # longitude
         lon = vdata['Longitude']
         lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[0]),axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
+        lon_metadata.shape = lon_data.shape
         lon_coord = Coord(lon_data, lon_metadata)
 
         # time coordinate
         time_data = self._generate_time_array(vdata)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
-        time_coord = Coord(time_data, hdf.read_metadata(vdata['Profile_time'], "VD"), "X")
+        time_metadata = hdf.read_metadata(vdata['Profile_time'],"VD")
+        time_metadata.shape = time_data.shape
+        time_coord = Coord(time_data,time_metadata,"X")
         time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
 
         # create object containing list of coordinates
@@ -137,8 +141,12 @@ class MODIS_L3(AProduct):
         lon = sdata['XDim']
         lon_metadata = hdf.read_metadata(lon, "SD")
 
+        # expand lat and lon data array so that they have the same shape
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat,"SD"),lon_metadata.shape,axis=1) # expand latitude column wise
         lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon,"SD"),lat_metadata.shape,axis=0) # expand longitude row wise
+
+        lat_metadata.shape = lat_data.shape
+        lon_metadata.shape = lon_data.shape
 
         # to make sure "Latitude" and "Longitude", i.e. the standard_name is displayed instead of "YDim"and "XDim"
         lat_metadata.standard_name = "latitude"
@@ -150,7 +158,7 @@ class MODIS_L3(AProduct):
         time_data_array = []
         for filename in filenames:
             mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
-            time_data = np.empty([lat_metadata.shape, lon_metadata.shape],dtype=object)
+            time_data = np.empty(lat_metadata.shape,dtype=object)
             time_data.fill(mid_datetime)
             time_data_array.append(time_data)
         time_data = utils.concatenate(time_data_array)
