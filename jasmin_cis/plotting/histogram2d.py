@@ -3,6 +3,9 @@ from generic_plot import Generic_Plot
 class Histogram_2D(Generic_Plot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
     def plot(self):
+        '''
+        Plots a 2D histogram
+        '''
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
@@ -41,9 +44,11 @@ class Histogram_2D(Generic_Plot):
         self.format_2d_plot()
 
     def set_default_axis_label(self, axis):
-        from plot import format_units
-        import jasmin_cis.exceptions as cisex
-        import iris.exceptions as irisex
+        '''
+        Sets the default axis label for the given axis.
+        If the axis is "y", then labels it "Frequency", else works it out based on the name and units of the data
+        @param axis: The axis to calculate the default axis label for
+        '''
         axis = axis.lower()
         axislabel = axis + "label"
 
@@ -55,14 +60,20 @@ class Histogram_2D(Generic_Plot):
                 if len(self.packed_data_items) == 1:
                     name = self.packed_data_items[0].name()
                     # only 1 data to plot, display
-                    self.plot_args[axislabel] = name + format_units(units)
+                    self.plot_args[axislabel] = name + self.format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
-                    self.plot_args[axislabel] = format_units(units)
+                    self.plot_args[axislabel] = self.format_units(units)
             elif axis == "y":
                 self.plot_args[axislabel] = "Frequency"
 
     def calculate_axis_limits(self, axis):
+        '''
+        Calculates the limits for a given axis.
+        If the axis is "y" then looks at the "data" as this is where the values are stored
+        @param axis: The axis to calculate the limits for
+        @return: A dictionary containing the min and max values for the given axis
+        '''
         valrange = {}
         if axis == "x":
             coord_axis = "x"
@@ -72,6 +83,12 @@ class Histogram_2D(Generic_Plot):
         return valrange
 
     def apply_axis_limits(self, valrange, axis):
+        '''
+        Applies the limits (if given) to the specified axis.
+        Sets the "y" axis as having a minimum value of 0 as can never have a negative frequency
+        @param valrange: A dictionary containing the min and/or max values for the axis
+        @param axis: The axis to apply the limits to
+        '''
         if valrange is not None:
             if axis == "x":
                 step = valrange.pop("xstep", None)

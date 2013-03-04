@@ -1,13 +1,10 @@
 from generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
-    #'scatter' : PlotType(None, 2, plot_scatter),
     def plot(self):
         '''
-        Plots a scatter plot
+        Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
-
-        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.plots = []
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
@@ -56,15 +53,13 @@ class Scatter_Plot(Generic_Plot):
             self.format_2d_plot()
 
     def set_default_axis_label(self, axis):
-        from generic_plot import is_map
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
-        from plot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
 
         if self.plot_args[axislabel] is None:
-            if is_map(self.packed_data_items[0]):
+            if self.is_map():
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
@@ -78,7 +73,7 @@ class Scatter_Plot(Generic_Plot):
                         name = self.packed_data_items[0].coord(axis=axis).name()
                     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                         name = self.packed_data_items[0].name()
-                    self.plot_args[axislabel] = name + format_units(units)
+                    self.plot_args[axislabel] = name + self.format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     self.plot_args[axislabel] = units
