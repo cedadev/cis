@@ -24,9 +24,10 @@ class Scatter_Plot(Generic_Plot):
 
             from datetime import datetime
             from jasmin_cis.time_util import convert_datetime_to_num_array
-            #units = datetimeobjwect
+            #units = datetimeobject TODO  self.packed_data_items[i].coords(axis="x").units == "DateTime Object":#
             if isinstance(unpacked_data_item["x"].flatten()[0], datetime):
                 x_coords = convert_datetime_to_num_array(unpacked_data_item["x"])
+                #overrite x_coords and set boolean instead to be used to decide whether to call set x axis as time method below
             else:
                 x_coords = unpacked_data_item["x"]
 
