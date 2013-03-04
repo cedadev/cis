@@ -56,3 +56,12 @@ class Line_Plot(Generic_Plot):
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
                 self.plot_args[axislabel] = self.format_units(units)
 
+    def calculate_axis_limits(self, axis):
+        valrange = {}
+        if axis == "x":
+            coord_axis = "x"
+        elif axis == "y":
+            coord_axis = "data"
+        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+        return valrange
+

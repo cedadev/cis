@@ -5,7 +5,7 @@ from nose.tools import istest, raises, eq_
 import numpy as np
 import datetime as dt
 
-from jasmin_cis.timeUtil import *
+from jasmin_cis.time_util import *
 
 @istest
 def test_that_can_convert_tai_to_datetime_obj():
