@@ -28,7 +28,7 @@ class Scatter_Plot(Generic_Plot):
             if isinstance(unpacked_data_item["x"].flatten()[0], datetime):
                 x_coords = convert_datetime_to_num_array(unpacked_data_item["x"])
             else:
-                x_coords = self.unpacked_data_items[0]["x"]
+                x_coords = unpacked_data_item["x"]
 
             if unpacked_data_item.get("y", None) is not None:
                 #3D
@@ -42,7 +42,7 @@ class Scatter_Plot(Generic_Plot):
             self.mplkwargs.pop("latlon", None)
             self.plots.append(self.plot_method.scatter(x_coords, y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
-            if self.scatter_type == "3D" and isinstance(unpacked_data_item["x"].flatten()[0], datetime):
+            if isinstance(unpacked_data_item["x"].flatten()[0], datetime):
                 self.set_x_axis_as_time()
 
     def calculate_axis_limits(self, axis):
