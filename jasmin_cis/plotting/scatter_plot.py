@@ -15,7 +15,7 @@ class Scatter_Plot(Generic_Plot):
             else:
                 self.mplkwargs["marker"] = 'o'
 
-            colour_scheme = self.mplkwargs.get("color", None)
+            colour_scheme = datafile.get("color", None)
             if colour_scheme is None:
                 if unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
                     colour_scheme = unpacked_data_item["data"]
