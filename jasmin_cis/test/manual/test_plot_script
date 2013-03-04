@@ -1,4 +1,5 @@
 #!/bin/bash -e
+start_time="$(date +%s)"
 source_dir="./test/test_files/"
 output_dir="./test/manual/test_plot_script_results/"
 clear
@@ -23,11 +24,11 @@ python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/
 echo Iris Scatter Overlay
 python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc"::^:snowlabel --type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xrange 0:200:10 --cbarorient horizontal --yrange 0:90 --valrange 0: --cbarorient horizontal --output "${output_dir}irisscatteroverlay"
 echo Other Contour
-python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --cmap RdBu --ylabel overiddenylabel --title overiddentitle --xrange 0:50  --valrange 0: --cbarorient vertical --grid --output "${output_dir}othercontour"
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --cmap RdBu --ylabel overiddenylabel --title overiddentitle --valrange 0: --cbarorient vertical --grid --output "${output_dir}othercontour"
 echo Other Contourf
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --xlabel overiddenxlabel --itemwidth 4 --fontsize 15 --height 10 --yrange 0:10000 --valrange 0::300 --cbarorient horizontal --grid --output "${output_dir}othercontourf"
 echo Other heatmap
-python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type heatmap --cmap RdBu --ylabel overiddenylabel --width 7 --xrange=-50:50 --yrange 0:5000 --nocolourbar --grid --output "${output_dir}otherheatmap"
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type heatmap --cmap RdBu --ylabel overiddenylabel --width 7 --yrange 0:5000 --nocolourbar --grid --output "${output_dir}otherheatmap"
 echo Other one line
 python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20::dashed:overiddenlabel --type line --xlabel "overiddenx" --title "overiddentitle" --itemwidth 4 --fontsize 7 --height 7 --yrange 0.1:1 --logx --logy --output "${output_dir}otheroneline"
 echo Other many lines
@@ -36,3 +37,5 @@ echo Other Scatter 2D
 python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20 --type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --itemwidth 2 --fontsize 15 --height 5 --width 6 --logy --grid --output "${output_dir}otherscatter2d"
 echo Other Scatter 3D
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type scatter --cmap RdBu --title overiddentitle --itemwidth 20 --valrange :175 --logy --output "${output_dir}otherscatter3d"
+end_time="$(($(date +%s)-start_time))"
+echo "Time taken: ${end_time}"
