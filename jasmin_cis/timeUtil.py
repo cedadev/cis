@@ -43,9 +43,17 @@ def parse_datetimestr_delta_to_obj(s):
             seconds = val
             continue
         else:
-            raise ValueError("unvalid time delta format")
+            raise ValueError("unvalid time delta format. Must be '1y2m3d4H5M6S'")
 
     return relativedelta(years=years,months=months,days=days,hours=hours,minutes=minutes,seconds=seconds)
+
+
+def calculate_mid_time(t1, t2):
+    import math
+    delta = relativedelta(t2,t1)
+    total_seconds = delta.seconds + delta.minutes * 60 + delta.hours * 3600 + delta.days * 86400 + delta.months * 2592000 + delta.years * 31536000
+    half = relativedelta(seconds=int(math.ceil(total_seconds / 2.0)))
+    return t1 + half
 
 def convert_time_since_to_datetime(time_array, units):
     from netcdftime import _dateparse

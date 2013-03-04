@@ -35,6 +35,7 @@ def test_that_can_parse_datetimestr_to_obj():
     eq_(parse_datetimestr_to_obj("2010-"),dt.datetime(2010,now.month,now.day))
     eq_(parse_datetimestr_to_obj(""),dt.datetime(now.year,now.month,now.day))
 
+
 @istest
 def test_that_can_parse_time_deltas():
     delta = parse_datetimestr_delta_to_obj("2y15m3d")
@@ -45,8 +46,16 @@ def test_that_can_parse_time_deltas():
     eq_(delta.minutes,0)
     eq_(delta.seconds,0)
 
+
 @istest
 @raises(ValueError)
 def test_that_raise_an_error_when_datetimestr_delta_is_invalid():
     parse_datetimestr_delta_to_obj("some wierd string")
+
+
+def test_that_can_calculate_mid_point_between_two_datetime():
+    t1 = dt.datetime(2010,02,05,0,0,0)
+    t2 = dt.datetime(2010,02,06,0,0,0)
+    tm = calculate_mid_time(t1,t2)
+    eq_(tm,dt.datetime(2010,02,05,12,0,0))
 

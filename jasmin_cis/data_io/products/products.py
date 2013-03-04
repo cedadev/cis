@@ -123,6 +123,8 @@ class MODIS_L3(AProduct):
         return regex_list
 
     def create_coords(self, filenames):
+        import numpy as np
+        from jasmin_cis.timeUtil import calculate_mid_time
 
         variables = ['XDim','YDim']
         logging.info("Listing coordinates: " + str(variables))
@@ -141,15 +143,20 @@ class MODIS_L3(AProduct):
         lon_metadata.standard_name = "longitude"
         lon_metadata._name = ""
 
+        # create arrays for time coordinate using the midpoint of the time delta between the start date and the end date
+        time_data_array = []
+        for filename in filenames:
+            mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
+            time_data = np.empty([lat_metadata.shape, lon_metadata.shape])
+            time_data.fill(mid_datetime)
+            time_data_array.append(time_data)
+        time_data = utils.concatenate(time_data_array)
+        time_metadata = Metadata(name="Date time", shape=time_data.shape, units="DateTime Object")
+
         coords = CoordList()
         coords.append(Coord(lon, lon_metadata,'X'))
         coords.append(Coord(lat, lat_metadata,'Y'))
-
-        for filename in filenames:
-            print self._get_start_date(filename)
-            print self._get_end_date(filename)
-
-        # TODO get array with middle date
+        coords.append(Coord(time_data, time_metadata,'T'))
 
         return coords
 
@@ -168,6 +175,8 @@ class MODIS_L3(AProduct):
         # retrieve data + its metadata
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
+
+        print metadata.shape
 
         return UngriddedData(var, metadata, coords)
 
