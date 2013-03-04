@@ -13,7 +13,7 @@ class Generic_Plot(object):
         @param mplargs: Any arguments to be passed directly into matplotlib
         @param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         '''
-        from utils import unpack_data_object
+        from jasmin_cis.utils import unpack_data_object
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
 
