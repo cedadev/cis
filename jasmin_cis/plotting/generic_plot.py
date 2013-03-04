@@ -35,7 +35,6 @@ class Generic_Plot(object):
         self.plot_args = plot_args
         self.packed_data_items = packed_data_items
         self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
-        self.v_range = self.mplkwargs.pop("valrange", {})
         self.calculate_min_and_max_values()
 
         self.matplotlib = plt
@@ -167,8 +166,8 @@ class Generic_Plot(object):
     def calculate_min_and_max_values(self):
         from sys import maxint
 
-        vmin = self.v_range.get("vmin", maxint)
-        vmax = self.v_range.get("vmax", -maxint - 1)
+        vmin = self.plot_args["valrange"].get("vmin", maxint)
+        vmax = self.plot_args["valrange"].get("vmax", -maxint - 1)
 
         if vmin == maxint:
             vmin = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
@@ -182,7 +181,7 @@ class Generic_Plot(object):
     def add_color_bar(self):
         from plot import format_units
 
-        step = self.v_range.get("vstep", None)
+        step = self.plot_args["valrange"].get("vstep", None)
         if step is None:
             ticks = None
         else:
@@ -203,10 +202,10 @@ class Generic_Plot(object):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        if self.v_range.get("vstep", None) is None:
+        if self.plot_args["valrange"].get("vstep", None) is None:
             step = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
         else:
-            step = (vmax - vmin) / self.v_range["vstep"]
+            step = (vmax - vmin) / self.plot_args["valrange"]["vstep"]
 
         if filled:
             contour_type = self.plot_method.contourf
