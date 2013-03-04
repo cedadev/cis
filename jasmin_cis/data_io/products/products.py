@@ -102,7 +102,7 @@ class MODIS_L3(AProduct):
         return res
 
     def _get_start_date(self, filename):
-        from jasmin_cis.timeUtil import parse_datetimestr_to_obj
+        from jasmin_cis.time_util import parse_datetimestr_to_obj
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
         date = self._parse_datetime(metadata_dict,'RANGEBEGINNINGDATE')
         time = self._parse_datetime(metadata_dict,'RANGEBEGINNINGTIME')
@@ -110,7 +110,7 @@ class MODIS_L3(AProduct):
         return parse_datetimestr_to_obj(datetime_str)
 
     def _get_end_date(self, filename):
-        from jasmin_cis.timeUtil import parse_datetimestr_to_obj
+        from jasmin_cis.time_util import parse_datetimestr_to_obj
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
         date = self._parse_datetime(metadata_dict,'RANGEENDINGDATE')
         time = self._parse_datetime(metadata_dict,'RANGEENDINGTIME')
@@ -124,7 +124,7 @@ class MODIS_L3(AProduct):
 
     def create_coords(self, filenames):
         import numpy as np
-        from jasmin_cis.timeUtil import calculate_mid_time
+        from jasmin_cis.time_util import calculate_mid_time
 
         variables = ['XDim','YDim']
         logging.info("Listing coordinates: " + str(variables))
@@ -137,6 +137,9 @@ class MODIS_L3(AProduct):
         lon = sdata['XDim']
         lon_metadata = hdf.read_metadata(lon, "SD")
 
+        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat,"SD"),lon_metadata.shape,axis=1) # expand latitude column wise
+        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon,"SD"),lat_metadata.shape,axis=0) # expand longitude row wise
+
         # to make sure "Latitude" and "Longitude", i.e. the standard_name is displayed instead of "YDim"and "XDim"
         lat_metadata.standard_name = "latitude"
         lat_metadata._name = ""
@@ -147,15 +150,15 @@ class MODIS_L3(AProduct):
         time_data_array = []
         for filename in filenames:
             mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
-            time_data = np.empty([lat_metadata.shape, lon_metadata.shape])
+            time_data = np.empty([lat_metadata.shape, lon_metadata.shape],dtype=object)
             time_data.fill(mid_datetime)
             time_data_array.append(time_data)
         time_data = utils.concatenate(time_data_array)
         time_metadata = Metadata(name="Date time", shape=time_data.shape, units="DateTime Object")
 
         coords = CoordList()
-        coords.append(Coord(lon, lon_metadata,'X'))
-        coords.append(Coord(lat, lat_metadata,'Y'))
+        coords.append(Coord(lon_data, lon_metadata,'X'))
+        coords.append(Coord(lat_data, lat_metadata,'Y'))
         coords.append(Coord(time_data, time_metadata,'T'))
 
         return coords
@@ -175,8 +178,6 @@ class MODIS_L3(AProduct):
         # retrieve data + its metadata
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
-
-        print metadata.shape
 
         return UngriddedData(var, metadata, coords)
 
