@@ -86,22 +86,18 @@ def get_metadata(var):
     @return: A metadata object
     '''
     from ungridded_data import Metadata
-    try:
-        standard_name = var.standard_name
-    except AttributeError:
-        standard_name = ""
 
+    standard_name = getattr(var,'standard_name',"")
     missing_value = find_missing_value(var)
+    long_name = getattr(var,'long_name',"")
+    units = getattr(var, 'units', "")
 
     try:
         shape=(var._recLen[0],)
     except AttributeError:
         shape = ()
-    try:
-        long_name = var.long_name
-    except AttributeError:
-        long_name = ""
-    metadata = Metadata(var._name, standard_name, long_name, units=var.units, missing_value=missing_value, shape=shape)
+
+    metadata = Metadata(var._name, standard_name, long_name, units=units, missing_value=missing_value, shape=shape)
 
     return metadata
 
