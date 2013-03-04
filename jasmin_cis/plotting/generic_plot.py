@@ -2,13 +2,17 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
 def is_map(data_item):
+    '''
+
+    @param data_item: The packed data item to be analysed
+    @return: A boolean saying if the data item contains lat and lon coordinates
+    '''
     axes = []
     for coord in data_item.coords(axis="X"):
         axes.append(coord.name())
     for coord in data_item.coords(axis="Y"):
         axes.append(coord.name())
 
-    # Code review this
     lat = False
     lon = False
     for axis in axes:
@@ -24,6 +28,14 @@ class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
     def __init__(self, packed_data_items, plot_args, *mplargs, **mplkwargs):
+        '''
+        Constructor for Generic_Plot.
+        Note: This also calls the plot method
+        @param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
+        @param plot_args: A dictionary of plot args that was created by plot.py
+        @param mplargs: Any arguments to be passed directly into matplotlib
+        @param mplkwargs: Any keyword arguments to be passed directly into matplotlib
+        '''
         from utils import unpack_data_object
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
@@ -69,15 +81,29 @@ class Generic_Plot(object):
         # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def plot(self):
+        '''
+        The method that will do the plotting. To be implemented by each subclass of Generic_Plot.
+        '''
         raise NotImplementedError()
 
     def format_plot(self):
+        '''
+        The method that will format the plot. To be implemented by each subclass of Generic_Plot.
+        '''
         raise NotImplementedError()
 
     def set_default_axis_label(self, axis):
+        '''
+        The method that will set the default axis label. To be implemented by each subclass of Generic_Plot.
+        @param axis: The axis of which to set the default label for. Either "x" or "y".
+        '''
         raise NotImplementedError()
 
     def create_legend(self):
+        '''
+        Creates a draggable legend in the "best" location for the plot.
+        Works out legend labels unless explicitly given to the parser in the datagroups argument.
+        '''
         legend_titles = []
         datagroups = self.plot_args["datagroups"]
         for i, item in enumerate(self.packed_data_items):
@@ -89,6 +115,10 @@ class Generic_Plot(object):
         legend.draggable(state = True)
 
     def set_default_axis_label_for_comparative_plot(self, axis):
+        '''
+        Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
+        @param axis: The axis to set the default label for
+        '''
         from plot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
@@ -120,6 +150,13 @@ class Generic_Plot(object):
             self.matplotlib.figure(figsize = (width, height))
 
     def calculate_min_and_max_values_of_array_including_case_of_log(self, axis, array):
+        '''
+        Calculates the min and max values of a given array.
+        If a log scale is being used on the given axis, only positive values are taken into account
+        @param axis: The axis to check if a log scale is being used for
+        @param array: The array to calculate the min and max values of
+        @return: The min and max values of the array
+        '''
         log_axis = self.plot_args.get("log" + axis, False)
 
         if log_axis:
@@ -133,12 +170,18 @@ class Generic_Plot(object):
         return min_val, max_val
 
     def calculate_axis_limits(self, axis):
+        '''
+        Calculates the axis limits for a given axis
+        @param axis: The axis for the limits to be calculated
+        @return: A dictionary containing the min and max values of an array along a given axis
+        '''
         valrange = {}
         valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
         return valrange
 
     def apply_axis_limits(self, valrange, axis):
         '''
+        Applies the limits to the specified axis if given, or calculates them otherwise
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
@@ -157,6 +200,10 @@ class Generic_Plot(object):
             pass # In case of date axis. TODO Fix this
 
     def set_font_size(self):
+        '''
+        Converts the fontsize argument (if specified) from a float into a dictionary that matplotlib can recognise.
+        Could be further extended to allow specifying bold, and other font formatting
+        '''
         if self.plot_args.get("fontsize", None) is not None:
             if not isinstance(self.plot_args.get("fontsize", None), dict):
                 self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
@@ -164,6 +211,10 @@ class Generic_Plot(object):
             self.plot_args.pop("fontsize", None)
 
     def calculate_min_and_max_values(self):
+        '''
+        Calculates the min and max values of all the data given
+        Stores the values in the matplotlib keyword args to be directly passed into the plot methods.
+        '''
         from sys import maxint
 
         vmin = self.plot_args["valrange"].get("vmin", maxint)
@@ -179,6 +230,10 @@ class Generic_Plot(object):
         self.mplkwargs["vmax"] = float(vmax)
 
     def add_color_bar(self):
+        '''
+        Adds a colour bar to a plot
+        Allows specifying of tick spacing and orientation
+        '''
         from plot import format_units
 
         step = self.plot_args["valrange"].get("vstep", None)
@@ -198,6 +253,10 @@ class Generic_Plot(object):
         cbar.set_label(format_units(self.packed_data_items[0].units))
 
     def contour_plot(self, filled):
+        '''
+        Used by both contour and contourf to plot a contour plot
+        @param filled: A boolean specifying whether or not the contour plot should be filled
+        '''
         from numpy import linspace
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
@@ -218,6 +277,10 @@ class Generic_Plot(object):
         self.mplkwargs["vmax"] = vmax
 
     def draw_coastlines(self, draw_grid = False):
+        '''
+        Draws coastlines and a grid on the plot
+        @param draw_grid: A boolean specifying whether or not a grid should be drawn
+        '''
         if is_map(self.packed_data_items[0]):
             self.basemap.drawcoastlines()
 
@@ -233,6 +296,10 @@ class Generic_Plot(object):
             self.matplotlib.yticks(parallels, parallel_labels)
 
     def __create_map_grid_lines(self):
+        '''
+        Creates the lists of parallels and meridians to be used for plotting grid lines
+        @return: The parallels and meridians
+        '''
         def __create_set_of_grid_lines(axis, range_dict):
             from numpy import arange, append
             lines = None
@@ -265,7 +332,12 @@ class Generic_Plot(object):
 
         return parallels, meridians
 
-    def __format_map_ticks(self, tick_array, axis):
+    def __format_map_ticks(self, tick_array):
+        '''
+        Given an array of ticks, creates a labels array where only every fourth tick is labelled
+        @param tick_array: The array to create the labels for
+        @return: The label every containing every fourth tick labelled
+        '''
         label_format = "{0:.0f}"
         labels = []
         i = 0
@@ -283,10 +355,18 @@ class Generic_Plot(object):
         return labels
 
     def set_log_scale(self, logx, logy):
+        '''
+        Sets a log (base 10) scale (if specified) on the axes
+        @param logx: A boolean specifying whether or not to apply a log scale to the x axis
+        @param logy: A boolean specifying whether or not to apply a log scale to the y axis
+        '''
         if logx: self.matplotlib.xscale("log")
         if logy: self.matplotlib.yscale("log")
 
     def format_2d_plot(self):
+        '''
+        Used by 2d subclasses to format the plot
+        '''
         import logging
         from jasmin_cis.plotting.plot import plot_options
 
@@ -323,14 +403,7 @@ class Generic_Plot(object):
 
     def format_3d_plot(self):
         '''
-        Sets the fontsize, xlabel, ylabel, title, legend and color bar
-        Tries to assign default value if value not specified
-
-        @param data:                    A list of data objects (cubes or ungridded data)
-        @param options:                 A dictionary of formatting options constructed using __create_plot_format_options
-        @param plot_type:               The plot type (as a string, not a PlotType object)
-        @param datagroups:               The list of datagroups from the command line, as a dictionary, containing filename, variable, label etc
-        @param colour_bar_orientation:  A string, either 'horizontal' or 'vertical', should have been converted to lowercase by the parser
+        Used by 3d subclasses to format the plot
         '''
         from jasmin_cis.plotting.plot import plot_options
 
@@ -367,6 +440,11 @@ class Generic_Plot(object):
         if len(self.packed_data_items) > 1: self.create_legend()
 
     def set_3daxis_label(self, axis):
+        '''
+        Used by 3d plots to calculate the default axis label.
+        Uses Latitude or Longitude if a map is being plotted
+        @param axis: The axis to calculate the default label for
+        '''
         from plot import format_units
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
