@@ -126,10 +126,13 @@ def convert_num_to_datetime_array(num_array):
 
 
 def convert_masked_array_type(masked_array, new_type, operation, *args, **kwargs):
+    from numpy.ma import getmaskarray
     converted_time = np.ma.array(np.zeros(masked_array.shape, dtype=new_type),
                                  mask=masked_array.mask)
+
+    masks = getmaskarray(masked_array)
     for i, val in np.ndenumerate(masked_array):
-        if not masked_array.mask[i]:
+        if not masks[i]:
             converted_time[i] = operation(val, *args, **kwargs)
     return converted_time
 

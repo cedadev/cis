@@ -34,9 +34,19 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--cmap", metavar = "Colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar = "Plot height", nargs = "?", help = "The height of the plot in inches")
     parser.add_argument("--width", metavar = "Plot width", nargs = "?", help = "The width of the plot in inches")
-    parser.add_argument("--xrange", metavar = "X range", nargs = "?", help = "The range of the x axis")
-    parser.add_argument("--yrange", metavar = "Y range", nargs = "?", help = "The range of the y axis")
-    parser.add_argument("--valrange", metavar = "Value range", nargs = "?", help = "The range of values to plot")
+
+    parser.add_argument("--xmin", metavar = "Minimum x", nargs = "?", help = "The minimum x value to plot")
+    parser.add_argument("--xmax", metavar = "Maximum x", nargs = "?", help = "The maximum x value to plot")
+    parser.add_argument("--xstep", metavar = "X step", nargs = "?", help = "The step of the x axis")
+
+    parser.add_argument("--ymin", metavar = "Minimum y", nargs = "?", help = "The minimum y value to plot")
+    parser.add_argument("--ymax", metavar = "Maximum y", nargs = "?", help = "The maximum y value to plot")
+    parser.add_argument("--ystep", metavar = "Y step", nargs = "?", help = "The step of the y axis")
+
+    parser.add_argument("--vmin", metavar = "Minimum value", nargs = "?", help = "The minimum value to plot")
+    parser.add_argument("--vmax", metavar = "Maximum value", nargs = "?", help = "The maximum value to plot")
+    parser.add_argument("--vstep", metavar = "X value", nargs = "?", help = "The step of the colour bar")
+
     parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
     parser.add_argument("--logx", metavar = "Log (base 10) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the x axis")
@@ -224,33 +234,53 @@ def check_colour_bar_orientation(orientation, parser):
         parser.error("The colour bar orientation must either be horizontal or vertical")
     return orientation
 
+def parse_as_float_or_date(arg, name, parser):
+    if arg:
+        try:
+            # First try and parse as a float
+            arg = float(arg)
+            return arg
+        except ValueError:
+            # Then try and parse as a date
+            from time_util import parse_datetimestr_to_obj
+            from time_util import convert_datetime_to_num
+            try:
+                arg = parse_datetimestr_to_obj(arg)
+                arg = convert_datetime_to_num(arg)
+                return arg
+            except ValueError:
+                # Otherwise throw an error
+                parser.error("'" + arg + "' is not a valid " + name)
+                return None
 
-def check_range(ax_range, parser, range_type):
+def check_range(arguments, parser, range_axis):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
     '''
-    error_message = "Range must be in the format 'min:max:stepsize'"
-    if ax_range is not None:
-        if ":" in ax_range:
-            split_range = ax_range.split(":")
-            if len(split_range) == 2 or len(split_range) == 3:
-                r_min = parse_float(split_range[0], "min", parser)
-                r_max = parse_float(split_range[1], "max", parser)
-                ax_range = {}
-                if r_min is not None:
-                    ax_range[range_type + "min"] = r_min
-                if r_max is not None:
-                    ax_range[range_type + "max"] = r_max
-                if r_min and r_max and r_min > r_max:
-                    parser.error(error_message)
-                if len(split_range) == 3:
-                    r_step = parse_float(split_range[2], "step", parser)
-                    if r_step is not None:
-                        ax_range[range_type + "step"] = r_step
-            else:
-                parser.error(error_message)
-        else:
-            parser.error(error_message)
+    if range_axis == "x":
+        min_val = arguments.xmin
+        max_val = arguments.xmax
+        step = arguments.xstep
+    elif range_axis == "y":
+        min_val = arguments.ymin
+        max_val = arguments.ymax
+        step = arguments.ystep
+    elif range_axis == "v":
+        min_val = arguments.vmin
+        max_val = arguments.vmax
+        step = arguments.vstep
+
+    ax_range = {}
+
+    if min_val is not None:
+        ax_range[range_axis + "min"] = parse_as_float_or_date(min_val, range_axis + "min", parser)
+
+    if max_val is not None:
+        ax_range[range_axis + "max"] = parse_as_float_or_date(max_val, range_axis + "max", parser)
+
+    if step is not None:
+        ax_range[range_axis + "step"] = parse_as_float_or_date(step, range_axis + "step", parser)
+
     return ax_range
 
 
@@ -287,9 +317,11 @@ def assign_logs(arguments):
 def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
     check_plot_type(arguments.type, arguments.datagroups, parser)
-    arguments.valrange = check_range(arguments.valrange, parser, "v")
-    arguments.xrange = check_range(arguments.xrange, parser, "x")
-    arguments.yrange = check_range(arguments.yrange, parser, "y")
+
+    arguments.valrange = check_range(arguments, parser, "v")
+    arguments.xrange = check_range(arguments, parser, "x")
+    arguments.yrange = check_range(arguments, parser, "y")
+
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar)
     arguments.grid = check_boolean_argument(arguments.grid)
