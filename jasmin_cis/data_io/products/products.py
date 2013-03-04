@@ -647,36 +647,42 @@ class ASCII_Hyperpoints(AProduct):
     def get_file_signature(self):
         return [r'.*\.txt']
 
-    def create_coords(self, filenames, variable = None):
+    def create_coords(self, filenames, variable=None):
         from jasmin_cis.data_io.ungridded_data import Metadata
-        from numpy import array, loadtxt
+        from numpy import genfromtxt
         from jasmin_cis.exceptions import InvalidVariableError
-
-
-        variables = [ "Latitude", "Longitude", "Altitude", "Time" ]
-        logging.info("Listing coordinates: " + str(variables))
+        from jasmin_cis.timeUtil import parse_datetimestr_to_obj_array
 
         array_list = []
-        for filename in filenames:
-            array_list.append(loadtxt(filename, delimiter=','))
 
-        array = utils.concatenate(array_list)
-        n_elements = len(array[0,:])
+        for filename in filenames:
+            try:
+                array_list.append(genfromtxt(filename, dtype="f8,f8,f8,S20,f8",
+                                             names=['latitude', 'longitude', 'altitude', 'time', 'value'],
+                                             delimiter=',', missing_values='', usemask=True, invalid_raise=True))
+            except:
+                raise IOError('Unable to read file '+filename)
+
+        data_array = utils.concatenate(array_list)
+        n_elements = len(data_array['latitude'])
 
         coords = CoordList()
-        coords.append(Coord(array[1,:], Metadata(name="Longitude", shape=(n_elements,), units="degrees_east")))
-        coords.append(Coord(array[0,:], Metadata(name="Latitude", shape=(n_elements,), units="degrees_north")))
-        coords.append(Coord(array[3,:], Metadata(name="Time", shape=(n_elements,), units="Julian Date")).convert_julian_to_datetime())
-        coords.append(Coord(array[2,:], Metadata(name="Altitude", shape=(n_elements,), units="meters")))
+        coords.append(Coord(data_array["latitude"], Metadata(standard_name="latitude", shape=(n_elements,), units="degrees_north")))
+        coords.append(Coord(data_array["longitude"], Metadata(standard_name="longitude", shape=(n_elements,), units="degrees_east")))
+        coords.append(Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
 
-        if variable is not None:
+        time_arr = parse_datetimestr_to_obj_array(data_array["time"])
+        time = Coord(time_arr, Metadata(standard_name="time", shape=(n_elements,), units="DateTime Object"))
+        coords.append(time)
+
+        if variable:
             try:
-                data = UngriddedData(array[variable,:], Metadata(name="Altitude", shape=(n_elements,), units="meters"), coords)
+                data = UngriddedData(data_array['value'], Metadata(name="Altitude", shape=(n_elements,), units="meters"), coords)
             except:
-                InvalidVariableError(variable + " does not exist in file " + filename)
+                InvalidVariableError("Value column does not exist in file " + filenames)
             return data
         else:
             return coords
 
     def create_data_object(self, filenames, variable):
-        return self.create_coords(filenames, variable)
+        return self.create_coords(filenames, True)
