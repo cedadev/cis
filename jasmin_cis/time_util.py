@@ -86,12 +86,12 @@ def convert_days_since_to_obj(days, ref):
     return timedelta(days=float(days)) + ref
 
 
-def convert_julian_date_to_obj_array(julian_time_array, calender='julian'):
+def convert_julian_date_to_obj_array(julian_time_array, calender='standard'):
     from iris.unit import julian_day2date
     return convert_numpy_array(julian_time_array, 'O', julian_day2date, calender)
 
 
-def convert_obj_to_julian_date_array(time_array, calander='julian'):
+def convert_obj_to_julian_date_array(time_array, calander='standard'):
     from iris.unit import date2julian_day
     return convert_numpy_array(time_array, 'float64', date2julian_day, calander)
 
