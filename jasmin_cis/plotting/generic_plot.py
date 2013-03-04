@@ -40,24 +40,6 @@ class Generic_Plot(object):
         
         self.plot()
 
-        # import matplotlib.dates as dates
-        # from matplotlib import ticker
-        # fig, ax = plt.subplots()
-        # def format_date(x, pos=None):
-        #     from jasmin_cis.timeUtil import convert_num_to_datetime
-        #     return convert_num_to_datetime(x).strftime('%Y-%m-%d')
-        #
-        # def format_datetime(x, pos=None):
-        #     from jasmin_cis.timeUtil import convert_num_to_datetime
-        #     return convert_num_to_datetime(x).strftime('%Y-%m-%d %H:%M:%S')
-        #
-        # def format_time(x, pos=None):
-        #     from jasmin_cis.timeUtil import convert_num_to_datetime
-        #     return convert_num_to_datetime(x).strftime('%H:%M:%S')
-        #
-        # ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-        # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
-
     def plot(self):
         '''
         The method that will do the plotting. To be implemented by each subclass of Generic_Plot.
@@ -176,6 +158,23 @@ class Generic_Plot(object):
         except (AttributeError, TypeError):
             pass # In case of date axis. TODO Fix this
 
+    def set_x_axis_as_time(self):
+        from matplotlib import ticker
+        from jasmin_cis.time_util import convert_num_to_datetime
+
+        ax = self.matplotlib.gca()
+        def format_date(x, pos=None):
+            return convert_num_to_datetime(x).strftime('%Y-%m-%d')
+
+        def format_datetime(x, pos=None):
+            return convert_num_to_datetime(x).strftime('%Y-%m-%d %H:%M:%S')
+
+        def format_time(x, pos=None):
+            return convert_num_to_datetime(x).strftime('%H:%M:%S')
+
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+        ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
+
     def set_font_size(self):
         '''
         Converts the fontsize argument (if specified) from a float into a dictionary that matplotlib can recognise.
@@ -255,6 +254,7 @@ class Generic_Plot(object):
         @param filled: A boolean specifying whether or not the contour plot should be filled
         '''
         from numpy import linspace
+        from datetime import datetime
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
@@ -268,7 +268,13 @@ class Generic_Plot(object):
         else:
             contour_type = self.plot_method.contour
 
+        from jasmin_cis.time_util import convert_datetime_to_num_array
+        if isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
+            self.unpacked_data_items[0]["x"] = convert_datetime_to_num_array(self.unpacked_data_items[0]["x"])
+
         contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
+
+        if isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime): self.set_x_axis_as_time()
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
@@ -467,3 +473,4 @@ class Generic_Plot(object):
             return " ($" + str(units) + "$)"
         else:
             return ""
+
