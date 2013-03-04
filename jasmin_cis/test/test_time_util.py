@@ -38,14 +38,8 @@ def test_that_can_parse_datetimestr_to_obj():
 
 @istest
 def test_that_can_parse_time_deltas():
-    delta = parse_datetimestr_delta_to_obj("2y15m3d")
-    eq_(delta.years,3)
-    eq_(delta.months,3)
-    eq_(delta.days,3)
-    eq_(delta.hours,0)
-    eq_(delta.minutes,0)
-    eq_(delta.seconds,0)
-
+    delta = parse_datetimestr_delta_to_obj("2y15m3d5M10H3S")
+    eq_(102247503,delta.total_seconds())
 
 @istest
 @raises(ValueError)
