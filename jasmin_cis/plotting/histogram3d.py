@@ -1,4 +1,4 @@
-from generic_plot import Generic_Plot
+from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Histogram_3D(Generic_Plot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]

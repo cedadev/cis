@@ -1,4 +1,4 @@
-from generic_plot import Generic_Plot
+from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Line_Plot(Generic_Plot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
