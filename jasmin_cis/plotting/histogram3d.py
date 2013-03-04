@@ -9,8 +9,8 @@ class Histogram_3D(Generic_Plot):
         xbins = self.calculate_number_of_bins("x")
         ybins = self.calculate_number_of_bins("y")
 
-        cmin = self.v_range.get("vmin", None)
-        cmax = self.v_range.get("vmax", None)
+        cmin = self.plot_args["valrange"].get("vmin", None)
+        cmax = self.plot_args["valrange"].get("vmax", None)
 
 
         # Add y=x line
@@ -72,7 +72,7 @@ class Histogram_3D(Generic_Plot):
         pass
 
     def add_color_bar(self):
-        step = self.v_range.get("vstep", None)
+        step = self.plot_args["valrange"].get("vstep", None)
         if step is None:
             ticks = None
         else:

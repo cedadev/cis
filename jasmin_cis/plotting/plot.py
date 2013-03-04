@@ -57,6 +57,7 @@ class Plotter(object):
                      "logv" : mplkwargs.pop("logv", False),
                      "xrange" : mplkwargs.pop("xrange", None),
                      "yrange" : mplkwargs.pop("yrange", None),
+                     "valrange" : mplkwargs.pop("valrange", {}),
                      "cbarorient" : mplkwargs.pop("cbarorient", "horizontal"),
                      "grid" : mplkwargs.pop("grid", False),
                      "xlabel" : mplkwargs.pop("xlabel", None),
