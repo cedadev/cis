@@ -2,10 +2,9 @@
 Utilities for converting time units
 """
 import numpy as np
-import dateutil.parser as du
-from dateutil.relativedelta import *
 
 def parse_datetimestr_to_obj(s):
+    import dateutil.parser as du
     return du.parse(s)
 
 
@@ -20,22 +19,22 @@ def parse_datetimestr_delta_to_obj(s):
     @return: a relativedelta object
     """
     import re
+    from datetime import timedelta
 
     tokens = re.findall('[0-9]*[ymdHMS]',s)
     
-    years = months = days = hours = minutes = seconds = 0
+    days = hours = minutes = seconds = 0
     for token in tokens:
 
         val = int(token.replace('','')[:-1])
-
         if token[-1:] == "y":
-            years = val
+            days += val*365
             continue
         elif token[-1:] == "m":
-            months = val
+            days += val*30
             continue
         elif token[-1:] == "d":
-            days = val
+            days += val
             continue
         elif token[-1:] == "H":
             hours = val
@@ -49,7 +48,7 @@ def parse_datetimestr_delta_to_obj(s):
         else:
             raise ValueError("Invalid time delta format")
 
-    return relativedelta(years=years,months=months,days=days,hours=hours,minutes=minutes,seconds=seconds)
+    return timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds)
 
 def convert_time_since_to_datetime(time_array, units):
     from netcdftime import _dateparse

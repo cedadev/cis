@@ -92,23 +92,24 @@ def __get_class(parent_class, name=None):
 
 def get_constraint(method=None):
     '''
-    Top level routine for instantiating the correct Constraint object.
+    Top level routine for finding the correct Constraint object. This doesn't instantiate the constraint class as it
+    may need variables passed to the constructor
 
     @param method: The constraint method to find - this should be a string which matches the name of one of the subclasses of Constraint
-    @return: An instance of one of Constraint's subclasses
+    @return: One of Constraint's subclasses
     '''
     constraint_cls = __get_class(Constraint, method)
-    return constraint_cls()
+    return constraint_cls
 
 def get_kernel(method=None):
     '''
-    Top level routine for instantiating the correct Kernel object.
+    Top level routine for finding the correct Kernel object.
 
     @param method: The kernel method to find - this should be a string which matches the name of one of the subclasses of Kernel
-    @return: An instance of one of Kernel's subclasses
+    @return: One of Kernel's subclasses
     '''
     kernel_cls = __get_class(Kernel, method)
-    return kernel_cls()
+    return kernel_cls
 
 def get_colocator(method=None):
     '''

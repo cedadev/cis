@@ -98,65 +98,39 @@ class DummyConstraint(Constraint):
 
 class SepConstraint(Constraint):
 
-    def constrain_points(self, ref_point, data):
-        from jasmin_cis.data_io.hyperpoint import HyperPointList
-        con_points = HyperPointList()
-        for point in data:
-            checks = [point.haversine_dist(ref_point) < self.h_sep,
-                      point.time_sep(ref_point) < self.t_sep,
-                      point.alt_sep(ref_point) < self.a_sep]
-            if all(checks):
-                con_points.append(point)
-        return con_points
+    def __init__(self, h_sep=None, a_sep=None, t_sep=None, fill_value=None):
+        super(SepConstraint, self).__init__()
+        if fill_value is not None:
+            self.fill_value = fill_value
+        self.checks = []
+        if h_sep is not None:
+            self.h_sep = h_sep
+            self.checks.append(self.horizontal_constraint)
+        if a_sep is not None:
+            self.a_sep = a_sep
+            self.checks.append(self.alt_constraint)
+        if t_sep is not None:
+            from jasmin_cis.timeUtil import parse_datetimestr_delta_to_obj
+            self.t_sep = parse_datetimestr_delta_to_obj(t_sep)
+            self.checks.append(self.time_constraint)
 
+    def time_constraint(self, point, ref_point):
+        return point.time_sep(ref_point) < self.t_sep
 
-class BasicConstraint(Constraint):
+    def alt_constraint(self, point, ref_point):
+        return point.alt_sep(ref_point) < self.a_sep
 
-    def constrain_points(self, ref_point, data):
-        from jasmin_cis.data_io.hyperpoint import HyperPointList
-        con_points = HyperPointList()
-        for point in data:
-            if self.method(point, ref_point) < self.constraint:
-                con_points.append(point)
-        return con_points
-
-
-class TimeConstraint(BasicConstraint):
-
-    def constrain_points(self, ref_point, data):
-        from jasmin_cis.data_io.hyperpoint import HyperPointList
-        con_points = HyperPointList()
-        for point in data:
-            if point.time_sep(ref_point) < self.constraint:
-                con_points.append(point)
-        return con_points
-
-
-class AltitudeConstraint(BasicConstraint):
-
-    # def __init__(self):
-    #     from jasmin_cis.data_io.hyperpoint import HyperPoint
-    #     super(AltitudeConstraint, self).__init__()
-    #     self.method = HyperPoint.alt_sep
+    def horizontal_constraint(self, point, ref_point):
+        return point.haversine_dist(ref_point) < self.h_sep
 
     def constrain_points(self, ref_point, data):
         from jasmin_cis.data_io.hyperpoint import HyperPointList
         con_points = HyperPointList()
         for point in data:
-            if point.alt_sep(ref_point) < self.constraint:
+            if all(check(point, ref_point) for check in self.checks):
                 con_points.append(point)
         return con_points
 
-
-class HorizontalConstraint(BasicConstraint):
-
-    def constrain_points(self, ref_point, data):
-        from jasmin_cis.data_io.hyperpoint import HyperPointList
-        con_points = HyperPointList()
-        for point in data:
-            if point.haversine_dist(ref_point) < self.constraint:
-                con_points.append(point)
-        return con_points
 
 class mean(Kernel):
 
