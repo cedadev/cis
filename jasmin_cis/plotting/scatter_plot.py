@@ -1,13 +1,10 @@
 from generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
-    #'scatter' : PlotType(None, 2, plot_scatter),
     def plot(self):
         '''
-        Plots a scatter plot
+        Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
-
-        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.plots = []
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1

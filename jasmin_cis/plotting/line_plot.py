@@ -2,14 +2,10 @@ from generic_plot import Generic_Plot
 
 class Line_Plot(Generic_Plot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
-    #'line' : PlotType(None, 1, plot_line),
 
     def plot(self):
         '''
-        Plots a line graph
-        Stores the plot in a list to be used for when adding the legend
-
-        @param data_item:    A dictionary containing the x coords and data as arrays
+        Plots one or many line graphs
         '''
         self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1)
 
@@ -23,7 +19,7 @@ class Line_Plot(Generic_Plot):
                     self.mplkwargs["linestyle"] = datafile["itemstyle"]
                 else:
                     from jasmin_cis.exceptions import InvalidLineStyleError
-                    raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(Plotter.line_styles))
+                    raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(self.line_styles))
             else:
                 self.mplkwargs["linestyle"] = "-"
 
