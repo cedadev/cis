@@ -1,6 +1,7 @@
 '''
 Class for plotting graphs.
-Also contains dictionaries for the valid plot types and formatting options
+Also contains a dictionary for the valid plot types
+All plot types need to be imported and added to the plot_types dictionary in order to be used.
 '''
 from contour_plot import Contour_Plot
 from contourf_plot import Contourf_Plot
@@ -14,6 +15,10 @@ from histogram3d import Histogram_3D
 import matplotlib.pyplot as mpl
 
 def format_units(units):
+    '''
+    @param units: The units of a variable, as a string
+    @return: The units formatted in LaTeX style with surrounding brackets, or the empty string if no units given
+    '''
     if units:
         return " ($" + str(units) + "$)"
     else:
@@ -42,13 +47,13 @@ class Plotter(object):
 
     def __init__(self, packed_data_items, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
         '''
-        Constructor for the Plotter
-        
-        @param data             A list of data objects (either Cubes or UngriddedData)
-        @param plot_type        The plot type, as a string
-        @param out_filename     The filename to save the plot to
-        @param *mplargs            mplargs to be passed into matplotlib
-        @param **mplkwargs         kwargs to be passed into matplotlib
+        Constructor for the plotter
+
+        @param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
+        @param plot_type: The plot type to be used, as a string
+        @param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be used, with png being the default
+        @param mplargs: Any other arguments received from the parser
+        @param mplkwargs: Any other keyword arguments received from the plotter
         '''
         plot_args = {"datagroups" : mplkwargs.pop("datagroups", None),
                      "nocolourbar" : mplkwargs.pop("nocolourbar", False),
@@ -66,34 +71,30 @@ class Plotter(object):
                      "fontsize" : mplkwargs.pop("fontsize", None),
                      "itemwidth" : mplkwargs.pop("itemwidth", 1)}
 
-        self.out_filename = out_filename
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
 
-        self.packed_data_items = packed_data_items
-
-        if plot_type is None: plot_type = self.__set_default_plot_type(packed_data_items)
+        if plot_type is None: plot_type = self.set_default_plot_type(packed_data_items)
 
         # Do plot
         plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
         plot.format_plot()
         plot.apply_axis_limits(plot_args["xrange"], "x")
         plot.apply_axis_limits(plot_args["yrange"], "y")
-        self.output_to_file_or_screen()
+        self.output_to_file_or_screen(out_filename)
 
-    def output_to_file_or_screen(self):
+    def output_to_file_or_screen(self, out_filename = None):
         '''
         Outputs to screen unless a filename is given
-
-        @param out_filename    The filename of the file to save to
+        @param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
         '''
         import logging
         import matplotlib.pyplot as plt
-        if self.out_filename is None:
+        if out_filename is None:
             plt.show()
         else:
-            logging.info("saving plot to file: " + self.out_filename)
-            plt.savefig(self.out_filename) # Will overwrite if file already exists
+            logging.info("saving plot to file: " + out_filename)
+            plt.savefig(out_filename) # Will overwrite if file already exists
 
     def remove_unassigned_arguments(self):
         '''
@@ -103,9 +104,11 @@ class Plotter(object):
             if self.mplkwargs[key] is None:
                 self.mplkwargs.pop(key)
 
-    def __set_default_plot_type(self, data):
+    def set_default_plot_type(self, data):
         '''
         Sets the default plot type based on the number of dimensions of the data
+        @param data: A list of packed data items
+        @return The default plot type as a string
         '''
         from jasmin_cis.exceptions import InvalidPlotTypeError
         variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
