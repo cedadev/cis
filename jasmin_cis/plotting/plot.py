@@ -14,16 +14,6 @@ from histogram2d import Histogram_2D
 from histogram3d import Histogram_3D
 import matplotlib.pyplot as mpl
 
-def format_units(units):
-    '''
-    @param units: The units of a variable, as a string
-    @return: The units formatted in LaTeX style with surrounding brackets, or the empty string if no units given
-    '''
-    if units:
-        return " ($" + str(units) + "$)"
-    else:
-        return ""
-
 plot_options = { 'title' : mpl.title,
                  'xlabel' : mpl.xlabel,
                  'ylabel' : mpl.ylabel,

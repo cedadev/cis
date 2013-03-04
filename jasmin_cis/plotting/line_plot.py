@@ -35,7 +35,6 @@ class Line_Plot(Generic_Plot):
         self.format_2d_plot()
 
     def set_default_axis_label(self, axis):
-        from plot import format_units
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
@@ -53,8 +52,8 @@ class Line_Plot(Generic_Plot):
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
                 # only 1 data to plot, display
-                self.plot_args[axislabel] = name + format_units(units)
+                self.plot_args[axislabel] = name + self.format_units(units)
             else:
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
-                self.plot_args[axislabel] = format_units(units)
+                self.plot_args[axislabel] = self.format_units(units)
 

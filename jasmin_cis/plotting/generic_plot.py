@@ -96,7 +96,6 @@ class Generic_Plot(object):
         Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
         @param axis: The axis to set the default label for
         '''
-        from plot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
         if axis == 'x':
@@ -107,7 +106,7 @@ class Generic_Plot(object):
         if self.plot_args[axislabel] is None:
             units = self.packed_data_items[item_index].units
             name = self.packed_data_items[item_index].name()
-            self.plot_args[axislabel] = name + format_units(units)
+            self.plot_args[axislabel] = name + self.format_units(units)
 
     def set_width_and_height(self):
         '''
@@ -232,7 +231,6 @@ class Generic_Plot(object):
         Adds a colour bar to a plot
         Allows specifying of tick spacing and orientation
         '''
-        from plot import format_units
 
         step = self.plot_args["valrange"].get("vstep", None)
         if step is None:
@@ -248,7 +246,7 @@ class Generic_Plot(object):
             cbar.formatter.set_powerlimits((-3,3))
             cbar.update_ticks()
 
-        cbar.set_label(format_units(self.packed_data_items[0].units))
+        cbar.set_label(self.format_units(self.packed_data_items[0].units))
 
     def contour_plot(self, filled):
         '''
@@ -443,7 +441,6 @@ class Generic_Plot(object):
         Uses Latitude or Longitude if a map is being plotted
         @param axis: The axis to calculate the default label for
         '''
-        from plot import format_units
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
@@ -464,4 +461,14 @@ class Generic_Plot(object):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                self.plot_args[axislabel] = name + format_units(units)
+                self.plot_args[axislabel] = name + self.format_units(units)
+
+    def format_units(self, units):
+        '''
+        @param units: The units of a variable, as a string
+        @return: The units formatted in LaTeX style with surrounding brackets, or the empty string if no units given
+        '''
+        if units:
+            return " ($" + str(units) + "$)"
+        else:
+            return ""

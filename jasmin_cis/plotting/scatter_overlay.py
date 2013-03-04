@@ -14,7 +14,6 @@ class Scatter_Overlay(Generic_Plot):
         self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], self.plot_args, *self.mplargs, **self.mplkwargs)
 
     def set_axis_label(self, axis, options):
-        from plot import format_units
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
@@ -35,7 +34,7 @@ class Scatter_Overlay(Generic_Plot):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                options[axislabel] = name + format_units(units)
+                options[axislabel] = name + self.format_units(units)
 
         return options
 
