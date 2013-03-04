@@ -22,24 +22,27 @@ class Scatter_Plot(Generic_Plot):
                 else:
                     colour_scheme = "b" # Default color scheme used by matplotlib
 
+            from datetime import datetime
+            from jasmin_cis.time_util import convert_datetime_to_num_array
+            #units = datetimeobjwect
+            if isinstance(unpacked_data_item["x"].flatten()[0], datetime):
+                x_coords = convert_datetime_to_num_array(unpacked_data_item["x"])
+            else:
+                x_coords = self.unpacked_data_items[0]["x"]
+
             if unpacked_data_item.get("y", None) is not None:
                 #3D
                 self.scatter_type = "3D"
                 y_coords = unpacked_data_item["y"]
-
-                from datetime import datetime
-                from jasmin_cis.time_util import convert_datetime_to_num_array
-                if isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
-                    self.unpacked_data_items[0]["x"] = convert_datetime_to_num_array(self.unpacked_data_items[0]["x"])
             else:
                 #2D
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
 
             self.mplkwargs.pop("latlon", None)
-            self.plots.append(self.plot_method.scatter(unpacked_data_item["x"], y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
+            self.plots.append(self.plot_method.scatter(x_coords, y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
-            if self.scatter_type == "3D" and isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
+            if self.scatter_type == "3D" and isinstance(unpacked_data_item["x"].flatten()[0], datetime):
                 self.set_x_axis_as_time()
 
     def calculate_axis_limits(self, axis):
