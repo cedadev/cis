@@ -53,7 +53,6 @@ class Scatter_Plot(Generic_Plot):
             self.format_2d_plot()
 
     def set_default_axis_label(self, axis):
-        from generic_plot import is_map
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         from plot import format_units
@@ -61,7 +60,7 @@ class Scatter_Plot(Generic_Plot):
         axislabel = axis + "label"
 
         if self.plot_args[axislabel] is None:
-            if is_map(self.packed_data_items[0]):
+            if self.is_map():
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:

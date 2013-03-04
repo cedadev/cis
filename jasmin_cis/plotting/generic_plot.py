@@ -1,29 +1,6 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
-def is_map(data_item):
-    '''
-
-    @param data_item: The packed data item to be analysed
-    @return: A boolean saying if the data item contains lat and lon coordinates
-    '''
-    axes = []
-    for coord in data_item.coords(axis="X"):
-        axes.append(coord.name())
-    for coord in data_item.coords(axis="Y"):
-        axes.append(coord.name())
-
-    lat = False
-    lon = False
-    for axis in axes:
-        if axis.lower().startswith("lat"): lat = True
-        if axis.lower().startswith("lon"): lon = True
-
-    if lat and lon:
-        return True
-    else:
-        return False
-
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
@@ -51,7 +28,7 @@ class Generic_Plot(object):
 
         self.matplotlib = plt
 
-        if is_map(packed_data_items[0]):
+        if self.is_map():
             self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
             self.plot_method = self.basemap
             self.mplkwargs["latlon"] = True
@@ -210,6 +187,27 @@ class Generic_Plot(object):
         else:
             self.plot_args.pop("fontsize", None)
 
+    def is_map(self):
+        '''
+        @return: A boolean saying if the first packed data item contains lat and lon coordinates
+        '''
+        axes = []
+        for coord in self.packed_data_items[0].coords(axis="X"):
+            axes.append(coord.name())
+        for coord in self.packed_data_items[0].coords(axis="Y"):
+            axes.append(coord.name())
+
+        lat = False
+        lon = False
+        for axis in axes:
+            if axis.lower().startswith("lat"): lat = True
+            if axis.lower().startswith("lon"): lon = True
+
+        if lat and lon:
+            return True
+        else:
+            return False
+
     def calculate_min_and_max_values(self):
         '''
         Calculates the min and max values of all the data given
@@ -281,7 +279,7 @@ class Generic_Plot(object):
         Draws coastlines and a grid on the plot
         @param draw_grid: A boolean specifying whether or not a grid should be drawn
         '''
-        if is_map(self.packed_data_items[0]):
+        if self.is_map():
             self.basemap.drawcoastlines()
 
             parallels, meridians = self.__create_map_grid_lines()
@@ -452,7 +450,7 @@ class Generic_Plot(object):
         axislabel = axis + "label"
 
         if self.plot_args[axislabel] is None:
-            if is_map(self.packed_data_items[0]):
+            if self.is_map():
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:

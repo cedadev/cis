@@ -14,7 +14,6 @@ class Scatter_Overlay(Generic_Plot):
         self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], self.plot_args, *self.mplargs, **self.mplkwargs)
 
     def set_axis_label(self, axis, options):
-        from generic_plot import is_map
         from plot import format_units
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
@@ -22,7 +21,7 @@ class Scatter_Overlay(Generic_Plot):
         axislabel = axis + "label"
 
         if options[axislabel] is None:
-            if is_map(self.packed_data_items[0]):
+            if self.is_map():
                 options[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
