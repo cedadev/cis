@@ -409,10 +409,10 @@ class CisCol(AProduct):
                 utils.add_element_to_list_in_dict(var_data, var, var_dict[var])
 
         coords = CoordList()
-        coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0]), "X"))
+        coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0])))
         coords.append(Coord(var_data["latitude"], get_metadata(var_data["latitude"][0])))
         coords.append(Coord(var_data["altitude"], get_metadata(var_data["altitude"][0])))
-        time_coord = Coord(var_data["time"], get_metadata(var_data["time"][0]))
+        time_coord = Coord(var_data["time"], get_metadata(var_data["time"][0]), 'X')
         time_coord.convert_julian_to_datetime()
         coords.append(time_coord)
 
