@@ -33,6 +33,10 @@ valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
 valid_cis_col_file = make_pathname("cis-col-short.nc")
 
+valid_ascii_filename = make_pathname("my_dummy_points_with_values.txt")
+ascii_filename_with_no_values = make_pathname("my_dummy_points.txt")
+valid_ascii_variable = 0
+
 test_directory = make_pathname('test_dir')
 
 large_15GB_file_filename = "/run/media/daniel/Storage/xglnwa.pm.k8dec-k9nov.nc"

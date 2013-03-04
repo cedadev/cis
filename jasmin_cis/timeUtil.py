@@ -9,6 +9,10 @@ def parse_datetimestr_to_obj(s):
     return du.parse(s)
 
 
+def parse_datetimestr_to_obj_array(string_time_array):
+    return convert_numpy_array(string_time_array, 'O', parse_datetimestr_to_obj)
+
+
 def parse_datetimestr_delta_to_obj(s):
     """
     parsing "1y2m3d4H5M6S" into a time delta represented as a relativedelta object

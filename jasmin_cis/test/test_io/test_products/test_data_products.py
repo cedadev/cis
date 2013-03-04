@@ -152,6 +152,36 @@ class TestAeronet(ProductTests):
     @istest
     def test_create_data_object_from_multiple_files(self):
         self.product().create_data_object(self.filenames, self.valid_variable)
+
+class TestAeronet(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
+        self.filename = valid_ascii_filename
+        self.no_value_filename = ascii_filename_with_no_values
+        self.valid_variable = valid_ascii_variable
+        self.product = ASCII_Hyperpoints
+
     @istest
-    def test_create_data_object(self):
-        self.product().create_data_object([self.filename], self.valid_variable)
+    @raises(IOError)
+    def should_raise_error_when_variable_does_not_exist_in_file(self):
+        '''
+         This product throws an IO error rather than an InvalidVariable error as the file can only have one variable
+        @return:
+        '''
+        self.product().create_data_object([self.no_value_filename], True)
+
+    @istest
+    def test_create_data_object_with_missing_values(self):
+        '''
+         Check that missing values get masked correctly
+        @return:
+        '''
+        data = self.product().create_data_object([self.filename], True)
+        assert(all(data.data.mask == [False, False, False, True, False, True, False, False]))
+
+    @istest
+    def test_create_data_object_with_valid_datetime(self):
+        import datetime
+        data = self.product().create_data_object([self.filename], True)
+        assert(data.coord('time').data[3] == datetime.datetime(2012,8,25,15,32,03))
+        assert(data.coord('time').data[4] == datetime.datetime(2012,8,26))
