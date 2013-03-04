@@ -14,17 +14,17 @@ def test_that_can_read_all_variables():
 @istest
 def test_that_can_read_known_variable():
     data = read(valid_2d_filename,'latitude')
-    assert(isinstance(data,Variable))
+    assert(isinstance(data['latitude'],Variable))
 
 @istest
 def test_that_can_get_data():
     data = read(valid_2d_filename, 'latitude')
-    eq_(data.shape,(145,))
+    eq_(data['latitude'].shape,(145,))
 
 @istest
 def test_that_can_get_metadata_for_known_variable():
     data = read(valid_2d_filename,'rain')
-    metadata = get_metadata(data)
+    metadata = get_metadata(data['rain'])
 
     eq_(str(metadata.missing_value),"2e+20")
     eq_(metadata.long_name,"TOTAL RAINFALL RATE: LS+CONV KG/M2/S")
