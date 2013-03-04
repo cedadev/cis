@@ -24,8 +24,9 @@ class Scatter_Plot(Generic_Plot):
 
             from datetime import datetime
             from jasmin_cis.time_util import convert_datetime_to_num_array
-            if isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
-                x_coords = convert_datetime_to_num_array(self.unpacked_data_items[0]["x"])
+            #units = datetimeobjwect
+            if isinstance(unpacked_data_item["x"].flatten()[0], datetime):
+                x_coords = convert_datetime_to_num_array(unpacked_data_item["x"])
             else:
                 x_coords = self.unpacked_data_items[0]["x"]
 
@@ -41,7 +42,7 @@ class Scatter_Plot(Generic_Plot):
             self.mplkwargs.pop("latlon", None)
             self.plots.append(self.plot_method.scatter(x_coords, y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
-            if self.scatter_type == "3D" and isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
+            if self.scatter_type == "3D" and isinstance(unpacked_data_item["x"].flatten()[0], datetime):
                 self.set_x_axis_as_time()
 
     def calculate_axis_limits(self, axis):
