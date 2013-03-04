@@ -29,7 +29,7 @@ class DefaultColocator(Colocator):
             con_points = constraint.constrain_points(point, data)
             try:
                 values[i] = kernel.get_value(point, con_points)
-            except ValueError:
+            except ValueError as e:
                 values[i] = constraint.fill_value
         new_data = LazyData(values, metadata)
         new_data.missing_value = constraint.fill_value
@@ -98,14 +98,36 @@ class DummyConstraint(Constraint):
 
 class SepConstraint(Constraint):
 
+    def __init__(self, h_sep=None, a_sep=None, t_sep=None, fill_value=None):
+        super(SepConstraint, self).__init__()
+        if fill_value is not None:
+            self.fill_value = fill_value
+        self.checks = []
+        if h_sep is not None:
+            self.h_sep = h_sep
+            self.checks.append(self.horizontal_constraint)
+        if a_sep is not None:
+            self.a_sep = a_sep
+            self.checks.append(self.alt_constraint)
+        if t_sep is not None:
+            from jasmin_cis.timeUtil import parse_datetimestr_delta_to_obj
+            self.t_sep = parse_datetimestr_delta_to_obj(t_sep)
+            self.checks.append(self.time_constraint)
+
+    def time_constraint(self, point, ref_point):
+        return point.time_sep(ref_point) < self.t_sep
+
+    def alt_constraint(self, point, ref_point):
+        return point.alt_sep(ref_point) < self.a_sep
+
+    def horizontal_constraint(self, point, ref_point):
+        return point.haversine_dist(ref_point) < self.h_sep
+
     def constrain_points(self, ref_point, data):
         from jasmin_cis.data_io.hyperpoint import HyperPointList
         con_points = HyperPointList()
         for point in data:
-            checks = [point.haversine_dist(ref_point) < self.h_sep,
-                      point.time_sep < self.t_sep,
-                      point.alt_sep < self.a_sep]
-            if all(checks):
+            if all(check(point, ref_point) for check in self.checks):
                 con_points.append(point)
         return con_points
 
@@ -130,7 +152,7 @@ class nn_horizontal(Kernel):
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
-        return nearest_point.val
+        return nearest_point.val[0]
 
 
 class nn_vertical(Kernel):
@@ -143,20 +165,20 @@ class nn_vertical(Kernel):
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.compalt(nearest_point, data_point): nearest_point = data_point
-        return nearest_point.val
+        return nearest_point.val[0]
 
 
 class nn_time(Kernel):
 
     def get_value(self, point, data):
         '''
-            Colocation using nearest neighbours without any constraints where both points and
-              data are a list of HyperPoints
+            Colocation using nearest neighbours in time, where both points and
+              data are a list of HyperPoints. The default point is the first point.
         '''
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.comptime(nearest_point, data_point): nearest_point = data_point
-        return nearest_point.val
+        return nearest_point.val[0]
 
 
 class nn_gridded(Kernel):

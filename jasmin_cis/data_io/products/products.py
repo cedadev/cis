@@ -442,24 +442,33 @@ class CisCol(AProduct):
         from jasmin_cis.data_io.netcdf import read, get_metadata
         from jasmin_cis.data_io.Coord import Coord
 
-        if variable is not None:
-            var = read(filenames[0], variable)
+        variables = [ "latitude", "longitude", "altitude", "time" ]
 
-        lon = read(filenames[0], "Longitude")
-        lat = read(filenames[0], "Latitude")
-        alt = read(filenames[0], "Height")
-        time = read(filenames[0], "Profile_time")
+        if variable is not None:
+            variables.append(variable)
+
+        logging.info("Listing coordinates: " + str(variables))
+
+        var_data = {}
+
+        for filename in filenames:
+
+            var_dict = read(filename, variables)
+            for var in var_dict.keys():
+                utils.add_element_to_list_in_dict(var_data, var, var_dict[var])
 
         coords = CoordList()
-        coords.append(Coord(lon, get_metadata(lon), "X"))
-        coords.append(Coord(lat, get_metadata(lat), "Y"))
-        coords.append(Coord(alt, get_metadata(alt)))
-        coords.append(Coord(time, get_metadata(time), "T").convert_julian_to_datetime())
+        coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0]), "X"))
+        coords.append(Coord(var_data["latitude"], get_metadata(var_data["latitude"][0]), "Y"))
+        coords.append(Coord(var_data["altitude"], get_metadata(var_data["altitude"][0])))
+        time_coord = Coord(var_data["time"], get_metadata(var_data["time"][0]), "T")
+        time_coord.convert_julian_to_datetime()
+        coords.append(time_coord)
 
         if variable is None:
             return coords
         else:
-            return UngriddedData(var, get_metadata(var), coords)
+            return UngriddedData(var_data[var], get_metadata(var_data[var]), coords)
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
@@ -608,7 +617,7 @@ class Xenida(NetCDF_CF_Gridded):
         return [r'.*xenida.*\.nc']
 
     def create_coords(self, filenames, variable=None):
-        # TODO Expand coordinates
+        # TODO Expand coordinates and read multiple files
         # For gridded data sets this will actually return coordinates which are too short
         #  we need to think about how to expand them here
         """
@@ -620,7 +629,7 @@ class Xenida(NetCDF_CF_Gridded):
         from jasmin_cis.data_io.netcdf import read, get_metadata
         from jasmin_cis.data_io.Coord import Coord
 
-        variables = [ "latitude", "longitude", "altitude", "time" ]
+        variables = [ "latitude", "longitude", "atmosphere_hybrid_height_coordinate_ak", "time" ]
         logging.info("Listing coordinates: " + str(variables))
 
         data_variables = read(filenames[0], variables)
@@ -628,14 +637,18 @@ class Xenida(NetCDF_CF_Gridded):
         coords = CoordList()
         coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
         coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
+
+
         altitude = Coord(data_variables["atmosphere_hybrid_height_coordinate_ak"], get_metadata(data_variables["atmosphere_hybrid_height_coordinate_ak"]), "Z")
-        altitude.standard_name = altitude
+        altitude.standard_name = 'altitude'
+
+
         coords.append(altitude)
 
         #days since 1979-4-1
         time = Coord(data_variables["time"], get_metadata(data_variables["time"]), "T")
         time.convert_time_since_to_datetime(time.units)
-        coords.append()
+        coords.append(time)
 
         return coords
 
@@ -653,9 +666,6 @@ class Aeronet(AProduct):
     def create_coords(self, filenames, data = None):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from jasmin_cis.data_io.aeronet import load_multiple_aeronet
-
-        variables = [ "latitude", "longitude", "altitude", "datetime" ]
-        logging.info("Listing coordinates: " + str(variables))
 
         if data is None:
             data = load_multiple_aeronet(filenames)
@@ -686,36 +696,42 @@ class ASCII_Hyperpoints(AProduct):
     def get_file_signature(self):
         return [r'.*\.txt']
 
-    def create_coords(self, filenames, variable = None):
+    def create_coords(self, filenames, variable=None):
         from jasmin_cis.data_io.ungridded_data import Metadata
-        from numpy import array, loadtxt
+        from numpy import genfromtxt
         from jasmin_cis.exceptions import InvalidVariableError
-
-
-        variables = [ "Latitude", "Longitude", "Altitude", "Time" ]
-        logging.info("Listing coordinates: " + str(variables))
+        from jasmin_cis.time_util import parse_datetimestr_to_obj_array
 
         array_list = []
-        for filename in filenames:
-            array_list.append(loadtxt(filename, delimiter=','))
 
-        array = utils.concatenate(array_list)
-        n_elements = len(array[0,:])
+        for filename in filenames:
+            try:
+                array_list.append(genfromtxt(filename, dtype="f8,f8,f8,S20,f8",
+                                             names=['latitude', 'longitude', 'altitude', 'time', 'value'],
+                                             delimiter=',', missing_values='', usemask=True, invalid_raise=True))
+            except:
+                raise IOError('Unable to read file '+filename)
+
+        data_array = utils.concatenate(array_list)
+        n_elements = len(data_array['latitude'])
 
         coords = CoordList()
-        coords.append(Coord(array[1,:], Metadata(name="Longitude", shape=(n_elements,), units="degrees_east")))
-        coords.append(Coord(array[0,:], Metadata(name="Latitude", shape=(n_elements,), units="degrees_north")))
-        coords.append(Coord(array[3,:], Metadata(name="Time", shape=(n_elements,), units="Julian Date")).convert_julian_to_datetime())
-        coords.append(Coord(array[2,:], Metadata(name="Altitude", shape=(n_elements,), units="meters")))
+        coords.append(Coord(data_array["latitude"], Metadata(standard_name="latitude", shape=(n_elements,), units="degrees_north")))
+        coords.append(Coord(data_array["longitude"], Metadata(standard_name="longitude", shape=(n_elements,), units="degrees_east")))
+        coords.append(Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
 
-        if variable is not None:
+        time_arr = parse_datetimestr_to_obj_array(data_array["time"])
+        time = Coord(time_arr, Metadata(standard_name="time", shape=(n_elements,), units="DateTime Object"))
+        coords.append(time)
+
+        if variable:
             try:
-                data = UngriddedData(array[variable,:], Metadata(name="Altitude", shape=(n_elements,), units="meters"), coords)
+                data = UngriddedData(data_array['value'], Metadata(name="Altitude", shape=(n_elements,), units="meters"), coords)
             except:
-                InvalidVariableError(variable + " does not exist in file " + filename)
+                InvalidVariableError("Value column does not exist in file " + filenames)
             return data
         else:
             return coords
 
     def create_data_object(self, filenames, variable):
-        return self.create_coords(filenames, variable)
+        return self.create_coords(filenames, True)

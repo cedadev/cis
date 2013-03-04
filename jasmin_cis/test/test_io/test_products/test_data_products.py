@@ -1,7 +1,7 @@
 '''
 module to test the various subclasses of the abstract AProduct class
 '''
-from nose.tools import istest, eq_, raises
+from nose.tools import istest, eq_, raises, nottest
 from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file
@@ -135,9 +135,53 @@ class TestXenida(ProductTests):
         self.valid_variable = valid_xenida_variable
         self.product = Xenida
 
+    @nottest
+    def test_write_coords(self):
+        # This won't work for model data yet as the coordinates aren't all the same shape,
+        #  they need to be 'expanded'
+        pass
+
 class TestAeronet(ProductTests):
     def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable
+        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
         self.filename = valid_aeronet_filename
+        self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
         self.valid_variable = valid_aeronet_variable
         self.product = Aeronet
+
+    @istest
+    def test_create_data_object_from_multiple_files(self):
+        self.product().create_data_object(self.filenames, self.valid_variable)
+
+class TestASCII(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
+        self.filename = valid_ascii_filename
+        self.no_value_filename = ascii_filename_with_no_values
+        self.valid_variable = valid_ascii_variable
+        self.product = ASCII_Hyperpoints
+
+    @istest
+    @raises(IOError)
+    def should_raise_error_when_variable_does_not_exist_in_file(self):
+        '''
+         This product throws an IO error rather than an InvalidVariable error as the file can only have one variable
+        @return:
+        '''
+        self.product().create_data_object([self.no_value_filename], True)
+
+    @istest
+    def test_create_data_object_with_missing_values(self):
+        '''
+         Check that missing values get masked correctly
+        @return:
+        '''
+        data = self.product().create_data_object([self.filename], True)
+        assert(all(data.data.mask == [False, False, False, True, False, True, False, False]))
+
+    @istest
+    def test_create_data_object_with_valid_datetime(self):
+        import datetime
+        data = self.product().create_data_object([self.filename], True)
+        assert(data.coord('time').data[3] == datetime.datetime(2012,8,25,15,32,03))
+        assert(data.coord('time').data[4] == datetime.datetime(2012,8,26))

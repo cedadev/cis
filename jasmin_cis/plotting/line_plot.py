@@ -2,14 +2,10 @@ from generic_plot import Generic_Plot
 
 class Line_Plot(Generic_Plot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
-    #'line' : PlotType(None, 1, plot_line),
 
     def plot(self):
         '''
-        Plots a line graph
-        Stores the plot in a list to be used for when adding the legend
-
-        @param data_item:    A dictionary containing the x coords and data as arrays
+        Plots one or many line graphs
         '''
         self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1)
 
@@ -23,7 +19,7 @@ class Line_Plot(Generic_Plot):
                     self.mplkwargs["linestyle"] = datafile["itemstyle"]
                 else:
                     from jasmin_cis.exceptions import InvalidLineStyleError
-                    raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(Plotter.line_styles))
+                    raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(self.line_styles))
             else:
                 self.mplkwargs["linestyle"] = "-"
 
@@ -34,12 +30,10 @@ class Line_Plot(Generic_Plot):
 
             self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs ) #TODO append to list
 
-
     def format_plot(self):
         self.format_2d_plot()
 
     def set_default_axis_label(self, axis):
-        from plot import format_units
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
         axis = axis.lower()
@@ -57,8 +51,8 @@ class Line_Plot(Generic_Plot):
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
                 # only 1 data to plot, display
-                self.plot_args[axislabel] = name + format_units(units)
+                self.plot_args[axislabel] = name + self.format_units(units)
             else:
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
-                self.plot_args[axislabel] = format_units(units)
+                self.plot_args[axislabel] = self.format_units(units)
 

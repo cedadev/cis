@@ -2,11 +2,14 @@
 Utilities for converting time units
 """
 import numpy as np
-import dateutil.parser as du
-from dateutil.relativedelta import *
 
 def parse_datetimestr_to_obj(s):
+    import dateutil.parser as du
     return du.parse(s)
+
+
+def parse_datetimestr_to_obj_array(string_time_array):
+    return convert_numpy_array(string_time_array, 'O', parse_datetimestr_to_obj)
 
 
 def parse_datetimestr_delta_to_obj(s):
@@ -16,22 +19,22 @@ def parse_datetimestr_delta_to_obj(s):
     @return: a relativedelta object
     """
     import re
+    from datetime import timedelta
 
     tokens = re.findall('[0-9]*[ymdHMS]',s)
     
-    years = months = days = hours = minutes = seconds = 0
+    days = hours = minutes = seconds = 0
     for token in tokens:
 
         val = int(token.replace('','')[:-1])
-
         if token[-1:] == "y":
-            years = val
+            days += val*365
             continue
         elif token[-1:] == "m":
-            months = val
+            days += val*30
             continue
         elif token[-1:] == "d":
-            days = val
+            days += val
             continue
         elif token[-1:] == "H":
             hours = val
@@ -45,11 +48,12 @@ def parse_datetimestr_delta_to_obj(s):
         else:
             raise ValueError("unvalid time delta format. Must be '1y2m3d4H5M6S'")
 
-    return relativedelta(years=years,months=months,days=days,hours=hours,minutes=minutes,seconds=seconds)
+    return timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds)
 
 
 def calculate_mid_time(t1, t2):
     import math
+    from dateutil.relativedelta import *
     delta = relativedelta(t2,t1)
     total_seconds = delta.seconds + delta.minutes * 60 + delta.hours * 3600 + delta.days * 86400 + delta.months * 2592000 + delta.years * 31536000
     half = relativedelta(seconds=int(math.ceil(total_seconds / 2.0)))
@@ -57,7 +61,9 @@ def calculate_mid_time(t1, t2):
 
 def convert_time_since_to_datetime(time_array, units):
     from netcdftime import _dateparse
-    units, dt = _dateparse(units)
+    import datetime
+    units, utc_offset, dt = _dateparse(units)
+    dt = datetime.datetime(*dt.timetuple()[0:6])
     if units == 'days':
         new_array = convert_numpy_array(time_array, 'O', convert_days_since_to_obj, dt)
     elif units == 'secs':
@@ -86,7 +92,7 @@ def convert_sec_since_to_obj(seconds, ref):
 
 def convert_days_since_to_obj(days, ref):
     from datetime import timedelta
-    return timedelta(days=int(days)) + ref
+    return timedelta(days=float(days)) + ref
 
 
 def convert_julian_date_to_obj_array(julian_time_array, calender='julian'):

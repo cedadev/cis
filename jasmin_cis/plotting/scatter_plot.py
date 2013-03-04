@@ -1,13 +1,10 @@
 from generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
-    #'scatter' : PlotType(None, 2, plot_scatter),
     def plot(self):
         '''
-        Plots a scatter plot
+        Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
-
-        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.plots = []
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
@@ -29,6 +26,11 @@ class Scatter_Plot(Generic_Plot):
                 #3D
                 self.scatter_type = "3D"
                 y_coords = unpacked_data_item["y"]
+
+                from datetime import datetime
+                from jasmin_cis.time_util import convert_datetime_to_num_array
+                if isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
+                    self.unpacked_data_items[0]["x"] = convert_datetime_to_num_array(self.unpacked_data_items[0]["x"])
             else:
                 #2D
                 self.scatter_type = "2D"
@@ -36,6 +38,9 @@ class Scatter_Plot(Generic_Plot):
 
             self.mplkwargs.pop("latlon", None)
             self.plots.append(self.plot_method.scatter(unpacked_data_item["x"], y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
+
+            if self.scatter_type == "3D" and isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
+                self.set_x_axis_as_time()
 
     def calculate_axis_limits(self, axis):
         valrange = {}
@@ -56,15 +61,13 @@ class Scatter_Plot(Generic_Plot):
             self.format_2d_plot()
 
     def set_default_axis_label(self, axis):
-        from generic_plot import is_map
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
-        from plot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
 
         if self.plot_args[axislabel] is None:
-            if is_map(self.packed_data_items[0]):
+            if self.is_map():
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
@@ -78,7 +81,7 @@ class Scatter_Plot(Generic_Plot):
                         name = self.packed_data_items[0].coord(axis=axis).name()
                     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                         name = self.packed_data_items[0].name()
-                    self.plot_args[axislabel] = name + format_units(units)
+                    self.plot_args[axislabel] = name + self.format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     self.plot_args[axislabel] = units
