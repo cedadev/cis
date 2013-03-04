@@ -153,7 +153,7 @@ class TestAeronet(ProductTests):
     def test_create_data_object_from_multiple_files(self):
         self.product().create_data_object(self.filenames, self.valid_variable)
 
-class TestAeronet(ProductTests):
+class TestASCII(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
         self.filename = valid_ascii_filename
