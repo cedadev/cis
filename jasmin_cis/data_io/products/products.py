@@ -45,7 +45,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lat = vdata['Latitude']
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
-        lat_metadata = lat_data.shape
+        lat_metadata.shape = lat_data.shape
         lat_coord = Coord(lat_data, lat_metadata, "Y")
 
         # longitude
