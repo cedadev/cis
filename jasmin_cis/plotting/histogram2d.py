@@ -6,6 +6,7 @@ class Histogram_2D(Generic_Plot):
         '''
         Plots a 2D histogram
         '''
+        from numpy.ma import MaskedArray
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
@@ -36,7 +37,12 @@ class Histogram_2D(Generic_Plot):
             else:
                 self.mplkwargs["color"] = None
 
-            self.matplotlib.hist(unpacked_data_item["data"].compressed(), bins = number_of_bins, *self.mplargs, **self.mplkwargs)
+            if isinstance(unpacked_data_item["data"], MaskedArray):
+                data = unpacked_data_item["data"].compressed()
+            else:
+                data = unpacked_data_item["data"]
+
+            self.matplotlib.hist(unpacked_data_item["data"], bins = number_of_bins, *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
