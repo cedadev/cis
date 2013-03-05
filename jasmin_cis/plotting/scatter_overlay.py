@@ -1,7 +1,7 @@
-from generic_plot import Generic_Plot
-from heatmap import Heatmap
-from scatter_plot import Scatter_Plot
-#TODO FIX
+from jasmin_cis.plotting.generic_plot import Generic_Plot
+from jasmin_cis.plotting.heatmap import Heatmap
+from jasmin_cis.plotting.scatter_plot import Scatter_Plot
+
 class Scatter_Overlay(Generic_Plot):
     def plot(self):
         '''

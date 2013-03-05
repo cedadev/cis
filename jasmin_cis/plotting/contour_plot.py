@@ -1,4 +1,4 @@
-from generic_plot import Generic_Plot
+from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Contour_Plot(Generic_Plot):
     #'contour' : PlotType(1, 2, plot_contour),

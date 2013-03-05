@@ -3,15 +3,15 @@ Class for plotting graphs.
 Also contains a dictionary for the valid plot types
 All plot types need to be imported and added to the plot_types dictionary in order to be used.
 '''
-from contour_plot import Contour_Plot
-from contourf_plot import Contourf_Plot
-from heatmap import Heatmap
-from line_plot import Line_Plot
-from scatter_overlay import Scatter_Overlay
-from scatter_plot import Scatter_Plot
-from comparative_scatter import Comparative_Scatter
-from histogram2d import Histogram_2D
-from histogram3d import Histogram_3D
+from jasmin_cis.plotting.contour_plot import Contour_Plot
+from jasmin_cis.plotting.contourf_plot import Contourf_Plot
+from jasmin_cis.plotting.heatmap import Heatmap
+from jasmin_cis.plotting.line_plot import Line_Plot
+from jasmin_cis.plotting.scatter_overlay import Scatter_Overlay
+from jasmin_cis.plotting.scatter_plot import Scatter_Plot
+from jasmin_cis.plotting.comparative_scatter import Comparative_Scatter
+from jasmin_cis.plotting.histogram2d import Histogram_2D
+from jasmin_cis.plotting.histogram3d import Histogram_3D
 import matplotlib.pyplot as mpl
 
 plot_options = { 'title' : mpl.title,

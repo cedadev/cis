@@ -13,7 +13,7 @@ class Generic_Plot(object):
         @param mplargs: Any arguments to be passed directly into matplotlib
         @param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         '''
-        from utils import unpack_data_object
+        from jasmin_cis.utils import unpack_data_object
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
 
@@ -310,11 +310,10 @@ class Generic_Plot(object):
             lines = None
             grid_spacing = 15 # in degrees
             if range_dict is not None: #If the user has specified range
-                min_val = range_dict[axis + "min"]
-                max_val = range_dict[axis + "max"]
-                step = range_dict.get(axis + "step", None)
+                min_val = range_dict.get(axis + "min", 0 if axis == "x" else -90)
+                max_val = range_dict.get(axis + "max", 360 if axis == "x" else 90)
+                step = range_dict.get(axis + "step", grid_spacing)
 
-                if step is None: step = (max_val-min_val) / 24
                 lines = arange(min_val, max_val+1, step)
                 if min_val < 0 and max_val > 0: lines = append(lines, 0)
                 lines.sort()
@@ -340,7 +339,7 @@ class Generic_Plot(object):
         label_format = "{0:.0f}"
         labels = []
         i = 0
-        label_every_nth_tick = 4
+        label_every_nth_tick = 1
         for tick in tick_array:
             # Label every nth tick, the 0 tick, and the last tick
             if i % label_every_nth_tick == 0 or tick == 0 or i == len(tick_array) - 1:

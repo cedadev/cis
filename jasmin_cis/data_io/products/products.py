@@ -39,24 +39,29 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         height = sdata['Height']
         height_data = hdf.read_data(height, "SD")
         height_metadata = hdf.read_metadata(height, "SD")
-        height_coord = Coord(height_data, height_metadata,'Y')
+        height_coord = Coord(height_data, height_metadata)
 
         # latitude
         lat = vdata['Latitude']
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
-        lat_coord = Coord(lat_data, lat_metadata)
+        lat_metadata = lat_data.shape
+        lat_coord = Coord(lat_data, lat_metadata, "Y")
 
         # longitude
         lon = vdata['Longitude']
         lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[0]),axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
-        lon_coord = Coord(lon_data, lon_metadata)
+        lon_metadata.shape = lon_data.shape
+        lon_coord = Coord(lon_data, lon_metadata, "X")
 
         # time coordinate
         time_data = self._generate_time_array(vdata)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
-        time_coord = Coord(time_data, hdf.read_metadata(vdata['Profile_time'], "VD"), "X")
+        time_metadata = hdf.read_metadata(vdata['Profile_time'],"VD")
+        time_metadata.shape = time_data.shape
+        time_metadata.units = "DateTime Object"
+        time_coord = Coord(time_data,time_metadata,"T")
         time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
 
         # create object containing list of coordinates
@@ -86,14 +91,45 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
 class MODIS_L3(AProduct):
 
+    def _parse_datetime(self,metadata_dict,keyword):
+        import re
+        res = ""
+        for s in metadata_dict.itervalues():
+            i_start = s.find(keyword)
+            ssub = s[i_start:len(s)]
+            i_end = ssub.find("END_OBJECT")
+            ssubsub = s[i_start:i_start+i_end]
+            matches = re.findall('".*"',ssubsub)
+            if len(matches) > 0:
+                res = matches[0].replace('\"','')
+                if res is not "":
+                    break
+        return res
+
+    def _get_start_date(self, filename):
+        from jasmin_cis.time_util import parse_datetimestr_to_obj
+        metadata_dict = hdf.get_hdf4_file_metadata(filename)
+        date = self._parse_datetime(metadata_dict,'RANGEBEGINNINGDATE')
+        time = self._parse_datetime(metadata_dict,'RANGEBEGINNINGTIME')
+        datetime_str = date + " " + time
+        return parse_datetimestr_to_obj(datetime_str)
+
+    def _get_end_date(self, filename):
+        from jasmin_cis.time_util import parse_datetimestr_to_obj
+        metadata_dict = hdf.get_hdf4_file_metadata(filename)
+        date = self._parse_datetime(metadata_dict,'RANGEENDINGDATE')
+        time = self._parse_datetime(metadata_dict,'RANGEENDINGTIME')
+        datetime_str = date + " " + time
+        return parse_datetimestr_to_obj(datetime_str)
 
     def get_file_signature(self):
         product_names = ['MYD08_D3','MOD08_D3']
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 
-
     def create_coords(self, filenames):
+        import numpy as np
+        from jasmin_cis.time_util import calculate_mid_time
 
         variables = ['XDim','YDim']
         logging.info("Listing coordinates: " + str(variables))
@@ -106,15 +142,33 @@ class MODIS_L3(AProduct):
         lon = sdata['XDim']
         lon_metadata = hdf.read_metadata(lon, "SD")
 
+        # expand lat and lon data array so that they have the same shape
+        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat,"SD"),lon_metadata.shape,axis=1) # expand latitude column wise
+        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon,"SD"),lat_metadata.shape,axis=0) # expand longitude row wise
+
+        lat_metadata.shape = lat_data.shape
+        lon_metadata.shape = lon_data.shape
+
         # to make sure "Latitude" and "Longitude", i.e. the standard_name is displayed instead of "YDim"and "XDim"
         lat_metadata.standard_name = "latitude"
         lat_metadata._name = ""
         lon_metadata.standard_name = "longitude"
         lon_metadata._name = ""
 
+        # create arrays for time coordinate using the midpoint of the time delta between the start date and the end date
+        time_data_array = []
+        for filename in filenames:
+            mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
+            time_data = np.empty(lat_metadata.shape,dtype=object)
+            time_data.fill(mid_datetime)
+            time_data_array.append(time_data)
+        time_data = utils.concatenate(time_data_array)
+        time_metadata = Metadata(name="Date time", shape=time_data.shape, units="DateTime Object")
+
         coords = CoordList()
-        coords.append(Coord(lon, lon_metadata,'X'))
-        coords.append(Coord(lat, lat_metadata,'Y'))
+        coords.append(Coord(lon_data, lon_metadata,'X'))
+        coords.append(Coord(lat_data, lat_metadata,'Y'))
+        coords.append(Coord(time_data, time_metadata,'T'))
 
         return coords
 
@@ -201,7 +255,12 @@ class MODIS_L2(AProduct):
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata,'X')
 
-        return CoordList([lat_coord,lon_coord])
+        time = sdata['Scan_Start_Time']
+        time_metadata = hdf.read_metadata(time,"SD")
+        time_coord = Coord(time,time_metadata,"T")
+        time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
+
+        return CoordList([lat_coord,lon_coord,time_coord])
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)

@@ -5,7 +5,7 @@ import argparse
 import sys
 import os.path
 from plotting.plot import Plotter
-
+import logging
 
 def initialise_top_parser():
     '''
@@ -83,6 +83,7 @@ def expand_file_list(filenames, parser):
     if not filenames:
         parser.error("Please specify at least one filename")
     input_list = filenames.split(',')
+
     # Ensure we don't get duplicates by making file_set a set
     file_set = set()
     for element in input_list:
@@ -97,11 +98,16 @@ def expand_file_list(filenames, parser):
             file_set.add(element)
         else:
             parser.error("'" + element + "' is not a valid filename")
+
     # Check we matched at least one file
     if not file_set:
         parser.error("No files found which match: "+filenames)
+
     # Cast set to a list to make it easier to index etc. later on
-    return list(file_set)
+    alist = list(file_set)
+    logging.info("Identified input file list: " + str(alist))
+
+    return alist
 
 
 def check_file_exists(filename, parser):

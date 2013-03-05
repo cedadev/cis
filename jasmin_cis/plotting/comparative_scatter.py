@@ -1,4 +1,4 @@
-from generic_plot import Generic_Plot
+from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Comparative_Scatter(Generic_Plot):
     def plot(self):
