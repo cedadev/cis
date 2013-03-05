@@ -202,3 +202,12 @@ def haversine(lat, lon, lat2, lon2):
     lon2 = math.radians(lon2)
     arclen = 2*math.asin(math.sqrt((math.sin((lat2-lat1)/2))**2 + math.cos(lat1) * math.cos(lat2) * (math.sin((lon2-lon1)/2))**2))
     return arclen*R_E
+
+
+def apply_intersection_mask_to_two_arrays(maskedarray1, maskedarray2):
+    import numpy.ma as ma
+    intersection_mask = ma.mask_or(maskedarray1.mask, maskedarray2.mask)
+    maskedarray1 = ma.array(maskedarray1, mask = intersection_mask)
+    maskedarray2 = ma.array(maskedarray2, mask = intersection_mask)
+
+    return maskedarray1, maskedarray2
