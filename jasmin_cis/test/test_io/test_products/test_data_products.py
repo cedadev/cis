@@ -104,7 +104,7 @@ class TestCisCol(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_cis_col_file
         self.filename = valid_cis_col_file
-        self.valid_variable = 'mass_fraction_of_cloud_liquid_water_in_air'
+        self.valid_variable = 'AOT_440'
         self.product = CisCol
 
 # class TestXglnwa(ProductTests):

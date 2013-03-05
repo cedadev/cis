@@ -45,7 +45,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         lat = vdata['Latitude']
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
-        lat_metadata = lat_data.shape
+        lat_metadata.shape = lat_data.shape
         lat_coord = Coord(lat_data, lat_metadata, "Y")
 
         # longitude
@@ -285,25 +285,18 @@ class Cloud_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from jasmin_cis.data_io.netcdf import read, get_metadata, get_data
+        from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata, get_data
         from jasmin_cis.data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
         logging.info("Listing coordinates: " + str(variables))
 
-        lon = []
-        lat = []
-        time = []
-
-        for filename in filenames:
-            lon.append(read(filename, "lon"))
-            lat.append(read(filename, "lat"))
-            time.append(read(filename, "time"))
+        var_data = read_many_files_individually(filenames, variables)
 
         coords = CoordList()
-        coords.append(Coord(lon, get_metadata(lon[0])))
-        coords.append(Coord(lat, get_metadata(lat[0]), "Y"))
-        time_coord = Coord(time, get_metadata(time[0]), "X")
+        coords.append(Coord(var_data['lat'], get_metadata(var_data['lat'][0]), 'Y'))
+        coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0])))
+        time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]), "X")
         time_coord.convert_julian_to_datetime()
         coords.append(time_coord)
 
@@ -311,13 +304,13 @@ class Cloud_CCI(AProduct):
 
     def create_data_object(self, filenames, variable):
 
-        from jasmin_cis.data_io.netcdf import get_metadata, read
+        from jasmin_cis.data_io.netcdf import get_metadata, read_many_files_individually
 
         coords = self.create_coords(filenames)
-        var = [read(filename, variable) for filename in filenames]
-        metadata = get_metadata(var[0])
+        var = read_many_files_individually(filenames, [variable])
+        metadata = get_metadata(var[variable][0])
 
-        return UngriddedData(var, metadata, coords)
+        return UngriddedData(var[variable], metadata, coords)
 
 class Aerosol_CCI(AProduct):
 
@@ -449,7 +442,7 @@ class CisCol(AProduct):
         return [r'cis\-col\-.*\.nc']
 
     def create_coords(self, filenames, variable = None):
-        from jasmin_cis.data_io.netcdf import read, get_metadata
+        from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata
         from jasmin_cis.data_io.Coord import Coord
 
         variables = [ "latitude", "longitude", "altitude", "time" ]
@@ -459,13 +452,7 @@ class CisCol(AProduct):
 
         logging.info("Listing coordinates: " + str(variables))
 
-        var_data = {}
-
-        for filename in filenames:
-
-            var_dict = read(filename, variables)
-            for var in var_dict.keys():
-                utils.add_element_to_list_in_dict(var_data, var, var_dict[var])
+        var_data = read_many_files_individually(filenames, variables)
 
         coords = CoordList()
         coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0])))

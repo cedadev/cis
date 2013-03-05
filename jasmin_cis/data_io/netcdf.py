@@ -47,6 +47,32 @@ def read_many_files(filenames, usr_variables, dim=None):
     return data
 
 
+def read_many_files_individually(filenames, usr_variables):
+    """
+    Read multiple Variables from many NetCDF files manually - i.e. not with MFDataset as this doesn't alays work
+
+        @param filenames: A list of NetCDF filenames to read, or a string with wildcards.
+        @param usr_variables: A list of variable (dataset) names to read from the
+                       files. The names must appear exactly as in in the NetCDF file.
+        @return: A dictionary of lists of variable instances constructed from all of the input files with the variable
+                    name as the key
+    """
+    from jasmin_cis.utils import add_element_to_list_in_dict
+
+    if not isinstance(usr_variables,list):
+        usr_variables = [usr_variables]
+
+    var_data = {}
+
+    for filename in filenames:
+
+        var_dict = read(filename, usr_variables)
+        for var in var_dict.keys():
+            add_element_to_list_in_dict(var_data, var, var_dict[var])
+
+    return var_data
+
+
 def read(filename, usr_variables):
     """
     Reads a Variable from a NetCDF file
