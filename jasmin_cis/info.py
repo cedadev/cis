@@ -37,25 +37,25 @@ def info(filename, user_variables=None, data_type=None):
     from jasmin_cis.data_io.hdf import get_hdf4_file_variables
     from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
     from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
-    from pyhdf.error import HDF4Error
+    from jasmin_cis.exceptions import InvalidFileExtensionError, CISError
 
-    try:
-
-        file_variables = get_netcdf_file_variables(filename)
-        __print_variables(file_variables, user_variables)
-
-    except RuntimeError:
-
+    if filename.endswith(".nc"):
         try:
-            sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
-
-            if sd_vars is not None:
-                print "\n====== SD variables:"
-                __print_variables(sd_vars, user_variables, False)
-            if vd_vars is not None:
-                print "\n====== VD variables:"
-                __print_variables(vd_vars, user_variables, False)
-
-        except HDF4Error as e:
-            file_variables = get_aeronet_file_variables(filename)
+            file_variables = get_netcdf_file_variables(filename)
             __print_variables(file_variables, user_variables)
+        except RuntimeError as e:
+            raise CISError(e)
+    elif filename.endswith(".hdf"):
+        sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
+
+        if sd_vars is not None:
+            print "\n====== SD variables:"
+            __print_variables(sd_vars, user_variables, False)
+        if vd_vars is not None:
+            print "\n====== VD variables:"
+            __print_variables(vd_vars, user_variables, False)
+    elif filename.endswith(".lev20"):
+        file_variables = get_aeronet_file_variables(filename)
+        __print_variables(file_variables, user_variables)
+    else:
+        raise InvalidFileExtensionError("File extension not recognised. Please use one of .nc, .hdf or .lev20")

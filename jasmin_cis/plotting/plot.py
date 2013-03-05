@@ -69,6 +69,7 @@ class Plotter(object):
                      "grid" : mplkwargs.pop("grid", False),
                      "xlabel" : mplkwargs.pop("xlabel", None),
                      "ylabel" : mplkwargs.pop("ylabel", None),
+                     "cbarlabel" : mplkwargs.pop("cbarlabel", None),
                      "title" : mplkwargs.pop("title", None),
                      "fontsize" : mplkwargs.pop("fontsize", None),
                      "itemwidth" : mplkwargs.pop("itemwidth", 1)}

@@ -246,7 +246,12 @@ class Generic_Plot(object):
             cbar.formatter.set_powerlimits((-3,3))
             cbar.update_ticks()
 
-        cbar.set_label(self.format_units(self.packed_data_items[0].units))
+        if self.plot_args["cbarlabel"] is None:
+            label = self.format_units(self.packed_data_items[0].units)
+        else:
+            label = self.plot_args["cbarlabel"]
+
+        cbar.set_label(label)
 
     def contour_plot(self, filled):
         '''

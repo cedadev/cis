@@ -21,12 +21,12 @@ class Line_Plot(Generic_Plot):
                     from jasmin_cis.exceptions import InvalidLineStyleError
                     raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(self.line_styles))
             else:
-                self.mplkwargs["linestyle"] = "-"
+                self.mplkwargs.pop("linestyle", None)
 
             if datafile["color"]:
                 self.mplkwargs["color"] = datafile["color"]
             else:
-                self.mplkwargs["color"] = "b"
+                self.mplkwargs.pop("color", None)
 
             self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs ) #TODO append to list
 
