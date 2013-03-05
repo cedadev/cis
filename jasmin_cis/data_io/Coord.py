@@ -35,7 +35,7 @@ class Coord(LazyData):
         self._data = convert_obj_to_julian_date_array(self.data)
         self.units = "Julian Date, days elapsed since 12:00 January 1, 4713 BC"
 
-    def convert_julian_to_datetime(self, calender='julian'):
+    def convert_julian_to_datetime(self, calender='standard'):
         from jasmin_cis.time_util import convert_julian_date_to_obj_array
         #if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")
         self._data = convert_julian_date_to_obj_array(self.data, calender)
