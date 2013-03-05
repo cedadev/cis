@@ -34,7 +34,10 @@ class Colocate(object):
         con_cls = get_constraint(con_method)
 
         try:
-            con = con_cls(**con_params)
+            if con_params is not None:
+                con = con_cls(**con_params)
+            else:
+                con = con_cls()
         except TypeError as e:
             raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified constraint method.")
 
