@@ -8,34 +8,34 @@ if [ -d $output_dir ]; then
 fi
 mkdir -p $output_dir
 echo Iris Contour
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type contour --cmap RdBu --xlabel "Overidden X Label" --title "Overidded Title" --height 5 --width 5 --xrange 15:45:20 --cbarorient vertical --fontsize 10 --output "${output_dir}iriscontour"
+python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type contour --cmap RdBu --xlabel "Overidden X Label" --title "Overidded Title" --height 5 --width 5 --xmin 15 --xmax 45 --xstep 20 --cbarorient vertical --fontsize 10 --output "${output_dir}iriscontour"
 echo Iris Contourf
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type contourf --ylabel "Overidden Y Label" --height 5 --width 10 --yrange 15:45:10 --nocolourbar --output "${output_dir}iriscontourf"
+python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type contourf --ylabel "Overidden Y Label" --height 5 --width 10 --ymin 15 --ymax 45 --ystep 10 --nocolourbar --output "${output_dir}iriscontourf"
 echo Iris Heatmap
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type heatmap --cmap RdBu --ylabel OveriddenY --title OveriddenTitle --valrange :0.000135 --fontsize 10 --height 3.5 --cbarorient horizontal --output "${output_dir}irisheatmap"
+python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type heatmap --cmap RdBu --ylabel OveriddenY --title OveriddenTitle --vmax 0.000135 --fontsize 10 --height 3.5 --cbarorient horizontal --output "${output_dir}irisheatmap"
 echo Iris one line
 python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::dashed:overiddenlabel --xlabel overiddenxlabel --title overiddentitle --itemwidth 4 --height 5 --width 10 --logy --grid --output "${output_dir}irisoneline"
 echo Iris many lines
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc":red snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::dashed:overiddenlabel2 --xlabel overiddenxlabel --ylabel overiddenylabel --itemwidth 5 --width 10 --logx --grid --xrange 0.00000000001: --yrange :50 --output "${output_dir}irismanylines"
+python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc":red snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::dashed:overiddenlabel2 --xlabel overiddenxlabel --ylabel overiddenylabel --itemwidth 5 --width 10 --logx --grid --xmin 0.00000000001 --ymax 50 --output "${output_dir}irismanylines"
 echo Iris Scatter 2D
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::^: --type scatter --title overiddentitle --fontsize 10 --width 7 --itemwidth 300 --xrange=-0.0005:0.0005 --output "${output_dir}irisscatter2d"
+python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::^: --type scatter --title overiddentitle --fontsize 10 --width 7 --itemwidth 300 --xmin=-0.0005 --xmax 0.0005 --output "${output_dir}irisscatter2d"
 echo Iris Scatter 3D
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc":::snowlabel --type scatter --cmap RdBu --fontsize 7 --cbarorient vertical --grid --yrange 0:90 --valrange 0: --cbarorient vertical --output "${output_dir}irisscatter3d"
+python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc":::snowlabel --type scatter --cmap RdBu --fontsize 7 --cbarorient vertical --grid --ymin 0 --ymax 90 --vmin 0 --cbarorient vertical --output "${output_dir}irisscatter3d"
 echo Iris Scatter Overlay
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc"::^:snowlabel --type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xrange 0:200:10 --cbarorient horizontal --yrange 0:90 --valrange 0: --cbarorient horizontal --output "${output_dir}irisscatteroverlay"
+python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc"::^:snowlabel --type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10 --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --output "${output_dir}irisscatteroverlay"
 echo Other Contour
-python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --cmap RdBu --ylabel overiddenylabel --title overiddentitle --valrange 0: --cbarorient vertical --grid --output "${output_dir}othercontour"
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --cmap RdBu --ylabel overiddenylabel --title overiddentitle --vmin 0 --cbarorient vertical --grid --output "${output_dir}othercontour"
 echo Other Contourf
-python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --xlabel overiddenxlabel --itemwidth 4 --fontsize 15 --height 10 --yrange 0:10000 --valrange 0::300 --cbarorient horizontal --grid --output "${output_dir}othercontourf"
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --xlabel overiddenxlabel --itemwidth 4 --fontsize 15 --height 10 --ymin 0 --ymax 10000 --vmin 0 --vstep 300 --cbarorient horizontal --grid --output "${output_dir}othercontourf"
 echo Other heatmap
-python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type heatmap --cmap RdBu --ylabel overiddenylabel --width 7 --yrange 0:5000 --nocolourbar --grid --output "${output_dir}otherheatmap"
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type heatmap --cmap RdBu --ylabel overiddenylabel --width 7 --ymin 0 --ymax 5000 --nocolourbar --grid --output "${output_dir}otherheatmap"
 echo Other one line
-python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20::dashed:overiddenlabel --type line --xlabel "overiddenx" --title "overiddentitle" --itemwidth 4 --fontsize 7 --height 7 --yrange 0.1:1 --logx --logy --output "${output_dir}otheroneline"
+python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20::dashed:overiddenlabel --type line --xlabel "overiddenx" --title "overiddentitle" --itemwidth 4 --fontsize 7 --height 7 --ymin 0.1 --ymax 1 --logx --logy --output "${output_dir}otheroneline"
 echo Other many lines
-python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20:green:dotted AOT_870:${source_dir}920801_091128_Agoufou.lev20::dashed AOT_1020:${source_dir}920801_091128_Agoufou.lev20:red --type line --ylabel overiddenylabel --itemwidth 2 --yrange 0.1:1 --logx --logy --output "${output_dir}othermanylines"
+python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20:green:dotted AOT_870:${source_dir}920801_091128_Agoufou.lev20::dashed AOT_1020:${source_dir}920801_091128_Agoufou.lev20:red --type line --ylabel overiddenylabel --itemwidth 2 --ymin 0.1 --ymax 1 --logx --logy --output "${output_dir}othermanylines"
 echo Other Scatter 2D
 python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20 --type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --itemwidth 2 --fontsize 15 --height 5 --width 6 --logy --grid --output "${output_dir}otherscatter2d"
 echo Other Scatter 3D
-python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type scatter --cmap RdBu --title overiddentitle --itemwidth 20 --valrange :175 --logy --output "${output_dir}otherscatter3d"
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type scatter --cmap RdBu --title overiddentitle --itemwidth 20 --vmax 175 --logy --output "${output_dir}otherscatter3d"
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}"
