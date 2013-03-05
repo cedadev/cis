@@ -32,7 +32,7 @@ class DefaultColocator(Colocator):
             except ValueError as e:
                 values[i] = constraint.fill_value
         new_data = LazyData(values, metadata)
-        new_data.missing_value = constraint.fill_value
+        new_data.metadata.missing_value = constraint.fill_value
         return [new_data]
 
 
@@ -139,6 +139,8 @@ class mean(Kernel):
             Colocation using the mean of any points left after a constraint.
         '''
         from numpy import mean
+        values = data.vals
+        if len(values) == 0: raise ValueError
         return mean(data.vals)
 
 

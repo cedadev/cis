@@ -468,17 +468,17 @@ class CisCol(AProduct):
                 utils.add_element_to_list_in_dict(var_data, var, var_dict[var])
 
         coords = CoordList()
-        coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0]), "X"))
-        coords.append(Coord(var_data["latitude"], get_metadata(var_data["latitude"][0]), "Y"))
+        coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0])))
+        coords.append(Coord(var_data["latitude"], get_metadata(var_data["latitude"][0])))
         coords.append(Coord(var_data["altitude"], get_metadata(var_data["altitude"][0])))
-        time_coord = Coord(var_data["time"], get_metadata(var_data["time"][0]), "T")
+        time_coord = Coord(var_data["time"], get_metadata(var_data["time"][0]), 'X')
         time_coord.convert_julian_to_datetime()
         coords.append(time_coord)
 
         if variable is None:
             return coords
         else:
-            return UngriddedData(var_data[var], get_metadata(var_data[var]), coords)
+            return UngriddedData(var_data[variable], get_metadata(var_data[variable][0]), coords)
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
@@ -684,7 +684,7 @@ class Aeronet(AProduct):
         coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),), units="degrees_east", range=(-180,180))))
         coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),), units="degrees_north", range=(-90,90))))
         coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters", range=(-90,90))))
-        coords.append(Coord(data["datetime"], Metadata(name="Date time", shape=(len(data),), units="DateTime Object"), "X"))
+        coords.append(Coord(data["datetime"], Metadata(name="Date time",standard_name='time', shape=(len(data),), units="DateTime Object"), "X"))
 
         return coords
 
