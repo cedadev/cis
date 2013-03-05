@@ -31,7 +31,7 @@ valid_xenida_variable = "mass_fraction_of_cloud_liquid_water_in_air"
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
-valid_cis_col_file = make_pathname("cis-col-short.nc")
+valid_cis_col_file = make_pathname("cis-col-Agoufou_seasonal_average.nc")
 
 valid_ascii_filename = make_pathname("my_dummy_points_with_values.txt")
 ascii_filename_with_no_values = make_pathname("my_dummy_points.txt")
