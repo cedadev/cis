@@ -110,7 +110,7 @@ class SepConstraint(Constraint):
             self.a_sep = a_sep
             self.checks.append(self.alt_constraint)
         if t_sep is not None:
-            from jasmin_cis.timeUtil import parse_datetimestr_delta_to_obj
+            from jasmin_cis.time_util import parse_datetimestr_delta_to_obj
             self.t_sep = parse_datetimestr_delta_to_obj(t_sep)
             self.checks.append(self.time_constraint)
 
