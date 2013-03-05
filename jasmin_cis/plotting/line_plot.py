@@ -7,7 +7,7 @@ class Line_Plot(Generic_Plot):
         '''
         Plots one or many line graphs
         '''
-        self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1)
+        self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
 
         self.mplkwargs.pop("vmax", None)
         self.mplkwargs.pop("vmin", None)
