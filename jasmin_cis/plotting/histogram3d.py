@@ -106,7 +106,12 @@ class Histogram_3D(Generic_Plot):
             ticks = MultipleLocator(step)
         cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
 
-        cbar.set_label("Frequency")
+        if self.plot_args["cbarlabel"] is None:
+            label = "Frequency"
+        else:
+            label = self.plot_args["cbarlabel"]
+
+        cbar.set_label(label)
 
 
 
