@@ -172,11 +172,8 @@ class Generic_Plot(object):
         def format_time(x, pos=None):
             return convert_num_to_datetime(x).strftime('%H:%M:%S')
 
-
-        from matplotlib.dates import AutoDateFormatter, AutoDateLocator
-        ax.xaxis.set_major_formatter(AutoDateFormatter(AutoDateLocator()))
-        #ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-        #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+        ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def set_font_size(self):
         '''
