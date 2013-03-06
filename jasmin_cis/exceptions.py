@@ -47,3 +47,5 @@ class ClassNotFoundError(CISError):
 class InvalidCommandLineOptionError(CISError):
     pass
 
+class NotEnoughDatagroupsSpecifiedError(CISError):
+    pass

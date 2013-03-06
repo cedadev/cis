@@ -8,28 +8,44 @@ class Histogram_3D(Generic_Plot):
         Requires two data items.
         The first data item is plotted on the x axis, and the second on the y axis
         '''
-        vmin = self.mplkwargs.pop("vmin")
-        vmax = self.mplkwargs.pop("vmax")
+        from numpy.ma import MaskedArray
+        from jasmin_cis.utils import apply_intersection_mask_to_two_arrays
+        from jasmin_cis.exceptions import NotEnoughDatagroupsSpecifiedError
+        if len(self.packed_data_items) == 2:
+            vmin = self.mplkwargs.pop("vmin")
+            vmax = self.mplkwargs.pop("vmax")
 
-        xbins = self.calculate_number_of_bins("x")
-        ybins = self.calculate_number_of_bins("y")
+            xbins = self.calculate_number_of_bins("x")
+            ybins = self.calculate_number_of_bins("y")
 
-        # All bins that have count less than cmin will not be displayed
-        cmin = self.plot_args["valrange"].get("vmin", None)
-        # All bins that has count more than cmax will not be displayed
-        cmax = self.plot_args["valrange"].get("vmax", None)
+            # All bins that have count less than cmin will not be displayed
+            cmin = self.plot_args["valrange"].get("vmin", None)
+            # All bins that have count more than cmax will not be displayed
+            cmax = self.plot_args["valrange"].get("vmax", None)
 
 
-        # Add y=x line
-        min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
-        max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
-        y_equals_x_array = [min_val, max_val]
-        self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
+            # Add y=x line
+            min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
+            max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
+            y_equals_x_array = [min_val, max_val]
+            self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
 
-        self.matplotlib.hist2d(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], bins = [xbins, ybins], cmin = cmin, cmax = cmax, *self.mplargs, **self.mplkwargs)
+            if isinstance(self.unpacked_data_items[0]["data"], MaskedArray) and isinstance(self.unpacked_data_items[1]["data"], MaskedArray):
+                first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
+                first_data_item = first_data_item.compressed()
+                second_data_item = second_data_item.compressed()
+            else:
+                first_data_item = self.unpacked_data_items[0]["data"]
+                second_data_item = self.unpacked_data_items[1]["data"]
 
-        self.mplkwargs["vmin"] = vmin
-        self.mplkwargs["vmax"] = vmax
+
+
+            self.matplotlib.hist2d(first_data_item, second_data_item, bins = [xbins, ybins], cmin = cmin, cmax = cmax, *self.mplargs, **self.mplkwargs)
+
+            self.mplkwargs["vmin"] = vmin
+            self.mplkwargs["vmax"] = vmax
+        else:
+            raise NotEnoughDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
 
     def calculate_number_of_bins(self, axis):
         '''
@@ -106,7 +122,12 @@ class Histogram_3D(Generic_Plot):
             ticks = MultipleLocator(step)
         cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
 
-        cbar.set_label("Frequency")
+        if self.plot_args["cbarlabel"] is None:
+            label = "Frequency"
+        else:
+            label = self.plot_args["cbarlabel"]
+
+        cbar.set_label(label)
 
 
 

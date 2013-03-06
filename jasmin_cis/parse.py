@@ -26,8 +26,11 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+", help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label, where the last three arguments are optional")
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
+
     parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
+    parser.add_argument("--cbarlabel", metavar = "Colour bar label", nargs = "?", help = "The label for the colour bar")
+
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
     parser.add_argument("--itemwidth", metavar = "Item width", nargs = "?", help = "The width of the item")   
     parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font")

@@ -7,11 +7,14 @@ class Scatter_Overlay(Generic_Plot):
         '''
         Plots a heatmap overlayed with one or more scatter plots
         '''
-
-        Heatmap(self.packed_data_items, self.plot_args, *self.mplargs, **self.mplkwargs)
-        scatter_plot_args = self.plot_args
-        scatter_plot_args["datagroups"] = self.plot_args["datagroups"][1:]
-        self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], self.plot_args, *self.mplargs, **self.mplkwargs)
+        from jasmin_cis.exceptions import NotEnoughDatagroupsSpecifiedError
+        if len(self.packed_data_items) > 1:
+            Heatmap(self.packed_data_items, self.plot_args, *self.mplargs, **self.mplkwargs)
+            scatter_plot_args = self.plot_args
+            scatter_plot_args["datagroups"] = self.plot_args["datagroups"][1:]
+            self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], scatter_plot_args, calculate_min_and_max_values = False, *self.mplargs, **self.mplkwargs)
+        else:
+            raise NotEnoughDatagroupsSpecifiedError("Scatter overlay requires two or more datagroups")
 
     def set_axis_label(self, axis, options):
         import jasmin_cis.exceptions as cisex

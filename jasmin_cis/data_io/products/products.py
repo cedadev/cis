@@ -383,7 +383,7 @@ class Caliop(AProduct):
         alt_metadata = Metadata()
         alt_metadata.standard_name = "Altitude"
         alt_metadata.shape = new_shape
-        alt_coord = Coord(alt_data,alt_metadata, "Y")
+        alt_coord = Coord(alt_data,alt_metadata)
 
         # latitude
         lat = sdata['Latitude']
@@ -391,7 +391,7 @@ class Caliop(AProduct):
         lat_data = utils.expand_1d_to_2d_array(lat_data[:,1],len_x,axis=1)
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_metadata.shape = new_shape
-        lat_coord = Coord(lat_data, lat_metadata)
+        lat_coord = Coord(lat_data, lat_metadata, 'Y')
 
         # longitude
         lon = sdata['Longitude']
@@ -399,7 +399,7 @@ class Caliop(AProduct):
         lon_data = utils.expand_1d_to_2d_array(lon_data[:,1],len_x,axis=1)
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_metadata.shape = new_shape
-        lon_coord = Coord(lon_data, lon_metadata)
+        lon_coord = Coord(lon_data, lon_metadata,'X')
 
         #profile time, x
         time = sdata['Profile_Time']
@@ -407,7 +407,7 @@ class Caliop(AProduct):
         time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
         time_metadata = hdf.read_metadata(time,"SD")
         time_metadata.shape = new_shape
-        time_coord = Coord(time_data, time_metadata, "X")
+        time_coord = Coord(time_data, time_metadata)
         time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
 
         # create the object containing all coordinates

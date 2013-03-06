@@ -21,8 +21,8 @@ valid_aerosol_cci_variable = "AOD550"
 valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc")
 valid_cloud_cci_variable = "stemp"
 
-valid_aeronet_filename = make_pathname("920801_091128_Agoufou.lev20")
-another_valid_aeronet_filename = make_pathname("920801_091128_Abracos_Hill.lev20")
+valid_aeronet_filename = make_pathname("920801_091128_Agoufou_small.lev20")
+another_valid_aeronet_filename = make_pathname("920801_091128_Abracos_Hill_small.lev20")
 valid_aeronet_variable = "AOT_440"
 
 valid_xenida_filename = make_pathname("xenida.pah9440.nc")

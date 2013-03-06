@@ -4,7 +4,7 @@ from mpl_toolkits.basemap import Basemap
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, plot_args, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values = True, *mplargs, **mplkwargs):
         '''
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -25,7 +25,7 @@ class Generic_Plot(object):
         if self.plot_args["valrange"] is None: self.plot_args["valrange"] = {}
         self.packed_data_items = packed_data_items
         self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
-        self.calculate_min_and_max_values()
+        if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
         self.matplotlib = plt
 
@@ -246,7 +246,12 @@ class Generic_Plot(object):
             cbar.formatter.set_powerlimits((-3,3))
             cbar.update_ticks()
 
-        cbar.set_label(self.format_units(self.packed_data_items[0].units))
+        if self.plot_args["cbarlabel"] is None:
+            label = self.format_units(self.packed_data_items[0].units)
+        else:
+            label = self.plot_args["cbarlabel"]
+
+        cbar.set_label(label)
 
     def contour_plot(self, filled):
         '''
