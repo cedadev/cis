@@ -30,8 +30,6 @@ def __get_missing_value(coord):
 
 
 def __create_variable(nc_file, data):
-    if data.units == "DateTime Object":
-        data.convert_datetime_to_julian()
     logging.info("Creating variable: " + data.name() + "("+index_name+")" + " " + types[str(data.data.dtype)])
     var = nc_file.createVariable(data.name(), types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
     var = __add_metadata(var, data)

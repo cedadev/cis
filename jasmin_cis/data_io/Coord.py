@@ -17,24 +17,6 @@ class Coord(LazyData):
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
-    def convert_datetime_to_num(self):
-        from jasmin_cis.time_util import convert_datetime_to_num_array
-        #if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a number")
-        self._data = convert_datetime_to_num_array(self.data)
-        self.units = "DateTime Number"
-
-    def convert_num_to_datetime(self):
-        from jasmin_cis.time_util import convert_num_to_datetime_array
-        #if self.units != "DateTime Number": raise ValueError("Time units must be DateTime Number for conversion to an Object")
-        self._data = convert_num_to_datetime_array(self.data)
-        self.units = "DateTime Object"
-
-    def convert_datetime_to_julian(self):
-        from jasmin_cis.time_util import convert_obj_to_julian_date_array
-        #if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a Julian Date")
-        self._data = convert_obj_to_julian_date_array(self.data)
-        self.units = "Julian Date, days elapsed since 12:00 January 1, 4713 BC"
-
     def convert_julian_to_datetime(self, calender='standard'):
         from jasmin_cis.time_util import convert_julian_date_to_obj_array
         #if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")

@@ -4,12 +4,10 @@
 CompareResultsAndClean()
 {
 # Compare the results of the test harness run and clean up.
-echo Output
-cat "$HARNESS_DIR/O$SUBJECT.dat"
 
-if [ -f "$HARNESS_DIR/O$SUBJECT.png" -a -f "$HARNESS_DIR/O$SUBJECT.png.ref" ]
+if [ -f "$TEST_DIR/O$SUBJECT.png" -a -f "$TEST_DIR/O$SUBJECT.png.ref" ]
 then
-  local DIFFERENCE=`diff -w -a "$HARNESS_DIR/O$SUBJECT.png" "$HARNESS_DIR/O$SUBJECT.png.ref"`
+  local DIFFERENCE=`diff -w -a "$TEST_DIR/O$SUBJECT.png" "$TEST_DIR/O$SUBJECT.png.ref"`
 
   if [ -n "$DIFFERENCE" ]
   then
@@ -17,7 +15,7 @@ then
      echo "------------"
      echo "Differences:"
      echo "------------"
-     diff -w -a "$HARNESS_DIR/O$SUBJECT.png" "$HARNESS_DIR/O$SUBJECT.png.ref"
+     diff -w -a "$TEST_DIR/O$SUBJECT.png" "$TEST_DIR/O$SUBJECT.png.ref"
      COMPARE_RESULTS_RETURN_VALUE=1
 
      echo "-----------------------------------------------------"

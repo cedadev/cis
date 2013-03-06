@@ -297,6 +297,8 @@ class Cloud_CCI(AProduct):
         coords.append(Coord(var_data['lat'], get_metadata(var_data['lat'][0]), 'Y'))
         coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0])))
         time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]), "X")
+
+        # TODO: Is this really julian?
         time_coord.convert_julian_to_datetime()
         coords.append(time_coord)
 
@@ -458,9 +460,9 @@ class CisCol(AProduct):
         coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0])))
         coords.append(Coord(var_data["latitude"], get_metadata(var_data["latitude"][0])))
         coords.append(Coord(var_data["altitude"], get_metadata(var_data["altitude"][0])))
-        time_coord = Coord(var_data["time"], get_metadata(var_data["time"][0]), 'X')
-        time_coord.convert_julian_to_datetime()
-        coords.append(time_coord)
+        # We don't need to convert this time coord as it should have been written in our
+        #  'standard' time
+        coords.append(Coord(var_data["time"], get_metadata(var_data["time"][0]), 'X'))
 
         if variable is None:
             return coords

@@ -40,8 +40,6 @@ do
     cat TEST_OUTPUT >> ../test_details.txt
     rm TEST_OUTPUT
 
-    cd ..
-
 done
 
 # Now summarise results of tests
