@@ -33,7 +33,7 @@ echo Other Contour
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --cmap RdBu --ylabel overiddenylabel --title overiddentitle --vmin 0 --cbarorient vertical --grid --output "${output_dir}othercontour"
 echo Other Contourf
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --xlabel overiddenxlabel --itemwidth 4 --fontsize 15 --height 10 --ymin 0 --ymax 10000 --vmin 0 --vstep 300 --cbarorient horizontal --grid --output "${output_dir}othercontourf"
-echo Other heatmap
+echo Other Heatmap
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type heatmap --cmap RdBu --ylabel overiddenylabel --width 7 --ymin 0 --ymax 5000 --nocolourbar --grid --output "${output_dir}otherheatmap"
 echo Other one line
 python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20::dashed:overiddenlabel --type line --xlabel "overiddenx" --title "overiddentitle" --itemwidth 4 --fontsize 7 --height 7 --ymin 0.1 --ymax 1 --logx --logy --output "${output_dir}otheroneline"
@@ -43,5 +43,10 @@ echo Other Scatter 2D
 python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20 --type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --itemwidth 2 --fontsize 15 --height 5 --width 6 --logy --grid --output "${output_dir}otherscatter2d"
 echo Other Scatter 3D
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type scatter --cmap RdBu --title overiddentitle --itemwidth 20 --vmax 175 --logy --output "${output_dir}otherscatter3d"
+echo Other Scatter Overlay
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf RVOD_ice_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf::s:overiddenlabel --type scatteroverlay --xlabel overiddenx --ylabel overiddeny --itemwidth 200 --fontsize 15 --height 10 --width 10 --xmin=-50 --xmax 50 --ymin 0 --ymax 15000 --vmin=-0.006 --vmax 0.003 --vstep 0.003 --cbarorient Vertical --grid --xaxis latitude --yaxis altitude --output "${output_dir}otherscatteroverlay"
+echo Other Comparative Scatter
+python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou_small.lev20:red:s AOT_870:${source_dir}920801_091128_Agoufou_small.lev20 --type comparativescatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --fontsize 7 --height 5 --width 5 --xmin 0 --xmax 1 --ymin 0 --ymax 0.5 --itemwidth 400 --grid --output "${output_dir}othercomparativescatter"
+
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
