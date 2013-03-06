@@ -47,6 +47,9 @@ echo Other Scatter Overlay
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf RVOD_ice_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf::s:overiddenlabel --type scatteroverlay --xlabel overiddenx --ylabel overiddeny --itemwidth 200 --fontsize 15 --height 10 --width 10 --xmin=-50 --xmax 50 --ymin 0 --ymax 15000 --vmin=-0.006 --vmax 0.003 --vstep 0.003 --cbarorient Vertical --grid --xaxis latitude --yaxis altitude --output "${output_dir}otherscatteroverlay"
 echo Other Comparative Scatter
 python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou_small.lev20:red:s AOT_870:${source_dir}920801_091128_Agoufou_small.lev20 --type comparativescatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --fontsize 7 --height 5 --width 5 --xmin 0 --xmax 1 --ymin 0 --ymax 0.5 --itemwidth 400 --grid --output "${output_dir}othercomparativescatter"
-
+echo Other Histogram 2D
+python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou_small.lev20::step --type histogram2d --xlabel overiddenx --fontsize 10 --height 10 --width 10 --xmin 0 --xmax 1.5 --xstep 0.1 --grid --output "${output_dir}otherhistogram2d"
+echo Other Histogram 3D
+python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou_small.lev20 AOT_870:${source_dir}920801_091128_Agoufou_small.lev20 --type histogram3d --xlabel overridenx --ylabel overiddeny --cbarlabel overiddencbarlabel --title overiddentitle --fontsize 7 --width 10 --xmin 0 --xmax 2 --xstep 0.1 --ymin 0 --ymax 1.5 --ystep 0.1 --vmin 60 --vmax 480 --vstep 30 --cbarorient Vertical --grid --output "${output_dir}otherhistogram3d"
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
