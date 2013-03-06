@@ -15,3 +15,19 @@ def can_get_info_on_a_variable_in_a_netcdf_file():
 @raises(CISError)
 def should_raise_error_when_file_is_not_netcdf():
     info(non_netcdf_file_with_netcdf_file_extension)
+
+@istest
+def can_get_info_on_an_hdf_file():
+    info(valid_cloudsat_RVOD_file)
+
+@istest
+def can_get_info_on_a_variable_in_an_hdf_file():
+    info(valid_cloudsat_RVOD_file, [valid_cloudsat_RVOD_variable])
+
+@istest
+def can_get_info_on_an_aeronet_file():
+    info(valid_aeronet_filename)
+
+@istest
+def can_get_info_on_a_variable_in_an_aeronet_file():
+    info(valid_aeronet_filename, [valid_aeronet_variable])
