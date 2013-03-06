@@ -38,6 +38,29 @@ def __error_occurred(e):
     sys.stderr.write(str(e) + "\n")
     exit(1)
 
+def __assign_variables_to_x_and_y_axis(main_arguments, data):
+    # overwrites which variable to used for the x and y axis
+    # ignore unknown variables
+    # TODO does not work for cube!!
+    from iris.cube import Cube
+    var_axis_dict = {}
+    if main_arguments['xaxis'] is not None:
+        var_axis_dict[main_arguments["xaxis"].lower()] = "X"
+        logging.info("Overriding data product default variable for x axis with: " + main_arguments.pop("xaxis"))
+
+    if main_arguments['yaxis'] is not None:
+        var_axis_dict[main_arguments["yaxis"].lower()] = "Y"
+        logging.info("Overriding data product default variable for y axis with: " + main_arguments.pop("yaxis"))
+
+    for data_item in data:
+        if not isinstance(data_item, Cube):
+            for coord in data_item.coords():
+                if var_axis_dict.has_key(coord.standard_name.lower()):
+                    coord.axis = var_axis_dict[coord.standard_name.lower()]
+                if coord.standard_name.lower() not in var_axis_dict.iterkeys() and \
+                        hasattr(coord, 'axis') and coord.axis in var_axis_dict.itervalues():
+                    coord.axis = ''
+
 def plot_cmd(main_arguments):
     '''
     Main routine for handling calls to the 'plot' command. 
@@ -67,24 +90,7 @@ def plot_cmd(main_arguments):
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
-    # overwrites which variable to used for the x and y axis
-    # ignore unknown variables
-    # TODO does not work for cube!!
-    var_axis_dict = {}
-    if main_arguments['xaxis'] is not None:
-        var_axis_dict[main_arguments["xaxis"].lower()] = "X"
-        logging.info("Overriding data product default variable for x axis with: " + main_arguments.pop("xaxis"))
-    if main_arguments['yaxis'] is not None:
-        var_axis_dict[main_arguments["yaxis"].lower()] = "Y"
-        logging.info("Overriding data product default variable for y axis with: " + main_arguments.pop("yaxis"))
-    for d in data:
-        for coord in d.coords():
-            if var_axis_dict.has_key(coord.name().lower()):
-                coord.axis = var_axis_dict[coord.name().lower()]
-            if coord.name().lower() not in var_axis_dict.iterkeys() and \
-                            hasattr(coord, 'axis') and coord.axis in var_axis_dict.itervalues():
-                coord.axis = ''
-
+    __assign_variables_to_x_and_y_axis(main_arguments, data)
 
     try:
         Plotter(data, plot_type, output, **main_arguments)
