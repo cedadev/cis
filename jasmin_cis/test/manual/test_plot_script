@@ -8,21 +8,27 @@ if [ -d $output_dir ]; then
 fi
 mkdir -p $output_dir
 echo Iris Contour
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type contour --cmap RdBu --xlabel "Overidden X Label" --title "Overidded Title" --height 5 --width 5 --xmin 15 --xmax 45 --xstep 20 --cbarorient vertical --fontsize 10 --output "${output_dir}iriscontour"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type contour --cmap RdBu --xlabel "Overidden X Label" --title "Overidded Title" --height 5 --width 5 --xmin 15 --xmax 45 --xstep 20 --cbarorient vertical --fontsize 10 --output "${output_dir}iriscontour"
 echo Iris Contourf
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type contourf --ylabel "Overidden Y Label" --height 5 --width 10 --ymin 15 --ymax 45 --ystep 10 --nocolourbar --output "${output_dir}iriscontourf"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type contourf --ylabel "Overidden Y Label" --height 5 --width 10 --ymin 15 --ymax 45 --ystep 10 --nocolourbar --output "${output_dir}iriscontourf"
 echo Iris Heatmap
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" --type heatmap --cmap RdBu --ylabel OveriddenY --title OveriddenTitle --vmax 0.000135 --fontsize 10 --height 3.5 --cbarorient horizontal --output "${output_dir}irisheatmap"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type heatmap --cmap RdBu --ylabel OveriddenY --title OveriddenTitle --vmax 0.000135 --fontsize 10 --height 3.5 --cbarorient horizontal --output "${output_dir}irisheatmap"
 echo Iris one line
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::dashed:overiddenlabel --xlabel overiddenxlabel --title overiddentitle --itemwidth 4 --height 5 --width 10 --logy --grid --output "${output_dir}irisoneline"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc::dashed:overiddenlabel --xlabel overiddenxlabel --title overiddentitle --itemwidth 4 --height 5 --width 10 --logy --grid --output "${output_dir}irisoneline"
 echo Iris many lines
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc":red snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::dashed:overiddenlabel2 --xlabel overiddenxlabel --ylabel overiddenylabel --itemwidth 5 --width 10 --logx --grid --xmin 0.00000000001 --ymax 50 --output "${output_dir}irismanylines"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc:red snow:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc::dashed:overiddenlabel2 --xlabel overiddenxlabel --ylabel overiddenylabel --itemwidth 5 --width 10 --logx --grid --xmin 0.00000000001 --ymax 50 --output "${output_dir}irismanylines"
 echo Iris Scatter 2D
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc"::^: --type scatter --title overiddentitle --fontsize 10 --width 7 --itemwidth 300 --xmin=-0.0005 --xmax 0.0005 --output "${output_dir}irisscatter2d"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc::^: --type scatter --title overiddentitle --fontsize 10 --width 7 --itemwidth 300 --xmin=-0.0005 --xmax 0.0005 --output "${output_dir}irisscatter2d"
 echo Iris Scatter 3D
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc":::snowlabel --type scatter --cmap RdBu --fontsize 7 --cbarorient vertical --grid --ymin 0 --ymax 90 --vmin 0 --cbarorient vertical --output "${output_dir}irisscatter3d"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc snow:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc:::snowlabel --type scatter --cmap RdBu --fontsize 7 --cbarorient vertical --grid --ymin 0 --ymax 90 --vmin 0 --cbarorient vertical --output "${output_dir}irisscatter3d"
 echo Iris Scatter Overlay
-python ./cis.py plot rain:"${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc" snow:"/home/shared/NetCDF Files/xglnwa.pm.k8dec-k9nov.col.tm.nc"::^:snowlabel --type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10 --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --output "${output_dir}irisscatteroverlay"
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc snow:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc::^:snowlabel --type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10 --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --output "${output_dir}irisscatteroverlay"
+echo Iris Comparative Scatter
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc:green:^ snow:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type comparativescatter --itemwidth 400 --logx --logy --output "${output_dir}iriscomparativescatter"
+echo Iris Histogram 2D
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc:red:step:overridenlabel snow:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc:green:step --type histogram2d --xmin=-50 --xmax 50 --xstep 10 --ymin 1 --logy --output "${output_dir}irishistogram2d"
+echo Iris Histogram 3D
+python ./cis.py plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc snow:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc --type histogram3d --cmap RdBu --ylabel overiddeny --title overiddentitle --xmin=-50 --xmax 40 --ystep 10 --vmin 3 --vstep 1 --output "${output_dir}irishistogram3d"
 echo Other Contour
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type contour --cmap RdBu --ylabel overiddenylabel --title overiddentitle --vmin 0 --cbarorient vertical --grid --output "${output_dir}othercontour"
 echo Other Contourf
@@ -38,4 +44,4 @@ python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20 --type sca
 echo Other Scatter 3D
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type scatter --cmap RdBu --title overiddentitle --itemwidth 20 --vmax 175 --logy --output "${output_dir}otherscatter3d"
 end_time="$(($(date +%s)-start_time))"
-echo "Time taken: ${end_time}"
+echo "Time taken: ${end_time}s"
