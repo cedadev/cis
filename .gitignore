@@ -7,9 +7,7 @@
 .pydevproject
 /.idea
 *.log
-*.png
 *.pyc
-*.png
 doc/api/
 build/
 
