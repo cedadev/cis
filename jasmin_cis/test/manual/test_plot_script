@@ -42,7 +42,7 @@ python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20:green:dott
 echo Other Scatter 2D
 python ./cis.py plot AOT_440:${source_dir}920801_091128_Agoufou.lev20 --type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --itemwidth 2 --fontsize 15 --height 5 --width 6 --logy --grid --output "${output_dir}otherscatter2d"
 echo Other Scatter 3D
-python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type scatter --cmap RdBu --title overiddentitle --itemwidth 20 --vmax 175 --logy  --xaxis latitude --yaxis altitude --output "${output_dir}otherscatter3d"
+python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type scatter --cmap RdBu --title overiddentitle --itemwidth 20 --vmax 175 --logy --xaxis latitude --yaxis altitude --output "${output_dir}otherscatter3d"
 echo Other Scatter Overlay
 python ./cis.py plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf RVOD_ice_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf::s:overiddenlabel --type scatteroverlay --xlabel overiddenx --ylabel overiddeny --itemwidth 200 --fontsize 15 --height 10 --width 10 --xmin=-50 --xmax 50 --ymin 0 --ymax 15000 --vmin=-0.006 --vmax 0.003 --vstep 0.003 --cbarorient Vertical --grid --xaxis latitude --yaxis altitude --output "${output_dir}otherscatteroverlay"
 echo Other Comparative Scatter
