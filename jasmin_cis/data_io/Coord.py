@@ -51,6 +51,19 @@ class Coord(LazyData):
         self._data = convert_time_since_to_datetime(self.data, units)
         self.units = "DateTime Object"
 
+    def convert_datetime_to_standard_time(self):
+        from jasmin_cis.time_util import convert_obj_to_standard_date_array, cis_standard_time_unit
+        self._data = convert_obj_to_standard_date_array(self.data)
+        self.units = str(cis_standard_time_unit)
+
+    # go through the above methods looking for usages, rename them the to_datetime methods, to_standard_time
+    # and add a line to each converting the datetime objects to standard time. I think it's rare
+    # that you can skip this step as even if they are both of the form time since... there's no
+    # guarantee they are on the same calender...
+    # Then write a standard time formatter for the plot
+    # and a time and delta parser for the command line
+    # rationalise the methods both here and in time_util as there are a lot of them,,,
+    # add a calander to time metadata...
 
 class CoordList(list):
     """All the functionality of a standard `list` with added "Coord" context."""

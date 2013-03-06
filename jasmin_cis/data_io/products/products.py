@@ -651,8 +651,12 @@ class Xenida(NetCDF_CF_Gridded):
 
     def create_data_object(self, filenames, variable):
         from iris.aux_factory import HybridHeightFactory
+        from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
+
         cube = super(Xenida, self).create_data_object(filenames, variable)
         cube.add_aux_factory(HybridHeightFactory(cube.coords()[5]))
+        cube = convert_cube_time_coord_to_standard_time(cube)
+
         return cube
 
 class Aeronet(AProduct):

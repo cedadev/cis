@@ -2,6 +2,9 @@
 Utilities for converting time units
 """
 import numpy as np
+from iris.unit import Unit
+
+cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00',calendar='gregorian')
 
 def parse_datetimestr_to_obj(s):
     import dateutil.parser as du
@@ -28,10 +31,10 @@ def parse_datetimestr_delta_to_obj(s):
 
         val = int(token.replace('','')[:-1])
         if token[-1:] == "y":
-            days += val*365
+            days += val*365.2425
             continue
         elif token[-1:] == "m":
-            days += val*30
+            days += val*365.2425/12.0
             continue
         elif token[-1:] == "d":
             days += val
@@ -48,7 +51,9 @@ def parse_datetimestr_delta_to_obj(s):
         else:
             raise ValueError("unvalid time delta format. Must be '1y2m3d4H5M6S'")
 
-    return timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds)
+    td = timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds)
+
+    return td.days
 
 
 def calculate_mid_time(t1, t2):
@@ -106,6 +111,10 @@ def convert_obj_to_julian_date_array(time_array, calander='standard'):
     return convert_numpy_array(time_array, 'float64', date2julian_day, calander)
 
 
+def convert_obj_to_standard_date_array(time_array):
+    return convert_numpy_array(time_array, 'float64', cis_standard_time_unit.date2num)
+
+
 def convert_datetime_to_num(dt):
     from iris.unit import encode_time
     return encode_time(*dt.timetuple()[0:6])
@@ -151,3 +160,26 @@ def convert_numpy_array(array, new_type, operation, *args, **kwargs):
     else:
         new_array = convert_array_type(array, new_type, operation, *args, **kwargs)
     return new_array
+
+
+def convert_cube_time_coord_to_standard_time(cube):
+    # Get the current time coordinate and it's data dimension
+    t_coord = cube.coord(standard_name='time')
+    data_dim = cube.coord_dims(t_coord)
+
+    # And remove it from the cube
+    cube.remove_coord(t_coord)
+
+    # Convert the raw time numbers to our 'standard' time
+    new_datetimes = convert_numpy_array(t_coord.points,'O',t_coord.units.num2date)
+    new_datetime_nums = convert_obj_to_standard_date_array(new_datetimes)
+
+    # Create a new time coordinate by copying the old one, but using our new points and units
+    new_time_coord = t_coord
+    new_time_coord.points = new_datetime_nums
+    new_time_coord.units = cis_standard_time_unit
+
+    # And add the new coordinate back into the cube
+    cube.add_dim_coord(new_time_coord, data_dim)
+
+    return cube

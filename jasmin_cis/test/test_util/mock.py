@@ -64,15 +64,18 @@ def make_square_5x3_2d_cube_with_time():
     from iris.cube import Cube
     from iris.coords import DimCoord
     import datetime
+    from jasmin_cis.time_util import convert_datetime_to_num_array
 
     t0 = datetime.datetime(1984,8,27)
-    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(15)])
+    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(7)])
 
-    time = DimCoord(times, standard_name='time')
+    time_nums = convert_datetime_to_num_array(times)
+
+    time = DimCoord(time_nums, standard_name='time')
     latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(15)+1.0,(5,3))
-    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)])
 
     return cube
 
