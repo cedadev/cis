@@ -2,7 +2,6 @@
 Utilities for converting time units
 """
 import numpy as np
-from dateutil.relativedelta import *
 
 def parse_datetimestr_to_obj(s):
     import dateutil.parser as du
@@ -54,10 +53,12 @@ def parse_datetimestr_delta_to_obj(s):
 
 def calculate_mid_time(t1, t2):
     import math
+    from dateutil.relativedelta import relativedelta
     delta = relativedelta(t2,t1)
     total_seconds = delta.seconds + delta.minutes * 60 + delta.hours * 3600 + delta.days * 86400 + delta.months * 2592000 + delta.years * 31536000
     half = relativedelta(seconds=int(math.ceil(total_seconds / 2.0)))
     return t1 + half
+
 
 def convert_time_since_to_datetime(time_array, units):
     from netcdftime import _dateparse
