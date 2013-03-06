@@ -6,16 +6,16 @@ from iris.unit import Unit
 
 cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00',calendar='gregorian')
 
-def parse_datetimestr_to_obj(s):
+def parse_datetimestr_to_std_time(s):
     import dateutil.parser as du
-    return du.parse(s)
+    return cis_standard_time_unit.date2num(du.parse(s))
 
 
-def parse_datetimestr_to_obj_array(string_time_array):
-    return convert_numpy_array(string_time_array, 'O', parse_datetimestr_to_obj)
+def parse_datetimestr_to_std_time_array(string_time_array):
+    return convert_numpy_array(string_time_array, 'float64', parse_datetimestr_to_std_time)
 
 
-def parse_datetimestr_delta_to_obj(s):
+def parse_datetimestr_delta_to_float_days(s):
     """
     parsing "1y2m3d4H5M6S" into a time delta represented as a relativedelta object
     @param s: string to be parsed
@@ -65,74 +65,47 @@ def calculate_mid_time(t1, t2):
     return t1 + half
 
 
-def convert_time_since_to_datetime(time_array, units):
+def convert_time_since_to_std_time(time_array, units):
     from netcdftime import _dateparse
     import datetime
     units, utc_offset, dt = _dateparse(units)
     dt = datetime.datetime(*dt.timetuple()[0:6])
     if units == 'days':
-        new_array = convert_numpy_array(time_array, 'O', convert_days_since_to_obj, dt)
+        new_array = convert_numpy_array(time_array, 'float64', convert_days_since_to_std_time, dt)
     elif units == 'secs':
-        new_array = convert_numpy_array(time_array, 'O', convert_sec_since_to_obj, dt)
+        new_array = convert_numpy_array(time_array, 'float64', convert_sec_since_to_std_time, dt)
     return new_array
 
 
-def convert_tai_to_mpl_array(tai_time_array, ref):
-    intermediate_array = convert_numpy_array(tai_time_array, 'O', convert_sec_since_to_obj, ref)
-    return convert_numpy_array(intermediate_array, 'int64', convert_datetime_to_num)
+def convert_sec_since_to_std_time_array(tai_time_array, ref):
+    return convert_numpy_array(tai_time_array, 'float64', convert_sec_since_to_std_time, ref)
 
 
-def convert_dt_to_mpl(dt):
-    import matplotlib.dates as dates
-    return dates.date2num(dt)
-
-
-def convert_sec_since_to_obj_array(tai_time_array, ref):
-    return convert_numpy_array(tai_time_array, 'O', convert_sec_since_to_obj, ref)
-
-
-def convert_sec_since_to_obj(seconds, ref):
+def convert_sec_since_to_std_time(seconds, ref):
     from datetime import timedelta
-    return timedelta(seconds=int(seconds)) + ref
+    return cis_standard_time_unit.date2num(timedelta(seconds=int(seconds)) + ref)
 
 
-def convert_days_since_to_obj(days, ref):
+def convert_days_since_to_std_time(days, ref):
     from datetime import timedelta
-    return timedelta(days=float(days)) + ref
+    return cis_standard_time_unit.date2num(timedelta(days=float(days)) + ref)
 
 
-def convert_julian_date_to_obj_array(julian_time_array, calender='standard'):
+def convert_std_time_to_datetime(std_time):
+    return cis_standard_time_unit.num2date(std_time)
+
+
+def convert_julian_date_to_std_time_array(julian_time_array, calender='standard'):
+    return convert_numpy_array(julian_time_array, 'float64', convert_julian_date_to_std_time, calender)
+
+
+def convert_julian_date_to_std_time(julian_date, calender='standard'):
     from iris.unit import julian_day2date
-    return convert_numpy_array(julian_time_array, 'O', julian_day2date, calender)
-
-
-def convert_obj_to_julian_date_array(time_array, calander='standard'):
-    from iris.unit import date2julian_day
-    return convert_numpy_array(time_array, 'float64', date2julian_day, calander)
+    return cis_standard_time_unit.date2num(julian_day2date(julian_date, calender))
 
 
 def convert_obj_to_standard_date_array(time_array):
     return convert_numpy_array(time_array, 'float64', cis_standard_time_unit.date2num)
-
-
-def convert_datetime_to_num(dt):
-    from iris.unit import encode_time
-    return encode_time(*dt.timetuple()[0:6])
-
-
-def convert_num_to_datetime(time_number):
-    from iris.unit import decode_time
-    from datetime import datetime
-    dt_tuple = decode_time(time_number)
-    return datetime(dt_tuple[0], dt_tuple[1], dt_tuple[2], dt_tuple[3], dt_tuple[4], int(dt_tuple[5]))
-
-
-def convert_datetime_to_num_array(time_array):
-    return convert_numpy_array(time_array, 'int64',convert_datetime_to_num)
-
-
-def convert_num_to_datetime_array(num_array):
-    return convert_numpy_array(num_array, 'O', convert_num_to_datetime)
 
 
 def convert_masked_array_type(masked_array, new_type, operation, *args, **kwargs):

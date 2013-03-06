@@ -27,6 +27,7 @@ then
      echo "TEST PASSED."
      echo "------------"
      COMPARE_RESULTS_RETURN_VALUE=0
+     rm "$TEST_DIR/O$SUBJECT.png"
   fi
 else
    COMPARE_RESULTS_RETURN_VALUE=2

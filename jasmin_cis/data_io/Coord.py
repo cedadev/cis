@@ -17,26 +17,30 @@ class Coord(LazyData):
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
-    def convert_julian_to_datetime(self, calender='standard'):
-        from jasmin_cis.time_util import convert_julian_date_to_obj_array
+    def convert_julian_to_std_time(self, calender='standard'):
+        from jasmin_cis.time_util import convert_julian_date_to_std_time_array, cis_standard_time_unit
         #if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")
-        self._data = convert_julian_date_to_obj_array(self.data, calender)
-        self.units = "DateTime Object"
+        self._data = convert_julian_date_to_std_time_array(self.data, calender)
+        self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
 
-    def convert_TAI_time_to_datetime(self, ref):
-        from jasmin_cis.time_util import convert_sec_since_to_obj_array
-        self._data = convert_sec_since_to_obj_array(self.data, ref)
-        self.units = "DateTime Object"
+    def convert_TAI_time_to_std_time(self, ref):
+        from jasmin_cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
+        self._data = convert_sec_since_to_std_time_array(self.data, ref)
+        self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
 
-    def convert_time_since_to_datetime(self, units):
-        from jasmin_cis.time_util import convert_time_since_to_datetime
-        self._data = convert_time_since_to_datetime(self.data, units)
-        self.units = "DateTime Object"
+    def convert_time_since_to_std_time(self, units):
+        from jasmin_cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit
+        self._data = convert_time_since_to_std_time(self.data, units)
+        self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
 
     def convert_datetime_to_standard_time(self):
         from jasmin_cis.time_util import convert_obj_to_standard_date_array, cis_standard_time_unit
         self._data = convert_obj_to_standard_date_array(self.data)
         self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
 
     # go through the above methods looking for usages, rename them the to_datetime methods, to_standard_time
     # and add a line to each converting the datetime objects to standard time. I think it's rare

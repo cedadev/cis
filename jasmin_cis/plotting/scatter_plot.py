@@ -22,14 +22,7 @@ class Scatter_Plot(Generic_Plot):
                 else:
                     colour_scheme = "b" # Default color scheme used by matplotlib
 
-            from datetime import datetime
-            from jasmin_cis.time_util import convert_datetime_to_num_array
-            #units = datetimeobject TODO  self.packed_data_items[i].coords(axis="x").units == "DateTime Object":#
-            if isinstance(unpacked_data_item["x"].flatten()[0], datetime):
-                x_coords = convert_datetime_to_num_array(unpacked_data_item["x"])
-                #overrite x_coords and set boolean instead to be used to decide whether to call set x axis as time method below
-            else:
-                x_coords = unpacked_data_item["x"]
+            x_coords = unpacked_data_item["x"]
 
             if unpacked_data_item.get("y", None) is not None:
                 #3D
@@ -43,8 +36,6 @@ class Scatter_Plot(Generic_Plot):
             self.mplkwargs.pop("latlon", None)
             self.plots.append(self.plot_method.scatter(x_coords, y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
-            if isinstance(unpacked_data_item["x"].flatten()[0], datetime):
-                self.set_x_axis_as_time()
 
     def calculate_axis_limits(self, axis):
         valrange = {}
@@ -59,6 +50,7 @@ class Scatter_Plot(Generic_Plot):
         return valrange
 
     def format_plot(self):
+        self.format_time_axis()
         if self.scatter_type == "3D":
             self.format_3d_plot()
         elif self.scatter_type == "2D":

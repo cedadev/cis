@@ -19,6 +19,7 @@ def __add_metadata(var, data):
     if data.long_name: var.long_name = data.long_name
     if data.metadata.range : var.valid_range = data.metadata.range
     if data.metadata.missing_value : var.missing_value = data.metadata.missing_value
+    if data.metadata.calendar : var.calendar = data.metadata.calendar
     return var
 
 
