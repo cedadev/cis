@@ -16,12 +16,15 @@ def get_hdf_SD_file_variables(filename):
     '''
     from pyhdf import SD
 
+    variables = None
+
     try:
-        variables = None
         # Open the file.
         datafile = SD.SD(filename)
         # List of required variable names.
         variables = datafile.datasets()
+        # Close the file
+        datafile.end()
     except:
         logging.error("Error while reading SD data")
 
