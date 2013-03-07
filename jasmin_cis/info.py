@@ -38,6 +38,7 @@ def info(filename, user_variables=None, data_type=None):
     from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
     from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
     from jasmin_cis.exceptions import InvalidFileExtensionError, CISError
+    from os.path import basename
 
     if filename.endswith(".nc"):
         try:
@@ -46,6 +47,8 @@ def info(filename, user_variables=None, data_type=None):
         except RuntimeError as e:
             raise CISError(e)
     elif filename.endswith(".hdf"):
+        if basename(filename).startswith("CAL_LID") and data_type == None:
+            data_type = "SD"
         sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
 
         if sd_vars is not None:
