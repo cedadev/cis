@@ -75,6 +75,10 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 
+def get_calipso_data(sds):
+    return get_data(sds, calipso_scaling=True)
+
+
 def get_data(sds, calipso_scaling=False):
     """
     Reads raw data from an SD instance. Automatically applies the

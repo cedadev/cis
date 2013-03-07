@@ -58,11 +58,12 @@ class LazyData(object):
         Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
 
-    def __init__(self, data, metadata):
+    def __init__(self, data, metadata, data_retrieval_callback=None):
         '''
         @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
                         This can be a list of data handlers, or a single data handler
         @param metadata: Any associated metadata
+        @param data_retrieval_callback: An, optional, method for retrieving data when needed
         '''
         from jasmin_cis.exceptions import InvalidDataTypeError
         from iris.cube import CubeMetadata
@@ -86,8 +87,12 @@ class LazyData(object):
             else:
                 self._data_manager = [ data ]
 
-            # Check that we recognise the data manager and that they are all the same
-            if self._data_manager[0].__class__ in static_mappings and all([d.__class__ == self._data_manager[0].__class__ for d in self._data_manager ]) :
+            if data_retrieval_callback is not None:
+                # Use the given data retrieval method
+                self.retrieve_raw_data = data_retrieval_callback
+            elif self._data_manager[0].__class__ in static_mappings and all([d.__class__ == self._data_manager[0].__class__ for d in self._data_manager ]) :
+                # Check that we recognise the data manager and that they are all the same
+
                 # Set the retrieve_raw_data method to it's mapped function name
                 self.retrieve_raw_data = static_mappings[self._data_manager[0].__class__]
             else:
@@ -179,18 +184,19 @@ class UngriddedData(LazyData):
         Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
 
-    def __init__(self, data, metadata, coords):
+    def __init__(self, data, metadata, coords, data_retrieval_callback=None):
         '''
         Constructor
 
         @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
                         This can be a list of data handlers, or a single data handler
-        @param coords: A list of the associated Coord objects
         @param metadata: Any associated metadata
+        @param coords: A list of the associated Coord objects
+        @param data_retrieval_callback: A method for retrieving data when needed
         '''
         from jasmin_cis.data_io.Coord import CoordList, Coord
 
-        super(UngriddedData, self).__init__(data, metadata)
+        super(UngriddedData, self).__init__(data, metadata, data_retrieval_callback)
 
         if isinstance(coords, list):
             self._coords = CoordList(coords)
