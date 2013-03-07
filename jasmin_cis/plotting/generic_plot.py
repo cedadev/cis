@@ -201,19 +201,11 @@ class Generic_Plot(object):
         '''
         @return: A boolean saying if the first packed data item contains lat and lon coordinates
         '''
-        axes = []
-        for coord in self.packed_data_items[0].coords(axis="X"):
-            axes.append(coord.name())
-        for coord in self.packed_data_items[0].coords(axis="Y"):
-            axes.append(coord.name())
+        axes = {}
+        axes["X"] = self.packed_data_items[0].coord(axis="X")
+        axes["Y"] = self.packed_data_items[0].coord(axis="Y")
 
-        lat = False
-        lon = False
-        for axis in axes:
-            if axis.lower().startswith("lat"): lat = True
-            if axis.lower().startswith("lon"): lon = True
-
-        if lat and lon:
+        if axes["X"].name().lower().startswith("lon") and axes["Y"].name().lower().startswith("lat"):
             return True
         else:
             return False
