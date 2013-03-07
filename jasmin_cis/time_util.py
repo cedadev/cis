@@ -32,10 +32,10 @@ def parse_datetimestr_delta_to_float_days(s):
 
         val = int(token.replace('','')[:-1])
         if token[-1:] == "y":
-            days += val*365
+            days += val*365.2425
             continue
         elif token[-1:] == "m":
-            days += val*30
+            days += val*365.2425/12.0
             continue
         elif token[-1:] == "d":
             days += val
@@ -54,10 +54,7 @@ def parse_datetimestr_delta_to_float_days(s):
 
     td = timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds)
 
-    print td.total_seconds()*sec
-    print td.days
-
-    return td.total_seconds()
+    return td.total_seconds()*sec
 
 
 def calculate_mid_time(t1, t2):
