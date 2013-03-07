@@ -178,6 +178,7 @@ class Generic_Plot(object):
             return convert_std_time_to_datetime(x).strftime('%Y-%m-%d')
 
         def format_datetime(x, pos=None):
+            # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
             return convert_std_time_to_datetime(x).isoformat(' ')
 
         def format_time(x, pos=None):
