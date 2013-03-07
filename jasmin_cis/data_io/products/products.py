@@ -1,4 +1,3 @@
-import datetime as dt
 import logging
 
 from jasmin_cis.data_io.Coord import Coord, CoordList
@@ -13,20 +12,24 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         return [r'.*2B.CWC.RVOD.*\.hdf']
 
     def _generate_time_array(self, vdata):
-
-        import numpy as np
         import jasmin_cis.data_io.hdf_vd as hdf_vd
+        import datetime as dt
+        from jasmin_cis.time_util import convert_sec_since_to_std_time_array
+
+        Cloudsat_start_time = dt.datetime(1993,1,1,0,0,0)
 
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
             time = hdf_vd.get_data(i)
             start = hdf_vd.get_data(j)
             time += start
+            # Do the conversion to standard time here before we expand the time array...
+            time = convert_sec_since_to_std_time_array(time, Cloudsat_start_time)
             arrays.append(time)
         return utils.concatenate(arrays)
 
     def create_coords(self, filenames):
-
+        from jasmin_cis.time_util import cis_standard_time_unit
         # list of coordinate variables we are interested in
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
@@ -60,9 +63,10 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
         time_metadata = hdf.read_metadata(vdata['Profile_time'],"VD")
         time_metadata.shape = time_data.shape
-        time_metadata.units = "DateTime Object"
+        time_metadata.units = str(cis_standard_time_unit)
+        time_metadata.calendar = cis_standard_time_unit.calendar
         time_coord = Coord(time_data,time_metadata,"T")
-        time_coord.convert_TAI_time_to_std_time(dt.datetime(1993,1,1,0,0,0))
+
 
         # create object containing list of coordinates
         coords = CoordList()
@@ -234,6 +238,7 @@ class MODIS_L2(AProduct):
         return output
 
     def create_coords(self, filenames, variable=None):
+        import datetime as dt
 
         variables = [ 'Latitude','Longitude','Scan_Start_Time']
         logging.info("Listing coordinates: " + str(variables))
@@ -358,6 +363,7 @@ class Caliop(AProduct):
         from jasmin_cis.data_io.hdf_vd import get_data
         from jasmin_cis.data_io.hdf_vd import VDS
         from jasmin_cis.data_io import hdf_sd
+        import datetime as dt
 
         variables = [ 'Latitude','Longitude', "Profile_Time"]
         logging.info("Listing coordinates: " + str(variables))
@@ -677,7 +683,9 @@ class Aeronet(AProduct):
         coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),), units="degrees_east", range=(-180,180))))
         coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),), units="degrees_north", range=(-90,90))))
         coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters", range=(-90,90))))
-        coords.append(Coord(data["datetime"], Metadata(name="Date time",standard_name='time', shape=(len(data),), units="DateTime Object"), "X"))
+        time_coord = Coord(data["datetime"], Metadata(name="Date time",standard_name='time', shape=(len(data),), units="DateTime Object"), "X")
+        time_coord.convert_datetime_to_standard_time()
+        coords.append(time_coord)
 
         return coords
 

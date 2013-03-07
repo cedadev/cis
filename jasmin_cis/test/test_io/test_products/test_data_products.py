@@ -182,6 +182,7 @@ class TestASCII(ProductTests):
     @istest
     def test_create_data_object_with_valid_datetime(self):
         import datetime
+        from jasmin_cis.time_util import convert_datetime_to_std_time
         data = self.product().create_data_object([self.filename], True)
-        assert(data.coord('time').data[3] == datetime.datetime(2012,8,25,15,32,03))
-        assert(data.coord('time').data[4] == datetime.datetime(2012,8,26))
+        assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012,8,25,15,32,03)))
+        assert(data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012,8,26)))

@@ -25,16 +25,17 @@ def parse_datetimestr_delta_to_float_days(s):
     from datetime import timedelta
 
     tokens = re.findall('[0-9]*[ymdHMS]',s)
-    
+    sec = 1.0/(24.0*60.0*60.0) # Conversion from sec to day
+
     days = hours = minutes = seconds = 0
     for token in tokens:
 
         val = int(token.replace('','')[:-1])
         if token[-1:] == "y":
-            days += val*365.2425
+            days += val*365
             continue
         elif token[-1:] == "m":
-            days += val*365.2425/12.0
+            days += val*30
             continue
         elif token[-1:] == "d":
             days += val
@@ -49,20 +50,22 @@ def parse_datetimestr_delta_to_float_days(s):
             seconds = val
             continue
         else:
-            raise ValueError("unvalid time delta format. Must be '1y2m3d4H5M6S'")
+            raise ValueError("Invalid time delta format. Must be '1y2m3d4H5M6S'")
 
     td = timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds)
 
-    return td.days
+    print td.total_seconds()*sec
+    print td.days
+
+    return td.total_seconds()
 
 
 def calculate_mid_time(t1, t2):
     import math
-    from dateutil.relativedelta import relativedelta
-    delta = relativedelta(t2,t1)
-    total_seconds = delta.seconds + delta.minutes * 60 + delta.hours * 3600 + delta.days * 86400 + delta.months * 2592000 + delta.years * 31536000
-    half = relativedelta(seconds=int(math.ceil(total_seconds / 2.0)))
-    return t1 + half
+    from datetime import timedelta
+    delta = t2 - t1
+    half = timedelta(seconds=int(math.ceil(delta.total_seconds() / 2.0)))
+    return convert_datetime_to_std_time(t1 + half)
 
 
 def convert_time_since_to_std_time(time_array, units):
@@ -82,6 +85,14 @@ def convert_sec_since_to_std_time_array(tai_time_array, ref):
 
 
 def convert_sec_since_to_std_time(seconds, ref):
+    '''
+        Convert a number of seconds since a given reference datetime to a number of days since our standard time.
+        This in principle could avoid the intermediate step converting to a datetime object except we don't know which
+         calander the reference is on, e.g. it could be a 360 day calendar
+    @param seconds:
+    @param ref:
+    @return:
+    '''
     from datetime import timedelta
     return cis_standard_time_unit.date2num(timedelta(seconds=int(seconds)) + ref)
 
@@ -95,6 +106,10 @@ def convert_std_time_to_datetime(std_time):
     return cis_standard_time_unit.num2date(std_time)
 
 
+def convert_datetime_to_std_time(dt):
+    return cis_standard_time_unit.date2num(dt)
+
+
 def convert_julian_date_to_std_time_array(julian_time_array, calender='standard'):
     return convert_numpy_array(julian_time_array, 'float64', convert_julian_date_to_std_time, calender)
 
@@ -105,7 +120,7 @@ def convert_julian_date_to_std_time(julian_date, calender='standard'):
 
 
 def convert_obj_to_standard_date_array(time_array):
-    return convert_numpy_array(time_array, 'float64', cis_standard_time_unit.date2num)
+    return convert_numpy_array(time_array, 'float64', convert_datetime_to_std_time)
 
 
 def convert_masked_array_type(masked_array, new_type, operation, *args, **kwargs):
