@@ -94,7 +94,7 @@ def plot_cmd(main_arguments):
 
     try:
         Plotter(data, plot_type, output, **main_arguments)
-    except (ex.InvalidPlotTypeError, ex.InvalidPlotFormatError, ex.InconsistentDimensionsError, ex.InvalidFileExtensionError, ValueError, ex.NotEnoughDatagroupsSpecifiedError) as e:
+    except (ex.CISError, ValueError) as e:
         __error_occurred(e)
 
 def info_cmd(main_arguments):

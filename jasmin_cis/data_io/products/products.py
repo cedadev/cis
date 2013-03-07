@@ -1,4 +1,3 @@
-import datetime as dt
 import logging
 
 from jasmin_cis.data_io.Coord import Coord, CoordList
@@ -13,20 +12,24 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         return [r'.*2B.CWC.RVOD.*\.hdf']
 
     def _generate_time_array(self, vdata):
-
-        import numpy as np
         import jasmin_cis.data_io.hdf_vd as hdf_vd
+        import datetime as dt
+        from jasmin_cis.time_util import convert_sec_since_to_std_time_array
+
+        Cloudsat_start_time = dt.datetime(1993,1,1,0,0,0)
 
         arrays = []
         for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
             time = hdf_vd.get_data(i)
             start = hdf_vd.get_data(j)
             time += start
+            # Do the conversion to standard time here before we expand the time array...
+            time = convert_sec_since_to_std_time_array(time, Cloudsat_start_time)
             arrays.append(time)
         return utils.concatenate(arrays)
 
     def create_coords(self, filenames):
-
+        from jasmin_cis.time_util import cis_standard_time_unit
         # list of coordinate variables we are interested in
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
 
@@ -58,11 +61,10 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # time coordinate
         time_data = self._generate_time_array(vdata)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
-        time_metadata = hdf.read_metadata(vdata['Profile_time'],"VD")
-        time_metadata.shape = time_data.shape
-        time_metadata.units = "DateTime Object"
-        time_coord = Coord(time_data,time_metadata,"T")
-        time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
+        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+                                              units=str(cis_standard_time_unit),
+                                              calendar=cis_standard_time_unit.calendar),"T")
+
 
         # create object containing list of coordinates
         coords = CoordList()
@@ -107,20 +109,20 @@ class MODIS_L3(AProduct):
         return res
 
     def _get_start_date(self, filename):
-        from jasmin_cis.time_util import parse_datetimestr_to_obj
+        from jasmin_cis.time_util import parse_datetimestr_to_std_time
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
         date = self._parse_datetime(metadata_dict,'RANGEBEGINNINGDATE')
         time = self._parse_datetime(metadata_dict,'RANGEBEGINNINGTIME')
         datetime_str = date + " " + time
-        return parse_datetimestr_to_obj(datetime_str)
+        return parse_datetimestr_to_std_time(datetime_str)
 
     def _get_end_date(self, filename):
-        from jasmin_cis.time_util import parse_datetimestr_to_obj
+        from jasmin_cis.time_util import parse_datetimestr_to_std_time
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
         date = self._parse_datetime(metadata_dict,'RANGEENDINGDATE')
         time = self._parse_datetime(metadata_dict,'RANGEENDINGTIME')
         datetime_str = date + " " + time
-        return parse_datetimestr_to_obj(datetime_str)
+        return parse_datetimestr_to_std_time(datetime_str)
 
     def get_file_signature(self):
         product_names = ['MYD08_D3','MOD08_D3',"MOD08_E3"]
@@ -234,6 +236,7 @@ class MODIS_L2(AProduct):
         return output
 
     def create_coords(self, filenames, variable=None):
+        import datetime as dt
 
         variables = [ 'Latitude','Longitude','Scan_Start_Time']
         logging.info("Listing coordinates: " + str(variables))
@@ -258,7 +261,7 @@ class MODIS_L2(AProduct):
         time = sdata['Scan_Start_Time']
         time_metadata = hdf.read_metadata(time,"SD")
         time_coord = Coord(time,time_metadata,"T")
-        time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
+        time_coord.convert_TAI_time_to_std_time(dt.datetime(1993,1,1,0,0,0))
 
         return CoordList([lat_coord,lon_coord,time_coord])
 
@@ -297,7 +300,9 @@ class Cloud_CCI(AProduct):
         coords.append(Coord(var_data['lat'], get_metadata(var_data['lat'][0]), 'Y'))
         coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0])))
         time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]), "X")
-        time_coord.convert_julian_to_datetime()
+
+        # TODO: Is this really julian?
+        time_coord.convert_julian_to_std_time()
         coords.append(time_coord)
 
         return coords
@@ -332,7 +337,7 @@ class Aerosol_CCI(AProduct):
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
         time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
-        time_coord.convert_TAI_time_to_datetime(datetime.datetime(1970,1,1))
+        time_coord.convert_TAI_time_to_std_time(datetime.datetime(1970,1,1))
         coords.append(time_coord)
         
         return coords
@@ -356,6 +361,7 @@ class Caliop(AProduct):
         from jasmin_cis.data_io.hdf_vd import get_data
         from jasmin_cis.data_io.hdf_vd import VDS
         from jasmin_cis.data_io import hdf_sd
+        import datetime as dt
 
         variables = [ 'Latitude','Longitude', "Profile_Time"]
         logging.info("Listing coordinates: " + str(variables))
@@ -408,7 +414,7 @@ class Caliop(AProduct):
         time_metadata = hdf.read_metadata(time,"SD")
         time_metadata.shape = new_shape
         time_coord = Coord(time_data, time_metadata)
-        time_coord.convert_TAI_time_to_datetime(dt.datetime(1993,1,1,0,0,0))
+        time_coord.convert_TAI_time_to_std_time(dt.datetime(1993,1,1,0,0,0))
 
         # create the object containing all coordinates
         coords = CoordList()
@@ -458,9 +464,9 @@ class CisCol(AProduct):
         coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0])))
         coords.append(Coord(var_data["latitude"], get_metadata(var_data["latitude"][0])))
         coords.append(Coord(var_data["altitude"], get_metadata(var_data["altitude"][0])))
-        time_coord = Coord(var_data["time"], get_metadata(var_data["time"][0]), 'X')
-        time_coord.convert_julian_to_datetime()
-        coords.append(time_coord)
+        # We don't need to convert this time coord as it should have been written in our
+        #  'standard' time
+        coords.append(Coord(var_data["time"], get_metadata(var_data["time"][0]), 'X'))
 
         if variable is None:
             return coords
@@ -644,15 +650,19 @@ class Xenida(NetCDF_CF_Gridded):
 
         #days since 1979-4-1
         time = Coord(data_variables["time"], get_metadata(data_variables["time"]), "T")
-        time.convert_time_since_to_datetime(time.units)
+        time.convert_time_since_to_std_time(time.units)
         coords.append(time)
 
         return coords
 
     def create_data_object(self, filenames, variable):
         from iris.aux_factory import HybridHeightFactory
+        from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
+
         cube = super(Xenida, self).create_data_object(filenames, variable)
         cube.add_aux_factory(HybridHeightFactory(cube.coords()[5]))
+        cube = convert_cube_time_coord_to_standard_time(cube)
+
         return cube
 
 class Aeronet(AProduct):
@@ -671,7 +681,9 @@ class Aeronet(AProduct):
         coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),), units="degrees_east", range=(-180,180))))
         coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),), units="degrees_north", range=(-90,90))))
         coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters", range=(-90,90))))
-        coords.append(Coord(data["datetime"], Metadata(name="Date time",standard_name='time', shape=(len(data),), units="DateTime Object"), "X"))
+        time_coord = Coord(data["datetime"], Metadata(name="Date time",standard_name='time', shape=(len(data),), units="DateTime Object"), "X")
+        time_coord.convert_datetime_to_standard_time()
+        coords.append(time_coord)
 
         return coords
 
@@ -697,7 +709,7 @@ class ASCII_Hyperpoints(AProduct):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from numpy import genfromtxt
         from jasmin_cis.exceptions import InvalidVariableError
-        from jasmin_cis.time_util import parse_datetimestr_to_obj_array
+        from jasmin_cis.time_util import parse_datetimestr_to_std_time_array
 
         array_list = []
 
@@ -717,7 +729,7 @@ class ASCII_Hyperpoints(AProduct):
         coords.append(Coord(data_array["longitude"], Metadata(standard_name="longitude", shape=(n_elements,), units="degrees_east")))
         coords.append(Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
 
-        time_arr = parse_datetimestr_to_obj_array(data_array["time"])
+        time_arr = parse_datetimestr_to_std_time_array(data_array["time"])
         time = Coord(time_arr, Metadata(standard_name="time", shape=(n_elements,), units="DateTime Object"))
         coords.append(time)
 

@@ -51,6 +51,17 @@ class Generic_Plot(object):
         '''
         raise NotImplementedError()
 
+    def format_time_axis(self):
+        from jasmin_cis.time_util import cis_standard_time_unit
+
+        coords = self.packed_data_items[0].coords(axis='X')
+        if len(coords) == 0:
+            coords = self.packed_data_items[0].coords(axis='T')
+
+        if len(coords) == 1:
+            if coords[0].units == str(cis_standard_time_unit):
+                self.set_x_axis_as_time()
+
     def set_default_axis_label(self, axis):
         '''
         The method that will set the default axis label. To be implemented by each subclass of Generic_Plot.
@@ -159,20 +170,21 @@ class Generic_Plot(object):
 
     def set_x_axis_as_time(self):
         from matplotlib import ticker
-        from jasmin_cis.time_util import convert_num_to_datetime
+        from jasmin_cis.time_util import convert_std_time_to_datetime
 
         ax = self.matplotlib.gca()
         def format_date(x, pos=None):
-            return convert_num_to_datetime(x).strftime('%Y-%m-%d')
+            return convert_std_time_to_datetime(x).strftime('%Y-%m-%d')
 
         def format_datetime(x, pos=None):
-            return convert_num_to_datetime(x).strftime('%Y-%m-%d %H:%M:%S')
+            # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
+            return convert_std_time_to_datetime(x).isoformat(' ')
 
         def format_time(x, pos=None):
-            return convert_num_to_datetime(x).strftime('%H:%M:%S')
+            return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
 
-        ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-        ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
+        #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def set_font_size(self):
         '''
@@ -276,6 +288,7 @@ class Generic_Plot(object):
         contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
 
         self.mplkwargs.pop("latlon", None)
+        
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 

@@ -11,11 +11,19 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
             Small constructor for the HyperPoint named tuple to allow optional arguments
              and set-up value list.
         '''
-        # If no value was specified create an empty list, otherwise create a list with one entry   
+        import datetime
+        from jasmin_cis.time_util import convert_datetime_to_std_time
+
+        # If no value was specified create an empty list, otherwise create a list with one entry
         if val is None or val == []:
             val = []
         else:
             val = [ val ]
+
+        # If t was given as a datetime we need to convert it into our standard time
+        if isinstance(t,datetime.datetime):
+            t = convert_datetime_to_std_time(t)
+
         return super(HyperPoint,cls).__new__(cls,lat,lon,alt,t,val)
 
     def same_point_in_time(self, other):

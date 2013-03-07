@@ -1,4 +1,4 @@
-from nose.tools import eq_, istest, raises, nottest
+from nose.tools import eq_, istest, raises
 from jasmin_cis.data_io.hdf import __read_hdf4
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import valid_hdf_sd_file
@@ -18,13 +18,13 @@ def test_read_hdf4():
     eq_(True,sds.has_key('Mean_Reflectance_Land'))
     eq_(False,vds.has_key('Mean_Reflectance_Land'))
 
-@nottest
+@istest
 @raises(InvalidVariableError)
 def test_that_cannot_read_unknown_variables():
     filename = valid_hdf_sd_file
     sds, vds = __read_hdf4(filename,['athing','unechose','einding'])
 
-@nottest
+@istest
 @raises(InvalidVariableError)
 def test_that_cannot_read_unknown_variables_and_valid_variables():
     filename = valid_hdf_sd_file

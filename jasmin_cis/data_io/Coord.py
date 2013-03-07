@@ -17,40 +17,39 @@ class Coord(LazyData):
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
-    def convert_datetime_to_num(self):
-        from jasmin_cis.time_util import convert_datetime_to_num_array
-        #if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a number")
-        self._data = convert_datetime_to_num_array(self.data)
-        self.units = "DateTime Number"
-
-    def convert_num_to_datetime(self):
-        from jasmin_cis.time_util import convert_num_to_datetime_array
-        #if self.units != "DateTime Number": raise ValueError("Time units must be DateTime Number for conversion to an Object")
-        self._data = convert_num_to_datetime_array(self.data)
-        self.units = "DateTime Object"
-
-    def convert_datetime_to_julian(self):
-        from jasmin_cis.time_util import convert_obj_to_julian_date_array
-        #if self.units != "DateTime Object": raise ValueError("Time units must be DateTime Object for conversion to a Julian Date")
-        self._data = convert_obj_to_julian_date_array(self.data)
-        self.units = "Julian Date, days elapsed since 12:00 January 1, 4713 BC"
-
-    def convert_julian_to_datetime(self, calender='standard'):
-        from jasmin_cis.time_util import convert_julian_date_to_obj_array
+    def convert_julian_to_std_time(self, calender='standard'):
+        from jasmin_cis.time_util import convert_julian_date_to_std_time_array, cis_standard_time_unit
         #if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")
-        self._data = convert_julian_date_to_obj_array(self.data, calender)
-        self.units = "DateTime Object"
+        self._data = convert_julian_date_to_std_time_array(self.data, calender)
+        self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
 
-    def convert_TAI_time_to_datetime(self, ref):
-        from jasmin_cis.time_util import convert_sec_since_to_obj_array
-        self._data = convert_sec_since_to_obj_array(self.data, ref)
-        self.units = "DateTime Object"
+    def convert_TAI_time_to_std_time(self, ref):
+        from jasmin_cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
+        self._data = convert_sec_since_to_std_time_array(self.data, ref)
+        self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
 
-    def convert_time_since_to_datetime(self, units):
-        from jasmin_cis.time_util import convert_time_since_to_datetime
-        self._data = convert_time_since_to_datetime(self.data, units)
-        self.units = "DateTime Object"
+    def convert_time_since_to_std_time(self, units):
+        from jasmin_cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit
+        self._data = convert_time_since_to_std_time(self.data, units)
+        self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
 
+    def convert_datetime_to_standard_time(self):
+        from jasmin_cis.time_util import convert_obj_to_standard_date_array, cis_standard_time_unit
+        self._data = convert_obj_to_standard_date_array(self.data)
+        self.units = str(cis_standard_time_unit)
+        self.metadata.calendar = cis_standard_time_unit.calendar
+
+    # go through the above methods looking for usages, rename them the to_datetime methods, to_standard_time
+    # and add a line to each converting the datetime objects to standard time. I think it's rare
+    # that you can skip this step as even if they are both of the form time since... there's no
+    # guarantee they are on the same calender...
+    # Then write a standard time formatter for the plot
+    # and a time and delta parser for the command line
+    # rationalise the methods both here and in time_util as there are a lot of them,,,
+    # add a calander to time metadata...
 
 class CoordList(list):
     """All the functionality of a standard `list` with added "Coord" context."""

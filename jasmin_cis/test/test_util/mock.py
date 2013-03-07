@@ -47,15 +47,31 @@ def make_square_5x3_2d_cube():
 def make_square_5x3_2d_cube_with_time():
     '''
         Makes a well defined cube of shape 5x3 with data as follows
-        array([[1,2,3],
-               [4,5,6],
-               [7,8,9],
-               [10,11,12],
-               [13,14,15]])
+        arr([[[   1.    2.    3.    4.    5.    6.    7.]
+              [   8.    9.   10.   11.   12.   13.   14.]
+              [  15.   16.   17.   18.   19.   20.   21.]]
+
+             [[  22.   23.   24.   25.   26.   27.   28.]
+              [  29.   30.   31.   32.   33.   34.   35.]
+              [  36.   37.   38.   39.   40.   41.   42.]]
+
+             [[  43.   44.   45.   46.   47.   48.   49.]
+              [  50.   51.   52.   53.   54.   55.   56.]
+              [  57.   58.   59.   60.   61.   62.   63.]]
+
+             [[  64.   65.   66.   67.   68.   69.   70.]
+              [  71.   72.   73.   74.   75.   76.   77.]
+              [  78.   79.   80.   81.   82.   83.   84.]]
+
+             [[  85.   86.   87.   88.   89.   90.   91.]
+              [  92.   93.   94.   95.   96.   97.   98.]
+              [  99.  100.  101.  102.  103.  104.  105.]]])
         and coordinates in latitude:
             array([ -10, -5, 0, 5, 10 ])
         longitude:
             array([ -5, 0, 5 ])
+        time:
+            array([1984-08-27, 1984-08-28, 1984-08-29, 1984-08-30, 1984-08-31, 1984-09-01, 1984-09-02])
 
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
@@ -64,15 +80,20 @@ def make_square_5x3_2d_cube_with_time():
     from iris.cube import Cube
     from iris.coords import DimCoord
     import datetime
+    from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
     t0 = datetime.datetime(1984,8,27)
-    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(15)])
+    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(7)])
 
-    time = DimCoord(times, standard_name='time')
+    time_nums = convert_obj_to_standard_date_array(times)
+
+    time = DimCoord(time_nums, standard_name='time')
     latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(15)+1.0,(5,3))
-    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)])
+
+    print data
 
     return cube
 
@@ -296,11 +317,12 @@ def make_regular_4d_ungridded_data():
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
+    from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
     x_points = np.linspace(-10,10,5)
     y_points = np.linspace(-5, 5, 5)
     t0 = datetime.datetime(1984,8,27)
-    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(5)])
+    times = convert_obj_to_standard_date_array(np.array([t0+datetime.timedelta(days=d) for d in xrange(5)]))
 
     alt = np.linspace(0,90,10)
 

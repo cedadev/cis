@@ -96,14 +96,14 @@ class Test_nn_gridded(KernelTests):
         cube = mock.make_square_5x3_2d_cube_with_time()
 
         sample_points = HyperPointList()
-        sample_points.append(HyperPoint(1.0, 1.0,t=dt.datetime(1984,8,29,8,34)))
-        sample_points.append(HyperPoint(4.0,4.0,t=dt.datetime(1984,9,2,1,23)))
-        sample_points.append(HyperPoint(-4.0,-4.0,t=dt.datetime(1984,9,4,15,54)))
+        sample_points.append(HyperPoint(1.0, 1.0,t=dt.datetime(1984,8,28,8,34)))
+        sample_points.append(HyperPoint(4.0,4.0,t=dt.datetime(1984,8,31,1,23)))
+        sample_points.append(HyperPoint(-4.0,-4.0,t=dt.datetime(1984,9,2,15,54)))
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
-        eq_(new_data.data[0], 3.0)
-        eq_(new_data.data[1], 7.0)
-        eq_(new_data.data[2], 10.0)
+        eq_(new_data.data[0], 51.0)
+        eq_(new_data.data[1], 82.0)
+        eq_(new_data.data[2], 28.0)
 
 
 class Test_nn_horizontal(KernelTests):
@@ -360,10 +360,11 @@ class TestSepConstraint(ConstraintTests):
         from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
         import datetime as dt
+        from jasmin_cis.time_util import convert_datetime_to_std_time
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
         sample_points = HyperPointList()
-        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+        sample_points.append(HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29))))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction

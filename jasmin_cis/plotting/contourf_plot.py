@@ -11,4 +11,5 @@ class Contourf_Plot(Generic_Plot):
         return self.set_3daxis_label(axis)
 
     def format_plot(self):
+        self.format_time_axis()
         self.format_3d_plot()

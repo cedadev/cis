@@ -48,6 +48,7 @@ class Scatter_Plot(Generic_Plot):
         return valrange
 
     def format_plot(self):
+        self.format_time_axis()
         if self.scatter_type == "3D":
             self.format_3d_plot()
         elif self.scatter_type == "2D":

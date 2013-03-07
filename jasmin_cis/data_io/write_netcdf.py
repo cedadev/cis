@@ -19,6 +19,7 @@ def __add_metadata(var, data):
     if data.long_name: var.long_name = data.long_name
     if data.metadata.range : var.valid_range = data.metadata.range
     if data.metadata.missing_value : var.missing_value = data.metadata.missing_value
+    if data.metadata.calendar : var.calendar = data.metadata.calendar
     return var
 
 
@@ -30,8 +31,6 @@ def __get_missing_value(coord):
 
 
 def __create_variable(nc_file, data):
-    if data.units == "DateTime Object":
-        data.convert_datetime_to_julian()
     logging.info("Creating variable: " + data.name() + "("+index_name+")" + " " + types[str(data.data.dtype)])
     var = nc_file.createVariable(data.name(), types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
     var = __add_metadata(var, data)
