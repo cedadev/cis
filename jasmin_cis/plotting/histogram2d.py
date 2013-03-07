@@ -42,7 +42,7 @@ class Histogram_2D(Generic_Plot):
             else:
                 data = unpacked_data_item["data"]
 
-            self.matplotlib.hist(unpacked_data_item["data"], bins = number_of_bins, *self.mplargs, **self.mplkwargs)
+            self.matplotlib.hist(unpacked_data_item["data"], *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
