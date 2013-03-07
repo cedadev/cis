@@ -61,11 +61,9 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # time coordinate
         time_data = self._generate_time_array(vdata)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
-        time_metadata = hdf.read_metadata(vdata['Profile_time'],"VD")
-        time_metadata.shape = time_data.shape
-        time_metadata.units = str(cis_standard_time_unit)
-        time_metadata.calendar = cis_standard_time_unit.calendar
-        time_coord = Coord(time_data,time_metadata,"T")
+        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+                                              units=str(cis_standard_time_unit),
+                                              calendar=cis_standard_time_unit.calendar),"T")
 
 
         # create object containing list of coordinates
