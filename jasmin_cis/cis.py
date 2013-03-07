@@ -38,6 +38,27 @@ def __error_occurred(e):
     sys.stderr.write(str(e) + "\n")
     exit(1)
 
+def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axis):
+    from iris.cube import Cube
+    from jasmin_cis.exceptions import InvalidVariableError, NotEnoughAxesSpecifiedError
+
+    if axis == "x":
+        other_axis = "y"
+    elif axis =="y":
+        other_axis = "x"
+
+    for data_item in data:
+        if not isinstance(data_item, Cube):
+            if len(data_item.coords(standard_name=main_arguments[axis + "axis"])) == 0:
+                raise InvalidVariableError(main_arguments[axis + "axis"] + " is not a valid variable")
+            else:
+                if data_item.coord(standard_name=main_arguments[axis + "axis"]).axis == other_axis.upper() and main_arguments[other_axis + "axis"] is None:
+                    raise NotEnoughAxesSpecifiedError("--" + other_axis + "axis must also be specified if assigning the current " + other_axis + " axis coordinate to the " + axis + " axis")
+                else:
+                    var_axis_dict[main_arguments[axis + "axis"].lower()] = axis.upper()
+                    logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
+                    break
+
 def __assign_variables_to_x_and_y_axis(main_arguments, data):
     # overwrites which variable to used for the x and y axis
     # ignore unknown variables
@@ -45,20 +66,20 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     from iris.cube import Cube
     var_axis_dict = {}
     if main_arguments['xaxis'] is not None:
-        var_axis_dict[main_arguments["xaxis"].lower()] = "X"
-        logging.info("Overriding data product default variable for x axis with: " + main_arguments.pop("xaxis"))
+        __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, "x")
 
     if main_arguments['yaxis'] is not None:
-        var_axis_dict[main_arguments["yaxis"].lower()] = "Y"
-        logging.info("Overriding data product default variable for y axis with: " + main_arguments.pop("yaxis"))
+        __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, "y")
+
+    main_arguments.pop("xaxis")
+    main_arguments.pop("yaxis")
 
     for data_item in data:
         if not isinstance(data_item, Cube):
             for coord in data_item.coords():
                 if var_axis_dict.has_key(coord.standard_name.lower()):
                     coord.axis = var_axis_dict[coord.standard_name.lower()]
-                if coord.standard_name.lower() not in var_axis_dict.iterkeys() and \
-                        hasattr(coord, 'axis') and coord.axis in var_axis_dict.itervalues():
+                if coord.standard_name.lower() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
                     coord.axis = ''
 
 def plot_cmd(main_arguments):
@@ -90,7 +111,10 @@ def plot_cmd(main_arguments):
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
-    __assign_variables_to_x_and_y_axis(main_arguments, data)
+    try:
+        __assign_variables_to_x_and_y_axis(main_arguments, data)
+    except (ex.InvalidVariableError, ex.NotEnoughAxesSpecifiedError) as e:
+        __error_occurred(e)
 
     try:
         Plotter(data, plot_type, output, **main_arguments)
