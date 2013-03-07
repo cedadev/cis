@@ -131,7 +131,7 @@ class MODIS_L3(AProduct):
 
     def create_coords(self, filenames):
         import numpy as np
-        from jasmin_cis.time_util import calculate_mid_time
+        from jasmin_cis.time_util import calculate_mid_time, cis_standard_time_unit
 
         variables = ['XDim','YDim']
         logging.info("Listing coordinates: " + str(variables))
@@ -161,11 +161,12 @@ class MODIS_L3(AProduct):
         time_data_array = []
         for filename in filenames:
             mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
-            time_data = np.empty(lat_metadata.shape,dtype=object)
+            time_data = np.empty(lat_metadata.shape,dtype='float64')
             time_data.fill(mid_datetime)
             time_data_array.append(time_data)
         time_data = utils.concatenate(time_data_array)
-        time_metadata = Metadata(name="Date time", shape=time_data.shape, units="DateTime Object")
+        time_metadata = Metadata(name='Date Time', standard_name='time', shape=time_data.shape,
+                                 units=str(cis_standard_time_unit),calendar=cis_standard_time_unit.calendar)
 
         coords = CoordList()
         coords.append(Coord(lon_data, lon_metadata,'X'))
