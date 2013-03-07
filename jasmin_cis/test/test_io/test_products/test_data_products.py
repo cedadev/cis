@@ -73,10 +73,23 @@ class TestCloudsat(ProductTests):
         # workaround for HDF library bug in Jasmin
         raise InvalidVariableError
 
-#
-# class TestMODIS_L3(ProductTests):
-#     pass
-#
+
+class TestMODIS_L3(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_modis_l3_filename, valid_modis_l3_variable
+        self.filename = valid_modis_l3_filename
+        self.valid_variable = valid_modis_l3_variable
+        self.product = MODIS_L3
+
+
+class TestCaliop(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_caliop_filename, valid_caliop_variable
+        self.filename = valid_caliop_filename
+        self.valid_variable = valid_caliop_variable
+        self.product = Caliop
+
+
 class TestMODIS_L2(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_modis_l2_filename, valid_modis_l2_variable

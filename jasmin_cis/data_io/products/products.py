@@ -288,7 +288,7 @@ class Cloud_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata, get_data
+        from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata
         from jasmin_cis.data_io.Coord import Coord
 
         variables = ["lat", "lon", "time"]
@@ -324,7 +324,7 @@ class Aerosol_CCI(AProduct):
 
     def create_coords(self, filenames):
 
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, get_data
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
         from jasmin_cis.data_io.Coord import Coord
         import datetime
 
@@ -360,8 +360,10 @@ class Caliop(AProduct):
 
         from jasmin_cis.data_io.hdf_vd import get_data
         from jasmin_cis.data_io.hdf_vd import VDS
+        from pyhdf.error import HDF4Error
         from jasmin_cis.data_io import hdf_sd
         import datetime as dt
+        from jasmin_cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
 
         variables = [ 'Latitude','Longitude', "Profile_Time"]
         logging.info("Listing coordinates: " + str(variables))
@@ -371,7 +373,11 @@ class Caliop(AProduct):
         alt_data_arr = []
         for filename in filenames:
 
-            sds_dict = hdf_sd.read(filename, variables)
+            try:
+                sds_dict = hdf_sd.read(filename, variables)
+            except HDF4Error as e:
+                raise IOError(str(e))
+
             for var in sds_dict.keys():
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
@@ -386,9 +392,7 @@ class Caliop(AProduct):
         # altitude
         alt_data = utils.concatenate(alt_data_arr)
         alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata()
-        alt_metadata.standard_name = "Altitude"
-        alt_metadata.shape = new_shape
+        alt_metadata = Metadata(standard_name="altitude", shape=new_shape)
         alt_coord = Coord(alt_data,alt_metadata)
 
         # latitude
@@ -410,11 +414,11 @@ class Caliop(AProduct):
         #profile time, x
         time = sdata['Profile_Time']
         time_data = hdf.read_data(time,"SD")
+        time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
         time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
-        time_metadata = hdf.read_metadata(time,"SD")
-        time_metadata.shape = new_shape
-        time_coord = Coord(time_data, time_metadata)
-        time_coord.convert_TAI_time_to_std_time(dt.datetime(1993,1,1,0,0,0))
+        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+                                              units=str(cis_standard_time_unit),
+                                              calendar=cis_standard_time_unit.calendar),"T")
 
         # create the object containing all coordinates
         coords = CoordList()
