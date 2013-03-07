@@ -47,7 +47,8 @@ def info(filename, user_variables=None, data_type=None):
         except RuntimeError as e:
             raise CISError(e)
     elif filename.endswith(".hdf"):
-        if basename(filename).startswith("CAL_LID") and data_type == None:
+        if (basename(filename).startswith("CAL_LID") or
+        basename(filename).startswith("MISR")) and data_type == None:
             data_type = "SD"
         sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
 
