@@ -40,9 +40,9 @@ class Histogram_2D(Generic_Plot):
             if isinstance(unpacked_data_item["data"], MaskedArray):
                 data = unpacked_data_item["data"].compressed()
             else:
-                data = unpacked_data_item["data"]
+                data = unpacked_data_item["data"].flatten()
 
-            self.matplotlib.hist(unpacked_data_item["data"], *self.mplargs, **self.mplkwargs)
+            self.matplotlib.hist(data, *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
