@@ -125,7 +125,7 @@ class MODIS_L3(AProduct):
         return parse_datetimestr_to_std_time(datetime_str)
 
     def get_file_signature(self):
-        product_names = ['MYD08_D3','MOD08_D3']
+        product_names = ['MYD08_D3','MOD08_D3',"MOD08_E3"]
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 

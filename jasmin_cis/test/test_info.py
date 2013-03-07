@@ -39,3 +39,11 @@ def can_get_info_on_an_aeronet_file():
 @istest
 def can_get_info_on_a_variable_in_an_aeronet_file():
     info(valid_aeronet_filename, [valid_aeronet_variable])
+
+@istest
+def can_get_info_on_a_caliop_file():
+    info(valid_caliop_filename)
+
+@istest
+def can_get_info_on_a_variable_in_a_caliop_file():
+    info(valid_caliop_filename, [valid_caliop_variable])

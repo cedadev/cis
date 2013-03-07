@@ -58,10 +58,14 @@ def __read_hdf4(filename,variables):
         # remove the variables identified as SD (i.e. the keys in sds_dict)
         # no need to try looking for them as VD variable
         # AND this can cause a crash in some version/implementations of the core HDF4 libraries!
-        for sds_dict_key in sds_dict:
-            variables.remove(sds_dict_key)
 
-        vds_dict = hdf_vd.read(filename,variables)
+        # First create a copy of the list in order for the original list to be left intact when elements are removed from it
+        # This enables the original list to be used when many files are read
+        vdvariables = list(variables)
+        for sds_dict_key in sds_dict:
+            vdvariables.remove(sds_dict_key)
+
+        vds_dict = hdf_vd.read(filename, vdvariables)
     except HDF4Error as e:
         raise IOError(str(e))
 

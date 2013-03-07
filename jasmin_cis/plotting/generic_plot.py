@@ -318,9 +318,9 @@ class Generic_Plot(object):
         def __create_set_of_grid_lines(axis, range_dict):
             from numpy import arange, append
             lines = None
-            grid_spacing = 15 # in degrees
+            grid_spacing = 30 # in degrees
             if range_dict is not None: #If the user has specified range
-                min_val = range_dict.get(axis + "min", 0 if axis == "x" else -90)
+                min_val = range_dict.get(axis + "min", -360 if axis == "x" else -90)
                 max_val = range_dict.get(axis + "max", 360 if axis == "x" else 90)
                 step = range_dict.get(axis + "step", grid_spacing)
 
@@ -331,7 +331,7 @@ class Generic_Plot(object):
                 if axis == "y":
                     lines = arange(-90, 91, grid_spacing)
                 elif axis == "x":
-                    lines = arange(0, 361, grid_spacing)
+                    lines = arange(-360, 361, grid_spacing)
 
             return lines
 
