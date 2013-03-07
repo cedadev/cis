@@ -259,7 +259,6 @@ class Generic_Plot(object):
         @param filled: A boolean specifying whether or not the contour plot should be filled
         '''
         from numpy import linspace
-        from datetime import datetime
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
@@ -273,16 +272,9 @@ class Generic_Plot(object):
         else:
             contour_type = self.plot_method.contour
 
-        from jasmin_cis.time_util import convert_datetime_to_num_array
-        '''
-        if isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime):
-            x_coords = convert_datetime_to_num_array(self.unpacked_data_items[0]["x"])
-        else:'''
-        x_coords = self.unpacked_data_items[0]["x"]
 
-        contour_type(x_coords, self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
+        contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
 
-        #if isinstance(self.unpacked_data_items[0]["x"].flatten()[0], datetime): self.set_x_axis_as_time()
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
