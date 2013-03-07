@@ -178,7 +178,7 @@ class Generic_Plot(object):
             return convert_std_time_to_datetime(x).strftime('%Y-%m-%d')
 
         def format_datetime(x, pos=None):
-            return convert_std_time_to_datetime(x).strftime('%Y-%m-%d %H:%M:%S')
+            return convert_std_time_to_datetime(x).isoformat(' ')
 
         def format_time(x, pos=None):
             return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
