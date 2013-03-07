@@ -40,6 +40,7 @@ class Comparative_Scatter(Generic_Plot):
         return valrange
 
     def format_plot(self):
+        self.format_time_axis()
         self.format_2d_plot()
 
     def set_default_axis_label(self, axis):

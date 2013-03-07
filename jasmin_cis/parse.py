@@ -246,10 +246,8 @@ def parse_as_float_or_date(arg, name, parser):
         except ValueError:
             # Then try and parse as a date
             from time_util import parse_datetimestr_to_std_time
-            from time_util import convert_datetime_to_num
             try:
                 arg = parse_datetimestr_to_std_time(arg)
-                arg = convert_datetime_to_num(arg)
                 return arg
             except ValueError:
                 # Otherwise throw an error

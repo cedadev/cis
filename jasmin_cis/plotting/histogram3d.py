@@ -72,6 +72,7 @@ class Histogram_3D(Generic_Plot):
         return number_of_bins
 
     def format_plot(self):
+        self.format_time_axis()
         self.format_3d_plot()
 
     def set_default_axis_label(self, axis):

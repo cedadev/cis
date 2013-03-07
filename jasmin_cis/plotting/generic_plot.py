@@ -54,8 +54,14 @@ class Generic_Plot(object):
 
     def format_time_axis(self):
         from jasmin_cis.time_util import cis_standard_time_unit
-        if self.packed_data_items[0].coord(axis='x').unit == str(cis_standard_time_unit):
-            self.set_x_axis_as_time()
+
+        coords = self.packed_data_items[0].coords(axis='X')
+        if len(coords) == 0:
+            coords = self.packed_data_items[0].coords(axis='T')
+
+        if len(coords) == 1:
+            if coords[0].units == str(cis_standard_time_unit):
+                self.set_x_axis_as_time()
 
     def set_default_axis_label(self, axis):
         '''

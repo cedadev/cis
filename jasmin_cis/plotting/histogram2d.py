@@ -47,6 +47,7 @@ class Histogram_2D(Generic_Plot):
         self.mplkwargs["vmax"] = vmax
 
     def format_plot(self):
+        self.format_time_axis()
         self.format_2d_plot()
 
     def set_default_axis_label(self, axis):

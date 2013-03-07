@@ -45,6 +45,7 @@ class Scatter_Overlay(Generic_Plot):
         self.scatter_plots.create_legend()
 
     def format_plot(self):
+        self.format_time_axis()
         self.format_3d_plot()
 
     def set_default_axis_label(self, axis):

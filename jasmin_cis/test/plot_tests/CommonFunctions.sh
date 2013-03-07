@@ -11,17 +11,10 @@ then
 
   if [ -n "$DIFFERENCE" ]
   then
-     echo
-     echo "------------"
-     echo "Differences:"
-     echo "------------"
-     diff -w -a "$TEST_DIR/O$SUBJECT.png" "$TEST_DIR/O$SUBJECT.png.ref"
-     COMPARE_RESULTS_RETURN_VALUE=1
-
      echo "-----------------------------------------------------"
      echo "TEST FAILED:- There are differences in results files."
-     echo "              See above."
      echo "-----------------------------------------------------"
+     COMPARE_RESULTS_RETURN_VALUE=1
   else
      echo "------------"
      echo "TEST PASSED."
