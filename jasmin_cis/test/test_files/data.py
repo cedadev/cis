@@ -13,6 +13,9 @@ valid_hdf_sd_file = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf"
 valid_modis_l2_filename = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
 valid_modis_l2_variable = 'Asymmetry_Factor_Average_Ocean'
 
+valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
+valid_modis_l3_variable = "Pressure_Level"
+
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_RVOD_variable = "RVOD_liq_water_content"
 
