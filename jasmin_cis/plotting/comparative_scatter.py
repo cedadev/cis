@@ -20,12 +20,17 @@ class Comparative_Scatter(Generic_Plot):
 
             scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
             datagroup = self.plot_args["datagroups"][0]
-            marker = datagroup["itemstyle"] if datagroup["itemstyle"] else 'o'
-            colour = datagroup["color"] if datagroup["color"] else "b"
+            if datagroup["itemstyle"]:
+                self.mplkwargs["marker"] = datagroup["itemstyle"]
+            else:
+                self.mplkwargs.pop("marker", None)
 
-            self.mplkwargs.pop("latlon", None)
+            if datagroup["color"]:
+                self.mplkwargs["color"] = datagroup["color"]
+            else:
+                self.mplkwargs.pop("color", None)
 
-            ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], color=colour, marker=marker, s=scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
+            ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], s=scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
         else:
             raise NotEnoughDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 

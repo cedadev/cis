@@ -13,14 +13,14 @@ class Scatter_Plot(Generic_Plot):
             if datafile["itemstyle"]:
                 self.mplkwargs["marker"] = datafile["itemstyle"]
             else:
-                self.mplkwargs["marker"] = 'o'
+                self.mplkwargs.pop("marker", None)
 
-            colour_scheme = datafile.get("color", None)
-            if colour_scheme is None:
+            self.mplkwargs["c"] = datafile.get("color", None)
+            if self.mplkwargs["c"] is None:
                 if unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
-                    colour_scheme = unpacked_data_item["data"]
+                    self.mplkwargs["c"] = unpacked_data_item["data"]
                 else:
-                    colour_scheme = "b" # Default color scheme used by matplotlib
+                    self.mplkwargs.pop("c", None)
 
             x_coords = unpacked_data_item["x"]
 
@@ -33,9 +33,7 @@ class Scatter_Plot(Generic_Plot):
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
 
-            self.mplkwargs.pop("latlon", None)
-            self.plots.append(self.plot_method.scatter(x_coords, y_coords, c = colour_scheme, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
-
+            self.plots.append(self.plot_method.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
     def calculate_axis_limits(self, axis):
         valrange = {}
