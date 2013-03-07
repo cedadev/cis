@@ -58,11 +58,13 @@ def parse_datetimestr_delta_to_float_days(s):
 
 
 def calculate_mid_time(t1, t2):
-    import math
-    from datetime import timedelta
-    delta = t2 - t1
-    half = timedelta(seconds=int(math.ceil(delta.total_seconds() / 2.0)))
-    return convert_datetime_to_std_time(t1 + half)
+    '''
+        Find the mid time between two times expressed as floats
+    @param t1: a time represented as a float
+    @param t2: a time in the same representation as t1
+    @return: a float representing the time between t1 and t2
+    '''
+    return t1 + (t2 - t1)/2.0
 
 
 def convert_time_since_to_std_time(time_array, units):

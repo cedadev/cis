@@ -51,8 +51,8 @@ def test_that_raise_an_error_when_datetimestr_delta_is_invalid():
 
 
 def test_that_can_calculate_mid_point_between_two_datetime():
-    t1 = dt.datetime(2010,02,05,0,0,0)
-    t2 = dt.datetime(2010,02,06,0,0,0)
+    t1 = convert_datetime_to_std_time(dt.datetime(2010,02,05,0,0,0))
+    t2 = convert_datetime_to_std_time(dt.datetime(2010,02,06,0,0,0))
     tm = calculate_mid_time(t1,t2)
     eq_(tm,convert_datetime_to_std_time(dt.datetime(2010,02,05,12,0,0)))
 
