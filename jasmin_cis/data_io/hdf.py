@@ -34,7 +34,7 @@ def get_hdf4_file_metadata(filename):
     @param filename
     @return: dictionary of string attributes
     """
-    from pyhdf.SD import *
+    from pyhdf.SD import SD
     return SD(filename).attributes()
 
 def __read_hdf4(filename,variables):
