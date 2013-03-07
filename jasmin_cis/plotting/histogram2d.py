@@ -17,9 +17,9 @@ class Histogram_2D(Generic_Plot):
 
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
             if step is None:
-                number_of_bins = 10
+                self.mplkwargs.pop("bins", None)
             else:
-                number_of_bins = int((unpacked_data_item["data"].max() - unpacked_data_item["data"].min())/step)
+                self.mplkwargs["bins"] = int((unpacked_data_item["data"].max() - unpacked_data_item["data"].min())/step)
 
             datafile = self.plot_args["datagroups"][i]
             if datafile["itemstyle"]:
@@ -30,12 +30,12 @@ class Histogram_2D(Generic_Plot):
                     raise InvalidHistogramStyleError("'" + datafile["itemstyle"] + "' is not a valid histogram style, please use one of: " + str(self.valid_histogram_styles))
 
             else:
-                self.mplkwargs["histtype"] = "bar"
+                self.mplkwargs.pop("histtype", None)
 
             if datafile["color"]:
                 self.mplkwargs["color"] = datafile["color"]
             else:
-                self.mplkwargs["color"] = None
+                self.mplkwargs.pop("color", None)
 
             if isinstance(unpacked_data_item["data"], MaskedArray):
                 data = unpacked_data_item["data"].compressed()
