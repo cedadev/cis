@@ -32,7 +32,6 @@ class Generic_Plot(object):
         if self.is_map():
             self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
             self.plot_method = self.basemap
-            self.mplkwargs["latlon"] = True
         else:
             self.plot_method = self.matplotlib
 
@@ -272,10 +271,11 @@ class Generic_Plot(object):
         else:
             contour_type = self.plot_method.contour
 
+        if self.is_map(): self.mplkwargs["latlon"] = True
 
         contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
 
-
+        self.mplkwargs.pop("latlon", None)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 

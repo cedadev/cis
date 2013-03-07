@@ -25,7 +25,6 @@ class Comparative_Scatter(Generic_Plot):
             else:
                 self.mplkwargs.pop("marker", None)
 
-            self.mplkwargs.pop("latlon", None)
             if datagroup["color"]:
                 self.mplkwargs["color"] = datagroup["color"]
             else:
