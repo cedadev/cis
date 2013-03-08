@@ -93,7 +93,7 @@ def convert_sec_since_to_std_time(seconds, ref):
     @return:
     '''
     from datetime import timedelta
-    return cis_standard_time_unit.date2num(timedelta(seconds=int(seconds)) + ref)
+    return cis_standard_time_unit.date2num(timedelta(seconds=float(seconds)) + ref)
 
 
 def convert_days_since_to_std_time(days, ref):

@@ -352,7 +352,7 @@ class Aerosol_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
-class Caliop(AProduct):
+class Caliop_L2(AProduct):
 
     def get_file_signature(self):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
@@ -432,6 +432,7 @@ class Caliop(AProduct):
 
 
     def create_data_object(self, filenames, variable):
+        from jasmin_cis.data_io.hdf_sd import get_calipso_data
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -445,7 +446,7 @@ class Caliop(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords)
+        return UngriddedData(var, metadata, coords, get_calipso_data)
 
 class CisCol(AProduct):
 

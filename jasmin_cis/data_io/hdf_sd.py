@@ -75,22 +75,61 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 
-def get_data(sds, calipso_scaling=False):
+def get_calipso_data(sds):
     """
     Reads raw data from an SD instance. Automatically applies the
-    scaling factors and offsets to the data arrays often found in NASA HDF-EOS
-    data. (Used for e.g. MODIS/Calipso data)
+    scaling factors and offsets to the data arrays found in Calipso data.
 
     Returns:
         A numpy array containing the raw data with missing data is replaced by NaN.
 
     Arguments:
         sds        -- The specific sds instance to read
-        calipso_scaling -- If set, the code will apply offsets and scaling in
-                       the order used by CALIPSO data (rather than the MODIS
-                       method). The two methods are:
-                       MODIS:   (data - offset) * scale_factor
-                       CALIPSO: data/scalefactor + offset.
+
+    """
+    from jasmin_cis.utils import create_masked_array_for_missing_data
+
+    calipso_fill_values = {'Float_32' : -9999.0,
+                           #'Int_8' : 'See SDS description',
+                           'Int_16' : -9999,
+                           'Int_32' : -9999,
+                           'UInt_8' : -127,
+                           #'UInt_16' : 'See SDS description',
+                           #'UInt_32' : 'See SDS description',
+                           'ExtinctionQC Fill Value' : 32768,
+                           'FeatureFinderQC No Features Found' : 32767,
+                           'FeatureFinderQC Fill Value' : 65535}
+
+    data = sds.get()
+    attributes = sds.attributes()
+
+    # Missing data.
+    try:
+        missing_val = calipso_fill_values[attributes.get('format', None)]
+    except KeyError:
+        missing_val = attributes.get('_FillValue', None)
+
+    data = create_masked_array_for_missing_data(data, missing_val)
+
+    # Offsets and scaling.
+    offset  = attributes.get('add_offset', 0)
+    scale_factor = attributes.get('scale_factor', 1)
+    data = __apply_scaling_factor_CALIPSO(data, scale_factor, offset)
+
+    return data
+
+
+def get_data(sds):
+    """
+    Reads raw data from an SD instance. Automatically applies the
+    scaling factors and offsets to the data arrays often found in NASA HDF-EOS
+    data (e.g. MODIS)
+
+    Returns:
+        A numpy array containing the raw data with missing data is replaced by NaN.
+
+    Arguments:
+        sds        -- The specific sds instance to read
 
     """
     from jasmin_cis.utils import create_masked_array_for_missing_data
@@ -105,10 +144,7 @@ def get_data(sds, calipso_scaling=False):
     # Offsets and scaling.
     offset  = attributes.get('add_offset', 0)
     scale_factor = attributes.get('scale_factor', 1)
-    if calipso_scaling:
-        data = __apply_scaling_factor_CALIPSO(data, scale_factor, offset)
-    else:
-        data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
+    data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
 
     return data
 

@@ -87,7 +87,7 @@ class TestCaliop(ProductTests):
         from jasmin_cis.test.test_files.data import valid_caliop_filename, valid_caliop_variable
         self.filename = valid_caliop_filename
         self.valid_variable = valid_caliop_variable
-        self.product = Caliop
+        self.product = Caliop_L2
 
 
 class TestMODIS_L2(ProductTests):
