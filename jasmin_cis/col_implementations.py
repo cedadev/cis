@@ -3,6 +3,13 @@ import logging
 
 
 class DefaultColocator(Colocator):
+
+    def __init__(self, var_name='', var_long_name='', var_units=''):
+        super(DefaultColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+
     def colocate(self, points, data, constraint, kernel):
         '''
             This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
@@ -34,6 +41,9 @@ class DefaultColocator(Colocator):
             except ValueError:
                 pass
         new_data = LazyData(values, metadata)
+        if self.var_name: new_data.metadata._name = self.var_name
+        if self.var_long_name: new_data.metadata.long_name = self.var_long_name
+        if self.var_units: new_data.units = self.var_units
         new_data.metadata.shape = (len(points),)
         new_data.metadata.missing_value = constraint.fill_value
         return [new_data]
