@@ -30,9 +30,9 @@ class Coord(LazyData):
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 
-    def convert_time_since_to_std_time(self, units):
+    def convert_to_std_time(self):
         from jasmin_cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit
-        self._data = convert_time_since_to_std_time(self.data, units)
+        self._data = convert_time_since_to_std_time(self.data, self.units)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 

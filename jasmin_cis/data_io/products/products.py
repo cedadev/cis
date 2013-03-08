@@ -536,7 +536,9 @@ class NCAR_NetCDF_RAF(NetCDF_CF):
         coords.append(Coord(data_variables["LATC"], get_metadata(data_variables["LATC"]), "Y"))
         coords.append(Coord(data_variables["LONC"], get_metadata(data_variables["LONC"]), "X"))
         coords.append(Coord(data_variables["GGALTC"], get_metadata(data_variables["GGALTC"]), "Z"))
-        coords.append(Coord(data_variables["Time"], get_metadata(data_variables["Time"]), "T"))
+        time_coord = Coord(data_variables["Time"], get_metadata(data_variables["Time"]), "T")
+        time_coord.convert_to_std_time()
+        coords.append(time_coord)
 
         if variable is None:
             return coords
@@ -689,7 +691,7 @@ class Xenida(NetCDF_CF_Gridded):
 
         #days since 1979-4-1
         time = Coord(data_variables["time"], get_metadata(data_variables["time"]), "T")
-        time.convert_time_since_to_std_time(time.units)
+        time.convert_to_std_time()
         coords.append(time)
 
         return coords
