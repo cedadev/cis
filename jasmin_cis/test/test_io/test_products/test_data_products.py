@@ -120,6 +120,14 @@ class TestCisCol(ProductTests):
         self.valid_variable = 'AOT_440'
         self.product = CisCol
 
+class TestNCAR_NetCDF_RAF(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_NCAR_NetCDF_RAF_filename, valid_NCAR_NetCDF_RAF_variable
+        self.filename = valid_NCAR_NetCDF_RAF_filename
+        self.valid_variable = valid_NCAR_NetCDF_RAF_variable
+        self.product = NCAR_NetCDF_RAF
+
 # class TestXglnwa(ProductTests):
 #
 #     def __init__(self):
