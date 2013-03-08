@@ -72,10 +72,12 @@ def convert_time_since_to_std_time(time_array, units):
     import datetime
     units, utc_offset, dt = _dateparse(units)
     dt = datetime.datetime(*dt.timetuple()[0:6])
-    if units == 'days':
+    if units.lower() == 'days':
         new_array = convert_numpy_array(time_array, 'float64', convert_days_since_to_std_time, dt)
-    elif units == 'secs':
+    elif units.lower().startswith('sec'):
         new_array = convert_numpy_array(time_array, 'float64', convert_sec_since_to_std_time, dt)
+    else:
+        raise NotImplementedError('Tried to convert a time with unrecognised units')
     return new_array
 
 
