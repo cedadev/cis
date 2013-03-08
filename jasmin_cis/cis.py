@@ -155,7 +155,7 @@ def col_cmd(main_arguments):
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
 
-    col = Colocate(main_arguments.samplefilename, output_file)
+    col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, output_file)
 
     for input_group in main_arguments.datagroups:
         variable = input_group['variable']

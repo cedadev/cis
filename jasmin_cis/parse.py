@@ -161,6 +161,19 @@ def get_col_datagroups(datagroups, parser):
     return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
 
 
+def get_col_samplegroup(samplegroup, parser):
+    '''
+    @param samplegroups:    A list of datagroups (possibly containing colons)
+    @param parser:       The parser used to report errors
+    @return The parsed samplegroups as a list of dictionaries
+    '''
+    from collections import namedtuple
+    DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable"])
+    samplegroup_options = DatagroupOptions(expand_file_list, lambda x, y: x)
+
+    return parse_colonic_arguments(samplegroup, parser, samplegroup_options)
+
+
 def parse_colonic_arguments(inputs, parser, options, min_args=1):
     '''
     @param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
@@ -349,9 +362,10 @@ def validate_col_args(arguments, parser):
     Checks that the filenames are valid and that variables and methods have been specified.
     Assigns default method/variable to datagroups with unspecified method/variable if default is specified
     '''
+    samplegroup = get_col_samplegroup([arguments.samplefilename], parser)
 
-    check_file_exists(arguments.samplefilename, parser)
-
+    arguments.samplefiles = samplegroup[0]["filenames"]
+    arguments.samplevariable = samplegroup[0]["variable"]
     arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
 
     return arguments
