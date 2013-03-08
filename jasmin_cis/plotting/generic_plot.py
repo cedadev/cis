@@ -220,15 +220,21 @@ class Generic_Plot(object):
         Stores the values in the matplotlib keyword args to be directly passed into the plot methods.
         '''
         from sys import maxint
+        from numpy import ma
+
+        if self.plot_args.get('logv', False):
+            mask_val = 0.0
+        else:
+            mask_val = maxint
 
         vmin = self.plot_args["valrange"].get("vmin", maxint)
         vmax = self.plot_args["valrange"].get("vmax", -maxint - 1)
 
         if vmin == maxint:
-            vmin = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
+            vmin = min(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"]<=mask_val).min() for unpacked_data_item in self.unpacked_data_items)
 
         if vmax == -maxint - 1:
-            vmax = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
+            vmax = max(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"]<=mask_val).max() for unpacked_data_item in self.unpacked_data_items)
 
         self.mplkwargs["vmin"] = float(vmin)
         self.mplkwargs["vmax"] = float(vmax)
@@ -394,10 +400,9 @@ class Generic_Plot(object):
         self.set_default_axis_label("X")
         self.set_default_axis_label("Y")
 
-        if self.plot_args["xlabel"] == None: self.plot_args["xlabel"] = ""
-        if self.plot_args["ylabel"] == None: self.plot_args["ylabel"] = ""
-
-        if not self.plot_args["title"]: self.plot_args["title"] = ""
+        if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
+        if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
+        if self.plot_args["title"] is None: self.plot_args["title"] = ""
 
         for key in plot_options.keys():
             # Call the method associated with the option
@@ -426,12 +431,9 @@ class Generic_Plot(object):
             self.set_default_axis_label("X")
             self.set_default_axis_label("Y")
 
-            if self.plot_args["xlabel"] == None: self.plot_args["xlabel"] = ""
-            if self.plot_args["ylabel"] == None: self.plot_args["ylabel"] = ""
-
-            if not self.plot_args["title"]: self.plot_args["title"] = ""
-
-            if not self.plot_args["title"]: self.plot_args["title"] = self.packed_data_items[0].long_name
+            if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
+            if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
+            if self.plot_args["title"] is None: self.plot_args["title"] = self.packed_data_items[0].long_name
 
             for key in plot_options.keys():
             # Call the method associated with the option
