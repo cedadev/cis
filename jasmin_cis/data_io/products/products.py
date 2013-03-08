@@ -352,7 +352,7 @@ class Aerosol_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
-class Caliop(AProduct):
+class Caliop_L2(AProduct):
 
     def get_file_signature(self):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']

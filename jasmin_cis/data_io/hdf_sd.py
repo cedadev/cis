@@ -90,12 +90,12 @@ def get_calipso_data(sds):
     from jasmin_cis.utils import create_masked_array_for_missing_data
 
     calipso_fill_values = {'Float_32' : -9999.0,
-                           'Int_8' : 'See SDS description',
+                           #'Int_8' : 'See SDS description',
                            'Int_16' : -9999,
                            'Int_32' : -9999,
                            'UInt_8' : -127,
-                           'UInt_16' : 'See SDS description',
-                           'UInt_32' : 'See SDS description',
+                           #'UInt_16' : 'See SDS description',
+                           #'UInt_32' : 'See SDS description',
                            'ExtinctionQC Fill Value' : 32768,
                            'FeatureFinderQC No Features Found' : 32767,
                            'FeatureFinderQC Fill Value' : 65535}
