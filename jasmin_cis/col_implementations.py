@@ -79,7 +79,8 @@ class DebugColocator(Colocator):
             if frac == 0: print str(i)+" took: "+str(times[i])
         logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
         new_data = LazyData(values, metadata)
-        new_data.missing_value = constraint.fill_value
+        new_data.metadata.shape = (len(points),)
+        new_data.metadata.missing_value = constraint.fill_value
         return [new_data]
 
 
@@ -203,6 +204,17 @@ class nn_gridded(Kernel):
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
         return nearest_neighbour_data_value(data, point.get_coord_tuple())
+
+
+class nn_gridded_diff(Kernel):
+    def get_value(self, point, data):
+        '''
+            Co-location routine using nearest neighbour algorithm optimized for gridded data.
+             This calls out to iris to do the work and returns the difference between the original
+             value and the value of the nearest neighbour
+        '''
+        from iris.analysis.interpolate import nearest_neighbour_data_value
+        return nearest_neighbour_data_value(data, point.get_coord_tuple()) - point.val[0]
 
 
 class li(Kernel):
