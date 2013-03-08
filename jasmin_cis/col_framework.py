@@ -113,10 +113,10 @@ def get_kernel(method=None):
 
 def get_colocator(method=None):
     '''
-    Top level routine for instantiating the correct Colocator object.
+    Top level routine for finding the correct Colocator object.
 
     @param method: The colocate method to find - this should be a string which matches the name of one of the subclasses of Colocator
-    @return: An instance of one of Colocator's subclasses
+    @return: One of Colocator's subclasses
     '''
     colocate_cls = __get_class(Colocator, method)
-    return colocate_cls()
+    return colocate_cls

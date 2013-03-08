@@ -18,7 +18,7 @@ class Colocate(object):
         self.sample_points = sample_points
         self.output_file = output_file
 
-    def colocate(self, variable, filenames, col=None, con_method=None, con_params=None, kern=None, kern_params=None):
+    def colocate(self, variable, filenames, col=None, col_params=None, con_method=None, con_params=None, kern=None, kern_params=None):
         from jasmin_cis.data_io.read import read_data
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.col_framework import get_constraint, get_kernel, get_colocator
@@ -50,14 +50,26 @@ class Colocate(object):
         kern_cls = get_kernel(kern)
 
         try:
-            kernel = kern_cls(**kern_params)
+            if kern_params is not None:
+                kernel = kern_cls(**kern_params)
+            else:
+                kernel = kern_cls()
         except TypeError as e:
             raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified kernel.")
 
         # Find colocator, constraint_fn and kernel to use
         if col is None:
             col = 'DefaultColocator'
-        col = get_colocator(col)
+        col_cls = get_colocator(col)
+
+        try:
+            if col_params is not None:
+                col = col_cls(**col_params)
+            else:
+                col = col_cls()
+        except TypeError as e:
+            raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified colocator.")
+
 
         logging.info("Colocating, this could take a while...")
         t1 = time()

@@ -168,7 +168,7 @@ def col_cmd(main_arguments):
         kern_options = input_group['kernel'][1] if  input_group['kernel'] is not None else None
 
         try:
-            col.colocate(variable, filenames, col_name, con_name, con_options, kern_name, kern_options)
+            col.colocate(variable, filenames, col_name, col_options, con_name, con_options, kern_name, kern_options)
         except CISError as e:
             __error_occurred(e)
         except ClassNotFoundError as e:
