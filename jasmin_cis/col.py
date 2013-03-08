@@ -9,7 +9,7 @@ class Colocate(object):
     def __init__(self, sample_file, output_file):
         from jasmin_cis.data_io.read import read_coordinates
         from jasmin_cis.data_io.write_netcdf import write_coordinates
-
+        self.sample_file = sample_file
         coords = read_coordinates(sample_file)
 
         sample_points = coords.get_coordinates_points()
@@ -70,4 +70,13 @@ class Colocate(object):
 
         logging.info("Appending data to "+self.output_file)
         for data in new_data:
+            data.metadata.history += {"sample_file" : self.sample_file,
+                                      "variable" : variable,
+                                      "filenames" : filenames,
+                                      "col" : col,
+                                      "con_method" : con_method,
+                                      "con_params" : con_params,
+                                      "kern" : kern,
+                                      "kern_params" : kern_params}:
+
             add_data_to_file(data, self.output_file)
