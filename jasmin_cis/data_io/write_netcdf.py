@@ -33,8 +33,8 @@ def __get_missing_value(coord):
 
 
 def __create_variable(nc_file, data):
-    logging.info("Creating variable: " + data.name() + "("+index_name+")" + " " + types[str(data.data.dtype)])
-    var = nc_file.createVariable(data.name(), types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
+    logging.info("Creating variable: " + data.standard_name + "("+index_name+")" + " " + types[str(data.data.dtype)])
+    var = nc_file.createVariable(data.standard_name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
     var = __add_metadata(var, data)
     var[:] = data.data.flatten()
 
