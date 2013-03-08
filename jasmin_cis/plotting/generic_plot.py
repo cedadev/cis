@@ -225,7 +225,7 @@ class Generic_Plot(object):
         if self.plot_args.get('logv', False):
             mask_val = 0.0
         else:
-            mask_val = maxint
+            mask_val = -maxint - 1
 
         vmin = self.plot_args["valrange"].get("vmin", maxint)
         vmax = self.plot_args["valrange"].get("vmax", -maxint - 1)
