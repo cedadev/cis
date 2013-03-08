@@ -32,6 +32,7 @@ class DefaultColocator(Colocator):
             except ValueError as e:
                 values[i] = constraint.fill_value
         new_data = LazyData(values, metadata)
+        new_data.metadata.shape = (len(points),)
         new_data.metadata.missing_value = constraint.fill_value
         return [new_data]
 

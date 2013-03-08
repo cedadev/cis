@@ -9,7 +9,7 @@ class Colocate(object):
     def __init__(self, sample_file, output_file):
         from jasmin_cis.data_io.read import read_coordinates
         from jasmin_cis.data_io.write_netcdf import write_coordinates
-
+        self.sample_file = sample_file
         coords = read_coordinates(sample_file)
 
         sample_points = coords.get_coordinates_points()
@@ -25,6 +25,7 @@ class Colocate(object):
         from jasmin_cis.exceptions import CoordinateNotFoundError, InvalidCommandLineOptionError
         from time import time
         from iris import cube
+        from jasmin_cis.cis import __version__
 
         logging.info("Reading data for: "+variable)
         data = read_data(filenames, variable)
@@ -70,4 +71,13 @@ class Colocate(object):
 
         logging.info("Appending data to "+self.output_file)
         for data in new_data:
+            data.metadata.history += "Colocated onto sampling from: " + self.sample_file + " using CIS version " + __version__ + \
+                                      "\nvariable: " + str(variable) + \
+                                      "\nwith files: " + str(filenames) + \
+                                      "\nusing colocator: " + str(col.__class__.__name__) + \
+                                      "\nconstraint method: " + str(con_method) + \
+                                      "\nconstraint parameters: " + str(con_params) + \
+                                      "\nkernel: " + str(kern) + \
+                                      "\nkernel parameters: " + str(kern_params)
+
             add_data_to_file(data, self.output_file)

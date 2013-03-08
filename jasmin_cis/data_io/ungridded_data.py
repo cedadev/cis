@@ -16,7 +16,7 @@ class Metadata(object):
         return cls(name='',standard_name=cube_meta.standard_name,long_name=cube_meta.long_name, units=str(cube_meta.units), misc=cube_meta.attributes)
 
 
-    def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', calendar='', misc=None):
+    def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', calendar='', history = '', misc=None):
         self._name = name
         if standard_name:
             self.standard_name = standard_name
@@ -30,6 +30,7 @@ class Metadata(object):
         self.offset = offset
         self.missing_value = missing_value
         self.calendar = calendar
+        self.history = history
         if misc is None:
             self.misc = {}
         else:

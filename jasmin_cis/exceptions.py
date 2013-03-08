@@ -49,3 +49,6 @@ class InvalidCommandLineOptionError(CISError):
 
 class NotEnoughDatagroupsSpecifiedError(CISError):
     pass
+
+class NotEnoughAxesSpecifiedError(CISError):
+    pass
