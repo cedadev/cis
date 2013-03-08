@@ -447,7 +447,6 @@ class Caliop(AProduct):
         metadata = hdf.read_metadata(var, "SD")
 
         return UngriddedData(var, metadata, coords, get_calipso_data)
-        #return UngriddedData(var, metadata, coords)
 
 class CisCol(AProduct):
 
