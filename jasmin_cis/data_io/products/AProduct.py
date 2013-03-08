@@ -79,8 +79,10 @@ def __get_class(filename, product=None):
             if product == cls.__name__:
                 logging.debug("Selected product class " +  cls.__name__)
                 return cls
-
-    raise ClassNotFoundError("Product cannot be found for given file")
+    error_message = "Product cannot be found for given file.\nSupported products and signatures are:\n"
+    for cls in product_classes:
+        error_message += cls().__class__.__name__ + ": " + str(cls().get_file_signature()) + "\n"
+    raise ClassNotFoundError(error_message)
 
 
 def get_data(filenames, variable, product=None):
