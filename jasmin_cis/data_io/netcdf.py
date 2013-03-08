@@ -117,6 +117,9 @@ def get_metadata(var):
     missing_value = find_missing_value(var)
     long_name = getattr(var,'long_name',"")
     units = getattr(var, 'units', "")
+    # Prepend any hashes with a backslash so they don't break matplotlib
+    units = "\\#".join(units.rsplit('#'))
+
     history = getattr(var, "history", "")
     shape = getattr(var, "shape", None)
     if shape is None:
