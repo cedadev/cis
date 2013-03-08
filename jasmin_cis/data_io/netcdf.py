@@ -118,11 +118,12 @@ def get_metadata(var):
     long_name = getattr(var,'long_name',"")
     units = getattr(var, 'units', "")
     history = getattr(var, "history", "")
-
-    try:
-        shape=(var._recLen[0],)
-    except AttributeError:
-        shape = ()
+    shape = getattr(var, "shape", None)
+    if shape is None:
+        try:
+            shape=(var._recLen[0],)
+        except AttributeError:
+            shape = ()
 
     metadata = Metadata(var._name, standard_name, long_name, units=units, missing_value=missing_value, shape=shape, history=history)
 
