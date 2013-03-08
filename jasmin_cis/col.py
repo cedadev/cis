@@ -77,6 +77,6 @@ class Colocate(object):
                                       "con_method" : con_method,
                                       "con_params" : con_params,
                                       "kern" : kern,
-                                      "kern_params" : kern_params}:
+                                      "kern_params" : kern_params}
 
             add_data_to_file(data, self.output_file)
