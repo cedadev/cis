@@ -201,12 +201,13 @@ class Generic_Plot(object):
         '''
         @return: A boolean saying if the first packed data item contains lat and lon coordinates
         '''
-        from jasmin_cis.exceptions import CoordinateNotFoundError
+        from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
+        from jasmin_cis.exceptions import CoordinateNotFoundError as JasminNotFoundError
         axes = {}
-        axes["X"] = self.packed_data_items[0].coord(axis="X")
         try:
+            axes["X"] = self.packed_data_items[0].coord(axis="X")
             axes["Y"] = self.packed_data_items[0].coord(axis="Y")
-        except CoordinateNotFoundError:
+        except (JasminNotFoundError, irisNotFoundError):
             return False
 
         if axes["X"].name().lower().startswith("lon") and axes["Y"].name().lower().startswith("lat"):
