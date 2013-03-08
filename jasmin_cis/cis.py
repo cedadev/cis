@@ -10,7 +10,7 @@ from jasmin_cis.exceptions import CISError
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "x"
+__version__ = "V0R4M2"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
