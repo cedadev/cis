@@ -184,7 +184,9 @@ class Generic_Plot(object):
             return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
 
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
-        self.matplotlib.xticks(rotation=45)
+        tick_angle = self.plot_args.get("xtickangle", None)
+        if tick_angle is None: tick_angle = 45
+        self.matplotlib.xticks(rotation=tick_angle)
         # Give extra spacing at bottom of plot due to rotated labels
         self.matplotlib.gcf().subplots_adjust(bottom=0.3)
         #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
