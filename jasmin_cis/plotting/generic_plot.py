@@ -185,6 +185,8 @@ class Generic_Plot(object):
 
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
         self.matplotlib.xticks(rotation=45)
+        # Give extra spacing at bottom of plot due to rotated labels
+        self.matplotlib.gcf().subplots_adjust(bottom=0.3)
         #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def set_font_size(self):
