@@ -11,7 +11,7 @@ def initialise_top_parser():
     '''
     The parser to which all arguments are initially passed
     '''
-    parser = argparse.ArgumentParser("CIS")
+    parser = argparse.ArgumentParser("cis")
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help = "Create plots")
     add_plot_parser_arguments(plot_parser)
@@ -31,12 +31,12 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--cbarlabel", metavar = "Colour bar label", nargs = "?", help = "The label for the colour bar")
 
-    parser.add_argument("--xtickangle", metavar = "X tick angle", nargs = "?", help = "The angle of the ticks on the x axis")
-    parser.add_argument("--ytickangle", metavar = "Y tick angle", nargs = "?", help = "The angle of the ticks on the y axis")
+    parser.add_argument("--xtickangle", metavar = "X tick angle", nargs = "?", help = "The angle (in degrees) of the ticks on the x axis")
+    parser.add_argument("--ytickangle", metavar = "Y tick angle", nargs = "?", help = "The angle (in degrees) of the ticks on the y axis")
 
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
-    parser.add_argument("--itemwidth", metavar = "Item width", nargs = "?", help = "The width of the item")   
-    parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font")
+    parser.add_argument("--itemwidth", metavar = "Item width", nargs = "?", help = "The width of an item. Unit are points in the case of a line, and point^2 in the case of a scatter point.")
+    parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font in points")
     parser.add_argument("--cmap", metavar = "Colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar = "Plot height", nargs = "?", help = "The height of the plot in inches")
     parser.add_argument("--width", metavar = "Plot width", nargs = "?", help = "The width of the plot in inches")
@@ -53,14 +53,14 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--vmax", metavar = "Maximum value", nargs = "?", help = "The maximum value to plot")
     parser.add_argument("--vstep", metavar = "X value", nargs = "?", help = "The step of the colour bar")
 
-    parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
+    parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar, either horizontal or vertical")
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
 
     parser.add_argument("--logx", metavar = "Log (base 10) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the x axis")
     parser.add_argument("--logy", metavar = "Log (base 10) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the y axis")
     parser.add_argument("--logv", metavar = "Log (base 10) scale for values", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the colour bar")
 
-    parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
+    parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows grid lines on the plot")
     parser.add_argument("--xaxis", metavar = "Variable on x axis", nargs="?", help="Name of variable to use on the x axis")
     parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
     return parser
