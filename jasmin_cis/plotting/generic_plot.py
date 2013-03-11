@@ -137,14 +137,18 @@ class Generic_Plot(object):
             max_val =  array.max()
         return min_val, max_val
 
-    def calculate_axis_limits(self, axis):
+    def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
         Calculates the axis limits for a given axis
         @param axis: The axis for the limits to be calculated
         @return: A dictionary containing the min and max values of an array along a given axis
         '''
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
         valrange = {}
-        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
+        valrange[axis + "min"] = calculated_min if min_val is None else min_val
+        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "step"] = step
+
         return valrange
 
     def apply_axis_limits(self, valrange, axis):
@@ -154,7 +158,7 @@ class Generic_Plot(object):
         @param axis        The axis to apply the limits to
         '''
         try:
-            if valrange is None: valrange = self.calculate_axis_limits(axis)
+            valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
 
             if axis == "x":
                 step = valrange.pop("xstep", None)
@@ -330,7 +334,7 @@ class Generic_Plot(object):
             from numpy import arange, append
             lines = None
             grid_spacing = 30 # in degrees
-            if range_dict is not None: #If the user has specified range
+            if len(range_dict) != 0: #If the user has specified range
                 min_val = range_dict.get(axis + "min", -360 if axis == "x" else -90)
                 max_val = range_dict.get(axis + "max", 360 if axis == "x" else 90)
                 step = range_dict.get(axis + "step", grid_spacing)

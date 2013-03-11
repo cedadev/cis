@@ -35,8 +35,7 @@ class Scatter_Plot(Generic_Plot):
 
             self.plots.append(self.plot_method.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
-    def calculate_axis_limits(self, axis):
-        valrange = {}
+    def calculate_axis_limits(self, axis, min_val, max_val, step):
         if axis == "x":
             coord_axis = "x"
         elif axis == "y":
@@ -44,7 +43,13 @@ class Scatter_Plot(Generic_Plot):
                 coord_axis = "data"
             elif self.scatter_type == "3D":
                 coord_axis = "y"
-        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+
+        valrange = {}
+        valrange[axis + "min"] = calculated_min if min_val is None else min_val
+        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "step"] = step
+
         return valrange
 
     def format_plot(self):

@@ -59,7 +59,7 @@ class Histogram_3D(Generic_Plot):
         elif axis == "y":
             axis_index = 1
 
-        if self.plot_args[axis + "range"] is not None:
+        if len(self.plot_args[axis + "range"]) != 0:
             step = self.plot_args[axis + "range"].get(axis + "step", None)
         else:
             step = None
@@ -78,7 +78,7 @@ class Histogram_3D(Generic_Plot):
     def set_default_axis_label(self, axis):
         self.set_default_axis_label_for_comparative_plot(axis)
 
-    def calculate_axis_limits(self, axis):
+    def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
         Calculates the limits for a given axis.
         If the axis is "x" then looks at the data of the first data item
@@ -86,16 +86,21 @@ class Histogram_3D(Generic_Plot):
         @param axis: The axis to calculate the limits for
         @return: A dictionary containing the min and max values for the given axis
         '''
-        valrange = {}
         if axis == "x":
             coord_axis = 0
         elif axis == "y":
             coord_axis = 1
-        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[coord_axis]["data"])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[coord_axis]["data"])
+
+        valrange = {}
+        valrange[axis + "min"] = calculated_min if min_val is None else min_val
+        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "step"] = step
+
         return valrange
 
     def apply_axis_limits(self, valrange, axis):
-        if valrange is not None:
+        if len(valrange) != 0:
             if axis == "x":
                 step = valrange.pop("xstep", None)
                 self.matplotlib.xlim(**valrange)

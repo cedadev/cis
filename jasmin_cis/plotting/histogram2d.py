@@ -10,7 +10,7 @@ class Histogram_2D(Generic_Plot):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        if self.plot_args["xrange"] is not None:
+        if len(self.plot_args["xrange"]) != 0:
             step = self.plot_args["xrange"].get("xstep", None)
         else:
             step = None
@@ -74,19 +74,24 @@ class Histogram_2D(Generic_Plot):
             elif axis == "y":
                 self.plot_args[axislabel] = "Frequency"
 
-    def calculate_axis_limits(self, axis):
+    def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
         Calculates the limits for a given axis.
         If the axis is "y" then looks at the "data" as this is where the values are stored
         @param axis: The axis to calculate the limits for
         @return: A dictionary containing the min and max values for the given axis
         '''
-        valrange = {}
         if axis == "x":
             coord_axis = "x"
         elif axis == "y":
             coord_axis = "data"
-        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+
+        valrange = {}
+        valrange[axis + "min"] = calculated_min if min_val is None else min_val
+        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "step"] = step
+
         return valrange
 
     def apply_axis_limits(self, valrange, axis):
@@ -96,7 +101,7 @@ class Histogram_2D(Generic_Plot):
         @param valrange: A dictionary containing the min and/or max values for the axis
         @param axis: The axis to apply the limits to
         '''
-        if valrange is not None:
+        if len(valrange) != 0:
             if axis == "x":
                 step = valrange.pop("xstep", None)
                 self.matplotlib.xlim(**valrange)

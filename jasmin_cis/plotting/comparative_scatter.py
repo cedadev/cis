@@ -34,14 +34,19 @@ class Comparative_Scatter(Generic_Plot):
         else:
             raise NotEnoughDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 
-    def calculate_axis_limits(self, axis):
-        valrange = {}
+    def calculate_axis_limits(self, axis, min_val, max_val, step):
         if axis == "x":
             axis_index = 0
         elif axis == "y":
             axis_index = 1
 
-        valrange[axis + "min"], valrange[axis + "max"] = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[axis_index]["data"])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[axis_index]["data"])
+
+        valrange = {}
+        valrange[axis + "min"] = calculated_min if min_val is None else min_val
+        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "step"] = step
+
         return valrange
 
     def format_plot(self):
