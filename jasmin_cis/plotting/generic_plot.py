@@ -403,6 +403,12 @@ class Generic_Plot(object):
         draw_grid = self.plot_args.pop("grid", False)
         if draw_grid: self.matplotlib.grid(True, which="both")
 
+        if self.plot_args.get("xtickangle", None) is not None:
+            self.matplotlib.xticks(rotation=self.plot_args.get("xtickangle"))
+
+        if self.plot_args.get("ytickangle", None) is not None:
+            self.matplotlib.yticks(rotation=self.plot_args.get("ytickangle"))
+
         self.set_font_size()
 
         # If any of the options have not been specified, then use the defaults
@@ -443,6 +449,12 @@ class Generic_Plot(object):
             if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
             if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
             if self.plot_args["title"] is None: self.plot_args["title"] = self.packed_data_items[0].long_name
+
+            if self.plot_args.get("xtickangle", None) is not None:
+                self.matplotlib.xticks(rotation=self.plot_args.get("xtickangle"))
+
+            if self.plot_args.get("ytickangle", None) is not None:
+                self.matplotlib.yticks(rotation=self.plot_args.get("ytickangle"))
 
             for key in plot_options.keys():
             # Call the method associated with the option
