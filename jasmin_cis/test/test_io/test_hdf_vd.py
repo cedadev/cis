@@ -24,7 +24,8 @@ def test_that_can_get_metadata():
     vd = hdf_vd.read(valid_hdf_vd_file,'DEM_elevation')['DEM_elevation']
     metadata = hdf_vd.get_metadata(vd)
     eq_(metadata._name,"DEM_elevation")
-    eq_(metadata.standard_name,"")
+    # No standard name, so gets _name by default
+    eq_(metadata.standard_name,"DEM_elevation")
     eq_(metadata.long_name,"Digital Elevation Map")
     eq_(metadata.shape,[37081])
     eq_(metadata.units,"meters")

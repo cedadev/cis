@@ -43,6 +43,9 @@ valid_ascii_filename = make_pathname("my_dummy_points_with_values.txt")
 ascii_filename_with_no_values = make_pathname("my_dummy_points.txt")
 valid_ascii_variable = 0
 
+valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
+valid_NCAR_NetCDF_RAF_variable = 'ATX'
+
 test_directory = make_pathname('test_dir')
 
 large_15GB_file_filename = "/run/media/daniel/Storage/xglnwa.pm.k8dec-k9nov.nc"

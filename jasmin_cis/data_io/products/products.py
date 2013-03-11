@@ -514,6 +514,41 @@ class NetCDF_CF(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
+
+class NCAR_NetCDF_RAF(NetCDF_CF):
+
+    def get_file_signature(self):
+        return [r'RF.*\.nc']
+
+    def create_coords(self, filenames, variable = None):
+        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
+        from jasmin_cis.data_io.Coord import Coord
+
+        variables = [ "LATC", "LONC", "GGALTC", "Time" ]
+        logging.info("Listing coordinates: " + str(variables))
+
+        if variable is not None:
+            variables.append(variable)
+
+        data_variables = read_many_files(filenames, variables, dim='Time')
+
+        coords = CoordList()
+        coords.append(Coord(data_variables["LATC"], get_metadata(data_variables["LATC"]), "Y"))
+        coords.append(Coord(data_variables["LONC"], get_metadata(data_variables["LONC"]), "X"))
+        coords.append(Coord(data_variables["GGALTC"], get_metadata(data_variables["GGALTC"]), "Z"))
+        time_coord = Coord(data_variables["Time"], get_metadata(data_variables["Time"]), "T")
+        time_coord.convert_to_std_time()
+        coords.append(time_coord)
+
+        if variable is None:
+            return coords
+        else:
+            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
+
+    def create_data_object(self, filenames, variable):
+        return self.create_coords(filenames, variable)
+
+
 class NetCDF_CF_Gridded(NetCDF_CF):
 
     def get_file_signature(self):
@@ -656,7 +691,7 @@ class Xenida(NetCDF_CF_Gridded):
 
         #days since 1979-4-1
         time = Coord(data_variables["time"], get_metadata(data_variables["time"]), "T")
-        time.convert_time_since_to_std_time(time.units)
+        time.convert_to_std_time()
         coords.append(time)
 
         return coords

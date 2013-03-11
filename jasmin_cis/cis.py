@@ -155,7 +155,7 @@ def col_cmd(main_arguments):
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
 
-    col = Colocate(main_arguments.samplefilename, output_file)
+    col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, output_file)
 
     for input_group in main_arguments.datagroups:
         variable = input_group['variable']
@@ -168,7 +168,7 @@ def col_cmd(main_arguments):
         kern_options = input_group['kernel'][1] if  input_group['kernel'] is not None else None
 
         try:
-            col.colocate(variable, filenames, col_name, con_name, con_options, kern_name, kern_options)
+            col.colocate(variable, filenames, col_name, col_options, con_name, con_options, kern_name, kern_options)
         except CISError as e:
             __error_occurred(e)
         except ClassNotFoundError as e:

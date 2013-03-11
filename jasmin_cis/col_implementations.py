@@ -3,6 +3,13 @@ import logging
 
 
 class DefaultColocator(Colocator):
+
+    def __init__(self, var_name='', var_long_name='', var_units=''):
+        super(DefaultColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+
     def colocate(self, points, data, constraint, kernel):
         '''
             This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
@@ -24,20 +31,30 @@ class DefaultColocator(Colocator):
         if isinstance(data, UngriddedData):
             data = data.get_points()
 
-        values = np.zeros(len(points))
+        # Fill will the FillValue from the start
+        values = np.zeros(len(points)) + constraint.fill_value
+
         for i, point in enumerate(points):
             con_points = constraint.constrain_points(point, data)
             try:
                 values[i] = kernel.get_value(point, con_points)
-            except ValueError as e:
-                values[i] = constraint.fill_value
+            except ValueError:
+                pass
         new_data = LazyData(values, metadata)
+        if self.var_name: new_data.metadata._name = self.var_name
+        if self.var_long_name: new_data.metadata.long_name = self.var_long_name
+        if self.var_units: new_data.units = self.var_units
         new_data.metadata.shape = (len(points),)
         new_data.metadata.missing_value = constraint.fill_value
         return [new_data]
 
 
 class DebugColocator(Colocator):
+
+    def __init__(self, max_vals=1000, print_step=10.0):
+        super(DebugColocator, self).__init__()
+        self.max_vals = int(max_vals)
+        self.print_step = float(print_step)
 
     def colocate(self, points, data, constraint, kernel):
         # This is the same colocate method as above with extra logging and timing steps. This is useful for debugging
@@ -53,8 +70,12 @@ class DebugColocator(Colocator):
         if isinstance(data, UngriddedData):
             data = data.get_points()
 
-        short_points = points if len(points)<1000 else points[:999]
-        values = np.zeros(len(short_points))
+        # Only colocate a certain number of points, as a quick test
+        short_points = points if len(points)<self.max_vals else points[:self.max_vals-1]
+
+        # We still need to output the full size list, to match the size of the coordinates
+        values = np.zeros(len(points)) + constraint.fill_value
+
         times = np.zeros(len(short_points))
         for i, point in enumerate(short_points):
             t1 = time()
@@ -62,13 +83,14 @@ class DebugColocator(Colocator):
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
-                values[i] = constraint.fill_value
+                pass
             times[i] = time() - t1
-            frac, rem = math.modf(i/10.0)
+            frac, rem = math.modf(i/self.print_step)
             if frac == 0: print str(i)+" took: "+str(times[i])
         logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
         new_data = LazyData(values, metadata)
-        new_data.missing_value = constraint.fill_value
+        new_data.metadata.shape = (len(points),)
+        new_data.metadata.missing_value = constraint.fill_value
         return [new_data]
 
 
@@ -192,6 +214,17 @@ class nn_gridded(Kernel):
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
         return nearest_neighbour_data_value(data, point.get_coord_tuple())
+
+
+class nn_gridded_diff(Kernel):
+    def get_value(self, point, data):
+        '''
+            Co-location routine using nearest neighbour algorithm optimized for gridded data.
+             This calls out to iris to do the work and returns the difference between the original
+             value and the value of the nearest neighbour
+        '''
+        from iris.analysis.interpolate import nearest_neighbour_data_value
+        return nearest_neighbour_data_value(data, point.get_coord_tuple()) - point.val[0]
 
 
 class li(Kernel):

@@ -6,33 +6,50 @@ import logging
 
 class Colocate(object):
 
-    def __init__(self, sample_file, output_file):
-        from jasmin_cis.data_io.read import read_coordinates
+    def __init__(self, sample_files, sample_var, output_file):
+        from jasmin_cis.data_io.read import read_coordinates, read_data
         from jasmin_cis.data_io.write_netcdf import write_coordinates
-        self.sample_file = sample_file
-        coords = read_coordinates(sample_file)
 
-        sample_points = coords.get_coordinates_points()
+        self.sample_files = sample_files
+        if sample_var is None:
+            coords = read_coordinates(sample_files)
+            sample_points = coords.get_coordinates_points()
+        else:
+            data = read_data(sample_files, sample_var)
+            coords = data.coords()
+            sample_points = data.get_points()
+
         write_coordinates(coords, output_file)
 
         self.sample_points = sample_points
         self.output_file = output_file
 
-    def colocate(self, variable, filenames, col=None, con_method=None, con_params=None, kern=None, kern_params=None):
-        from jasmin_cis.data_io.read import read_data
-        from jasmin_cis.data_io.write_netcdf import add_data_to_file
-        from jasmin_cis.col_framework import get_constraint, get_kernel, get_colocator
-        from jasmin_cis.exceptions import CoordinateNotFoundError, InvalidCommandLineOptionError
-        from time import time
-        from iris import cube
-        from jasmin_cis.cis import __version__
+    @staticmethod
+    def _get_valid_colocator_instance(col_name, col_params):
+        from jasmin_cis.col_framework import get_colocator
+        from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
-        logging.info("Reading data for: "+variable)
-        data = read_data(filenames, variable)
+        if col_name is None:
+            col_name = 'DefaultColocator'
+        col_cls = get_colocator(col_name)
 
-        if con_method is None:
-            con_method = 'DummyConstraint'
-        con_cls = get_constraint(con_method)
+        try:
+            if col_params is not None:
+                col = col_cls(**col_params)
+            else:
+                col = col_cls()
+        except TypeError as e:
+            raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified colocator.")
+        return col
+
+    @staticmethod
+    def _get_valid_constraint_instance(con_name, con_params):
+        from jasmin_cis.col_framework import get_constraint
+        from jasmin_cis.exceptions import InvalidCommandLineOptionError
+
+        if con_name is None:
+            con_name = 'DummyConstraint'
+        con_cls = get_constraint(con_name)
 
         try:
             if con_params is not None:
@@ -41,23 +58,45 @@ class Colocate(object):
                 con = con_cls()
         except TypeError as e:
             raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified constraint method.")
+        return con
 
-        if kern is None:
-            if isinstance(data, cube.Cube):
-                kern = 'nn_gridded'
+    @staticmethod
+    def _get_valid_kernel_instance(kern_name, kern_params, cube=False):
+        from jasmin_cis.col_framework import get_kernel
+        from jasmin_cis.exceptions import InvalidCommandLineOptionError
+
+        if kern_name is None:
+            if cube:
+                kern_name = 'nn_gridded'
             else:
-                kern = 'nn_horizontal'
-        kern_cls = get_kernel(kern)
+                kern_name = 'nn_horizontal'
+        kern_cls = get_kernel(kern_name)
 
         try:
-            kernel = kern_cls(**kern_params)
+            if kern_params is not None:
+                kernel = kern_cls(**kern_params)
+            else:
+                kernel = kern_cls()
         except TypeError as e:
             raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified kernel.")
 
+        return kernel
+
+    def colocate(self, variable, filenames, col_name=None, col_params=None, con_method=None, con_params=None, kern=None, kern_params=None):
+        from jasmin_cis.data_io.read import read_data
+        from jasmin_cis.data_io.write_netcdf import add_data_to_file
+        from jasmin_cis.exceptions import CoordinateNotFoundError
+        from time import time
+        from iris import cube
+        from jasmin_cis.cis import __version__
+
+        logging.info("Reading data for: "+variable)
+        data = read_data(filenames, variable)
+
         # Find colocator, constraint_fn and kernel to use
-        if col is None:
-            col = 'DefaultColocator'
-        col = get_colocator(col)
+        col = Colocate._get_valid_colocator_instance(col_name, col_params)
+        con = Colocate._get_valid_constraint_instance(con_method, con_params)
+        kernel = Colocate._get_valid_kernel_instance(kern, kern_params, isinstance(data, cube.Cube))
 
         logging.info("Colocating, this could take a while...")
         t1 = time()
@@ -71,10 +110,11 @@ class Colocate(object):
 
         logging.info("Appending data to "+self.output_file)
         for data in new_data:
-            data.metadata.history += "Colocated onto sampling from: " + self.sample_file + " using CIS version " + __version__ + \
+            data.metadata.history += "Colocated onto sampling from: " + str(self.sample_files) + " using CIS version " + __version__ + \
                                       "\nvariable: " + str(variable) + \
                                       "\nwith files: " + str(filenames) + \
-                                      "\nusing colocator: " + str(col.__class__.__name__) + \
+                                      "\nusing colocator: " + str(col_name) + \
+                                      "\ncolocator parameters: " + str(col_params) + \
                                       "\nconstraint method: " + str(con_method) + \
                                       "\nconstraint parameters: " + str(con_params) + \
                                       "\nkernel: " + str(kern) + \
