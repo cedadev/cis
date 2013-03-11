@@ -31,6 +31,9 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
     parser.add_argument("--cbarlabel", metavar = "Colour bar label", nargs = "?", help = "The label for the colour bar")
 
+    parser.add_argument("--xtickangle", metavar = "X tick angle", nargs = "?", help = "The angle of the ticks on the x axis")
+    parser.add_argument("--ytickangle", metavar = "Y tick angle", nargs = "?", help = "The angle of the ticks on the y axis")
+
     parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
     parser.add_argument("--itemwidth", metavar = "Item width", nargs = "?", help = "The width of the item")   
     parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font")
@@ -52,9 +55,11 @@ def add_plot_parser_arguments(parser):
 
     parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar")
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
+
     parser.add_argument("--logx", metavar = "Log (base 10) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the x axis")
     parser.add_argument("--logy", metavar = "Log (base 10) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the y axis")
     parser.add_argument("--logv", metavar = "Log (base 10) scale for values", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the colour bar")
+
     parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows a grid on a line graph")
     parser.add_argument("--xaxis", metavar = "Variable on x axis", nargs="?", help="Name of variable to use on the x axis")
     parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
@@ -347,7 +352,9 @@ def validate_plot_args(arguments, parser):
     arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
     arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)
     arguments.height = parse_float(arguments.height, "height", parser)
-    arguments.width = parse_float(arguments.width, "width", parser) 
+    arguments.width = parse_float(arguments.width, "width", parser)
+    arguments.xtickangle = parse_float(arguments.xtickangle, "x tick angle", parser)
+    arguments.ytickangle = parse_float(arguments.ytickangle, "y tick angle", parser)
     
     return arguments
 
