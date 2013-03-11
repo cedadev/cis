@@ -1,7 +1,12 @@
 from nose.tools import eq_, istest, raises
 from jasmin_cis.data_io.hdf import __read_hdf4
 from jasmin_cis.exceptions import InvalidVariableError
-from jasmin_cis.test.test_files.data import valid_hdf_sd_file
+from jasmin_cis.test.test_files.data import *
+
+@istest
+@raises(IOError)
+def should_raise_io_error_with_non_hdf_file():
+    __read_hdf4(valid_cloud_cci_filename, valid_cloud_cci_variable)
 
 @istest
 def test_read_hdf4():
