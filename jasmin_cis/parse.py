@@ -22,8 +22,12 @@ def initialise_top_parser():
     return parser
 
 
-def add_plot_parser_arguments(parser):    
-    parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+", help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label, where the last three arguments are optional")
+def add_plot_parser_arguments(parser):
+    from jasmin_cis.data_io.products.AProduct import AProduct
+    import jasmin_cis.plugin as plugin
+    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products')
+    parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
+                        help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label:product, where the last four arguments are optional and product is one of " + str([cls().__class__.__name__ for cls in product_classes]))
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
 
@@ -140,6 +144,17 @@ def parse_float(arg, name, parser):
             parser.error("'" + arg + "' is not a valid " + name)
             return None
 
+def check_product(product, parser):
+    from jasmin_cis.data_io.products.AProduct import AProduct
+    import jasmin_cis.plugin as plugin
+    if product:
+        product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products')
+        product_names = [cls().__class__.__name__ for cls in product_classes]
+        if product not in product_names:
+            parser.error(product + " is not a valid product. Please use one of " + str(product_names))
+    else:
+        product = None
+    return product
 
 def get_plot_datagroups(datagroups, parser):
     '''
@@ -148,8 +163,8 @@ def get_plot_datagroups(datagroups, parser):
     @return The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "itemstyle", "label"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_nothing, check_nothing)
+    DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "itemstyle", "label", "product"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_nothing, check_nothing, check_product)
     return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
 
 

@@ -99,7 +99,7 @@ def plot_cmd(main_arguments):
     data = []
     try:
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
-        data = [ read_data(datagroup['filenames'],datagroup['variable']) for datagroup in main_arguments.datagroups ]
+        data = [ read_data(datagroup['filenames'], datagroup['variable'], datagroup['product']) for datagroup in main_arguments.datagroups ]
 
     except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError) as e:
         __error_occurred(e)
