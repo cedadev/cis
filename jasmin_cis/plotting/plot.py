@@ -45,17 +45,17 @@ class Plotter(object):
         @param mplargs: Any other arguments received from the parser
         @param mplkwargs: Any other keyword arguments received from the plotter
         '''
-        mplkwargs.pop("xmin")
-        mplkwargs.pop("xmax")
-        mplkwargs.pop("xstep")
+        mplkwargs.pop("xmin", None)
+        mplkwargs.pop("xmax", None)
+        mplkwargs.pop("xstep", None)
 
-        mplkwargs.pop("ymin")
-        mplkwargs.pop("ymax")
-        mplkwargs.pop("ystep")
+        mplkwargs.pop("ymin", None)
+        mplkwargs.pop("ymax", None)
+        mplkwargs.pop("ystep", None)
 
-        mplkwargs.pop("vmin")
-        mplkwargs.pop("vmax")
-        mplkwargs.pop("vstep")
+        mplkwargs.pop("vmin", None)
+        mplkwargs.pop("vmax", None)
+        mplkwargs.pop("vstep", None)
 
         plot_args = {"datagroups" : mplkwargs.pop("datagroups", None),
                      "nocolourbar" : mplkwargs.pop("nocolourbar", False),
