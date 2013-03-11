@@ -7,6 +7,11 @@ from jasmin_cis.test.test_files.data import *
 from jasmin_cis.data_io.netcdf import *
 
 @istest
+@raises(IOError)
+def should_raise_io_error_with_file_that_is_not_netcdf():
+    read(valid_aeronet_filename, valid_aeronet_variable)
+
+@istest
 def test_that_can_read_all_variables():
     dict = get_netcdf_file_variables(valid_2d_filename)
     eq_(len(dict),426)
