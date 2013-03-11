@@ -63,7 +63,7 @@ def load_aeronet(fname, variables=None):
     try:
         rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True,
                              converters={0:date2daynum, 1:time2seconds}, missing_values='N/A', usemask=True)
-    except StopIteration as e:
+    except (StopIteration, IndexError) as e:
         raise IOError(e)
 
     lend = len(rawd)
