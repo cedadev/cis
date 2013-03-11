@@ -22,7 +22,6 @@ class Generic_Plot(object):
             self.mplkwargs["norm"] = LogNorm()
 
         self.plot_args = plot_args
-        if self.plot_args["valrange"] is None: self.plot_args["valrange"] = {}
         self.packed_data_items = packed_data_items
         self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
         if calculate_min_and_max_values: self.calculate_min_and_max_values()

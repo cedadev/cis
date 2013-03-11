@@ -300,8 +300,6 @@ def check_range(arguments, parser, range_axis):
     if step is not None:
         ax_range[range_axis + "step"] = parse_as_float_or_date(step, range_axis + "step", parser)
 
-    if len(ax_range) == 0: ax_range = None
-
     return ax_range
 
 
