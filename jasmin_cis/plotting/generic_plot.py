@@ -184,6 +184,7 @@ class Generic_Plot(object):
             return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
 
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
+        self.matplotlib.xticks(rotation=45)
         #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def set_font_size(self):
