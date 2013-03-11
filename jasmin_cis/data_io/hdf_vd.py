@@ -71,7 +71,11 @@ def get_data(vds, first_record = False):
     filename = vds.filename
     variable = vds.variable
 
-    datafile = HDF(filename)
+    try:
+        datafile = HDF(filename)
+    except HDF4Error as e:
+        raise IOError(e)
+
     vs = datafile.vstart()
 
     if first_record:
