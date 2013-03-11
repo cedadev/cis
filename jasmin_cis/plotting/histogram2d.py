@@ -10,17 +10,9 @@ class Histogram_2D(Generic_Plot):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        if len(self.plot_args["xrange"]) != 0:
-            step = self.plot_args["xrange"].get("xstep", None)
-        else:
-            step = None
+        self.mplkwargs["bins"] = self.calculate_bins()
 
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            if step is None:
-                self.mplkwargs.pop("bins", None)
-            else:
-                self.mplkwargs["bins"] = int((unpacked_data_item["data"].max() - unpacked_data_item["data"].min())/step)
-
             datafile = self.plot_args["datagroups"][i]
             if datafile["itemstyle"]:
                 if datafile["itemstyle"] in self.valid_histogram_styles:
@@ -45,6 +37,35 @@ class Histogram_2D(Generic_Plot):
             self.matplotlib.hist(data, *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
+
+    def calculate_bins(self):
+        from math import ceil
+        from numpy import arange
+        # Calculate min and max of all data
+        min_v = min([unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items])
+        max_v = max([unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items])
+        # Calculate range of all data rounded UP to nearest integer
+        val_range = ceil(max_v - min_v)
+
+        if len(self.plot_args["xrange"]) != 0:
+            bin_width = self.plot_args["xrange"].get("xstep", None)
+        else:
+            bin_width = None
+
+        # Calculate default bin width
+        if bin_width is None: bin_width = ceil((max_v - min_v) / 10)
+
+        print min_v
+        print max_v
+        print bin_width
+
+        # Create an array of bin EDGES
+        bins = arange(start = min_v,
+                      stop = min_v + val_range + bin_width,
+                      step = bin_width)
+
+        return bins
+
 
     def format_plot(self):
         # We don't format the time axis here as we're only plotting frequency against data
