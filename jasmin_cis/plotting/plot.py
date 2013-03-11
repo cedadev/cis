@@ -72,7 +72,9 @@ class Plotter(object):
                      "cbarlabel" : mplkwargs.pop("cbarlabel", None),
                      "title" : mplkwargs.pop("title", None),
                      "fontsize" : mplkwargs.pop("fontsize", None),
-                     "itemwidth" : mplkwargs.pop("itemwidth", 1)}
+                     "itemwidth" : mplkwargs.pop("itemwidth", 1),
+                     "xtickangle" : mplkwargs.pop("xtickangle", None),
+                     "ytickangle" : mplkwargs.pop("ytickangle", None)}
 
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
