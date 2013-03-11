@@ -316,8 +316,11 @@ class Generic_Plot(object):
             meridian_labels = self.__format_map_ticks(meridians)
             parallel_labels = self.__format_map_ticks(parallels)
 
-            self.matplotlib.xticks(meridians, meridian_labels)
-            self.matplotlib.yticks(parallels, parallel_labels)
+            xtickangle = self.plot_args.get("xtickangle", None)
+            ytickangle = self.plot_args.get("ytickangle", None)
+
+            self.matplotlib.xticks(meridians, meridian_labels, rotation = xtickangle)
+            self.matplotlib.yticks(parallels, parallel_labels, rotation = ytickangle)
 
     def __create_map_grid_lines(self):
         '''
