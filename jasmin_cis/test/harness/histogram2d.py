@@ -1,39 +1,32 @@
-from plotting.plot import Plotter
-from data_io.Coord import CoordList, Coord
-from data_io.ungridded_data import UngriddedData, Metadata
-from numpy import array, arange
+import matplotlib.pyplot as plt
+from numpy import arange
+from numpy.random import random
+from math import ceil, floor
 
-x = Coord(arange(10), Metadata('latitude'),'x')
-coords = CoordList([x])
-data1 = array([1,1.5,1,1.5,
-              2,2,2.5,
-              3,3.5,
-              4,
-              5,5.5,
-              6,6.5,6,
-              7,7,7.5,7,
-              8,8.5,8,8,8,
-              9,9,9.5,9,
-              10,10.5,10])
+w = 2
 
-data2 = array([1.5,1,1.5,1,1,
-               2,2.5,2,
-               3.5,
-               5.5,5,5,
-               6.5,6,
-               7,7.5,7,7,7,
-               8.5,8,8,8,8,8,8,
-               9,9.5,9,
-               10.5,10])
+#d1 = arange(start=-5, stop=20.6, step=0.5)
+d1 = random(30)*50 - 5
+print d1
 
+#d2 = arange(start=0,stop=50, step=1)
+d2 = random(10)*20
+print d2
 
-data_object1 = UngriddedData(data1, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
-data_object2 = UngriddedData(data2, Metadata(standard_name='snow', long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+# GETTING THE TOTAL RANGE
+min_v = min(d1.min(), d2.min())
+max_v = max(d1.max(), d2.max())
+r = ceil(max_v - min_v)
+print r
 
-Plotter([data_object1, data_object2], xrange={"xmin" : 2, "xmax" : 10, "xstep" : 0.5},
-        yrange={"ymin" : 1},
-        logy = True,
-        grid = True,
-        datagroups = [{"itemstyle" : "step", "color" : "green", "label" : "overidden rain"},
-                                         {"itemstyle" : "step", "color" : None, "label" : None}],
-        plot_type="histogram2d")
+w = None
+if w is None:
+    w = ceil((max_v-min_v)/10)
+
+# CREATING AN ARRAY OF BIN EDGES
+bins = arange(start=min_v,stop=min_v+r+w,step=w)
+print bins
+
+plt.hist(d1, bins=bins, histtype="step")
+plt.hist(d2, bins=bins, histtype="step")
+plt.show()
