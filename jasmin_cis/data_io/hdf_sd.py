@@ -104,10 +104,13 @@ def get_calipso_data(sds):
     attributes = sds.attributes()
 
     # Missing data.
-    try:
-        missing_val = calipso_fill_values[attributes.get('format', None)]
-    except KeyError:
-        missing_val = attributes.get('_FillValue', None)
+    missing_val = attributes.get('fillvalue', None)
+    if missing_val is None:
+        try:
+            missing_val = calipso_fill_values[attributes.get('format', None)]
+        except KeyError:
+            # Last guess
+            missing_val = attributes.get('_FillValue', None)
 
     data = create_masked_array_for_missing_data(data, missing_val)
 
