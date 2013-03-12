@@ -47,10 +47,7 @@ class Histogram_2D(Generic_Plot):
         # Calculate range of all data rounded UP to nearest integer
         val_range = ceil(max_v - min_v)
 
-        if len(self.plot_args["xrange"]) != 0:
-            bin_width = self.plot_args["xrange"].get("xstep", None)
-        else:
-            bin_width = None
+        bin_width = self.plot_args.get("xbinwidth", None)
 
         # Calculate default bin width
         if bin_width is None: bin_width = ceil((max_v - min_v) / 10)

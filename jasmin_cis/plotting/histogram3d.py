@@ -59,10 +59,7 @@ class Histogram_3D(Generic_Plot):
         elif axis == "y":
             axis_index = 1
 
-        if len(self.plot_args[axis + "range"]) != 0:
-            step = self.plot_args[axis + "range"].get(axis + "step", None)
-        else:
-            step = None
+        step = self.plot_args.get(axis + "binwidth", None)
 
         if step is None:
             number_of_bins = 10

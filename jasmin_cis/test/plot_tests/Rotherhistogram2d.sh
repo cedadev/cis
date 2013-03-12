@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot AOT_440:${source_dir}920801_091128_Agoufou_small.lev20::step --type histogram2d --xlabel overiddenx --fontsize 10 --height 10 --width 10 --xmin 0 --xmax 1.5 --xstep 0.1 --grid --output "O$SUBJECT.png"
+cis plot AOT_440:${source_dir}920801_091128_Agoufou_small.lev20::step --type histogram2d --xlabel overiddenx --fontsize 10 --height 10 --width 10 --xmin 0 --xmax 1.5 --xbinwidth 0.1 --grid --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
