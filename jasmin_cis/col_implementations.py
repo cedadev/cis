@@ -49,6 +49,70 @@ class DefaultColocator(Colocator):
         return [new_data]
 
 
+class AverageColocator(Colocator):
+
+    def __init__(self, var_name='', var_long_name='', var_units=''):
+        super(AverageColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+
+    def colocate(self, points, data, constraint, kernel):
+        '''
+            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
+             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
+             for the output LazyData object is copied from the input data object.
+        @param points: A list of HyperPoints
+        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+                            based on it's internal parameters
+        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
+        @return: A single LazyData object
+        '''
+        from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
+        from jasmin_cis.exceptions import ClassNotFoundError
+
+        import numpy as np
+
+        metadata = data.metadata
+
+        if not isinstance(kernel, full_average):
+            raise ClassNotFoundError("Invalid kernel specified for this colocator. Should be 'full_average'.")
+
+        # Convert ungridded data to a list of points
+        if isinstance(data, UngriddedData):
+            data = data.get_points()
+
+        # Fill will the FillValue from the start
+        mean = np.zeros(len(points)) + constraint.fill_value
+        stddev = np.zeros(len(points)) + constraint.fill_value
+        nopoints = np.zeros(len(points)) + constraint.fill_value
+
+        for i, point in enumerate(points):
+            con_points = constraint.constrain_points(point, data)
+            try:
+                mean[i], stddev[i], nopoints[i] = kernel.get_value(point, con_points)
+            except ValueError:
+                pass
+
+        mean_data = LazyData(mean, metadata)
+        if self.var_name: mean_data.metadata._name = self.var_name
+        if self.var_long_name: mean_data.metadata.long_name = self.var_long_name
+        if self.var_units: mean_data.units = self.var_units
+        mean_data.metadata.shape = (len(points),)
+        mean_data.metadata.missing_value = constraint.fill_value
+
+        stddev_data = LazyData(stddev, Metadata(name='std_dev',
+                                                long_name='Standard deviation from the mean in '+metadata._name,
+                                                shape=(len(points),), missing_value=constraint.fill_value, units=mean_data.units))
+
+        nopoints_data = LazyData(nopoints, Metadata(name='no_points',
+                                                    long_name='Number of points used to calculate the mean of '+metadata._name,
+                                                    shape=(len(points),), missing_value=constraint.fill_value, units='1'))
+
+        return [mean_data, stddev_data, nopoints_data]
+
+
 class DebugColocator(Colocator):
 
     def __init__(self, max_vals=1000, print_step=10.0):

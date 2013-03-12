@@ -2,6 +2,7 @@
  Module to test the colocation routines
 '''
 from nose.tools import istest, eq_, assert_almost_equal, raises
+from jasmin_cis.exceptions import ClassNotFoundError
 from test_util import mock
 
 
@@ -27,8 +28,69 @@ class TestDefaultColocator(ColocatorTests):
     pass
 
 
+class TestAverageColocator(ColocatorTests):
+
+    @istest
+    @raises(ClassNotFoundError)
+    def should_throw_error_if_full_average_kernel_is_not_used(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import AverageColocator, mean, DummyConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(1.0, 1.0,12.0,dt.datetime(1984,8,29,8,34)))
+
+        col = AverageColocator()
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), mean())
+
+
+    @istest
+    def test_basic_col_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import AverageColocator, full_average, DummyConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(1.0, 1.0,12.0,dt.datetime(1984,8,29,8,34)))
+
+        col = AverageColocator()
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), full_average())
+        means = new_data[0]
+        std_dev = new_data[1]
+        no_points = new_data[2]
+
+        eq_(means.name(), 'rain')
+        eq_(std_dev.name(), 'std_dev')
+        eq_(no_points.name(), 'no_points')
+
+
 class KernelTests(object):
     pass
+
+
+class Test_full_average(KernelTests):
+
+    @istest
+    def test_basic_col_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import AverageColocator, full_average, DummyConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(1.0, 1.0,12.0,dt.datetime(1984,8,29,8,34)))
+
+        col = AverageColocator()
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), full_average())
+        means = new_data[0]
+        std_dev = new_data[1]
+        no_points = new_data[2]
+
+        eq_(means.data[0], 25.5)
+        assert_almost_equal(std_dev.data[0], 14.4308696897)
+        eq_(no_points.data[0], 50)
 
 
 class Test_nn_gridded(KernelTests):
@@ -357,41 +419,48 @@ class TestSepConstraint(ConstraintTests):
 
     @istest
     def test_all_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-        from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
+        from jasmin_cis.data_io.hyperpoint import HyperPoint
+        from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
         from jasmin_cis.time_util import convert_datetime_to_std_time
+        import numpy as np
+
         ug_data = mock.make_regular_4d_ungridded_data()
-        # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29))))
+        ug_data_points = ug_data.get_points()
+        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
         h_sep = 1000
         # 15m altitude seperation
         a_sep = 15
-        # 1 day time seperation
-        t_sep = '1d'
+        # 1 day (and a little bit) time seperation
+        t_sep = '1d1M'
 
         constraint = SepConstraint(h_sep = h_sep, a_sep = a_sep, t_sep = t_sep)
 
         # This should leave us with 9 points: [[ 22, 23, 24]
         #                                      [ 27, 28, 29]
         #                                      [ 32, 33, 34]]
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
-        eq_(new_data.data[0], 28.0)
+        ref_vals = np.array([22,23,24,27,28,29,32,33,34])
+
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(all(np.equal(ref_vals, new_vals)))
 
     @istest
     def test_alt_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-        from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
+        from jasmin_cis.data_io.hyperpoint import HyperPoint
+        from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
+        from jasmin_cis.time_util import convert_datetime_to_std_time
+        import numpy as np
+
         ug_data = mock.make_regular_4d_ungridded_data()
-        # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+        ug_data_points = ug_data.get_points()
+        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
 
         # 15m altitude seperation
         a_sep = 15
@@ -401,44 +470,59 @@ class TestSepConstraint(ConstraintTests):
         # This should leave us with 15 points:   [ 21.  22.  23.  24.  25.]
         #                                       [ 26.  27.  28.  29.  30.]
         #                                       [ 31.  32.  33.  34.  35.]
+        ref_vals = np.array([21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,33.,34.,35.])
 
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
-        eq_(new_data.data[0], 28.0)
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(all(np.equal(ref_vals, new_vals)))
 
     @istest
     def test_horizontal_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-        from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
+        from jasmin_cis.data_io.hyperpoint import HyperPoint
+        from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
+        from jasmin_cis.time_util import convert_datetime_to_std_time
+        import numpy as np
+
         ug_data = mock.make_regular_4d_ungridded_data()
-        # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+        ug_data_points = ug_data.get_points()
+        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
         constraint = SepConstraint(h_sep=1000)
 
         # This should leave us with 30 points
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
-        eq_(new_data.data[0], 25.5)
+        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[:,1:4].flatten()
+
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(all(np.equal(ref_vals, new_vals)))
 
     @istest
     def test_time_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-        from jasmin_cis.col_implementations import DefaultColocator, mean, SepConstraint
+        from jasmin_cis.data_io.hyperpoint import HyperPoint
+        from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
-        ug_data = mock.make_regular_4d_ungridded_data()
-        # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29)))
+        from jasmin_cis.time_util import convert_datetime_to_std_time
+        import numpy as np
 
-        # 1 day time seperation
-        constraint = SepConstraint(t_sep='1d')
+        ug_data = mock.make_regular_4d_ungridded_data()
+        ug_data_points = ug_data.get_points()
+        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
+
+        # 1 day (and a little bit) time seperation
+        constraint = SepConstraint(t_sep='1d1M')
 
         # This should leave us with 30 points
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, constraint, mean())[0]
-        eq_(new_data.data[0], 25.5)
+        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[:,1:4].flatten()
+
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(all(np.equal(ref_vals, new_vals)))
