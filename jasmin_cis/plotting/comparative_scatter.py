@@ -58,8 +58,3 @@ class Comparative_Scatter(Generic_Plot):
 
     def create_legend(self):
         pass
-
-    def draw_coastlines(self, draw_grid = False):
-        pass
-
-
