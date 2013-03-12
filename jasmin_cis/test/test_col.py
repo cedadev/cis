@@ -471,7 +471,7 @@ class TestSepConstraint(ConstraintTests):
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(all(np.equal(ref_vals, new_vals)))
+        assert(np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_alt_constraint_in_4d(self):
@@ -498,7 +498,7 @@ class TestSepConstraint(ConstraintTests):
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(all(np.equal(ref_vals, new_vals)))
+        assert(np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_horizontal_constraint_in_4d(self):
@@ -522,7 +522,7 @@ class TestSepConstraint(ConstraintTests):
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(all(np.equal(ref_vals, new_vals)))
+        assert(np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_time_constraint_in_4d(self):
@@ -545,4 +545,4 @@ class TestSepConstraint(ConstraintTests):
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(all(np.equal(ref_vals, new_vals)))
+        assert(np.equal(ref_vals, new_vals).all())

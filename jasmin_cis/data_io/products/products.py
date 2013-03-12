@@ -500,7 +500,7 @@ class Caliop_L1(AProduct):
         alt_coord = Coord(alt_data,alt_metadata)
 
         # latitude
-        lat_data = utils.expand_1d_to_2d_array(lat_data[:,1],len_x,axis=1)
+        lat_data = utils.expand_1d_to_2d_array(lat_data[:,0],len_x,axis=1)
         lat_metadata = hdf.read_metadata(sdata['Latitude'], "SD")
         lat_metadata.shape = new_shape
         lat_coord = Coord(lat_data, lat_metadata, 'Y')
@@ -508,7 +508,7 @@ class Caliop_L1(AProduct):
         # longitude
         lon = sdata['Longitude']
         lon_data = hdf.read_data(lon,"SD")
-        lon_data = utils.expand_1d_to_2d_array(lon_data[:,1],len_x,axis=1)
+        lon_data = utils.expand_1d_to_2d_array(lon_data[:,0],len_x,axis=1)
         lon_metadata = hdf.read_metadata(lon,"SD")
         lon_metadata.shape = new_shape
         lon_coord = Coord(lon_data, lon_metadata,'X')
@@ -517,7 +517,7 @@ class Caliop_L1(AProduct):
         time = sdata['Profile_Time']
         time_data = hdf.read_data(time,"SD")
         time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
-        time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
+        time_data = utils.expand_1d_to_2d_array(time_data[:,0],len_x,axis=1)
         time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
                                               units=str(cis_standard_time_unit),
                                               calendar=cis_standard_time_unit.calendar),"T")
