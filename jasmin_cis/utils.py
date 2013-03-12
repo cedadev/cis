@@ -24,7 +24,7 @@ def concatenate(arrays, axis=0):
     return res
 
 
-def expand_1d_to_2d_array(array_1d,length,axis=None):
+def expand_1d_to_2d_array(array_1d,length,axis=0):
     '''
     General utility routine to 'extend a 1D array into a 2D array
     by duplicating the data along a given 'axis' (default is 0)
@@ -51,17 +51,13 @@ def expand_1d_to_2d_array(array_1d,length,axis=None):
     @param axis:
     @return:
     '''
-
-    if axis is None:
-        axis = 0
-
     import numpy as np
-    array_2d = np.array([array_1d])
-    for i in range(length-1):
-        array_2d = np.concatenate((array_2d,[array_1d]))
 
-    if axis==1:
-        array_2d = array_2d.T
+    if axis==0:
+        array_2d = np.repeat(array_1d[np.newaxis,:],length,0)
+    else:
+        array_2d = np.repeat(array_1d[:,np.newaxis],length,1)
+
     return array_2d
 
 
