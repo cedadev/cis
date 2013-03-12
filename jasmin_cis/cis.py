@@ -169,10 +169,10 @@ def col_cmd(main_arguments):
 
         try:
             col.colocate(variable, filenames, col_name, col_options, con_name, con_options, kern_name, kern_options)
-        except CISError as e:
-            __error_occurred(e)
         except ClassNotFoundError as e:
             __error_occurred(str(e) + "\nInvalid co-location option.")
+        except CISError as e:
+            __error_occurred(e)
 
 
 commands = { 'plot' : plot_cmd,
