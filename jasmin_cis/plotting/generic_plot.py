@@ -155,6 +155,40 @@ class Generic_Plot(object):
             self.matplotlib.xticks(meridians, meridian_labels, rotation = xtickangle)
             self.matplotlib.yticks(parallels, parallel_labels, rotation = ytickangle)
 
+    def set_axis_ticks(self, axis, no_of_dims):
+        from numpy import arange
+
+        if axis == "x":
+            coord_axis = "x"
+            tick_method = self.matplotlib.xticks
+        elif axis == "y":
+            coord_axis = "data" if no_of_dims == 2 else "y"
+            tick_method = self.matplotlib.yticks
+
+        if self.plot_args.get(axis + "tickangle", None) is None:
+            angle = None
+        else:
+            angle = self.plot_args[axis + "tickangle"]
+
+        if self.plot_args[axis + "range"].get(axis + "step") is not None:
+            step = self.plot_args[axis + "range"][axis + "step"]
+
+            if self.plot_args[axis + "range"].get(axis + "min") is None:
+                min_val = min(unpacked_data_item[coord_axis].min() for unpacked_data_item in self.unpacked_data_items)
+            else:
+                min_val = self.plot_args[axis + "range"][axis + "min"]
+
+            if self.plot_args[axis + "range"].get(axis + "max") is None:
+                max_val = max(unpacked_data_item[coord_axis].max() for unpacked_data_item in self.unpacked_data_items)
+            else:
+                max_val = self.plot_args[axis + "range"][axis + "max"]
+
+            ticks = arange(min_val, max_val+step, step)
+
+            tick_method(ticks, rotation=angle)
+        else:
+            tick_method(rotation=angle)
+
     def format_time_axis(self):
         from jasmin_cis.time_util import cis_standard_time_unit
 
@@ -386,40 +420,6 @@ class Generic_Plot(object):
         '''
         if logx: self.matplotlib.xscale("log")
         if logy: self.matplotlib.yscale("log")
-
-    def set_axis_ticks(self, axis, no_of_dims):
-        from numpy import arange
-
-        if axis == "x":
-            coord_axis = "x"
-            tick_method = self.matplotlib.xticks
-        elif axis == "y":
-            coord_axis = "data" if no_of_dims == 2 else "y"
-            tick_method = self.matplotlib.yticks
-
-        if self.plot_args.get(axis + "tickangle", None) is None:
-            angle = None
-        else:
-            angle = self.plot_args[axis + "tickangle"]
-
-        if self.plot_args[axis + "range"].get(axis + "step") is not None:
-            step = self.plot_args[axis + "range"][axis + "step"]
-
-            if self.plot_args[axis + "range"].get(axis + "min") is None:
-                min_val = min(unpacked_data_item[coord_axis].min() for unpacked_data_item in self.unpacked_data_items)
-            else:
-                min_val = self.plot_args[axis + "range"][axis + "min"]
-
-            if self.plot_args[axis + "range"].get(axis + "max") is None:
-                max_val = max(unpacked_data_item[coord_axis].max() for unpacked_data_item in self.unpacked_data_items)
-            else:
-                max_val = self.plot_args[axis + "range"][axis + "max"]
-
-            ticks = arange(min_val, max_val+step, step)
-
-            tick_method(ticks, rotation=angle)
-        else:
-            tick_method(rotation=angle)
 
     def set_axes_ticks(self, no_of_dims):
         self.set_axis_ticks("x", no_of_dims)
