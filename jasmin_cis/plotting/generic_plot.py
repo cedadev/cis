@@ -92,19 +92,16 @@ class Generic_Plot(object):
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
-        try:
-            valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
+        valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
 
-            if axis == "x":
-                step = valrange.pop("xstep", None)
-                self.matplotlib.xlim(**valrange)
-                if step is not None: valrange["xstep"] = step
-            elif axis == "y":
-                step = valrange.pop("ystep", None)
-                self.matplotlib.ylim(**valrange)
-                if step is not None: valrange["ystep"] = step
-        except (AttributeError, TypeError):
-            pass # In case of date axis. TODO Fix this
+        if axis == "x":
+            step = valrange.pop("xstep", None)
+            self.matplotlib.xlim(**valrange)
+            if step is not None: valrange["xstep"] = step
+        elif axis == "y":
+            step = valrange.pop("ystep", None)
+            self.matplotlib.ylim(**valrange)
+            if step is not None: valrange["ystep"] = step
 
     def add_color_bar(self):
         '''
