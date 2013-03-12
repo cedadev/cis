@@ -55,10 +55,6 @@ class Histogram_2D(Generic_Plot):
         # Calculate default bin width
         if bin_width is None: bin_width = ceil((max_v - min_v) / 10)
 
-        print min_v
-        print max_v
-        print bin_width
-
         # Create an array of bin EDGES
         bins = arange(start = min_v,
                       stop = min_v + val_range + bin_width,
@@ -114,6 +110,20 @@ class Histogram_2D(Generic_Plot):
         valrange[axis + "step"] = step
 
         return valrange
+
+    def set_axis_ticks(self, axis):
+
+        if axis == "x":
+            tick_method = self.matplotlib.xticks
+        elif axis == "y":
+            tick_method = self.matplotlib.yticks
+
+        if self.plot_args.get(axis + "tickangle", None) is None:
+            angle = None
+        else:
+            angle = self.plot_args[axis + "tickangle"]
+
+        tick_method(rotation=angle)
 
     def apply_axis_limits(self, valrange, axis):
         '''
