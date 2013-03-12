@@ -50,17 +50,6 @@ class Generic_Plot(object):
         '''
         raise NotImplementedError()
 
-    def format_time_axis(self):
-        from jasmin_cis.time_util import cis_standard_time_unit
-
-        coords = self.packed_data_items[0].coords(axis='X')
-        if len(coords) == 0:
-            coords = self.packed_data_items[0].coords(axis='T')
-
-        if len(coords) == 1:
-            if coords[0].units == str(cis_standard_time_unit):
-                self.set_x_axis_as_time()
-
     def set_default_axis_label(self, axis):
         '''
         The method that will set the default axis label. To be implemented by each subclass of Generic_Plot.
@@ -82,6 +71,100 @@ class Generic_Plot(object):
                 legend_titles.append(item.long_name)
         legend = self.matplotlib.legend(legend_titles, loc="best")
         legend.draggable(state = True)
+
+    def calculate_axis_limits(self, axis, min_val, max_val, step):
+        '''
+        Calculates the axis limits for a given axis
+        @param axis: The axis for the limits to be calculated
+        @return: A dictionary containing the min and max values of an array along a given axis
+        '''
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
+        valrange = {}
+        valrange[axis + "min"] = calculated_min if min_val is None else min_val
+        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "step"] = step
+
+        return valrange
+
+    def apply_axis_limits(self, valrange, axis):
+        '''
+        Applies the limits to the specified axis if given, or calculates them otherwise
+        @param valrange    A dictionary containing xmin, xmax or ymin, ymax
+        @param axis        The axis to apply the limits to
+        '''
+        try:
+            valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
+
+            if axis == "x":
+                step = valrange.pop("xstep", None)
+                self.matplotlib.xlim(**valrange)
+                if step is not None: valrange["xstep"] = step
+            elif axis == "y":
+                step = valrange.pop("ystep", None)
+                self.matplotlib.ylim(**valrange)
+                if step is not None: valrange["ystep"] = step
+        except (AttributeError, TypeError):
+            pass # In case of date axis. TODO Fix this
+
+    def add_color_bar(self):
+        '''
+        Adds a colour bar to a plot
+        Allows specifying of tick spacing and orientation
+        '''
+
+        step = self.plot_args["valrange"].get("vstep", None)
+        if step is None:
+            ticks = None
+        else:
+            from matplotlib.ticker import MultipleLocator
+            ticks = MultipleLocator(step)
+
+        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
+
+        if not self.plot_args["logv"]:
+            cbar.formatter.set_scientific(True)
+            cbar.formatter.set_powerlimits((-3,3))
+            cbar.update_ticks()
+
+        if self.plot_args["cbarlabel"] is None:
+            label = self.format_units(self.packed_data_items[0].units)
+        else:
+            label = self.plot_args["cbarlabel"]
+
+        cbar.set_label(label)
+
+    def draw_coastlines(self, draw_grid = False):
+        '''
+        Draws coastlines and a grid on the plot
+        @param draw_grid: A boolean specifying whether or not a grid should be drawn
+        '''
+        if self.is_map():
+            self.basemap.drawcoastlines()
+
+            parallels, meridians = self.__create_map_grid_lines()
+            if draw_grid:
+                self.basemap.drawparallels(parallels)
+                self.basemap.drawmeridians(meridians)
+
+            meridian_labels = self.__format_map_ticks(meridians)
+            parallel_labels = self.__format_map_ticks(parallels)
+
+            xtickangle = self.plot_args.get("xtickangle", None)
+            ytickangle = self.plot_args.get("ytickangle", None)
+
+            self.matplotlib.xticks(meridians, meridian_labels, rotation = xtickangle)
+            self.matplotlib.yticks(parallels, parallel_labels, rotation = ytickangle)
+
+    def format_time_axis(self):
+        from jasmin_cis.time_util import cis_standard_time_unit
+
+        coords = self.packed_data_items[0].coords(axis='X')
+        if len(coords) == 0:
+            coords = self.packed_data_items[0].coords(axis='T')
+
+        if len(coords) == 1:
+            if coords[0].units == str(cis_standard_time_unit):
+                self.set_x_axis_as_time()
 
     def set_default_axis_label_for_comparative_plot(self, axis):
         '''
@@ -136,40 +219,6 @@ class Generic_Plot(object):
             min_val =  array.min()
             max_val =  array.max()
         return min_val, max_val
-
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
-        '''
-        Calculates the axis limits for a given axis
-        @param axis: The axis for the limits to be calculated
-        @return: A dictionary containing the min and max values of an array along a given axis
-        '''
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
-        valrange = {}
-        valrange[axis + "min"] = calculated_min if min_val is None else min_val
-        valrange[axis + "max"] = calculated_max if max_val is None else max_val
-        valrange[axis + "step"] = step
-
-        return valrange
-
-    def apply_axis_limits(self, valrange, axis):
-        '''
-        Applies the limits to the specified axis if given, or calculates them otherwise
-        @param valrange    A dictionary containing xmin, xmax or ymin, ymax
-        @param axis        The axis to apply the limits to
-        '''
-        try:
-            valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
-
-            if axis == "x":
-                step = valrange.pop("xstep", None)
-                self.matplotlib.xlim(**valrange)
-                if step is not None: valrange["xstep"] = step
-            elif axis == "y":
-                step = valrange.pop("ystep", None)
-                self.matplotlib.ylim(**valrange)
-                if step is not None: valrange["ystep"] = step
-        except (AttributeError, TypeError):
-            pass # In case of date axis. TODO Fix this
 
     def set_x_axis_as_time(self):
         from matplotlib import ticker
@@ -248,33 +297,6 @@ class Generic_Plot(object):
         self.mplkwargs["vmin"] = float(vmin)
         self.mplkwargs["vmax"] = float(vmax)
 
-    def add_color_bar(self):
-        '''
-        Adds a colour bar to a plot
-        Allows specifying of tick spacing and orientation
-        '''
-
-        step = self.plot_args["valrange"].get("vstep", None)
-        if step is None:
-            ticks = None
-        else:
-            from matplotlib.ticker import MultipleLocator
-            ticks = MultipleLocator(step)
-
-        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
-
-        if not self.plot_args["logv"]:
-            cbar.formatter.set_scientific(True)
-            cbar.formatter.set_powerlimits((-3,3))
-            cbar.update_ticks()
-
-        if self.plot_args["cbarlabel"] is None:
-            label = self.format_units(self.packed_data_items[0].units)
-        else:
-            label = self.plot_args["cbarlabel"]
-
-        cbar.set_label(label)
-
     def contour_plot(self, filled):
         '''
         Used by both contour and contourf to plot a contour plot
@@ -302,28 +324,6 @@ class Generic_Plot(object):
         
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
-
-    def draw_coastlines(self, draw_grid = False):
-        '''
-        Draws coastlines and a grid on the plot
-        @param draw_grid: A boolean specifying whether or not a grid should be drawn
-        '''
-        if self.is_map():
-            self.basemap.drawcoastlines()
-
-            parallels, meridians = self.__create_map_grid_lines()
-            if draw_grid:
-                self.basemap.drawparallels(parallels)
-                self.basemap.drawmeridians(meridians)
-
-            meridian_labels = self.__format_map_ticks(meridians)
-            parallel_labels = self.__format_map_ticks(parallels)
-
-            xtickangle = self.plot_args.get("xtickangle", None)
-            ytickangle = self.plot_args.get("ytickangle", None)
-
-            self.matplotlib.xticks(meridians, meridian_labels, rotation = xtickangle)
-            self.matplotlib.yticks(parallels, parallel_labels, rotation = ytickangle)
 
     def __create_map_grid_lines(self):
         '''
@@ -386,6 +386,44 @@ class Generic_Plot(object):
         if logx: self.matplotlib.xscale("log")
         if logy: self.matplotlib.yscale("log")
 
+    def set_axis_ticks(self, axis, no_of_dims):
+        from numpy import arange
+
+        if axis == "x":
+            coord_axis = "x"
+            tick_method = self.matplotlib.xticks
+        elif axis == "y":
+            coord_axis = "data" if no_of_dims == 2 else "y"
+            tick_method = self.matplotlib.yticks
+
+        if self.plot_args.get(axis + "tickangle", None) is None:
+            angle = None
+        else:
+            angle = self.plot_args[axis + "tickangle"]
+
+        if self.plot_args[axis + "range"].get(axis + "step") is not None:
+            step = self.plot_args[axis + "range"][axis + "step"]
+
+            if self.plot_args[axis + "range"].get(axis + "min") is None:
+                min_val = min(unpacked_data_item[coord_axis].min() for unpacked_data_item in self.unpacked_data_items)
+            else:
+                min_val = self.plot_args[axis + "range"][axis + "min"]
+
+            if self.plot_args[axis + "range"].get(axis + "max") is None:
+                max_val = max(unpacked_data_item[coord_axis].max() for unpacked_data_item in self.unpacked_data_items)
+            else:
+                max_val = self.plot_args[axis + "range"][axis + "max"]
+
+            ticks = arange(min_val, max_val+step, step)
+
+            tick_method(ticks, rotation=angle)
+        else:
+            tick_method(rotation=angle)
+
+    def set_axes_ticks(self, no_of_dims):
+        self.set_axis_ticks("x", no_of_dims)
+        self.set_axis_ticks("y", no_of_dims)
+
     def format_2d_plot(self):
         '''
         Used by 2d subclasses to format the plot
@@ -406,11 +444,7 @@ class Generic_Plot(object):
         draw_grid = self.plot_args.pop("grid", False)
         if draw_grid: self.matplotlib.grid(True, which="both")
 
-        if self.plot_args.get("xtickangle", None) is not None:
-            self.matplotlib.xticks(rotation=self.plot_args.get("xtickangle"))
-
-        if self.plot_args.get("ytickangle", None) is not None:
-            self.matplotlib.yticks(rotation=self.plot_args.get("ytickangle"))
+        self.set_axes_ticks(2)
 
         self.set_font_size()
 
@@ -443,6 +477,8 @@ class Generic_Plot(object):
 
             draw_grid = self.plot_args.get("grid")
             if draw_grid: self.matplotlib.grid(True, which="both")
+
+            self.set_axes_ticks(3)
 
             self.set_font_size()
             # If any of the options have not been specified, then use the defaults

@@ -59,10 +59,7 @@ class Histogram_3D(Generic_Plot):
         elif axis == "y":
             axis_index = 1
 
-        if len(self.plot_args[axis + "range"]) != 0:
-            step = self.plot_args[axis + "range"].get(axis + "step", None)
-        else:
-            step = None
+        step = self.plot_args.get(axis + "binwidth", None)
 
         if step is None:
             number_of_bins = 10
@@ -135,5 +132,37 @@ class Histogram_3D(Generic_Plot):
 
         cbar.set_label(label)
 
+    def set_axis_ticks(self, axis, no_of_dims):
+        from numpy import arange
 
+        if axis == "x":
+            tick_method = self.matplotlib.xticks
+            item_index = 0
+        elif axis == "y":
+            tick_method = self.matplotlib.yticks
+            item_index = 1
+
+        if self.plot_args.get(axis + "tickangle", None) is None:
+            angle = None
+        else:
+            angle = self.plot_args[axis + "tickangle"]
+
+        if self.plot_args[axis + "range"].get(axis + "step") is not None:
+            step = self.plot_args[axis + "range"][axis + "step"]
+
+            if self.plot_args[axis + "range"].get(axis + "min") is None:
+                min_val = self.unpacked_data_items[item_index]["data"].min()
+            else:
+                min_val = self.plot_args[axis + "range"][axis + "min"]
+
+            if self.plot_args[axis + "range"].get(axis + "max") is None:
+                max_val = self.unpacked_data_items[item_index]["data"].max()
+            else:
+                max_val = self.plot_args[axis + "range"][axis + "max"]
+
+            ticks = arange(min_val, max_val+step, step)
+
+            tick_method(ticks, rotation=angle)
+        else:
+            tick_method(rotation=angle)
 

@@ -57,6 +57,9 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--vmax", metavar = "Maximum value", nargs = "?", help = "The maximum value to plot")
     parser.add_argument("--vstep", metavar = "X value", nargs = "?", help = "The step of the colour bar")
 
+    parser.add_argument("--xbinwidth", metavar = "Histogram x axis bin width", nargs = "?", help = "The width of the bins on the x axis of a histogram")
+    parser.add_argument("--ybinwidth", metavar = "Histogram y axis bin width", nargs = "?", help = "The width of the bins on the y axis of a histogram")
+
     parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar, either horizontal or vertical")
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
 
@@ -368,6 +371,8 @@ def validate_plot_args(arguments, parser):
     arguments.width = parse_float(arguments.width, "width", parser)
     arguments.xtickangle = parse_float(arguments.xtickangle, "x tick angle", parser)
     arguments.ytickangle = parse_float(arguments.ytickangle, "y tick angle", parser)
+    arguments.xbinwidth = parse_float(arguments.xbinwidth, "x bin width", parser)
+    arguments.ybinwidth = parse_float(arguments.ybinwidth, "y bin width", parser)
     
     return arguments
 
