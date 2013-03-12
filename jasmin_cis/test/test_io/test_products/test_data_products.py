@@ -25,6 +25,7 @@ class ProductTests():
     @istest
     def test_file_regex_matching_for_full_path(self):
         check_regex_matching(self.product.__name__, "/home/duncan/"+self.filename)
+        check_regex_matching(self.product.__name__, "/a/xenida/more/lev20/confusing/hdf/path/nc/"+self.filename)
 
     @istest
     def test_create_data_object(self):
@@ -32,7 +33,9 @@ class ProductTests():
 
     @istest
     def test_create_coords(self):
-        self.product().create_coords([self.filename])
+        valid_standard_names = ['latitude', 'longitude', 'altitude', 'time']
+        coords = self.product().create_coords([self.filename])
+        assert(all([ coord in valid_standard_names for coord in coords ]))
 
     @istest
     def test_write_coords(self):
