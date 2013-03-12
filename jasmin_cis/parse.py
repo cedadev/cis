@@ -81,7 +81,7 @@ def add_info_parser_arguments(parser):
 
 
 def add_col_parser_arguments(parser):
-    parser.add_argument("samplefilename", metavar = "SampleFilename", help = "The filename of the sample file")
+    parser.add_argument("samplegroup", metavar = "SampleGroup", help = "A string of the format filename:variable:product where the variable and product are optional")
     parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variable to colocate with filenames and other options split by a colon")
     parser.add_argument("-o", "--output", metavar = "Output filename", default = "out", nargs = "?", help = "The filename of the output file for the plot image")
     return parser
@@ -178,8 +178,8 @@ def get_col_datagroups(datagroups, parser):
     @return The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "colocator", "constraint", "kernel"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, extract_method_and_args, extract_method_and_args, extract_method_and_args)
+    DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "colocator", "constraint", "kernel", "product"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, extract_method_and_args, extract_method_and_args, extract_method_and_args, check_product)
 
     return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
 
@@ -191,8 +191,8 @@ def get_col_samplegroup(samplegroup, parser):
     @return The parsed samplegroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable"])
-    samplegroup_options = DatagroupOptions(expand_file_list, lambda x, y: x)
+    DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable", "product"])
+    samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, check_product)
 
     return parse_colonic_arguments(samplegroup, parser, samplegroup_options)
 
@@ -394,11 +394,15 @@ def validate_col_args(arguments, parser):
     '''
     Checks that the filenames are valid and that variables and methods have been specified.
     Assigns default method/variable to datagroups with unspecified method/variable if default is specified
+    Checks that the product is valid if specified
     '''
-    samplegroup = get_col_samplegroup([arguments.samplefilename], parser)
+    # Note: Sample group is put into a list as parse_colonic_arguments expects a list. Samplegroup will only ever be one argument though
+    samplegroup = get_col_samplegroup([arguments.samplegroup], parser)
 
+    # Take the three parts out of the 0th samplegroup. Note: Due to the reason stated above, there will only ever be one samplegroup
     arguments.samplefiles = samplegroup[0]["filenames"]
-    arguments.samplevariable = samplegroup[0]["variable"]
+    arguments.samplevariable = samplegroup[0]["variable"] if samplegroup[0]["variable"] is not "" else None
+    arguments.sampleproduct = samplegroup[0]["product"]
     arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
 
     return arguments
