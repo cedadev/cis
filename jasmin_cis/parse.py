@@ -319,6 +319,10 @@ def check_range(min_val, max_val, step, parser, range_axis):
     if max_val is not None:
         ax_range[range_axis + "max"] = parse_as_float_or_date(max_val, range_axis + "max", parser)
 
+    if ax_range.get(range_axis + "min", None) is not None and ax_range.get(range_axis + "max", None) is not None:
+        if ax_range[range_axis + "min"] >= ax_range[range_axis + "max"]:
+            parser.error(range_axis + "min must be less than " + range_axis + "max")
+
     if step is not None:
         ax_range[range_axis + "step"] = parse_as_float_or_time_delta(step, range_axis + "step", parser)
 
