@@ -299,8 +299,8 @@ class Cloud_CCI(AProduct):
 
         coords = CoordList()
         coords.append(Coord(var_data['lat'], get_metadata(var_data['lat'][0]), 'Y'))
-        coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0])))
-        time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]), "X")
+        coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0]),'X'))
+        time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]))
 
         # TODO: Is this really julian?
         time_coord.convert_julian_to_std_time()
