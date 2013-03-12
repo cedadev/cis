@@ -164,7 +164,21 @@ class mean(Kernel):
         from numpy import mean
         values = data.vals
         if len(values) == 0: raise ValueError
-        return mean(data.vals)
+        return mean(values)
+
+
+class full_average(Kernel):
+
+    def get_value(self, point, data):
+        '''
+            Colocation using the mean of any points left after a constraint. Also returns the standard
+             deviation and the number of points
+        '''
+        from numpy import mean, std
+        values = data.vals
+        num_values = len(values)
+        if num_values == 0: raise ValueError
+        return (mean(values), std(values), num_values)
 
 
 class nn_horizontal(Kernel):
