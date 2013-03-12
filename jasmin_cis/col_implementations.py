@@ -51,11 +51,13 @@ class DefaultColocator(Colocator):
 
 class AverageColocator(Colocator):
 
-    def __init__(self, var_name='', var_long_name='', var_units=''):
+    def __init__(self, var_name='', var_long_name='', var_units='',stddev_name='',nopoints_name=''):
         super(AverageColocator, self).__init__()
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
+        self.stddev_name = stddev_name
+        self.nopoints_name = nopoints_name
 
     def colocate(self, points, data, constraint, kernel):
         '''
@@ -66,8 +68,10 @@ class AverageColocator(Colocator):
         @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
         @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
                             based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
-        @return: A single LazyData object
+        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value - This
+                            should be full_average - no other kernels currently return multiple values
+        @return: One LazyData object for the mean of the constrained values, one for the standard deviation and another
+                    for the number of points in the constrained set for which the mean was calculated
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
         from jasmin_cis.exceptions import ClassNotFoundError
@@ -84,33 +88,97 @@ class AverageColocator(Colocator):
             data = data.get_points()
 
         # Fill will the FillValue from the start
-        mean = np.zeros(len(points)) + constraint.fill_value
+        means = np.zeros(len(points)) + constraint.fill_value
         stddev = np.zeros(len(points)) + constraint.fill_value
         nopoints = np.zeros(len(points)) + constraint.fill_value
 
         for i, point in enumerate(points):
             con_points = constraint.constrain_points(point, data)
             try:
-                mean[i], stddev[i], nopoints[i] = kernel.get_value(point, con_points)
+                means[i], stddev[i], nopoints[i] = kernel.get_value(point, con_points)
             except ValueError:
                 pass
 
-        mean_data = LazyData(mean, metadata)
-        if self.var_name: mean_data.metadata._name = self.var_name
+        mean_data = LazyData(means, metadata)
+        if self.var_name:
+            mean_data.metadata._name = self.var_name
+        else:
+            mean_data.metadata._name = mean_data.name() + '_mean'
         if self.var_long_name: mean_data.metadata.long_name = self.var_long_name
         if self.var_units: mean_data.units = self.var_units
         mean_data.metadata.shape = (len(points),)
         mean_data.metadata.missing_value = constraint.fill_value
 
-        stddev_data = LazyData(stddev, Metadata(name='std_dev',
+        if not self.stddev_name:
+            self.stddev_name = mean_data.name()+'_std_dev'
+        stddev_data = LazyData(stddev, Metadata(name=self.stddev_name,
                                                 long_name='Standard deviation from the mean in '+metadata._name,
                                                 shape=(len(points),), missing_value=constraint.fill_value, units=mean_data.units))
 
-        nopoints_data = LazyData(nopoints, Metadata(name='no_points',
+        if not self.nopoints_name:
+            self.nopoints_name = mean_data.name()+'_no_points'
+        nopoints_data = LazyData(nopoints, Metadata(name=self.nopoints_name,
                                                     long_name='Number of points used to calculate the mean of '+metadata._name,
                                                     shape=(len(points),), missing_value=constraint.fill_value, units='1'))
 
         return [mean_data, stddev_data, nopoints_data]
+
+
+class DifferenceColocator(Colocator):
+
+    def __init__(self, var_name='', var_long_name='', var_units='', diff_name='difference', diff_long_name=''):
+        super(DifferenceColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+        self.diff_name = diff_name
+        self.diff_long_name= diff_long_name
+
+    def colocate(self, points, data, constraint, kernel):
+        '''
+            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
+             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
+             for the output LazyData object is copied from the input data object.
+        @param points: A list of HyperPoints
+        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+                            based on it's internal parameters
+        @param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
+        @return: One LazyData object for the colocated data, and another for the difference between that data and the sample data
+        '''
+        from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
+        import numpy as np
+
+        metadata = data.metadata
+
+        # Convert ungridded data to a list of points
+        if isinstance(data, UngriddedData):
+            data = data.get_points()
+
+        # Fill will the FillValue from the start
+        values = np.zeros(len(points)) + constraint.fill_value
+        difference = np.zeros(len(points)) + constraint.fill_value
+
+        for i, point in enumerate(points):
+            con_points = constraint.constrain_points(point, data)
+            try:
+                values[i] = kernel.get_value(point, con_points)
+                difference[i] = values[i] - point.val[0]
+            except ValueError:
+                pass
+
+        val_data = LazyData(values, metadata)
+        if self.var_name: val_data.metadata._name = self.var_name
+        if self.var_long_name: val_data.metadata.long_name = self.var_long_name
+        if self.var_units: val_data.units = self.var_units
+        val_data.metadata.shape = (len(points),)
+        val_data.metadata.missing_value = constraint.fill_value
+
+        if not self.diff_long_name: self.diff_long_name = 'Difference between '+metadata._name+' and sampling values'
+        diff_data = LazyData(difference, Metadata(name=self.diff_name, long_name=self.diff_long_name, shape=(len(points),),
+                                                  missing_value=constraint.fill_value, units=val_data.units))
+
+        return [val_data, diff_data]
 
 
 class DebugColocator(Colocator):
@@ -291,18 +359,7 @@ class nn_gridded(Kernel):
              This calls out to iris to do the work.
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
-        return nearest_neighbour_data_value(data, point.get_coord_tuple())
-
-
-class nn_gridded_diff(Kernel):
-    def get_value(self, point, data):
-        '''
-            Co-location routine using nearest neighbour algorithm optimized for gridded data.
-             This calls out to iris to do the work and returns the difference between the original
-             value and the value of the nearest neighbour
-        '''
-        from iris.analysis.interpolate import nearest_neighbour_data_value
-        return nearest_neighbour_data_value(data, point.get_coord_tuple()) - point.val[0]
+        return nearest_neighbour_data_value(data, point.coord_tuple)
 
 
 class li(Kernel):

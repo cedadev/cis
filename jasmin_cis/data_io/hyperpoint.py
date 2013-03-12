@@ -24,7 +24,12 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         if isinstance(t,datetime.datetime):
             t = convert_datetime_to_std_time(t)
 
-        return super(HyperPoint,cls).__new__(cls,lat,lon,alt,t,val)
+        point = super(HyperPoint,cls).__new__(cls,lat,lon,alt,t,val)
+
+        # Store the coordinate tuple for this point in case we need it later
+        point.coord_tuple = point.get_coord_tuple()
+
+        return point
 
     def same_point_in_time(self, other):
         return self.time == other.time

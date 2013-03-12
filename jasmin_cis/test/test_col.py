@@ -55,15 +55,39 @@ class TestAverageColocator(ColocatorTests):
         sample_points = HyperPointList()
         sample_points.append(HyperPoint(1.0, 1.0,12.0,dt.datetime(1984,8,29,8,34)))
 
-        col = AverageColocator()
+        col = AverageColocator(stddev_name='my_std_dev',nopoints_name='my_no_points')
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), full_average())
         means = new_data[0]
         std_dev = new_data[1]
         no_points = new_data[2]
 
-        eq_(means.name(), 'rain')
-        eq_(std_dev.name(), 'std_dev')
-        eq_(no_points.name(), 'no_points')
+        eq_(means.name(), 'rain_mean')
+        eq_(std_dev.name(), 'my_std_dev')
+        eq_(no_points.name(), 'my_no_points')
+
+
+class TestDifferenceColocator(ColocatorTests):
+
+    @istest
+    def test_basic_col_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DifferenceColocator, mean, DummyConstraint
+        import datetime as dt
+        ug_data = mock.make_regular_4d_ungridded_data()
+        # Note - This isn't actually used for averaging
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(1.0, 1.0,12.0,dt.datetime(1984,8,29,8,34),25.0))
+
+        col = DifferenceColocator(diff_name='my_diff')
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), mean())
+        values = new_data[0]
+        differences = new_data[1]
+
+        eq_(values.name(), 'rain')
+        eq_(differences.name(), 'my_diff')
+        eq_(values.data[0],25.5)
+        eq_(differences.data[0],0.5)
+
 
 
 class KernelTests(object):
@@ -422,12 +446,11 @@ class TestSepConstraint(ConstraintTests):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
-        from jasmin_cis.time_util import convert_datetime_to_std_time
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
+        sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
@@ -455,12 +478,11 @@ class TestSepConstraint(ConstraintTests):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
-        from jasmin_cis.time_util import convert_datetime_to_std_time
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
+        sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # 15m altitude seperation
         a_sep = 15
@@ -483,12 +505,11 @@ class TestSepConstraint(ConstraintTests):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
-        from jasmin_cis.time_util import convert_datetime_to_std_time
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
+        sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
@@ -508,12 +529,11 @@ class TestSepConstraint(ConstraintTests):
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
-        from jasmin_cis.time_util import convert_datetime_to_std_time
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
+        sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # 1 day (and a little bit) time seperation
         constraint = SepConstraint(t_sep='1d1M')
