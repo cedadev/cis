@@ -237,8 +237,9 @@ class Generic_Plot(object):
 
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
         tick_angle = self.plot_args.get("xtickangle", None)
-        if tick_angle is None: tick_angle = 45
-        self.matplotlib.xticks(rotation=tick_angle)
+        if tick_angle is None:
+            self.plot_args["xtickangle"] = 45
+        self.matplotlib.xticks(rotation=self.plot_args["xtickangle"])
         # Give extra spacing at bottom of plot due to rotated labels
         self.matplotlib.gcf().subplots_adjust(bottom=0.3)
         #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
@@ -488,12 +489,6 @@ class Generic_Plot(object):
             if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
             if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
             if self.plot_args["title"] is None: self.plot_args["title"] = self.packed_data_items[0].long_name
-
-            if self.plot_args.get("xtickangle", None) is not None:
-                self.matplotlib.xticks(rotation=self.plot_args.get("xtickangle"))
-
-            if self.plot_args.get("ytickangle", None) is not None:
-                self.matplotlib.yticks(rotation=self.plot_args.get("ytickangle"))
 
             for key in plot_options.keys():
             # Call the method associated with the option
