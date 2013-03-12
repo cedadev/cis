@@ -58,3 +58,6 @@ class Comparative_Scatter(Generic_Plot):
 
     def create_legend(self):
         pass
+
+    def is_map(self):
+        return False
