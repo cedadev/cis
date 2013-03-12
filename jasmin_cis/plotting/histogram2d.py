@@ -108,7 +108,7 @@ class Histogram_2D(Generic_Plot):
 
         return valrange
 
-    def set_axis_ticks(self, axis):
+    def set_axis_ticks(self, axis, no_of_dims):
 
         if axis == "x":
             tick_method = self.matplotlib.xticks
