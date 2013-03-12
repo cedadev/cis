@@ -17,9 +17,9 @@ def parse_datetimestr_to_std_time_array(string_time_array):
 
 def parse_datetimestr_delta_to_float_days(s):
     """
-    parsing "1y2m3d4H5M6S" into a time delta represented as a relativedelta object
+    parsing "1y2m3d4H5M6S" into a fractional day
     @param s: string to be parsed
-    @return: a relativedelta object
+    @return: a float representation of a day
     """
     import re
     from datetime import timedelta
@@ -30,25 +30,19 @@ def parse_datetimestr_delta_to_float_days(s):
     days = hours = minutes = seconds = 0
     for token in tokens:
 
-        val = int(token.replace('','')[:-1])
+        val = int(token[:-1])
         if token[-1:] == "y":
             days += val*365.2425
-            continue
         elif token[-1:] == "m":
             days += val*365.2425/12.0
-            continue
         elif token[-1:] == "d":
             days += val
-            continue
         elif token[-1:] == "H":
             hours = val
-            continue
         elif token[-1:] == "M":
             minutes = val
-            continue
         elif token[-1:] == "S":
             seconds = val
-            continue
         else:
             raise ValueError("Invalid time delta format. Must be '1y2m3d4H5M6S'")
 

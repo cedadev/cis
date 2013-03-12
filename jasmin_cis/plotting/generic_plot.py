@@ -92,19 +92,16 @@ class Generic_Plot(object):
         @param valrange    A dictionary containing xmin, xmax or ymin, ymax
         @param axis        The axis to apply the limits to
         '''
-        try:
-            valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
+        valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
 
-            if axis == "x":
-                step = valrange.pop("xstep", None)
-                self.matplotlib.xlim(**valrange)
-                if step is not None: valrange["xstep"] = step
-            elif axis == "y":
-                step = valrange.pop("ystep", None)
-                self.matplotlib.ylim(**valrange)
-                if step is not None: valrange["ystep"] = step
-        except (AttributeError, TypeError):
-            pass # In case of date axis. TODO Fix this
+        if axis == "x":
+            step = valrange.pop("xstep", None)
+            self.matplotlib.xlim(**valrange)
+            if step is not None: valrange["xstep"] = step
+        elif axis == "y":
+            step = valrange.pop("ystep", None)
+            self.matplotlib.ylim(**valrange)
+            if step is not None: valrange["ystep"] = step
 
     def add_color_bar(self):
         '''
@@ -133,27 +130,42 @@ class Generic_Plot(object):
 
         cbar.set_label(label)
 
-    def draw_coastlines(self, draw_grid = False):
-        '''
-        Draws coastlines and a grid on the plot
-        @param draw_grid: A boolean specifying whether or not a grid should be drawn
-        '''
-        if self.is_map():
-            self.basemap.drawcoastlines()
+    def set_axis_ticks(self, axis, no_of_dims):
+        from numpy import arange
 
-            parallels, meridians = self.__create_map_grid_lines()
-            if draw_grid:
-                self.basemap.drawparallels(parallels)
-                self.basemap.drawmeridians(meridians)
+        if axis == "x":
+            coord_axis = "x"
+            tick_method = self.matplotlib.xticks
+        elif axis == "y":
+            coord_axis = "data" if no_of_dims == 2 else "y"
+            tick_method = self.matplotlib.yticks
 
-            meridian_labels = self.__format_map_ticks(meridians)
-            parallel_labels = self.__format_map_ticks(parallels)
+        if self.plot_args.get(axis + "tickangle", None) is None:
+            angle = None
+        else:
+            angle = self.plot_args[axis + "tickangle"]
 
-            xtickangle = self.plot_args.get("xtickangle", None)
-            ytickangle = self.plot_args.get("ytickangle", None)
+        if self.is_map() and self.plot_args[axis + "range"].get(axis + "step") is None:
+            self.plot_args[axis + "range"][axis + "step"] = 30
 
-            self.matplotlib.xticks(meridians, meridian_labels, rotation = xtickangle)
-            self.matplotlib.yticks(parallels, parallel_labels, rotation = ytickangle)
+        if self.plot_args[axis + "range"].get(axis + "step") is not None:
+            step = self.plot_args[axis + "range"][axis + "step"]
+
+            if self.plot_args[axis + "range"].get(axis + "min") is None:
+                min_val = min(unpacked_data_item[coord_axis].min() for unpacked_data_item in self.unpacked_data_items)
+            else:
+                min_val = self.plot_args[axis + "range"][axis + "min"]
+
+            if self.plot_args[axis + "range"].get(axis + "max") is None:
+                max_val = max(unpacked_data_item[coord_axis].max() for unpacked_data_item in self.unpacked_data_items)
+            else:
+                max_val = self.plot_args[axis + "range"][axis + "max"]
+
+            ticks = arange(min_val, max_val+step, step)
+
+            tick_method(ticks, rotation=angle)
+        else:
+            tick_method(rotation=angle)
 
     def format_time_axis(self):
         from jasmin_cis.time_util import cis_standard_time_unit
@@ -237,8 +249,9 @@ class Generic_Plot(object):
 
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
         tick_angle = self.plot_args.get("xtickangle", None)
-        if tick_angle is None: tick_angle = 45
-        self.matplotlib.xticks(rotation=tick_angle)
+        if tick_angle is None:
+            self.plot_args["xtickangle"] = 45
+        self.matplotlib.xticks(rotation=self.plot_args["xtickangle"])
         # Give extra spacing at bottom of plot due to rotated labels
         self.matplotlib.gcf().subplots_adjust(bottom=0.3)
         #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
@@ -325,58 +338,6 @@ class Generic_Plot(object):
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
-    def __create_map_grid_lines(self):
-        '''
-        Creates the lists of parallels and meridians to be used for plotting grid lines
-        @return: The parallels and meridians
-        '''
-        def __create_set_of_grid_lines(axis, range_dict):
-            from numpy import arange, append
-            lines = None
-            grid_spacing = 30 # in degrees
-            if len(range_dict) != 0: #If the user has specified range
-                min_val = range_dict.get(axis + "min", -360 if axis == "x" else -90)
-                max_val = range_dict.get(axis + "max", 360 if axis == "x" else 90)
-                step = range_dict.get(axis + "step", grid_spacing)
-
-                lines = arange(min_val, max_val+1, step)
-                if min_val < 0 and max_val > 0: lines = append(lines, 0)
-                lines.sort()
-            else:
-                if axis == "y":
-                    lines = arange(-90, 91, grid_spacing)
-                elif axis == "x":
-                    lines = arange(-360, 361, grid_spacing)
-
-            return lines
-
-        parallels = __create_set_of_grid_lines("y", self.plot_args["yrange"])
-        meridians = __create_set_of_grid_lines("x", self.plot_args["xrange"])
-
-        return parallels, meridians
-
-    def __format_map_ticks(self, tick_array):
-        '''
-        Given an array of ticks, creates a labels array where only every fourth tick is labelled
-        @param tick_array: The array to create the labels for
-        @return: The label every containing every fourth tick labelled
-        '''
-        label_format = "{0:.0f}"
-        labels = []
-        i = 0
-        label_every_nth_tick = 1
-        for tick in tick_array:
-            # Label every nth tick, the 0 tick, and the last tick
-            if i % label_every_nth_tick == 0 or tick == 0 or i == len(tick_array) - 1:
-                if tick == 0:
-                    labels.append(0)
-                else:
-                    labels.append(label_format.format(tick))
-            else:
-                labels.append("")
-            i += 1
-        return labels
-
     def set_log_scale(self, logx, logy):
         '''
         Sets a log (base 10) scale (if specified) on the axes
@@ -385,40 +346,6 @@ class Generic_Plot(object):
         '''
         if logx: self.matplotlib.xscale("log")
         if logy: self.matplotlib.yscale("log")
-
-    def set_axis_ticks(self, axis, no_of_dims):
-        from numpy import arange
-
-        if axis == "x":
-            coord_axis = "x"
-            tick_method = self.matplotlib.xticks
-        elif axis == "y":
-            coord_axis = "data" if no_of_dims == 2 else "y"
-            tick_method = self.matplotlib.yticks
-
-        if self.plot_args.get(axis + "tickangle", None) is None:
-            angle = None
-        else:
-            angle = self.plot_args[axis + "tickangle"]
-
-        if self.plot_args[axis + "range"].get(axis + "step") is not None:
-            step = self.plot_args[axis + "range"][axis + "step"]
-
-            if self.plot_args[axis + "range"].get(axis + "min") is None:
-                min_val = min(unpacked_data_item[coord_axis].min() for unpacked_data_item in self.unpacked_data_items)
-            else:
-                min_val = self.plot_args[axis + "range"][axis + "min"]
-
-            if self.plot_args[axis + "range"].get(axis + "max") is None:
-                max_val = max(unpacked_data_item[coord_axis].max() for unpacked_data_item in self.unpacked_data_items)
-            else:
-                max_val = self.plot_args[axis + "range"][axis + "max"]
-
-            ticks = arange(min_val, max_val+step, step)
-
-            tick_method(ticks, rotation=angle)
-        else:
-            tick_method(rotation=angle)
 
     def set_axes_ticks(self, no_of_dims):
         self.set_axis_ticks("x", no_of_dims)
@@ -469,40 +396,33 @@ class Generic_Plot(object):
         '''
         from jasmin_cis.plotting.plot import plot_options
 
-        if self.plot_args is not None:
-            logx = self.plot_args.get("logx", False)
-            logy = self.plot_args.get("logy", False)
-            if logx or logy:
-                self.set_log_scale(logx, logy)
+        logx = self.plot_args.get("logx", False)
+        logy = self.plot_args.get("logy", False)
+        if logx or logy:
+            self.set_log_scale(logx, logy)
 
-            draw_grid = self.plot_args.get("grid")
-            if draw_grid: self.matplotlib.grid(True, which="both")
+        draw_grid = self.plot_args.get("grid")
+        if draw_grid: self.matplotlib.grid(True, which="both")
 
-            self.set_axes_ticks(3)
+        if self.is_map(): self.basemap.drawcoastlines()
 
-            self.set_font_size()
-            # If any of the options have not been specified, then use the defaults
-            self.set_default_axis_label("X")
-            self.set_default_axis_label("Y")
+        self.set_axes_ticks(3)
 
-            if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
-            if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
-            if self.plot_args["title"] is None: self.plot_args["title"] = self.packed_data_items[0].long_name
+        self.set_font_size()
+        # If any of the options have not been specified, then use the defaults
+        self.set_default_axis_label("X")
+        self.set_default_axis_label("Y")
 
-            if self.plot_args.get("xtickangle", None) is not None:
-                self.matplotlib.xticks(rotation=self.plot_args.get("xtickangle"))
+        if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
+        if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
+        if self.plot_args["title"] is None: self.plot_args["title"] = self.packed_data_items[0].long_name
 
-            if self.plot_args.get("ytickangle", None) is not None:
-                self.matplotlib.yticks(rotation=self.plot_args.get("ytickangle"))
-
-            for key in plot_options.keys():
-            # Call the method associated with the option
-                if key in self.plot_args.keys():
-                    plot_options[key](self.plot_args[key])
+        for key in plot_options.keys():
+        # Call the method associated with the option
+            if key in self.plot_args.keys():
+                plot_options[key](self.plot_args[key])
 
         if not self.plot_args["nocolourbar"]: self.add_color_bar()
-
-        self.draw_coastlines(draw_grid)
 
         if len(self.packed_data_items) > 1: self.create_legend()
 

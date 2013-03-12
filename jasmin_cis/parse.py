@@ -274,39 +274,43 @@ def check_colour_bar_orientation(orientation, parser):
     return orientation
 
 def parse_as_float_or_date(arg, name, parser):
+    from time_util import parse_datetimestr_to_std_time
     if arg:
         try:
             # First try and parse as a float
             arg = float(arg)
-            return arg
         except ValueError:
             # Then try and parse as a date
-            from time_util import parse_datetimestr_to_std_time
             try:
                 arg = parse_datetimestr_to_std_time(arg)
-                return arg
             except ValueError:
                 # Otherwise throw an error
                 parser.error("'" + arg + "' is not a valid " + name)
-                return None
+        return arg
+    else:
+        return None
 
-def check_range(arguments, parser, range_axis):
+def parse_as_float_or_time_delta(arg, name, parser):
+    from time_util import parse_datetimestr_delta_to_float_days
+    if arg:
+        try:
+            # First try and parse as a float
+            arg = float(arg)
+        except ValueError:
+            # Then try and parse as a timedelta
+            try:
+                arg = parse_datetimestr_delta_to_float_days(arg)
+            except ValueError:
+                # Otherwise throw an error
+                parser.error("'" + arg + "' is not a valid " + name)
+        return arg
+    else:
+        return None
+
+def check_range(min_val, max_val, step, parser, range_axis):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
     '''
-    if range_axis == "x":
-        min_val = arguments.xmin
-        max_val = arguments.xmax
-        step = arguments.xstep
-    elif range_axis == "y":
-        min_val = arguments.ymin
-        max_val = arguments.ymax
-        step = arguments.ystep
-    elif range_axis == "v":
-        min_val = arguments.vmin
-        max_val = arguments.vmax
-        step = arguments.vstep
-
     ax_range = {}
 
     if min_val is not None:
@@ -315,8 +319,12 @@ def check_range(arguments, parser, range_axis):
     if max_val is not None:
         ax_range[range_axis + "max"] = parse_as_float_or_date(max_val, range_axis + "max", parser)
 
+    if ax_range.get(range_axis + "min", None) is not None and ax_range.get(range_axis + "max", None) is not None:
+        if ax_range[range_axis + "min"] >= ax_range[range_axis + "max"]:
+            parser.error(range_axis + "min must be less than " + range_axis + "max")
+
     if step is not None:
-        ax_range[range_axis + "step"] = parse_as_float_or_date(step, range_axis + "step", parser)
+        ax_range[range_axis + "step"] = parse_as_float_or_time_delta(step, range_axis + "step", parser)
 
     return ax_range
 
@@ -355,9 +363,9 @@ def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
     check_plot_type(arguments.type, arguments.datagroups, parser)
 
-    arguments.valrange = check_range(arguments, parser, "v")
-    arguments.xrange = check_range(arguments, parser, "x")
-    arguments.yrange = check_range(arguments, parser, "y")
+    arguments.valrange = check_range(arguments.vmin, arguments.vmax, arguments.vstep, parser, "v")
+    arguments.xrange = check_range(arguments.xmin, arguments.xmax, arguments.xstep, parser, "x")
+    arguments.yrange = check_range(arguments.ymin, arguments.ymax, arguments.ystep, parser, "y")
 
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar)
