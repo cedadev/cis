@@ -434,8 +434,8 @@ class TestSepConstraint(ConstraintTests):
         h_sep = 1000
         # 15m altitude seperation
         a_sep = 15
-        # 1 day time seperation
-        t_sep = '1d'
+        # 1 day (and a little bit) time seperation
+        t_sep = '1d1M'
 
         constraint = SepConstraint(h_sep = h_sep, a_sep = a_sep, t_sep = t_sep)
 
@@ -447,7 +447,7 @@ class TestSepConstraint(ConstraintTests):
         new_points = constraint.constrain_points(sample_point,ug_data_points)
         new_vals = new_points.vals
 
-        eq_(len(ref_vals),len(new_vals))
+        eq_(ref_vals.size, new_vals.size)
         assert(all(np.equal(ref_vals, new_vals)))
 
     @istest
@@ -475,7 +475,7 @@ class TestSepConstraint(ConstraintTests):
         new_points = constraint.constrain_points(sample_point,ug_data_points)
         new_vals = new_points.vals
 
-        eq_(len(ref_vals),len(new_vals))
+        eq_(ref_vals.size, new_vals.size)
         assert(all(np.equal(ref_vals, new_vals)))
 
     @istest
@@ -495,12 +495,12 @@ class TestSepConstraint(ConstraintTests):
         constraint = SepConstraint(h_sep=1000)
 
         # This should leave us with 30 points
-        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[4:6,:]
+        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[:,1:4].flatten()
 
         new_points = constraint.constrain_points(sample_point,ug_data_points)
         new_vals = new_points.vals
 
-        eq_(len(ref_vals),len(new_vals))
+        eq_(ref_vals.size, new_vals.size)
         assert(all(np.equal(ref_vals, new_vals)))
 
     @istest
@@ -515,14 +515,14 @@ class TestSepConstraint(ConstraintTests):
         ug_data_points = ug_data.get_points()
         sample_point = HyperPoint(0.0, 0.0, 50.0,convert_datetime_to_std_time(dt.datetime(1984,8,29)))
 
-        # 1 day time seperation
-        constraint = SepConstraint(t_sep='1d')
+        # 1 day (and a little bit) time seperation
+        constraint = SepConstraint(t_sep='1d1M')
 
         # This should leave us with 30 points
-        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[4:6,:]
+        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[:,1:4].flatten()
 
         new_points = constraint.constrain_points(sample_point,ug_data_points)
         new_vals = new_points.vals
 
-        eq_(len(ref_vals),len(new_vals))
+        eq_(ref_vals.size, new_vals.size)
         assert(all(np.equal(ref_vals, new_vals)))
