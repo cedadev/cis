@@ -155,7 +155,10 @@ def col_cmd(main_arguments):
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
 
-    col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, output_file)
+    try:
+        col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, main_arguments.sampleproduct, output_file)
+    except IOError as e:
+        __error_occurred(e)
 
     for input_group in main_arguments.datagroups:
         variable = input_group['variable']
@@ -166,13 +169,14 @@ def col_cmd(main_arguments):
         con_options = input_group['constraint'][1] if  input_group['constraint'] is not None else None
         kern_name = input_group['kernel'][0] if  input_group['kernel'] is not None else None
         kern_options = input_group['kernel'][1] if  input_group['kernel'] is not None else None
+        product = input_group["product"] if input_group["product"] is not None else None
 
         try:
-            col.colocate(variable, filenames, col_name, col_options, con_name, con_options, kern_name, kern_options)
-        except CISError as e:
-            __error_occurred(e)
+            col.colocate(variable, filenames, col_name, col_options, con_name, con_options, kern_name, kern_options, product)
         except ClassNotFoundError as e:
             __error_occurred(str(e) + "\nInvalid co-location option.")
+        except (CISError, IOError) as e:
+            __error_occurred(e)
 
 
 commands = { 'plot' : plot_cmd,

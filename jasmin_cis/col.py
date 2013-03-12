@@ -6,16 +6,16 @@ import logging
 
 class Colocate(object):
 
-    def __init__(self, sample_files, sample_var, output_file):
+    def __init__(self, sample_files, sample_var, sample_product, output_file):
         from jasmin_cis.data_io.read import read_coordinates, read_data
         from jasmin_cis.data_io.write_netcdf import write_coordinates
 
         self.sample_files = sample_files
         if sample_var is None:
-            coords = read_coordinates(sample_files)
+            coords = read_coordinates(sample_files, sample_product)
             sample_points = coords.get_coordinates_points()
         else:
-            data = read_data(sample_files, sample_var)
+            data = read_data(sample_files, sample_var, sample_product)
             coords = data.coords()
             sample_points = data.get_points()
 
@@ -82,7 +82,7 @@ class Colocate(object):
 
         return kernel
 
-    def colocate(self, variable, filenames, col_name=None, col_params=None, con_method=None, con_params=None, kern=None, kern_params=None):
+    def colocate(self, variable, filenames, col_name=None, col_params=None, con_method=None, con_params=None, kern=None, kern_params=None, product = None):
         from jasmin_cis.data_io.read import read_data
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.exceptions import CoordinateNotFoundError
@@ -91,7 +91,7 @@ class Colocate(object):
         from jasmin_cis.cis import __version__
 
         logging.info("Reading data for: "+variable)
-        data = read_data(filenames, variable)
+        data = read_data(filenames, variable, product)
 
         # Find colocator, constraint_fn and kernel to use
         col = Colocate._get_valid_colocator_instance(col_name, col_params)
