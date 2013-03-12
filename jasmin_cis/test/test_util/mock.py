@@ -330,6 +330,9 @@ def make_regular_4d_ungridded_data():
     print np.mean(data[:,1:3])
     print np.mean(data[4:6,:])
     print np.mean(data[:,2])
+    print np.std(data)
+    print np.mean(data)
+    print len(data.flat)
 
     y, a = np.meshgrid(y_points,alt)
     x, a = np.meshgrid(x_points,alt)
