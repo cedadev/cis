@@ -28,7 +28,7 @@ class Line_Plot(Generic_Plot):
             else:
                 self.mplkwargs.pop("color", None)
 
-            self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs ) #TODO append to list
+            self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs )
 
     def format_plot(self):
         self.format_time_axis()
