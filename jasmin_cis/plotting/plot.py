@@ -78,6 +78,10 @@ class Plotter(object):
                      "xbinwidth" : mplkwargs.pop("xbinwidth", None),
                      "ybinwidth" : mplkwargs.pop("ybinwidth", None)}
 
+        slice_args = mplkwargs.pop("slice", {})
+
+        if len(slice_args) == 2: packed_data_items = self.perform_slicing(slice_args, packed_data_items)
+
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
 
@@ -89,6 +93,24 @@ class Plotter(object):
         plot.apply_axis_limits(plot_args["xrange"], "x")
         plot.apply_axis_limits(plot_args["yrange"], "y")
         self.output_to_file_or_screen(out_filename)
+
+    def perform_slicing(self, slice_args, packed_data_items):
+        from jasmin_cis.exceptions import InvalidSliceIndexError
+        for packed_data_item in packed_data_items:
+            try:
+                if slice_args["dim_index"] == 0:
+                    packed_data_item.data = packed_data_item.data[slice_args["index_in_dim"],:,:]
+                elif slice_args["dim_index"] == 1:
+                    packed_data_item.data = packed_data_item.data[:,slice_args["index_in_dim"],:]
+                elif slice_args["dim_index"] == 2:
+                    packed_data_item.data = packed_data_item.data[:,:,slice_args["index_in_dim"]]
+                else:
+                    raise InvalidSliceIndexError("Invalid dim_index: " + str(slice_args["dim_index"]))
+            except IndexError:
+                raise InvalidSliceIndexError("Invalid index_in_dim: " + str(slice_args["index_in_dim"]))
+            packed_data_item.shape = packed_data_item.data.shape
+
+        return packed_data_items
 
     def output_to_file_or_screen(self, out_filename = None):
         '''
@@ -122,4 +144,17 @@ class Plotter(object):
         try:
             return self.default_plot_types[variable_dim]
         except KeyError:
-            raise InvalidPlotTypeError("There is no valid plot type for this variable - check its dimensions")
+            coord_shape = None
+            all_coords_are_of_same_shape = False
+            for coord in data[0].coords():
+                if coord_shape == None:
+                    coord_shape = coord.shape
+                    all_coords_are_of_same_shape = True
+                elif coord_shape != coord.shape:
+                    all_coords_are_of_same_shape = False
+                    break
+
+            error_message = "There is no valid plot type for this variable\nIts shape is: " + str(data[0].shape)
+            if all_coords_are_of_same_shape:
+                error_message += "\nThe shape of its coordinates is: " + str(data[0].coords()[0].shape)
+            raise InvalidPlotTypeError(error_message)

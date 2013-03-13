@@ -70,6 +70,8 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows grid lines on the plot")
     parser.add_argument("--xaxis", metavar = "Variable on x axis", nargs="?", help="Name of variable to use on the x axis")
     parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
+
+    parser.add_argument("--slice", metavar = "Slice the data", nargs = "?", help = "An argument of the form i,j. Slices the ith dimension of the data along the index j")
     return parser
 
 
@@ -358,6 +360,18 @@ def assign_logs(arguments):
     
     return arguments
 
+def check_slice(arg, parser):
+    if arg:
+        arg = arg.split(",")
+        if len(arg) == 2:
+            slice_args = {}
+            slice_args["dim_index"] = parse_float(arg[0], "slice dimension index", parser)
+            slice_args["index_in_dim"] =parse_float(arg[1], "slice dimension index", parser)
+            return slice_args
+        else:
+            parser.error("Slice must be of the form i,j, where i is the index of the dimension of the data to slice, and j is the index in the dimension at which to slice")
+    else:
+        return {}
 
 def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
@@ -370,7 +384,9 @@ def validate_plot_args(arguments, parser):
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar)
     arguments.grid = check_boolean_argument(arguments.grid)
-    
+
+    arguments.slice = check_slice(arguments.slice, parser)
+
     arguments = assign_logs(arguments)
     # Try and parse numbers
     arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
