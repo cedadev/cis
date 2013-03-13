@@ -102,7 +102,8 @@ def get_data(vds, first_record = False):
     return data
 
 def get_metadata(vds):
-    from ungridded_data import Metadata
+    from jasmin_cis.data_io.ungridded_data import Metadata
+    from jasmin_cis.utils import escape_latex_characters
 
     # get file and variable reference from tuple
     filename = vds.filename
@@ -118,6 +119,7 @@ def get_metadata(vds):
     long_name = __get_attribute_value(vd, 'long_name')
     shape = [len(vd.read(nRec = vd.inquire()[0]))] #VD data are always 1D, so the shape is simply the length of the data vector
     units = __get_attribute_value(vd, 'units')
+    units = escape_latex_characters(units)
     valid_range = __get_attribute_value(vd, 'valid_range')
     factor = __get_attribute_value(vd, 'factor')
     offset = __get_attribute_value(vd, 'offset')

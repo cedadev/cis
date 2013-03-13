@@ -111,14 +111,14 @@ def get_metadata(var):
     @param var: the Variable to read metadata from
     @return: A metadata object
     '''
-    from ungridded_data import Metadata
+    from jasmin_cis.data_io.ungridded_data import Metadata
+    from jasmin_cis.utils import escape_latex_characters
 
     standard_name = getattr(var,'standard_name',"")
     missing_value = find_missing_value(var)
     long_name = getattr(var,'long_name',"")
     units = getattr(var, 'units', "")
-    # Prepend any hashes with a backslash so they don't break matplotlib
-    units = "\\#".join(units.rsplit('#'))
+    units = escape_latex_characters(units)
 
     history = getattr(var, "history", "")
     shape = getattr(var, "shape", None)

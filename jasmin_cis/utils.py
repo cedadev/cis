@@ -60,6 +60,15 @@ def expand_1d_to_2d_array(array_1d,length,axis=0):
 
     return array_2d
 
+def escape_latex_characters(string):
+    reserved_LaTeX_characters = ["#", "$", "%", "^", "&", "_", "{", "}", "~", "\\"]
+    new_string = ""
+    for char in string:
+        if char in reserved_LaTeX_characters:
+            new_string += "\\"
+        new_string += char
+    return new_string
+
 
 def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma

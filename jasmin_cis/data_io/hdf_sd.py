@@ -153,12 +153,14 @@ def get_data(sds):
 
 
 def get_metadata(sds):
-    from ungridded_data import Metadata
+    from jasmin_cis.data_io.ungridded_data import Metadata
+    from jasmin_cis.utils import escape_latex_characters
 
     name = sds.info()[0]
     long_name = sds.attributes().get('long_name',None)
     shape = sds.info()[2]
     units = sds.attributes().get('units')
+    units = escape_latex_characters(units)
     valid_range = sds.attributes().get('valid_range')
     factor = sds.attributes().get('scale_factor')
     offset = sds.attributes().get('add_offset')
