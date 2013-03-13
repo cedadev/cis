@@ -72,6 +72,8 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
 
     parser.add_argument("--slice", metavar = "Slice the data", nargs = "?", help = "An argument of the form i,j. Slices the ith dimension of the data along the index j")
+
+    parser.add_argument("--coastlinescolour", metavar = "Coastlines Colour", nargs = "?", help = "The colour of the coastlines on a map")
     return parser
 
 
@@ -384,6 +386,8 @@ def validate_plot_args(arguments, parser):
     arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
     arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar)
     arguments.grid = check_boolean_argument(arguments.grid)
+
+    arguments.coastlinescolour = check_color(arguments.coastlinescolour, parser)
 
     arguments.slice = check_slice(arguments.slice, parser)
 

@@ -404,7 +404,9 @@ class Generic_Plot(object):
         draw_grid = self.plot_args.get("grid")
         if draw_grid: self.matplotlib.grid(True, which="both")
 
-        if self.is_map(): self.basemap.drawcoastlines()
+        if self.is_map():
+            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
+            self.basemap.drawcoastlines(color = colour)
 
         self.set_axes_ticks(3)
 

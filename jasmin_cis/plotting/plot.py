@@ -76,7 +76,8 @@ class Plotter(object):
                      "xtickangle" : mplkwargs.pop("xtickangle", None),
                      "ytickangle" : mplkwargs.pop("ytickangle", None),
                      "xbinwidth" : mplkwargs.pop("xbinwidth", None),
-                     "ybinwidth" : mplkwargs.pop("ybinwidth", None)}
+                     "ybinwidth" : mplkwargs.pop("ybinwidth", None),
+                     "coastlinescolour" : mplkwargs.pop("coastlinescolour", "k")}
 
         slice_args = mplkwargs.pop("slice", {})
 
