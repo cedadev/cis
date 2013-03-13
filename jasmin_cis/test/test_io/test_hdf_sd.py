@@ -30,7 +30,7 @@ def test_that_can_get_metadata_for_known_variable():
     eq_(metadata.standard_name,"latitude")
     eq_(metadata.long_name,"Geodetic Latitude")
     eq_(metadata.shape,[203, 135])
-    eq_(metadata.units,"Degrees_north")
+    eq_(metadata.units,"Degrees\\_north")
     eq_(metadata.range,[-90.0, 90.0])
     eq_(metadata.factor,1.0)
     eq_(metadata.offset,0.0)
