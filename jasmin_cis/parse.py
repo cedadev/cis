@@ -124,6 +124,7 @@ def expand_file_list(filenames, parser):
 
     # Cast set to a list to make it easier to index etc. later on
     alist = list(file_set)
+    alist.sort()
     logging.info("Identified input file list: " + str(alist))
 
     return alist
