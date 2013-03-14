@@ -81,7 +81,7 @@ class Plotter(object):
 
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
-
+        #testslicebranc DELETE ME
         if plot_type is None: plot_type = self.set_default_plot_type(packed_data_items)
 
         # Do plot
