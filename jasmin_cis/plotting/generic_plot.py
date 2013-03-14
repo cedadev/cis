@@ -242,7 +242,13 @@ class Generic_Plot(object):
 
         def format_datetime(x, pos=None):
             # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
-            return convert_std_time_to_datetime(x).isoformat(' ')
+            date_time = convert_std_time_to_datetime(x)
+            if date_time.hour == 0 and date_time.minute == 0 and date_time.second == 0:
+                return date_time.strftime("%Y-%m-%d")
+            elif date_time.second == 0:
+                return date_time.strftime("%Y-%m-%d %H:%M")
+            else:
+                return date_time.isoformat(' ')
 
         def format_time(x, pos=None):
             return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
