@@ -142,8 +142,10 @@ class Generic_Plot(object):
 
         if self.plot_args.get(axis + "tickangle", None) is None:
             angle = None
+            ha = "center" if axis == "x" else "right"
         else:
             angle = self.plot_args[axis + "tickangle"]
+            ha = "right"
 
         if self.is_map() and self.plot_args[axis + "range"].get(axis + "step") is None:
             self.plot_args[axis + "range"][axis + "step"] = 30
@@ -163,9 +165,9 @@ class Generic_Plot(object):
 
             ticks = arange(min_val, max_val+step, step)
 
-            tick_method(ticks, rotation=angle)
+            tick_method(ticks, rotation=angle, ha=ha)
         else:
-            tick_method(rotation=angle)
+            tick_method(rotation=angle, ha=ha)
 
     def format_time_axis(self):
         from jasmin_cis.time_util import cis_standard_time_unit
