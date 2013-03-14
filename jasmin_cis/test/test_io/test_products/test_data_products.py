@@ -85,12 +85,20 @@ class TestMODIS_L3(ProductTests):
         self.product = MODIS_L3
 
 
-class TestCaliop(ProductTests):
+class TestCaliop_L2(ProductTests):
     def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_caliop_filename, valid_caliop_variable
-        self.filename = valid_caliop_filename
-        self.valid_variable = valid_caliop_variable
+        from jasmin_cis.test.test_files.data import valid_caliop_l2_filename, valid_caliop_l2_variable
+        self.filename = valid_caliop_l2_filename
+        self.valid_variable = valid_caliop_l2_variable
         self.product = Caliop_L2
+
+
+class TestCaliop_L1(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_caliop_l1_filename, valid_caliop_l1_variable
+        self.filename = valid_caliop_l1_filename
+        self.valid_variable = valid_caliop_l1_variable
+        self.product = Caliop_L1
 
 
 class TestMODIS_L2(ProductTests):

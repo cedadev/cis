@@ -158,7 +158,7 @@ def col_cmd(main_arguments):
     try:
         col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, main_arguments.sampleproduct, output_file)
     except IOError as e:
-        __error_occurred(e)
+        __error_occurred("There was an error reading one of the files: \n" + str(e))
 
     for input_group in main_arguments.datagroups:
         variable = input_group['variable']
