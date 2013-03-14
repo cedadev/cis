@@ -10,40 +10,66 @@ from jasmin_cis.plotting.plot import Plotter
 import argparse
 
 @istest
+def order_is_preserved_when_specifying_individual_files():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(valid_1d_filename + "," + valid_2d_filename, parser)
+    eq_(files, [valid_1d_filename, valid_2d_filename])
+    files = expand_file_list(valid_2d_filename + "," + valid_1d_filename, parser)
+    eq_(files, [valid_2d_filename, valid_1d_filename])
+
+@istest
+def directories_are_sorted():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(test_directory, parser)
+    eq_(files, test_directory_files)
+
+@istest
+def wildcarded_files_are_sorted():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(os.path.join(test_directory,'test_*'), parser)
+    eq_(files, test_directory_files)
+
+@istest
+def order_is_preserved_when_specifying_files_even_when_wildcards_and_directories_are_specified_too():
+    parser = argparse.ArgumentParser()
+    files = expand_file_list(valid_1d_filename + "," + valid_2d_filename + "," + os.path.join(test_directory,'test_1') + "," + valid_cloud_cci_filename + "," + test_directory, parser)
+    eq_(files, [valid_1d_filename, valid_2d_filename, test_directory_file1, valid_cloud_cci_filename, test_directory_file2, test_directory_file3])
+
+@istest
 def can_specify_one_valid_filename_and_a_directory():
     parser = argparse.ArgumentParser()
     files = expand_file_list(valid_1d_filename+','+test_directory, parser)
-    eq_(len(files),4)
+    eq_(files, [valid_1d_filename] + test_directory_files)
 
 @istest
 def can_specify_a_directory():
     parser = argparse.ArgumentParser()
     files = expand_file_list(test_directory, parser)
-    eq_(len(files),3)
+    eq_(files, test_directory_files)
 
 @istest
 def can_specify_a_file_with_wildcards():
     parser = argparse.ArgumentParser()
     files = expand_file_list(os.path.join(test_directory,'test_*'), parser)
-    eq_(len(files),3)
+    eq_(files,test_directory_files)
     files = expand_file_list(os.path.join(test_directory,'*_1'), parser)
-    eq_(len(files),1)
+    eq_(files,[test_directory_file1])
     files = expand_file_list(os.path.join(test_directory,'test_?'), parser)
-    eq_(len(files),3)
+    eq_(files,test_directory_files)
     files = expand_file_list(os.path.join(test_directory,'test_[0-9]'), parser)
-    eq_(len(files),3)
+    eq_(files,test_directory_files)
 
 @istest
 def can_specify_one_valid_filename_and_a_wildcarded_file():
     parser = argparse.ArgumentParser()
     files = expand_file_list(valid_1d_filename+','+os.path.join(test_directory,'test_[0-9]'), parser)
-    eq_(len(files),4)
+    eq_(files,[valid_1d_filename] + test_directory_files)
 
 @istest
 def duplicate_files_are_not_returned_from_expand_file_list():
     parser = argparse.ArgumentParser()
     files = expand_file_list(os.path.join(test_directory,'test_1')+','+os.path.join(test_directory,'test_[0-9]'), parser)
-    eq_(len(files),3)
+    eq_(files,test_directory_files)
 
 @istest
 def can_specify_one_valid_filename():
