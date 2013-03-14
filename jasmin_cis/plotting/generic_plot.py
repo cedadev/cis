@@ -251,9 +251,10 @@ class Generic_Plot(object):
         tick_angle = self.plot_args.get("xtickangle", None)
         if tick_angle is None:
             self.plot_args["xtickangle"] = 45
-        self.matplotlib.xticks(rotation=self.plot_args["xtickangle"])
+        self.matplotlib.xticks(rotation=self.plot_args["xtickangle"], ha="right")
         # Give extra spacing at bottom of plot due to rotated labels
         self.matplotlib.gcf().subplots_adjust(bottom=0.3)
+
         #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def set_font_size(self):
