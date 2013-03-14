@@ -254,19 +254,33 @@ class DummyConstraint(Constraint):
 class SepConstraint(Constraint):
 
     def __init__(self, h_sep=None, a_sep=None, t_sep=None, fill_value=None):
+        from jasmin_cis.exceptions import InvalidCommandLineOptionError
+
         super(SepConstraint, self).__init__()
         if fill_value is not None:
-            self.fill_value = fill_value
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise InvalidCommandLineOptionError('Seperation Constraint fill_value must be a valid float')
         self.checks = []
         if h_sep is not None:
-            self.h_sep = h_sep
+            try:
+                self.h_sep = float(h_sep)
+            except ValueError:
+                raise InvalidCommandLineOptionError('Seperation Constraint h_sep must be a valid float')
             self.checks.append(self.horizontal_constraint)
         if a_sep is not None:
-            self.a_sep = a_sep
+            try:
+                self.a_sep = float(a_sep)
+            except:
+                raise InvalidCommandLineOptionError('Seperation Constraint a_sep must be a valid float')
             self.checks.append(self.alt_constraint)
         if t_sep is not None:
             from jasmin_cis.time_util import parse_datetimestr_delta_to_float_days
-            self.t_sep = parse_datetimestr_delta_to_float_days(t_sep)
+            try:
+                self.t_sep = parse_datetimestr_delta_to_float_days(t_sep)
+            except ValueError as e:
+                raise InvalidCommandLineOptionError(e)
             self.checks.append(self.time_constraint)
 
     def time_constraint(self, point, ref_point):
@@ -320,6 +334,7 @@ class nn_horizontal(Kernel):
             Colocation using nearest neighbours along the face of the earth where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
+        if len(data) == 0: raise ValueError
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
@@ -333,6 +348,7 @@ class nn_vertical(Kernel):
             Colocation using nearest neighbours in altitude, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
+        if len(data) == 0: raise ValueError
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.compalt(nearest_point, data_point): nearest_point = data_point
@@ -346,6 +362,7 @@ class nn_time(Kernel):
             Colocation using nearest neighbours in time, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
+        if len(data) == 0: raise ValueError
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.comptime(nearest_point, data_point): nearest_point = data_point
