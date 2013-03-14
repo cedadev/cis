@@ -97,17 +97,23 @@ def expand_file_list(filenames, parser):
     @return: A flat list of files which exist - with no duplicate
     '''
     from glob import glob
+    from jasmin_cis.utils import OrderedSet
     if not filenames:
         parser.error("Please specify at least one filename")
     input_list = filenames.split(',')
 
     # Ensure we don't get duplicates by making file_set a set
-    file_set = set()
+    file_set = OrderedSet()
     for element in input_list:
         if any(wildcard in element for wildcard in ['*', '?',']','}']):
-            file_set.update(glob(element))
+            filenames = glob(element)
+            filenames.sort()
+            for filename in filenames:
+                file_set.add(filename)
         elif os.path.isdir(element):
-            for a_file in os.listdir(element):
+            filenames = os.listdir(element)
+            filenames.sort()
+            for a_file in filenames:
                 full_file = os.path.join(element, a_file)
                 if os.path.isfile(full_file):
                     file_set.add(full_file)
@@ -122,7 +128,7 @@ def expand_file_list(filenames, parser):
 
     # Cast set to a list to make it easier to index etc. later on
     alist = list(file_set)
-    alist.sort()
+
     logging.info("Identified input file list: " + str(alist))
 
     return alist
