@@ -100,7 +100,7 @@ def read(filename, usr_variables):
         try:
             data[variable] = datafile.variables[variable]
         except:
-            raise InvalidVariableError
+            raise InvalidVariableError(variable+' could not be found in '+filename)
 
     return data
 

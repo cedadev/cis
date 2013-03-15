@@ -247,6 +247,27 @@ def make_regular_2d_with_time_ungridded_data():
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
 
+def make_MODIS_time_steps():
+    '''
+        Useful for debugging MODIS colocation
+    @return:
+    '''
+    import numpy as np
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x = np.zeros(4)
+    times = np.array([149754,149762,149770,149778])
+
+    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
+
+    data = np.arange(4.0)
+
+    coords = CoordList([x, t])
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+
+
 def make_regular_4d_ungridded_data():
     '''
         Makes a well defined ungridded data object of shape 10x5 with data as follows

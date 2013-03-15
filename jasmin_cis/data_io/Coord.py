@@ -130,7 +130,7 @@ class CoordList(list):
                   % (len(coords), ', '.join(coord.name() for coord in coords))
             raise CoordinateNotFoundError(msg)
         elif len(coords) == 0:
-            bad_name = name or standard_name or long_name or ''
+            bad_name = name or standard_name or long_name or axis or ''
             msg = 'Expected to find exactly 1 %s coordinate, but found none.' % bad_name
             raise CoordinateNotFoundError(msg)
 

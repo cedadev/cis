@@ -71,7 +71,7 @@ def __get_class(parent_class, name=None):
     @param name: name of the class to find
     @return: a subclass of the parent_class
     '''
-    from plugin import find_plugin_classes
+    from jasmin_cis.plugin import find_plugin_classes
     from jasmin_cis.exceptions import ClassNotFoundError
     import logging
 

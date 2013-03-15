@@ -281,16 +281,41 @@ class Test_nn_time(KernelTests):
         eq_(new_data.data[2], 10.0)
 
     @istest
+    def test_basic_col_with_time(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+        from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
+        import numpy as np
+
+        ug_data = mock.make_MODIS_time_steps()
+
+        ref = np.array([0.0,1.0,2.0,3.0])
+
+        sample_points = HyperPointList()
+        sample_points.append(HyperPoint(0.0, 0.0,t=149751.369618055))
+        sample_points.append(HyperPoint(0.0,0.0,t=149759.378055556,))
+        sample_points.append(HyperPoint(0.0,0.0,t=149766.373969907))
+        sample_points.append(HyperPoint(0.0,0.0,t=149776.375995371))
+
+        col = DefaultColocator()
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
+        assert(np.equal(new_data.data,ref).all())
+
+    @istest
     def test_already_colocated_in_col_ungridded_to_ungridded_in_2d(self):
         from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         import datetime as dt
+        import numpy as np
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
         sample_points = HyperPointList()
-        sample_points.append(HyperPoint(0.0, 0.0,t=dt.datetime(1984,9,3)))
+
+        t0 = dt.datetime(1984,8,27)
+        for d in xrange(15):
+            sample_points.append(HyperPoint(0.0, 0.0,t=t0+dt.timedelta(days=d)))
+
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
-        eq_(new_data.data[0], 8.0)
+        assert(np.equal(new_data.data,np.arange(15)+1.0).all())
 
     @istest
     def test_coordinates_exactly_between_points_in_col_ungridded_to_ungridded_in_2d(self):
