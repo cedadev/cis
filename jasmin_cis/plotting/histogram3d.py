@@ -54,19 +54,18 @@ class Histogram_3D(Generic_Plot):
         @param axis: The axis to calculate the number of bins for
         @return: The number of bins for the given axis
         '''
+        from jasmin_cis.utils import calculate_number_of_histogram3d_bins
         if axis == "x":
-            axis_index = 0
+            data = self.unpacked_data_items[0]["data"]
         elif axis == "y":
-            axis_index = 1
+            data = self.unpacked_data_items[1]["data"]
 
-        step = self.plot_args.get(axis + "binwidth", None)
+        bin_edges = calculate_number_of_histogram3d_bins(data, axis, self.plot_args[axis + "range"], self.plot_args[axis + "binwidth"])
 
-        if step is None:
-            number_of_bins = 10
-        else:
-            number_of_bins = int((self.unpacked_data_items[axis_index]["data"].max() - self.unpacked_data_items[axis_index]["data"].min())/step)
+        self.plot_args[axis + "range"][axis + "min"] = bin_edges.min()
+        self.plot_args[axis + "range"][axis + "max"] = bin_edges.max()
 
-        return number_of_bins
+        return bin_edges
 
     def format_plot(self):
         # We don't format the time axis here as we're only plotting data against data
