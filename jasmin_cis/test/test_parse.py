@@ -26,13 +26,13 @@ def directories_are_sorted():
 @istest
 def wildcarded_files_are_sorted():
     parser = argparse.ArgumentParser()
-    files = expand_file_list(os.path.join(test_directory,'test_*'), parser)
+    files = expand_file_list(os.path.join(test_directory,'test_file_for_parser_*'), parser)
     eq_(files, test_directory_files)
 
 @istest
 def order_is_preserved_when_specifying_files_even_when_wildcards_and_directories_are_specified_too():
     parser = argparse.ArgumentParser()
-    files = expand_file_list(valid_1d_filename + "," + valid_2d_filename + "," + os.path.join(test_directory,'test_1') + "," + valid_cloud_cci_filename + "," + test_directory, parser)
+    files = expand_file_list(valid_1d_filename + "," + valid_2d_filename + "," + os.path.join(test_directory,'test_file_for_parser_1') + "," + valid_cloud_cci_filename + "," + test_directory, parser)
     eq_(files, [valid_1d_filename, valid_2d_filename, test_directory_file1, valid_cloud_cci_filename, test_directory_file2, test_directory_file3])
 
 @istest
@@ -50,25 +50,25 @@ def can_specify_a_directory():
 @istest
 def can_specify_a_file_with_wildcards():
     parser = argparse.ArgumentParser()
-    files = expand_file_list(os.path.join(test_directory,'test_*'), parser)
+    files = expand_file_list(os.path.join(test_directory,'test_file_for_parser_*'), parser)
     eq_(files,test_directory_files)
     files = expand_file_list(os.path.join(test_directory,'*_1'), parser)
     eq_(files,[test_directory_file1])
-    files = expand_file_list(os.path.join(test_directory,'test_?'), parser)
+    files = expand_file_list(os.path.join(test_directory,'test_file_for_parser_?'), parser)
     eq_(files,test_directory_files)
-    files = expand_file_list(os.path.join(test_directory,'test_[0-9]'), parser)
+    files = expand_file_list(os.path.join(test_directory,'test_file_for_parser_[0-9]'), parser)
     eq_(files,test_directory_files)
 
 @istest
 def can_specify_one_valid_filename_and_a_wildcarded_file():
     parser = argparse.ArgumentParser()
-    files = expand_file_list(valid_1d_filename+','+os.path.join(test_directory,'test_[0-9]'), parser)
+    files = expand_file_list(valid_1d_filename+','+os.path.join(test_directory,'test_file_for_parser_[0-9]'), parser)
     eq_(files,[valid_1d_filename] + test_directory_files)
 
 @istest
 def duplicate_files_are_not_returned_from_expand_file_list():
     parser = argparse.ArgumentParser()
-    files = expand_file_list(os.path.join(test_directory,'test_1')+','+os.path.join(test_directory,'test_[0-9]'), parser)
+    files = expand_file_list(os.path.join(test_directory,'test_file_for_parser_1')+','+os.path.join(test_directory,'test_file_for_parser_[0-9]'), parser)
     eq_(files,test_directory_files)
 
 @istest
@@ -160,5 +160,3 @@ def should_raise_error_with_invalid_line_style():
     except SystemExit as e:
         if e.code != 2:
             raise e 
-
-#how to specify more than one variable
