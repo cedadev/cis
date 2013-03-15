@@ -59,9 +59,6 @@ def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axi
                     var_axis_dict[main_arguments[axis + "axis"]] = axis.upper()
                     logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
                     break
-        else:
-            raise NotImplementedError("Options --xaxis and --yaxis are not implemented for Cube object")
-
 
 def __assign_variables_to_x_and_y_axis(main_arguments, data):
     # overwrites which variable to used for the x and y axis
@@ -84,8 +81,6 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
                     coord.axis = var_axis_dict[coord.name()]
                 if coord.name() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
                     coord.axis = ''
-        else:
-            raise NotImplementedError("Options --xaxis and --yaxis are not implemented for Cube object")
 
 
 def plot_cmd(main_arguments):
