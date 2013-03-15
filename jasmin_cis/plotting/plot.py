@@ -21,9 +21,9 @@ plot_options = { 'title' : mpl.title,
 
 class Plotter(object):
 
-    
+    # default plots type for a given shape of the data array.
     default_plot_types = { 1 : 'line',
-                           2 : 'heatmap'}
+                           2 : 'scatter'}
 
     plot_types = {"contour" : Contour_Plot,
                   "contourf" : Contourf_Plot,

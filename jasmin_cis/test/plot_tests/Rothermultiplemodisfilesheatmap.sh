@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot Surface_Temperature:${source_dir}MYD06_L2.A2011100.172* --output "O$SUBJECT.png"
+cis plot Surface_Temperature:${source_dir}MYD06_L2.A2011100.172* --output "O$SUBJECT.png" --type heatmap
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
