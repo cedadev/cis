@@ -119,9 +119,12 @@ class Plotter(object):
         @return The default plot type as a string
         '''
         from jasmin_cis.exceptions import InvalidPlotTypeError
+        import logging
         variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
         try:
-            return self.default_plot_types[variable_dim]
+            plot_type = self.default_plot_types[variable_dim]
+            logging.info("No plot type specified. Plotting data as a " + plot_type)
+            return plot_type
         except KeyError:
             coord_shape = None
             all_coords_are_of_same_shape = False
