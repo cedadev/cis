@@ -161,7 +161,9 @@ class MODIS_L3(AProduct):
         time_data_array = []
         for filename in filenames:
             mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
-            time_data = np.empty(lat_metadata.shape,dtype='float64')
+            logging.debug("Using "+str(mid_datetime)+" as datetime for file "+str(filename))
+            # Only use part of the full lat shape as it has already been concattenated
+            time_data = np.empty((lat_metadata.shape[0]/len(filenames),lat_metadata.shape[1]),dtype='float64')
             time_data.fill(mid_datetime)
             time_data_array.append(time_data)
         time_data = utils.concatenate(time_data_array)
