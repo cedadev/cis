@@ -6,7 +6,7 @@ from jasmin_cis.parse import parse_args
 @istest
 def can_overide_default_product():
     from jasmin_cis.data_io.products.products import Caliop_L2, Xglnwa
-    filename = valid_caliop_filename
+    filename = valid_caliop_l2_filename
     eq_(__get_class(filename), Caliop_L2)
     eq_(__get_class(filename, "Xglnwa"), Xglnwa)
 
