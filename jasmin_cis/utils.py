@@ -270,10 +270,30 @@ class OrderedSet(collections.MutableSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
-def apply_intersection_mask_to_two_arrays(maskedarray1, maskedarray2):
+def apply_intersection_mask_to_two_arrays(array1, array2):
+    '''
+        Ensure two (optionally) masked arrays have the same mask.
+        If both arrays are masked the intersection of the masks is used.
+        If one array is masked and the other is not, the mask from the masked array is applied
+          to the unmasked array
+        If neither array is masked then both arrays are returned as masked arrays with an empty mask
+    @param array1: An (optionally masked) array
+    @param array2: Another (optionally masked) array
+    @return: Two masked arrays with a common mask
+    '''
     import numpy.ma as ma
-    intersection_mask = ma.mask_or(maskedarray1.mask, maskedarray2.mask)
-    maskedarray1 = ma.array(maskedarray1, mask = intersection_mask)
-    maskedarray2 = ma.array(maskedarray2, mask = intersection_mask)
+    if isinstance(array1, ma.MaskedArray):
+        if isinstance(array2, ma.MaskedArray):
+            intersection_mask = ma.mask_or(array1.mask, array2.mask)
+        else:
+            intersection_mask = array1.mask
+    else:
+        if isinstance(array2, ma.MaskedArray):
+            intersection_mask = array2.mask
+        else:
+            intersection_mask = False
 
-    return maskedarray1, maskedarray2
+    array1 = ma.array(array1, mask = intersection_mask)
+    array2 = ma.array(array2, mask = intersection_mask)
+
+    return array1, array2

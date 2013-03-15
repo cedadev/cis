@@ -30,15 +30,10 @@ class Histogram_3D(Generic_Plot):
             y_equals_x_array = [min_val, max_val]
             self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
 
-            if isinstance(self.unpacked_data_items[0]["data"], MaskedArray) and isinstance(self.unpacked_data_items[1]["data"], MaskedArray):
-                first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
-                first_data_item = first_data_item.compressed()
-                second_data_item = second_data_item.compressed()
-            else:
-                first_data_item = self.unpacked_data_items[0]["data"]
-                second_data_item = self.unpacked_data_items[1]["data"]
+            first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
 
-
+            first_data_item = first_data_item.compressed()
+            second_data_item = second_data_item.compressed()
 
             self.matplotlib.hist2d(first_data_item, second_data_item, bins = [xbins, ybins], cmin = cmin, cmax = cmax, *self.mplargs, **self.mplkwargs)
 
