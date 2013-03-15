@@ -166,3 +166,5 @@ class Histogram_3D(Generic_Plot):
         else:
             tick_method(rotation=angle)
 
+    def drawcoastlines(self):
+        pass
