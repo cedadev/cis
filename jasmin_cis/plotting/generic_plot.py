@@ -399,6 +399,10 @@ class Generic_Plot(object):
 
         if len(self.packed_data_items) > 1: self.create_legend()
 
+    def drawcoastlines(self):
+        colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
+        self.basemap.drawcoastlines(color = colour)
+
     def format_3d_plot(self):
         '''
         Used by 3d subclasses to format the plot
@@ -413,9 +417,7 @@ class Generic_Plot(object):
         draw_grid = self.plot_args.get("grid")
         if draw_grid: self.matplotlib.grid(True, which="both")
 
-        if self.is_map():
-            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
-            self.basemap.drawcoastlines(color = colour)
+        if self.is_map(): self.drawcoastlines()
 
         self.set_axes_ticks(3)
 
