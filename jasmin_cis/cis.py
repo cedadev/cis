@@ -77,13 +77,7 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     main_arguments.pop("xaxis")
     main_arguments.pop("yaxis")
 
-    print var_axis_dict
-
     for data_item in data:
-
-        for coord in data_item.coords():
-            print coord.name(), coord.axis
-
         if not isinstance(data_item, Cube):
             for coord in data_item.coords():
                 if var_axis_dict.has_key(coord.name()):
@@ -93,9 +87,6 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
         else:
             raise NotImplementedError("Options --xaxis and --yaxis are not implemented for Cube object")
 
-        print "---"
-        for coord in data_item.coords():
-            print coord.name(), coord.axis
 
 def plot_cmd(main_arguments):
     '''
