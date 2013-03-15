@@ -555,31 +555,31 @@ class CisCol(AProduct):
     def get_file_signature(self):
         return [r'cis\-col\-.*\.nc']
 
-    def create_coords(self, filenames, variable = None):
+    def create_coords(self, filenames, usr_variable = None):
         from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata
         from jasmin_cis.data_io.Coord import Coord
+        from jasmin_cis.exceptions import InvalidVariableError
 
-        variables = [ "latitude", "longitude", "altitude", "time" ]
-
-        if variable is not None:
-            variables.append(variable)
+        variables = [ ("longitude", "x"), ("latitude","y"), ("altitude","z"), ("time","t") ]
 
         logging.info("Listing coordinates: " + str(variables))
 
-        var_data = read_many_files_individually(filenames, variables)
-
         coords = CoordList()
-        coords.append(Coord(var_data["longitude"], get_metadata(var_data["longitude"][0])))
-        coords.append(Coord(var_data["latitude"], get_metadata(var_data["latitude"][0])))
-        coords.append(Coord(var_data["altitude"], get_metadata(var_data["altitude"][0])))
-        # We don't need to convert this time coord as it should have been written in our
-        #  'standard' time
-        coords.append(Coord(var_data["time"], get_metadata(var_data["time"][0]), 'X'))
+        for variable in variables:
+            try:
+                var_data = read_many_files_individually(filenames,variable[0])[variable[0]]
+                coords.append(Coord(var_data, get_metadata(var_data[0]),axis=variable[1]))
+            except InvalidVariableError:
+                pass
 
-        if variable is None:
+        # Note - We don't need to convert this time coord as it should have been written in our
+        #  'standard' time
+
+        if usr_variable is None:
             return coords
         else:
-            return UngriddedData(var_data[variable], get_metadata(var_data[variable][0]), coords)
+            usr_var_data = read_many_files_individually(filenames,usr_variable)[usr_variable]
+            return UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
