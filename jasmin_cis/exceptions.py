@@ -52,3 +52,6 @@ class InvalidNumberOfDatagroupsSpecifiedError(CISError):
 
 class NotEnoughAxesSpecifiedError(CISError):
     pass
+
+class InvalidSliceIndexError(CISError):
+    pass
