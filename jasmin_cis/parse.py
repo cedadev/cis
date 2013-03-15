@@ -60,7 +60,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--xbinwidth", metavar = "Histogram x axis bin width", nargs = "?", help = "The width of the bins on the x axis of a histogram")
     parser.add_argument("--ybinwidth", metavar = "Histogram y axis bin width", nargs = "?", help = "The width of the bins on the y axis of a histogram")
 
-    parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "horizontal", nargs = "?", help = "The orientation of the colour bar, either horizontal or vertical")
+    parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "vertical", nargs = "?", help = "The orientation of the colour bar, either horizontal or vertical")
     parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
 
     parser.add_argument("--logx", metavar = "Log (base 10) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the x axis")
