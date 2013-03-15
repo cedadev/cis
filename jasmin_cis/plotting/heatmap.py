@@ -14,6 +14,9 @@ class Heatmap(Generic_Plot):
     def set_default_axis_label(self, axis):
         return self.set_3daxis_label(axis)
 
+    def create_legend(self):
+        pass
+
     def format_plot(self):
         self.format_time_axis()
         self.format_3d_plot()
