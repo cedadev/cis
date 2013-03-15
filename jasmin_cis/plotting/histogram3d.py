@@ -10,7 +10,7 @@ class Histogram_3D(Generic_Plot):
         '''
         from numpy.ma import MaskedArray
         from jasmin_cis.utils import apply_intersection_mask_to_two_arrays
-        from jasmin_cis.exceptions import NotEnoughDatagroupsSpecifiedError
+        from jasmin_cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) == 2:
             vmin = self.mplkwargs.pop("vmin")
             vmax = self.mplkwargs.pop("vmax")
@@ -45,7 +45,7 @@ class Histogram_3D(Generic_Plot):
             self.mplkwargs["vmin"] = vmin
             self.mplkwargs["vmax"] = vmax
         else:
-            raise NotEnoughDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
+            raise InvalidNumberOfDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
 
     def calculate_number_of_bins(self, axis):
         '''
