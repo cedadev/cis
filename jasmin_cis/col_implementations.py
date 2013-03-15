@@ -174,7 +174,7 @@ class DifferenceColocator(Colocator):
         val_data.metadata.shape = (len(points),)
         val_data.metadata.missing_value = constraint.fill_value
 
-        if not self.diff_long_name: self.diff_long_name = 'Difference between '+metadata._name+' and sampling values'
+        if not self.diff_long_name: self.diff_long_name = 'Difference between given variable and sampling values'
         diff_data = LazyData(difference, Metadata(name=self.diff_name, long_name=self.diff_long_name, shape=(len(points),),
                                                   missing_value=constraint.fill_value, units=val_data.units))
 
