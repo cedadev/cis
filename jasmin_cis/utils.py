@@ -23,6 +23,28 @@ def concatenate(arrays, axis=0):
 
     return res
 
+def calculate_number_of_histogram3d_bins(data, axis, user_range, step):
+    from decimal import Decimal
+    from numpy import array, append
+
+    min_val = user_range.get(axis + "min", data.min())
+    max_val = user_range.get(axis + "max", data.max())
+
+    val_range = float(max_val - min_val)
+
+    if step is None: step = val_range / 10.0
+
+    x = float(Decimal(str(val_range)) % Decimal(str(step)))
+
+    stop = max_val + step if  x < 1.e-7 else max_val # 1.e-7 is very close to 0
+
+    bin_edges = array([])
+    i = min_val
+    while abs(i - stop) >= 1.e-7 and i < stop:
+        bin_edges = append(bin_edges, (i))
+        i += step
+
+    return bin_edges
 
 def expand_1d_to_2d_array(array_1d,length,axis=0):
     '''
