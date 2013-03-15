@@ -50,10 +50,10 @@ valid_ascii_variable = 0
 valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
 valid_NCAR_NetCDF_RAF_variable = 'ATX'
 
-test_directory = make_pathname('test_dir')
-test_directory_file1 = test_directory + "/test_1"
-test_directory_file2 = test_directory + "/test_2"
-test_directory_file3 = test_directory + "/test_3"
+test_directory = make_pathname('test_directory_for_parser')
+test_directory_file1 = test_directory + "/test_file_for_parser_1"
+test_directory_file2 = test_directory + "/test_file_for_parser_2"
+test_directory_file3 = test_directory + "/test_file_for_parser_3"
 test_directory_files = [test_directory_file1, test_directory_file2, test_directory_file3]
 
 large_15GB_file_filename = "/run/media/daniel/Storage/xglnwa.pm.k8dec-k9nov.nc"

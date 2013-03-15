@@ -10,7 +10,7 @@ from jasmin_cis.exceptions import CISError
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "V0R4M2"
+__version__ = "V0R4M4"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
@@ -49,20 +49,23 @@ def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axi
 
     for data_item in data:
         if not isinstance(data_item, Cube):
-            if len(data_item.coords(standard_name=main_arguments[axis + "axis"])) == 0:
+
+            if len(data_item.coords(name=main_arguments[axis + "axis"])) == 0:
                 raise InvalidVariableError(main_arguments[axis + "axis"] + " is not a valid variable")
             else:
-                if data_item.coord(standard_name=main_arguments[axis + "axis"]).axis == other_axis.upper() and main_arguments[other_axis + "axis"] is None:
+                if data_item.coord(name=main_arguments[axis + "axis"]).axis == other_axis.upper() and main_arguments[other_axis + "axis"] is None:
                     raise NotEnoughAxesSpecifiedError("--" + other_axis + "axis must also be specified if assigning the current " + other_axis + " axis coordinate to the " + axis + " axis")
                 else:
-                    var_axis_dict[main_arguments[axis + "axis"].lower()] = axis.upper()
+                    var_axis_dict[main_arguments[axis + "axis"]] = axis.upper()
                     logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
                     break
+        else:
+            raise NotImplementedError("Options --xaxis and --yaxis are not implemented for Cube object")
+
 
 def __assign_variables_to_x_and_y_axis(main_arguments, data):
     # overwrites which variable to used for the x and y axis
     # ignore unknown variables
-    # TODO does not work for cube!!
     from iris.cube import Cube
     var_axis_dict = {}
     if main_arguments['xaxis'] is not None:
@@ -77,10 +80,13 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     for data_item in data:
         if not isinstance(data_item, Cube):
             for coord in data_item.coords():
-                if var_axis_dict.has_key(coord.standard_name.lower()):
-                    coord.axis = var_axis_dict[coord.standard_name.lower()]
-                if coord.standard_name.lower() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
+                if var_axis_dict.has_key(coord.name()):
+                    coord.axis = var_axis_dict[coord.name()]
+                if coord.name() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
                     coord.axis = ''
+        else:
+            raise NotImplementedError("Options --xaxis and --yaxis are not implemented for Cube object")
+
 
 def plot_cmd(main_arguments):
     '''

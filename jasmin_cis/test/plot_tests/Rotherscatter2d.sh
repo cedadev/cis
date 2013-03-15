@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot AOT_440:${source_dir}920801_091128_Agoufou.lev20 --type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --itemwidth 2 --fontsize 15 --height 5 --width 6 --logy --grid --output "O$SUBJECT.png"
+cis plot AOT_440:${source_dir}920801_091128_Agoufou_small.lev20 --type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --itemwidth 2 --fontsize 15 --height 5 --width 6 --logy --grid --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"

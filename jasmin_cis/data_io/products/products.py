@@ -42,28 +42,28 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         height = sdata['Height']
         height_data = hdf.read_data(height, "SD")
         height_metadata = hdf.read_metadata(height, "SD")
-        height_coord = Coord(height_data, height_metadata)
+        height_coord = Coord(height_data, height_metadata, "Y")
 
         # latitude
         lat = vdata['Latitude']
         lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
         lat_metadata.shape = lat_data.shape
-        lat_coord = Coord(lat_data, lat_metadata, "Y")
+        lat_coord = Coord(lat_data, lat_metadata)
 
         # longitude
         lon = vdata['Longitude']
         lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[0]),axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
         lon_metadata.shape = lon_data.shape
-        lon_coord = Coord(lon_data, lon_metadata, "X")
+        lon_coord = Coord(lon_data, lon_metadata)
 
         # time coordinate
         time_data = self._generate_time_array(vdata)
         time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
-        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+        time_coord = Coord(time_data,Metadata(name='Profile_time', standard_name='time', shape=time_data.shape,
                                               units=str(cis_standard_time_unit),
-                                              calendar=cis_standard_time_unit.calendar),"T")
+                                              calendar=cis_standard_time_unit.calendar),"X")
 
 
         # create object containing list of coordinates

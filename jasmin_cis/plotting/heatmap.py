@@ -5,6 +5,10 @@ class Heatmap(Generic_Plot):
         '''
         Plots a heatmap
         '''
+        from jasmin_cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
+        if len(self.packed_data_items) != 1:
+            raise InvalidNumberOfDatagroupsSpecifiedError("Invalid number of datagroups specified. Only one datagroup can be plotted for a heatmap.")
+
         if self.is_map(): self.mplkwargs["latlon"] = True
 
         self.plot_method.pcolormesh(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], *self.mplargs, **self.mplkwargs)
@@ -13,6 +17,9 @@ class Heatmap(Generic_Plot):
 
     def set_default_axis_label(self, axis):
         return self.set_3daxis_label(axis)
+
+    def create_legend(self):
+        pass
 
     def format_plot(self):
         self.format_time_axis()

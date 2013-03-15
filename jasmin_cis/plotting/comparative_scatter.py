@@ -2,7 +2,7 @@ from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Comparative_Scatter(Generic_Plot):
     def plot(self):
-        from jasmin_cis.exceptions import NotEnoughDatagroupsSpecifiedError
+        from jasmin_cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) == 2:
             # Add y=x line
             ax = self.matplotlib.gca()
@@ -32,7 +32,7 @@ class Comparative_Scatter(Generic_Plot):
 
             ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], s=scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
         else:
-            raise NotEnoughDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
+            raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         if axis == "x":
