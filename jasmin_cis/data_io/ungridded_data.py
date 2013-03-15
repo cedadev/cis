@@ -105,6 +105,7 @@ class LazyData(object):
                 If they are all empty it returns an empty string
         @return: The name of the data object as a string
         """
+
         for name in [self.metadata._name, self.metadata.standard_name, self.metadata.long_name]:
             if name:
                 return name
