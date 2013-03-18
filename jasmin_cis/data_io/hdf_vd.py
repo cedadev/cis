@@ -92,7 +92,12 @@ def get_data(vds, first_record = False):
 
     #Deal with missing data
     missing_val = __get_attribute_value(vd, 'missing')
+
+    #np.set_printoptions(threshold=np.nan)
+    #print data
+
     data = create_masked_array_for_missing_data(data,missing_val)
+
 
     # detach and close
     vd.detach()
