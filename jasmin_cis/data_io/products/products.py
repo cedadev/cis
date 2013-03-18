@@ -86,8 +86,14 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         sdata, vdata = hdf.read(filenames, variable)
 
         # retrieve data + its metadata
-        var = sdata[variable]
-        metadata = hdf.read_metadata(var,"SD")
+        if variable in vdata:
+            var = vdata[variable]
+            metadata = hdf.read_metadata(var,"VD")
+        elif variable in sdata:
+            var = sdata[variable]
+            metadata = hdf.read_metadata(var,"SD")
+        else:
+            raise ValueError("variable not found")
 
         return UngriddedData(var,metadata,coords)
 
@@ -253,16 +259,19 @@ class MODIS_L2(AProduct):
 
         lat = sdata['Latitude']
         lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
-        lat_metadata = hdf.read_metadata(lat, "SD")
+        #lat_metadata = hdf.read_metadata(lat, "SD")
+        lat_metadata = Metadata()
         lat_coord = Coord(lat_data, lat_metadata,'Y')
 
         lon = sdata['Longitude']
         lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
-        lon_metadata = hdf.read_metadata(lon,"SD")
+        #lon_metadata = hdf.read_metadata(lon,"SD")
+        lon_metadata = Metadata()
         lon_coord = Coord(lon_data, lon_metadata,'X')
 
         time = sdata['Scan_Start_Time']
-        time_metadata = hdf.read_metadata(time,"SD")
+        #time_metadata = hdf.read_metadata(time,"SD")
+        time_metadata = Metadata()
         # Ensure the standard name is set
         time_metadata.standard_name = 'time'
         time_coord = Coord(time,time_metadata,"T")
@@ -388,6 +397,10 @@ class Caliop_L2(AProduct):
 
             alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
 
+        alt_name = "altitude"
+        logging.info("Additional coordinates: " + alt_name)
+
+
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
         alt_data = utils.concatenate(alt_data_arr)
@@ -400,7 +413,7 @@ class Caliop_L2(AProduct):
 
         # altitude
         alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata(standard_name="altitude", shape=new_shape)
+        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
         alt_coord = Coord(alt_data,alt_metadata)
 
         # latitude
@@ -422,7 +435,7 @@ class Caliop_L2(AProduct):
         time_data = hdf.read_data(time,"SD")
         time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
         time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
-        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
                                               units=str(cis_standard_time_unit),
                                               calendar=cis_standard_time_unit.calendar),"T")
 
@@ -486,6 +499,9 @@ class Caliop_L1(AProduct):
 
             alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
 
+        alt_name = "altitude";
+        logging.info("Additional coordinates: " + alt_name)
+
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
         alt_data = utils.concatenate(alt_data_arr)
@@ -498,7 +514,7 @@ class Caliop_L1(AProduct):
 
         # altitude
         alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata(standard_name="altitude", shape=new_shape)
+        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
         alt_coord = Coord(alt_data,alt_metadata)
 
         # latitude
@@ -520,7 +536,7 @@ class Caliop_L1(AProduct):
         time_data = hdf.read_data(time,"SD")
         time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
         time_data = utils.expand_1d_to_2d_array(time_data[:,0],len_x,axis=1)
-        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
                                               units=str(cis_standard_time_unit),
                                               calendar=cis_standard_time_unit.calendar),"T")
 
