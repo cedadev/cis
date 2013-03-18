@@ -72,6 +72,9 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
 
     parser.add_argument("--coastlinescolour", metavar = "Coastlines Colour", nargs = "?", help = "The colour of the coastlines on a map. Any valid html colour (e.g. red)")
+
+    parser.add_argument("--slice", metavar = "Slice the data", nargs = "?", help = "An argument of the form i,j. Slices the ith dimension of the data along the index j")
+
     return parser
 
 
@@ -80,6 +83,19 @@ def add_info_parser_arguments(parser):
     parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
     parser.add_argument("--type", metavar = "type of HDF data", nargs="?", help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
+
+def check_slice(arg, parser):
+    if arg:
+        arg = arg.split(",")
+        if len(arg) == 2:
+            slice_args = {}
+            slice_args["dim_index"] = parse_float(arg[0], "slice dimension index", parser)
+            slice_args["index_in_dim"] =parse_float(arg[1], "slice dimension index", parser)
+            return slice_args
+        else:
+            parser.error("Slice must be of the form i,j, where i is the index of the dimension of the data to slice, and j is the index in the dimension at which to slice")
+    else:
+        return {}
 
 
 def add_col_parser_arguments(parser):
@@ -380,6 +396,8 @@ def validate_plot_args(arguments, parser):
     arguments.grid = check_boolean_argument(arguments.grid)
 
     arguments.coastlinescolour = check_color(arguments.coastlinescolour, parser)
+
+    arguments.slice = check_slice(arguments.slice, parser)
 
     arguments = assign_logs(arguments)
     # Try and parse numbers
