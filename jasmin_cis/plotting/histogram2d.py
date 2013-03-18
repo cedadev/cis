@@ -10,7 +10,7 @@ class Histogram_2D(Generic_Plot):
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        self.mplkwargs["bins"] = self.calculate_bins()
+        self.mplkwargs["bins"] = self.calculate_bin_edges()
 
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
             datafile = self.plot_args["datagroups"][i]
@@ -38,26 +38,24 @@ class Histogram_2D(Generic_Plot):
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
-    def calculate_bins(self):
-        from math import ceil
-        from numpy import arange
-        # Calculate min and max of all data
-        min_v = min([unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items])
-        max_v = max([unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items])
-        # Calculate range of all data rounded UP to nearest integer
-        val_range = ceil(max_v - min_v)
+    def calculate_bin_edges(self):
+        '''
+        Calculates the number of bins for a given axis.
+        Uses 10 as the default
+        @param axis: The axis to calculate the number of bins for
+        @return: The number of bins for the given axis
+        '''
+        from jasmin_cis.utils import calculate_histogram_bin_edges
+        from numpy import array
+        min_val = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
+        max_val = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
+        data = array([min_val, max_val])
+        bin_edges = calculate_histogram_bin_edges(data, "x", self.plot_args["xrange"], self.plot_args["xbinwidth"])
 
-        bin_width = self.plot_args.get("xbinwidth", None)
+        self.plot_args["xrange"]["xmin"] = bin_edges.min()
+        self.plot_args["xrange"]["xmax"] = bin_edges.max()
 
-        # Calculate default bin width
-        if bin_width is None: bin_width = ceil((max_v - min_v) / 10)
-
-        # Create an array of bin EDGES
-        bins = arange(start = min_v,
-                      stop = min_v + val_range + bin_width,
-                      step = bin_width)
-
-        return bins
+        return bin_edges
 
 
     def format_plot(self):
