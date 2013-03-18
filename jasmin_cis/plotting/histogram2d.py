@@ -2,6 +2,9 @@ from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Histogram_2D(Generic_Plot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
+    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values = True, *mplargs, **mplkwargs):
+        self.__histogram_init__(packed_data_items, plot_args, calculate_min_and_max_values, *mplargs, **mplkwargs)
+
     def plot(self):
         '''
         Plots a 2D histogram

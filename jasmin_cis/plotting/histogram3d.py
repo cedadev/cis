@@ -2,6 +2,9 @@ from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Histogram_3D(Generic_Plot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
+    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values = True, *mplargs, **mplkwargs):
+        self.__histogram_init__(packed_data_items, plot_args, calculate_min_and_max_values, *mplargs, **mplkwargs)
+
     def plot(self):
         '''
         Plots a 3d histogram.
@@ -64,6 +67,7 @@ class Histogram_3D(Generic_Plot):
 
     def format_plot(self):
         # We don't format the time axis here as we're only plotting data against data
+        self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
         self.format_3d_plot()
 
     def set_default_axis_label(self, axis):
