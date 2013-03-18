@@ -71,8 +71,6 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--xaxis", metavar = "Variable on x axis", nargs="?", help="Name of variable to use on the x axis")
     parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
 
-    parser.add_argument("--slice", metavar = "Slice the data", nargs = "?", help = "An argument of the form i,j. Slices the ith dimension of the data along the index j")
-
     parser.add_argument("--coastlinescolour", metavar = "Coastlines Colour", nargs = "?", help = "The colour of the coastlines on a map. Any valid html colour (e.g. red)")
     return parser
 
@@ -157,19 +155,6 @@ def parse_float(arg, name, parser):
         except ValueError:
             parser.error("'" + arg + "' is not a valid " + name)
             return None
-
-def check_slice(arg, parser):
-    if arg:
-        arg = arg.split(",")
-        if len(arg) == 2:
-            slice_args = {}
-            slice_args["dim_index"] = parse_float(arg[0], "slice dimension index", parser)
-            slice_args["index_in_dim"] =parse_float(arg[1], "slice dimension index", parser)
-            return slice_args
-        else:
-            parser.error("Slice must be of the form i,j, where i is the index of the dimension of the data to slice, and j is the index in the dimension at which to slice")
-    else:
-        return {}
 
 def check_product(product, parser):
     from jasmin_cis.data_io.products.AProduct import AProduct
@@ -395,8 +380,6 @@ def validate_plot_args(arguments, parser):
     arguments.grid = check_boolean_argument(arguments.grid)
 
     arguments.coastlinescolour = check_color(arguments.coastlinescolour, parser)
-
-    arguments.slice = check_slice(arguments.slice, parser)
 
     arguments = assign_logs(arguments)
     # Try and parse numbers
