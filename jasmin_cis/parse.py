@@ -27,7 +27,7 @@ def add_plot_parser_arguments(parser):
     import jasmin_cis.plugin as plugin
     product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products')
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
-                        help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label:product, where the last four arguments are optional and product is one of " + str([cls().__class__.__name__ for cls in product_classes]))
+                        help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label:product, where the last four arguments are optional, colour is any valid html colour (e.g. red) and product is one of " + str([cls().__class__.__name__ for cls in product_classes]))
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
 
@@ -73,7 +73,7 @@ def add_plot_parser_arguments(parser):
 
     parser.add_argument("--slice", metavar = "Slice the data", nargs = "?", help = "An argument of the form i,j. Slices the ith dimension of the data along the index j")
 
-    parser.add_argument("--coastlinescolour", metavar = "Coastlines Colour", nargs = "?", help = "The colour of the coastlines on a map")
+    parser.add_argument("--coastlinescolour", metavar = "Coastlines Colour", nargs = "?", help = "The colour of the coastlines on a map. Any valid html colour (e.g. red)")
     return parser
 
 
