@@ -15,8 +15,8 @@ class Histogram_3D(Generic_Plot):
             vmin = self.mplkwargs.pop("vmin")
             vmax = self.mplkwargs.pop("vmax")
 
-            xbins = self.calculate_number_of_bins("x")
-            ybins = self.calculate_number_of_bins("y")
+            xbins = self.calculate_bin_edges("x")
+            ybins = self.calculate_bin_edges("y")
 
             # All bins that have count less than cmin will not be displayed
             cmin = self.plot_args["valrange"].get("vmin", None)
@@ -42,20 +42,20 @@ class Histogram_3D(Generic_Plot):
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
 
-    def calculate_number_of_bins(self, axis):
+    def calculate_bin_edges(self, axis):
         '''
         Calculates the number of bins for a given axis.
         Uses 10 as the default
         @param axis: The axis to calculate the number of bins for
         @return: The number of bins for the given axis
         '''
-        from jasmin_cis.utils import calculate_number_of_histogram3d_bins
+        from jasmin_cis.utils import calculate_histogram_bin_edges
         if axis == "x":
             data = self.unpacked_data_items[0]["data"]
         elif axis == "y":
             data = self.unpacked_data_items[1]["data"]
 
-        bin_edges = calculate_number_of_histogram3d_bins(data, axis, self.plot_args[axis + "range"], self.plot_args[axis + "binwidth"])
+        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "range"], self.plot_args[axis + "binwidth"])
 
         self.plot_args[axis + "range"][axis + "min"] = bin_edges.min()
         self.plot_args[axis + "range"][axis + "max"] = bin_edges.max()

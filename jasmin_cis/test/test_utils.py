@@ -1,4 +1,4 @@
-from jasmin_cis.utils import apply_intersection_mask_to_two_arrays, calculate_number_of_histogram3d_bins
+from jasmin_cis.utils import apply_intersection_mask_to_two_arrays, calculate_histogram_bin_edges
 from nose.tools import istest, eq_
 
 @istest
@@ -71,7 +71,7 @@ def ten_bins_are_created_by_default():
     val_range = {}
     step = None
 
-    bin_edges = calculate_number_of_histogram3d_bins(data, "x", val_range, step)
+    bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
     eq_(len(bin_edges), 11) # 11 edges = 10 bins
     eq_(bin_edges.min(), data.min())
     assert(abs(bin_edges.max() - data.max()) < 1.e-7)
@@ -83,7 +83,7 @@ def bin_width_can_be_specified_where_bin_width_perfectly_divides_range():
     val_range = {}
     step = 0.5
 
-    bin_edges = calculate_number_of_histogram3d_bins(data, "x", val_range, step)
+    bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
     eq_(len(bin_edges), 7)
     eq_(bin_edges.min(), data.min())
     eq_(bin_edges.max(), data.max())
@@ -95,7 +95,7 @@ def bin_width_can_be_specified_where_bin_width_does_not_perfectly_divides_range(
     val_range = {}
     step = 0.7
 
-    bin_edges = calculate_number_of_histogram3d_bins(data, "x", val_range, step)
+    bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
     eq_(len(bin_edges), 5)
     eq_(bin_edges.min(), data.min())
     assert(bin_edges.max() < data.max())
@@ -107,7 +107,7 @@ def ten_bins_are_created_when_min_is_specified():
     val_range = {"xmin" : 0.3}
     step = None
 
-    bin_edges = calculate_number_of_histogram3d_bins(data, "x", val_range, step)
+    bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
     eq_(len(bin_edges), 11) # 11 edges = 10 bins
     eq_(bin_edges.min(), 0.3)
     assert(abs(bin_edges.max() - data.max()) < 1.e-7) # 1.e-7 is approx 0
@@ -119,7 +119,7 @@ def ten_bins_are_created_when_max_is_specified():
     val_range = {"xmax" : 2.3}
     step = None
 
-    bin_edges = calculate_number_of_histogram3d_bins(data, "x", val_range, step)
+    bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
     eq_(len(bin_edges), 11) # 11 edges = 10 bins
     eq_(bin_edges.min(), data.min())
     assert(abs(bin_edges.max() - 2.3) < 1.e-7) # 1.e-7 is approx 0'''
@@ -131,7 +131,7 @@ def ten_bins_are_created_when_min_and_max_is_specified():
     val_range = {"xmin" : 0.3, "xmax" : 2.3}
     step = None
 
-    bin_edges = calculate_number_of_histogram3d_bins(data, "x", val_range, step)
+    bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
     eq_(len(bin_edges), 11) # 11 edges = 10 bins
     assert(abs(bin_edges.min() - 0.3) < 1.e-7) # 1.e-7 is approx 0
     assert(abs(bin_edges.max() - 2.3) < 1.e-7) # 1.e-7 is approx 0

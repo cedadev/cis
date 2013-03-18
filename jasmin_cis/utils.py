@@ -23,7 +23,7 @@ def concatenate(arrays, axis=0):
 
     return res
 
-def calculate_number_of_histogram3d_bins(data, axis, user_range, step):
+def calculate_histogram_bin_edges(data, axis, user_range, step):
     from decimal import Decimal
     from numpy import array, append
 
