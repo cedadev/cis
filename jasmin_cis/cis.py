@@ -14,21 +14,6 @@ __version__ = "V0R4M4"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
-
-def __setup_logging(log_file, log_level):
-    '''
-    Set up the logging used throughout cis
-    
-    @param log_file:    The filename of the file to store the logs
-    @param log_level:   The level at which to log 
-    '''
-
-    logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
-
-    # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
-    #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
-    logging.captureWarnings(True)
-
 def __error_occurred(e):
     '''
     Wrapper method used to print error messages.
