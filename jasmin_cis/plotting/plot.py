@@ -57,6 +57,7 @@ class Plotter(object):
         mplkwargs.pop("vmax", None)
         mplkwargs.pop("vstep", None)
 
+        # Remove arguments from mplkwargs that cannot be passed directly into the plotting methods
         plot_args = {"datagroups" : mplkwargs.pop("datagroups", None),
                      "nocolourbar" : mplkwargs.pop("nocolourbar", False),
                      "logx" : mplkwargs.pop("logx", False),
@@ -79,10 +80,6 @@ class Plotter(object):
                      "ybinwidth" : mplkwargs.pop("ybinwidth", None),
                      "coastlinescolour" : mplkwargs.pop("coastlinescolour", "k")}
 
-        slice_args = mplkwargs.pop("slice", {})
-
-        if len(slice_args) == 2: packed_data_items = self.perform_slicing(slice_args, packed_data_items)
-
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
         
@@ -94,24 +91,6 @@ class Plotter(object):
         plot.apply_axis_limits(plot_args["xrange"], "x")
         plot.apply_axis_limits(plot_args["yrange"], "y")
         self.output_to_file_or_screen(out_filename)
-
-    def perform_slicing(self, slice_args, packed_data_items):
-        from jasmin_cis.exceptions import InvalidSliceIndexError
-        for packed_data_item in packed_data_items:
-            try:
-                if slice_args["dim_index"] == 0:
-                    packed_data_item.data = packed_data_item.data[slice_args["index_in_dim"],:,:]
-                elif slice_args["dim_index"] == 1:
-                    packed_data_item.data = packed_data_item.data[:,slice_args["index_in_dim"],:]
-                elif slice_args["dim_index"] == 2:
-                    packed_data_item.data = packed_data_item.data[:,:,slice_args["index_in_dim"]]
-                else:
-                    raise InvalidSliceIndexError("Invalid dim_index: " + str(slice_args["dim_index"]))
-            except IndexError:
-                raise InvalidSliceIndexError("Invalid index_in_dim: " + str(slice_args["index_in_dim"]))
-            packed_data_item.shape = packed_data_item.data.shape
-
-        return packed_data_items
 
     def output_to_file_or_screen(self, out_filename = None):
         '''

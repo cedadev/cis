@@ -24,6 +24,13 @@ def concatenate(arrays, axis=0):
     return res
 
 def calculate_histogram_bin_edges(data, axis, user_range, step):
+    '''
+    @param data: A numpy array
+    @param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
+    @param user_range: A dictionary containing the min and max values for the edges specified by the user. The data min and max is used if the user did not specify
+    @param step: The distance between each bin edge/the width of each bin
+    @return: An array containing a list of bin edges (i.e. when each bin starts and ends)
+    '''
     from decimal import Decimal
     from numpy import array, append
 

@@ -14,24 +14,9 @@ __version__ = "V0R4M4"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
-
-def __setup_logging(log_file, log_level):
-    '''
-    Set up the logging used throughout cis
-    
-    @param log_file:    The filename of the file to store the logs
-    @param log_level:   The level at which to log 
-    '''
-
-    logging.basicConfig(format='%(levelname)s: %(message)s',filename=log_file, level=log_level)
-
-    # This sends warnings straight to the logger, this is used as iris can throw a lot of warnings
-    #  that we don't want bubbling up. We may change this in the future as it's a bit overkill.
-    logging.captureWarnings(True)
-
 def __error_occurred(e):
     '''
-    Wrapper method used to print error messages.
+    Wrapper method used to print error messages and exit the program.
     
     @param e: An error object or any string
     '''
@@ -39,6 +24,14 @@ def __error_occurred(e):
     exit(1)
 
 def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axis):
+    '''
+    Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to assign
+    the variable to the specified axis
+    @param main_arguments: The arguments received from the parser
+    @param data: A list of packed data objects
+    @param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it will be plotted on.
+    @param axis: The axis on which to plot the variable on
+    '''
     from iris.cube import Cube
     from jasmin_cis.exceptions import InvalidVariableError, NotEnoughAxesSpecifiedError
 
@@ -61,8 +54,12 @@ def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axi
                     break
 
 def __assign_variables_to_x_and_y_axis(main_arguments, data):
-    # overwrites which variable to used for the x and y axis
-    # ignore unknown variables
+    '''
+    Overwrites which variable to used for the x and y axis
+    Does not work for Iris Cubes
+    @param main_arguments: The arguments received from the parser
+    @param data: A list of packed data objects
+    '''
     from iris.cube import Cube
     var_axis_dict = {}
     if main_arguments['xaxis'] is not None:
@@ -87,9 +84,8 @@ def plot_cmd(main_arguments):
     '''
     Main routine for handling calls to the 'plot' command. 
     Reads in the data files specified and passes the rest of the arguments to the plot function.
-        
 
-    @param main_arguments:    The command line arguments (minus the plot command)        
+    @param main_arguments:    The command line arguments
     '''
     from plotting.plot import Plotter
     from jasmin_cis.data_io.read import read_data
