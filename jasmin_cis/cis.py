@@ -33,7 +33,6 @@ def __check_variable_is_valid(main_arguments, data, axis):
     @param axis: The axis on which to plot the variable on
     '''
     from jasmin_cis.exceptions import InvalidVariableError
-    import logging
 
     user_specified_variable = main_arguments[axis + "axis"]
 
@@ -41,7 +40,6 @@ def __check_variable_is_valid(main_arguments, data, axis):
         if len(data_item.coords(name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
             raise InvalidVariableError(user_specified_variable + " is not a valid variable")
         else:
-            logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
             return main_arguments[axis + "axis"]
 
 def __get_variable_name(axis, main_arguments, data):
@@ -66,8 +64,9 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     @param main_arguments: The arguments received from the parser
     @param data: A list of packed data objects
     '''
+    import logging
     from jasmin_cis.exceptions import NotEnoughAxesSpecifiedError
-    
+
     x_variable = __get_variable_name("x", main_arguments, data)
     y_variable = __get_variable_name("y", main_arguments, data)
 
@@ -79,8 +78,8 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     main_arguments.pop("xaxis")
     main_arguments.pop("yaxis")
 
-    print "x: " + x_variable
-    print "y: " + y_variable
+    logging.info("Plotting " + x_variable + " on the x axis")
+    logging.info("Plotting " + y_variable + " on the y axis")
 
     return x_variable, y_variable
 
