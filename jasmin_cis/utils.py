@@ -104,6 +104,14 @@ def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
     return ma.array(data, mask=data==missing_val, fill_value=missing_val)
 
+def create_masked_array_for_missing_values(data, missing_values):
+    import numpy.ma as ma
+
+    mdata = data
+    for missing_value in missing_values:
+        mdata = ma.masked_where(missing_value==mdata,mdata)
+
+    return mdata
 
 def unpack_data_object(data_object):
     '''

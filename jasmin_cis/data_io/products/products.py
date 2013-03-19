@@ -259,19 +259,16 @@ class MODIS_L2(AProduct):
 
         lat = sdata['Latitude']
         lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
-        #lat_metadata = hdf.read_metadata(lat, "SD")
-        lat_metadata = Metadata()
+        lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata,'Y')
 
         lon = sdata['Longitude']
         lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
-        #lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_metadata = Metadata()
+        lon_metadata = hdf.read_metadata(lon,"SD")
         lon_coord = Coord(lon_data, lon_metadata,'X')
 
         time = sdata['Scan_Start_Time']
-        #time_metadata = hdf.read_metadata(time,"SD")
-        time_metadata = Metadata()
+        time_metadata = hdf.read_metadata(time,"SD")
         # Ensure the standard name is set
         time_metadata.standard_name = 'time'
         time_coord = Coord(time,time_metadata,"T")

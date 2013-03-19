@@ -34,6 +34,9 @@ class Comparative_Scatter(Generic_Plot):
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 
+    def unpack_data_items(self):
+        return self.unpack_comparative_data()
+
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         if axis == "x":
             axis_index = 0
