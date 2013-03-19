@@ -40,6 +40,8 @@ def find_plugins(plugin_dir, parent_class_name):
     logging.info("importing plugin " + str(plugin_files))
     sys.path.insert(0, plugin_dir)
 
+    product_classes = []
+
     for plugin in plugin_files:
         module = __import__(plugin)
         classes = [getattr(module, x) for x in dir(module) if isinstance(getattr(module, x), type)]
