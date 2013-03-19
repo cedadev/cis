@@ -2,6 +2,7 @@ from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Histogram_2D(Generic_Plot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
+
     def plot(self):
         '''
         Plots a 2D histogram
@@ -37,6 +38,12 @@ class Histogram_2D(Generic_Plot):
             self.matplotlib.hist(data, *self.mplargs, **self.mplkwargs)
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
+
+    def unpack_data_items(self):
+        return self.unpack_comparative_data()
+
+    def set_plotting_library(self):
+        pass
 
     def calculate_bin_edges(self):
         '''
