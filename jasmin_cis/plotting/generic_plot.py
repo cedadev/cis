@@ -64,6 +64,9 @@ class Generic_Plot(object):
         self.set_width_and_height()
 
         self.plot()
+    def unpack_data_items(self):
+        from jasmin_cis.utils import unpack_data_object
+        return [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
 
 
     def plot(self):
