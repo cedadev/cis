@@ -53,7 +53,8 @@ if __name__ == '__main__':
 
     # get a list of files to read
     folder = "/home/david/Data"
-    filenames = glob(folder + "/*" + "CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
+    #filenames = glob(folder + "/*" + "CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
+    filenames = [folder + "/2007180012247_06214_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf"]
     filenames = np.sort(filenames)
 
     # read the data

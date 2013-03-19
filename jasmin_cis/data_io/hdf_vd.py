@@ -66,7 +66,6 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 def get_data(vds, first_record=False, missing_values=None):
-    from jasmin_cis.utils import create_masked_array_for_missing_data
 
     # get file and variable reference from tuple
     filename = vds.filename
