@@ -13,7 +13,6 @@ class Generic_Plot(object):
         @param mplargs: Any arguments to be passed directly into matplotlib
         @param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         '''
-        from jasmin_cis.utils import unpack_data_object
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
 
@@ -23,20 +22,23 @@ class Generic_Plot(object):
 
         self.plot_args = plot_args
         self.packed_data_items = packed_data_items
-        self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
+        self.unpacked_data_items = self.unpacked_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
         self.matplotlib = plt
 
-        if self.is_map():
-            self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
-            self.plot_method = self.basemap
-        else:
-            self.plot_method = self.matplotlib
+        self.plotting_library = self.set_plotting_library()
 
         self.set_width_and_height()
         
         self.plot()
+
+    def set_plotting_library(self):
+        if self.is_map():
+            self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
+            return self.basemap
+        else:
+            return self.matplotlib
 
     def __histogram_init__(self, packed_data_items, plot_args, calculate_min_and_max_values = True, *mplargs, **mplkwargs):
         '''
@@ -365,9 +367,9 @@ class Generic_Plot(object):
             step = (vmax - vmin) / self.plot_args["valrange"]["vstep"]
 
         if filled:
-            contour_type = self.plot_method.contourf
+            contour_type = self.plotting_library.contourf
         else:
-            contour_type = self.plot_method.contour
+            contour_type = self.plotting_library.contour
 
         if self.is_map(): self.mplkwargs["latlon"] = True
 

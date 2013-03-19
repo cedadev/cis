@@ -33,7 +33,7 @@ class Scatter_Plot(Generic_Plot):
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
 
-            self.plots.append(self.plot_method.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
+            self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
