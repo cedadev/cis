@@ -22,7 +22,7 @@ class Generic_Plot(object):
 
         self.plot_args = plot_args
         self.packed_data_items = packed_data_items
-        self.unpacked_data_items = self.unpacked_data_items()
+        self.unpacked_data_items = self.unpack_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
         self.matplotlib = plt
