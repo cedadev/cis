@@ -44,6 +44,20 @@ def __check_variable_is_valid(main_arguments, data, axis):
             logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
             return main_arguments[axis + "axis"]
 
+def __get_variable_name(axis, main_arguments, data):
+    import iris.exceptions as iris_ex
+    import jasmin_cis.exceptions as jasmin_ex
+
+    # If the user has explicitly specified what variable they want plotting on the axis
+    if main_arguments[axis + 'axis'] is not None:
+        return __check_variable_is_valid(main_arguments, data, axis)
+    else:
+        try:
+            return data[0].coord(axis=axis.upper()).name()
+        except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+            return "default"
+
+
 
 def __assign_variables_to_x_and_y_axis(main_arguments, data):
     '''
@@ -52,31 +66,15 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     @param main_arguments: The arguments received from the parser
     @param data: A list of packed data objects
     '''
-    import iris.exceptions as iris_ex
-    import jasmin_cis.exceptions as jasmin_ex
-
-    # If the user has explicitly specified what variable they want plotting on the x axis
-    if main_arguments['xaxis'] is not None:
-        x_variable = __check_variable_is_valid(main_arguments, data, "x")
-    else:
-        try:
-            x_variable = data[0].coord(axis="X").name()
-        except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
-            x_variable = "default"
-
-    # If the user has explicitly specified what variable they want plotting on the y axis
-    if main_arguments['yaxis'] is not None:
-        y_variable = __check_variable_is_valid(main_arguments, data, "y")
-    else:
-        try:
-            y_variable = data[0].coord(axis="Y").name()
-        except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
-            y_variable = "default"
+    from jasmin_cis.exceptions import NotEnoughAxesSpecifiedError
+    
+    x_variable = __get_variable_name("x", main_arguments, data)
+    y_variable = __get_variable_name("y", main_arguments, data)
 
     if x_variable == y_variable:
         specified_axis = "x" if main_arguments["xaxis"] is not None else "y"
         not_specified_axis = "y" if specified_axis == "x" else "y"
-        raise jasmin_ex.NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + specified_axis + " axis coordinate to the " + not_specified_axis + " axis")
+        raise NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + specified_axis + " axis coordinate to the " + not_specified_axis + " axis")
 
     main_arguments.pop("xaxis")
     main_arguments.pop("yaxis")
