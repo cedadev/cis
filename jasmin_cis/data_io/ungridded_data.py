@@ -297,8 +297,8 @@ class UngriddedData(LazyData):
          A constuctor for building an UngriddedData object from a list of hyper points
         @param hyperpoints:    A list of HyperPoints
         """
-        from data_io.Coord import Coord, CoordList
-        from data_io.hyperpoint import HyperPointList
+        from jasmin_cis.data_io.Coord import Coord, CoordList
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
 
         if not isinstance(hyperpoints, HyperPointList):
             hyperpoints = HyperPointList(hyperpoints)

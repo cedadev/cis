@@ -2,6 +2,7 @@
 Module containing hdf file utility functions for the SD object
 """
 import logging
+from jasmin_cis.utils import create_masked_array_for_missing_values
 
 
 def get_hdf_SD_file_variables(filename):
@@ -122,7 +123,7 @@ def get_calipso_data(sds):
     return data
 
 
-def get_data(sds):
+def get_data(sds, missing_values=None):
     """
     Reads raw data from an SD instance. Automatically applies the
     scaling factors and offsets to the data arrays often found in NASA HDF-EOS
@@ -141,8 +142,10 @@ def get_data(sds):
     attributes = sds.attributes()
 
     # Missing data.
-    missing_val = attributes.get('_FillValue', None)
-    data = create_masked_array_for_missing_data(data, missing_val)
+    if missing_values is None:
+        missing_values = [attributes.get('_FillValue', None)]
+
+    data = create_masked_array_for_missing_values(data,missing_values)
 
     # Offsets and scaling.
     offset  = attributes.get('add_offset', 0)
