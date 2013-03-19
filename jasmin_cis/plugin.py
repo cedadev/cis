@@ -37,10 +37,11 @@ def find_plugins(plugin_dir, parent_class_name):
         if f.endswith(".py"):
             plugin_files.append(f[:-3])
 
+    if len(plugin_files) == 0:
+        return []
+
     logging.info("importing plugin " + str(plugin_files))
     sys.path.insert(0, plugin_dir)
-
-    product_classes = []
 
     for plugin in plugin_files:
         module = __import__(plugin)
