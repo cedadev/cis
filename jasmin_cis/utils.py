@@ -142,15 +142,13 @@ def unpack_data_object(data_object, x_variable, y_variable):
         if plot_defn.transpose:
             data = data.T
 
-        if x_variable != data_object.name():
+        if x_variable != data_object.name() and x_variable != "default":
             x = __get_coord(data_object, x_variable)
             y = __get_coord(data_object, y_variable)
         else:
             x = data
             data = __get_coord(data_object, y_variable)
             y = None
-
-
 
         if plot_defn.transpose:
             x = x.T
@@ -166,12 +164,10 @@ def unpack_data_object(data_object, x_variable, y_variable):
 
         return { "data": data, "x" : x, "y" : y }
     else:
-        if x_variable == data_object.name():
+        if x_variable == data_object.name() or x_variable == "default":
             return {"data" : data_object.coord(name=y_variable).data, "x" : data}
         else:
             try:
-                x = data_object.coord(name=x_variable)
-                y = data_object.coord(name=y_variable)
                 return { "data": data, "x" : data_object.coord(name=x_variable).data, "y" : data_object.coord(name=y_variable).data }
             except CoordinateNotFoundError:
                 return { "data": data, "x" : data_object.coord(name=x_variable).data }

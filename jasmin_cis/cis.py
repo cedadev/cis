@@ -62,7 +62,7 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
         try:
             x_variable = data[0].coord(axis="X").name()
         except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
-            x_variable = data[0].name()
+            x_variable = "default"
 
     # If the user has explicitly specified what variable they want plotting on the y axis
     if main_arguments['yaxis'] is not None:
@@ -71,7 +71,7 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
         try:
             y_variable = data[0].coord(axis="Y").name()
         except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
-            y_variable = data[0].name()
+            y_variable = "default"
 
     if x_variable == y_variable:
         specified_axis = "x" if main_arguments["xaxis"] is not None else "y"
