@@ -42,7 +42,7 @@ class Generic_Plot(object):
 
     def unpack_data_items(self):
         from jasmin_cis.utils import unpack_data_object
-        return [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
+        return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"]) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]
@@ -181,9 +181,7 @@ class Generic_Plot(object):
     def format_time_axis(self):
         from jasmin_cis.time_util import cis_standard_time_unit
 
-        coords = self.packed_data_items[0].coords(axis='X')
-        if len(coords) == 0:
-            coords = self.packed_data_items[0].coords(axis='T')
+        coords = self.packed_data_items[0].coords(name=self.plot_args["x_variable"])
 
         if len(coords) == 1:
             if coords[0].units == str(cis_standard_time_unit):
@@ -291,14 +289,13 @@ class Generic_Plot(object):
         '''
         from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
         from jasmin_cis.exceptions import CoordinateNotFoundError as JasminNotFoundError
-        axes = {}
         try:
-            axes["X"] = self.packed_data_items[0].coord(axis="X")
-            axes["Y"] = self.packed_data_items[0].coord(axis="Y")
+            x = self.packed_data_items[0].coord(name=self.plot_args["x_variable"])
+            y = self.packed_data_items[0].coord(name=self.plot_args["y_variable"])
         except (JasminNotFoundError, irisNotFoundError):
             return False
 
-        if axes["X"].name().lower().startswith("lon") and axes["Y"].name().lower().startswith("lat"):
+        if x.name().lower().startswith("lon") and y.name().lower().startswith("lat"):
             return True
         else:
             return False
@@ -464,12 +461,12 @@ class Generic_Plot(object):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    name = self.packed_data_items[0].coord(axis=axis).name()
+                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
 
                 try:
-                    units = self.packed_data_items[0].coord(axis=axis).units
+                    units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 

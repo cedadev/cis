@@ -42,13 +42,13 @@ class Line_Plot(Generic_Plot):
 
         if self.plot_args[axislabel] is None:
             try:
-                units = self.packed_data_items[0].coord(axis=axis).units
+                units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
             except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                 units = self.packed_data_items[0].units
 
             if len(self.packed_data_items) == 1:
                 try:
-                    name = self.packed_data_items[0].coord(axis=axis).name()
+                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
                 # only 1 data to plot, display

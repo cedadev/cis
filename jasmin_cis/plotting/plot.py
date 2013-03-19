@@ -78,7 +78,9 @@ class Plotter(object):
                      "ytickangle" : mplkwargs.pop("ytickangle", None),
                      "xbinwidth" : mplkwargs.pop("xbinwidth", None),
                      "ybinwidth" : mplkwargs.pop("ybinwidth", None),
-                     "coastlinescolour" : mplkwargs.pop("coastlinescolour", "k")}
+                     "coastlinescolour" : mplkwargs.pop("coastlinescolour", "k"),
+                     "x_variable" : mplkwargs.pop("x_variable"),
+                     "y_variable" : mplkwargs.pop("y_variable")}
 
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()

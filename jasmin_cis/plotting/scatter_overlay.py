@@ -27,12 +27,12 @@ class Scatter_Overlay(Generic_Plot):
                 options[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    name = self.packed_data_items[0].coord(axis=axis).name()
+                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
 
                 try:
-                    units = self.packed_data_items[0].coord(axis=axis).units
+                    units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 
