@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc snow:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc --type histogram3d --cmap RdBu --ylabel overiddeny --title overiddentitle --xmin=-50 --xmax 40 --ybinwidth 10 --vmin 3 --vstep 1 --output "O$SUBJECT.png"
+cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc snow:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc --type histogram3d --cmap RdBu --ylabel overiddeny --title overiddentitle --xmin 0.000002 --xmax 0.000006 --ybinwidth 0.000001 --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
