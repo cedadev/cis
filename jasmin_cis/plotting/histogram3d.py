@@ -44,7 +44,7 @@ class Histogram_3D(Generic_Plot):
             raise InvalidNumberOfDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
 
     def unpack_data_items(self):
-        return self.unpack_histogram_data()
+        return self.unpack_comparative_data()
 
     def set_plotting_library(self):
         pass

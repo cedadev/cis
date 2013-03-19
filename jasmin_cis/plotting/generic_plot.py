@@ -44,7 +44,7 @@ class Generic_Plot(object):
         from jasmin_cis.utils import unpack_data_object
         return [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
 
-    def unpack_histogram_data(self):
+    def unpack_comparative_data(self):
         return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]
 
     def plot(self):
