@@ -40,36 +40,12 @@ class Generic_Plot(object):
         else:
             return self.matplotlib
 
-    def __histogram_init__(self, packed_data_items, plot_args, calculate_min_and_max_values = True, *mplargs, **mplkwargs):
-        '''
-        Constructor for Generic_Plot.
-        Note: This also calls the plot method
-        @param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
-        @param plot_args: A dictionary of plot args that was created by plot.py
-        @param mplargs: Any arguments to be passed directly into matplotlib
-        @param mplkwargs: Any keyword arguments to be passed directly into matplotlib
-        '''
-        self.mplargs = mplargs
-        self.mplkwargs = mplkwargs
-
-        if plot_args.get("logv", False):
-            from matplotlib.colors import LogNorm
-            self.mplkwargs["norm"] = LogNorm()
-
-        self.plot_args = plot_args
-        self.packed_data_items = packed_data_items
-        self.unpacked_data_items = [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]
-        if calculate_min_and_max_values: self.calculate_min_and_max_values()
-
-        self.matplotlib = plt
-
-        self.set_width_and_height()
-
-        self.plot()
     def unpack_data_items(self):
         from jasmin_cis.utils import unpack_data_object
         return [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
 
+    def unpack_histogram_data(self):
+        return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]
 
     def plot(self):
         '''
