@@ -38,13 +38,12 @@ def can_apply_intersection_mask_to_one_masked_and_one_unmasked_array():
 
 @istest
 def can_apply_intersection_mask_to_two_unmasked_arrays():
-    import numpy.ma as ma
     import numpy as np
     array1 = np.array([1,2,3,4,5,6,7,8,9,10])
     array2 = np.array([2,4,5,6,7,8,4,3,6,80])
     array1, array2 = apply_intersection_mask_to_two_arrays(array1, array2)
-    assert(array1.mask, False)
-    assert(array2.mask, False)
+    assert(array1.mask, all(False))
+    assert(array2.mask, all(False))
 
 @istest
 def can_expand_1d_array_accross():
