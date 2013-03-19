@@ -113,7 +113,7 @@ def create_masked_array_for_missing_values(data, missing_values):
 
     return mdata
 
-def unpack_data_object(data_object):
+def unpack_data_object(data_object, x_variable, y_variable):
     '''
     @param data_object    A cube or an UngriddedData object
     @return A dictionary containing x, y and data as numpy arrays
@@ -123,13 +123,15 @@ def unpack_data_object(data_object):
     import iris
     from jasmin_cis.exceptions import CoordinateNotFoundError
 
-    def __get_coord(axis, data_object):
+    def __get_coord(data_object, variable):
         from iris.exceptions import CoordinateNotFoundError
         try:
-            coord = data_object.coord(axis=axis)
+            coord = data_object.coord(name=variable)
             return coord.points
         except CoordinateNotFoundError:
             return None
+
+    data = data_object.data #ndarray
 
     if type(data_object) is Cube:
         no_of_dims = len(data_object.shape)
@@ -137,45 +139,42 @@ def unpack_data_object(data_object):
         from mpl_toolkits.basemap import addcyclic
 
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
-        data = data_object.data #ndarray
         if plot_defn.transpose:
             data = data.T
 
-        if no_of_dims == 1:
-            x = __get_coord("x", data_object)
-            y = __get_coord("y", data_object)
+        if x_variable != data_object.name():
+            x = __get_coord(data_object, x_variable)
+            y = __get_coord(data_object, y_variable)
+        else:
+            x = data
+            data = __get_coord(data_object, y_variable)
+            y = None
 
-            if x is None and y is not None:
-                x = data
-                data = y
-                y = None
 
-        elif no_of_dims == 2:
-            # Obtain U and V coordinates
-            v_coord, u_coord = plot_defn.coords
-            if u_coord:
-                u = u_coord.points
-            else:
-                u = np.arange(data.shape[1])
-            if v_coord:
-                v = v_coord.points
-            else:
-                v = np.arange(data.shape[0])
 
         if plot_defn.transpose:
-            u = u.T
-            v = v.T
+            x = x.T
+            y = y.T
 
         if no_of_dims == 2:
-            data, u = addcyclic(data, u)
-            x, y = np.meshgrid(u, v)
+            try:
+                data, x = addcyclic(data, x)
+                x, y = np.meshgrid(x, y)
+            except:
+                data, y = addcyclic(data, y)
+                y, x = np.meshgrid(y, x)
 
         return { "data": data, "x" : x, "y" : y }
     else:
-        try:
-            return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
-        except CoordinateNotFoundError:
-            return { "data": data_object.data, "x" : data_object.x.data}
+        if x_variable == data_object.name():
+            return {"data" : data_object.coord(name=y_variable).data, "x" : data}
+        else:
+            try:
+                x = data_object.coord(name=x_variable)
+                y = data_object.coord(name=y_variable)
+                return { "data": data, "x" : data_object.coord(name=x_variable).data, "y" : data_object.coord(name=y_variable).data }
+            except CoordinateNotFoundError:
+                return { "data": data, "x" : data_object.coord(name=x_variable).data }
 
 
 def copy_attributes(source, dest):

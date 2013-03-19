@@ -23,7 +23,7 @@ def __error_occurred(e):
     sys.stderr.write(str(e) + "\n")
     exit(1)
 
-def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axis):
+def __check_variable_is_valid(main_arguments, data, axis):
     '''
     Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to assign
     the variable to the specified axis
@@ -32,26 +32,18 @@ def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axi
     @param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it will be plotted on.
     @param axis: The axis on which to plot the variable on
     '''
-    from iris.cube import Cube
-    from jasmin_cis.exceptions import InvalidVariableError, NotEnoughAxesSpecifiedError
+    from jasmin_cis.exceptions import InvalidVariableError
+    import logging
 
-    if axis == "x":
-        other_axis = "y"
-    elif axis =="y":
-        other_axis = "x"
+    user_specified_variable = main_arguments[axis + "axis"]
 
     for data_item in data:
-        if not isinstance(data_item, Cube):
+        if len(data_item.coords(name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
+            raise InvalidVariableError(user_specified_variable + " is not a valid variable")
+        else:
+            logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
+            return main_arguments[axis + "axis"]
 
-            if len(data_item.coords(name=main_arguments[axis + "axis"])) == 0:
-                raise InvalidVariableError(main_arguments[axis + "axis"] + " is not a valid variable")
-            else:
-                if data_item.coord(name=main_arguments[axis + "axis"]).axis == other_axis.upper() and main_arguments[other_axis + "axis"] is None:
-                    raise NotEnoughAxesSpecifiedError("--" + other_axis + "axis must also be specified if assigning the current " + other_axis + " axis coordinate to the " + axis + " axis")
-                else:
-                    var_axis_dict[main_arguments[axis + "axis"]] = axis.upper()
-                    logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
-                    break
 
 def __assign_variables_to_x_and_y_axis(main_arguments, data):
     '''
@@ -60,24 +52,39 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     @param main_arguments: The arguments received from the parser
     @param data: A list of packed data objects
     '''
-    from iris.cube import Cube
-    var_axis_dict = {}
-    if main_arguments['xaxis'] is not None:
-        __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, "x")
+    import iris.exceptions as iris_ex
+    import jasmin_cis.exceptions as jasmin_ex
 
+    # If the user has explicitly specified what variable they want plotting on the x axis
+    if main_arguments['xaxis'] is not None:
+        x_variable = __check_variable_is_valid(main_arguments, data, "x")
+    else:
+        try:
+            x_variable = data[0].coord(axis="X").name()
+        except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+            x_variable = data[0].name()
+
+    # If the user has explicitly specified what variable they want plotting on the y axis
     if main_arguments['yaxis'] is not None:
-        __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, "y")
+        y_variable = __check_variable_is_valid(main_arguments, data, "y")
+    else:
+        try:
+            y_variable = data[0].coord(axis="Y").name()
+        except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+            y_variable = data[0].name()
+
+    if x_variable == y_variable:
+        specified_axis = "x" if main_arguments["xaxis"] is not None else "y"
+        not_specified_axis = "y" if specified_axis == "x" else "y"
+        raise jasmin_ex.NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + specified_axis + " axis coordinate to the " + not_specified_axis + " axis")
 
     main_arguments.pop("xaxis")
     main_arguments.pop("yaxis")
 
-    for data_item in data:
-        if not isinstance(data_item, Cube):
-            for coord in data_item.coords():
-                if var_axis_dict.has_key(coord.name()):
-                    coord.axis = var_axis_dict[coord.name()]
-                if coord.name() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
-                    coord.axis = ''
+    print "x: " + x_variable
+    print "y: " + y_variable
+
+    return x_variable, y_variable
 
 
 def plot_cmd(main_arguments):
@@ -109,7 +116,7 @@ def plot_cmd(main_arguments):
     output = main_arguments.pop("output")
 
     try:
-        __assign_variables_to_x_and_y_axis(main_arguments, data)
+        main_arguments["x_variable"], main_arguments["y_variable"] = __assign_variables_to_x_and_y_axis(main_arguments, data)
     except (ex.InvalidVariableError, ex.NotEnoughAxesSpecifiedError) as e:
         __error_occurred(e)
 
