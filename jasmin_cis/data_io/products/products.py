@@ -5,6 +5,7 @@ from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
+import numpy as np
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -85,17 +86,21 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
 
+        #missing values
+        missing_values = [0,-9999,-4444,-3333]
+
         # retrieve data + its metadata
         if variable in vdata:
-            var = vdata[variable]
-            metadata = hdf.read_metadata(var,"VD")
+            var = hdf.read_data(vdata[variable], "VD",missing_values)
+            metadata = hdf.read_metadata(vdata[variable],"VD")
         elif variable in sdata:
-            var = sdata[variable]
-            metadata = hdf.read_metadata(var,"SD")
+            var = hdf.read_data(sdata[variable], "SD",missing_values)
+            metadata = hdf.read_metadata(sdata[variable],"SD")
         else:
             raise ValueError("variable not found")
 
         return UngriddedData(var,metadata,coords)
+
 
 class MODIS_L3(AProduct):
 
@@ -362,7 +367,90 @@ class Aerosol_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
-class Caliop_L2(AProduct):
+
+class Caliop(AProduct):
+
+    def get_file_signature(self):
+        '''
+        To be implemented by subclcass
+        @return:
+        '''
+        return []
+
+    def create_coords(self, filenames):
+        '''
+        To be implemented by subclass
+        @param filenames:
+        @return:
+        '''
+        return None
+
+    def create_data_object(self, filenames, variable):
+        '''
+        To be implemented by subclass
+        @param filenames:
+        @param variable:
+        @return:
+        '''
+        return None
+
+    def get_calipso_data(self, sds):
+        """
+        Reads raw data from an SD instance. Automatically applies the
+        scaling factors and offsets to the data arrays found in Calipso data.
+
+        Returns:
+            A numpy array containing the raw data with missing data is replaced by NaN.
+
+        Arguments:
+            sds        -- The specific sds instance to read
+
+        """
+        from jasmin_cis.utils import create_masked_array_for_missing_data
+
+        calipso_fill_values = {'Float_32' : -9999.0,
+                               #'Int_8' : 'See SDS description',
+                               'Int_16' : -9999,
+                               'Int_32' : -9999,
+                               'UInt_8' : -127,
+                               #'UInt_16' : 'See SDS description',
+                               #'UInt_32' : 'See SDS description',
+                               'ExtinctionQC Fill Value' : 32768,
+                               'FeatureFinderQC No Features Found' : 32767,
+                               'FeatureFinderQC Fill Value' : 65535}
+
+        data = sds.get()
+        attributes = sds.attributes()
+
+        # Missing data.
+        missing_val = attributes.get('fillvalue', None)
+        if missing_val is None:
+            try:
+                missing_val = calipso_fill_values[attributes.get('format', None)]
+            except KeyError:
+                # Last guess
+                missing_val = attributes.get('_FillValue', None)
+
+        data = create_masked_array_for_missing_data(data, missing_val)
+
+        # Offsets and scaling.
+        offset  = attributes.get('add_offset', 0)
+        scale_factor = attributes.get('scale_factor', 1)
+        data = self.apply_scaling_factor_CALIPSO(data, scale_factor, offset)
+
+        return data
+
+    def apply_scaling_factor_CALIPSO(self,data, scale_factor, offset):
+        '''
+        Apply scaling factor Calipso data
+        @param data:
+        @param scale_factor:
+        @param offset:
+        @return:
+        '''
+        return (data/scale_factor) + offset
+
+class Caliop_L2(Caliop):
 
     def get_file_signature(self):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
@@ -395,7 +483,7 @@ class Caliop_L2(AProduct):
             alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
 
         alt_name = "altitude"
-        logging.info("Additional coordinates: " + alt_name)
+        logging.info("Additional coordinates: '" + alt_name + "'")
 
 
         # work out size of data arrays
@@ -447,7 +535,6 @@ class Caliop_L2(AProduct):
 
 
     def create_data_object(self, filenames, variable):
-        from jasmin_cis.data_io.hdf_sd import get_calipso_data
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -461,10 +548,10 @@ class Caliop_L2(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, get_calipso_data)
+        return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
-class Caliop_L1(AProduct):
+class Caliop_L1(Caliop):
 
     def get_file_signature(self):
         return [r'CAL_LID_L1-ValStage1-V3-01.*hdf']
@@ -497,7 +584,7 @@ class Caliop_L1(AProduct):
             alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
 
         alt_name = "altitude";
-        logging.info("Additional coordinates: " + alt_name)
+        logging.info("Additional coordinates: '" + alt_name + "'")
 
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
@@ -548,7 +635,6 @@ class Caliop_L1(AProduct):
 
 
     def create_data_object(self, filenames, variable):
-        from jasmin_cis.data_io.hdf_sd import get_calipso_data
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -562,7 +648,7 @@ class Caliop_L1(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, get_calipso_data)
+        return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
 class CisCol(AProduct):
