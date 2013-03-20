@@ -33,6 +33,8 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
     '''
     from decimal import Decimal
     from numpy import array, append
+    import logging
+    import sys
 
     min_val = user_range.get(axis + "min", data.min())
     max_val = user_range.get(axis + "max", data.max())
@@ -47,10 +49,11 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
 
     bin_edges = array([])
     i = min_val
-    while abs(i - stop) >= 1.e-7 and i < stop:
+    while abs(i - stop) >= sys.float_info.min and i < stop:
         bin_edges = append(bin_edges, (i))
         i += step
 
+    logging.debug(axis + " axis bin edges: " + str(bin_edges))
     return bin_edges
 
 def expand_1d_to_2d_array(array_1d,length,axis=0):
