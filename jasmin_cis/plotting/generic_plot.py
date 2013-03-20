@@ -47,13 +47,13 @@ class Generic_Plot(object):
         from iris.cube import Cube
         import logging
         if len(self.packed_data_items[0].shape) == 1:
-            if self.plot_args["x_variable"] == "default":
+            if self.plot_args["x_variable"] == "default" or self.plot_args["x_variable"] == self.packed_data_items[0].standard_name or self.plot_args["x_variable"] == self.packed_data_items[0].long_name:
                 x_data = self.packed_data_items[0].data
             else:
                 x = self.packed_data_items[0].coord(self.plot_args["x_variable"])
                 x_data = x.points if isinstance(self.packed_data_items[0], Cube) else x.data
 
-            if self.plot_args["y_variable"] == "default":
+            if self.plot_args["y_variable"] == "default" or self.plot_args["y_variable"] == self.packed_data_items[0].standard_name or self.plot_args["y_variable"] == self.packed_data_items[0].long_name:
                 y_data = self.packed_data_items[0].data
             else:
                 y = self.packed_data_items[0].coord(self.plot_args["y_variable"])
