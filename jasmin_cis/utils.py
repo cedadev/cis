@@ -41,7 +41,11 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
 
     val_range = float(max_val - min_val)
 
-    if step is None: step = val_range / 10.0
+    if step is None:
+        step = val_range / 10.0
+        user_specified_step = False
+    else:
+        user_specified_step = True
 
     x = float(Decimal(str(val_range)) % Decimal(str(step)))
 
@@ -50,6 +54,8 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
     bin_edges = array([])
     i = min_val
     while abs(i - stop) >= sys.float_info.min and i < stop:
+        if not user_specified_step and len(bin_edges) == 11:
+            break
         bin_edges = append(bin_edges, (i))
         i += step
 
