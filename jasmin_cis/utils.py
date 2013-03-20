@@ -23,7 +23,7 @@ def concatenate(arrays, axis=0):
 
     return res
 
-def calculate_histogram_bin_edges(data, axis, user_range, step):
+def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = False):
     '''
     @param data: A numpy array
     @param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
@@ -32,7 +32,7 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
     @return: An array containing a list of bin edges (i.e. when each bin starts and ends)
     '''
     from decimal import Decimal
-    from numpy import array, append
+    from numpy import array, append, logspace, log10
     import logging
     import sys
 
@@ -53,11 +53,15 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
 
     bin_edges = array([])
     i = min_val
-    while abs(i - stop) >= sys.float_info.min and i < stop:
-        if not user_specified_step and len(bin_edges) == 11:
-            break
-        bin_edges = append(bin_edges, (i))
-        i += step
+    if not log_scale or user_specified_step:
+        while abs(i - stop) >= sys.float_info.min and i < stop:
+            if not user_specified_step and len(bin_edges) == 11:
+                break
+            bin_edges = append(bin_edges, i)
+
+            i += step
+    else:
+        bin_edges = logspace(log10(min_val), log10(stop), num=11)
 
     logging.debug(axis + " axis bin edges: " + str(bin_edges))
     return bin_edges
