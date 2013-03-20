@@ -127,30 +127,38 @@ def unpack_data_object(data_object, x_variable, y_variable):
         from iris.exceptions import CoordinateNotFoundError
         try:
             coord = data_object.coord(name=variable)
-            return coord.points
+            if isinstance(data_object, Cube):
+                return coord.points
+            else:
+                return coord.data
         except CoordinateNotFoundError:
             return None
 
+    no_of_dims = len(data_object.shape)
+
     data = data_object.data #ndarray
 
+    if x_variable == data_object.name() or x_variable == "default":
+        x = data
+    else:
+        x = __get_coord(data_object, x_variable)
+
+    if y_variable == data_object.name() or y_variable == "default":
+        y = data
+    else:
+        y = __get_coord(data_object, y_variable)
+
+    if no_of_dims == 1:
+        data = y
+        y = None
+
     if type(data_object) is Cube:
-        no_of_dims = len(data_object.shape)
         import numpy as np
         from mpl_toolkits.basemap import addcyclic
 
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
         if plot_defn.transpose:
             data = data.T
-
-        if x_variable != data_object.name() and x_variable != "default":
-            x = __get_coord(data_object, x_variable)
-            y = __get_coord(data_object, y_variable)
-        else:
-            x = data
-            data = __get_coord(data_object, y_variable)
-            y = None
-
-        if plot_defn.transpose:
             x = x.T
             y = y.T
 
@@ -162,16 +170,7 @@ def unpack_data_object(data_object, x_variable, y_variable):
                 data, y = addcyclic(data, y)
                 y, x = np.meshgrid(y, x)
 
-        return { "data": data, "x" : x, "y" : y }
-    else:
-        if x_variable == data_object.name() or x_variable == "default":
-            return {"data" : data_object.coord(name=y_variable).data, "x" : data}
-        else:
-            try:
-                return { "data": data, "x" : data_object.coord(name=x_variable).data, "y" : data_object.coord(name=y_variable).data }
-            except CoordinateNotFoundError:
-                return { "data": data, "x" : data_object.coord(name=x_variable).data }
-
+    return { "data": data, "x" : x, "y" : y }
 
 def copy_attributes(source, dest):
     '''
