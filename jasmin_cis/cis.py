@@ -73,7 +73,7 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     if x_variable == y_variable:
         specified_axis = "x" if main_arguments["xaxis"] is not None else "y"
         not_specified_axis = "y" if specified_axis == "x" else "y"
-        raise NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + specified_axis + " axis coordinate to the " + not_specified_axis + " axis")
+        raise NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + not_specified_axis + " axis coordinate to the " + specified_axis + " axis")
 
     main_arguments.pop("xaxis")
     main_arguments.pop("yaxis")

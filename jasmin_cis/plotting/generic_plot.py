@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+import logging
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
@@ -22,6 +23,7 @@ class Generic_Plot(object):
 
         self.plot_args = plot_args
         self.packed_data_items = packed_data_items
+        logging.debug("Unpacking the data items")
         self.unpacked_data_items = self.unpack_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
