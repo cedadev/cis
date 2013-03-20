@@ -31,6 +31,8 @@ class DefaultColocator(Colocator):
         if isinstance(data, UngriddedData):
             data = data.get_points()
 
+        logging.info("--> colocating...")
+
         # Fill will the FillValue from the start
         values = np.zeros(len(points)) + constraint.fill_value
 
@@ -46,6 +48,7 @@ class DefaultColocator(Colocator):
         if self.var_units: new_data.units = self.var_units
         new_data.metadata.shape = (len(points),)
         new_data.metadata.missing_value = constraint.fill_value
+
         return [new_data]
 
 
@@ -86,6 +89,8 @@ class AverageColocator(Colocator):
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
             data = data.get_points()
+
+        logging.info("--> colocating...")
 
         # Fill will the FillValue from the start
         means = np.zeros(len(points)) + constraint.fill_value
@@ -155,6 +160,8 @@ class DifferenceColocator(Colocator):
         if isinstance(data, UngriddedData):
             data = data.get_points()
 
+        logging.info("--> colocating...")
+
         # Fill will the FillValue from the start
         values = np.zeros(len(points)) + constraint.fill_value
         difference = np.zeros(len(points)) + constraint.fill_value
@@ -202,6 +209,8 @@ class DebugColocator(Colocator):
         if isinstance(data, UngriddedData):
             data = data.get_points()
 
+        logging.info("--> colocating...")
+
         # Only colocate a certain number of points, as a quick test
         short_points = points if len(points)<self.max_vals else points[:self.max_vals-1]
 
@@ -240,6 +249,9 @@ class DummyColocator(Colocator):
         @return: A single LazyData object
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData
+
+        logging.info("--> colocating...")
+
         new_data = LazyData(data.data, data.metadata)
         return [new_data]
 
