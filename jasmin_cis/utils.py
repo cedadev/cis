@@ -121,7 +121,7 @@ def unpack_data_object(data_object, x_variable, y_variable):
     from iris.cube import Cube
     import iris.plot as iplt
     import iris
-    from jasmin_cis.exceptions import CoordinateNotFoundError
+    import logging
 
     def __get_coord(data_object, variable):
         from iris.exceptions import CoordinateNotFoundError
@@ -169,6 +169,10 @@ def unpack_data_object(data_object, x_variable, y_variable):
             except:
                 data, y = addcyclic(data, y)
                 y, x = np.meshgrid(y, x)
+
+    logging.debug("Shape of x: " + str(x.shape))
+    if no_of_dims != 1: logging.debug("Shape of y: " + str(y.shape))
+    logging.debug("Shape of data: " + str(data.shape))
 
     return { "data": data, "x" : x, "y" : y }
 
