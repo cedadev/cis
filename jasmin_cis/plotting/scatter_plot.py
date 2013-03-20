@@ -99,10 +99,7 @@ class Scatter_Plot(Generic_Plot):
             if datagroups is not None and datagroups[i]["label"]:
                 legend_titles.append(datagroups[i]["label"])
             else:
-                if " " in item.long_name:
-                    legend_titles.append(" ".join(item.long_name.split()[:-1]))
-                else:
-                    legend_titles.append(item.long_name)
+                legend_titles.append(item.long_name)
         handles = self.plots
         legend = self.matplotlib.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
         legend.draggable(state = True)
