@@ -56,7 +56,10 @@ def __get_variable_name(axis, main_arguments, data):
             if axis == "x":
                 number_of_points_in_dimension = data[0].shape[0]
             elif axis == "y":
-                number_of_points_in_dimension = data[0].shape[1]
+                if len(data[0].shape) > 1:
+                    number_of_points_in_dimension = data[0].shape[1]
+                else:
+                    return "default"
 
             for coord in data[0].coords():
                 if coord.shape[0] == number_of_points_in_dimension:
