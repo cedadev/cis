@@ -124,7 +124,7 @@ def expand_file_list(filenames, parser):
 
     # Check we matched at least one file
     if not file_set:
-        parser.error("No files found which match: "+filenames)
+        parser.error("No files found which match: " + str(filenames))
 
     # Cast set to a list to make it easier to index etc. later on
     alist = list(file_set)
