@@ -136,30 +136,33 @@ def unpack_data_object(data_object, x_variable, y_variable):
     import iris
     import logging
 
-    def __get_coord(data_object, variable):
+    def __get_coord(data_object, variable, data):
         from iris.exceptions import CoordinateNotFoundError
-        try:
-            coord = data_object.coord(name=variable)
+
+        if variable == data_object.name() or variable == "default":
+            return data
+        else:
+            if variable.startswith("search:"):
+                number_of_points = float(variable.split(":")[1])
+                for coord in data_object.coords():
+                    if coord.shape[0] == number_of_points:
+                        break
+            else:
+                try:
+                    coord = data_object.coord(name=variable)
+                except CoordinateNotFoundError:
+                    return None
             if isinstance(data_object, Cube):
                 return coord.points
             else:
                 return coord.data
-        except CoordinateNotFoundError:
-            return None
 
     no_of_dims = len(data_object.shape)
 
     data = data_object.data #ndarray
 
-    if x_variable == data_object.name() or x_variable == "default":
-        x = data
-    else:
-        x = __get_coord(data_object, x_variable)
-
-    if y_variable == data_object.name() or y_variable == "default":
-        y = data
-    else:
-        y = __get_coord(data_object, y_variable)
+    x = __get_coord(data_object, x_variable, data)
+    y = __get_coord(data_object, y_variable, data)
 
     if no_of_dims == 1:
         data = y
