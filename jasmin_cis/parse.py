@@ -23,9 +23,11 @@ def initialise_top_parser():
 
 
 def add_plot_parser_arguments(parser):
+
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
-    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products')
+    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products', verbose=False)
+
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
                         help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label:product, where the last four arguments are optional, colour is any valid html colour (e.g. red) and product is one of " + str([cls().__class__.__name__ for cls in product_classes]))
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
