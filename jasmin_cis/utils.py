@@ -135,6 +135,8 @@ def unpack_data_object(data_object, x_variable, y_variable):
     import iris.plot as iplt
     import iris
     import logging
+    import numpy as np
+    from mpl_toolkits.basemap import addcyclic
 
     def __get_coord(data_object, variable, data):
         from iris.exceptions import CoordinateNotFoundError
@@ -164,14 +166,12 @@ def unpack_data_object(data_object, x_variable, y_variable):
     x = __get_coord(data_object, x_variable, data)
     y = __get_coord(data_object, y_variable, data)
 
-    if no_of_dims == 1:
-        data = y
-        y = None
+    try:
+        if (y == data).all(): y = None
+    except AttributeError:
+        if y == data: y = None
 
     if type(data_object) is Cube:
-        import numpy as np
-        from mpl_toolkits.basemap import addcyclic
-
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
         if plot_defn.transpose:
             data = data.T
