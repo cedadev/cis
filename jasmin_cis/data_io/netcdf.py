@@ -112,13 +112,11 @@ def get_metadata(var):
     @return: A metadata object
     '''
     from jasmin_cis.data_io.ungridded_data import Metadata
-    from jasmin_cis.utils import escape_latex_characters
 
     standard_name = getattr(var,'standard_name',"")
     missing_value = find_missing_value(var)
     long_name = getattr(var,'long_name',"")
     units = getattr(var, 'units', "")
-    units = escape_latex_characters(units)
 
     history = getattr(var, "history", "")
     shape = getattr(var, "shape", None)
