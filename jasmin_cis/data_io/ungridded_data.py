@@ -282,7 +282,6 @@ class UngriddedData(LazyData):
         return points
 
 
-
     def get_non_masked_points(self):
         """
              Pack a list of coordinates into a list of x, y, z, t points. If the internal data is a masked array then
@@ -309,12 +308,8 @@ class UngriddedData(LazyData):
         if isinstance(self.data, np.ma.masked_array):
             # Loop over all of the elements in the array, so that i goes from 0 to len(data)-1, but
             #  only access those entries which the mask is False, that is for which not the mask is True...
-            print "---"
-
             for i, val in enumerate(data):
                 if not data.mask[i]:
-                    print i, all_coords[0][i], all_coords[1][i], val
-
                     points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
         else:
             for i, val in enumerate(data):

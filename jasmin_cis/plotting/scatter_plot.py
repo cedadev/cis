@@ -35,10 +35,6 @@ class Scatter_Plot(Generic_Plot):
                 y_coords = unpacked_data_item["data"]
 
 
-            print "data", unpacked_data_item["data"][0]
-            print "x", unpacked_data_item["x"][0]
-            print "y", unpacked_data_item["y"][0]
-
             self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
