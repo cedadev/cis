@@ -14,10 +14,20 @@ class Colocate(object):
         if sample_var is None:
             coords = read_coordinates(sample_files, sample_product)
             sample_points = coords.get_coordinates_points()
+
+            for coord in coords:
+                print coord.shape
+            print len(sample_points)
+
         else:
             data = read_data(sample_files, sample_var, sample_product)
             coords = data.coords()
-            sample_points = data.get_points()
+            sample_points = data.get_all_points()
+
+            for coord in coords:
+                print coord.shape
+            print len(sample_points)
+
 
         write_coordinates(coords, output_file)
 

@@ -674,13 +674,23 @@ class CisCol(AProduct):
                 pass
 
         # Note - We don't need to convert this time coord as it should have been written in our
-        #  'standard' time
+        #  'standard' time unit
 
         if usr_variable is None:
-            return coords
+            res = coords
         else:
             usr_var_data = read_many_files_individually(filenames,usr_variable)[usr_variable]
-            return UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
+            res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
+
+        ###
+
+        print coords.get_coord(name='longitude').data.shape
+        print coords.get_coord(name='latitude').data.shape
+        print res.data.shape, res.shape
+
+        ###
+
+        return res
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)

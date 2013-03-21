@@ -474,7 +474,7 @@ class TestSepConstraint(ConstraintTests):
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_points()
+        ug_data_points = ug_data.get_non_masked_points()
         sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
@@ -506,7 +506,7 @@ class TestSepConstraint(ConstraintTests):
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_points()
+        ug_data_points = ug_data.get_non_masked_points()
         sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # 15m altitude seperation
@@ -533,7 +533,7 @@ class TestSepConstraint(ConstraintTests):
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_points()
+        ug_data_points = ug_data.get_non_masked_points()
         sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
@@ -557,7 +557,7 @@ class TestSepConstraint(ConstraintTests):
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_points()
+        ug_data_points = ug_data.get_non_masked_points()
         sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
 
         # 1 day (and a little bit) time seperation

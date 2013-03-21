@@ -1,6 +1,7 @@
 from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
+
     def plot(self):
         '''
         Plots one or many scatter plots
@@ -32,6 +33,11 @@ class Scatter_Plot(Generic_Plot):
                 #2D
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
+
+
+            print "data", unpacked_data_item["data"][0]
+            print "x", unpacked_data_item["x"][0]
+            print "y", unpacked_data_item["y"][0]
 
             self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
