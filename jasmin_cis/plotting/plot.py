@@ -21,10 +21,6 @@ plot_options = { 'title' : mpl.title,
 
 class Plotter(object):
 
-    # default plots type for a given shape of the data array.
-    default_plot_types = { 1 : 'line',
-                           2 : 'scatter'}
-
     plot_types = {"contour" : Contour_Plot,
                   "contourf" : Contourf_Plot,
                   "heatmap" : Heatmap,
@@ -123,9 +119,12 @@ class Plotter(object):
         '''
         from jasmin_cis.exceptions import InvalidPlotTypeError
         import logging
-        variable_dim = len(data[0].shape) # The first data object is arbitrarily chosen as all data objects should be of the same shape anyway
+        number_of_coords = 0
+        for coord in data[0].coords():
+            if len(coord.shape) != 1 or coord.shape[0] != 1:
+                number_of_coords += 1
         try:
-            plot_type = self.default_plot_types[variable_dim]
+            plot_type = "line" if number_of_coords == 1 else "scatter"
             logging.info("No plot type specified. Plotting data as a " + plot_type)
             return plot_type
         except KeyError:
