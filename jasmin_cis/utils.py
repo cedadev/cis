@@ -23,7 +23,7 @@ def concatenate(arrays, axis=0):
 
     return res
 
-def calculate_histogram_bin_edges(data, axis, user_range, step):
+def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = False):
     '''
     @param data: A numpy array
     @param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
@@ -32,7 +32,7 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
     @return: An array containing a list of bin edges (i.e. when each bin starts and ends)
     '''
     from decimal import Decimal
-    from numpy import array, append
+    from numpy import array, append, logspace, log10
     import logging
     import sys
 
@@ -53,11 +53,15 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
 
     bin_edges = array([])
     i = min_val
-    while abs(i - stop) >= sys.float_info.min and i < stop:
-        if not user_specified_step and len(bin_edges) == 11:
-            break
-        bin_edges = append(bin_edges, (i))
-        i += step
+    if not log_scale or user_specified_step:
+        while abs(i - stop) >= sys.float_info.min and i < stop:
+            if not user_specified_step and len(bin_edges) == 11:
+                break
+            bin_edges = append(bin_edges, i)
+
+            i += step
+    else:
+        bin_edges = logspace(log10(min_val), log10(stop), num=11)
 
     logging.debug(axis + " axis bin edges: " + str(bin_edges))
     return bin_edges
@@ -120,40 +124,43 @@ def unpack_data_object(data_object, x_variable, y_variable):
     import iris.plot as iplt
     import iris
     import logging
+    import numpy as np
+    from mpl_toolkits.basemap import addcyclic
 
-    def __get_coord(data_object, variable):
+    def __get_coord(data_object, variable, data):
         from iris.exceptions import CoordinateNotFoundError
-        try:
-            coord = data_object.coord(name=variable)
+
+        if variable == data_object.name() or variable == "default":
+            return data
+        else:
+            if variable.startswith("search:"):
+                number_of_points = float(variable.split(":")[1])
+                for coord in data_object.coords():
+                    if coord.shape[0] == number_of_points:
+                        break
+            else:
+                try:
+                    coord = data_object.coord(name=variable)
+                except CoordinateNotFoundError:
+                    return None
             if isinstance(data_object, Cube):
                 return coord.points
             else:
                 return coord.data
-        except CoordinateNotFoundError:
-            return None
 
     no_of_dims = len(data_object.shape)
 
     data = data_object.data #ndarray
 
-    if x_variable == data_object.name() or x_variable == "default":
-        x = data
-    else:
-        x = __get_coord(data_object, x_variable)
+    x = __get_coord(data_object, x_variable, data)
+    y = __get_coord(data_object, y_variable, data)
 
-    if y_variable == data_object.name() or y_variable == "default":
-        y = data
-    else:
-        y = __get_coord(data_object, y_variable)
-
-    #if no_of_dims == 1:
-    #    data = y
-    #    y = None
+    try:
+        if (y == data).all(): y = None
+    except AttributeError:
+        if y == data: y = None
 
     if type(data_object) is Cube:
-        import numpy as np
-        from mpl_toolkits.basemap import addcyclic
-
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
         if plot_defn.transpose:
             data = data.T

@@ -57,7 +57,7 @@ class Histogram_2D(Generic_Plot):
         min_val = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
         max_val = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
         data = array([min_val, max_val])
-        bin_edges = calculate_histogram_bin_edges(data, "x", self.plot_args["xrange"], self.plot_args["xbinwidth"])
+        bin_edges = calculate_histogram_bin_edges(data, "x", self.plot_args["xrange"], self.plot_args["xbinwidth"], self.plot_args["logx"])
 
         self.plot_args["xrange"]["xmin"] = bin_edges.min()
         self.plot_args["xrange"]["xmax"] = bin_edges.max()

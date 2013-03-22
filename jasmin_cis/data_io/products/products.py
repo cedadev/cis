@@ -469,9 +469,7 @@ class Caliop_L2(Caliop):
 
         # reading data from files
         sdata = {}
-        alt_data_arr = []
         for filename in filenames:
-
             try:
                 sds_dict = hdf_sd.read(filename, variables)
             except HDF4Error as e:
@@ -480,15 +478,16 @@ class Caliop_L2(Caliop):
             for var in sds_dict.keys():
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
-            alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
-
         alt_name = "altitude"
         logging.info("Additional coordinates: '" + alt_name + "'")
 
-
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
-        alt_data = utils.concatenate(alt_data_arr)
+        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
+        #       If this is not the case, then the following line will need to be changed
+        #       to concatenate the data from all the files and not just arbitrarily pick
+        #       the altitudes from the first file.
+        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
         len_x = alt_data.shape[0]
 
         lat_data = hdf.read_data(sdata['Latitude'],"SD")
@@ -570,9 +569,7 @@ class Caliop_L1(Caliop):
 
         # reading data from files
         sdata = {}
-        alt_data_arr = []
         for filename in filenames:
-
             try:
                 sds_dict = hdf_sd.read(filename, variables)
             except HDF4Error as e:
@@ -581,14 +578,16 @@ class Caliop_L1(Caliop):
             for var in sds_dict.keys():
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
-            alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
-
         alt_name = "altitude";
         logging.info("Additional coordinates: '" + alt_name + "'")
 
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
-        alt_data = utils.concatenate(alt_data_arr)
+        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
+        #       If this is not the case, then the following line will need to be changed
+        #       to concatenate the data from all the files and not just arbitrarily pick
+        #       the altitudes from the first file.
+        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
         len_x = alt_data.shape[0]
 
         lat_data = hdf.read_data(sdata['Latitude'],"SD")

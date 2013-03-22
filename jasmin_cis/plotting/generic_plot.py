@@ -43,30 +43,36 @@ class Generic_Plot(object):
             return self.matplotlib
 
     def unpack_data_items(self):
+        def __get_data(axis):
+            variable = self.plot_args[axis + "_variable"]
+            if variable == "default" or variable == self.packed_data_items[0].standard_name or variable == self.packed_data_items[0].long_name:
+                return self.packed_data_items[0].data
+            else:
+                if variable.startswith("search"):
+                    number_of_points = variable.split(":")[1]
+                    for coord in self.packed_data_items[0].coords():
+                        if coord.shape[0] == float(number_of_points):
+                            break
+                else:
+                    coord = self.packed_data_items[0].coord(variable)
+                return coord.points if isinstance(self.packed_data_items[0], Cube) else coord.data
+
+        def __set_variable_as_data(axis):
+            old_variable = self.plot_args[axis + "_variable"]
+            self.plot_args[axis + "_variable"] = self.packed_data_items[0].name()
+            logging.info("Plotting " + self.plot_args[axis + "_variable"] + " on the " + axis + " axis as " + old_variable + " has length 1")
+
         from jasmin_cis.utils import unpack_data_object
         from iris.cube import Cube
         import logging
         if len(self.packed_data_items[0].shape) == 1:
-            if self.plot_args["x_variable"] == "default" or self.plot_args["x_variable"] == self.packed_data_items[0].standard_name or self.plot_args["x_variable"] == self.packed_data_items[0].long_name:
-                x_data = self.packed_data_items[0].data
-            else:
-                x = self.packed_data_items[0].coord(self.plot_args["x_variable"])
-                x_data = x.points if isinstance(self.packed_data_items[0], Cube) else x.data
-
-            if self.plot_args["y_variable"] == "default" or self.plot_args["y_variable"] == self.packed_data_items[0].standard_name or self.plot_args["y_variable"] == self.packed_data_items[0].long_name:
-                y_data = self.packed_data_items[0].data
-            else:
-                y = self.packed_data_items[0].coord(self.plot_args["y_variable"])
-                y_data = y.points if isinstance(self.packed_data_items[0], Cube) else y.data
+            x_data = __get_data("x")
+            y_data = __get_data("y")
 
             if len(x_data) == 1 and len(y_data) == len(self.packed_data_items[0].data):
-                old_x_variable = self.plot_args["x_variable"]
-                self.plot_args["x_variable"] = self.packed_data_items[0].name()
-                logging.info("Plotting " + self.plot_args["x_variable"] + " on the x axis as " + old_x_variable + " has length 1")
+                __set_variable_as_data("x")
             elif len(y_data) == 1 and len(x_data) == len(self.packed_data_items[0].data):
-                old_y_variable = self.plot_args["y_variable"]
-                self.plot_args["y_variable"] = self.packed_data_items[0].name()
-                logging.info("Plotting " + self.plot_args["y_variable"] + " on the y axis as " + old_y_variable + " has length 1")
+                __set_variable_as_data("y")
 
         return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"]) for packed_data_item in self.packed_data_items]
 

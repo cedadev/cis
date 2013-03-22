@@ -53,6 +53,17 @@ def __get_variable_name(axis, main_arguments, data):
         try:
             return data[0].coord(axis=axis.upper()).name()
         except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+            if axis == "x":
+                number_of_points_in_dimension = data[0].shape[0]
+            elif axis == "y":
+                if len(data[0].shape) > 1:
+                    number_of_points_in_dimension = data[0].shape[1]
+                else:
+                    return "default"
+
+            for coord in data[0].coords():
+                if coord.shape[0] == number_of_points_in_dimension:
+                    return "search:" + str(number_of_points_in_dimension)
             return "default"
 
 
@@ -78,8 +89,15 @@ def __assign_variables_to_x_and_y_axis(main_arguments, data):
     main_arguments.pop("xaxis")
     main_arguments.pop("yaxis")
 
-    logging.info("Plotting " + x_variable + " on the x axis")
-    logging.info("Plotting " + y_variable + " on the y axis")
+    if "search" in x_variable:
+        logging.info("Plotting unknown on the x axis")
+    else:
+        logging.info("Plotting " + x_variable + " on the x axis")
+
+    if "search" in y_variable:
+        logging.info("Plotting unknown on the y axis")
+    else:
+        logging.info("Plotting " + y_variable + " on the y axis")
 
     return x_variable, y_variable
 
