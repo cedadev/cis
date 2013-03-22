@@ -9,6 +9,7 @@ class Colocate(object):
     def __init__(self, sample_files, sample_var, sample_product, output_file):
         from jasmin_cis.data_io.read import read_coordinates, read_data
         from jasmin_cis.data_io.write_netcdf import write_coordinates
+        from iris.cube import Cube
 
         self.sample_files = sample_files
         if sample_var is None:
@@ -17,9 +18,12 @@ class Colocate(object):
         else:
             data = read_data(sample_files, sample_var, sample_product)
             coords = data.coords()
-            sample_points = data.get_points()
+            if isinstance(data, Cube):
+                sample_points = data
+            else:
+                sample_points = data.get_points()
 
-        write_coordinates(coords, output_file)
+        if not isinstance(data, Cube): write_coordinates(coords, output_file)
 
         self.sample_points = sample_points
         self.output_file = output_file
@@ -87,7 +91,7 @@ class Colocate(object):
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.exceptions import CoordinateNotFoundError
         from time import time
-        from iris import cube
+        import iris
         from jasmin_cis.cis import __version__
 
         logging.info("Reading data for: "+variable)
@@ -96,11 +100,11 @@ class Colocate(object):
         # Find colocator, constraint_fn and kernel to use
         col = Colocate._get_valid_colocator_instance(col_name, col_params)
         con = Colocate._get_valid_constraint_instance(con_method, con_params)
-        kernel = Colocate._get_valid_kernel_instance(kern, kern_params, isinstance(data, cube.Cube))
+        kernel = Colocate._get_valid_kernel_instance(kern, kern_params, isinstance(data, iris.cube.Cube))
 
-        logging.info("Colocator: ", col_name)
-        logging.info("Constraints: ", con_method)
-        logging.info("kernel: ", kern)
+        logging.info("Colocator: " + str(col_name))
+        logging.info("Constraints: " + str(con_method))
+        logging.info("kernel: " + str(kern))
 
         logging.info("Colocating, this could take a while...")
         t1 = time()
@@ -114,7 +118,7 @@ class Colocate(object):
 
         logging.info("Appending data to "+self.output_file)
         for data in new_data:
-            data.metadata.history += "Colocated onto sampling from: " + str(self.sample_files) + " using CIS version " + __version__ + \
+            history = "Colocated onto sampling from: " + str(self.sample_files) + " using CIS version " + __version__ + \
                                       "\nvariable: " + str(variable) + \
                                       "\nwith files: " + str(filenames) + \
                                       "\nusing colocator: " + str(col_name) + \
@@ -123,5 +127,9 @@ class Colocate(object):
                                       "\nconstraint parameters: " + str(con_params) + \
                                       "\nkernel: " + str(kern) + \
                                       "\nkernel parameters: " + str(kern_params)
-
-            add_data_to_file(data, self.output_file)
+            if isinstance(data, iris.cube.Cube):
+                data.add_history(history)
+                iris.save(data, self.output_file)
+            else:
+                data.metadata.history += history
+                add_data_to_file(data, self.output_file)

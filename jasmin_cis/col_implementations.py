@@ -398,3 +398,50 @@ class li(Kernel):
         '''
         from iris.analysis.interpolate import linear
         return linear(data, point.get_coord_tuple()).data
+
+
+class GriddedColocator(DefaultColocator):
+
+    def __init__(self, var_name='', var_long_name='', var_units=''):
+        super(DefaultColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+
+    def colocate(self, points, data, constraint, kernel):
+        '''
+            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
+             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
+             for the output LazyData object is copied from the input data object.
+        @param points: A list of HyperPoints
+        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+                            based on it's internal parameters
+        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
+        @return: A single LazyData object
+        '''
+        import iris
+        from jasmin_cis.exceptions import ClassNotFoundError
+
+        if not isinstance(kernel, gridded_gridded_nn) and not isinstance(kernel, gridded_gridded_li):
+            raise ClassNotFoundError("...")
+
+        new_data = iris.analysis.interpolate.regrid(data, points, mode=kernel.name)#, **kwargs)
+
+        return [new_data]
+
+
+class gridded_gridded_nn(Kernel):
+    def __init__(self):
+        self.name = 'nearest'
+    def get_value(self, point, data):
+        '''
+            Co-location routine using nearest neighbour algorithm optimized for gridded data.
+             This calls out to iris to do the work.
+        '''
+        from iris.analysis.interpolate import nearest_neighbour_data_value
+        return nearest_neighbour_data_value(data, point.coord_tuple)
+
+class gridded_gridded_li(Kernel):
+    def __init__(self):
+        self.name = 'bilinear'
