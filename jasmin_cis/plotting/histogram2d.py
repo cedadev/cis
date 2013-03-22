@@ -86,7 +86,7 @@ class Histogram_2D(Generic_Plot):
                 if len(self.packed_data_items) == 1:
                     name = self.packed_data_items[0].name()
                     # only 1 data to plot, display
-                    self.plot_args[axislabel] = name + self.format_units(units)
+                    self.plot_args[axislabel] = name + " " + self.format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     self.plot_args[axislabel] = self.format_units(units)

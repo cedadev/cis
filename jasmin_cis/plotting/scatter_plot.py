@@ -1,6 +1,7 @@
 from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
+
     def plot(self):
         '''
         Plots one or many scatter plots
@@ -32,6 +33,7 @@ class Scatter_Plot(Generic_Plot):
                 #2D
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
+
 
             self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
@@ -87,7 +89,7 @@ class Scatter_Plot(Generic_Plot):
                         name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
                     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                         name = self.packed_data_items[0].name()
-                    self.plot_args[axislabel] = name + self.format_units(units)
+                    self.plot_args[axislabel] = name + " " + self.format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     self.plot_args[axislabel] = units

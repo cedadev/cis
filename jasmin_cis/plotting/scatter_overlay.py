@@ -37,7 +37,7 @@ class Scatter_Overlay(Generic_Plot):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                options[axislabel] = name + self.format_units(units)
+                options[axislabel] = name + " " + self.format_units(units)
 
         return options
 

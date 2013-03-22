@@ -29,7 +29,7 @@ class DefaultColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
 
         logging.info("--> colocating...")
 
@@ -88,7 +88,7 @@ class AverageColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
 
         logging.info("--> colocating...")
 
@@ -158,7 +158,7 @@ class DifferenceColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
 
         logging.info("--> colocating...")
 
@@ -207,7 +207,7 @@ class DebugColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
 
         logging.info("--> colocating...")
 
@@ -219,15 +219,21 @@ class DebugColocator(Colocator):
 
         times = np.zeros(len(short_points))
         for i, point in enumerate(short_points):
+
             t1 = time()
+
+            # colocate using a constraint and a kernel
             con_points = constraint.constrain_points(point, data)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
                 pass
+
+            # print debug information to screen
             times[i] = time() - t1
             frac, rem = math.modf(i/self.print_step)
-            if frac == 0: print str(i)+" took: "+str(times[i])
+            if frac == 0: print str(i) + " - took: " + str(times[i]) + "s" + " -  sample: " + str(point) + " - colocated value: " + str(values[i])
+
         logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
         new_data = LazyData(values, metadata)
         new_data.metadata.shape = (len(points),)

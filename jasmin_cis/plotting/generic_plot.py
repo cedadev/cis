@@ -249,7 +249,7 @@ class Generic_Plot(object):
         if self.plot_args[axislabel] is None:
             units = self.packed_data_items[item_index].units
             name = self.packed_data_items[item_index].name()
-            self.plot_args[axislabel] = name + self.format_units(units)
+            self.plot_args[axislabel] = name + " " + self.format_units(units)
 
     def set_width_and_height(self):
         '''
@@ -518,15 +518,15 @@ class Generic_Plot(object):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                self.plot_args[axislabel] = name + self.format_units(units)
+                self.plot_args[axislabel] = name + " " + self.format_units(units)
 
     def format_units(self, units):
         '''
         @param units: The units of a variable, as a string
-        @return: The units formatted in LaTeX style with surrounding brackets, or the empty string if no units given
+        @return: The units surrounding brackets, or the empty string if no units given
         '''
         if units:
-            return " ($" + str(units) + "$)"
+            return "(" + str(units) + ")"
         else:
             return ""
 
