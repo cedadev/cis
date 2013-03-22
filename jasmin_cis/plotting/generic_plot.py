@@ -23,6 +23,9 @@ class Generic_Plot(object):
 
         self.plot_args = plot_args
         self.packed_data_items = packed_data_items
+
+        self.assign_variables_to_x_and_y_axis()
+
         logging.debug("Unpacking the data items")
         self.unpacked_data_items = self.unpack_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
@@ -49,10 +52,9 @@ class Generic_Plot(object):
                 return self.packed_data_items[0].data
             else:
                 if variable.startswith("search"):
-                    number_of_points = variable.split(":")[1]
+                    number_of_points = float(variable.split(":")[1])
                     for coord in self.packed_data_items[0].coords():
-                        if coord.shape[0] == float(number_of_points):
-                            break
+                        if coord.shape[0] == number_of_points: break
                 else:
                     coord = self.packed_data_items[0].coord(variable)
                 return coord.points if isinstance(self.packed_data_items[0], Cube) else coord.data
@@ -515,3 +517,57 @@ class Generic_Plot(object):
         else:
             return ""
 
+    def assign_variables_to_x_and_y_axis(self):
+        '''
+        Overwrites which variable to used for the x and y axis
+        Does not work for Iris Cubes
+        @param main_arguments: The arguments received from the parser
+        @param data: A list of packed data objects
+        '''
+        import logging
+        from jasmin_cis.exceptions import NotEnoughAxesSpecifiedError
+        #TODO DELETE THIS LINE
+        x_variable = self.get_variable_name("x")
+        y_variable = self.get_variable_name("y")
+
+        if x_variable == y_variable:
+            specified_axis = "x" if self.plot_args["x_variable"] is not None else "y"
+            not_specified_axis = "y" if specified_axis == "x" else "y"
+            raise NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + not_specified_axis + " axis coordinate to the " + specified_axis + " axis")
+
+        if "search" in x_variable:
+            logging.info("Plotting unknown on the x axis")
+        else:
+            logging.info("Plotting " + x_variable + " on the x axis")
+
+        if "search" in y_variable:
+            logging.info("Plotting unknown on the y axis")
+        else:
+            logging.info("Plotting " + y_variable + " on the y axis")
+
+        self.plot_args["x_variable"] = x_variable
+        self.plot_args["y_variable"] = y_variable
+
+    def get_variable_name(self, axis):
+        import iris.exceptions as iris_ex
+        import jasmin_cis.exceptions as jasmin_ex
+
+        # If the user has explicitly specified what variable they want plotting on the axis
+        if self.plot_args[axis + '_variable'] is None:
+            try:
+                return self.packed_data_items[0].coord(axis=axis.upper()).name()
+            except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+                if axis == "x":
+                    number_of_points_in_dimension = self.packed_data_items[0].shape[0]
+                elif axis == "y":
+                    if len(self.packed_data_items[0].shape) > 1:
+                        number_of_points_in_dimension = self.packed_data_items[0].shape[1]
+                    else:
+                        return "default"
+
+                for coord in self.packed_data_items[0].coords():
+                    if coord.shape[0] == number_of_points_in_dimension:
+                        return "search:" + str(number_of_points_in_dimension)
+                return "default"
+        else:
+            return self.plot_args[axis + "_variable"]
