@@ -211,7 +211,7 @@ class MODIS_L2(AProduct):
     modis_scaling = ["1km","5km","10km"]
 
     def get_file_signature(self):
-        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MOD04_L2','MYDATML2','MODATML2']
+        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MOD04_L2']
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 
