@@ -5,6 +5,7 @@ from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
+import numpy as np
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -85,11 +86,21 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
 
+        #missing values
+        missing_values = [0,-9999,-4444,-3333]
+
         # retrieve data + its metadata
-        var = sdata[variable]
-        metadata = hdf.read_metadata(var,"SD")
+        if variable in vdata:
+            var = hdf.read_data(vdata[variable], "VD",missing_values)
+            metadata = hdf.read_metadata(vdata[variable],"VD")
+        elif variable in sdata:
+            var = hdf.read_data(sdata[variable], "SD",missing_values)
+            metadata = hdf.read_metadata(sdata[variable],"SD")
+        else:
+            raise ValueError("variable not found")
 
         return UngriddedData(var,metadata,coords)
+
 
 class MODIS_L3(AProduct):
 
@@ -356,7 +367,90 @@ class Aerosol_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
-class Caliop_L2(AProduct):
+
+class Caliop(AProduct):
+
+    def get_file_signature(self):
+        '''
+        To be implemented by subclcass
+        @return:
+        '''
+        return []
+
+    def create_coords(self, filenames):
+        '''
+        To be implemented by subclass
+        @param filenames:
+        @return:
+        '''
+        return None
+
+    def create_data_object(self, filenames, variable):
+        '''
+        To be implemented by subclass
+        @param filenames:
+        @param variable:
+        @return:
+        '''
+        return None
+
+    def get_calipso_data(self, sds):
+        """
+        Reads raw data from an SD instance. Automatically applies the
+        scaling factors and offsets to the data arrays found in Calipso data.
+
+        Returns:
+            A numpy array containing the raw data with missing data is replaced by NaN.
+
+        Arguments:
+            sds        -- The specific sds instance to read
+
+        """
+        from jasmin_cis.utils import create_masked_array_for_missing_data
+
+        calipso_fill_values = {'Float_32' : -9999.0,
+                               #'Int_8' : 'See SDS description',
+                               'Int_16' : -9999,
+                               'Int_32' : -9999,
+                               'UInt_8' : -127,
+                               #'UInt_16' : 'See SDS description',
+                               #'UInt_32' : 'See SDS description',
+                               'ExtinctionQC Fill Value' : 32768,
+                               'FeatureFinderQC No Features Found' : 32767,
+                               'FeatureFinderQC Fill Value' : 65535}
+
+        data = sds.get()
+        attributes = sds.attributes()
+
+        # Missing data.
+        missing_val = attributes.get('fillvalue', None)
+        if missing_val is None:
+            try:
+                missing_val = calipso_fill_values[attributes.get('format', None)]
+            except KeyError:
+                # Last guess
+                missing_val = attributes.get('_FillValue', None)
+
+        data = create_masked_array_for_missing_data(data, missing_val)
+
+        # Offsets and scaling.
+        offset  = attributes.get('add_offset', 0)
+        scale_factor = attributes.get('scale_factor', 1)
+        data = self.apply_scaling_factor_CALIPSO(data, scale_factor, offset)
+
+        return data
+
+    def apply_scaling_factor_CALIPSO(self,data, scale_factor, offset):
+        '''
+        Apply scaling factor Calipso data
+        @param data:
+        @param scale_factor:
+        @param offset:
+        @return:
+        '''
+        return (data/scale_factor) + offset
+
+class Caliop_L2(Caliop):
 
     def get_file_signature(self):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
@@ -375,9 +469,7 @@ class Caliop_L2(AProduct):
 
         # reading data from files
         sdata = {}
-        alt_data_arr = []
         for filename in filenames:
-
             try:
                 sds_dict = hdf_sd.read(filename, variables)
             except HDF4Error as e:
@@ -386,11 +478,16 @@ class Caliop_L2(AProduct):
             for var in sds_dict.keys():
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
-            alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
+        alt_name = "altitude"
+        logging.info("Additional coordinates: '" + alt_name + "'")
 
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
-        alt_data = utils.concatenate(alt_data_arr)
+        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
+        #       If this is not the case, then the following line will need to be changed
+        #       to concatenate the data from all the files and not just arbitrarily pick
+        #       the altitudes from the first file.
+        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
         len_x = alt_data.shape[0]
 
         lat_data = hdf.read_data(sdata['Latitude'],"SD")
@@ -400,7 +497,7 @@ class Caliop_L2(AProduct):
 
         # altitude
         alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata(standard_name="altitude", shape=new_shape)
+        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
         alt_coord = Coord(alt_data,alt_metadata)
 
         # latitude
@@ -422,7 +519,7 @@ class Caliop_L2(AProduct):
         time_data = hdf.read_data(time,"SD")
         time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
         time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
-        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
                                               units=str(cis_standard_time_unit),
                                               calendar=cis_standard_time_unit.calendar),"T")
 
@@ -437,7 +534,6 @@ class Caliop_L2(AProduct):
 
 
     def create_data_object(self, filenames, variable):
-        from jasmin_cis.data_io.hdf_sd import get_calipso_data
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -451,10 +547,10 @@ class Caliop_L2(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, get_calipso_data)
+        return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
-class Caliop_L1(AProduct):
+class Caliop_L1(Caliop):
 
     def get_file_signature(self):
         return [r'CAL_LID_L1-ValStage1-V3-01.*hdf']
@@ -473,9 +569,7 @@ class Caliop_L1(AProduct):
 
         # reading data from files
         sdata = {}
-        alt_data_arr = []
         for filename in filenames:
-
             try:
                 sds_dict = hdf_sd.read(filename, variables)
             except HDF4Error as e:
@@ -484,11 +578,16 @@ class Caliop_L1(AProduct):
             for var in sds_dict.keys():
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
-            alt_data_arr.append(get_data(VDS(filename,"Lidar_Data_Altitudes"), True))
+        alt_name = "altitude";
+        logging.info("Additional coordinates: '" + alt_name + "'")
 
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
-        alt_data = utils.concatenate(alt_data_arr)
+        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
+        #       If this is not the case, then the following line will need to be changed
+        #       to concatenate the data from all the files and not just arbitrarily pick
+        #       the altitudes from the first file.
+        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
         len_x = alt_data.shape[0]
 
         lat_data = hdf.read_data(sdata['Latitude'],"SD")
@@ -498,7 +597,7 @@ class Caliop_L1(AProduct):
 
         # altitude
         alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata(standard_name="altitude", shape=new_shape)
+        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
         alt_coord = Coord(alt_data,alt_metadata)
 
         # latitude
@@ -520,7 +619,7 @@ class Caliop_L1(AProduct):
         time_data = hdf.read_data(time,"SD")
         time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
         time_data = utils.expand_1d_to_2d_array(time_data[:,0],len_x,axis=1)
-        time_coord = Coord(time_data,Metadata(standard_name='time', shape=time_data.shape,
+        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
                                               units=str(cis_standard_time_unit),
                                               calendar=cis_standard_time_unit.calendar),"T")
 
@@ -535,7 +634,6 @@ class Caliop_L1(AProduct):
 
 
     def create_data_object(self, filenames, variable):
-        from jasmin_cis.data_io.hdf_sd import get_calipso_data
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -549,7 +647,7 @@ class Caliop_L1(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, get_calipso_data)
+        return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
 class CisCol(AProduct):
@@ -575,13 +673,15 @@ class CisCol(AProduct):
                 pass
 
         # Note - We don't need to convert this time coord as it should have been written in our
-        #  'standard' time
+        #  'standard' time unit
 
         if usr_variable is None:
-            return coords
+            res = coords
         else:
             usr_var_data = read_many_files_individually(filenames,usr_variable)[usr_variable]
-            return UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
+            res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
+
+        return res
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)

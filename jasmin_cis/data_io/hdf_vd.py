@@ -6,6 +6,7 @@ from pyhdf.HDF import *
 from pyhdf.VS import *
 from collections import namedtuple
 import logging
+from jasmin_cis.utils import create_masked_array_for_missing_values
 
 
 class VDS(namedtuple('VDS',['filename','variable'])):
@@ -64,8 +65,7 @@ def read(filename, variables=None, datadict=None):
 
     return datadict
 
-def get_data(vds, first_record = False):
-    from jasmin_cis.utils import create_masked_array_for_missing_data
+def get_data(vds, first_record=False, missing_values=None):
 
     # get file and variable reference from tuple
     filename = vds.filename
@@ -90,9 +90,14 @@ def get_data(vds, first_record = False):
     # create numpy array from data
     data = np.array(data).flatten()
 
-    #Deal with missing data
-    missing_val = __get_attribute_value(vd, 'missing')
-    data = create_masked_array_for_missing_data(data,missing_val)
+    # dealing with missing data
+    if missing_values is None:
+        missing_values = [__get_attribute_value(vd, 'missing')]
+
+    data = create_masked_array_for_missing_values(data,missing_values)
+
+    #np.set_printoptions(threshold=np.nan)
+    #print data
 
     # detach and close
     vd.detach()
@@ -103,7 +108,6 @@ def get_data(vds, first_record = False):
 
 def get_metadata(vds):
     from jasmin_cis.data_io.ungridded_data import Metadata
-    from jasmin_cis.utils import escape_latex_characters
 
     # get file and variable reference from tuple
     filename = vds.filename
@@ -119,7 +123,6 @@ def get_metadata(vds):
     long_name = __get_attribute_value(vd, 'long_name')
     shape = [len(vd.read(nRec = vd.inquire()[0]))] #VD data are always 1D, so the shape is simply the length of the data vector
     units = __get_attribute_value(vd, 'units')
-    units = escape_latex_characters(units)
     valid_range = __get_attribute_value(vd, 'valid_range')
     factor = __get_attribute_value(vd, 'factor')
     offset = __get_attribute_value(vd, 'offset')

@@ -29,7 +29,9 @@ class DefaultColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
+
+        logging.info("--> colocating...")
 
         # Fill will the FillValue from the start
         values = np.zeros(len(points)) + constraint.fill_value
@@ -46,6 +48,7 @@ class DefaultColocator(Colocator):
         if self.var_units: new_data.units = self.var_units
         new_data.metadata.shape = (len(points),)
         new_data.metadata.missing_value = constraint.fill_value
+
         return [new_data]
 
 
@@ -85,7 +88,9 @@ class AverageColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
+
+        logging.info("--> colocating...")
 
         # Fill will the FillValue from the start
         means = np.zeros(len(points)) + constraint.fill_value
@@ -153,7 +158,9 @@ class DifferenceColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
+
+        logging.info("--> colocating...")
 
         # Fill will the FillValue from the start
         values = np.zeros(len(points)) + constraint.fill_value
@@ -200,7 +207,9 @@ class DebugColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_points()
+            data = data.get_non_masked_points()
+
+        logging.info("--> colocating...")
 
         # Only colocate a certain number of points, as a quick test
         short_points = points if len(points)<self.max_vals else points[:self.max_vals-1]
@@ -210,15 +219,21 @@ class DebugColocator(Colocator):
 
         times = np.zeros(len(short_points))
         for i, point in enumerate(short_points):
+
             t1 = time()
+
+            # colocate using a constraint and a kernel
             con_points = constraint.constrain_points(point, data)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
                 pass
+
+            # print debug information to screen
             times[i] = time() - t1
             frac, rem = math.modf(i/self.print_step)
-            if frac == 0: print str(i)+" took: "+str(times[i])
+            if frac == 0: print str(i) + " - took: " + str(times[i]) + "s" + " -  sample: " + str(point) + " - colocated value: " + str(values[i])
+
         logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
         new_data = LazyData(values, metadata)
         new_data.metadata.shape = (len(points),)
@@ -240,6 +255,9 @@ class DummyColocator(Colocator):
         @return: A single LazyData object
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData
+
+        logging.info("--> colocating...")
+
         new_data = LazyData(data.data, data.metadata)
         return [new_data]
 

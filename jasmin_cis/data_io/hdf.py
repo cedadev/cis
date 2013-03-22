@@ -97,11 +97,11 @@ def read(filenames,variables):
 
     return sdata,vdata
 
-def read_data(data_dict, data_type):
+def read_data(data_dict, data_type, missing_values=None):
     if data_type=='VD':
-        out =  utils.concatenate([hdf_vd.get_data(i) for i in data_dict ])
+        out =  utils.concatenate([hdf_vd.get_data(i, missing_values=missing_values) for i in data_dict ])
     if data_type=='SD':
-        out =  utils.concatenate([hdf_sd.get_data(i) for i in data_dict ])
+        out =  utils.concatenate([hdf_sd.get_data(i, missing_values=missing_values) for i in data_dict ])
     return out
 
 def read_metadata(data_dict, data_type):

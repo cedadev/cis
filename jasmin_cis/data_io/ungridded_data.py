@@ -254,7 +254,35 @@ class UngriddedData(LazyData):
         """
         return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
 
-    def get_points(self):
+    def get_all_points(self):
+        """
+             Pack a list of coordinates into a list of x, y, z, t points.
+
+        @param coords: A CoordList of Coord objects
+        @return: A list of HyperPoints
+        """
+        import numpy as np
+        from hyperpoint import HyperPoint, HyperPointList
+
+        points = HyperPointList()
+
+        logging.info("--> Converting ungridded data to a list of HyperPoints...")
+
+        # We want the data to be flat whether it's masked or not
+        data = self.data.flatten()
+
+        # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
+        #  it were the full length of the array
+        data_len = len(data)
+        all_coords = self._coords.get_standard_coords(data_len)
+
+        for i, val in enumerate(data):
+            points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
+
+        return points
+
+
+    def get_non_masked_points(self):
         """
              Pack a list of coordinates into a list of x, y, z, t points. If the internal data is a masked array then
              only valid (unmasked) points will be returned in the list.
@@ -267,7 +295,7 @@ class UngriddedData(LazyData):
 
         points = HyperPointList()
 
-        logging.info("Converting ungridded data to a list of HyperPoints...")
+        logging.info("--> Converting ungridded data to a list of HyperPoints...")
 
         # We want the data to be flat whether it's masked or not
         data = self.data.flatten()
@@ -280,13 +308,12 @@ class UngriddedData(LazyData):
         if isinstance(self.data, np.ma.masked_array):
             # Loop over all of the elements in the array, so that i goes from 0 to len(data)-1, but
             #  only access those entries which the mask is False, that is for which not the mask is True...
-            for i, val in enumerate(data[~data.mask]):
-                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
+            for i, val in enumerate(data):
+                if not data.mask[i]:
+                    points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
         else:
             for i, val in enumerate(data):
                 points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
-
-        logging.info("... done")
 
         return points
 
@@ -297,8 +324,8 @@ class UngriddedData(LazyData):
          A constuctor for building an UngriddedData object from a list of hyper points
         @param hyperpoints:    A list of HyperPoints
         """
-        from data_io.Coord import Coord, CoordList
-        from data_io.hyperpoint import HyperPointList
+        from jasmin_cis.data_io.Coord import Coord, CoordList
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
 
         if not isinstance(hyperpoints, HyperPointList):
             hyperpoints = HyperPointList(hyperpoints)

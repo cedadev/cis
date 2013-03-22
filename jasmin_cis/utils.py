@@ -23,7 +23,7 @@ def concatenate(arrays, axis=0):
 
     return res
 
-def calculate_histogram_bin_edges(data, axis, user_range, step):
+def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = False):
     '''
     @param data: A numpy array
     @param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
@@ -32,14 +32,20 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
     @return: An array containing a list of bin edges (i.e. when each bin starts and ends)
     '''
     from decimal import Decimal
-    from numpy import array, append
+    from numpy import array, append, logspace, log10
+    import logging
+    import sys
 
     min_val = user_range.get(axis + "min", data.min())
     max_val = user_range.get(axis + "max", data.max())
 
     val_range = float(max_val - min_val)
 
-    if step is None: step = val_range / 10.0
+    if step is None:
+        step = val_range / 10.0
+        user_specified_step = False
+    else:
+        user_specified_step = True
 
     x = float(Decimal(str(val_range)) % Decimal(str(step)))
 
@@ -47,10 +53,17 @@ def calculate_histogram_bin_edges(data, axis, user_range, step):
 
     bin_edges = array([])
     i = min_val
-    while abs(i - stop) >= 1.e-7 and i < stop:
-        bin_edges = append(bin_edges, (i))
-        i += step
+    if not log_scale or user_specified_step:
+        while abs(i - stop) >= sys.float_info.min and i < stop:
+            if not user_specified_step and len(bin_edges) == 11:
+                break
+            bin_edges = append(bin_edges, i)
 
+            i += step
+    else:
+        bin_edges = logspace(log10(min_val), log10(stop), num=11)
+
+    logging.debug(axis + " axis bin edges: " + str(bin_edges))
     return bin_edges
 
 def expand_1d_to_2d_array(array_1d,length,axis=0):
@@ -89,23 +102,20 @@ def expand_1d_to_2d_array(array_1d,length,axis=0):
 
     return array_2d
 
-def escape_latex_characters(string):
-    reserved_LaTeX_characters = ["#", "$", "%", "^", "&", "_", "{", "}", "~", "\\"]
-    new_string = ""
-    if string is not None:
-        for char in string:
-            if char in reserved_LaTeX_characters:
-                new_string += "\\"
-            new_string += char
-    return new_string
-
-
 def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
     return ma.array(data, mask=data==missing_val, fill_value=missing_val)
 
+def create_masked_array_for_missing_values(data, missing_values):
+    import numpy.ma as ma
 
-def unpack_data_object(data_object):
+    mdata = data
+    for missing_value in missing_values:
+        mdata = ma.masked_where(missing_value==mdata,mdata)
+
+    return mdata
+
+def unpack_data_object(data_object, x_variable, y_variable):
     '''
     @param data_object    A cube or an UngriddedData object
     @return A dictionary containing x, y and data as numpy arrays
@@ -113,62 +123,72 @@ def unpack_data_object(data_object):
     from iris.cube import Cube
     import iris.plot as iplt
     import iris
-    from jasmin_cis.exceptions import CoordinateNotFoundError
+    import logging
+    import numpy as np
+    from mpl_toolkits.basemap import addcyclic
 
-    def __get_coord(axis, data_object):
+    def __get_coord(data_object, variable, data):
         from iris.exceptions import CoordinateNotFoundError
-        try:
-            coord = data_object.coord(axis=axis)
-            return coord.points
-        except CoordinateNotFoundError:
-            return None
+
+        if variable == data_object.name() or variable == "default":
+            return data
+        else:
+            if variable.startswith("search:"):
+                number_of_points = float(variable.split(":")[1])
+                for coord in data_object.coords():
+                    if coord.shape[0] == number_of_points:
+                        break
+            else:
+                try:
+                    coord = data_object.coord(name=variable)
+                except CoordinateNotFoundError:
+                    return None
+            if isinstance(data_object, Cube):
+                return coord.points
+            else:
+                return coord.data
+
+    no_of_dims = len(data_object.shape)
+
+    data = data_object.data #ndarray
+
+    x = __get_coord(data_object, x_variable, data)
+    y = __get_coord(data_object, y_variable, data)
+
+    try:
+        if (y == data).all() or (y == x).all(): y = None
+    except AttributeError:
+        if y == data or y == x: y = None
+
+    try:
+        if (x == data).all():
+            data = y
+            y = None
+    except AttributeError:
+        if x == data:
+            data = y
+            y = None
 
     if type(data_object) is Cube:
-        no_of_dims = len(data_object.shape)
-        import numpy as np
-        from mpl_toolkits.basemap import addcyclic
-
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
-        data = data_object.data #ndarray
         if plot_defn.transpose:
             data = data.T
-
-        if no_of_dims == 1:
-            x = __get_coord("x", data_object)
-            y = __get_coord("y", data_object)
-
-            if x is None and y is not None:
-                x = data
-                data = y
-                y = None
-
-        elif no_of_dims == 2:
-            # Obtain U and V coordinates
-            v_coord, u_coord = plot_defn.coords
-            if u_coord:
-                u = u_coord.points
-            else:
-                u = np.arange(data.shape[1])
-            if v_coord:
-                v = v_coord.points
-            else:
-                v = np.arange(data.shape[0])
-
-        if plot_defn.transpose:
-            u = u.T
-            v = v.T
+            x = x.T
+            y = y.T
 
         if no_of_dims == 2:
-            data, u = addcyclic(data, u)
-            x, y = np.meshgrid(u, v)
+            try:
+                data, x = addcyclic(data, x)
+                x, y = np.meshgrid(x, y)
+            except:
+                data, y = addcyclic(data, y)
+                y, x = np.meshgrid(y, x)
 
-        return { "data": data, "x" : x, "y" : y }
-    else:
-        try:
-            return { "data": data_object.data, "x" : data_object.x.data, "y" : data_object.y.data }
-        except CoordinateNotFoundError:
-            return { "data": data_object.data, "x" : data_object.x.data}
+    logging.debug("Shape of x: " + str(x.shape))
+    if y is not None: logging.debug("Shape of y: " + str(y.shape))
+    logging.debug("Shape of data: " + str(data.shape))
 
+    return { "data": data, "x" : x, "y" : y }
 
 def copy_attributes(source, dest):
     '''

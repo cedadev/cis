@@ -42,17 +42,17 @@ class Line_Plot(Generic_Plot):
 
         if self.plot_args[axislabel] is None:
             try:
-                units = self.packed_data_items[0].coord(axis=axis).units
+                units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
             except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                 units = self.packed_data_items[0].units
 
             if len(self.packed_data_items) == 1:
                 try:
-                    name = self.packed_data_items[0].coord(axis=axis).name()
+                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
                 # only 1 data to plot, display
-                self.plot_args[axislabel] = name + self.format_units(units)
+                self.plot_args[axislabel] = name + " " + self.format_units(units)
             else:
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
                 self.plot_args[axislabel] = self.format_units(units)
@@ -71,3 +71,25 @@ class Line_Plot(Generic_Plot):
 
         return valrange
 
+    def get_variable_name(self, axis):
+        import iris.exceptions as iris_ex
+        import jasmin_cis.exceptions as jasmin_ex
+
+        # If the user has explicitly specified what variable they want plotting on the axis
+        if self.plot_args[axis + '_variable'] is None:
+            if axis == "y":
+                return "default"
+            elif axis == "x":
+                try:
+                    return self.packed_data_items[0].coord(axis="X").name()
+                except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+                    try:
+                        return self.packed_data_items[0].coord(axis="Y").name()
+                    except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+                        number_of_points_in_dimension = self.packed_data_items[0].shape[0]
+
+                        for coord in self.packed_data_items[0].coords():
+                            if coord.shape[0] == number_of_points_in_dimension:
+                                return "search:" + str(number_of_points_in_dimension)
+        else:
+            return self.plot_args[axis + "_variable"]

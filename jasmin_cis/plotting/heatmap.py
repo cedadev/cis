@@ -11,7 +11,7 @@ class Heatmap(Generic_Plot):
 
         if self.is_map(): self.mplkwargs["latlon"] = True
 
-        self.plot_method.pcolormesh(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], *self.mplargs, **self.mplkwargs)
+        self.plotting_library.pcolormesh(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], *self.mplargs, **self.mplkwargs)
 
         self.mplkwargs.pop("latlon", None)
 

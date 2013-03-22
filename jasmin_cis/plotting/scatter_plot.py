@@ -1,6 +1,7 @@
 from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 class Scatter_Plot(Generic_Plot):
+
     def plot(self):
         '''
         Plots one or many scatter plots
@@ -33,7 +34,8 @@ class Scatter_Plot(Generic_Plot):
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
 
-            self.plots.append(self.plot_method.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
+
+            self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
@@ -77,17 +79,17 @@ class Scatter_Plot(Generic_Plot):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    units = self.packed_data_items[0].coord(axis=axis).units
+                    units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 
                 if len(self.packed_data_items) == 1:
                     # only 1 data to plot, display
                     try:
-                        name = self.packed_data_items[0].coord(axis=axis).name()
+                        name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
                     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                         name = self.packed_data_items[0].name()
-                    self.plot_args[axislabel] = name + self.format_units(units)
+                    self.plot_args[axislabel] = name + " " + self.format_units(units)
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                     self.plot_args[axislabel] = units
@@ -99,10 +101,7 @@ class Scatter_Plot(Generic_Plot):
             if datagroups is not None and datagroups[i]["label"]:
                 legend_titles.append(datagroups[i]["label"])
             else:
-                if " " in item.long_name:
-                    legend_titles.append(" ".join(item.long_name.split()[:-1]))
-                else:
-                    legend_titles.append(item.long_name)
+                legend_titles.append(item.long_name)
         handles = self.plots
         legend = self.matplotlib.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
         legend.draggable(state = True)

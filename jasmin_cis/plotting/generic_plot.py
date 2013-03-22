@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+import logging
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
@@ -13,7 +14,6 @@ class Generic_Plot(object):
         @param mplargs: Any arguments to be passed directly into matplotlib
         @param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         '''
-        from jasmin_cis.utils import unpack_data_object
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
 
@@ -23,20 +23,76 @@ class Generic_Plot(object):
 
         self.plot_args = plot_args
         self.packed_data_items = packed_data_items
-        self.unpacked_data_items = [unpack_data_object(packed_data_item) for packed_data_item in self.packed_data_items]
+
+        self.assign_variables_to_x_and_y_axis()
+
+        logging.debug("Unpacking the data items")
+        self.unpacked_data_items = self.unpack_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
         self.matplotlib = plt
 
-        if self.is_map():
-            self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
-            self.plot_method = self.basemap
-        else:
-            self.plot_method = self.matplotlib
+        self.plotting_library = self.set_plotting_library()
 
         self.set_width_and_height()
         
         self.plot()
+
+    def set_plotting_library(self):
+        if self.is_map():
+            self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
+            return self.basemap
+        else:
+            return self.matplotlib
+
+    def unpack_data_items(self):
+        def __get_data(axis):
+            variable = self.plot_args[axis + "_variable"]
+            if variable == "default" or variable == self.packed_data_items[0].standard_name or variable == self.packed_data_items[0].long_name:
+                return self.packed_data_items[0].data
+            else:
+                if variable.startswith("search"):
+                    number_of_points = float(variable.split(":")[1])
+                    for coord in self.packed_data_items[0].coords():
+                        if coord.shape[0] == number_of_points: break
+                else:
+                    coord = self.packed_data_items[0].coord(variable)
+                return coord.points if isinstance(self.packed_data_items[0], Cube) else coord.data
+
+        def __set_variable_as_data(axis):
+            old_variable = self.plot_args[axis + "_variable"]
+            self.plot_args[axis + "_variable"] = self.packed_data_items[0].name()
+            logging.info("Plotting " + self.plot_args[axis + "_variable"] + " on the " + axis + " axis as " + old_variable + " has length 1")
+
+        def __swap_x_and_y_variables():
+            temp =  self.plot_args["x_variable"]
+            self.plot_args["x_variable"] = self.plot_args["y_variable"]
+            self.plot_args["y_variable"] = temp
+
+
+        from jasmin_cis.utils import unpack_data_object
+        from iris.cube import Cube
+        import logging
+        if len(self.packed_data_items[0].shape) == 1:
+            x_data = __get_data("x")
+            y_data = __get_data("y")
+
+            if len(x_data) == 1 and len(y_data) == len(self.packed_data_items[0].data):
+                __set_variable_as_data("x")
+            elif len(y_data) == 1 and len(x_data) == len(self.packed_data_items[0].data):
+                __set_variable_as_data("y")
+            else:
+                try:
+                    if (x_data == y_data).all():
+                        __swap_x_and_y_variables()
+                except AttributeError:
+                    if x_data == y_data:
+                        __swap_x_and_y_variables()
+
+        return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"]) for packed_data_item in self.packed_data_items]
+
+    def unpack_comparative_data(self):
+        return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]
 
     def plot(self):
         '''
@@ -172,9 +228,7 @@ class Generic_Plot(object):
     def format_time_axis(self):
         from jasmin_cis.time_util import cis_standard_time_unit
 
-        coords = self.packed_data_items[0].coords(axis='X')
-        if len(coords) == 0:
-            coords = self.packed_data_items[0].coords(axis='T')
+        coords = self.packed_data_items[0].coords(name=self.plot_args["x_variable"])
 
         if len(coords) == 1:
             if coords[0].units == str(cis_standard_time_unit):
@@ -195,7 +249,7 @@ class Generic_Plot(object):
         if self.plot_args[axislabel] is None:
             units = self.packed_data_items[item_index].units
             name = self.packed_data_items[item_index].name()
-            self.plot_args[axislabel] = name + self.format_units(units)
+            self.plot_args[axislabel] = name + " " + self.format_units(units)
 
     def set_width_and_height(self):
         '''
@@ -282,14 +336,13 @@ class Generic_Plot(object):
         '''
         from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
         from jasmin_cis.exceptions import CoordinateNotFoundError as JasminNotFoundError
-        axes = {}
         try:
-            axes["X"] = self.packed_data_items[0].coord(axis="X")
-            axes["Y"] = self.packed_data_items[0].coord(axis="Y")
+            x = self.packed_data_items[0].coord(name=self.plot_args["x_variable"])
+            y = self.packed_data_items[0].coord(name=self.plot_args["y_variable"])
         except (JasminNotFoundError, irisNotFoundError):
             return False
 
-        if axes["X"].name().lower().startswith("lon") and axes["Y"].name().lower().startswith("lat"):
+        if x.name().lower().startswith("lon") and y.name().lower().startswith("lat"):
             return True
         else:
             return False
@@ -334,9 +387,9 @@ class Generic_Plot(object):
             step = (vmax - vmin) / self.plot_args["valrange"]["vstep"]
 
         if filled:
-            contour_type = self.plot_method.contourf
+            contour_type = self.plotting_library.contourf
         else:
-            contour_type = self.plot_method.contour
+            contour_type = self.plotting_library.contour
 
         if self.is_map(): self.mplkwargs["latlon"] = True
 
@@ -455,25 +508,79 @@ class Generic_Plot(object):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    name = self.packed_data_items[0].coord(axis=axis).name()
+                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
 
                 try:
-                    units = self.packed_data_items[0].coord(axis=axis).units
+                    units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                self.plot_args[axislabel] = name + self.format_units(units)
+                self.plot_args[axislabel] = name + " " + self.format_units(units)
 
     def format_units(self, units):
         '''
         @param units: The units of a variable, as a string
-        @return: The units formatted in LaTeX style with surrounding brackets, or the empty string if no units given
+        @return: The units surrounding brackets, or the empty string if no units given
         '''
         if units:
-            return " ($" + str(units) + "$)"
+            return "(" + str(units) + ")"
         else:
             return ""
 
+    def assign_variables_to_x_and_y_axis(self):
+        '''
+        Overwrites which variable to used for the x and y axis
+        Does not work for Iris Cubes
+        @param main_arguments: The arguments received from the parser
+        @param data: A list of packed data objects
+        '''
+        import logging
+        from jasmin_cis.exceptions import NotEnoughAxesSpecifiedError
+
+        x_variable = self.get_variable_name("x")
+        y_variable = self.get_variable_name("y")
+
+        if x_variable == y_variable:
+            specified_axis = "x" if self.plot_args["x_variable"] is not None else "y"
+            not_specified_axis = "y" if specified_axis == "x" else "y"
+            raise NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + not_specified_axis + " axis coordinate to the " + specified_axis + " axis")
+
+        if "search" in x_variable:
+            logging.info("Plotting unknown on the x axis")
+        else:
+            logging.info("Plotting " + x_variable + " on the x axis")
+
+        if "search" in y_variable:
+            logging.info("Plotting unknown on the y axis")
+        else:
+            logging.info("Plotting " + y_variable + " on the y axis")
+
+        self.plot_args["x_variable"] = x_variable
+        self.plot_args["y_variable"] = y_variable
+
+    def get_variable_name(self, axis):
+        import iris.exceptions as iris_ex
+        import jasmin_cis.exceptions as jasmin_ex
+
+        # If the user has explicitly specified what variable they want plotting on the axis
+        if self.plot_args[axis + '_variable'] is None:
+            try:
+                return self.packed_data_items[0].coord(axis=axis.upper()).name()
+            except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+                if axis == "x":
+                    number_of_points_in_dimension = self.packed_data_items[0].shape[0]
+                elif axis == "y":
+                    if len(self.packed_data_items[0].shape) > 1:
+                        number_of_points_in_dimension = self.packed_data_items[0].shape[1]
+                    else:
+                        return "default"
+
+                for coord in self.packed_data_items[0].coords():
+                    if coord.shape[0] == number_of_points_in_dimension:
+                        return "search:" + str(number_of_points_in_dimension)
+                return "default"
+        else:
+            return self.plot_args[axis + "_variable"]

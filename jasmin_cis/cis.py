@@ -10,7 +10,7 @@ from jasmin_cis.exceptions import CISError
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "V0R4M4"
+__version__ = "V0R5M3"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
@@ -23,7 +23,7 @@ def __error_occurred(e):
     sys.stderr.write(str(e) + "\n")
     exit(1)
 
-def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axis):
+def __check_variable_is_valid(main_arguments, data, axis):
     '''
     Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to assign
     the variable to the specified axis
@@ -32,53 +32,15 @@ def __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, axi
     @param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it will be plotted on.
     @param axis: The axis on which to plot the variable on
     '''
-    from iris.cube import Cube
-    from jasmin_cis.exceptions import InvalidVariableError, NotEnoughAxesSpecifiedError
+    from jasmin_cis.exceptions import InvalidVariableError
 
-    if axis == "x":
-        other_axis = "y"
-    elif axis =="y":
-        other_axis = "x"
+    user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
-        if not isinstance(data_item, Cube):
+        if len(data_item.coords(name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
+            raise InvalidVariableError(user_specified_variable + " is not a valid variable")
 
-            if len(data_item.coords(name=main_arguments[axis + "axis"])) == 0:
-                raise InvalidVariableError(main_arguments[axis + "axis"] + " is not a valid variable")
-            else:
-                if data_item.coord(name=main_arguments[axis + "axis"]).axis == other_axis.upper() and main_arguments[other_axis + "axis"] is None:
-                    raise NotEnoughAxesSpecifiedError("--" + other_axis + "axis must also be specified if assigning the current " + other_axis + " axis coordinate to the " + axis + " axis")
-                else:
-                    var_axis_dict[main_arguments[axis + "axis"]] = axis.upper()
-                    logging.info("Overriding data product default variable for " + axis + " axis with: " + main_arguments[axis + "axis"])
-                    break
-
-def __assign_variables_to_x_and_y_axis(main_arguments, data):
-    '''
-    Overwrites which variable to used for the x and y axis
-    Does not work for Iris Cubes
-    @param main_arguments: The arguments received from the parser
-    @param data: A list of packed data objects
-    '''
-    from iris.cube import Cube
-    var_axis_dict = {}
-    if main_arguments['xaxis'] is not None:
-        __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, "x")
-
-    if main_arguments['yaxis'] is not None:
-        __store_variable_name_in_dictionary(main_arguments, data, var_axis_dict, "y")
-
-    main_arguments.pop("xaxis")
-    main_arguments.pop("yaxis")
-
-    for data_item in data:
-        if not isinstance(data_item, Cube):
-            for coord in data_item.coords():
-                if var_axis_dict.has_key(coord.name()):
-                    coord.axis = var_axis_dict[coord.name()]
-                if coord.name() not in var_axis_dict.iterkeys() and coord.axis in var_axis_dict.itervalues():
-                    coord.axis = ''
-
+    return user_specified_variable
 
 def plot_cmd(main_arguments):
     '''
@@ -92,12 +54,10 @@ def plot_cmd(main_arguments):
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
 
-
     data = []
     try:
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
         data = [ read_data(datagroup['filenames'], datagroup['variable'], datagroup['product']) for datagroup in main_arguments.datagroups ]
-
     except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError) as e:
         __error_occurred(e)
     except IOError as e:
@@ -108,10 +68,8 @@ def plot_cmd(main_arguments):
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
-    try:
-        __assign_variables_to_x_and_y_axis(main_arguments, data)
-    except (ex.InvalidVariableError, ex.NotEnoughAxesSpecifiedError) as e:
-        __error_occurred(e)
+    main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
+    main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")
 
     try:
         Plotter(data, plot_type, output, **main_arguments)

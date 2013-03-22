@@ -14,10 +14,20 @@ class Colocate(object):
         if sample_var is None:
             coords = read_coordinates(sample_files, sample_product)
             sample_points = coords.get_coordinates_points()
+
+            for coord in coords:
+                print coord.shape
+            print len(sample_points)
+
         else:
             data = read_data(sample_files, sample_var, sample_product)
             coords = data.coords()
-            sample_points = data.get_points()
+            sample_points = data.get_all_points()
+
+            for coord in coords:
+                print coord.shape
+            print len(sample_points)
+
 
         write_coordinates(coords, output_file)
 
@@ -97,6 +107,10 @@ class Colocate(object):
         col = Colocate._get_valid_colocator_instance(col_name, col_params)
         con = Colocate._get_valid_constraint_instance(con_method, con_params)
         kernel = Colocate._get_valid_kernel_instance(kern, kern_params, isinstance(data, cube.Cube))
+
+        logging.info("Colocator: ", col_name)
+        logging.info("Constraints: ", con_method)
+        logging.info("kernel: ", kern)
 
         logging.info("Colocating, this could take a while...")
         t1 = time()

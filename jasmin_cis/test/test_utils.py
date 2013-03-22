@@ -38,16 +38,15 @@ def can_apply_intersection_mask_to_one_masked_and_one_unmasked_array():
 
 @istest
 def can_apply_intersection_mask_to_two_unmasked_arrays():
-    import numpy.ma as ma
     import numpy as np
     array1 = np.array([1,2,3,4,5,6,7,8,9,10])
     array2 = np.array([2,4,5,6,7,8,4,3,6,80])
     array1, array2 = apply_intersection_mask_to_two_arrays(array1, array2)
-    assert(array1.mask, False)
-    assert(array2.mask, False)
+    assert(all(array1.mask)== False)
+    assert(all(array2.mask)== False)
 
 @istest
-def can_expand_1d_array_accross():
+def can_expand_1d_array_across():
     import numpy as np
     from jasmin_cis.utils import expand_1d_to_2d_array
     a = np.array([1,2,3,4])
@@ -135,4 +134,3 @@ def ten_bins_are_created_when_min_and_max_is_specified():
     eq_(len(bin_edges), 11) # 11 edges = 10 bins
     assert(abs(bin_edges.min() - 0.3) < 1.e-7) # 1.e-7 is approx 0
     assert(abs(bin_edges.max() - 2.3) < 1.e-7) # 1.e-7 is approx 0
-
