@@ -71,3 +71,25 @@ class Line_Plot(Generic_Plot):
 
         return valrange
 
+    def get_variable_name(self, axis):
+        import iris.exceptions as iris_ex
+        import jasmin_cis.exceptions as jasmin_ex
+
+        # If the user has explicitly specified what variable they want plotting on the axis
+        if self.plot_args[axis + '_variable'] is None:
+            if axis == "y":
+                return "default"
+            elif axis == "x":
+                try:
+                    return self.packed_data_items[0].coord(axis="X").name()
+                except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+                    try:
+                        return self.packed_data_items[0].coord(axis="Y").name()
+                    except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
+                        number_of_points_in_dimension = self.packed_data_items[0].shape[0]
+
+                        for coord in self.packed_data_items[0].coords():
+                            if coord.shape[0] == number_of_points_in_dimension:
+                                return "search:" + str(number_of_points_in_dimension)
+        else:
+            return self.plot_args[axis + "_variable"]

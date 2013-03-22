@@ -156,9 +156,18 @@ def unpack_data_object(data_object, x_variable, y_variable):
     y = __get_coord(data_object, y_variable, data)
 
     try:
-        if (y == data).all(): y = None
+        if (y == data).all() or (y == x).all(): y = None
     except AttributeError:
-        if y == data: y = None
+        if y == data or y == x: y = None
+
+    try:
+        if (x == data).all():
+            data = y
+            y = None
+    except AttributeError:
+        if x == data:
+            data = y
+            y = None
 
     if type(data_object) is Cube:
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
@@ -176,7 +185,7 @@ def unpack_data_object(data_object, x_variable, y_variable):
                 y, x = np.meshgrid(y, x)
 
     logging.debug("Shape of x: " + str(x.shape))
-    if no_of_dims != 1: logging.debug("Shape of y: " + str(y.shape))
+    if y is not None: logging.debug("Shape of y: " + str(y.shape))
     logging.debug("Shape of data: " + str(data.shape))
 
     return { "data": data, "x" : x, "y" : y }

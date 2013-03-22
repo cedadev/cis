@@ -34,73 +34,13 @@ def __check_variable_is_valid(main_arguments, data, axis):
     '''
     from jasmin_cis.exceptions import InvalidVariableError
 
-    user_specified_variable = main_arguments[axis + "axis"]
+    user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
         if len(data_item.coords(name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
             raise InvalidVariableError(user_specified_variable + " is not a valid variable")
-        else:
-            return main_arguments[axis + "axis"]
 
-def __get_variable_name(axis, main_arguments, data):
-    import iris.exceptions as iris_ex
-    import jasmin_cis.exceptions as jasmin_ex
-
-    # If the user has explicitly specified what variable they want plotting on the axis
-    if main_arguments[axis + 'axis'] is not None:
-        return __check_variable_is_valid(main_arguments, data, axis)
-    else:
-        try:
-            return data[0].coord(axis=axis.upper()).name()
-        except (iris_ex.CoordinateNotFoundError, jasmin_ex.CoordinateNotFoundError):
-            if axis == "x":
-                number_of_points_in_dimension = data[0].shape[0]
-            elif axis == "y":
-                if len(data[0].shape) > 1:
-                    number_of_points_in_dimension = data[0].shape[1]
-                else:
-                    return "default"
-
-            for coord in data[0].coords():
-                if coord.shape[0] == number_of_points_in_dimension:
-                    return "search:" + str(number_of_points_in_dimension)
-            return "default"
-
-
-
-def __assign_variables_to_x_and_y_axis(main_arguments, data):
-    '''
-    Overwrites which variable to used for the x and y axis
-    Does not work for Iris Cubes
-    @param main_arguments: The arguments received from the parser
-    @param data: A list of packed data objects
-    '''
-    import logging
-    from jasmin_cis.exceptions import NotEnoughAxesSpecifiedError
-
-    x_variable = __get_variable_name("x", main_arguments, data)
-    y_variable = __get_variable_name("y", main_arguments, data)
-
-    if x_variable == y_variable:
-        specified_axis = "x" if main_arguments["xaxis"] is not None else "y"
-        not_specified_axis = "y" if specified_axis == "x" else "y"
-        raise NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + not_specified_axis + " axis coordinate to the " + specified_axis + " axis")
-
-    main_arguments.pop("xaxis")
-    main_arguments.pop("yaxis")
-
-    if "search" in x_variable:
-        logging.info("Plotting unknown on the x axis")
-    else:
-        logging.info("Plotting " + x_variable + " on the x axis")
-
-    if "search" in y_variable:
-        logging.info("Plotting unknown on the y axis")
-    else:
-        logging.info("Plotting " + y_variable + " on the y axis")
-
-    return x_variable, y_variable
-
+    return user_specified_variable
 
 def plot_cmd(main_arguments):
     '''
@@ -114,12 +54,10 @@ def plot_cmd(main_arguments):
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
 
-
     data = []
     try:
         # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
         data = [ read_data(datagroup['filenames'], datagroup['variable'], datagroup['product']) for datagroup in main_arguments.datagroups ]
-
     except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError) as e:
         __error_occurred(e)
     except IOError as e:
@@ -130,10 +68,8 @@ def plot_cmd(main_arguments):
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
-    try:
-        main_arguments["x_variable"], main_arguments["y_variable"] = __assign_variables_to_x_and_y_axis(main_arguments, data)
-    except (ex.InvalidVariableError, ex.NotEnoughAxesSpecifiedError) as e:
-        __error_occurred(e)
+    main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
+    main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")
 
     try:
         Plotter(data, plot_type, output, **main_arguments)
