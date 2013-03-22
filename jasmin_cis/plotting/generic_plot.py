@@ -64,6 +64,12 @@ class Generic_Plot(object):
             self.plot_args[axis + "_variable"] = self.packed_data_items[0].name()
             logging.info("Plotting " + self.plot_args[axis + "_variable"] + " on the " + axis + " axis as " + old_variable + " has length 1")
 
+        def __swap_x_and_y_variables():
+            temp =  self.plot_args["x_variable"]
+            self.plot_args["x_variable"] = self.plot_args["y_variable"]
+            self.plot_args["y_variable"] = temp
+
+
         from jasmin_cis.utils import unpack_data_object
         from iris.cube import Cube
         import logging
@@ -75,6 +81,13 @@ class Generic_Plot(object):
                 __set_variable_as_data("x")
             elif len(y_data) == 1 and len(x_data) == len(self.packed_data_items[0].data):
                 __set_variable_as_data("y")
+            else:
+                try:
+                    if (x_data == y_data).all():
+                        __swap_x_and_y_variables()
+                except AttributeError:
+                    if x_data == y_data:
+                        __swap_x_and_y_variables()
 
         return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"]) for packed_data_item in self.packed_data_items]
 
@@ -526,7 +539,7 @@ class Generic_Plot(object):
         '''
         import logging
         from jasmin_cis.exceptions import NotEnoughAxesSpecifiedError
-        #TODO DELETE THIS LINE
+
         x_variable = self.get_variable_name("x")
         y_variable = self.get_variable_name("y")
 
