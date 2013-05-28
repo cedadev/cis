@@ -68,7 +68,7 @@ class gen_doc(Command):
 
 setup(
     name='cis',
-    version='0.1',
+    version='0.6',
     description='Climate Inter-comparison Suite',
     author=' ',
     author_email=' ',
