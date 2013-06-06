@@ -66,13 +66,24 @@ class gen_doc(Command):
 # Metadata description
 #=====================
 
+# Extract long-description from README
+here = os.path.dirname(__file__)
+README = open(os.path.join(here, 'README')).read()
+
 setup(
-    name='cis',
+    name='jasmin_cis',
     version='0.6',
-    description='Climate Inter-comparison Suite',
-    author=' ',
-    author_email=' ',
+    description='JASMIN Community Inter-comparison Suite',
+    long_description=README,
+    maintainer='Stephen Pascoe',
+    maintainer_email='Stephen.Pascoe@stfc.ac.uk',
     url='http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite',
+    classifiers = [
+        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+        'Topic :: Scientific/Engineering :: Atmospheric Science',
+        'Topic :: Scientific/Engineering :: Visualization',
+        'Environment :: Console',
+        ],
 
     packages=find_packages(),
     package_data={'':['logging.conf']},
