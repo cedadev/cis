@@ -2,6 +2,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import logging
 
+plot_options = { 'title' : plt.title,
+                 'xlabel' : plt.xlabel,
+                 'ylabel' : plt.ylabel,
+                 'fontsize' : plt.rcParams.update }
+
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
@@ -418,7 +423,6 @@ class Generic_Plot(object):
         Used by 2d subclasses to format the plot
         '''
         import logging
-        from jasmin_cis.plotting.plot import plot_options
 
         logx = self.plot_args.get("logx", False)
         logy = self.plot_args.get("logy", False)
@@ -460,7 +464,6 @@ class Generic_Plot(object):
         '''
         Used by 3d subclasses to format the plot
         '''
-        from jasmin_cis.plotting.plot import plot_options
 
         logx = self.plot_args.get("logx", False)
         logy = self.plot_args.get("logy", False)

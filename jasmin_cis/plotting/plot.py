@@ -12,12 +12,7 @@ from jasmin_cis.plotting.scatter_plot import Scatter_Plot
 from jasmin_cis.plotting.comparative_scatter import Comparative_Scatter
 from jasmin_cis.plotting.histogram2d import Histogram_2D
 from jasmin_cis.plotting.histogram3d import Histogram_3D
-import matplotlib.pyplot as mpl
 
-plot_options = { 'title' : mpl.title,
-                 'xlabel' : mpl.xlabel,
-                 'ylabel' : mpl.ylabel,
-                 'fontsize' : mpl.rcParams.update }
 
 class Plotter(object):
 
@@ -96,10 +91,13 @@ class Plotter(object):
         @param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
         '''
         import logging
-        import matplotlib.pyplot as plt
         if out_filename is None:
+            import matplotlib.pyplot as plt
             plt.show()
         else:
+            import matplotlib
+            matplotlib.use("AGG")
+            import matplotlib.pyplot as plt
             logging.info("saving plot to file: " + out_filename)
             plt.savefig(out_filename) # Will overwrite if file already exists
 
