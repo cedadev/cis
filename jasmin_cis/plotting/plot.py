@@ -91,13 +91,10 @@ class Plotter(object):
         @param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
         '''
         import logging
+        import matplotlib.pyplot as plt
         if out_filename is None:
-            import matplotlib.pyplot as plt
             plt.show()
         else:
-            import matplotlib
-            matplotlib.use("AGG")
-            import matplotlib.pyplot as plt
             logging.info("saving plot to file: " + out_filename)
             plt.savefig(out_filename) # Will overwrite if file already exists
 

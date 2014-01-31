@@ -144,6 +144,10 @@ def main():
     Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
     '''
     import os
+    import matplotlib
+    # We need to set Agg before calling pyplot if no $DISPLAY environmental variable exists
+    if os.environ.get('DISPLAY') is None:
+        matplotlib.use('Agg')
     from parse import parse_args
     import logging, logging.config
     from datetime import datetime
