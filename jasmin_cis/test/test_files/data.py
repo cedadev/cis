@@ -39,6 +39,7 @@ valid_xenida_filename = make_pathname("xenida.pah9440.nc")
 valid_xenida_variable = "mass_fraction_of_cloud_liquid_water_in_air"
 
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
+valid_1d_vairable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
 valid_cis_col_file = make_pathname("cis-col-Agoufou_seasonal_average.nc")
@@ -49,6 +50,10 @@ valid_ascii_variable = 0
 
 valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
 valid_NCAR_NetCDF_RAF_variable = 'ATX'
+
+valid_zonal_time_mean_CMIP5_filename = \
+    make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
+valid_zonal_time_mean_CMIP5_variable = "toa_outgoing_shortwave_flux_assuming_clear_sky"
 
 test_directory = make_pathname('test_directory_for_parser')
 test_directory_file1 = test_directory + "/test_file_for_parser_1"
