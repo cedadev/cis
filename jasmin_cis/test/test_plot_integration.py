@@ -20,6 +20,17 @@ def should_do_scatter_plot_of_file_valid_aerosol_cci_file():
     # Remove plotted file, will throw an OSError if file was not created
     os.remove(valid_aerosol_cci_filename+'.png')
 
+@istest
+def should_do_contour_plot_of_valid_aerosol_cci_file():
+    # Actual file name: 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc
+    # Trac issue #98
+    arguments = ['plot', valid_aerosol_cci_variable+':'+valid_aerosol_cci_filename, '--output',
+                 valid_aerosol_cci_filename+'.png', '--type', 'contour']
+    main_arguments = parse_args(arguments)
+    plot_cmd(main_arguments)
+
+    # Remove plotted file, will throw an OSError if file was not created
+    os.remove(valid_aerosol_cci_filename+'.png')
 
 @istest
 def should_do_contourf_plot_of_valid_aerosol_cci_file():
