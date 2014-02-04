@@ -1,4 +1,5 @@
 from jasmin_cis.plotting.generic_plot import Generic_Plot
+import numpy
 
 class Histogram_3D(Generic_Plot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
@@ -36,7 +37,10 @@ class Histogram_3D(Generic_Plot):
             first_data_item = first_data_item.compressed()
             second_data_item = second_data_item.compressed()
 
-            self.matplotlib.hist2d(first_data_item, second_data_item, bins = [xbins, ybins], cmin = cmin, cmax = cmax, *self.mplargs, **self.mplkwargs)
+            # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
+            histogram2ddata = numpy.histogram2d(first_data_item, second_data_item, bins=[xbins, ybins])[0]
+            self.matplotlib.pcolor(xbins, ybins, histogram2ddata.T, vmin=cmin, vmax=cmax,
+                                   *self.mplargs, **self.mplkwargs)
 
             self.mplkwargs["vmin"] = vmin
             self.mplkwargs["vmax"] = vmax
@@ -62,7 +66,7 @@ class Histogram_3D(Generic_Plot):
         elif axis == "y":
             data = self.unpacked_data_items[1]["data"]
 
-        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "range"], self.plot_args[axis + "binwidth"])
+        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "range"], self.plot_args[axis + "binwidth"], self.plot_args["log" + axis])
 
         self.plot_args[axis + "range"][axis + "min"] = bin_edges.min()
         self.plot_args[axis + "range"][axis + "max"] = bin_edges.max()
