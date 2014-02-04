@@ -62,6 +62,10 @@ def plot_cmd(main_arguments):
         __error_occurred(e)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
+    except MemoryError as e:
+        __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
+                         "of data to be plotted, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
 
     main_arguments = vars(main_arguments)
     main_arguments.pop('command') # Remove the command argument now it is not needed
@@ -75,6 +79,10 @@ def plot_cmd(main_arguments):
         Plotter(data, plot_type, output, **main_arguments)
     except (ex.CISError, ValueError) as e:
         __error_occurred(e)
+    except MemoryError:
+        __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
+                         "of data to be plotted, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
 
 def info_cmd(main_arguments):
     '''
