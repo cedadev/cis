@@ -134,9 +134,33 @@ def col_cmd(main_arguments):
             __error_occurred(e)
 
 
+def subset_cmd(main_arguments):
+    '''
+    Main routine for handling calls to the subset command.
+
+    @param main_arguments:    The command line arguments (minus the subset command)
+    '''
+    from jasmin_cis.subsetting.subset import Subset
+    from jasmin_cis.utils import add_file_prefix
+
+    if len(main_arguments.datagroups) > 1:
+        __error_occurred("Subsetting can only be performed on one data group")
+    input_group = main_arguments.datagroups[0]
+
+    variable = input_group['variable']
+    filenames = input_group['filenames']
+    product = input_group["product"] if input_group["product"] is not None else None
+
+    # Add a prefix to the output file so that we have a signature to use when we read it in again
+    output_file = add_file_prefix("cis-sub-", main_arguments.output + ".nc")
+    # subset = Subset(main_arguments.datagroups, main_arguments.limits, output_file)
+    subset = Subset(variable, filenames, product, main_arguments.limits, output_file)
+    subset.subset()
+
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd,
-             'col'  : col_cmd} 
+             'col'  : col_cmd,
+             'subset': subset_cmd}
 
 def main():
     '''

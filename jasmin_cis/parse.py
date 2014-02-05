@@ -2,6 +2,7 @@
 Module used for parsing
 '''
 import argparse
+import re
 import sys
 import os.path
 from plotting.plot import Plotter
@@ -19,6 +20,8 @@ def initialise_top_parser():
     add_info_parser_arguments(info_parser)
     col_parser = subparsers.add_parser("col", help = "Perform colocation")
     add_col_parser_arguments(col_parser)
+    subset_parser = subparsers.add_parser("subset", help = "Perform subsetting")
+    add_subset_parser_arguments(subset_parser)
     return parser
 
 
@@ -91,6 +94,16 @@ def add_col_parser_arguments(parser):
     return parser
 
 
+def add_subset_parser_arguments(parser):
+    parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
+                        help = "Variable to subset with filenames and optional product separated by colon(s)")
+    parser.add_argument("subsetranges", metavar="SubsetRanges",
+                        help = "Dimension ranges to use for subsetting")
+    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
+                        help = "The filename of the output file")
+    return parser
+
+
 def expand_file_list(filenames, parser):
     '''
 
@@ -158,6 +171,25 @@ def parse_float(arg, name, parser):
             parser.error("'" + arg + "' is not a valid " + name)
             return None
 
+
+def parse_int(arg, name, parser):
+    '''
+    Tries to parse a string as an integer.
+
+    @param arg:    The arg to parse as an integer
+    @param name:   A description of the argument used for error messages
+    @param parser: The parser used to report an error message
+    @return: The parsed integer if succeeds or None if fails
+    '''
+    if arg:
+        try:
+            arg = int(arg)
+            return arg
+        except ValueError:
+            parser.error("'" + arg + "' is not a valid " + name)
+            return None
+
+
 def check_product(product, parser):
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
@@ -208,6 +240,69 @@ def get_col_samplegroup(samplegroup, parser):
     return parse_colonic_arguments(samplegroup, parser, samplegroup_options)
 
 
+def get_subset_datagroups(datagroups, parser):
+    '''
+    @param datagroups:    A list of datagroups (possibly containing colons)
+    @param parser:       The parser used to report errors
+    @return The parsed datagroups as a list of dictionaries
+    '''
+    from collections import namedtuple
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product)
+
+    return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
+
+
+def get_subset_limits(subsetlimits, parser):
+    '''
+    @param subsetlimits:  List of subset limit strings
+    @param parser:        The parser used to report errors
+    @return The parsed datagroups as a list of dictionaries
+    '''
+    from jasmin_cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
+    from jasmin_cis.subsetting.subset_limits import SubsetLimits
+
+    # Split into the limits for each dimension.
+    split_input = split_outside_brackets(subsetlimits)
+    if len(split_input) == 0:
+        parser.error("Limits for at least one dimension must be specified for subsetting")
+
+    limit_dict = {}
+    for seg in split_input:
+        # Parse out dimension name and limit value strings; the expected format is:
+        # <dim_name>=[<start_value>,<end_value>]
+        # or
+        # <dim_name>=[<start_value>]
+        match = re.match(r'(?P<dim>[^=]+)=\[(?P<start>[^],]+)(?:,(?P<end>[^],]+))?\]$', seg)
+        if match is None or match.group('dim') is None or match.group('start') is None:
+            parser.error(
+                "A dimension for subsetting does not have dimension name, start value and/or end value specified")
+        else:
+            dim_name = match.group('dim')
+            limit1 = match.group('start')
+            if match.group('end') is None:
+                limit2 = limit1
+            else:
+                limit2 = match.group('end')
+
+            # If the dimension is specified as x, y, z, or t, assume that the dimension is spatial or temporal in the
+            # obvious way. Otherwise, parse what is found as a date/time or number.
+            is_time = None
+            if dim_name.lower() == 't':
+                limit1_parsed = parse_datetime(limit1, 'subset range start date/time', parser)
+                limit2_parsed = parse_datetime(limit2, 'subset range end date/time', parser)
+                is_time = True
+            elif dim_name.lower() in ['x', 'y', 'z']:
+                limit1_parsed = parse_float(limit1, 'subset range start coordinate', parser)
+                limit2_parsed = parse_float(limit2, 'subset range start coordinate', parser)
+                is_time = False
+            else:
+                limit1_parsed = parse_as_number_or_datetime(limit1, 'subset range start coordinate', parser)
+                limit2_parsed = parse_as_number_or_datetime(limit2, 'subset range start coordinate', parser)
+            limit_dict[dim_name] = SubsetLimits(limit1_parsed, limit2_parsed, is_time)
+    return limit_dict
+
+
 def parse_colonic_arguments(inputs, parser, options, min_args=1):
     '''
     @param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
@@ -233,6 +328,40 @@ def parse_colonic_arguments(inputs, parser, options, min_args=1):
         
         input_dicts.append(input_dict)
     return input_dicts
+
+
+def split_outside_brackets(input, seps=[','], brackets={'[': ']'}):
+    """Splits an input string at separators that are not within brackets.
+    @param input: input string to parse
+    @param seps: list of separator characters - default: comma
+    @param brackets: map of open brackets to corresponding close brackets: default: square brackets
+    @return: list of strings formed by breaking the input at colons
+    """
+    match_brackets = []
+    match_bracket = None
+    in_brackets = 0
+    sep_idxs = []
+    for idx in range(0, len(input)):
+        if input[idx] in brackets:
+            if in_brackets > 0:
+                match_brackets.append(match_bracket)
+            match_bracket = brackets[input[idx]]
+            in_brackets += 1
+        elif in_brackets > 0 and input[idx] == match_bracket:
+            in_brackets -= 1
+            if in_brackets > 0:
+                match_bracket = match_brackets.pop()
+        elif input[idx] in seps and in_brackets == 0:
+            sep_idxs.append(idx)
+
+    output = []
+    start_idx = 0
+    for idx in sep_idxs:
+        output.append(input[start_idx:idx])
+        start_idx = idx + 1
+    if start_idx < len(input):
+        output.append(input[start_idx:])
+    return output
 
 
 def extract_method_and_args(arguments, parser):
@@ -420,9 +549,17 @@ def validate_col_args(arguments, parser):
     return arguments
 
 
+def validate_subset_args(arguments, parser):
+    print arguments
+    arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
+    arguments.limits = get_subset_limits(arguments.subsetranges, parser)
+    return arguments
+
+
 validators = { 'plot' : validate_plot_args,
                'info' : validate_info_args,
-               'col'  : validate_col_args}
+               'col'  : validate_col_args,
+               'subset': validate_subset_args}
 
 
 def parse_args(arguments = None):
