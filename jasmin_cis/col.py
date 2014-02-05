@@ -99,12 +99,9 @@ class Colocate(object):
         con = Colocate._get_valid_constraint_instance(con_method, con_params)
         kernel = Colocate._get_valid_kernel_instance(kern, kern_params, isinstance(data, cube.Cube))
 
-        try:
-            logging.info("Colocator: ", col_name)
-            logging.info("Constraints: ", con_method)
-            logging.info("kernel: ", kern)
-        except TypeError:
-            logging.info("Error logging colocator information.")
+        logging.info("Colocator: ", col_name)
+        logging.info("Constraints: ", con_method)
+        logging.info("kernel: ", kern)
 
         logging.info("Colocating, this could take a while...")
         t1 = time()

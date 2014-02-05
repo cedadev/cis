@@ -42,10 +42,6 @@ valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_1d_vairable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
-valid_lev20_filename = make_pathname("100101_100131_SEDE_BOKER.lev20")
-valid_lev20_variable = "AOT_440"
-valid_lev20_col_filename = make_pathname("cis-col-AERONET.nc")
-
 valid_cis_col_file = make_pathname("cis-col-Agoufou_seasonal_average.nc")
 
 valid_ascii_filename = make_pathname("my_dummy_points_with_values.txt")

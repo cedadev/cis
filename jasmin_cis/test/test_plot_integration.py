@@ -4,7 +4,7 @@ created without errors.
 """
 
 from nose.tools import istest
-from jasmin_cis.cis import plot_cmd, col_cmd
+from jasmin_cis.cis import plot_cmd
 from jasmin_cis.parse import parse_args
 from jasmin_cis.test.test_files.data import *
 
@@ -31,7 +31,6 @@ def should_do_contour_plot_of_valid_aerosol_cci_file():
 
     # Remove plotted file, will throw an OSError if file was not created
     os.remove(valid_aerosol_cci_filename+'.png')
-
 
 @istest
 def should_do_contourf_plot_of_valid_aerosol_cci_file():
@@ -94,22 +93,3 @@ def should_do_line_plot_of_valid_zonal_time_mean_cmip5_file():
 
     # Remove plotted file, will throw an OSError if file was not created
     os.remove(valid_zonal_time_mean_CMIP5_filename+'.png')
-
-
-@istest
-def should_do_colocation_and_plot_of_valid_lev20_file():
-    # Actual file name:
-    # Trac issue #139
-    arguments = ['col', valid_lev20_filename, valid_lev20_variable+':'+valid_lev20_filename+':::nn_time',
-                 '-o', 'AERONET']
-    main_arguments = parse_args(arguments)
-    col_cmd(main_arguments)
-
-    arguments = ['plot', valid_lev20_variable+':'+valid_lev20_filename+'::dotted',
-                 valid_lev20_variable+':'+valid_lev20_col_filename+'::dashed']
-    main_arguments = parse_args(arguments)
-    plot_cmd(main_arguments)
-
-    # Remove plotted file and colocated file, will throw an OSError if file was not created
-    os.remove(valid_lev20_col_filename)
-    os.remove(valid_lev20_filename+'.png')
