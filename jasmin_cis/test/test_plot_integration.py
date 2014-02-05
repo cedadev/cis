@@ -83,7 +83,7 @@ def should_do_heatmap_plot_of_valid_1d_file():
 
 @istest
 def should_do_line_plot_of_valid_zonal_time_mean_cmip5_file():
-    # Actual file name: xglnwa.pm.k8dec-k9nov.col.tm.nc
+    # Actual file name: rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc
     # Trac issue #130
     arguments = ['plot',
                  valid_zonal_time_mean_CMIP5_variable+':'+valid_zonal_time_mean_CMIP5_filename+'::::NetCDF_CF_Gridded',
