@@ -2,7 +2,6 @@ import logging
 import sys
 
 from iris import cube
-from iris.coords import DimCoord
 from iris.exceptions import IrisError
 import iris.util
 
