@@ -19,6 +19,7 @@ def initialise_top_parser():
     add_info_parser_arguments(info_parser)
     col_parser = subparsers.add_parser("col", help = "Perform colocation")
     add_col_parser_arguments(col_parser)
+    subparsers.add_parser("version", help = "Display the CIS version number")
     return parser
 
 
@@ -420,9 +421,15 @@ def validate_col_args(arguments, parser):
     return arguments
 
 
-validators = { 'plot' : validate_plot_args,
-               'info' : validate_info_args,
-               'col'  : validate_col_args}
+def validate_version_args(arguments, parser):
+    # no arguments accepted
+    return arguments
+
+
+validators = {'plot': validate_plot_args,
+              'info': validate_info_args,
+              'col': validate_col_args,
+              'version': validate_version_args}
 
 
 def parse_args(arguments = None):

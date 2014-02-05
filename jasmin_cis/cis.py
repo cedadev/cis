@@ -10,7 +10,7 @@ from jasmin_cis.exceptions import CISError
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "V0R5M3"
+__version__ = "V0R6M0"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
@@ -142,9 +142,15 @@ def col_cmd(main_arguments):
             __error_occurred(e)
 
 
-commands = { 'plot' : plot_cmd,
-             'info' : info_cmd,
-             'col'  : col_cmd} 
+def version_cmd(_main_arguments):
+    print "Using CIS version:", __version__, "("+__status__+")"
+
+
+commands = {'plot': plot_cmd,
+            'info': info_cmd,
+            'col': col_cmd,
+            'version': version_cmd}
+
 
 def main():
     '''
