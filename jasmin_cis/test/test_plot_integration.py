@@ -87,7 +87,7 @@ def should_do_line_plot_of_valid_zonal_time_mean_cmip5_file():
     # Actual file name: xglnwa.pm.k8dec-k9nov.col.tm.nc
     # Trac issue #130
     arguments = ['plot',
-                 valid_zonal_time_mean_CMIP5_filename+':'+valid_zonal_time_mean_CMIP5_filename+'::::NetCDF_CF_Gridded',
+                 valid_zonal_time_mean_CMIP5_variable+':'+valid_zonal_time_mean_CMIP5_filename+'::::NetCDF_CF_Gridded',
                  '--output', valid_zonal_time_mean_CMIP5_filename+'.png']
     main_arguments = parse_args(arguments)
     plot_cmd(main_arguments)
