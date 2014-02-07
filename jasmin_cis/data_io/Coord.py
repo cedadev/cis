@@ -124,6 +124,8 @@ class CoordList(list):
         """
         from jasmin_cis.exceptions import CoordinateNotFoundError
         coords = self.get_coords(name=name, standard_name=standard_name, long_name=long_name, attributes=attributes, axis=axis)
+        if len(coords) == 0:  # If we found none by name, try with standard name only
+            coords = self.get_coords(standard_name=name)
 
         if len(coords) > 1:
             msg = 'Expected to find exactly 1 coordinate, but found %s. They were: %s.'\

@@ -37,7 +37,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
     user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
-        if len(data_item.coords(name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
+        if len(data_item.coords(name=user_specified_variable)) == 0 and len(data_item.coords(standard_name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
             raise InvalidVariableError(user_specified_variable + " is not a valid variable")
 
     return user_specified_variable
