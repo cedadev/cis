@@ -180,7 +180,7 @@ def get_plot_datagroups(datagroups, parser):
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "itemstyle", "label", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_nothing, check_nothing, check_product)
-    return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
 def get_col_datagroups(datagroups, parser):
@@ -232,6 +232,56 @@ def parse_colonic_arguments(inputs, parser, options, min_args=1):
             except IndexError:
                 input_dict[option] = None
         
+        input_dicts.append(input_dict)
+    return input_dicts
+
+
+def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsary_args):
+    '''
+    @param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
+    @param parser:    The parser used to raise an error if one occurs
+    @param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    @param compulsary_args:   The exact number of compulsary arguments (colon separated)
+    @return A list of dictionaries containing the parsed arguments
+    '''
+    input_dicts = []
+
+    for input_string in inputs:
+        split_input = input_string.split(":")
+        if len(split_input) < compulsary_args:
+            parser.error("A mandatory data group option is missing")
+        elif len(split_input) > compulsary_args+1:
+            parser.error("Too many mandatory data groups")
+
+        input_dict = {}
+
+        option = options._asdict().keys()
+
+        # First deal with the comma separated compulsary arguments
+        for i in range(0, compulsary_args):
+            try:
+                current_option = split_input[i]
+                input_dict[option[0]] = options[i](current_option, parser)
+                option.pop(0)  # Compulsary arguments always the first in the list
+            except IndexError:
+                input_dict[option[i]] = None
+
+        # Now deal with optional arugments, if they exist. For each option loop through the list of arguments to see if
+        # it exists, if so check and add to the dictionary.
+        if len(split_input) == compulsary_args+1:
+            split_input_comma = split_input[-1].split(",")
+        else:
+            split_input_comma = []  # need to loop over options to set optional arguments to None
+
+        for i, option in enumerate(option):
+            # Make sure an entry for each option is created, even if it is None
+            input_dict[option] = None
+            for j in split_input_comma:
+                    # Split the input, [0] will be the key and [1] the value in the list
+                    split_input_variable = j.split("=")
+                    if split_input_variable[0] == option:
+                        input_dict[option] = options[i+compulsary_args](split_input_variable[1], parser)
+
         input_dicts.append(input_dict)
     return input_dicts
 
@@ -443,5 +493,5 @@ def parse_args(arguments = None):
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)
     main_args = validators[main_args.command](main_args, parser)
-        
+
     return main_args
