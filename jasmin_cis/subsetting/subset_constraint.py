@@ -112,7 +112,11 @@ class UngriddedSubsetConstraint(SubsetConstraint):
             coord_pairs.append(CoordPair(coord, []))
 
         # Filter points to include in subset.
+        is_masked = isinstance(data.data, np.ma.masked_array)
         for idx, value in enumerate(data.data.flat):
+            if is_masked and data.data.mask.flat[idx]:
+                continue
+
             include = True
             for limit in self._limits.itervalues():
                 # print limit.coord.data[idx], limit.constraint_function(limit.coord.data[idx])
@@ -149,7 +153,6 @@ class UngriddedOnGridSubsetConstraint(SubsetConstraint):
         """
         shape = data.data.shape
         ndim = len(shape)
-        print 'UngriddedOnGridSubsetConstraint: number of dimensions ', ndim, '#########################'
         #TODO Coordinates should have the same shape.
 
         # Initialise arrays for new values and slices that are included in the subset.
@@ -170,7 +173,6 @@ class UngriddedOnGridSubsetConstraint(SubsetConstraint):
                         max_indices[j] = idx[j]
                     if idx[j] < min_indices[j]:
                         min_indices[j] = idx[j]
-        print 'UngriddedOnGridSubsetConstraint: min_indices, max_indices', min_indices, max_indices
 
         # Construct slices and shape representing the region allowed by the constraints.
         slice_list = []
