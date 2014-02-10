@@ -108,7 +108,7 @@ def col_cmd(main_arguments):
     from jasmin_cis.utils import add_file_prefix
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
+    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
 
     try:
         col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, main_arguments.sampleproduct, output_file)
@@ -152,7 +152,7 @@ def subset_cmd(main_arguments):
     product = input_group["product"] if input_group["product"] is not None else None
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-sub-", main_arguments.output + ".nc")
+    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
     # subset = Subset(main_arguments.datagroups, main_arguments.limits, output_file)
     subset = Subset(variable, filenames, product, main_arguments.limits, output_file)
     subset.subset()

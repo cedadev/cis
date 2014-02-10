@@ -1,15 +1,19 @@
 import logging
 import sys
 
-from iris import cube
+from iris import cube, coords
 from iris.exceptions import IrisError
+import iris.unit
 import iris.util
 
 import jasmin_cis.exceptions as ex
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.data_io.read import read_data
-from jasmin_cis.subsetting.subset_constraint import SubsetConstraint
+from jasmin_cis.subsetting.subsetter import Subsetter
+from jasmin_cis.subsetting.subset_constraint import (GriddedSubsetConstraint, UngriddedOnGridSubsetConstraint,
+                                                     UngriddedSubsetConstraint)
 import jasmin_cis.time_util as time_util
+from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from jasmin_cis.cis import __version__
 
 
@@ -45,21 +49,46 @@ class Subset(object):
         except IOError as e:
             _fatal_error("There was an error reading one of the files: \n" + str(e))
 
-        # Perform subsetting.
+        # Set subset constraint type according to the type of the data object.
         if isinstance(data, cube.Cube):
-            # Gridded data
-            self._subset_gridded(data)
+            # Gridded data on Cube
+            subset_constraint = GriddedSubsetConstraint()
+        elif data.coords_on_grid:
+            # UngriddedData object with data lying on grid
+            subset_constraint = UngriddedOnGridSubsetConstraint()
         else:
-            raise Exception("Subsetting of ungridded data is not supported")
+            # Generic ungridded data
+            subset_constraint = UngriddedSubsetConstraint()
 
-    def _subset_gridded(self, data):
-        # Create constraint.
-        sc = SubsetConstraint()
-        limit_metadata = []
+        self._set_constraint_limits(data, subset_constraint)
+        subsetter = Subsetter()
+        subset = subsetter.subset(data, subset_constraint)
+
+        if subset is None:
+            # Constraints exclude all data.
+            raise ex.NoDataInSubsetError("Constraints exclude all data")
+        else:
+            history = "Subsetted using CIS version " + __version__ + \
+                      "\nvariable: " + str(self._variable) + \
+                      "\nfrom files: " + str(self._filenames) + \
+                      "\nusing limits: " + str(subset_constraint)
+
+            if isinstance(subset, cube.Cube):
+                subset.add_history(history)
+                iris.save(subset, self._output_file)
+            else:
+                if hasattr(subset.metadata, 'history') and len(subset.metadata.history) > 0:
+                    subset.metadata.history += '\n' + history
+                else:
+                    subset.metadata.history = history
+                write_coordinates(subset.coords(), self._output_file)
+                add_data_to_file(subset, self._output_file)
+
+    def _set_constraint_limits(self, data, subset_constraint):
         for coord in data.coords():
             # Match user-specified limits with dimensions found in data.
             limit_dim = None
-            guessed_axis = iris.util.guess_coord_axis(coord)
+            guessed_axis = self._guess_coord_axis(coord)
             guessed_axis = None if guessed_axis is None else guessed_axis.lower()
             if coord.name() in self._limits:
                 limit_dim = coord.name()
@@ -72,30 +101,34 @@ class Subset(object):
                 if limit.is_time or guessed_axis == 't':
                     # Ensure that the limits are date/times.
                     dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
-                    limit_start = time_util.convert_datetime_to_std_time(dt)
+                    limit_start = self._convert_datetime_to_coord_unit(coord, dt)
+                    # limit_start = time_util.convert_datetime_to_std_time(dt)
                     dt = parse_datetime.convert_datetime_components_to_datetime(limit.end, False)
-                    limit_end = time_util.convert_datetime_to_std_time(dt)
+                    limit_end = self._convert_datetime_to_coord_unit(coord, dt)
+                    # limit_end = time_util.convert_datetime_to_std_time(dt)
                 else:
                     # Assume to be a non-time axis.
                     limit_start = float(limit.start)
                     limit_end = float(limit.end)
-                sc.set_limit(limit_dim, limit_start, limit_end)
-                logging.info("Setting limit for dimension '%s' [%s, %s]",
-                             limit_dim, str(limit_start), str(limit_end))
-                limit_metadata.append("{}: [{}, {}]".format(limit_dim, str(limit_start), str(limit_end)))
+                subset_constraint.set_limit(limit_dim, coord, limit_start, limit_end)
 
-        # Apply constraint to data.
-        constraint = sc.make_iris_constraint()
-        subset = data.extract(constraint)
-
-        if subset is None:
-            # Constraints exclude all data.
-            raise ex.NoDataInSubsetError("Constraints exclude all data")
+    @staticmethod
+    def _guess_coord_axis(coord):
+        #TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
+        standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
+                          'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
+                          'altitude': 'Z', 'time': 'T'}
+        if isinstance(coord, iris.coords.Coord):
+            guessed_axis = iris.util.guess_coord_axis(coord)
         else:
-            history = "Subsetted using CIS version " + __version__ + \
-                      "\nvariable: " + str(self._variable) + \
-                      "\nfrom files: " + str(self._filenames) + \
-                      "\nusing limits: " + ', '.join(limit_metadata)
-            subset.add_history(history)
+            guessed_axis = standard_names.get(coord.standard_name.lower())
+        return guessed_axis
 
-            iris.save(subset, self._output_file)
+    @staticmethod
+    def _convert_datetime_to_coord_unit(coord, dt):
+        if isinstance(coord, iris.coords.Coord):
+            # The unit class is then iris.unit.Unit.
+            iris_unit = coord.units
+        else:
+            iris_unit = iris.unit.Unit(coord.units)
+        return iris_unit.date2num(dt)

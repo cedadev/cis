@@ -204,7 +204,9 @@ class MODIS_L3(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords)
+        data = UngriddedData(var, metadata, coords)
+        data.coords_on_grid = True
+        return data
 
 class MODIS_L2(AProduct):
 
@@ -650,10 +652,10 @@ class Caliop_L1(Caliop):
         return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
-class CisCol(AProduct):
+class Cis(AProduct):
 
     def get_file_signature(self):
-        return [r'cis\-col\-.*\.nc']
+        return [r'cis\-.*\.nc']
 
     def create_coords(self, filenames, usr_variable = None):
         from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata

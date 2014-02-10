@@ -208,6 +208,7 @@ class UngriddedData(LazyData):
             self._coords = CoordList([coords])
         else:
             raise ValueError("Invalid Coords type")
+        self.coords_on_grid = False
     
     @property
     def x(self):
