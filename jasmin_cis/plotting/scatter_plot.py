@@ -23,6 +23,11 @@ class Scatter_Plot(Generic_Plot):
                 else:
                     self.mplkwargs.pop("c", None)
 
+            if datafile["edgecolour"]:
+                edge_color = datafile["edgecolour"]
+            else:
+                edge_color = "None"
+
             x_coords = unpacked_data_item["x"]
 
             if unpacked_data_item.get("y", None) is not None:
@@ -35,7 +40,7 @@ class Scatter_Plot(Generic_Plot):
                 y_coords = unpacked_data_item["data"]
 
 
-            self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
+            self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = edge_color, *self.mplargs, **self.mplkwargs))
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
