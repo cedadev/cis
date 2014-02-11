@@ -178,7 +178,7 @@ def get_plot_datagroups(datagroups, parser):
     @return The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "edgecolour", "itemstyle", "label", "product"])
+    DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "edgecolor", "itemstyle", "label", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing, check_nothing, check_product)
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 

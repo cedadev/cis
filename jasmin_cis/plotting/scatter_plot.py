@@ -23,8 +23,8 @@ class Scatter_Plot(Generic_Plot):
                 else:
                     self.mplkwargs.pop("c", None)
 
-            if datafile["edgecolour"]:
-                edge_color = datafile["edgecolour"]
+            if datafile["edgecolor"]:
+                edge_color = datafile["edgecolor"]
             else:
                 edge_color = "None"
 
