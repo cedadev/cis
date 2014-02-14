@@ -139,7 +139,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
 
         subset_coords = CoordList()
         for coord in coord_pairs:
-            new_coord = Coord(np.array(coord.output, copy=False), coord.input.metadata)
+            new_coord = Coord(np.array(coord.output, dtype=coord.input.data.dtype, copy=False), coord.input.metadata)
             new_coord.metadata.shape = (len(coord.output),)
             subset_coords.append(new_coord)
         subset = UngriddedData(new_data, subset_metadata, subset_coords)
