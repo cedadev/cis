@@ -55,3 +55,6 @@ class NotEnoughAxesSpecifiedError(CISError):
 
 class InvalidSliceIndexError(CISError):
     pass
+
+class NoDataInSubsetError(CISError):
+    pass

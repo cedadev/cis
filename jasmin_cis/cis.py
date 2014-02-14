@@ -5,7 +5,7 @@ Command line interface for the Climate Intercomparison Suite (CIS)
 import sys
 import logging
 
-from jasmin_cis.exceptions import CISError
+from jasmin_cis.exceptions import CISError, NoDataInSubsetError
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ def col_cmd(main_arguments):
     from jasmin_cis.utils import add_file_prefix
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
+    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
 
     try:
         col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, main_arguments.sampleproduct, output_file)
@@ -142,6 +142,32 @@ def col_cmd(main_arguments):
             __error_occurred(e)
 
 
+def subset_cmd(main_arguments):
+    '''
+    Main routine for handling calls to the subset command.
+
+    @param main_arguments:    The command line arguments (minus the subset command)
+    '''
+    from jasmin_cis.subsetting.subset import Subset
+    from jasmin_cis.utils import add_file_prefix
+
+    if len(main_arguments.datagroups) > 1:
+        __error_occurred("Subsetting can only be performed on one data group")
+    input_group = main_arguments.datagroups[0]
+
+    variable = input_group['variable']
+    filenames = input_group['filenames']
+    product = input_group["product"] if input_group["product"] is not None else None
+
+    # Add a prefix to the output file so that we have a signature to use when we read it in again
+    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
+    subset = Subset(main_arguments.limits, output_file)
+    try:
+        subset.subset(variable, filenames, product)
+    except (NoDataInSubsetError, CISError) as exc:
+         __error_occurred(exc)
+
+
 def version_cmd(_main_arguments):
     print "Using CIS version:", __version__, "("+__status__+")"
 
@@ -149,6 +175,7 @@ def version_cmd(_main_arguments):
 commands = {'plot': plot_cmd,
             'info': info_cmd,
             'col': col_cmd,
+            'subset': subset_cmd,
             'version': version_cmd}
 
 

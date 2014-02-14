@@ -70,6 +70,8 @@ class LazyData(object):
         from iris.cube import CubeMetadata
         import numpy as np
 
+        self._data_flattened = None
+
         self.metadata = Metadata.from_CubeMetadata(metadata) if isinstance(metadata, CubeMetadata) else metadata
 
         if isinstance(data, np.ndarray):
@@ -168,6 +170,15 @@ class LazyData(object):
         # TODO remove this - it's only for testing colocation at the moment
         self._data = value
 
+    @property
+    def data_flattened(self):
+        '''Returns a 1D flattened view (or copy, if necessary) of the data.
+        '''
+        if self._data_flattened is None:
+            data = self.data
+            self._data_flattened = data.ravel()
+        return self._data_flattened
+
     def copy_metadata_from(self, other_data):
         '''
             Method to copy the metadata from one UngriddedData/Cube object to another
@@ -208,6 +219,7 @@ class UngriddedData(LazyData):
             self._coords = CoordList([coords])
         else:
             raise ValueError("Invalid Coords type")
+        self.coords_on_grid = False
     
     @property
     def x(self):
