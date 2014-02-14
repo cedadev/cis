@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc snow:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc::^:snowlabel --type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10 --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --output "O$SUBJECT.png"
+cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc snow:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc:itemstyle=^,label=snowlabel --type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10 --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"

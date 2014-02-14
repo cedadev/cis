@@ -155,17 +155,10 @@ def unpack_data_object(data_object, x_variable, y_variable):
     x = __get_coord(data_object, x_variable, data)
     y = __get_coord(data_object, y_variable, data)
 
-    try:
-        if (y == data).all() or (y == x).all(): y = None
-    except AttributeError:
-        if y == data or y == x: y = None
+    if np.array_equal(y, data) or np.array_equal(y, x):
+        y = None
 
-    try:
-        if (x == data).all():
-            data = y
-            y = None
-    except AttributeError:
-        if x == data:
+    if np.array_equal(x, data):
             data = y
             y = None
 

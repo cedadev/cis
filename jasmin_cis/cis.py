@@ -10,7 +10,7 @@ from jasmin_cis.exceptions import CISError, NoDataInSubsetError
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "V0R5M3"
+__version__ = "V0R6M0"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
@@ -37,7 +37,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
     user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
-        if len(data_item.coords(name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
+        if len(data_item.coords(name=user_specified_variable)) == 0 and len(data_item.coords(standard_name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
             raise InvalidVariableError(user_specified_variable + " is not a valid variable")
 
     return user_specified_variable
@@ -62,6 +62,10 @@ def plot_cmd(main_arguments):
         __error_occurred(e)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
+    except MemoryError as e:
+        __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
+                         "of data to be plotted, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
 
     main_arguments = vars(main_arguments)
     main_arguments.pop('command') # Remove the command argument now it is not needed
@@ -75,6 +79,10 @@ def plot_cmd(main_arguments):
         Plotter(data, plot_type, output, **main_arguments)
     except (ex.CISError, ValueError) as e:
         __error_occurred(e)
+    except MemoryError:
+        __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
+                         "of data to be plotted, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
 
 def info_cmd(main_arguments):
     '''
@@ -159,10 +167,17 @@ def subset_cmd(main_arguments):
     except (NoDataInSubsetError, CISError) as exc:
          __error_occurred(exc)
 
-commands = { 'plot' : plot_cmd,
-             'info' : info_cmd,
-             'col'  : col_cmd,
-             'subset': subset_cmd}
+
+def version_cmd(_main_arguments):
+    print "Using CIS version:", __version__, "("+__status__+")"
+
+
+commands = {'plot': plot_cmd,
+            'info': info_cmd,
+            'col': col_cmd,
+            'subset': subset_cmd,
+            'version': version_cmd}
+
 
 def main():
     '''

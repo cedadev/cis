@@ -393,9 +393,14 @@ class Generic_Plot(object):
 
         if self.is_map(): self.mplkwargs["latlon"] = True
 
+        # If data (and x, y) is one dimensional, "tri" is set to true to tell Basemap the data is unstructured
+        if self.unpacked_data_items[0]["data"].ndim == 1:
+            self.mplkwargs["tri"] = True
+
         contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
 
         self.mplkwargs.pop("latlon", None)
+        self.mplkwargs.pop("tri", None)
         
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
