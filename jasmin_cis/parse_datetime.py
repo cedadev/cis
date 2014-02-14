@@ -12,13 +12,13 @@ def _parse_datetime(dt_string):
     @raise ValueError: if the string cannot be parsed as a date/time
     """
     # Separate date and time at first character that is one of 'T', ' ' or ':'.
-    match = re.match(r'(?P<date>[^T :]+)(?:[T :](?P<time>.*)?)?$', dt_string)
-    if match is None or match.group('time') is None:
-        date_str = dt_string
-        time_components = []
-    else:
+    match = re.match(r'(?P<date>[^T :]+)(?:[T :])(?P<time>.+)$', dt_string)
+    if match is not None:
         date_str = match.group('date')
         time_components = [int(x) for x in match.group('time').split(':')]
+    else:
+        date_str = dt_string
+        time_components = []
 
     date_components = [int(x) for x in date_str.split('-')]
 
