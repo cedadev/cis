@@ -70,6 +70,8 @@ class LazyData(object):
         from iris.cube import CubeMetadata
         import numpy as np
 
+        self._data_flattened = None
+
         self.metadata = Metadata.from_CubeMetadata(metadata) if isinstance(metadata, CubeMetadata) else metadata
 
         if isinstance(data, np.ndarray):
@@ -167,6 +169,15 @@ class LazyData(object):
     def data(self, value):
         # TODO remove this - it's only for testing colocation at the moment
         self._data = value
+
+    @property
+    def data_flattened(self):
+        '''Returns a 1D flattened view (or copy, if necessary) of the data.
+        '''
+        if self._data_flattened is None:
+            data = self.data
+            self._data_flattened = data.ravel()
+        return self._data_flattened
 
     def copy_metadata_from(self, other_data):
         '''

@@ -3,18 +3,19 @@ import logging
 from collections import namedtuple
 
 import numpy as np
-from iris import Constraint
+import iris
 
 from jasmin_cis.subsetting.subset_framework import SubsetConstraintInterface
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
 
 
-class CoordLimits(namedtuple('CoordLimits', ['start', 'end', 'coord', 'constraint_function'])):
+class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
     """Holds the start and end values for subsetting limits.
+    @ivar coord: the coordinate the limit applies to
     @ivar start: subsetting limit start
     @ivar end: subsetting limit end
-    @ivar is_time: indicates whether the limits apply to a time dimension: None if not known
+    @ivar constraint_function: function determining whether the constraint is satisfied
     """
     pass
 
@@ -28,20 +29,19 @@ class SubsetConstraint(SubsetConstraintInterface):
 
     def __init__(self):
         self._limits = {}
-        print ("Created SubsetConstraint of type %s" % self.__class__.__name__)
         logging.debug("Created SubsetConstraint of type %s", self.__class__.__name__)
 
-    def set_limit(self, dim_name, coord, dim_min, dim_max):
+    def set_limit(self, coord, dim_min, dim_max):
         """Sets boundary values for a dimension to be used in subsetting.
 
-        @param dim_name: dimension name
+        @param coord: coordinate to which limit applies
         @param dim_min: lower bound on dimension or None to indicate no lower bound
         @param dim_max: upper bound on dimension or None to indicate no upper bound
         """
         if dim_min is not None or dim_max is not None:
-            logging.info("Setting limit for dimension '%s' [%s, %s]", dim_name, str(dim_min), str(dim_max))
-            self._limits[dim_name] = CoordLimits(dim_min, dim_max, coord,
-                                                 self._make_constraint_function(dim_min, dim_max))
+            logging.info("Setting limit for dimension '%s' [%s, %s]", coord.name(), str(dim_min), str(dim_max))
+            self._limits[coord.name()] = CoordLimits(coord, dim_min, dim_max,
+                                                     self._make_constraint_function(dim_min, dim_max))
 
     @staticmethod
     def _make_constraint_function(dim_min, dim_max):
@@ -77,19 +77,21 @@ class GriddedSubsetConstraint(SubsetConstraint):
         @return: iris.Constraint object
         """
         constraint = None
-        for dim_name, limits in self._limits.iteritems():
+        for coord, limits in self._limits.iteritems():
             constraint_function = limits.constraint_function
             if constraint is None:
-                constraint = Constraint(**{dim_name: constraint_function})
+                constraint = iris.Constraint(**{coord: constraint_function})
             else:
-                constraint = constraint & Constraint(**{dim_name: constraint_function})
+                constraint = constraint & iris.Constraint(**{coord: constraint_function})
         return constraint
 
     def constrain(self, data):
         """Subsets the supplied data.
 
         @param data: data to be subsetted
+        @type data: iris.cube.Cube
         @return: subsetted data
+        @rtype: iris.cube.Cube
         """
         iris_constraint = self.make_iris_constraint()
         return data.extract(iris_constraint)
@@ -113,31 +115,35 @@ class UngriddedSubsetConstraint(SubsetConstraint):
 
         # Filter points to include in subset.
         is_masked = isinstance(data.data, np.ma.masked_array)
+        missing_value = data.metadata.missing_value
         for idx, value in enumerate(data.data.flat):
-            if is_masked and data.data.mask.flat[idx]:
-                continue
+            if is_masked and value is np.ma.masked:
+                value = missing_value
+                # continue
 
             include = True
             for limit in self._limits.itervalues():
-                # print limit.coord.data[idx], limit.constraint_function(limit.coord.data[idx])
-                if not limit.constraint_function(limit.coord.data.flat[idx]):
+                if not limit.constraint_function(limit.coord.data_flattened[idx]):
                     include = False
                     break
             if include:
                 # Append coordinates and value.
-                # print 'Include point: ', idx
                 new_values.append(value)
                 for coord in coord_pairs:
-                    coord.output.append(coord.input.data.flat[idx])
+                    coord.output.append(coord.input.data_flattened[idx])
 
         # Collect output into object.
-        new_data = np.array(new_values, copy=False)
+        new_data = np.array(new_values, dtype=data.data.dtype, copy=False)
         subset_metadata = data.metadata
+        subset_metadata.shape = (len(new_values),)
+
         subset_coords = CoordList()
         for coord in coord_pairs:
             new_coord = Coord(np.array(coord.output, copy=False), coord.input.metadata)
+            new_coord.metadata.shape = (len(coord.output),)
             subset_coords.append(new_coord)
         subset = UngriddedData(new_data, subset_metadata, subset_coords)
+
         return subset
 
 

@@ -5,7 +5,7 @@ Command line interface for the Climate Intercomparison Suite (CIS)
 import sys
 import logging
 
-from jasmin_cis.exceptions import CISError
+from jasmin_cis.exceptions import CISError, NoDataInSubsetError
 
 logger = logging.getLogger(__name__)
 
@@ -153,9 +153,11 @@ def subset_cmd(main_arguments):
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
-    # subset = Subset(main_arguments.datagroups, main_arguments.limits, output_file)
-    subset = Subset(variable, filenames, product, main_arguments.limits, output_file)
-    subset.subset()
+    subset = Subset(main_arguments.limits, output_file)
+    try:
+        subset.subset(variable, filenames, product)
+    except (NoDataInSubsetError, CISError) as exc:
+         __error_occurred(exc)
 
 commands = { 'plot' : plot_cmd,
              'info' : info_cmd,
