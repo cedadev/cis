@@ -550,7 +550,6 @@ def validate_col_args(arguments, parser):
 
 
 def validate_subset_args(arguments, parser):
-    print arguments
     arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
     return arguments
