@@ -783,14 +783,12 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         """
         from jasmin_cis.exceptions import InvalidVariableError
         import iris
-        import numpy
 
         # checking if the files given actually exist
         for filename in filenames:
             with open(filename) as f: pass
 
         try:
-            print '###', variable
             cube = iris.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
             raise InvalidVariableError("Variable not found: " + str(variable) +
@@ -803,12 +801,6 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
         #  the dimension whose length is one. The above list comprehension would return a cube of
         #  shape (145, 165)
-
-        print sub_cube
-
-        for coord in sub_cube.coords():
-            print coord.name()
-            print coord.points.shape
 
         return sub_cube
 
