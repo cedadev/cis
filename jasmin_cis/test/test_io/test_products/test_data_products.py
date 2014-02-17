@@ -33,7 +33,7 @@ class ProductTests():
 
     @istest
     def test_create_coords(self):
-        valid_standard_names = ['latitude', 'longitude', 'altitude', 'time']
+        valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
         coords = self.product().create_coords([self.filename])
 
         for coord in coords:

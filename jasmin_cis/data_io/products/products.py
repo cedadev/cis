@@ -730,7 +730,7 @@ class NCAR_NetCDF_RAF(NetCDF_CF):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
         from jasmin_cis.data_io.Coord import Coord
 
-        variables = [ "LATC", "LONC", "GGALTC", "Time" ]
+        variables = [ "LATC", "LONC", "GGALTC", "Time", "PSXC" ]
         logging.info("Listing coordinates: " + str(variables))
 
         if variable is not None:
@@ -745,6 +745,7 @@ class NCAR_NetCDF_RAF(NetCDF_CF):
         time_coord = Coord(data_variables["Time"], get_metadata(data_variables["Time"]), "T")
         time_coord.convert_to_std_time()
         coords.append(time_coord)
+        coords.append(Coord(data_variables["PSXC"], get_metadata(data_variables["PSXC"]), "P"))
 
         if variable is None:
             return coords
@@ -782,12 +783,14 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         """
         from jasmin_cis.exceptions import InvalidVariableError
         import iris
+        import numpy
 
         # checking if the files given actually exist
         for filename in filenames:
             with open(filename) as f: pass
 
         try:
+            print '###', variable
             cube = iris.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
             raise InvalidVariableError("Variable not found: " + str(variable) +
@@ -800,6 +803,12 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
         #  the dimension whose length is one. The above list comprehension would return a cube of
         #  shape (145, 165)
+
+        print sub_cube
+
+        for coord in sub_cube.coords():
+            print coord.name()
+            print coord.points.shape
 
         return sub_cube
 
