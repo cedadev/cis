@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc:green:^ snow:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type comparativescatter --itemwidth 400 --logx --logy --output "O$SUBJECT.png"
+cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc:color=green,itemstyle=^ snow:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type comparativescatter --itemwidth 400 --logx --logy --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
