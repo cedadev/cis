@@ -379,13 +379,90 @@ class Caliop(AProduct):
         '''
         return []
 
-    def create_coords(self, filenames):
-        '''
-        To be implemented by subclass
-        @param filenames:
-        @return:
-        '''
-        return None
+    def create_coords(self, filenames, index_offset=0):
+        from jasmin_cis.data_io.hdf_vd import get_data
+        from jasmin_cis.data_io.hdf_vd import VDS
+        from pyhdf.error import HDF4Error
+        from jasmin_cis.data_io import hdf_sd
+        import datetime as dt
+        from jasmin_cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
+
+        variables = ['Latitude','Longitude', "Profile_Time", "Pressure"]
+        logging.info("Listing coordinates: " + str(variables))
+
+        # reading data from files
+        sdata = {}
+        for filename in filenames:
+            try:
+                sds_dict = hdf_sd.read(filename, variables)
+            except HDF4Error as e:
+                raise IOError(str(e))
+
+            for var in sds_dict.keys():
+                utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
+
+        alt_name = "altitude"
+        pres_name = "air_pressure"
+        logging.info("Additional coordinates: '" + alt_name + "'" + pres_name + "")
+
+        # work out size of data arrays
+        # the coordinate variables will be reshaped to match that.
+        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
+        #       If this is not the case, then the following line will need to be changed
+        #       to concatenate the data from all the files and not just arbitrarily pick
+        #       the altitudes from the first file.
+        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
+        len_x = alt_data.shape[0]
+
+        lat_data = hdf.read_data(sdata['Latitude'],"SD")
+        len_y = lat_data.shape[0]
+
+        new_shape = (len_x, len_y)
+
+        # altitude
+        alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
+        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
+        alt_coord = Coord(alt_data,alt_metadata)
+
+        # pressure
+        pres_data = hdf.read_data(sdata['Pressure'],"SD")
+        pres_metadata = hdf.read_metadata(sdata['Pressure'], "SD")
+        pres_metadata.shape = new_shape
+        pres_coord = Coord(pres_data, pres_metadata, 'P')
+
+        # latitude
+        lat_data = utils.expand_1d_to_2d_array(lat_data[:,index_offset],len_x,axis=1)
+        lat_metadata = hdf.read_metadata(sdata['Latitude'], "SD")
+        lat_metadata.shape = new_shape
+        lat_coord = Coord(lat_data, lat_metadata, 'Y')
+
+        # longitude
+        lon = sdata['Longitude']
+        lon_data = hdf.read_data(lon,"SD")
+        lon_data = utils.expand_1d_to_2d_array(lon_data[:,index_offset],len_x,axis=1)
+        lon_metadata = hdf.read_metadata(lon,"SD")
+        lon_metadata.shape = new_shape
+        lon_coord = Coord(lon_data, lon_metadata,'X')
+
+        #profile time, x
+        time = sdata['Profile_Time']
+        time_data = hdf.read_data(time,"SD")
+        time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
+        time_data = utils.expand_1d_to_2d_array(time_data[:,index_offset],len_x,axis=1)
+        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
+                                              units=str(cis_standard_time_unit),
+                                              calendar=cis_standard_time_unit.calendar),"T")
+
+        # create the object containing all coordinates
+        coords = CoordList()
+        coords.append(lat_coord)
+        coords.append(lon_coord)
+        coords.append(time_coord)
+        coords.append(alt_coord)
+        coords.append(pres_coord)
+
+        return coords
+
 
     def create_data_object(self, filenames, variable):
         '''
@@ -458,82 +535,7 @@ class Caliop_L2(Caliop):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
 
     def create_coords(self, filenames):
-
-        from jasmin_cis.data_io.hdf_vd import get_data
-        from jasmin_cis.data_io.hdf_vd import VDS
-        from pyhdf.error import HDF4Error
-        from jasmin_cis.data_io import hdf_sd
-        import datetime as dt
-        from jasmin_cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
-
-        variables = [ 'Latitude','Longitude', "Profile_Time"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        # reading data from files
-        sdata = {}
-        for filename in filenames:
-            try:
-                sds_dict = hdf_sd.read(filename, variables)
-            except HDF4Error as e:
-                raise IOError(str(e))
-
-            for var in sds_dict.keys():
-                utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
-
-        alt_name = "altitude"
-        logging.info("Additional coordinates: '" + alt_name + "'")
-
-        # work out size of data arrays
-        # the coordinate variables will be reshaped to match that.
-        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
-        #       If this is not the case, then the following line will need to be changed
-        #       to concatenate the data from all the files and not just arbitrarily pick
-        #       the altitudes from the first file.
-        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
-        len_x = alt_data.shape[0]
-
-        lat_data = hdf.read_data(sdata['Latitude'],"SD")
-        len_y = lat_data.shape[0]
-
-        new_shape = (len_x, len_y)
-
-        # altitude
-        alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
-        alt_coord = Coord(alt_data,alt_metadata)
-
-        # latitude
-        lat_data = utils.expand_1d_to_2d_array(lat_data[:,1],len_x,axis=1)
-        lat_metadata = hdf.read_metadata(sdata['Latitude'], "SD")
-        lat_metadata.shape = new_shape
-        lat_coord = Coord(lat_data, lat_metadata, 'Y')
-
-        # longitude
-        lon = sdata['Longitude']
-        lon_data = hdf.read_data(lon,"SD")
-        lon_data = utils.expand_1d_to_2d_array(lon_data[:,1],len_x,axis=1)
-        lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_metadata.shape = new_shape
-        lon_coord = Coord(lon_data, lon_metadata,'X')
-
-        #profile time, x
-        time = sdata['Profile_Time']
-        time_data = hdf.read_data(time,"SD")
-        time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
-        time_data = utils.expand_1d_to_2d_array(time_data[:,1],len_x,axis=1)
-        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
-                                              units=str(cis_standard_time_unit),
-                                              calendar=cis_standard_time_unit.calendar),"T")
-
-        # create the object containing all coordinates
-        coords = CoordList()
-        coords.append(lat_coord)
-        coords.append(lon_coord)
-        coords.append(time_coord)
-        coords.append(alt_coord)
-
-        return coords
-
+        return super(Caliop_L2, self).create_coords(filenames, index_offset=1)
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
@@ -557,83 +559,8 @@ class Caliop_L1(Caliop):
     def get_file_signature(self):
         return [r'CAL_LID_L1-ValStage1-V3-01.*hdf']
 
-    def create_coords(self, filenames):
-
-        from jasmin_cis.data_io.hdf_vd import get_data
-        from jasmin_cis.data_io.hdf_vd import VDS
-        from pyhdf.error import HDF4Error
-        from jasmin_cis.data_io import hdf_sd
-        import datetime as dt
-        from jasmin_cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
-
-        variables = [ 'Latitude','Longitude', "Profile_Time"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        # reading data from files
-        sdata = {}
-        for filename in filenames:
-            try:
-                sds_dict = hdf_sd.read(filename, variables)
-            except HDF4Error as e:
-                raise IOError(str(e))
-
-            for var in sds_dict.keys():
-                utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
-
-        alt_name = "altitude";
-        logging.info("Additional coordinates: '" + alt_name + "'")
-
-        # work out size of data arrays
-        # the coordinate variables will be reshaped to match that.
-        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
-        #       If this is not the case, then the following line will need to be changed
-        #       to concatenate the data from all the files and not just arbitrarily pick
-        #       the altitudes from the first file.
-        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
-        len_x = alt_data.shape[0]
-
-        lat_data = hdf.read_data(sdata['Latitude'],"SD")
-        len_y = lat_data.shape[0]
-
-        new_shape = (len_x, len_y)
-
-        # altitude
-        alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
-        alt_coord = Coord(alt_data,alt_metadata)
-
-        # latitude
-        lat_data = utils.expand_1d_to_2d_array(lat_data[:,0],len_x,axis=1)
-        lat_metadata = hdf.read_metadata(sdata['Latitude'], "SD")
-        lat_metadata.shape = new_shape
-        lat_coord = Coord(lat_data, lat_metadata, 'Y')
-
-        # longitude
-        lon = sdata['Longitude']
-        lon_data = hdf.read_data(lon,"SD")
-        lon_data = utils.expand_1d_to_2d_array(lon_data[:,0],len_x,axis=1)
-        lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_metadata.shape = new_shape
-        lon_coord = Coord(lon_data, lon_metadata,'X')
-
-        #profile time, x
-        time = sdata['Profile_Time']
-        time_data = hdf.read_data(time,"SD")
-        time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
-        time_data = utils.expand_1d_to_2d_array(time_data[:,0],len_x,axis=1)
-        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
-                                              units=str(cis_standard_time_unit),
-                                              calendar=cis_standard_time_unit.calendar),"T")
-
-        # create the object containing all coordinates
-        coords = CoordList()
-        coords.append(lat_coord)
-        coords.append(lon_coord)
-        coords.append(time_coord)
-        coords.append(alt_coord)
-
-        return coords
-
+    def offset(self):
+        return 0
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
