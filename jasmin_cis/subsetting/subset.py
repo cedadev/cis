@@ -112,7 +112,7 @@ class Subset(object):
         #TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
         standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
                           'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
-                          'altitude': 'Z', 'time': 'T'}
+                          'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
         if isinstance(coord, iris.coords.Coord):
             guessed_axis = iris.util.guess_coord_axis(coord)
         else:

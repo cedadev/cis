@@ -589,7 +589,7 @@ class Cis(AProduct):
         from jasmin_cis.data_io.Coord import Coord
         from jasmin_cis.exceptions import InvalidVariableError
 
-        variables = [ ("longitude", "x"), ("latitude","y"), ("altitude","z"), ("time","t") ]
+        variables = [ ("longitude", "x"), ("latitude","y"), ("altitude","z"), ("time","t"), ("air_pressure", "p") ]
 
         logging.info("Listing coordinates: " + str(variables))
 
