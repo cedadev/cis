@@ -835,7 +835,7 @@ class Xenida(NetCDF_CF_Gridded):
         from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
 
         cube = super(Xenida, self).create_data_object(filenames, variable)
-        cube.add_aux_factory(HybridHeightFactory(cube.coords()[5]))
+        cube.add_aux_factory(HybridHeightFactory(cube.coords()[4]))
         cube = convert_cube_time_coord_to_standard_time(cube)
 
         return cube
