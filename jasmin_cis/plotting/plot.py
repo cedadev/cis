@@ -118,13 +118,19 @@ class Plotter(object):
         @return The default plot type as a string
         '''
         from jasmin_cis.exceptions import InvalidPlotTypeError
+        from iris.cube import Cube
         import logging
         number_of_coords = 0
         for coord in data[0].coords():
             if len(coord.shape) != 1 or coord.shape[0] != 1:
                 number_of_coords += 1
         try:
-            plot_type = "line" if number_of_coords == 1 else "scatter"
+            if number_of_coords == 1:
+                plot_type = "line"
+            elif type(data[0]) is Cube:
+                plot_type = "heatmap"
+            else:
+                plot_type = "scatter"
             logging.info("No plot type specified. Plotting data as a " + plot_type)
             return plot_type
         except KeyError:
