@@ -403,7 +403,7 @@ class Caliop(AProduct):
 
         alt_name = "altitude"
         pres_name = "air_pressure"
-        logging.info("Additional coordinates: '" + alt_name + "'" + pres_name + "")
+        logging.info("Additional coordinates: '" + alt_name + "' and '" + pres_name + "'")
 
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.

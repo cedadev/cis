@@ -35,7 +35,7 @@ class Generic_Plot(object):
         self.plotting_library = self.set_plotting_library()
 
         self.set_width_and_height()
-        
+
         self.plot()
 
     def set_plotting_library(self):
@@ -139,6 +139,10 @@ class Generic_Plot(object):
         valrange[axis + "min"] = calculated_min if min_val is None else min_val
         valrange[axis + "max"] = calculated_max if max_val is None else max_val
         valrange[axis + "step"] = step
+
+        # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
+        if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
+            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
 
         return valrange
 
