@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import logging
+from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
@@ -206,9 +207,6 @@ class Generic_Plot(object):
         else:
             angle = self.plot_args[axis + "tickangle"]
             ha = "right"
-
-        if self.is_map() and self.plot_args[axis + "range"].get(axis + "step") is None:
-            self.plot_args[axis + "range"][axis + "step"] = 30
 
         if self.plot_args[axis + "range"].get(axis + "step") is not None:
             step = self.plot_args[axis + "range"][axis + "step"]
@@ -593,3 +591,60 @@ class Generic_Plot(object):
                 return "default"
         else:
             return self.plot_args[axis + "_variable"]
+
+    def auto_set_ticks(self):
+        """
+        Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
+        Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
+        vs longitude plots the ticks can come out overlapped, so an exception is included to deal with this.
+        """
+
+        y_variable = self.plot_args['y_variable'].lower()
+        x_variable = self.plot_args['x_variable'].lower()
+
+        ymin, ymax = self.matplotlib.ylim()
+        xmin, xmax = self.matplotlib.xlim()
+
+        max_x_bins = 9
+        max_y_bins = 9
+
+        xsteps = self.plot_args['xrange'].get('xstep', None)
+        ysteps = self.plot_args['yrange'].get('ystep', None)
+
+        lon_steps = [1, 3, 6, 9, 10]
+        lat_steps = [1, 3, 6, 9, 10]
+        variable_step = [1, 2, 4, 5, 10]
+
+        # We need to make a special exception for paritcularly narrow and wide plots, which will be lat vs lon
+        # preserving the aspect ratio. This gives more options for the spacing to try and find something that can use
+        # the maximum number of bins.
+        if x_variable.startswith('lon') and y_variable.startswith('lat'):
+            max_y_bins = 7  # as plots are wider rather than taller
+            if (ymax - ymin) > 4 * (xmax-xmin):
+                max_x_bins = 4
+                max_y_bins = 11
+                lon_steps = variable_step
+            elif (xmax - xmin) > 4 * (ymax - ymin):
+                max_x_bins = 14
+                max_y_bins = 4
+                lat_steps = variable_step
+
+        lat_or_lon = 'lat', 'lon'
+
+        if xsteps is None and self.plot_args['logx'] is None:
+            if self.plot_args['x_variable'].lower().startswith(lat_or_lon):
+                self.matplotlib.axes().xaxis.set_major_locator(MaxNLocator(nbins=max_x_bins, steps=lon_steps))
+            else:
+                self.matplotlib.axes().xaxis.set_major_locator(MaxNLocator(nbins=max_x_bins, steps=variable_step))
+
+            self.matplotlib.axes().xaxis.set_minor_locator(AutoMinorLocator())
+            self.matplotlib.axes().xaxis.grid(False, which='minor')
+
+        if ysteps is None and self.plot_args['logy'] is None:
+            if y_variable.startswith(lat_or_lon):
+                self.matplotlib.axes().yaxis.set_major_locator(MaxNLocator(nbins=max_y_bins, steps=lat_steps))
+            else:
+                self.matplotlib.axes().yaxis.set_major_locator(MaxNLocator(nbins=max_y_bins, steps=variable_step))
+
+            self.matplotlib.axes().yaxis.set_minor_locator(AutoMinorLocator())
+            self.matplotlib.axes().yaxis.grid(False, which='minor')

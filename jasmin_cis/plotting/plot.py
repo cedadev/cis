@@ -88,6 +88,7 @@ class Plotter(object):
         plot.format_plot()
         plot.apply_axis_limits(plot_args["xrange"], "x")
         plot.apply_axis_limits(plot_args["yrange"], "y")
+        plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename = None):
