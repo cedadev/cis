@@ -615,19 +615,22 @@ class Generic_Plot(object):
         lat_steps = [1, 3, 6, 9, 10]
         variable_step = [1, 2, 4, 5, 10]
 
+        if (xmax - xmin) < 5:
+            lon_steps = variable_step
+        if (ymax - ymin) < 5:
+            lat_steps = variable_step
+
         # We need to make a special exception for paritcularly narrow and wide plots, which will be lat vs lon
         # preserving the aspect ratio. This gives more options for the spacing to try and find something that can use
         # the maximum number of bins.
         if x_variable.startswith('lon') and y_variable.startswith('lat'):
             max_y_bins = 7  # as plots are wider rather than taller
-            if (ymax - ymin) > 4 * (xmax-xmin):
+            if (ymax - ymin) > 2.2 * (xmax-xmin):
                 max_x_bins = 4
                 max_y_bins = 11
-                lon_steps = variable_step
-            elif (xmax - xmin) > 4 * (ymax - ymin):
+            elif (xmax - xmin) > 2.2 * (ymax - ymin):
                 max_x_bins = 14
                 max_y_bins = 4
-                lat_steps = variable_step
 
         lat_or_lon = 'lat', 'lon'
 
