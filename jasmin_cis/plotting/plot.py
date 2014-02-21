@@ -122,7 +122,7 @@ class Plotter(object):
         from iris.cube import Cube
         import logging
         number_of_coords = 0
-        for coord in data[0].coords():
+        for coord in data[0].coords(dim_coords=True):
             if len(coord.shape) != 1 or coord.shape[0] != 1:
                 number_of_coords += 1
         try:

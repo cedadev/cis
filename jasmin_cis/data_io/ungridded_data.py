@@ -252,7 +252,7 @@ class UngriddedData(LazyData):
                           self.coord(standard_name='time').data.flat[index],
                           self.data.flat[index])
 
-    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
 
         @return: A list of coordinates in this UngriddedData object fitting the given criteria
