@@ -709,6 +709,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         from jasmin_cis.exceptions import InvalidVariableError
+        from iris.exceptions import CoordinateNotFoundError
         import iris
 
         # checking if the files given actually exist
@@ -722,6 +723,14 @@ class NetCDF_CF_Gridded(NetCDF_CF):
                                        "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
         except ValueError as e:
             raise IOError(e)
+
+        # Fix to create a hybrid pressure factory in Iris. More attempts may be required for different file types. This
+        # should be removed once the relevant Iris issue is resolved https://github.com/SciTools/iris/issues/933.
+        try:
+            cube.add_aux_factory(iris.aux_factory.HybridPressureFactory(
+                cube.coord(var_name="hyam"), cube.coord(var_name="hybm"), cube.coord(var_name="PS")))
+        except CoordinateNotFoundError:
+            pass
 
         sub_cube = list(cube.slices([ coord for coord in cube.coords(dim_coords=True) if coord.points.size > 1]))[0]
         #  Ensure that there are no extra dimensions which can confuse the plotting.
