@@ -72,7 +72,7 @@ README = open(os.path.join(here, 'README')).read()
 
 setup(
     name='jasmin_cis',
-    version='0.6.1',
+    version='0.6.2',
     description='JASMIN Community Inter-comparison Suite',
     long_description=README,
     maintainer='Stephen Pascoe',
