@@ -181,6 +181,10 @@ class CoordList(list):
             time = self.get_coord(standard_name='time').data.flatten()
         except CoordinateNotFoundError:
             time = empty_data
+        try:
+            pressure = self.get_coord(standard_name='air_pressure').data.flatten()
+        except CoordinateNotFoundError:
+            pressure = empty_data
 
-        return CoordList([lat, lon, alt, time ])
+        return CoordList([lat, lon, alt, time, pressure ])
 

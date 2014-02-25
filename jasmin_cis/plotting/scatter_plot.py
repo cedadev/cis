@@ -64,6 +64,10 @@ class Scatter_Plot(Generic_Plot):
         valrange[axis + "max"] = calculated_max if max_val is None else max_val
         valrange[axis + "step"] = step
 
+        # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
+        if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
+            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
+
         return valrange
 
     def format_plot(self):

@@ -44,6 +44,39 @@ def make_square_5x3_2d_cube():
     return cube
 
 
+def make_square_5x3_2d_cube_with_missing_data():
+    '''
+        Makes a well defined cube of shape 5x3 with data as follows
+        array([[1,2,3],
+               [4,M,6],
+               [7,8,M],
+               [10,11,12],
+               [M,14,15]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
+    values = np.ma.arange(15) + 1.0
+    values[4] = np.ma.masked
+    values[8] = np.ma.masked
+    values[12] = np.ma.masked
+    data = np.reshape(values, (5, 3))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    print cube.data
+
+    return cube
+
+
 def make_square_5x3_2d_cube_with_time():
     '''
         Makes a well defined cube of shape 5x3 with data as follows
@@ -199,6 +232,54 @@ def make_regular_2d_ungridded_data():
 
     coords = CoordList([x, y])
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_regular_2d_ungridded_data_with_missing_values():
+    '''
+        Makes a well defined ungridded data object of shape 5x3 with data as follows, in which M denotes a missing
+        value:
+        array([[1,2,3],
+               [4,M,6],
+               [7,8,M],
+               [10,11,12],
+               [M,14,15]])
+        and coordinates in latitude:
+        array([[-10,-10,-10],
+               [-5,-5,-5],
+               [0,0,0],
+               [5,5,5],
+               [10,10,10]])
+        longitude:
+        array([[-5,0,5],
+               [-5,0,5],
+               [-5,0,5],
+               [-5,0,5],
+               [-5,0,5]])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x_points = np.arange(-10, 11, 5)
+    y_points = np.arange(-5, 6, 5)
+    y, x = np.meshgrid(y_points, x_points)
+
+    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+    values = np.ma.arange(15) + 1.0
+    values[4] = np.ma.masked
+    values[8] = np.ma.masked
+    values[12] = np.ma.masked
+    data = np.reshape(values, (5, 3))
+
+    coords = CoordList([x, y])
+    return UngriddedData(data,
+                         Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                  units="kg m-2 s-1", missing_value=-999),
+                         coords)
 
 
 def make_regular_2d_with_time_ungridded_data():

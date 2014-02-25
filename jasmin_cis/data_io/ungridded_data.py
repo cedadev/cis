@@ -45,6 +45,8 @@ class Metadata(object):
             standard_name = 'longitude'
         elif name.lower().startswith('alt') or name.lower() == 'height':
             standard_name = 'altitude'
+        elif name.lower().startswith('pres'):
+            standard_name = 'air_pressure'
         return standard_name
 
 
@@ -250,7 +252,7 @@ class UngriddedData(LazyData):
                           self.coord(standard_name='time').data.flat[index],
                           self.data.flat[index])
 
-    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
 
         @return: A list of coordinates in this UngriddedData object fitting the given criteria

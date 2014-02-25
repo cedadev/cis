@@ -119,7 +119,6 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         for idx, value in enumerate(data.data.flat):
             if is_masked and value is np.ma.masked:
                 value = missing_value
-                # continue
 
             include = True
             for limit in self._limits.itervalues():
@@ -132,17 +131,20 @@ class UngriddedSubsetConstraint(SubsetConstraint):
                 for coord in coord_pairs:
                     coord.output.append(coord.input.data_flattened[idx])
 
-        # Collect output into object.
-        new_data = np.array(new_values, dtype=data.data.dtype, copy=False)
-        subset_metadata = data.metadata
-        subset_metadata.shape = (len(new_values),)
+        if len(new_values) > 0:
+            # Collect output into object.
+            new_data = np.array(new_values, dtype=data.data.dtype, copy=False)
+            subset_metadata = data.metadata
+            subset_metadata.shape = (len(new_values),)
 
-        subset_coords = CoordList()
-        for coord in coord_pairs:
-            new_coord = Coord(np.array(coord.output, dtype=coord.input.data.dtype, copy=False), coord.input.metadata)
-            new_coord.metadata.shape = (len(coord.output),)
-            subset_coords.append(new_coord)
-        subset = UngriddedData(new_data, subset_metadata, subset_coords)
+            subset_coords = CoordList()
+            for coord in coord_pairs:
+                new_coord = Coord(np.array(coord.output, dtype=coord.input.data.dtype, copy=False), coord.input.metadata)
+                new_coord.metadata.shape = (len(coord.output),)
+                subset_coords.append(new_coord)
+            subset = UngriddedData(new_data, subset_metadata, subset_coords)
+        else:
+            subset = None
 
         return subset
 
