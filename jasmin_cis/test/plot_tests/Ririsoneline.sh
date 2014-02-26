@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc::dashed:overiddenlabel --xlabel overiddenxlabel --title overiddentitle --itemwidth 4 --height 5 --width 10 --logx --grid --output "O$SUBJECT.png"
+cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.vprof.tm.nc:itemstyle=dashed,label=overiddenlabel --xlabel overiddenxlabel --title overiddentitle --itemwidth 4 --height 5 --width 10 --logx --grid --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"

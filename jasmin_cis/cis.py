@@ -5,12 +5,12 @@ Command line interface for the Climate Intercomparison Suite (CIS)
 import sys
 import logging
 
-from jasmin_cis.exceptions import CISError
+from jasmin_cis.exceptions import CISError, NoDataInSubsetError
 
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "V0R5M3"
+__version__ = "V0R6M0"
 __status__ = "Development"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
@@ -37,7 +37,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
     user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
-        if len(data_item.coords(name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
+        if len(data_item.coords(name=user_specified_variable)) == 0 and len(data_item.coords(standard_name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
             raise InvalidVariableError(user_specified_variable + " is not a valid variable")
 
     return user_specified_variable
@@ -62,6 +62,10 @@ def plot_cmd(main_arguments):
         __error_occurred(e)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
+    except MemoryError as e:
+        __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
+                         "of data to be plotted, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
 
     main_arguments = vars(main_arguments)
     main_arguments.pop('command') # Remove the command argument now it is not needed
@@ -75,6 +79,10 @@ def plot_cmd(main_arguments):
         Plotter(data, plot_type, output, **main_arguments)
     except (ex.CISError, ValueError) as e:
         __error_occurred(e)
+    except MemoryError:
+        __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
+                         "of data to be plotted, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
 
 def info_cmd(main_arguments):
     '''
@@ -108,7 +116,7 @@ def col_cmd(main_arguments):
     from jasmin_cis.utils import add_file_prefix
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-col-", main_arguments.output + ".nc")
+    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
 
     try:
         col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, main_arguments.sampleproduct, output_file)
@@ -134,9 +142,42 @@ def col_cmd(main_arguments):
             __error_occurred(e)
 
 
-commands = { 'plot' : plot_cmd,
-             'info' : info_cmd,
-             'col'  : col_cmd} 
+def subset_cmd(main_arguments):
+    '''
+    Main routine for handling calls to the subset command.
+
+    @param main_arguments:    The command line arguments (minus the subset command)
+    '''
+    from jasmin_cis.subsetting.subset import Subset
+    from jasmin_cis.utils import add_file_prefix
+
+    if len(main_arguments.datagroups) > 1:
+        __error_occurred("Subsetting can only be performed on one data group")
+    input_group = main_arguments.datagroups[0]
+
+    variable = input_group['variable']
+    filenames = input_group['filenames']
+    product = input_group["product"] if input_group["product"] is not None else None
+
+    # Add a prefix to the output file so that we have a signature to use when we read it in again
+    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
+    subset = Subset(main_arguments.limits, output_file)
+    try:
+        subset.subset(variable, filenames, product)
+    except (NoDataInSubsetError, CISError) as exc:
+         __error_occurred(exc)
+
+
+def version_cmd(_main_arguments):
+    print "Using CIS version:", __version__, "("+__status__+")"
+
+
+commands = {'plot': plot_cmd,
+            'info': info_cmd,
+            'col': col_cmd,
+            'subset': subset_cmd,
+            'version': version_cmd}
+
 
 def main():
     '''

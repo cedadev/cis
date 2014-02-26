@@ -88,6 +88,7 @@ class Plotter(object):
         plot.format_plot()
         plot.apply_axis_limits(plot_args["xrange"], "x")
         plot.apply_axis_limits(plot_args["yrange"], "y")
+        plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename = None):
@@ -118,13 +119,19 @@ class Plotter(object):
         @return The default plot type as a string
         '''
         from jasmin_cis.exceptions import InvalidPlotTypeError
+        from iris.cube import Cube
         import logging
         number_of_coords = 0
-        for coord in data[0].coords():
+        for coord in data[0].coords(dim_coords=True):
             if len(coord.shape) != 1 or coord.shape[0] != 1:
                 number_of_coords += 1
         try:
-            plot_type = "line" if number_of_coords == 1 else "scatter"
+            if number_of_coords == 1:
+                plot_type = "line"
+            elif type(data[0]) is Cube:
+                plot_type = "heatmap"
+            else:
+                plot_type = "scatter"
             logging.info("No plot type specified. Plotting data as a " + plot_type)
             return plot_type
         except KeyError:

@@ -33,7 +33,7 @@ class ProductTests():
 
     @istest
     def test_create_coords(self):
-        valid_standard_names = ['latitude', 'longitude', 'altitude', 'time']
+        valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
         coords = self.product().create_coords([self.filename])
 
         for coord in coords:
@@ -127,13 +127,13 @@ class TestAerosol_CCI(ProductTests):
         self.valid_variable = valid_aerosol_cci_variable
         self.product = Aerosol_CCI
 
-class TestCisCol(ProductTests):
+class TestCis(ProductTests):
 
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_cis_col_file
         self.filename = valid_cis_col_file
         self.valid_variable = 'AOT_440'
-        self.product = CisCol
+        self.product = Cis
 
 class TestNCAR_NetCDF_RAF(ProductTests):
 

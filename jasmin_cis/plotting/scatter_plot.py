@@ -23,6 +23,11 @@ class Scatter_Plot(Generic_Plot):
                 else:
                     self.mplkwargs.pop("c", None)
 
+            if datafile["edgecolor"]:
+                edge_color = datafile["edgecolor"]
+            else:
+                edge_color = "None"
+
             x_coords = unpacked_data_item["x"]
 
             if unpacked_data_item.get("y", None) is not None:
@@ -35,7 +40,7 @@ class Scatter_Plot(Generic_Plot):
                 y_coords = unpacked_data_item["data"]
 
 
-            self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs))
+            self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = edge_color, *self.mplargs, **self.mplkwargs))
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
@@ -58,6 +63,10 @@ class Scatter_Plot(Generic_Plot):
         valrange[axis + "min"] = calculated_min if min_val is None else min_val
         valrange[axis + "max"] = calculated_max if max_val is None else max_val
         valrange[axis + "step"] = step
+
+        # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
+        if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
+            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
 
         return valrange
 

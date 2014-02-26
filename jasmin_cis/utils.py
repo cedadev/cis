@@ -155,17 +155,10 @@ def unpack_data_object(data_object, x_variable, y_variable):
     x = __get_coord(data_object, x_variable, data)
     y = __get_coord(data_object, y_variable, data)
 
-    try:
-        if (y == data).all() or (y == x).all(): y = None
-    except AttributeError:
-        if y == data or y == x: y = None
+    if np.array_equal(y, data) or np.array_equal(y, x):
+        y = None
 
-    try:
-        if (x == data).all():
-            data = y
-            y = None
-    except AttributeError:
-        if x == data:
+    if np.array_equal(x, data):
             data = y
             y = None
 
@@ -176,13 +169,35 @@ def unpack_data_object(data_object, x_variable, y_variable):
             x = x.T
             y = y.T
 
+        # Check for auxillary coordinates.
+        aux_coords = False
+        for coord in data_object[0].coords(dim_coords=False):
+            aux_coords = True
+
         if no_of_dims == 2:
-            try:
-                data, x = addcyclic(data, x)
-                x, y = np.meshgrid(x, y)
-            except:
-                data, y = addcyclic(data, y)
-                y, x = np.meshgrid(y, x)
+            # If we have found some auxillary coordinates in the data and the shape of x data or y data is the same as
+            # data assume wehave a hybrid coordinate (which is two dimensional b nature. Perhaps need a more robust
+            # method for detecting this.
+            if aux_coords and (data.shape == x.shape or data.shape == y.shape):
+                # Work out which set of data needs expanding to match the coordinates of the others. Note there can only
+                # ever be one hybrid coordinate axis.
+                if y.shape == data.shape:
+                    if y[:, 0].shape == x.shape:
+                        x, _y = np.meshgrid(x, y[0, :])
+                    elif y[0, :].shape == x.shape:
+                        x, _y = np.meshgrid(x, y[:, 0])
+                elif x.shape == data.shape:
+                    if x[:, 0].shape == y.shape:
+                        y, _x = np.meshgrid(y, x[0, :])
+                    elif x[0, :].shape == y.shape:
+                        y, _x = np.meshgrid(y, x[:, 0])
+            else:
+                try:
+                    data, x = addcyclic(data, x)
+                    x, y = np.meshgrid(x, y)
+                except:
+                    data, y = addcyclic(data, y)
+                    y, x = np.meshgrid(y, x)
 
     logging.debug("Shape of x: " + str(x.shape))
     if y is not None: logging.debug("Shape of y: " + str(y.shape))

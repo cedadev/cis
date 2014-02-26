@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot RVOD_liq_water_content:"${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf" RVOD_ice_water_content:"${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf"::s:overiddenlabel --type scatteroverlay --xlabel overiddenx --ylabel overiddeny --itemwidth 200 --fontsize 15 --height 10 --width 10 --xmin=-50 --xmax 50 --ymin 0 --ymax 15000 --vmin=-0.006 --vmax 0.003 --vstep 0.003 --cbarorient vertical --grid --xaxis Latitude --yaxis Height --output "O$SUBJECT.png"
+cis plot RVOD_liq_water_content:"${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf" RVOD_ice_water_content:"${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf":itemstyle=s,label=overiddenlabel --type scatteroverlay --xlabel overiddenx --ylabel overiddeny --itemwidth 200 --fontsize 15 --height 10 --width 10 --xmin=-50 --xmax 50 --ymin 0 --ymax 15000 --vmin=-0.006 --vmax 0.003 --vstep 0.003 --cbarorient vertical --grid --xaxis Latitude --yaxis Height --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
