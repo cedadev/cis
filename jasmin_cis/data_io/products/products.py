@@ -402,8 +402,7 @@ class Caliop(AProduct):
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
         alt_name = "altitude"
-        pres_name = "air_pressure"
-        logging.info("Additional coordinates: '" + alt_name + "' and '" + pres_name + "'")
+        logging.info("Additional coordinates: '" + alt_name + "'")
 
         # work out size of data arrays
         # the coordinate variables will be reshaped to match that.
@@ -459,7 +458,11 @@ class Caliop(AProduct):
         coords.append(lon_coord)
         coords.append(time_coord)
         coords.append(alt_coord)
-        coords.append(pres_coord)
+        if pres_data.shape == alt_data.shape:
+            # For MODIS L1 this may is not be true, so skips the air pressure reading. If required for MODIS L1 then
+            # some kind of interpolation of the air pressure would be required, as it is on a different (smaller) grid
+            # than for the Lidar_Data_Altitudes.
+            coords.append(pres_coord)
 
         return coords
 
