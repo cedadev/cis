@@ -156,8 +156,8 @@ class CoordList(list):
         all_coords = self.get_standard_coords(data_len)
 
         for x in xrange(data_len):
-            points.append(HyperPoint(all_coords[0][x], all_coords[1][x], all_coords[2][x], all_coords[3][x]))
-
+            points.append(HyperPoint(lat=all_coords[0][x], lon=all_coords[1][x], alt=all_coords[2][x],
+                                     pres=all_coords[3][x], t=all_coords[4][x]))
         return points
 
     def get_standard_coords(self, data_len):
@@ -182,9 +182,9 @@ class CoordList(list):
         except CoordinateNotFoundError:
             time = empty_data
         try:
-            pressure = self.get_coord(standard_name='air_pressure').data.flatten()
+            pres = self.get_coord(standard_name='air_pressure').data.flatten()
         except CoordinateNotFoundError:
-            pressure = empty_data
+            pres = empty_data
 
-        return CoordList([lat, lon, alt, time, pressure ])
+        return CoordList([lat, lon, alt, pres, time])
 

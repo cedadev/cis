@@ -401,6 +401,18 @@ def make_regular_4d_ungridded_data():
          [ 80.  80.  80.  80.  80.]
          [ 90.  90.  90.  90.  90.]]
 
+        pressure:
+        [[  0.   0.   0.   0.   0.]
+         [ 10.  10.  10.  10.  10.]
+         [ 20.  20.  20.  20.  20.]
+         [ 30.  30.  30.  30.  30.]
+         [ 40.  40.  40.  40.  40.]
+         [ 50.  50.  50.  50.  50.]
+         [ 60.  60.  60.  60.  60.]
+         [ 70.  70.  70.  70.  70.]
+         [ 80.  80.  80.  80.  80.]
+         [ 90.  90.  90.  90.  90.]]
+
         time:
         [[1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
          [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
@@ -439,13 +451,15 @@ def make_regular_4d_ungridded_data():
     y, a = np.meshgrid(y_points,alt)
     x, a = np.meshgrid(x_points,alt)
     t, a = np.meshgrid(times,alt)
+    p = a
 
     a = Coord(a, Metadata(standard_name='altitude', units='meters'))
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+    p = Coord(p, Metadata(standard_name='air_pressure', units='Pa'))
     t = Coord(t, Metadata(standard_name='time', units='DateTime Object'))
 
-    coords = CoordList([x, y, a, t])
+    coords = CoordList([x, y, a, p, t])
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
 

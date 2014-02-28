@@ -271,7 +271,7 @@ class DummyConstraint(Constraint):
 
 class SepConstraint(Constraint):
 
-    def __init__(self, h_sep=None, a_sep=None, t_sep=None, fill_value=None):
+    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
         super(SepConstraint, self).__init__()
@@ -293,6 +293,12 @@ class SepConstraint(Constraint):
             except:
                 raise InvalidCommandLineOptionError('Seperation Constraint a_sep must be a valid float')
             self.checks.append(self.alt_constraint)
+        if p_sep is not None:
+            try:
+                self.p_sep = float(p_sep)
+            except:
+                raise InvalidCommandLineOptionError('Seperation Constraint p_sep must be a valid float')
+            self.checks.append(self.pressure_constraint)
         if t_sep is not None:
             from jasmin_cis.time_util import parse_datetimestr_delta_to_float_days
             try:
@@ -306,6 +312,9 @@ class SepConstraint(Constraint):
 
     def alt_constraint(self, point, ref_point):
         return point.alt_sep(ref_point) < self.a_sep
+
+    def pressure_constraint(self, point, ref_point):
+        return 1./self.p_sep < point.pres_sep(ref_point) < self.p_sep
 
     def horizontal_constraint(self, point, ref_point):
         return point.haversine_dist(ref_point) < self.h_sep

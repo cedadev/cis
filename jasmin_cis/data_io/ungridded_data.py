@@ -250,6 +250,7 @@ class UngriddedData(LazyData):
                           self.coord(standard_name='longitude').data.flat[index],
                           self.coord(standard_name='altitude').data.flat[index],
                           self.coord(standard_name='time').data.flat[index],
+                          self.coord(standard_name='air_pressure').data.flat[index],
                           self.data.flat[index])
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
@@ -291,7 +292,8 @@ class UngriddedData(LazyData):
         all_coords = self._coords.get_standard_coords(data_len)
 
         for i, val in enumerate(data):
-            points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
+                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
+                                         all_coords[4][i], val))
 
         return points
 
@@ -324,10 +326,12 @@ class UngriddedData(LazyData):
             #  only access those entries which the mask is False, that is for which not the mask is True...
             for i, val in enumerate(data):
                 if not data.mask[i]:
-                    points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
+                    points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
+                                             all_coords[4][i], val))
         else:
             for i, val in enumerate(data):
-                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i], val))
+                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
+                                         all_coords[4][i], val))
 
         return points
 

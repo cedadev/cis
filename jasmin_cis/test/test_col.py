@@ -76,7 +76,7 @@ class TestDifferenceColocator(ColocatorTests):
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
         sample_points = HyperPointList()
-        sample_points.append(HyperPoint(1.0, 1.0,12.0,dt.datetime(1984,8,29,8,34),25.0))
+        sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34), val=25.0))
 
         col = DifferenceColocator(diff_name='my_diff')
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), mean())
@@ -475,7 +475,7 @@ class TestSepConstraint(ConstraintTests):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
+        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, pres=50.0, t=dt.datetime(1984,8,29))
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
@@ -484,13 +484,15 @@ class TestSepConstraint(ConstraintTests):
         a_sep = 15
         # 1 day (and a little bit) time seperation
         t_sep = '1d1M'
+        # Pressure constraint is 50/40 < p_sep < 60/50
+        p_sep = 1.22
 
-        constraint = SepConstraint(h_sep = h_sep, a_sep = a_sep, t_sep = t_sep)
+        constraint = SepConstraint(h_sep=h_sep, a_sep=a_sep, p_sep=p_sep, t_sep=t_sep)
 
         # This should leave us with 9 points: [[ 22, 23, 24]
         #                                      [ 27, 28, 29]
         #                                      [ 32, 33, 34]]
-        ref_vals = np.array([22,23,24,27,28,29,32,33,34])
+        ref_vals = np.array([27.,28.,29.,32.,33.,34.])
 
         new_points = constraint.constrain_points(sample_point,ug_data_points)
         new_vals = new_points.vals
@@ -558,7 +560,7 @@ class TestSepConstraint(ConstraintTests):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0,dt.datetime(1984,8,29))
+        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984,8,29))
 
         # 1 day (and a little bit) time seperation
         constraint = SepConstraint(t_sep='1d1M')
@@ -571,3 +573,29 @@ class TestSepConstraint(ConstraintTests):
 
         eq_(ref_vals.size, new_vals.size)
         assert(np.equal(ref_vals, new_vals).all())
+
+
+    @istest
+    def test_pressure_constraint_in_4d(self):
+        from jasmin_cis.data_io.hyperpoint import HyperPoint
+        from jasmin_cis.col_implementations import SepConstraint
+        import datetime as dt
+        import numpy as np
+
+        ug_data = mock.make_regular_4d_ungridded_data()
+        ug_data_points = ug_data.get_non_masked_points()
+        sample_point = HyperPoint(0.0, 0.0, 50.0, 24.0, dt.datetime(1984,8,29))
+
+        constraint = SepConstraint(p_sep=2)
+
+        # This should leave us with 15 points:  [ 11.  12.  13.  14.  15.]
+        #                                       [ 16.  17.  18.  19.  20.]
+        #                                       [ 21.  22.  23.  24.  25.]
+        ref_vals = np.array([11.,12.,13.,14.,15.,16.,17.,18.,19.,20.,21.,22.,23.,24.,25.])
+
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(np.equal(ref_vals, new_vals).all())
+

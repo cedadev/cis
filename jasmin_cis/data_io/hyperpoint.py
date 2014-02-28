@@ -1,12 +1,13 @@
 from collections import namedtuple
 
-class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','time','val'])):
+
+class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 'air_pressure', 'time', 'val'])):
     '''
      Data type representing a point in space and time. It can contain multiple values which are stored in a list.
       We don't specify a reference time yet but when we do it should probably be here
     '''
 
-    def __new__(cls, lat=None, lon=None, alt=None, t=None, val=None):
+    def __new__(cls, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
         '''
             Small constructor for the HyperPoint named tuple to allow optional arguments
              and set-up value list.
@@ -24,7 +25,7 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         if isinstance(t,datetime.datetime):
             t = convert_datetime_to_std_time(t)
 
-        point = super(HyperPoint,cls).__new__(cls,lat,lon,alt,t,val)
+        point = super(HyperPoint, cls).__new__(cls, lat, lon, alt, pres, t, val)
 
         # Store the coordinate tuple for this point in case we need it later
         point.coord_tuple = point.get_coord_tuple()
@@ -36,7 +37,7 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
 
     def same_point_in_space(self, other):
         return ( self.latitude == other.latitude and self.longitude == other.longitude and
-                 self.altitude == other.altitude )
+                 self.altitude == other.altitude and self.air_pressure == other.air_pressure )
 
     def same_point_in_space_and_time(self, other):
         return ( self.same_point_in_space(other) and self.same_point_in_time(other) )
@@ -59,6 +60,12 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
         '''
         return (self.alt_sep(p1) > self.alt_sep(p2))
+
+    def comppres(self,p1,p2):
+        '''
+            Compares the pressure from this point to p1 and p2. Returns True if p2 is closer to self than p1
+        '''
+        return (self.pres_sep(p1) > self.pres_sep(p2))
 
     def comptime(self,p1,p2):
         '''
@@ -85,6 +92,12 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
         '''
         return abs(self.altitude - point2.altitude)
 
+    def pres_sep(self,point2):
+        '''
+            Computes the pressure ratio between two points
+        '''
+        return self.air_pressure / point2.air_pressure
+
     def furthest_point_from(self):
         '''
             Return a point on the opposite side of the globe from this point
@@ -94,7 +107,7 @@ class HyperPoint(namedtuple('HyperPoint',['latitude','longitude','altitude','tim
             furthest_lon = self.longitude - 180.0
         else:
             furthest_lon = self.longitude + 180.0
-        return HyperPoint(furthest_lat, furthest_lon, self.altitude, self.time, self.val)
+        return HyperPoint(furthest_lat, furthest_lon, self.altitude, self.air_pressure, self.time, self.val)
 
 
 class HyperPointList(list):
@@ -152,6 +165,20 @@ class HyperPointList(list):
             values = zeros(n_points)
             for i, point in enumerate(self):
                 values[i] = point.latitude
+        else:
+            values = None
+        return values
+
+    @property
+    def air_pressures(self):
+        from numpy import zeros
+
+        if self[0].longitude is not None:
+            n_points = len(self)
+
+            values = zeros(n_points)
+            for i, point in enumerate(self):
+                values[i] = point.air_pressure
         else:
             values = None
         return values
