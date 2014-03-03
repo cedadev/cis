@@ -53,19 +53,20 @@ class Coord(LazyData):
 class CoordList(list):
     """All the functionality of a standard `list` with added "Coord" context."""
 
-    def __init__(self, *args):
+    def __new__(cls, list_of_coords=None):
         """
         Given a `list` of Coords, return a CoordList instance.
 
-        @param list_of_coords: list of coordinates with which to initialise the list
         """
-        list.__init__(self, *args)
+        coord_list = list.__new__(cls, list_of_coords)
 
         # Check that all items in the incoming list are coords. Note that this checking
         # does not guarantee that a CoordList instance *always* has just coords in its list as
         # the append & __getitem__ methods have not been overridden.
-        if not all([isinstance(coord, Coord) for coord in self]):
+        if not all([isinstance(coord, Coord) for coord in coord_list]):
             raise ValueError('All items in list_of_coords must be Coord instances.')
+
+        return coord_list
 
     def append(self, other):
         """
