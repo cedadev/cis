@@ -440,14 +440,17 @@ class GriddedColocator(DefaultColocator):
 class gridded_gridded_nn(Kernel):
     def __init__(self):
         self.name = 'nearest'
+
     def get_value(self, point, data):
+        '''Not needed for gridded/gridded co-location.
         '''
-            Co-location routine using nearest neighbour algorithm optimized for gridded data.
-             This calls out to iris to do the work.
-        '''
-        from iris.analysis.interpolate import nearest_neighbour_data_value
-        return nearest_neighbour_data_value(data, point.coord_tuple)
+        return None
 
 class gridded_gridded_li(Kernel):
     def __init__(self):
         self.name = 'bilinear'
+
+    def get_value(self, point, data):
+        '''Not needed for gridded/gridded co-location.
+        '''
+        return None
