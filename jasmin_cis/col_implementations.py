@@ -368,7 +368,7 @@ class nn_horizontal(Kernel):
         return nearest_point.val[0]
 
 
-class nn_vertical(Kernel):
+class nn_altitude(Kernel):
 
     def get_value(self, point, data):
         '''
