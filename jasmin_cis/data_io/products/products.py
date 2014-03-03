@@ -1,11 +1,12 @@
 import logging
 
+import iris
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+import jasmin_cis.exceptions
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
-import numpy as np
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -689,17 +690,15 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         # We don't know of any 'standard' netCDF CF model data yet...
         return []
 
-    def create_coords(self, filenames, variable = None):
-        # TODO Expand coordinates
-        # For gridded data sets this will actually return coordinates which are too short
-        #  we need to think about how to expand them here
+    def create_coords(self, filenames, variable=None):
+        """Reads the coordinates on which a variable depends.
+        Note: This calls create_data_object because the coordinates are returned as a Cube.
+        @param filenames: list of names of files from which to read coordinates
+        @param variable: name of variable for which the coordinates are required
+                         (optional if file contains only one cube)
+        @return: iris.cube.Cube
         """
-
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
-        return super(NetCDF_CF_Gridded, self).create_coords(filenames, variable)
+        return self._create_cube(filenames, variable, False)
 
     def create_data_object(self, filenames, variable):
         """
@@ -708,11 +707,17 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         @param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
         @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
-        from jasmin_cis.exceptions import InvalidVariableError
-        from iris.exceptions import CoordinateNotFoundError
-        import iris
+        return self._create_cube(filenames, variable, True)
 
-        # checking if the files given actually exist
+    def _create_cube(self, filenames, variable, remove_length_one_dimensions):
+        """Creates a cube for the specified variable.
+        @param filenames: List of filenames to read coordinates from
+        @param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
+        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        """
+        from jasmin_cis.exceptions import InvalidVariableError
+
+        # Check if the files given actually exist.
         for filename in filenames:
             with open(filename) as f: pass
 
@@ -729,7 +734,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         try:
             cube.add_aux_factory(iris.aux_factory.HybridPressureFactory(
                 cube.coord(var_name="hyam"), cube.coord(var_name="hybm"), cube.coord(var_name="PS")))
-        except CoordinateNotFoundError:
+        except iris.exceptions.CoordinateNotFoundError:
             pass
 
         sub_cube = list(cube.slices([ coord for coord in cube.coords(dim_coords=True) if coord.points.size > 1]))[0]
@@ -739,6 +744,56 @@ class NetCDF_CF_Gridded(NetCDF_CF):
         #  shape (145, 165)
 
         return sub_cube
+
+
+class DisplayConstraint(iris.Constraint):
+    """Variant of iris.Constraint with a string value that can be displayed.
+    """
+    def __init__(self, *args, **kwargs):
+        sc_kwargs = kwargs.copy()
+        self.display = str(sc_kwargs.get('display', None))
+        if self.display is not None:
+            del sc_kwargs['display']
+        super(DisplayConstraint, self).__init__(*args, **sc_kwargs)
+
+    def __str__(self):
+        if self.display is not None:
+            return self.display
+        else:
+            return super(DisplayConstraint, self).__str__()
+
+
+class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
+    """Reads gridded netCDF identifying variable by variable name.
+    """
+    def get_file_signature(self):
+        # Generic product class so no signature.
+        return []
+
+    def create_coords(self, filenames, variable=None):
+        """Reads the coordinates on which a variable depends.
+        Note: This calls create_data_object because the coordinates are returned as a Cube.
+        @param filenames: list of names of files from which to read coordinates
+        @param variable: name of variable for which the coordinates are required
+                         (optional if file contains only one cube)
+        @return: iris.cube.Cube
+        """
+        variable_constraint = None
+        if variable is not None:
+            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
+        return super(NetCDFGriddedByVariableName, self).create_coords(filenames, variable_constraint)
+
+    def create_data_object(self, filenames, variable):
+        """Reads the data for a variable.
+        @param filenames: list of names of files from which to read data
+        @param variable: (optional) name of variable; if None, the file(s) must contain data for only one cube
+        @return: iris.cube.Cube
+        """
+        variable_constraint = None
+        if variable is not None:
+            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
+        return super(NetCDFGriddedByVariableName, self).create_data_object(filenames, variable_constraint)
+
 
 class Xglnwa_vprof(NetCDF_CF_Gridded):
 
