@@ -402,8 +402,8 @@ def make_regular_4d_ungridded_data():
          [ 90.  90.  90.  90.  90.]]
 
         pressure:
-        [[  0.   0.   0.   0.   0.]
-         [ 10.  10.  10.  10.  10.]
+        [[  4.   4.   4.   4.   4.]
+         [ 16.  16.  16.  16.  16.]
          [ 20.  20.  20.  20.  20.]
          [ 30.  30.  30.  30.  30.]
          [ 40.  40.  40.  40.  40.]
@@ -452,6 +452,8 @@ def make_regular_4d_ungridded_data():
     x, a = np.meshgrid(x_points,alt)
     t, a = np.meshgrid(times,alt)
     p = a
+    p[0,:] = 4
+    p[1,:] = 16
 
     a = Coord(a, Metadata(standard_name='altitude', units='meters'))
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))

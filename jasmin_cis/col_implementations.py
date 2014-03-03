@@ -314,7 +314,7 @@ class SepConstraint(Constraint):
         return point.alt_sep(ref_point) < self.a_sep
 
     def pressure_constraint(self, point, ref_point):
-        return 1./self.p_sep < point.pres_sep(ref_point) < self.p_sep
+        return point.pres_sep(ref_point) < self.p_sep
 
     def horizontal_constraint(self, point, ref_point):
         return point.haversine_dist(ref_point) < self.h_sep
@@ -379,6 +379,20 @@ class nn_altitude(Kernel):
         nearest_point = data[0]
         for data_point in data[1:]:
             if point.compalt(nearest_point, data_point): nearest_point = data_point
+        return nearest_point.val[0]
+
+
+class nn_pressure(Kernel):
+
+    def get_value(self, point, data):
+        '''
+            Colocation using nearest neighbours in pressure, where both points and
+              data are a list of HyperPoints. The default point is the first point.
+        '''
+        if len(data) == 0: raise ValueError
+        nearest_point = data[0]
+        for data_point in data[1:]:
+            if point.comppres(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
 
 

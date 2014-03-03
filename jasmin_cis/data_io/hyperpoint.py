@@ -94,9 +94,12 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
 
     def pres_sep(self,point2):
         '''
-            Computes the pressure ratio between two points
+            Computes the pressure ratio between two points, this is always >= 1.
         '''
-        return self.air_pressure / point2.air_pressure
+        if self.air_pressure > point2.air_pressure:
+            return self.air_pressure / point2.air_pressure
+        else:
+            return point2.air_pressure / self.air_pressure
 
     def furthest_point_from(self):
         '''
