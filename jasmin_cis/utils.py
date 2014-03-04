@@ -361,3 +361,25 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     array2 = ma.array(array2, mask = intersection_mask)
 
     return array1, array2
+
+
+def index_iterator(shape):
+    """Iterates over the indexes of a multi-dimensional array of a specified shape.
+
+    The last index changes most rapidly.
+    @param shape: sequence of array dimensions
+    @return: yields tuples of array indexes
+    """
+    dim = len(shape)
+    idx = [0] * dim
+    num_iterations = 1
+    for j in range(0, dim):
+        num_iterations *= shape[j]
+
+    for iterations in range(num_iterations):
+        yield tuple(idx)
+        for j in range(dim - 1, -1, -1):
+            idx[j] += 1
+            if idx[j] < shape[j]:
+                break
+            idx[j] = 0

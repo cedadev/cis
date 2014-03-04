@@ -1,5 +1,11 @@
-from jasmin_cis.col_framework import Colocator, Constraint, Kernel
 import logging
+import iris
+import numpy as np
+from jasmin_cis.col_framework import Colocator, Constraint, Kernel
+import jasmin_cis.exceptions
+from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
+import jasmin_cis.utils
 
 
 class DefaultColocator(Colocator):
@@ -320,7 +326,6 @@ class SepConstraint(Constraint):
         return point.haversine_dist(ref_point) < self.h_sep
 
     def constrain_points(self, ref_point, data):
-        from jasmin_cis.data_io.hyperpoint import HyperPointList
         con_points = HyperPointList()
         for point in data:
             if all(check(point, ref_point) for check in self.checks):
@@ -477,3 +482,136 @@ class gridded_gridded_li(Kernel):
         '''Not needed for gridded/gridded co-location.
         '''
         return None
+
+
+class UngriddedGriddedColocator(Colocator):
+    """Performs co-location of ungridded data onto a the points of a cube.
+    """
+    def __init__(self, var_name='', var_long_name='', var_units=''):
+        super(UngriddedGriddedColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+
+    def colocate(self, points, data, constraint, kernel):
+        """
+        @param points: cube defining the sample points
+        @param data: UngriddedData object providing data to be co-located
+        @param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
+                           data based on it's internal parameters
+        @param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
+        @return: Cube of co-located data
+        """
+        import iris
+        from jasmin_cis.exceptions import ClassNotFoundError
+
+        if not isinstance(kernel, mean):
+            raise ClassNotFoundError("Expected kernel of class %s; found one of class %s", type(mean), type(kernel))
+
+        # Work out how to iterate over the cube and map to HyperPoint coordinates.
+        coord_map = self._find_standard_coords(points)
+        coords = points.dim_coords
+        shape = []
+        output_coords = []
+        for ci, coord in enumerate(coords):
+            # Only iterate over coordinates used in HyperPoint.
+            if ci in coord_map.values():
+                if coord.ndim > 1:
+                    raise NotImplementedError("Co-location of data onto a cube with a coordinate of dimension greater"
+                                              " than one is not supported (coordinate %s)", coord.name())
+                # Ensure that bounds exist.
+                if not coord.has_bounds():
+                    logging.info("Creating guessed bounds as none exist in file")
+                    coord.guess_bounds()
+                shape.append(coord.shape[0])
+                output_coords.append(coord)
+
+        if isinstance(data, UngriddedData):
+            data = data.get_non_masked_points()
+
+        # Initialise output array - fill will the FillValue
+        #TODO Should this be a masked array?
+        values = np.zeros(shape) + constraint.fill_value
+
+        logging.info("--> Co-locating...")
+
+        # Iterate over cells in cube.
+        num_cp_coords = len(HyperPoint.standard_names)
+        for indices in jasmin_cis.utils.index_iterator(shape):
+            hp_values = []
+            for hpi in xrange(num_cp_coords):
+                if coord_map.has_key(hpi):
+                    ci = coord_map[hpi]
+                    hp_values.append(coords[ci].cell(indices[ci]))
+                else:
+                    hp_values.append(None)
+            hp = HyperPoint(*hp_values)
+            print hp
+            con_points = constraint.constrain_points(hp, data)
+            print len(con_points)
+            try:
+                values[indices] = kernel.get_value(hp, con_points)
+            except ValueError:
+                pass
+
+        # Construct an output cube containing the colocated data.
+        cube = self._create_colocated_cube(points, values, output_coords)
+
+        return [cube]
+
+    def _find_standard_coords(self, cube):
+        """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
+
+        @param cube: cube among the coordinates of which to find the standard coordinates
+        @return: dict of index in HyperPoint to index in coords
+        """
+        coord_map = {}
+        coord_lookup = {}
+        for idx, coord in enumerate(cube.coords()):
+            coord_lookup[coord] = idx
+
+        for hpi, name in enumerate(HyperPoint.standard_names):
+            coords = cube.coords(standard_name=name)
+            if len(coords) > 1:
+                msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
+                       % (len(coords), ', '.join(coord.name() for coord in coords)))
+                raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
+            elif len(coords) == 1:
+                coord_map[hpi] = coord_lookup[coords[0]]
+
+        return coord_map
+
+    def _create_colocated_cube(self, src_cube, data, coords):
+        """Creates a cube using the metadata from the source cube and supplied data.
+
+        @param src_cube:
+        @param data:
+        @return:
+        """
+        dim_coords_and_dims = []
+        for idx, coord in enumerate(coords):
+            dim_coords_and_dims.append((coord, idx))
+        cube = iris.cube.Cube(data, dim_coords_and_dims=dim_coords_and_dims)
+
+        # cube = iris.cube.Cube(data, data, standard_name=None, long_name=None, var_name=None, units=None,
+        #                       attributes=None, cell_methods=None, dim_coords_and_dims=None, aux_coords_and_dims=None,
+        #                       aux_factories=None, data_manager=None)
+        return cube
+
+
+class CubeCellConstraint(Constraint):
+
+    num_standard_coords = len(HyperPoint.standard_names)
+
+    def constrain_points(self, sample_point, data):
+        con_points = HyperPointList()
+        for point in data:
+            include = True
+            for idx in xrange(CubeCellConstraint.num_standard_coords):
+                cell = sample_point[idx]
+                if cell is not None:
+                    if not cell.contains_point(point[idx]):
+                        include = False
+            if include:
+                con_points.append(point)
+        return con_points
