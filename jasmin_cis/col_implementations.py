@@ -489,6 +489,7 @@ class UngriddedGriddedColocator(Colocator):
     """
     def __init__(self, var_name='', var_long_name='', var_units=''):
         super(UngriddedGriddedColocator, self).__init__()
+        #TODO These are not used - use or remove everywhere.
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -502,20 +503,21 @@ class UngriddedGriddedColocator(Colocator):
         @param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
         @return: Cube of co-located data
         """
-        import iris
         from jasmin_cis.exceptions import ClassNotFoundError
 
         if not isinstance(kernel, mean):
             raise ClassNotFoundError("Expected kernel of class %s; found one of class %s", type(mean), type(kernel))
 
-        # Work out how to iterate over the cube and map to HyperPoint coordinates.
+        # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = self._find_standard_coords(points)
-        coords = points.dim_coords
+        coords = points.coords()
         shape = []
         output_coords = []
-        for ci, coord in enumerate(coords):
-            # Only iterate over coordinates used in HyperPoint.
-            if ci in coord_map.values():
+
+        # Find shape of coordinates to be iterated over.
+        for (hpi, ci, shi) in coord_map:
+            if ci is not None:
+                coord = coords[ci]
                 if coord.ndim > 1:
                     raise NotImplementedError("Co-location of data onto a cube with a coordinate of dimension greater"
                                               " than one is not supported (coordinate %s)", coord.name())
@@ -526,36 +528,39 @@ class UngriddedGriddedColocator(Colocator):
                 shape.append(coord.shape[0])
                 output_coords.append(coord)
 
+        src_data = data
         if isinstance(data, UngriddedData):
             data = data.get_non_masked_points()
+        else:
+            raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
 
-        # Initialise output array - fill will the FillValue
-        #TODO Should this be a masked array?
-        values = np.zeros(shape) + constraint.fill_value
+        self._fix_longitude_range(coords, data)
+
+        # Initialise output array as initially all masked, and set the appropriate fill value.
+        values = np.ma.zeros(shape)
+        values.mask = True
+        values.fill_value = constraint.fill_value
 
         logging.info("--> Co-locating...")
 
         # Iterate over cells in cube.
-        num_cp_coords = len(HyperPoint.standard_names)
         for indices in jasmin_cis.utils.index_iterator(shape):
             hp_values = []
-            for hpi in xrange(num_cp_coords):
-                if coord_map.has_key(hpi):
-                    ci = coord_map[hpi]
-                    hp_values.append(coords[ci].cell(indices[ci]))
+            for (hpi, ci, shi) in coord_map:
+                if ci is not None:
+                    hp_values.append(coords[ci].cell(indices[shi]))
                 else:
                     hp_values.append(None)
             hp = HyperPoint(*hp_values)
-            print hp
             con_points = constraint.constrain_points(hp, data)
-            print len(con_points)
+            logging.debug("UngriddedGriddedColocator: point {} number constrained points {}".format(str(hp), len(con_points)))
             try:
                 values[indices] = kernel.get_value(hp, con_points)
             except ValueError:
                 pass
 
         # Construct an output cube containing the colocated data.
-        cube = self._create_colocated_cube(points, values, output_coords)
+        cube = self._create_colocated_cube(points, src_data, values, output_coords, constraint.fill_value)
 
         return [cube]
 
@@ -563,13 +568,14 @@ class UngriddedGriddedColocator(Colocator):
         """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
 
         @param cube: cube among the coordinates of which to find the standard coordinates
-        @return: dict of index in HyperPoint to index in coords
+        @return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
         """
-        coord_map = {}
+        coord_map = []
         coord_lookup = {}
         for idx, coord in enumerate(cube.coords()):
             coord_lookup[coord] = idx
 
+        shape_idx = 0
         for hpi, name in enumerate(HyperPoint.standard_names):
             coords = cube.coords(standard_name=name)
             if len(coords) > 1:
@@ -577,33 +583,93 @@ class UngriddedGriddedColocator(Colocator):
                        % (len(coords), ', '.join(coord.name() for coord in coords)))
                 raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
             elif len(coords) == 1:
-                coord_map[hpi] = coord_lookup[coords[0]]
-
+                coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
+                shape_idx += 1
+            else:
+                coord_map.append((hpi, None, None))
         return coord_map
 
-    def _create_colocated_cube(self, src_cube, data, coords):
+    def _find_longitude_range(self, coords):
+        """Finds the start of the longitude range, assumed to be either 0,360 or -180,180
+        @param coords: coordinates to check
+        @return: starting value for longitude range or None if no longitude coordinate found
+        """
+        low = None
+        for coord in coords:
+            if coord.standard_name == 'longitude':
+                low = 0.0
+                min_val = coord.points.min()
+                if min_val < 0.0:
+                    low = -180.0
+        return low
+
+    def _fix_longitude_range(self, coords, data):
+        """
+        @param coords: coordinates for grid on which to colocate
+        @param data: HyperPointList of data to fix
+        """
+        range_start = self._find_longitude_range(coords)
+        if range_start is not None:
+            range_end = range_start + 360.0
+            for idx, point in enumerate(data):
+                modified = False
+                if point.longitude < range_start:
+                    new_long = point.longitude + 360.0
+                    modified = True
+                elif point.longitude > range_end:
+                    new_long = point.longitude - 360.0
+                    modified = True
+                if modified:
+                    new_point = HyperPoint(point[0], new_long, point[2], point[3], point[4], point[5][0])
+                    data[idx] = new_point
+
+    def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.
 
-        @param src_cube:
-        @param data:
-        @return:
+        @param src_cube: cube of sample points
+        @param src_data: ungridded data that was to be colocated
+        @param data: colocated data values
+        @param coords: coordinates for output cube
+        @param fill_value: value that has been used as the fill value in data
+        @return: cube of colocated data
         """
         dim_coords_and_dims = []
         for idx, coord in enumerate(coords):
             dim_coords_and_dims.append((coord, idx))
-        cube = iris.cube.Cube(data, dim_coords_and_dims=dim_coords_and_dims)
-
-        # cube = iris.cube.Cube(data, data, standard_name=None, long_name=None, var_name=None, units=None,
+        metadata = src_data.metadata
+        metadata.missing_value = fill_value
+        cube = iris.cube.Cube(data, standard_name=src_data.standard_name,
+                              long_name=src_data.long_name,
+                              var_name=metadata._name,
+                              units=src_data.units,
+                              dim_coords_and_dims=dim_coords_and_dims)
+        #TODO Check if any other keyword arguments should be set:
+        # cube = iris.cube.Cube(data, standard_name=None, long_name=None, var_name=None, units=None,
         #                       attributes=None, cell_methods=None, dim_coords_and_dims=None, aux_coords_and_dims=None,
         #                       aux_factories=None, data_manager=None)
         return cube
 
 
 class CubeCellConstraint(Constraint):
-
+    """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
+    """
     num_standard_coords = len(HyperPoint.standard_names)
 
+    def __init__(self, fill_value=None):
+        super(CubeCellConstraint, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
+                    'Cube Cell Constraint fill_value must be a valid float')
+
     def constrain_points(self, sample_point, data):
+        """Returns HyperPoints lying within a cell.
+        @param sample_point: cell containing a sample point
+        @param data: list of HyperPoints to check
+        @return: HyperPointList of points found within cell
+        """
         con_points = HyperPointList()
         for point in data:
             include = True
