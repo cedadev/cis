@@ -89,9 +89,16 @@ def add_info_parser_arguments(parser):
 
 
 def add_col_parser_arguments(parser):
-    parser.add_argument("samplegroup", metavar = "SampleGroup", help = "A string of the format filename:variable:product where the variable and product are optional")
-    parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variable to colocate with filenames and other options split by a colon")
-    parser.add_argument("-o", "--output", metavar = "Output filename", default = "out", nargs = "?", help = "The filename of the output file for the plot image")
+    parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variables and files to colocate, "
+                        "which needs to be entered in the format variable:filename[:product], with multiple files to "
+                        "colocate separated by spaces.")
+    parser.add_argument("samplegroup", metavar = "SampleGroup", help = "A filename with the points to colocate onto. "
+                        "Additional options are variable, colocator, constraint, kernel and product, entered as "
+                        "keyword=value. For example filename:variable=var1,kernel=nn_altitude.")
+    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?", help="The "
+                        "filename of the output file containing the colocated data. The name specified will be "
+                        "prefixed with \"cis-\" and suffixed with \".nc\" so that cis can recognise it when using the "
+                        "file for further operations.")
     return parser
 
 
@@ -222,10 +229,10 @@ def get_col_datagroups(datagroups, parser):
     @return The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "colocator", "constraint", "kernel", "product"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, extract_method_and_args, extract_method_and_args, extract_method_and_args, check_product)
+    DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "product"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product)
 
-    return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
 def get_col_samplegroup(samplegroup, parser):
@@ -235,10 +242,10 @@ def get_col_samplegroup(samplegroup, parser):
     @return The parsed samplegroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable", "product"])
-    samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, check_product)
+    DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable", "colocator", "constraint", "kernel", "product"])
+    samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args, extract_method_and_args, extract_method_and_args, check_product)
 
-    return parse_colonic_arguments(samplegroup, parser, samplegroup_options)
+    return parse_colon_and_comma_separated_arguments(samplegroup, parser, samplegroup_options, compulsary_args=1)[0]
 
 
 def get_subset_datagroups(datagroups, parser):
@@ -364,7 +371,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
         # Now deal with optional arugments, if they exist. For each option loop through the list of arguments to see if
         # it exists, if so check and add to the dictionary.
         if len(split_input) == compulsary_args+1:
-            split_input_comma = split_input[-1].split(",")
+            split_input_comma = split_outside_brackets(split_input[-1])
         else:
             split_input_comma = []  # need to loop over options to set optional arguments to None
 
@@ -373,7 +380,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
             input_dict[option] = None
             for j in split_input_comma:
                     # Split the input, [0] will be the key and [1] the value in the list
-                    split_input_variable = j.split("=")
+                    split_input_variable = split_outside_brackets(j, '=')
                     if split_input_variable[0] == option:
                         input_dict[option] = options[i+compulsary_args](split_input_variable[1], parser)
 
@@ -420,11 +427,31 @@ def extract_method_and_args(arguments, parser):
     if not arguments:
         method_and_args = None
     else:
-        elements = arguments.split(',')
+        elements = multi_split(arguments, ['[', ',', ']'])
         method_name = elements[0]
         args = elements[1:] if len(elements) > 1 else []
         method_and_args = ( method_name, parse_key_val_list(args) )
     return method_and_args
+
+
+def multi_split(s, seps):
+    """Does a string split for multiple separators, and removes any blanks
+    @param s: input string to parse
+    @param seps: separators to use - the order of these matter
+    """
+    res = [s]
+    for sep in seps:
+        # For each separator perform the split, and append to res
+        s, res = res, []
+        for seq in s:
+            res += seq.split(sep)
+
+    for i in res:
+        # Remove empty strings
+        if not i:
+            res.pop(res.index(i))
+
+    return res
 
 
 def check_nothing(item, parser):
@@ -585,12 +612,12 @@ def validate_col_args(arguments, parser):
     Checks that the product is valid if specified
     '''
     # Note: Sample group is put into a list as parse_colonic_arguments expects a list. Samplegroup will only ever be one argument though
-    samplegroup = get_col_samplegroup([arguments.samplegroup], parser)
+    arguments.samplegroup = get_col_samplegroup([arguments.samplegroup], parser)
 
     # Take the three parts out of the 0th samplegroup. Note: Due to the reason stated above, there will only ever be one samplegroup
-    arguments.samplefiles = samplegroup[0]["filenames"]
-    arguments.samplevariable = samplegroup[0]["variable"] if samplegroup[0]["variable"] is not "" else None
-    arguments.sampleproduct = samplegroup[0]["product"]
+    arguments.samplefiles = arguments.samplegroup["filenames"]
+    arguments.samplevariable = arguments.samplegroup["variable"] if arguments.samplegroup["variable"] is not "" else None
+    arguments.sampleproduct = arguments.samplegroup["product"]
     arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
 
     return arguments
