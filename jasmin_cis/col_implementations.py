@@ -1,5 +1,6 @@
 from jasmin_cis.col_framework import Colocator, Constraint, Kernel
 import logging
+from utils import parse_distance_with_units_to_float_km, parse_distance_with_units_to_float_m
 
 
 class DefaultColocator(Colocator):
@@ -282,16 +283,10 @@ class SepConstraint(Constraint):
                 raise InvalidCommandLineOptionError('Seperation Constraint fill_value must be a valid float')
         self.checks = []
         if h_sep is not None:
-            try:
-                self.h_sep = float(h_sep)
-            except ValueError:
-                raise InvalidCommandLineOptionError('Seperation Constraint h_sep must be a valid float')
+            self.h_sep = parse_distance_with_units_to_float_km(h_sep)
             self.checks.append(self.horizontal_constraint)
         if a_sep is not None:
-            try:
-                self.a_sep = float(a_sep)
-            except:
-                raise InvalidCommandLineOptionError('Seperation Constraint a_sep must be a valid float')
+            self.a_sep = parse_distance_with_units_to_float_m(a_sep)
             self.checks.append(self.alt_constraint)
         if p_sep is not None:
             try:
