@@ -145,6 +145,12 @@ def test_split_into_float_and_units():
 
 
 @istest
+def test_split_into_float_and_units_with_spaces():
+    eq_(split_into_float_and_units('10 km')['value'], 10)
+    eq_(split_into_float_and_units('10 km')['units'], 'km')
+
+
+@istest
 def test_split_into_float_and_units_with_full_float():
     eq_(split_into_float_and_units('12.3e4uM')['value'], 12.3e4)
     eq_(split_into_float_and_units('12.3e4uM')['units'], 'uM')
