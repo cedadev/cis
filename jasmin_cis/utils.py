@@ -447,3 +447,11 @@ def split_into_float_and_units(measurement):
         measurement_units = [None]
 
     return {'value': float(measurement_value[0]), 'units': measurement_units[0]}
+
+
+def get_class_name(cls):
+    """Returns the qualified class name of a class.
+    @param cls: class
+    @return: class name
+    """
+    return cls.__module__ + '.' + cls.__name__

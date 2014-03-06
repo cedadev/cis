@@ -7,6 +7,7 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
       We don't specify a reference time yet but when we do it should probably be here
     '''
     standard_names = ['latitude', 'longitude', 'altitude', 'air_pressure', 'time']
+    number_standard_names = len(standard_names)
 
     def __new__(cls, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
         '''

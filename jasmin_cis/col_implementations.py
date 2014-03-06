@@ -1,7 +1,8 @@
 import logging
 import iris
 import numpy as np
-from jasmin_cis.col_framework import Colocator, Constraint, Kernel
+from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
+                                      IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
@@ -25,7 +26,7 @@ class DefaultColocator(Colocator):
         @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
         @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
                             based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
+        @param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
         @return: A single LazyData object
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
@@ -77,7 +78,7 @@ class AverageColocator(Colocator):
         @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
         @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
                             based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value - This
+        @param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value - This
                             should be full_average - no other kernels currently return multiple values
         @return: One LazyData object for the mean of the constrained values, one for the standard deviation and another
                     for the number of points in the constrained set for which the mean was calculated
@@ -275,7 +276,7 @@ class DummyConstraint(Constraint):
         return data
 
 
-class SepConstraint(Constraint):
+class SepConstraint(PointConstraint):
 
     def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
@@ -285,7 +286,7 @@ class SepConstraint(Constraint):
             try:
                 self.fill_value = float(fill_value)
             except ValueError:
-                raise InvalidCommandLineOptionError('Seperation Constraint fill_value must be a valid float')
+                raise InvalidCommandLineOptionError('Separation Constraint fill_value must be a valid float')
         self.checks = []
         if h_sep is not None:
             self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
@@ -297,7 +298,7 @@ class SepConstraint(Constraint):
             try:
                 self.p_sep = float(p_sep)
             except:
-                raise InvalidCommandLineOptionError('Seperation Constraint p_sep must be a valid float')
+                raise InvalidCommandLineOptionError('Separation Constraint p_sep must be a valid float')
             self.checks.append(self.pressure_constraint)
         if t_sep is not None:
             from jasmin_cis.time_util import parse_datetimestr_delta_to_float_days
@@ -451,8 +452,11 @@ class GriddedColocator(DefaultColocator):
         import iris
         from jasmin_cis.exceptions import ClassNotFoundError
 
-        if not isinstance(kernel, gridded_gridded_nn) and not isinstance(kernel, gridded_gridded_li):
-            raise ClassNotFoundError("...")
+        if not (isinstance(kernel, gridded_gridded_nn) or isinstance(kernel, gridded_gridded_li)):
+            raise ClassNotFoundError("Expected kernel of one of classes {}; found one of class {}".format(
+                str([jasmin_cis.utils.get_class_name(gridded_gridded_nn),
+                    jasmin_cis.utils.get_class_name(gridded_gridded_li)]),
+                    jasmin_cis.utils.get_class_name(type(kernel))))
 
         new_data = iris.analysis.interpolate.regrid(data, points, mode=kernel.name)#, **kwargs)
 
@@ -499,8 +503,17 @@ class UngriddedGriddedColocator(Colocator):
         """
         from jasmin_cis.exceptions import ClassNotFoundError
 
-        if not isinstance(kernel, mean):
-            raise ClassNotFoundError("Expected kernel of class %s; found one of class %s", type(mean), type(kernel))
+        # Constraint must be appropriate for gridded sample.
+        if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)):
+            raise ClassNotFoundError("Expected constraint of subclass of one of {}; found one of class {}".format(
+                str([jasmin_cis.utils.get_class_name(CellConstraint),
+                     jasmin_cis.utils.get_class_name(IndexedConstraint)]),
+                jasmin_cis.utils.get_class_name(type(constraint))))
+
+        # Only support the mean kernel currently.
+        # if not isinstance(kernel, mean):
+        #     raise ClassNotFoundError("Expected kernel of class {}; found one of class {}".format(
+        #         jasmin_cis.utils.get_class_name(mean), jasmin_cis.utils.get_class_name(type(kernel))))
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = self._find_standard_coords(points)
@@ -530,6 +543,12 @@ class UngriddedGriddedColocator(Colocator):
 
         self._fix_longitude_range(coords, data)
 
+        # Create index if constraint supports it.
+        indexed_constraint = isinstance(constraint, IndexedConstraint)
+        if indexed_constraint:
+            logging.info("--> Indexing data...")
+            constraint.index_data(coords, data, coord_map)
+
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = np.ma.zeros(shape)
         values.mask = True
@@ -538,20 +557,36 @@ class UngriddedGriddedColocator(Colocator):
         logging.info("--> Co-locating...")
 
         # Iterate over cells in cube.
+        num_cells = np.product(shape)
+        cell_count = 0
+        cell_total = 0
         for indices in jasmin_cis.utils.index_iterator(shape):
-            hp_values = []
+            hp_values = [None] * HyperPoint.number_standard_names
+            hp_cell_values = [None] * HyperPoint.number_standard_names
             for (hpi, ci, shi) in coord_map:
                 if ci is not None:
-                    hp_values.append(coords[ci].cell(indices[shi]))
-                else:
-                    hp_values.append(None)
+                    hp_values[hpi] = coords[ci].points[indices[shi]]
+                    hp_cell_values[hpi] = coords[ci].cell(indices[shi])
+
+            hp_cell = HyperPoint(*hp_cell_values)
             hp = HyperPoint(*hp_values)
-            con_points = constraint.constrain_points(hp, data)
-            logging.debug("UngriddedGriddedColocator: point {} number constrained points {}".format(str(hp), len(con_points)))
+            if indexed_constraint:
+                arg = indices
+            else:
+                arg = hp_cell
+            con_points = constraint.constrain_points(arg, data)
+            # logging.debug("UngriddedGriddedColocator: point {} number constrained points {}".format(str(hp), len(con_points)))
             try:
                 values[indices] = kernel.get_value(hp, con_points)
             except ValueError:
                 pass
+
+            # Log progress periodically.
+            cell_count += 1
+            cell_total += 1
+            if cell_count == 10000:
+                logging.info("    Processed %d points of %d (%d%%)", cell_total, num_cells, int(cell_total * 100 / num_cells))
+                cell_count = 0
 
         # Construct an output cube containing the colocated data.
         cube = self._create_colocated_cube(points, src_data, values, output_coords, constraint.fill_value)
@@ -644,11 +679,9 @@ class UngriddedGriddedColocator(Colocator):
         return cube
 
 
-class CubeCellConstraint(Constraint):
+class CubeCellConstraint(CellConstraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
     """
-    num_standard_coords = len(HyperPoint.standard_names)
-
     def __init__(self, fill_value=None):
         super(CubeCellConstraint, self).__init__()
         if fill_value is not None:
@@ -660,14 +693,14 @@ class CubeCellConstraint(Constraint):
 
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.
-        @param sample_point: cell containing a sample point
+        @param sample_point: HyperPoint of cells defining sample region
         @param data: list of HyperPoints to check
         @return: HyperPointList of points found within cell
         """
         con_points = HyperPointList()
         for point in data:
             include = True
-            for idx in xrange(CubeCellConstraint.num_standard_coords):
+            for idx in xrange(HyperPoint.num_standard_names):
                 cell = sample_point[idx]
                 if cell is not None:
                     if not cell.contains_point(point[idx]):
@@ -675,3 +708,83 @@ class CubeCellConstraint(Constraint):
             if include:
                 con_points.append(point)
         return con_points
+
+
+class BinningCubeCellConstraint(IndexedConstraint):
+    """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
+
+    Uses the index_data method to bin all the points 
+    """
+    def __init__(self, fill_value=None):
+        super(BinningCubeCellConstraint, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
+                    'Cube Cell Constraint fill_value must be a valid float')
+
+    def constrain_points(self, sample_point, data):
+        """Returns HyperPoints lying within a cell.
+        @param sample_point: HyperPoint of cells defining sample region
+        @param data: list of HyperPoints to check
+        @return: HyperPointList of points found within cell
+        """
+        point_list = self.index[tuple(sample_point)]
+        con_points = HyperPointList()
+        if point_list is not None:
+            for point in point_list:
+                con_points.append(point)
+        return con_points
+
+    def index_data(self, coords, data, coord_map):
+        """
+        @param coords: coordinates of grid
+        @param data: list of HyperPoints to index
+        @param coord_map: list of tuples relating index in HyperPoint to index in coords and in
+                          coords to be iterated over
+        """
+        # Create an index array matching the shape of the coordinates to be iterated over.
+        shape = []
+        for (hpi, ci, shi) in coord_map:
+            if ci is not None:
+                shape.append(len(coords[ci].points))
+        num_cell_indices = len(shape)
+
+        # Set a logging interval.
+        num_bin_checks = sum(shape)
+        log_every_points = 500000 / num_bin_checks
+        log_every_points -= log_every_points % 100
+        log_every_points = max(log_every_points, 100)
+
+        # Create the index, which will be an array containing of a lists of data points that are
+        # within each cell.
+        self.index = np.empty(tuple(shape), dtype=np.dtype(object))
+
+        num_points = len(data)
+        pt_total = 0
+        pt_count = 0
+        for point in data:
+            point_cell_indices = [None] * num_cell_indices
+            for (hpi, ci, shi) in coord_map:
+                if ci is not None:
+                    coord = coords[ci]
+                    for cell_idx in xrange(len(coord.points)):
+                        cell = coord.cell(cell_idx)
+                        if cell.contains_point(point[hpi]):
+                            point_cell_indices[shi] = cell_idx
+                            break
+            if point_cell_indices.count(None) == 0:
+                index_entry = self.index[tuple(point_cell_indices)]
+                if index_entry is None:
+                    index_entry = []
+                index_entry.append(point)
+                self.index[tuple(point_cell_indices)] = index_entry
+
+            # Periodically log progress.
+            pt_total += 1
+            pt_count += 1
+            if pt_count == log_every_points:
+                logging.info("    Indexed %d points of %d (%d%%)",
+                             pt_count, num_points, int(pt_count * 100 / num_points))
+                pt_count = 0
