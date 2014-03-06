@@ -123,15 +123,16 @@ def col_cmd(main_arguments):
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
 
+    col_name = main_arguments.samplegroup['colocator'][0] if main_arguments.samplegroup['colocator'] is not None else None
+    col_options = main_arguments.samplegroup['colocator'][1] if main_arguments.samplegroup['colocator'] is not None else None
+    con_name = main_arguments.samplegroup['constraint'][0] if main_arguments.samplegroup['constraint'] is not None else None
+    con_options = main_arguments.samplegroup['constraint'][1] if main_arguments.samplegroup['constraint'] is not None else None
+    kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
+    kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
+
     for input_group in main_arguments.datagroups:
         variable = input_group['variable']
         filenames = input_group['filenames']
-        col_name = input_group['colocator'][0] if  input_group['colocator'] is not None else None
-        col_options = input_group['colocator'][1] if  input_group['colocator'] is not None else None
-        con_name = input_group['constraint'][0] if  input_group['constraint'] is not None else None
-        con_options = input_group['constraint'][1] if  input_group['constraint'] is not None else None
-        kern_name = input_group['kernel'][0] if  input_group['kernel'] is not None else None
-        kern_options = input_group['kernel'][1] if  input_group['kernel'] is not None else None
         product = input_group["product"] if input_group["product"] is not None else None
 
         try:

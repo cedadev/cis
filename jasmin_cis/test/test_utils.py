@@ -1,5 +1,7 @@
-from jasmin_cis.utils import apply_intersection_mask_to_two_arrays, calculate_histogram_bin_edges
-from nose.tools import istest, eq_
+from jasmin_cis.exceptions import InvalidCommandLineOptionError
+from jasmin_cis.utils import apply_intersection_mask_to_two_arrays, calculate_histogram_bin_edges, \
+    split_into_float_and_units, parse_distance_with_units_to_float_km, parse_distance_with_units_to_float_m
+from nose.tools import istest, eq_, raises
 
 @istest
 def can_apply_intersection_mask_to_two_masked_arrays():
@@ -134,3 +136,82 @@ def ten_bins_are_created_when_min_and_max_is_specified():
     eq_(len(bin_edges), 11) # 11 edges = 10 bins
     assert(abs(bin_edges.min() - 0.3) < 1.e-7) # 1.e-7 is approx 0
     assert(abs(bin_edges.max() - 2.3) < 1.e-7) # 1.e-7 is approx 0
+
+
+@istest
+def test_split_into_float_and_units():
+    eq_(split_into_float_and_units('10km')['value'], 10)
+    eq_(split_into_float_and_units('10km')['units'], 'km')
+
+
+@istest
+def test_split_into_float_and_units_with_spaces():
+    eq_(split_into_float_and_units('10 km')['value'], 10)
+    eq_(split_into_float_and_units('10 km')['units'], 'km')
+
+
+@istest
+def test_split_into_float_and_units_with_full_float():
+    eq_(split_into_float_and_units('12.3e4uM')['value'], 12.3e4)
+    eq_(split_into_float_and_units('12.3e4uM')['units'], 'uM')
+
+
+@istest
+@raises(InvalidCommandLineOptionError)
+def test_split_into_float_and_units_with_extra_numbers():
+    split_into_float_and_units('10km10')
+
+
+@istest
+@raises(InvalidCommandLineOptionError)
+def test_split_into_float_and_units_with_no_numbers():
+    split_into_float_and_units('km')
+
+
+@istest
+def test_split_into_float_and_units_with_no_units():
+    eq_(split_into_float_and_units('10')['value'], 10)
+    eq_(split_into_float_and_units('10')['units'], None)
+
+
+@istest
+@raises(InvalidCommandLineOptionError)
+def test_split_into_float_and_units_with_extra_units():
+    eq_(split_into_float_and_units('km10m'), 10)
+
+
+@istest
+def test_parse_distance_with_units_of_km_to_float_km():
+    eq_(parse_distance_with_units_to_float_km('10km'), 10)
+
+
+@istest
+def test_parse_distance_with_units_of_m_to_float_km():
+    eq_(parse_distance_with_units_to_float_km('10000m'), 10)
+
+
+@istest
+def test_parse_distance_without_units_to_float_km():
+    eq_(parse_distance_with_units_to_float_km('10'), 10)
+
+
+@istest
+@raises(InvalidCommandLineOptionError)
+def test_parse_distance_with_invalid_units():
+    eq_(parse_distance_with_units_to_float_km('10Gb'), 10)
+
+
+@istest
+def test_parse_distance_with_units_of_m_to_float_m():
+    eq_(parse_distance_with_units_to_float_m('10m'), 10)
+
+
+@istest
+def test_parse_distance_with_units_of_km_to_float_m():
+    eq_(parse_distance_with_units_to_float_m('10km'), 10000)
+
+
+@istest
+def test_parse_distance_without_units_to_float_m():
+    eq_(parse_distance_with_units_to_float_m('10'), 10)
+
