@@ -412,6 +412,7 @@ class Caliop(AProduct):
         #       to concatenate the data from all the files and not just arbitrarily pick
         #       the altitudes from the first file.
         alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
+        alt_data *= 1000.0  # Convert to m
         len_x = alt_data.shape[0]
 
         lat_data = hdf.read_data(sdata['Latitude'],"SD")
