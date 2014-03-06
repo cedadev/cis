@@ -700,7 +700,7 @@ class CubeCellConstraint(CellConstraint):
         con_points = HyperPointList()
         for point in data:
             include = True
-            for idx in xrange(HyperPoint.num_standard_names):
+            for idx in xrange(HyperPoint.number_standard_names):
                 cell = sample_point[idx]
                 if cell is not None:
                     if not cell.contains_point(point[idx]):
