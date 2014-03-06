@@ -782,10 +782,14 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
                          (optional if file contains only one cube)
         @return: iris.cube.Cube
         """
+        from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
+
         variable_constraint = None
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
-        return super(NetCDFGriddedByVariableName, self).create_coords(filenames, variable_constraint)
+        cube = super(NetCDFGriddedByVariableName, self).create_coords(filenames, variable_constraint)
+        cube = convert_cube_time_coord_to_standard_time(cube)
+        return cube
 
     def create_data_object(self, filenames, variable):
         """Reads the data for a variable.
@@ -793,10 +797,14 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         @param variable: (optional) name of variable; if None, the file(s) must contain data for only one cube
         @return: iris.cube.Cube
         """
+        from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
+
         variable_constraint = None
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
-        return super(NetCDFGriddedByVariableName, self).create_data_object(filenames, variable_constraint)
+        cube = super(NetCDFGriddedByVariableName, self).create_data_object(filenames, variable_constraint)
+        cube = convert_cube_time_coord_to_standard_time(cube)
+        return cube
 
 
 class Xglnwa_vprof(NetCDF_CF_Gridded):

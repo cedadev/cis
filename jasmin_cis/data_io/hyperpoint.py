@@ -6,6 +6,7 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
      Data type representing a point in space and time. It can contain multiple values which are stored in a list.
       We don't specify a reference time yet but when we do it should probably be here
     '''
+    standard_names = ['latitude', 'longitude', 'altitude', 'air_pressure', 'time']
 
     def __new__(cls, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
         '''
@@ -43,7 +44,7 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
         return ( self.same_point_in_space(other) and self.same_point_in_time(other) )
 
     def get_coord_tuple(self):
-        # This returns a sorted tuple of coorinate names and values. It is sorted to fix an iris bug when doing
+        # This returns a sorted tuple of coordinate names and values. It is sorted to fix an iris bug when doing
         #  linear interpolation. It's linear interpolation routine calls itself recursively and recreates the cube each time,
         #  but it doesn't seem to repopulate derived dimensions. Hence the altitude dimension (which is usually the derived one)
         #  needs to be first in the list of coordinates to interpolate over.

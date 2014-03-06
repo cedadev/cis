@@ -1,6 +1,7 @@
 """
 Utilities for converting time units
 """
+import netcdftime
 import numpy as np
 from iris.unit import Unit
 
@@ -146,6 +147,57 @@ def convert_numpy_array(array, new_type, operation, *args, **kwargs):
 
 
 def convert_cube_time_coord_to_standard_time(cube):
+    """Converts the time coordinate from the one in the cube to one based on a standard time unit.
+    @param cube: cube to modify
+    @return: the cube
+    """
+    # Find the time coordinate.
+    t_coord = cube.coord(standard_name='time')
+    data_dim = cube.coord_dims(t_coord)
+    if len(data_dim) > 0:
+        # And remove it from the cube
+        cube.remove_coord(t_coord)
+
+        def convert_date(in_date):
+            """Converts a date from its initial unit and calendar to cis_standard_time_unit.
+
+            This implementation converts between calendars by maintaining the day number within the
+            year across the conversion. If the source calendar has fewer days in a year, there are
+            dates in the destination calendar that can never be returned. If the source calendar has
+            more days, an error can result.
+            @param in_date: date as a number from a reference date set by the coordinate unit
+            @return: modified date as a number from the reference date for the standard time unit
+            """
+            dt = t_coord.units.num2date(in_date)
+            year = dt.year
+            unit = 'days since {}-01-01 00:00:00'.format(year)
+            day_of_year = netcdftime.date2num(dt, unit, calendar=t_coord.units.calendar)
+            start_of_year = cis_standard_time_unit.date2num(netcdftime.datetime(year, 1, 1))
+            return start_of_year + day_of_year
+
+        new_datetime_nums = convert_numpy_array(t_coord.points, 'float64', convert_date)
+        if t_coord.nbounds > 0:
+            new_bound_nums = convert_numpy_array(t_coord.bounds, 'float64', convert_date)
+            t_coord.bounds = new_bound_nums
+
+        # Create a new time coordinate by copying the old one, but using our new points and units
+        new_time_coord = t_coord
+        new_time_coord.points = new_datetime_nums
+        new_time_coord.units = cis_standard_time_unit
+
+        # And add the new coordinate back into the cube
+        cube.add_dim_coord(new_time_coord, data_dim)
+
+    return cube
+
+def convert_cube_time_coord_to_standard_time_assuming_gregorian_calendar(cube):
+    """Converts the time coordinate from the one in the cube to one based on a standard time unit.
+
+    This approach assumes that source date is valid as a date in the calendar set for the
+    standard time unit (Gregorian) which will not always be true.
+    @param cube: cube to modify
+    @return: the cube
+    """
     # Get the current time coordinate and it's data dimension
     t_coord = cube.coord(standard_name='time')
     data_dim = cube.coord_dims(t_coord)
