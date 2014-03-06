@@ -1,6 +1,8 @@
 '''
 Module for creating mock, dummies and fakes
 '''
+import numpy
+
 
 def make_dummy_2d_cube():
     '''
@@ -15,6 +17,88 @@ def make_dummy_2d_cube():
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
     
     return cube
+
+
+def make_dummy_2d_cube_with_small_offset_in_lat():
+    '''
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    '''
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(0, 360, 10), standard_name='longitude', units='degrees')
+    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
+def make_dummy_2d_cube_with_small_offset_in_lon():
+    '''
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    '''
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
+def make_dummy_2d_cube_with_small_offset_in_lat_and_lon():
+    '''
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    '''
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
+def make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres():
+    """
+    Makes two dummy cubes where the cells intersect like:
+
+        |--------|
+        |        |
+        |   |----|----|
+        |   |    |    |
+        |--------|    |
+            |         |
+            |---------|
+
+    For the second cube the values contained are a checkerboard of 0s and 1s, starting with 0 for the first cell
+    """
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(0, 10, 2), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(0, 10, 2), standard_name='longitude', units='degrees')
+    cube1 = Cube(numpy.random.rand(5, 5), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    checkerboard = numpy.zeros((5, 5))
+
+    for i in range(0, 5):
+        for j in range(0, 5):
+            if (i+j)%2 == 1:
+                checkerboard[i, j] = 1
+
+    latitude = DimCoord(numpy.arange(1, 11, 2), standard_name='latitude', units='degrees')
+    longitude = DimCoord(numpy.arange(1, 11, 2), standard_name='longitude', units='degrees')
+    cube2 = Cube(checkerboard, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube1, cube2
+
 
 def make_square_5x3_2d_cube():
     '''
@@ -77,7 +161,7 @@ def make_square_5x3_2d_cube_with_missing_data():
     return cube
 
 
-def make_square_5x3_2d_cube_with_time():
+def make_square_5x3_2d_cube_with_time(offset=0):
     '''
         Makes a well defined cube of shape 5x3 with data as follows
         arr([[[   1.    2.    3.    4.    5.    6.    7.]
@@ -121,12 +205,10 @@ def make_square_5x3_2d_cube_with_time():
     time_nums = convert_obj_to_standard_date_array(times)
 
     time = DimCoord(time_nums, standard_name='time')
-    latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
-    longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
+    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(105)+1.0,(5,3,7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)])
-
-    print data
 
     return cube
 
@@ -140,6 +222,7 @@ def make_dummy_1d_cube():
     cube = Cube(numpy.random.rand(19), dim_coords_and_dims=[(latitude, 0)])
     
     return cube
+
 
 def get_random_1d_point():
     '''
@@ -174,10 +257,23 @@ def make_dummy_2d_points_list(num):
         Create a list of 2d points 'num' long
     '''
     return [ get_random_2d_point() for i in xrange(0,num) ]
-        
+
+
+def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0):
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x = Coord(numpy.array(lat), Metadata('latitude'),'x')
+    y = Coord(numpy.array(lon), Metadata('longitude'),'y')
+    coords = CoordList([x, y])
+    data = numpy.array(value)
+    return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
+
 def make_dummy_1d_ungridded_data():
-    from data_io.Coord import CoordList, Coord
-    from data_io.ungridded_data import UngriddedData, Metadata
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 
     x = Coord(gen_random_lat_array((5,)), Metadata('latitude'),'x')
     coords = CoordList([x])
