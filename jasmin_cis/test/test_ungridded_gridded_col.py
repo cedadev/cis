@@ -6,7 +6,8 @@ from jasmin_cis.col_implementations import UngriddedGriddedColocator, mean, Cube
     BinningCubeCellConstraint
 from jasmin_cis.test.test_util.mock import make_dummy_ungridded_data_single_point, make_square_5x3_2d_cube, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
-    make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, make_square_5x3_2d_cube_with_altitude
+    make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
+    make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure
 
 
 @istest
@@ -428,7 +429,61 @@ def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_wi
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
 
-    print out_cube.data
+    assert (out_cube.data.filled() == expected_result).all()
+
+
+@istest
+def test_single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure():
+    sample_cube = make_square_5x3_2d_cube_with_pressure()
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
+
+    print sample_cube.data
+
+    col = UngriddedGriddedColocator()
+    con = BinningCubeCellConstraint(fill_value=-999.9)
+
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
+
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+
+    assert (out_cube.data.filled() == expected_result).all()
+
+
+@istest
+def test_single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure():
+    sample_cube = make_square_5x3_2d_cube_with_pressure()
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, pressure=1.0)
+
+    col = UngriddedGriddedColocator()
+    con = BinningCubeCellConstraint(fill_value=-999.9)
+
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
+
+    expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, 1.2, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
+
+    print out_cube.data.filled()
 
     assert (out_cube.data.filled() == expected_result).all()
 
