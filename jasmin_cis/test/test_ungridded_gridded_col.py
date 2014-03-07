@@ -6,7 +6,7 @@ from jasmin_cis.col_implementations import UngriddedGriddedColocator, mean, Cube
     BinningCubeCellConstraint
 from jasmin_cis.test.test_util.mock import make_dummy_ungridded_data_single_point, make_square_5x3_2d_cube, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
-    make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time
+    make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, make_square_5x3_2d_cube_with_altitude
 
 
 @istest
@@ -335,25 +335,11 @@ def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_wit
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
-    expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
-
-                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
-
-                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
-
-                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
-
-                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
-                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
 
     assert (out_cube.data.filled() == expected_result).all()
 
@@ -361,7 +347,7 @@ def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_wit
 @istest
 def test_single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time():
     sample_cube = make_square_5x3_2d_cube_with_time()
-    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, datetime.datetime(1984, 8, 28, 0, 0))
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, time=datetime.datetime(1984, 8, 28, 0, 0))
 
     col = UngriddedGriddedColocator()
     con = BinningCubeCellConstraint(fill_value=-999.9)
@@ -388,7 +374,61 @@ def test_single_point_results_in_single_value_in_cell_with_time_on_boundary_with
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
 
-    print out_cube.data.filled()
+    assert (out_cube.data.filled() == expected_result).all()
+
+
+@istest
+def test_single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude():
+    sample_cube = make_square_5x3_2d_cube_with_altitude()
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
+
+    print sample_cube.data
+
+    col = UngriddedGriddedColocator()
+    con = BinningCubeCellConstraint(fill_value=-999.9)
+
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
+
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+
+    assert (out_cube.data.filled() == expected_result).all()
+
+
+@istest
+def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude():
+    sample_cube = make_square_5x3_2d_cube_with_altitude()
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=1.0)
+
+    col = UngriddedGriddedColocator()
+    con = BinningCubeCellConstraint(fill_value=-999.9)
+
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
+
+    expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, 1.2, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
+
+                                   [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
+                                    [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
+
+    print out_cube.data
 
     assert (out_cube.data.filled() == expected_result).all()
 

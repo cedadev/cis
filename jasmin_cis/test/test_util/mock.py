@@ -1,6 +1,7 @@
 '''
 Module for creating mock, dummies and fakes
 '''
+from nose.tools import raises
 
 
 def make_dummy_2d_cube():
@@ -212,6 +213,51 @@ def make_square_5x3_2d_cube_with_time(offset=0):
     return cube
 
 
+def make_square_5x3_2d_cube_with_altitude(offset=0):
+    """
+    Makes a well defined cube of shape 5x3 with data as follows
+    arr([[[   1.    2.    3.    4.    5.    6.    7.]
+          [   8.    9.   10.   11.   12.   13.   14.]
+          [  15.   16.   17.   18.   19.   20.   21.]]
+
+         [[  22.   23.   24.   25.   26.   27.   28.]
+          [  29.   30.   31.   32.   33.   34.   35.]
+          [  36.   37.   38.   39.   40.   41.   42.]]
+
+         [[  43.   44.   45.   46.   47.   48.   49.]
+          [  50.   51.   52.   53.   54.   55.   56.]
+          [  57.   58.   59.   60.   61.   62.   63.]]
+
+         [[  64.   65.   66.   67.   68.   69.   70.]
+          [  71.   72.   73.   74.   75.   76.   77.]
+          [  78.   79.   80.   81.   82.   83.   84.]]
+
+         [[  85.   86.   87.   88.   89.   90.   91.]
+          [  92.   93.   94.   95.   96.   97.   98.]
+          [  99.  100.  101.  102.  103.  104.  105.]]])
+    and coordinates in latitude:
+        array([ -10, -5, 0, 5, 10 ])
+    longitude:
+        array([ -5, 0, 5 ])
+    altitude:
+        array([0, 1, 2, 3, 4, 5, 6])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    """
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    altitude = DimCoord(np.arange(0, 7, 1), standard_name='altitude', units='metres')
+    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (altitude, 2)])
+
+    return cube
+
+
 def make_dummy_1d_cube():
     import numpy
     from iris.cube import Cube
@@ -258,7 +304,7 @@ def make_dummy_2d_points_list(num):
     return [ get_random_2d_point() for i in xrange(0,num) ]
 
 
-def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None):
+def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None):
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
@@ -267,9 +313,14 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=Non
     x = Coord(numpy.array(lat), Metadata('latitude'), 'x')
     y = Coord(numpy.array(lon), Metadata('longitude'), 'y')
 
-    if time is None:
+    if time is not None and altitude is not None:
+        raises(NotImplementedError)
+    elif time is None and altitude is None:
         coords = CoordList([x, y])
-    else:
+    elif altitude is not None:
+        z = Coord(numpy.array(altitude), Metadata('altitude'), 'z')
+        coords = CoordList([x, y, z])
+    elif time is not None:
         t = Coord(numpy.array(time), Metadata('time'), 't')
         coords = CoordList([x, y, t])
 
