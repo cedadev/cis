@@ -762,8 +762,8 @@ class BinningCubeCellConstraint(IndexedConstraint):
         self.index = np.empty(tuple(shape), dtype=np.dtype(object))
 
         num_points = len(data)
-        pt_total = 0
         pt_count = 0
+        pt_total = 0
         for point in data:
             point_cell_indices = [None] * num_cell_indices
             for (hpi, ci, shi) in coord_map:
@@ -782,9 +782,9 @@ class BinningCubeCellConstraint(IndexedConstraint):
                 self.index[tuple(point_cell_indices)] = index_entry
 
             # Periodically log progress.
-            pt_total += 1
             pt_count += 1
+            pt_total += 1
             if pt_count == log_every_points:
                 logging.info("    Indexed %d points of %d (%d%%)",
-                             pt_count, num_points, int(pt_count * 100 / num_points))
+                             pt_total, num_points, int(pt_total * 100 / num_points))
                 pt_count = 0
