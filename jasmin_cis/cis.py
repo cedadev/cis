@@ -10,8 +10,8 @@ from jasmin_cis.exceptions import CISError, NoDataInSubsetError
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "V0R6M0"
-__status__ = "Development"
+__version__ = "0.6.3"
+__status__ = "Phase 2, Sprint 3 Release"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
 def __error_occurred(e):
