@@ -1,7 +1,7 @@
 from nose.tools import istest
 import numpy
-from col_implementations import GriddedColocator, gridded_gridded_nn, gridded_gridded_li
-from test.test_util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
+from jasmin_cis.col_implementations import GriddedColocator, gridded_gridded_nn, gridded_gridded_li
+from jasmin_cis.test.test_util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
     make_dummy_2d_cube_with_small_offset_in_lat, make_dummy_2d_cube_with_small_offset_in_lon, \
     make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres, \
     make_square_5x3_2d_cube, make_square_5x3_2d_cube_with_time
