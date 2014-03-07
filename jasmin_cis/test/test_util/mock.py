@@ -263,10 +263,22 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0):
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 
-    x = Coord(numpy.array(lat), Metadata('latitude'),'x')
-    y = Coord(numpy.array(lon), Metadata('longitude'),'y')
+    x = Coord(numpy.array(lat), Metadata('latitude'), 'x')
+    y = Coord(numpy.array(lon), Metadata('longitude'), 'y')
     coords = CoordList([x, y])
     data = numpy.array(value)
+    return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_dummy_ungridded_data_two_points_with_different_values(lat=0.0, lon=0.0, value1=1.0, value2=2.0):
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x = Coord(numpy.array([lat, lat]), Metadata('latitude'), 'x')
+    y = Coord(numpy.array([lon, lon]), Metadata('longitude'), 'y')
+    coords = CoordList([x, y])
+    data = numpy.array([value1, value2])
     return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
@@ -275,10 +287,23 @@ def make_dummy_1d_ungridded_data():
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 
-    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'),'x')
+    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
     coords = CoordList([x])
     data = gen_random_data_array((5,),4.0,1.0)
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    return UngriddedData(data, Metadata(name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_dummy_1d_ungridded_data_with_invalid_standard_name():
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
+    coords = CoordList([x])
+    data = gen_random_data_array((5,),4.0,1.0)
+    return UngriddedData(data, Metadata(standard_name='notavalidname', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
 
 def make_dummy_2d_ungridded_data():
     from jasmin_cis.data_io.Coord import CoordList, Coord
