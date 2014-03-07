@@ -60,6 +60,45 @@ class Constraint(object):
         '''
 
 
+class PointConstraint(Constraint):
+    """Superclass of constraints acting on sample points.
+
+    The point argument in constrain_points is a HyperPoint.
+    """
+    __metaclass__ = ABCMeta
+    pass
+
+
+class CellConstraint(Constraint):
+    """Superclass of constraints acting on cells surrounding sample points.
+
+    The point argument in constrain_points is a HyperPoint in which the
+    coordinate values are of type iris.coords.Cell.
+    """
+    __metaclass__ = ABCMeta
+    pass
+
+
+class IndexedConstraint(Constraint):
+    """Superclass of constraints that create an index prior to constraining.
+
+    The index_data method is called before any calls to constrain_points. The
+    point argument in constrain_points is a tuple of indices into the
+    coordinates over which co-location is occurring.
+    """
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def index_data(self, coords, data, coord_map):
+        """
+        @param coords: coordinates of grid
+        @param data: list of HyperPoints to index
+        @param coord_map: list of tuples relating index in HyperPoint to index in coords and in
+                          coords to be iterated over
+                          (HyperPoint_coordinate_index, coord_index, index_of_coord_iterated_over)
+        """
+
+
 def __get_class(parent_class, name=None):
     '''
     Identify the subclass of parent_class to a given name, if specified.
