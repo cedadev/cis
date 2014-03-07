@@ -1,7 +1,6 @@
 '''
 Module for creating mock, dummies and fakes
 '''
-import numpy
 
 
 def make_dummy_2d_cube():
@@ -259,13 +258,21 @@ def make_dummy_2d_points_list(num):
     return [ get_random_2d_point() for i in xrange(0,num) ]
 
 
-def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0):
+def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None):
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    import datetime
+    import numpy
 
     x = Coord(numpy.array(lat), Metadata('latitude'), 'x')
     y = Coord(numpy.array(lon), Metadata('longitude'), 'y')
-    coords = CoordList([x, y])
+
+    if time is None:
+        coords = CoordList([x, y])
+    else:
+        t = Coord(numpy.array(time), Metadata('time'), 't')
+        coords = CoordList([x, y, t])
+
     data = numpy.array(value)
     return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
                                         units="kg m-2 s-1", missing_value=-999), coords)
@@ -274,6 +281,7 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0):
 def make_dummy_ungridded_data_two_points_with_different_values(lat=0.0, lon=0.0, value1=1.0, value2=2.0):
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    import numpy
 
     x = Coord(numpy.array([lat, lat]), Metadata('latitude'), 'x')
     y = Coord(numpy.array([lon, lon]), Metadata('longitude'), 'y')

@@ -1,7 +1,7 @@
 from nose.tools import istest
 import numpy
-from col_implementations import GriddedColocator, gridded_gridded_nn, gridded_gridded_li
-from test.test_util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
+from jasmin_cis.col_implementations import GriddedColocator, gridded_gridded_nn, gridded_gridded_li
+from jasmin_cis.test.test_util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
     make_dummy_2d_cube_with_small_offset_in_lat, make_dummy_2d_cube_with_small_offset_in_lon, \
     make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres, \
     make_square_5x3_2d_cube, make_square_5x3_2d_cube_with_time
@@ -105,6 +105,7 @@ def test_gridded_gridded_li_for_same_grids_check_returns_original_data():
 
 @istest
 def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_using_li():
+    # Test fails on Iris 1.5.1., but passes on version 1.6.1
     sample_cube = make_dummy_2d_cube()
     data_cube = make_dummy_2d_cube_with_small_offset_in_lat()
 
@@ -112,7 +113,10 @@ def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_using_li():
 
     out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    # Need some asserts once the test can actually run...
+    assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.1)
+    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+    assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
+    assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
 
 
 @istest
@@ -132,6 +136,7 @@ def test_gridded_gridded_for_one_grid_with_slight_offset_in_lon_using_li():
 
 @istest
 def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_li():
+    # Test fails on Iris 1.5.1., but passes on version 1.6.1
     sample_cube = make_dummy_2d_cube()
     data_cube = make_dummy_2d_cube_with_small_offset_in_lat_and_lon()
 
@@ -139,22 +144,28 @@ def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_li
 
     out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    # Need some asserts once the test can actually run...
+    assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.2)
+    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+    assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
+    assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
 
 
 @istest
 def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_li():
+    # Test fails on Iris 1.5.1., but passes on version 1.6.1
     sample_cube, data_cube = make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres()
 
     col = GriddedColocator()
 
     out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    expected_result = numpy.array([[-1., 2., -1., 2., -1.],
+    expected_result = numpy.array([[-1.5, 0.5, 0.5, 0.5, 0.5],
                                    [0.5, 0.5, 0.5, 0.5, 0.5],
                                    [0.5, 0.5, 0.5, 0.5, 0.5],
                                    [0.5, 0.5, 0.5, 0.5, 0.5],
                                    [0.5, 0.5, 0.5, 0.5, 0.5]])
+
+    print out_cube.data
 
     assert (out_cube.data == expected_result).all()
     assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
