@@ -515,8 +515,19 @@ class UngriddedGriddedColocator(Colocator):
         #     raise ClassNotFoundError("Expected kernel of class {}; found one of class {}".format(
         #         jasmin_cis.utils.get_class_name(mean), jasmin_cis.utils.get_class_name(type(kernel))))
 
+        src_data = data
+        if isinstance(data, UngriddedData):
+            data = data.get_non_masked_points()
+        else:
+            raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
+
+        # If there are coordinates in the sample grid that are not present for the data,
+        # omit the from the set of coordinates in the output grid. Find a mask of coordinates
+        # that are present to use when determining the output grid shape.
+        coordinate_mask = self._find_data_coords(data)
+
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
-        coord_map = self._find_standard_coords(points)
+        coord_map = self._find_standard_coords(points, coordinate_mask)
         coords = points.coords()
         shape = []
         output_coords = []
@@ -534,12 +545,6 @@ class UngriddedGriddedColocator(Colocator):
                     coord.guess_bounds()
                 shape.append(coord.shape[0])
                 output_coords.append(coord)
-
-        src_data = data
-        if isinstance(data, UngriddedData):
-            data = data.get_non_masked_points()
-        else:
-            raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
 
         self._fix_longitude_range(coords, data)
 
@@ -593,10 +598,23 @@ class UngriddedGriddedColocator(Colocator):
 
         return [cube]
 
-    def _find_standard_coords(self, cube):
+    def _find_data_coords(self, data):
+        """Checks the first data point to determine which coordinates are present.
+        @param data: HyperPointList of data
+        @return: list of booleans indicating HyperPoint coordinates that are present
+        """
+        point = data[0]
+        coordinate_mask = [True] * HyperPoint.number_standard_names
+        for idx in xrange(HyperPoint.number_standard_names):
+            if point[idx] is None:
+                coordinate_mask[idx] = False
+        return coordinate_mask
+
+    def _find_standard_coords(self, cube, coordinate_mask):
         """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
 
         @param cube: cube among the coordinates of which to find the standard coordinates
+        @param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
         @return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
         """
         coord_map = []
@@ -606,15 +624,19 @@ class UngriddedGriddedColocator(Colocator):
 
         shape_idx = 0
         for hpi, name in enumerate(HyperPoint.standard_names):
-            coords = cube.coords(standard_name=name)
-            if len(coords) > 1:
-                msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
-                       % (len(coords), ', '.join(coord.name() for coord in coords)))
-                raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
-            elif len(coords) == 1:
-                coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
-                shape_idx += 1
+            if coordinate_mask[hpi]:
+                coords = cube.coords(standard_name=name)
+                if len(coords) > 1:
+                    msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
+                           % (len(coords), ', '.join(coord.name() for coord in coords)))
+                    raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
+                elif len(coords) == 1:
+                    coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
+                    shape_idx += 1
+                else:
+                    coord_map.append((hpi, None, None))
             else:
+                # Ignore this coordinate.
                 coord_map.append((hpi, None, None))
         return coord_map
 
