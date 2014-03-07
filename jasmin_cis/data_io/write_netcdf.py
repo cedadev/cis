@@ -79,8 +79,7 @@ def write_coordinates(coords, filename):
     netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
     index_dim = __create_index(netcdf_file, len(coords[0].data.flatten()))
     for data in coords:
-        if data.name() != "Pressure":  # This is a temporary fix, for when Pressure is not a true coordinate
-            coord = __create_variable(netcdf_file, data)
+        __create_variable(netcdf_file, data)
     netcdf_file.close()
 
 

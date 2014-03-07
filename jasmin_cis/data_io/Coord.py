@@ -1,5 +1,6 @@
-from ungridded_data import LazyData
 import logging, collections
+from jasmin_cis.data_io.hyperpoint import HyperPoint
+from jasmin_cis.data_io.ungridded_data import LazyData
 
 class Coord(LazyData):
 
@@ -13,6 +14,13 @@ class Coord(LazyData):
         """
         super(Coord, self).__init__(data, metadata)
         self.axis = axis.upper()
+
+    @property
+    def points(self):
+        """Alias for data to match iris.coords.Coord.points
+        @return: coordinate data
+        """
+        return self.data
 
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
@@ -46,20 +54,19 @@ class Coord(LazyData):
 class CoordList(list):
     """All the functionality of a standard `list` with added "Coord" context."""
 
-    def __new__(cls, list_of_coords=None):
+    def __init__(self, *args):
         """
         Given a `list` of Coords, return a CoordList instance.
 
+        @param list_of_coords: list of coordinates with which to initialise the list
         """
-        coord_list = list.__new__(cls, list_of_coords)
+        list.__init__(self, *args)
 
         # Check that all items in the incoming list are coords. Note that this checking
         # does not guarantee that a CoordList instance *always* has just coords in its list as
         # the append & __getitem__ methods have not been overridden.
-        if not all([isinstance(coord, Coord) for coord in coord_list]):
+        if not all([isinstance(coord, Coord) for coord in self]):
             raise ValueError('All items in list_of_coords must be Coord instances.')
-
-        return coord_list
 
     def append(self, other):
         """
@@ -156,35 +163,27 @@ class CoordList(list):
         all_coords = self.get_standard_coords(data_len)
 
         for x in xrange(data_len):
-            points.append(HyperPoint(all_coords[0][x], all_coords[1][x], all_coords[2][x], all_coords[3][x]))
-
+            points.append(HyperPoint(lat=all_coords[0][x], lon=all_coords[1][x], alt=all_coords[2][x],
+                                     pres=all_coords[3][x], t=all_coords[4][x]))
         return points
 
     def get_standard_coords(self, data_len):
+        """Constructs a list of the standard coordinate values.
+        The standard coordinates are latitude, longitude, altitude, time and air_pressure; they occur in the return
+        list in this order.
+        @param data_len: expected length of coordinate data
+        @return: list of indexed sequences of coordinate values
+        """
         from jasmin_cis.exceptions import CoordinateNotFoundError
 
         empty_data = [None for i in xrange(data_len)]
+        ret_list = []
 
-        try:
-            lat = self.get_coord(standard_name='latitude').data.flatten()
-        except CoordinateNotFoundError:
-            lat = empty_data
-        try:
-            lon = self.get_coord(standard_name='longitude').data.flatten()
-        except CoordinateNotFoundError:
-            lon = empty_data
-        try:
-            alt = self.get_coord(standard_name='altitude').data.flatten()
-        except CoordinateNotFoundError:
-            alt = empty_data
-        try:
-            time = self.get_coord(standard_name='time').data.flatten()
-        except CoordinateNotFoundError:
-            time = empty_data
-        try:
-            pressure = self.get_coord(standard_name='air_pressure').data.flatten()
-        except CoordinateNotFoundError:
-            pressure = empty_data
+        for name in HyperPoint.standard_names:
+            try:
+                coord = self.get_coord(standard_name=name).data.flatten()
+            except CoordinateNotFoundError:
+                coord = empty_data
+            ret_list.append(coord)
 
-        return CoordList([lat, lon, alt, time, pressure ])
-
+        return ret_list

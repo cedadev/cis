@@ -3,6 +3,7 @@ from pkg_resources import require, DistributionNotFound, VersionConflict
 from distutils.spawn import spawn, find_executable
 import sys, os, os.path
 
+
 # Extension classes and functions to add custom command
 #======================================================
 
@@ -70,9 +71,11 @@ class gen_doc(Command):
 here = os.path.dirname(__file__)
 README = open(os.path.join(here, 'README')).read()
 
+from jasmin_cis.cis import __version__
+
 setup(
     name='jasmin_cis',
-    version='0.6.2',
+    version=__version__,
     description='JASMIN Community Inter-comparison Suite',
     long_description=README,
     maintainer='Stephen Pascoe',

@@ -1,4 +1,7 @@
 import collections
+import re
+from exceptions import InvalidCommandLineOptionError
+
 
 def add_element_to_list_in_dict(my_dict,key,value):
     try:
@@ -361,3 +364,94 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     array2 = ma.array(array2, mask = intersection_mask)
 
     return array1, array2
+
+
+def index_iterator(shape):
+    """Iterates over the indexes of a multi-dimensional array of a specified shape.
+
+    The last index changes most rapidly.
+    @param shape: sequence of array dimensions
+    @return: yields tuples of array indexes
+    """
+    dim = len(shape)
+    idx = [0] * dim
+    num_iterations = 1
+    for j in range(0, dim):
+        num_iterations *= shape[j]
+
+    for iterations in range(num_iterations):
+        yield tuple(idx)
+        for j in range(dim - 1, -1, -1):
+            idx[j] += 1
+            if idx[j] < shape[j]:
+                break
+            idx[j] = 0
+
+
+def parse_distance_with_units_to_float_km(distance):
+    """Parse a string such as '10km' or '1.0e3m' to a distance in km
+    @param distance: string to parse
+    @return: A distance in km
+    """
+    measurement = split_into_float_and_units(distance)
+    distance_in_km = measurement['value']
+    if measurement['units'] == 'm':
+        distance_in_km /= 1000.0
+    elif measurement['units'] == 'km' or measurement['units'] is None:
+        pass
+    else:
+        raise InvalidCommandLineOptionError("Units not recognised", measurement['units'])
+
+    return distance_in_km
+
+
+def parse_distance_with_units_to_float_m(distance):
+    """Parse a string such as '10km' or '1.0e3m' to a distance in m
+    @param distance: string to parse
+    @return: A distance in m
+    """
+    measurement = split_into_float_and_units(distance)
+    if measurement['units'] is None:
+        return measurement['value']
+    else:
+        return parse_distance_with_units_to_float_km(distance)*1000.0
+
+
+def split_into_float_and_units(measurement):
+    """Split a string such as '1000m' or '1.0e3' to a value and, optionally, units
+    @param distance: string to parse
+    @return: A distance in m
+    """
+
+    # Convert to a string, just in case the number comes in as something else
+    measurement = str(measurement)
+
+    # First find any numbers that match the float type, e.g. 1, 1.2, 12e3
+    measurement_value = re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?', measurement)
+
+    # Check for 1 and only 1 value found
+    if len(measurement_value) > 1:
+        raise InvalidCommandLineOptionError("More than one number found")
+    elif len(measurement_value) == 0:
+        raise InvalidCommandLineOptionError("No numbers found")
+
+    # Remove number from string, so floats such as 1e3 do not have the e confused for a unit
+    measurement = measurement.replace(measurement_value[0], " ")
+
+    # Match any strings of characters, which should be units
+    measurement_units = re.findall(r'[a-zA-z]+', measurement)
+
+    if len(measurement_units) > 1:
+        raise InvalidCommandLineOptionError("More than one unit found")
+    elif len(measurement_units) == 0:
+        measurement_units = [None]
+
+    return {'value': float(measurement_value[0]), 'units': measurement_units[0]}
+
+
+def get_class_name(cls):
+    """Returns the qualified class name of a class.
+    @param cls: class
+    @return: class name
+    """
+    return cls.__module__ + '.' + cls.__name__

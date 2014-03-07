@@ -1,6 +1,8 @@
 '''
 Module for creating mock, dummies and fakes
 '''
+from nose.tools import raises
+
 
 def make_dummy_2d_cube():
     '''
@@ -15,6 +17,88 @@ def make_dummy_2d_cube():
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
     
     return cube
+
+
+def make_dummy_2d_cube_with_small_offset_in_lat():
+    '''
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    '''
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(0, 360, 10), standard_name='longitude', units='degrees')
+    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
+def make_dummy_2d_cube_with_small_offset_in_lon():
+    '''
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    '''
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
+def make_dummy_2d_cube_with_small_offset_in_lat_and_lon():
+    '''
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    '''
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
+def make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres():
+    """
+    Makes two dummy cubes where the cells intersect like:
+
+        |--------|
+        |        |
+        |   |----|----|
+        |   |    |    |
+        |--------|    |
+            |         |
+            |---------|
+
+    For the second cube the values contained are a checkerboard of 0s and 1s, starting with 0 for the first cell
+    """
+    import numpy
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(range(0, 10, 2), standard_name='latitude', units='degrees')
+    longitude = DimCoord(range(0, 10, 2), standard_name='longitude', units='degrees')
+    cube1 = Cube(numpy.random.rand(5, 5), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    checkerboard = numpy.zeros((5, 5))
+
+    for i in range(0, 5):
+        for j in range(0, 5):
+            if (i+j)%2 == 1:
+                checkerboard[i, j] = 1
+
+    latitude = DimCoord(numpy.arange(1, 11, 2), standard_name='latitude', units='degrees')
+    longitude = DimCoord(numpy.arange(1, 11, 2), standard_name='longitude', units='degrees')
+    cube2 = Cube(checkerboard, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube1, cube2
+
 
 def make_square_5x3_2d_cube():
     '''
@@ -77,7 +161,7 @@ def make_square_5x3_2d_cube_with_missing_data():
     return cube
 
 
-def make_square_5x3_2d_cube_with_time():
+def make_square_5x3_2d_cube_with_time(offset=0):
     '''
         Makes a well defined cube of shape 5x3 with data as follows
         arr([[[   1.    2.    3.    4.    5.    6.    7.]
@@ -121,12 +205,100 @@ def make_square_5x3_2d_cube_with_time():
     time_nums = convert_obj_to_standard_date_array(times)
 
     time = DimCoord(time_nums, standard_name='time')
-    latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
-    longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
+    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(105)+1.0,(5,3,7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)])
 
-    print data
+    return cube
+
+
+def make_square_5x3_2d_cube_with_altitude(offset=0):
+    """
+    Makes a well defined cube of shape 5x3 with data as follows
+    arr([[[   1.    2.    3.    4.    5.    6.    7.]
+          [   8.    9.   10.   11.   12.   13.   14.]
+          [  15.   16.   17.   18.   19.   20.   21.]]
+
+         [[  22.   23.   24.   25.   26.   27.   28.]
+          [  29.   30.   31.   32.   33.   34.   35.]
+          [  36.   37.   38.   39.   40.   41.   42.]]
+
+         [[  43.   44.   45.   46.   47.   48.   49.]
+          [  50.   51.   52.   53.   54.   55.   56.]
+          [  57.   58.   59.   60.   61.   62.   63.]]
+
+         [[  64.   65.   66.   67.   68.   69.   70.]
+          [  71.   72.   73.   74.   75.   76.   77.]
+          [  78.   79.   80.   81.   82.   83.   84.]]
+
+         [[  85.   86.   87.   88.   89.   90.   91.]
+          [  92.   93.   94.   95.   96.   97.   98.]
+          [  99.  100.  101.  102.  103.  104.  105.]]])
+    and coordinates in latitude:
+        array([ -10, -5, 0, 5, 10 ])
+    longitude:
+        array([ -5, 0, 5 ])
+    altitude:
+        array([0, 1, 2, 3, 4, 5, 6])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    """
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    altitude = DimCoord(np.arange(0, 7, 1), standard_name='altitude', units='metres')
+    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (altitude, 2)])
+
+    return cube
+
+
+def make_square_5x3_2d_cube_with_pressure(offset=0):
+    """
+    Makes a well defined cube of shape 5x3 with data as follows
+    arr([[[   1.    2.    3.    4.    5.    6.    7.]
+          [   8.    9.   10.   11.   12.   13.   14.]
+          [  15.   16.   17.   18.   19.   20.   21.]]
+
+         [[  22.   23.   24.   25.   26.   27.   28.]
+          [  29.   30.   31.   32.   33.   34.   35.]
+          [  36.   37.   38.   39.   40.   41.   42.]]
+
+         [[  43.   44.   45.   46.   47.   48.   49.]
+          [  50.   51.   52.   53.   54.   55.   56.]
+          [  57.   58.   59.   60.   61.   62.   63.]]
+
+         [[  64.   65.   66.   67.   68.   69.   70.]
+          [  71.   72.   73.   74.   75.   76.   77.]
+          [  78.   79.   80.   81.   82.   83.   84.]]
+
+         [[  85.   86.   87.   88.   89.   90.   91.]
+          [  92.   93.   94.   95.   96.   97.   98.]
+          [  99.  100.  101.  102.  103.  104.  105.]]])
+    and coordinates in latitude:
+        array([ -10, -5, 0, 5, 10 ])
+    longitude:
+        array([ -5, 0, 5 ])
+    pressure:
+        array([0, 1, 2, 3, 4, 5, 6])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    """
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    pressure = DimCoord(np.arange(0, 7, 1), standard_name='air_pressure', units='hPa')
+    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (pressure, 2)])
 
     return cube
 
@@ -140,6 +312,7 @@ def make_dummy_1d_cube():
     cube = Cube(numpy.random.rand(19), dim_coords_and_dims=[(latitude, 0)])
     
     return cube
+
 
 def get_random_1d_point():
     '''
@@ -174,15 +347,70 @@ def make_dummy_2d_points_list(num):
         Create a list of 2d points 'num' long
     '''
     return [ get_random_2d_point() for i in xrange(0,num) ]
-        
-def make_dummy_1d_ungridded_data():
-    from data_io.Coord import CoordList, Coord
-    from data_io.ungridded_data import UngriddedData, Metadata
 
-    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'),'x')
+
+def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None):
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    import datetime
+    import numpy
+
+    x = Coord(numpy.array(lat), Metadata('latitude'), 'x')
+    y = Coord(numpy.array(lon), Metadata('longitude'), 'y')
+
+    if (time is not None) + (altitude is not None) + (pressure is not None) > 1:
+        raises(NotImplementedError)
+    elif time is None and altitude is None and pressure is None:
+        coords = CoordList([x, y])
+    elif altitude is not None:
+        z = Coord(numpy.array(altitude), Metadata('altitude'), 'z')
+        coords = CoordList([x, y, z])
+    elif time is not None:
+        t = Coord(numpy.array(time), Metadata('time'), 't')
+        coords = CoordList([x, y, t])
+    elif pressure is not None:
+        p = Coord(numpy.array(pressure), Metadata('air_pressure'), 'p')
+        coords = CoordList([x, y, p])
+
+    data = numpy.array(value)
+    return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_dummy_ungridded_data_two_points_with_different_values(lat=0.0, lon=0.0, value1=1.0, value2=2.0):
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    import numpy
+
+    x = Coord(numpy.array([lat, lat]), Metadata('latitude'), 'x')
+    y = Coord(numpy.array([lon, lon]), Metadata('longitude'), 'y')
+    coords = CoordList([x, y])
+    data = numpy.array([value1, value2])
+    return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_dummy_1d_ungridded_data():
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
     coords = CoordList([x])
     data = gen_random_data_array((5,),4.0,1.0)
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    return UngriddedData(data, Metadata(name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_dummy_1d_ungridded_data_with_invalid_standard_name():
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
+    coords = CoordList([x])
+    data = gen_random_data_array((5,),4.0,1.0)
+    return UngriddedData(data, Metadata(standard_name='notavalidname', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
+
 
 def make_dummy_2d_ungridded_data():
     from jasmin_cis.data_io.Coord import CoordList, Coord
@@ -401,6 +629,18 @@ def make_regular_4d_ungridded_data():
          [ 80.  80.  80.  80.  80.]
          [ 90.  90.  90.  90.  90.]]
 
+        pressure:
+        [[  4.   4.   4.   4.   4.]
+         [ 16.  16.  16.  16.  16.]
+         [ 20.  20.  20.  20.  20.]
+         [ 30.  30.  30.  30.  30.]
+         [ 40.  40.  40.  40.  40.]
+         [ 50.  50.  50.  50.  50.]
+         [ 60.  60.  60.  60.  60.]
+         [ 70.  70.  70.  70.  70.]
+         [ 80.  80.  80.  80.  80.]
+         [ 90.  90.  90.  90.  90.]]
+
         time:
         [[1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
          [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]
@@ -439,13 +679,17 @@ def make_regular_4d_ungridded_data():
     y, a = np.meshgrid(y_points,alt)
     x, a = np.meshgrid(x_points,alt)
     t, a = np.meshgrid(times,alt)
+    p = a
+    p[0,:] = 4
+    p[1,:] = 16
 
     a = Coord(a, Metadata(standard_name='altitude', units='meters'))
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+    p = Coord(p, Metadata(standard_name='air_pressure', units='Pa'))
     t = Coord(t, Metadata(standard_name='time', units='DateTime Object'))
 
-    coords = CoordList([x, y, a, t])
+    coords = CoordList([x, y, a, p, t])
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
 
