@@ -156,6 +156,8 @@ def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_li():
                                    [0.5, 0.5, 0.5, 0.5, 0.5],
                                    [0.5, 0.5, 0.5, 0.5, 0.5]])
 
+    print out_cube.data
+
     assert (out_cube.data == expected_result).all()
     assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
 
