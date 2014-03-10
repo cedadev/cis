@@ -2,6 +2,7 @@
 module to test the various subclasses of the abstract AProduct class
 '''
 from nose.tools import istest, eq_, raises, nottest
+from iris.exceptions import TranslationError
 from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file
@@ -56,8 +57,8 @@ class ProductTests():
         self.product().create_data_object([invalid_filename], self.valid_variable)
 
     @istest
-    @raises(IOError)
-    def should_raise_ioerror_with_file_that_is_not_a_recognised_format(self):
+    @raises(IOError, TranslationError)
+    def should_raise_ioerror_or_translationerror_with_file_that_is_not_a_recognised_format(self):
         self.product().create_data_object([invalid_format], self.valid_variable)
 
     @istest
