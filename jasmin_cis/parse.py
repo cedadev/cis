@@ -33,7 +33,12 @@ def add_plot_parser_arguments(parser):
     product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products', verbose=False)
 
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
-                        help = "The datagroups to be plotted, in the format: variable:filenames:colour:style:label:product, where the last four arguments are optional, colour is any valid html colour (e.g. red) and product is one of " + str([cls().__class__.__name__ for cls in product_classes]))
+                        help = "The datagroups to be plotted, in the format 'variable:filenames[:options]', where "
+                               "options are entered in a comma separated list of the form \'keyword=value\'. Available "
+                               "options are color, edgecolor, itemstylem, label and product. Colour is any valid html "
+                               "colour and product is one of the options listed below. For example 'cis plot "
+                               "var1:file:product=NetCDF_CF_Gridded,colour=red'. Products: " +
+                               str([cls().__class__.__name__ for cls in product_classes]))
     parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
     parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
 
