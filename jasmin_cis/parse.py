@@ -351,9 +351,9 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
     for input_string in inputs:
         split_input = input_string.split(":")
         if len(split_input) < compulsary_args:
-            parser.error("A mandatory data group option is missing")
+            parser.error("A mandatory option is missing")
         elif len(split_input) > compulsary_args+1:
-            parser.error("Too many mandatory data groups")
+            parser.error("Too many mandatory options")
 
         input_dict = {}
 
