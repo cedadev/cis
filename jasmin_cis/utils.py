@@ -158,10 +158,11 @@ def unpack_data_object(data_object, x_variable, y_variable):
     x = __get_coord(data_object, x_variable, data)
     y = __get_coord(data_object, y_variable, data)
 
-    if np.array_equal(y, data) or np.array_equal(y, x):
+    # Must use np.all here, as np.array_equal will return false if missing values are present
+    if np.all(y == data) or np.all(y == x):
         y = None
 
-    if np.array_equal(x, data):
+    if np.all(x == data):
             data = y
             y = None
 
