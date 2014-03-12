@@ -186,8 +186,6 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        print out_cube.data - data_cube.data
-
         assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
 
 
