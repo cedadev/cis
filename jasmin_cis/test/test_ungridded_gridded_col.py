@@ -7,7 +7,8 @@ from jasmin_cis.col_implementations import UngriddedGriddedColocator, mean, Cube
 from jasmin_cis.test.test_util.mock import make_dummy_ungridded_data_single_point, make_square_5x3_2d_cube, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
-    make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure
+    make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
+    make_square_5x3_2d_cube_with_decreasing_latitude
 
 
 @istest
@@ -23,7 +24,7 @@ def test_throws_value_error_with_empty_coord_list():
 
 
 @istest
-def test_fill_value_for_cube_cell_constratint():
+def test_fill_value_for_cube_cell_constraint():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
 
@@ -42,7 +43,7 @@ def test_fill_value_for_cube_cell_constratint():
 
 
 @istest
-def test_fill_value_for_cube_cell_constratint_default_fill_value():
+def test_fill_value_for_cube_cell_constraint_default_fill_value():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
 
@@ -137,7 +138,7 @@ def test_two_points_in_a_cell_results_in_mean_value_in_cell_using_binning():
 
 
 @istest
-def test_point_on_a_lat_bounday_appears_in_both_cells():
+def test_point_on_a_lat_boundary_appears_in_higher_cell():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
 
@@ -148,7 +149,7 @@ def test_point_on_a_lat_bounday_appears_in_both_cells():
 
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
-                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
@@ -156,7 +157,7 @@ def test_point_on_a_lat_bounday_appears_in_both_cells():
 
 
 @istest
-def test_point_on_a_lat_bounday_appears_in_both_cells_using_binning():
+def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binning():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
 
@@ -167,7 +168,7 @@ def test_point_on_a_lat_bounday_appears_in_both_cells_using_binning():
 
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
-                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
@@ -175,7 +176,7 @@ def test_point_on_a_lat_bounday_appears_in_both_cells_using_binning():
 
 
 @istest
-def test_point_on_a_lon_bounday_appears_in_both_cells():
+def test_point_on_a_lon_boundary_appears_in_higher_cell():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
 
@@ -186,7 +187,7 @@ def test_point_on_a_lon_bounday_appears_in_both_cells():
 
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
-                                   [-999.9, 1.2, 1.2],
+                                   [-999.9, -999.9, 1.2],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
@@ -194,7 +195,7 @@ def test_point_on_a_lon_bounday_appears_in_both_cells():
 
 
 @istest
-def test_point_on_a_lon_bounday_appears_in_both_cells_using_binning():
+def test_point_on_a_lon_boundary_appears_in_higher_cell_using_binning():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
 
@@ -205,7 +206,7 @@ def test_point_on_a_lon_bounday_appears_in_both_cells_using_binning():
 
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
-                                   [-999.9, 1.2, 1.2],
+                                   [-999.9, -999.9, 1.2],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
@@ -213,7 +214,7 @@ def test_point_on_a_lon_bounday_appears_in_both_cells_using_binning():
 
 
 @istest
-def test_point_on_a_lat_lon_bounday_appears_in_four_cells():
+def test_point_on_a_lat_lon_boundary_appears_in_highest_cell():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
 
@@ -224,15 +225,15 @@ def test_point_on_a_lat_lon_bounday_appears_in_four_cells():
 
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
-                                   [-999.9, 1.2, 1.2],
-                                   [-999.9, 1.2, 1.2],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, 1.2],
                                    [-999.9, -999.9, -999.9]])
 
     assert numpy.allclose(out_cube.data.filled(), expected_result, atol=1.0e-15)
 
 
 @istest
-def test_point_on_a_lat_lon_bounday_appears_in_four_cells_using_binning():
+def test_point_on_a_lat_lon_boundary_appears_in_highest_cell_using_binning():
     sample_cube = make_square_5x3_2d_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
 
@@ -243,8 +244,8 @@ def test_point_on_a_lat_lon_bounday_appears_in_four_cells_using_binning():
 
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
-                                   [-999.9, 1.2, 1.2],
-                                   [-999.9, 1.2, 1.2],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, 1.2],
                                    [-999.9, -999.9, -999.9]])
 
     assert numpy.allclose(out_cube.data.filled(), expected_result, atol=1.0e-15)
@@ -509,3 +510,40 @@ def test_data_with_invalid_standard_name():
 
     out_cube = col.colocate(points=sample_cube, data=data_points, constraint=con, kernel=mean())[0]
 
+
+@istest
+def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude():
+    sample_cube = make_square_5x3_2d_cube_with_decreasing_latitude()
+    data_point = make_dummy_ungridded_data_single_point(3.0, 0.5, 1.2)
+
+    col = UngriddedGriddedColocator()
+    con = CubeCellConstraint(fill_value=-999.9)
+
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
+
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+
+    assert (out_cube.data.filled() == expected_result).all()
+
+
+@istest
+def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude_using_binning():
+    sample_cube = make_square_5x3_2d_cube_with_decreasing_latitude()
+    data_point = make_dummy_ungridded_data_single_point(3.0, 0.5, 1.2)
+
+    col = UngriddedGriddedColocator()
+    con = BinningCubeCellConstraint(fill_value=-999.9)
+
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
+
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+
+    assert (out_cube.data.filled() == expected_result).all()

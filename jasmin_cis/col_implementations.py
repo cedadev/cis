@@ -1,6 +1,9 @@
 import logging
+import math
+
 import iris
 import numpy as np
+
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
@@ -725,7 +728,7 @@ class CubeCellConstraint(CellConstraint):
             for idx in xrange(HyperPoint.number_standard_names):
                 cell = sample_point[idx]
                 if cell is not None:
-                    if not cell.contains_point(point[idx]):
+                    if not (np.min(cell.bound) <= point[idx] < np.max(cell.bound)):
                         include = False
             if include:
                 con_points.append(point)
@@ -739,6 +742,7 @@ class BinningCubeCellConstraint(IndexedConstraint):
     """
     def __init__(self, fill_value=None):
         super(BinningCubeCellConstraint, self).__init__()
+        self.index = None
         if fill_value is not None:
             try:
                 self.fill_value = float(fill_value)
@@ -748,6 +752,9 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.
+
+        This implementation returns the points that have been stored in the
+        appropriate bin by the index_data method.
         @param sample_point: HyperPoint of cells defining sample region
         @param data: list of HyperPoints to check
         @return: HyperPointList of points found within cell
@@ -774,8 +781,8 @@ class BinningCubeCellConstraint(IndexedConstraint):
         num_cell_indices = len(shape)
 
         # Set a logging interval.
-        num_bin_checks = sum(shape)
-        log_every_points = 500000 / num_bin_checks
+        num_bin_checks = sum([math.log(x) for x in shape])
+        log_every_points = 2000000 / num_bin_checks
         log_every_points -= log_every_points % 100
         log_every_points = max(log_every_points, 100)
 
@@ -783,19 +790,43 @@ class BinningCubeCellConstraint(IndexedConstraint):
         # within each cell.
         self.index = np.empty(tuple(shape), dtype=np.dtype(object))
 
+        coord_descreasing = [False] * len(coords)
+        coord_lengths = [0] * len(coords)
+        for (hpi, ci, shi) in coord_map:
+            if ci is not None:
+                coord = coords[ci]
+                # Coordinates must be monotonic; determine whether increasing or decreasing.
+                if len(coord.points) > 1:
+                    if coord.points[1] < coord.points[0]:
+                        coord_descreasing[ci] = True
+                coord_lengths[ci] = len(coord.points)
+
+        # Populate the index by finding the cell containing each data point.
         num_points = len(data)
         pt_count = 0
         pt_total = 0
         for point in data:
             point_cell_indices = [None] * num_cell_indices
+
+            # Find the interval the point resides in for each relevant coordinate.
             for (hpi, ci, shi) in coord_map:
                 if ci is not None:
                     coord = coords[ci]
-                    for cell_idx in xrange(len(coord.points)):
-                        cell = coord.cell(cell_idx)
-                        if cell.contains_point(point[hpi]):
-                            point_cell_indices[shi] = cell_idx
-                            break
+                    if coord_descreasing[ci]:
+                        # Use reversed view of bounds array.
+                        lower_bounds = coord.bounds[::-1, 1]
+                        upper_bounds = coord.bounds[::-1, 0]
+                        search_index = np.searchsorted(lower_bounds, point[hpi], side='right') - 1
+                        cell_index = coord_lengths[ci] - search_index - 1
+                    else:
+                        lower_bounds = coord.bounds[::, 0]
+                        upper_bounds = coord.bounds[::, 1]
+                        search_index = np.searchsorted(lower_bounds, point[hpi], side='right') - 1
+                        cell_index = search_index
+                    if (search_index >= 0) and (point[hpi] <= upper_bounds[search_index]):
+                        point_cell_indices[shi] = cell_index
+
+            # Add point to index if a containing interval was found for each coordinate.
             if point_cell_indices.count(None) == 0:
                 index_entry = self.index[tuple(point_cell_indices)]
                 if index_entry is None:
