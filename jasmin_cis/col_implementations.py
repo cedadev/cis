@@ -9,7 +9,7 @@ from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, Ce
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
-import jasmin_cis.utils
+from jasmin_cis.utils import index_iterator
 
 
 class DefaultColocator(Colocator):
@@ -432,7 +432,7 @@ class li(Kernel):
         return linear(data, point.get_coord_tuple()).data
 
 
-class GriddedColocator(DefaultColocator):
+class GriddedColocatorUsingIrisRegrid(DefaultColocator):
 
     def __init__(self, var_name='', var_long_name='', var_units=''):
         super(DefaultColocator, self).__init__()
@@ -441,17 +441,16 @@ class GriddedColocator(DefaultColocator):
         self.var_units = var_units
 
     def colocate(self, points, data, constraint, kernel):
-        '''
-            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
-             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
-             for the output LazyData object is copied from the input data object.
-        @param points: A list of HyperPoints
-        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
-                            based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
-        @return: A single LazyData object
-        '''
+        """
+        This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the points cube. The
+        colocator then returns another Iris cube. This uses Iris' implementation, which only works onto a horizontal
+        grid.
+        @param points: An Iris cube with the sampling grid to colocate onto.
+        @param data: The Iris cube with the data to be colocated.
+        @param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
+        @param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
+        @return: An Iris cube with the colocated data.
+        """
         import iris
         from jasmin_cis.exceptions import ClassNotFoundError
 
@@ -466,18 +465,74 @@ class GriddedColocator(DefaultColocator):
         return [new_data]
 
 
+class GriddedColocator(DefaultColocator):
+
+    def __init__(self, var_name='', var_long_name='', var_units=''):
+        super(DefaultColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+
+    def colocate(self, points, data, constraint, kernel):
+        """
+        This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the 'points' cube. The
+        colocator then returns another Iris cube.
+        @param points: An Iris cube with the sampling grid to colocate onto.
+        @param data: The Iris cube with the data to be colocated.
+        @param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
+        @param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
+        @return: An Iris cube with the colocated data.
+        """
+
+        # Make a list of the coordinates we have, with each entry containing a list with the name of the coordinate and
+        # the number of points along it
+        coord_names_and_sizes = []
+        for coord in points.coords():
+            coord_names_and_sizes.append([coord.name(), len(coord.points)])
+
+        # An array for the new data
+        new_data = np.zeros_like(data.data)
+
+        # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes
+        for i in index_iterator([i[1] for i in coord_names_and_sizes]):
+            coordinate_point_pairs = []
+            for j in range(0, len(coord_names_and_sizes)):
+                # Now for each coordinate make the list of tuple pair Iris expects, for example
+                # [('latitude', -90), ('longitude, 0')]
+                coordinate_point_pairs.append((coord_names_and_sizes[j][0], points.dim_coords[j].points[i[j]]))
+
+            new_data[i] = kernel.interpolater(data, coordinate_point_pairs).data
+
+            if all(x == 0 for x in i[1:]):
+                print 'Currently on', coord_names_and_sizes[0][0], 'coordinate at ', data.dim_coords[0].points[i[0]]
+
+        new_dim_coord_list = []
+        j = 0
+        for coord in points.coords():
+            new_dim_coord_list.append((iris.coord.DimCoord(coord.points, standard_name=coord.standard_name,
+                                                           long_name=coord.long_name), j))
+            j += 1
+
+        new_cube = iris.cube.Cube(new_data, dim_coords_and_dims=new_dim_coord_list)
+
+        return [new_cube]
+
+
 class gridded_gridded_nn(Kernel):
     def __init__(self):
         self.name = 'nearest'
+        self.interpolater = iris.analysis.interpolate.extract_nearest_neighbour
 
     def get_value(self, point, data):
         '''Not needed for gridded/gridded co-location.
         '''
         return None
 
+
 class gridded_gridded_li(Kernel):
     def __init__(self):
         self.name = 'bilinear'
+        self.interpolater = iris.analysis.interpolate.linear
 
     def get_value(self, point, data):
         '''Not needed for gridded/gridded co-location.

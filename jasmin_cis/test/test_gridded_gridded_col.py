@@ -1,6 +1,7 @@
 from nose.tools import istest
 import numpy
-from jasmin_cis.col_implementations import GriddedColocator, gridded_gridded_nn, gridded_gridded_li
+from jasmin_cis.col_implementations import GriddedColocator, GriddedColocatorUsingIrisRegrid, gridded_gridded_nn, \
+    gridded_gridded_li
 from jasmin_cis.test.test_util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
     make_dummy_2d_cube_with_small_offset_in_lat, make_dummy_2d_cube_with_small_offset_in_lon, \
     make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres, \
@@ -47,184 +48,201 @@ def check_cubes_have_equal_data_values_and_dimension_coordinates(cube1, cube2):
         check_cubes_have_equal_dimension_coordinates(cube1, cube2)
 
 
-@istest
-def test_gridded_gridded_nn_for_same_grids_check_returns_original_data():
-    sample_cube = make_dummy_2d_cube()
-    data_cube = make_dummy_2d_cube()
+class GriddedGriddedColocatorTests():
 
-    col = GriddedColocator()
+    def __init__(self):
+        raise NotImplementedError
 
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+    @istest
+    def test_gridded_gridded_nn_for_same_grids_check_returns_original_data(self):
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube()
 
-    assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
+        col = self.colocator
 
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-@istest
-def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_nn():
-    sample_cube = make_dummy_2d_cube()
-    data_cube = make_dummy_2d_cube_with_small_offset_in_lat_and_lon()
-
-    col = GriddedColocator()
-
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
-
-    assert check_cubes_have_equal_data_values(data_cube, out_cube)
-    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-    assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-    assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
 
 
-@istest
-def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_nn():
-    sample_cube, data_cube = make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres()
+    @istest
+    def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_nn(self):
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube_with_small_offset_in_lat_and_lon()
 
-    col = GriddedColocator()
+        col = self.colocator
 
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-    result = numpy.array([[0., 0., 1., 0., 1.],
-                          [0., 0., 1., 0., 1.],
-                          [1., 1., 0., 1., 0.],
-                          [0., 0., 1., 0., 1.],
-                          [1., 1., 0., 1., 0.]])
-
-    assert (out_cube.data == result).all()
+        assert check_cubes_have_equal_data_values(data_cube, out_cube)
+        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
+        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
 
 
-@istest
-def test_gridded_gridded_li_for_same_grids_check_returns_original_data():
-    sample_cube = make_dummy_2d_cube()
-    data_cube = make_dummy_2d_cube()
+    @istest
+    def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_nn(self):
+        sample_cube, data_cube = make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres()
 
-    col = GriddedColocator()
+        col = self.colocator
 
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-    assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
+        result = numpy.array([[0., 0., 1., 0., 1.],
+                              [0., 0., 1., 0., 1.],
+                              [1., 1., 0., 1., 0.],
+                              [0., 0., 1., 0., 1.],
+                              [1., 1., 0., 1., 0.]])
 
-
-@istest
-def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_using_li():
-    # Test fails on Iris 1.5.1., but passes on version 1.6.1
-    sample_cube = make_dummy_2d_cube()
-    data_cube = make_dummy_2d_cube_with_small_offset_in_lat()
-
-    col = GriddedColocator()
-
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
-
-    assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.1)
-    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-    assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-    assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert (out_cube.data == result).all()
 
 
-@istest
-def test_gridded_gridded_for_one_grid_with_slight_offset_in_lon_using_li():
-    sample_cube = make_dummy_2d_cube()
-    data_cube = make_dummy_2d_cube_with_small_offset_in_lon()
+    @istest
+    def test_gridded_gridded_li_for_same_grids_check_returns_original_data(self):
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube()
 
-    col = GriddedColocator()
+        col = self.colocator
 
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.1)
-    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-    assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-    assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
 
 
-@istest
-def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_li():
-    # Test fails on Iris 1.5.1., but passes on version 1.6.1
-    sample_cube = make_dummy_2d_cube()
-    data_cube = make_dummy_2d_cube_with_small_offset_in_lat_and_lon()
+    @istest
+    def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_using_li(self):
+        # Test fails on Iris 1.5.1., but passes on version 1.6.1
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube_with_small_offset_in_lat()
 
-    col = GriddedColocator()
+        col = self.colocator
 
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.2)
-    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-    assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-    assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
-
-
-@istest
-def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_li():
-    # Test fails on Iris 1.5.1., but passes on version 1.6.1
-    sample_cube, data_cube = make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres()
-
-    col = GriddedColocator()
-
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
-
-    expected_result = numpy.array([[-1.5, 0.5, 0.5, 0.5, 0.5],
-                                   [0.5, 0.5, 0.5, 0.5, 0.5],
-                                   [0.5, 0.5, 0.5, 0.5, 0.5],
-                                   [0.5, 0.5, 0.5, 0.5, 0.5],
-                                   [0.5, 0.5, 0.5, 0.5, 0.5]])
-
-    print out_cube.data
-
-    assert (out_cube.data == expected_result).all()
-    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.1)
+        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
+        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
 
 
-@istest
-def test_gridded_gridded_nn_with_one_grid_containing_time():
-    sample_cube = make_square_5x3_2d_cube()
-    data_cube = make_square_5x3_2d_cube_with_time()
+    @istest
+    def test_gridded_gridded_for_one_grid_with_slight_offset_in_lon_using_li(self):
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube_with_small_offset_in_lon()
 
-    col = GriddedColocator()
+        col = self.colocator
 
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
-
-
-@istest
-def test_gridded_gridded_nn_with_one_grid_containing_time_and_slightly_offset():
-    sample_cube = make_square_5x3_2d_cube()
-    data_cube = make_square_5x3_2d_cube_with_time(offset=0.1)
-
-    col = GriddedColocator()
-
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
-
-    assert check_cubes_have_equal_data_values(data_cube, out_cube)
-    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-    assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.1)
+        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
+        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
 
 
-@istest
-def test_gridded_gridded_nn_with_one_grid_containing_time_and_moderate_offset():
-    sample_cube = make_square_5x3_2d_cube()
-    data_cube = make_square_5x3_2d_cube_with_time(offset=2.6)
+    @istest
+    def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_li(self):
+        # Test fails on Iris 1.5.1., but passes on version 1.6.1
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube_with_small_offset_in_lat_and_lon()
 
-    col = GriddedColocator()
+        col = self.colocator
 
-    out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    expected_result = numpy.array([[[1., 2., 3., 4., 5., 6., 7.],
-                                    [1., 2., 3., 4., 5., 6., 7.],
-                                    [8., 9., 10., 11., 12., 13., 14.]],
+        assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.2)
+        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
+        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
 
-                                   [[1., 2., 3., 4., 5., 6., 7.],
-                                    [1., 2., 3., 4., 5., 6., 7.],
-                                    [8., 9., 10., 11., 12., 13., 14.]],
 
-                                   [[22., 23., 24., 25., 26., 27., 28.],
-                                    [22., 23., 24., 25., 26., 27., 28.],
-                                    [29., 30., 31., 32., 33., 34., 35.]],
+    @istest
+    def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_li(self):
+        # Test fails on Iris 1.5.1., but passes on version 1.6.1
+        sample_cube, data_cube = make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres()
 
-                                   [[43., 44., 45., 46., 47., 48., 49.],
-                                    [43., 44., 45., 46., 47., 48., 49.],
-                                    [50., 51., 52., 53., 54., 55., 56.]],
+        col = self.colocator
 
-                                   [[64., 65., 66., 67., 68., 69., 70.],
-                                    [64., 65., 66., 67., 68., 69., 70.],
-                                    [71., 72., 73., 74., 75., 76., 77.]]])
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-    assert (out_cube.data == expected_result).all()
-    assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        expected_result = numpy.array([[-1.5, 0.5, 0.5, 0.5, 0.5],
+                                       [0.5, 0.5, 0.5, 0.5, 0.5],
+                                       [0.5, 0.5, 0.5, 0.5, 0.5],
+                                       [0.5, 0.5, 0.5, 0.5, 0.5],
+                                       [0.5, 0.5, 0.5, 0.5, 0.5]])
+
+        print out_cube.data
+
+        assert (out_cube.data == expected_result).all()
+        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+
+
+    @istest
+    def test_gridded_gridded_nn_with_one_grid_containing_time(self):
+        sample_cube = make_square_5x3_2d_cube()
+        data_cube = make_square_5x3_2d_cube_with_time()
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        print out_cube.data - data_cube.data
+
+        assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
+
+
+    @istest
+    def test_gridded_gridded_nn_with_one_grid_containing_time_and_slightly_offset(self):
+        sample_cube = make_square_5x3_2d_cube()
+        data_cube = make_square_5x3_2d_cube_with_time(offset=0.1)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        assert check_cubes_have_equal_data_values(data_cube, out_cube)
+        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+
+
+    @istest
+    def test_gridded_gridded_nn_with_one_grid_containing_time_and_moderate_offset(self):
+        sample_cube = make_square_5x3_2d_cube()
+        data_cube = make_square_5x3_2d_cube_with_time(offset=2.6)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        expected_result = numpy.array([[[1., 2., 3., 4., 5., 6., 7.],
+                                        [1., 2., 3., 4., 5., 6., 7.],
+                                        [8., 9., 10., 11., 12., 13., 14.]],
+
+                                       [[1., 2., 3., 4., 5., 6., 7.],
+                                        [1., 2., 3., 4., 5., 6., 7.],
+                                        [8., 9., 10., 11., 12., 13., 14.]],
+
+                                       [[22., 23., 24., 25., 26., 27., 28.],
+                                        [22., 23., 24., 25., 26., 27., 28.],
+                                        [29., 30., 31., 32., 33., 34., 35.]],
+
+                                       [[43., 44., 45., 46., 47., 48., 49.],
+                                        [43., 44., 45., 46., 47., 48., 49.],
+                                        [50., 51., 52., 53., 54., 55., 56.]],
+
+                                       [[64., 65., 66., 67., 68., 69., 70.],
+                                        [64., 65., 66., 67., 68., 69., 70.],
+                                        [71., 72., 73., 74., 75., 76., 77.]]])
+
+        assert (out_cube.data == expected_result).all()
+        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+
+
+class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests):
+    def __init__(self):
+        self.colocator = GriddedColocatorUsingIrisRegrid()
+
+
+class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
+    def __init__(self):
+        self.colocator = GriddedColocator()
