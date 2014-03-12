@@ -509,7 +509,7 @@ class GriddedColocator(DefaultColocator):
         new_dim_coord_list = []
         j = 0
         for coord in points.coords():
-            new_dim_coord_list.append((iris.coord.DimCoord(coord.points, standard_name=coord.standard_name,
+            new_dim_coord_list.append((iris.coords.DimCoord(coord.points, standard_name=coord.standard_name,
                                                            long_name=coord.long_name), j))
             j += 1
 
