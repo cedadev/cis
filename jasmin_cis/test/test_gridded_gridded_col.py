@@ -1,4 +1,5 @@
 from nose.tools import istest
+from iris.exceptions import CoordinateNotFoundError
 import numpy
 from jasmin_cis.col_implementations import GriddedColocator, GriddedColocatorUsingIrisRegrid, gridded_gridded_nn, \
     gridded_gridded_li
@@ -39,6 +40,14 @@ def check_cubes_have_equal_dimension_coordinates(cube1, cube2):
             return False
 
     return True
+
+
+def does_coord_exist_in_cube(cube, coord):
+    try:
+        cube.coord(coord)
+        return True
+    except CoordinateNotFoundError:
+        return False
 
 
 def check_cubes_have_equal_data_values_and_dimension_coordinates(cube1, cube2):
@@ -304,6 +313,44 @@ class GriddedGriddedColocatorTests():
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(data_cube.coord('time').points, out_cube.coord('time').points)
 
+    @istest
+    def test_gridded_gridded_nn_with_sample_containing_time_and_pressure_and_small_offset(self):
+        sample_cube = make_mock_cube(time_dim_length=7, pres_dim_length=10, data_offset=1.0)
+        data_cube = make_mock_cube(horizontal_offset=0.1, time_offset=0.1)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        assert check_cubes_have_equal_data_values(data_cube, out_cube)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert not does_coord_exist_in_cube(out_cube, 'time')
+        assert not does_coord_exist_in_cube(out_cube, 'pressure')
+
+    @istest
+    def test_gridded_gridded_li_with_sample_grid_4d_and_slightly_offset(self):
+        sample_cube = make_mock_cube(alt_dim_length=7, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(horizontal_offset=0.1)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        result = numpy.array([[0.92, 1.92, 2.92],
+                              [3.92, 4.92, 5.92],
+                              [6.92, 7.92, 8.92],
+                              [9.92, 10.92, 11.92],
+                              [12.92, 13.92, 14.92]])
+
+        print out_cube.data
+
+        assert numpy.allclose(out_cube.data, result)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert not does_coord_exist_in_cube(out_cube, 'time')
+        assert not does_coord_exist_in_cube(out_cube, 'altitude')
+
 
 class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests):
     def __init__(self):
@@ -471,3 +518,273 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_4d_data_and_small_offset(self):
+        sample_cube = make_mock_cube(alt_dim_length=4, time_dim_length=3, data_offset=1.0)
+        data_cube = make_mock_cube(alt_dim_length=4, time_dim_length=3,
+                                   horizontal_offset=0.1, altitude_offset=0.1, time_offset=0.1)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+        assert numpy.array_equal(sample_cube.coord('altitude').points, out_cube.coord('altitude').points)
+
+    @istest
+    def test_gridded_gridded_li_with_4d_data_and_small_offset(self):
+        sample_cube = make_mock_cube(alt_dim_length=2, time_dim_length=3, data_offset=1.0)
+        data_cube = make_mock_cube(alt_dim_length=2, time_dim_length=3,
+                                   horizontal_offset=0.1, altitude_offset=0.1, time_offset=0.1)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        result = numpy.array([[[[0.37714286, 1.37714286, 2.37714286],
+                                [3.37714286, 4.37714286, 5.37714286]],
+
+                               [[6.37714286, 7.37714286, 8.37714286],
+                                [9.37714286, 10.37714286, 11.37714286]],
+
+                               [[12.37714286, 13.37714286, 14.37714286],
+                                [15.37714286, 16.37714286, 17.37714286]]],
+
+                              [[[18.37714286, 19.37714286, 20.37714286],
+                                [21.37714286, 22.37714286, 23.37714286]],
+
+                               [[24.37714286, 25.37714286, 26.37714286],
+                                [27.37714286, 28.37714286, 29.37714286]],
+
+                               [[30.37714286, 31.37714286, 32.37714286],
+                                [33.37714286, 34.37714286, 35.37714286]]],
+
+                              [[[36.37714286, 37.37714286, 38.37714286],
+                                [39.37714286, 40.37714286, 41.37714286]],
+
+                               [[42.37714286, 43.37714286, 44.37714286],
+                                [45.37714286, 46.37714286, 47.37714286]],
+
+                               [[48.37714286, 49.37714286,  50.37714286],
+                                [51.37714286, 52.37714286, 53.37714286]]],
+
+                              [[[54.37714286, 55.37714286, 56.37714286],
+                                [57.37714286, 58.37714286, 59.37714286]],
+
+                               [[60.37714286, 61.37714286, 62.37714286],
+                                [63.37714286, 64.37714286, 65.37714286]],
+
+                               [[66.37714286, 67.37714286, 68.37714286],
+                                [69.37714286, 70.37714286, 71.37714286]]],
+
+                              [[[72.37714286, 73.37714286, 74.37714286],
+                                [75.37714286, 76.37714286, 77.37714286]],
+
+                               [[78.37714286, 79.37714286, 80.37714286],
+                                [81.37714286, 82.37714286, 83.37714286]],
+
+                               [[84.37714286, 85.37714286, 86.37714286],
+                                [87.37714286, 88.37714286, 89.37714286]]]])
+
+        print out_cube.data
+
+        assert numpy.allclose(result, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+        assert numpy.array_equal(sample_cube.coord('altitude').points, out_cube.coord('altitude').points)
+
+    @istest
+    def test_gridded_gridded_li_with_sample_grid_4d_data_grid_with_time_with_moderate_offset_and_different_grids(self):
+        sample_cube = make_mock_cube(pres_dim_length=3, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
+                                   time_offset=1.5)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        result = numpy.array([[[-124.26, -123.26, -122.26, -121.26, -120.26, -119.26, -118.26],
+                               [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
+                               [1.74, 2.74, 3.74, 4.74, 5.74, 6.74, 7.74]],
+
+                              [[50.74, 51.74, 52.74, 53.74, 54.74, 55.74, 56.74],
+                               [113.74, 114.74, 115.74, 116.74, 117.74, 118.74, 119.74],
+                               [176.74, 177.74,  178.74,  179.74,  180.74,  181.74, 182.74]],
+
+                              [[225.74, 226.74, 227.74, 228.74, 229.74, 230.74, 231.74],
+                               [288.74, 289.74, 290.74, 291.74, 292.74, 293.74, 294.74],
+                               [351.74, 352.74, 353.74, 354.74, 355.74, 356.74, 357.74]],
+
+                              [[400.74, 401.74, 402.74, 403.74, 404.74, 405.74, 406.74],
+                               [463.74, 464.74, 465.74, 466.74, 467.74, 468.74, 469.74],
+                               [526.74, 527.74, 528.74, 529.74, 530.74, 531.74, 532.74]],
+
+                              [[575.74, 576.74, 577.74, 578.74, 579.74, 580.74, 581.74],
+                               [638.74,  639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
+                               [701.74,  702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
+
+        assert numpy.allclose(out_cube.data, result)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_li_with_data_grid_4d_sample_grid_with_time_with_moderate_offset_and_different_grids(self):
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(lat_dim_length=3, lon_dim_length=3, alt_dim_length=2, time_dim_length=2,
+                                   horizontal_offset=2.6, time_offset=1.5)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        result = numpy.array([[[[-5.7, -3.7],
+                                [-4.7, -2.7],
+                                [-3.7, -1.7],
+                                [-2.7, -0.7],
+                                [-1.7,  0.3],
+                                [-0.7, 1.3],
+                                [0.3, 2.3]],
+
+                               [[-1.7, 0.3],
+                                [-0.7, 1.3],
+                                [0.3, 2.3],
+                                [1.3, 3.3],
+                                [2.3, 4.3],
+                                [3.3, 5.3],
+                                [4.3, 6.3]],
+
+                               [[2.3, 4.3],
+                                [3.3, 5.3],
+                                [4.3, 6.3],
+                                [5.3, 7.3],
+                                [6.3, 8.3],
+                                [7.3, 9.3],
+                                [8.3, 10.3]]],
+
+                             [[[0.3, 2.3],
+                               [1.3, 3.3],
+                               [2.3, 4.3],
+                               [3.3, 5.3],
+                               [4.3, 6.3],
+                               [5.3, 7.3],
+                               [6.3, 8.3]],
+
+                              [[4.3, 6.3],
+                               [5.3, 7.3],
+                               [6.3, 8.3],
+                               [7.3, 9.3],
+                               [8.3, 10.3],
+                               [9.3, 11.3],
+                               [10.3, 12.3]],
+
+                              [[8.3, 10.3],
+                               [9.3, 11.3],
+                               [10.3, 12.3],
+                               [11.3, 13.3],
+                               [12.3, 14.3],
+                               [13.3, 15.3],
+                               [14.3, 16.3]]],
+
+
+                             [[[6.3, 8.3],
+                               [7.3, 9.3],
+                               [8.3, 10.3],
+                               [9.3, 11.3],
+                               [10.3, 12.3],
+                               [11.3, 13.3],
+                               [12.3, 14.3]],
+
+                              [[10.3, 12.3],
+                               [11.3, 13.3],
+                               [12.3, 14.3],
+                               [13.3, 15.3],
+                               [14.3, 16.3],
+                               [15.3, 17.3],
+                               [16.3, 18.3]],
+
+                              [[14.3, 16.3],
+                               [15.3, 17.3],
+                               [16.3, 18.3],
+                               [17.3, 19.3],
+                               [18.3, 20.3],
+                               [19.3, 21.3],
+                               [20.3, 22.3]]],
+
+                             [[[12.3, 14.3],
+                               [13.3, 15.3],
+                               [14.3, 16.3],
+                               [15.3, 17.3],
+                               [16.3, 18.3],
+                               [17.3, 19.3],
+                               [18.3, 20.3]],
+
+                              [[16.3, 18.3],
+                               [17.3, 19.3],
+                               [18.3, 20.3],
+                               [19.3, 21.3],
+                               [20.3, 22.3],
+                               [21.3, 23.3],
+                               [22.3, 24.3]],
+
+                              [[20.3, 22.3],
+                               [21.3, 23.3],
+                               [22.3, 24.3],
+                               [23.3, 25.3],
+                               [24.3, 26.3],
+                               [25.3, 27.3],
+                               [26.3, 28.3]]],
+
+                             [[[18.3, 20.3],
+                               [19.3, 21.3],
+                               [20.3, 22.3],
+                               [21.3, 23.3],
+                               [22.3, 24.3],
+                               [23.3, 25.3],
+                               [24.3, 26.3]],
+
+                              [[22.3, 24.3],
+                               [23.3, 25.3],
+                               [24.3, 26.3],
+                               [25.3, 27.3],
+                               [26.3, 28.3],
+                               [27.3, 29.3],
+                               [28.3, 30.3]],
+
+                              [[26.3, 28.3],
+                               [27.3, 29.3],
+                               [28.3, 30.3],
+                               [29.3, 31.3],
+                               [30.3, 32.3],
+                               [31.3, 33.3],
+                               [32.3, 34.3]]]])
+
+        assert numpy.allclose(out_cube.data, result)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+        assert numpy.array_equal(data_cube.coord('altitude').points, out_cube.coord('altitude').points)
+
+    @istest
+    def test_gridded_gridded_li_with_very_different_grids(self):
+        sample_cube = make_mock_cube(lon_dim_length=0, alt_dim_length=10, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(lat_dim_length=0, pres_dim_length=6, time_dim_length=15,
+                                   horizontal_offset=2.6, time_offset=1.5)
+
+        # Result should maintain longitude, pressure and time, and discard latitude and altitude
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        # We will not verify the data here, just that the output has the correct shape
+        assert not does_coord_exist_in_cube(out_cube, 'laitude')
+        assert not does_coord_exist_in_cube(out_cube, 'altitude')
+        assert numpy.array_equal(data_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+        assert numpy.array_equal(data_cube.coord('air_pressure').points, out_cube.coord('air_pressure').points)

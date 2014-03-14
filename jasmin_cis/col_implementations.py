@@ -497,12 +497,36 @@ class GriddedColocator(DefaultColocator):
             # data, as this is what we will be keeping.
             try:
                 coord_names_and_sizes_for_sample_grid.append([coord.name(), len(points.coords(coord.name())[0].points)])
-                coord_names_and_sizes_for_output_grid.append([coord.name(), len(points.coords(coord.name())[0].points)])
             except IndexError:
                 coord_names_and_sizes_for_output_grid.append([coord.name(), len(coord.points)])
 
+        # Adding the lists together in this way ensures that the coordinates not in the sample grid appear in the final
+        # position, which is important for adding the points from the Iris interpolater to the new array. The data
+        # returned from the Iris interpolater method will have dimensions of these missing coordinates, which needs
+        # to be the final dimensions in the numpy array, as the iterator will give the position of the other dimensions.
+        coord_names_and_sizes_for_output_grid = coord_names_and_sizes_for_sample_grid + \
+                                                coord_names_and_sizes_for_output_grid
+
         # An array for the colocated data, with the correct shape
         new_data = np.zeros(tuple(i[1] for i in coord_names_and_sizes_for_output_grid))
+
+        # Now recreate the points cube, while ignoring any DimCoords in points that are not in the data cube
+        new_dim_coord_list = []
+        new_points_array_shape = []
+        for i in range(0, len(coord_names_and_sizes_for_output_grid)):
+            # Try and find the coordinate in the sample grid
+            coord_found = points.coords(coord_names_and_sizes_for_output_grid[i][0])
+
+            # If the coordinate exists in the sample grid then append the new coordinate to the list. Iris requires
+            # this be given as a DimCoord object, along with a axis number, in a tuple pair.
+            if len(coord_found) != 0:
+                new_dim_coord_list.append((coord_found[0], len(new_dim_coord_list)))
+                new_points_array_shape.append(coord_found[0].points.size)
+
+        new_points_array = np.zeros(tuple(new_points_array_shape))
+
+        # Use the new_data array to recreate points, without the DimCoords not in the data cube
+        points = iris.cube.Cube(new_points_array, dim_coords_and_dims=new_dim_coord_list)
 
         # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid. Now
         # for each point in the sample grid we do the interpolation.
@@ -522,7 +546,7 @@ class GriddedColocator(DefaultColocator):
             # Log a progress update, as this can take a long time.
             if all(x == 0 for x in i[1:]):
                 logging.info('Currently on {0} coordinate at {1}'.format(coord_names_and_sizes_for_sample_grid[0][0],
-                                                                         data.dim_coords[0].points[i[0]]))
+                                                                         points.dim_coords[0].points[i[0]]))
 
         # Now we need to make a list with the appropriate coordinates, i.e. based on that in
         # coord_names_and_sizes_for_output_grid. This means choosing the grid points from the sampling grid in the case
