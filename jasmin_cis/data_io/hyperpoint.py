@@ -131,6 +131,8 @@ class HyperPointList(list):
         # Check that all items in the incoming list are HyperPoints. Note that this checking
         # does not guarantee that a HyperPointList instance *always* has just HyperPoints in its list as
         # the append & __getitem__ methods have not been overridden.
+        #TODO In fact it doesn't even check here because the list is not initialised yet. Override __init__ for
+        # mutable objects.
         if not all([isinstance(point, HyperPoint) for point in point_list]):
             raise ValueError('All items in list_of_coords must be Coord instances.')
         return point_list

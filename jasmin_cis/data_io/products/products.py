@@ -2,11 +2,13 @@ import logging
 
 import iris
 from jasmin_cis.data_io.Coord import Coord, CoordList
+import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.products.AProduct import AProduct
-from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedCoordinates
 import jasmin_cis.exceptions
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
+
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -610,7 +612,8 @@ class Cis(AProduct):
         #  'standard' time unit
 
         if usr_variable is None:
-            res = coords
+            # res = coords
+            res = UngriddedCoordinates(coords)
         else:
             usr_var_data = read_many_files_individually(filenames,usr_variable)[usr_variable]
             res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
@@ -726,7 +729,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
             with open(filename) as f: pass
 
         try:
-            cube = iris.load_cube(filenames, variable)
+            cube = gridded_data.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
             raise InvalidVariableError("Variable not found: " + str(variable) +
                                        "\nTo see a list of variables run: cis info " + filenames[0] + " -h")

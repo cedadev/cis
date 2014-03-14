@@ -13,21 +13,23 @@ class Colocate(object):
 
         self.sample_files = sample_files
         if sample_var is None:
-            coords = read_coordinates(sample_files, sample_product)
-            if isinstance(coords, Cube):
-                sample_points = coords
-            else:
-                sample_points = coords.get_coordinates_points()
+            sample_points = read_coordinates(sample_files, sample_product)
+            # coords = read_coordinates(sample_files, sample_product)
+            # if isinstance(coords, Cube):
+            #     sample_points = coords
+            # else:
+            #     sample_points = coords.get_coordinates_points()
         else:
-            data = read_data(sample_files, sample_var, sample_product)
-            coords = data.coords()
-            if isinstance(data, Cube):
-                sample_points = data
-            else:
-                sample_points = data.get_all_points()
+            sample_points = read_data(sample_files, sample_var, sample_product)
+            # data = read_data(sample_files, sample_var, sample_product)
+            # coords = data.coords()
+            # if isinstance(data, Cube):
+            #     sample_points = data
+            # else:
+            #     sample_points = data.get_all_points()
 
         if not isinstance(sample_points, Cube):
-            write_coordinates(coords, output_file)
+            write_coordinates(sample_points.coords(), output_file)
 
         self.sample_points = sample_points
         self.output_file = output_file

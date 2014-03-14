@@ -38,16 +38,19 @@ class DefaultColocator(Colocator):
         metadata = data.metadata
 
         # Convert ungridded data to a list of points
-        if isinstance(data, UngriddedData):
-            data = data.get_non_masked_points()
+        # if isinstance(data, UngriddedData):
+        #     data = data.get_non_masked_points()
+        data_points = data.get_non_masked_points()
 
         logging.info("--> colocating...")
+
+        points = points.get_coordinates_points()
 
         # Fill will the FillValue from the start
         values = np.zeros(len(points)) + constraint.fill_value
 
         for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data)
+            con_points = constraint.constrain_points(point, data_points)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
@@ -359,7 +362,7 @@ class full_average(Kernel):
 
 class nn_horizontal(Kernel):
 
-    def get_value(self, point, data):
+    def x_get_value(self, point, data):
         '''
             Colocation using nearest neighbours along the face of the earth where both points and
               data are a list of HyperPoints. The default point is the first point.
@@ -367,6 +370,21 @@ class nn_horizontal(Kernel):
         if len(data) == 0: raise ValueError
         nearest_point = data[0]
         for data_point in data[1:]:
+            if point.compdist(nearest_point, data_point): nearest_point = data_point
+        return nearest_point.val[0]
+
+    def get_value(self, point, data):
+        '''
+            Colocation using nearest neighbours along the face of the earth where both points and
+              data are a list of HyperPoints. The default point is the first point.
+        '''
+        iterator = data.__iter__()
+        try:
+            nearest_point = iterator.next()
+        except StopIteration:
+            # No points to check
+            raise ValueError
+        for data_point in iterator:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
 
@@ -379,8 +397,9 @@ class nn_altitude(Kernel):
               data are a list of HyperPoints. The default point is the first point.
         '''
         if len(data) == 0: raise ValueError
-        nearest_point = data[0]
-        for data_point in data[1:]:
+        iterator = data.__iter__()
+        nearest_point = iterator.next()
+        for data_point in iterator:
             if point.compalt(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
 
@@ -393,8 +412,9 @@ class nn_pressure(Kernel):
               data are a list of HyperPoints. The default point is the first point.
         '''
         if len(data) == 0: raise ValueError
-        nearest_point = data[0]
-        for data_point in data[1:]:
+        iterator = data.__iter__()
+        nearest_point = iterator.next()
+        for data_point in iterator:
             if point.comppres(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
 
@@ -407,8 +427,9 @@ class nn_time(Kernel):
               data are a list of HyperPoints. The default point is the first point.
         '''
         if len(data) == 0: raise ValueError
-        nearest_point = data[0]
-        for data_point in data[1:]:
+        iterator = data.__iter__()
+        nearest_point = iterator.next()
+        for data_point in iterator:
             if point.comptime(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
 
@@ -420,7 +441,7 @@ class nn_gridded(Kernel):
              This calls out to iris to do the work.
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
-        return nearest_neighbour_data_value(data, point.coord_tuple)
+        return nearest_neighbour_data_value(data.cube, point.coord_tuple)
 
 
 class li(Kernel):
@@ -429,7 +450,7 @@ class li(Kernel):
             Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
         '''
         from iris.analysis.interpolate import linear
-        return linear(data, point.get_coord_tuple()).data
+        return linear(data.cube, point.coord_tuple).data
 
 
 class GriddedColocator(DefaultColocator):
@@ -473,7 +494,7 @@ class gridded_gridded_nn(Kernel):
     def get_value(self, point, data):
         '''Not needed for gridded/gridded co-location.
         '''
-        return None
+        raise ValueError("gridded_gridded_nn kernel selected for use with colocator other than GriddedColocator")
 
 class gridded_gridded_li(Kernel):
     def __init__(self):
@@ -482,7 +503,7 @@ class gridded_gridded_li(Kernel):
     def get_value(self, point, data):
         '''Not needed for gridded/gridded co-location.
         '''
-        return None
+        raise ValueError("gridded_gridded_li kernel selected for use with colocator other than GriddedColocator")
 
 
 class UngriddedGriddedColocator(Colocator):
@@ -518,16 +539,16 @@ class UngriddedGriddedColocator(Colocator):
         #     raise ClassNotFoundError("Expected kernel of class {}; found one of class {}".format(
         #         jasmin_cis.utils.get_class_name(mean), jasmin_cis.utils.get_class_name(type(kernel))))
 
-        src_data = data
         if isinstance(data, UngriddedData):
-            data = data.get_non_masked_points()
+            data_points = data.get_non_masked_points()
         else:
             raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
 
         # If there are coordinates in the sample grid that are not present for the data,
         # omit the from the set of coordinates in the output grid. Find a mask of coordinates
         # that are present to use when determining the output grid shape.
-        coordinate_mask = self._find_data_coords(data)
+        # coordinate_mask = self._find_data_coords(data)
+        coordinate_mask = [False if c is None else True for c in data.coords().find_standard_coords()]
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = self._find_standard_coords(points, coordinate_mask)
@@ -548,14 +569,14 @@ class UngriddedGriddedColocator(Colocator):
                     coord.guess_bounds()
                 shape.append(coord.shape[0])
                 output_coords.append(coord)
-
-        self._fix_longitude_range(coords, data)
+        #TODO reinstate ##################################################################
+##        self._fix_longitude_range(coords, data)
 
         # Create index if constraint supports it.
         indexed_constraint = isinstance(constraint, IndexedConstraint)
         if indexed_constraint:
             logging.info("--> Indexing data...")
-            constraint.index_data(coords, data, coord_map)
+            constraint.index_data(coords, data_points, coord_map)
 
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = np.ma.zeros(shape)
@@ -582,7 +603,7 @@ class UngriddedGriddedColocator(Colocator):
                 arg = indices
             else:
                 arg = hp_cell
-            con_points = constraint.constrain_points(arg, data)
+            con_points = constraint.constrain_points(arg, data_points)
             # logging.debug("UngriddedGriddedColocator: point {} number constrained points {}".format(str(hp), len(con_points)))
             try:
                 values[indices] = kernel.get_value(hp, con_points)
@@ -597,7 +618,7 @@ class UngriddedGriddedColocator(Colocator):
                 cell_count = 0
 
         # Construct an output cube containing the colocated data.
-        cube = self._create_colocated_cube(points, src_data, values, output_coords, constraint.fill_value)
+        cube = self._create_colocated_cube(points, data, values, output_coords, constraint.fill_value)
 
         return [cube]
 
@@ -763,7 +784,7 @@ class BinningCubeCellConstraint(IndexedConstraint):
         con_points = HyperPointList()
         if point_list is not None:
             for point in point_list:
-                con_points.append(point)
+                con_points.append(data[point])
         return con_points
 
     def index_data(self, coords, data, coord_map):
@@ -789,6 +810,7 @@ class BinningCubeCellConstraint(IndexedConstraint):
         # Create the index, which will be an array containing of a lists of data points that are
         # within each cell.
         self.index = np.empty(tuple(shape), dtype=np.dtype(object))
+        self.index.fill(None)
 
         coord_descreasing = [False] * len(coords)
         coord_lengths = [0] * len(coords)
@@ -805,10 +827,12 @@ class BinningCubeCellConstraint(IndexedConstraint):
         num_points = len(data)
         pt_count = 0
         pt_total = 0
-        for point in data:
+        for pt_idx, point in data.enumerate_non_masked_points():
+            if point.val[0] is np.ma.masked:
+                continue
             point_cell_indices = [None] * num_cell_indices
 
-            # Find the interval the point resides in for each relevant coordinate.
+            # Find the interval that the point resides in for each relevant coordinate.
             for (hpi, ci, shi) in coord_map:
                 if ci is not None:
                     coord = coords[ci]
@@ -831,7 +855,7 @@ class BinningCubeCellConstraint(IndexedConstraint):
                 index_entry = self.index[tuple(point_cell_indices)]
                 if index_entry is None:
                     index_entry = []
-                index_entry.append(point)
+                index_entry.append(pt_idx)
                 self.index[tuple(point_cell_indices)] = index_entry
 
             # Periodically log progress.
