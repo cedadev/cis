@@ -8,52 +8,12 @@ from jasmin_cis.test.test_util.mock import make_dummy_2d_cube, make_dummy_2d_cub
     make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres, make_mock_cube
 
 
-def check_cubes_have_equal_data_values(cube1, cube2, tolerance=1e-15):
-    """
-    Check two cubes, which have the same shape, have the same data values to within a given tolerance
-    @param cube1: A cube
-    @param cube2: Another cube
-    @param tolerance: The amount of difference allowed in the data values
-    @return: Boolean True if equal, else False
-    """
-
-    if numpy.allclose(cube1.data, cube2.data, atol=tolerance):
-        return True
-
-    return False
-
-
-def check_cubes_have_equal_dimension_coordinates(cube1, cube2):
-    """
-    Check all the coordinates for cube 1 are identical in cube 2, but not that all the the coordinates in cube 2 are
-    contained in cube 1.
-    @param cube1: A cube
-    @param cube2: Another cube
-    @return: Boolean True if equal, else False
-    """
-    for coord_i in cube1.coords():
-        match = False
-        for coord_j in cube2.coords():
-            if coord_i.name() == coord_j.name() and numpy.array_equal(coord_i.points, coord_j.points):
-                match = True
-        if not match:
-            return False
-
-    return True
-
-
 def does_coord_exist_in_cube(cube, coord):
     try:
         cube.coord(coord)
         return True
     except CoordinateNotFoundError:
         return False
-
-
-def check_cubes_have_equal_data_values_and_dimension_coordinates(cube1, cube2):
-
-    return check_cubes_have_equal_data_values(cube1, cube2) and \
-        check_cubes_have_equal_dimension_coordinates(cube1, cube2)
 
 
 class GriddedGriddedColocatorTests():
@@ -70,7 +30,9 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_nn(self):
@@ -81,10 +43,11 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        assert check_cubes_have_equal_data_values(data_cube, out_cube)
-        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert not numpy.array_equal(data_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert not numpy.array_equal(data_cube.coord('longitude').points, out_cube.coord('longitude').points)
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_different_grid_size_using_nn(self):
@@ -128,7 +91,9 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
+        assert numpy.allclose(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_using_li(self):
@@ -140,10 +105,10 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.1)
-        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert numpy.allclose(data_cube.data, out_cube.data, atol=0.1)
+        assert not numpy.array_equal(sample_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lon_using_li(self):
@@ -154,10 +119,10 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.1)
-        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert numpy.allclose(data_cube.data, out_cube.data, atol=0.1)
+        assert not numpy.array_equal(sample_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_li(self):
@@ -169,10 +134,10 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        assert check_cubes_have_equal_data_values(data_cube, out_cube, tolerance=0.2)
-        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
-        assert not check_cubes_have_equal_data_values(sample_cube, out_cube)
-        assert not check_cubes_have_equal_dimension_coordinates(data_cube, out_cube)
+        assert numpy.allclose(data_cube.data, out_cube.data, atol=0.2)
+        assert not numpy.array_equal(sample_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_different_grid_size_using_li(self):
@@ -207,7 +172,8 @@ class GriddedGriddedColocatorTests():
                                        [0.5, 0.5, 0.5, 0.5, 0.5]])
 
         assert numpy.array_equal(out_cube.data, expected_result)
-        assert check_cubes_have_equal_dimension_coordinates(sample_cube, out_cube)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
 
     @istest
     def test_gridded_gridded_nn_with_one_grid_containing_time(self):
@@ -218,7 +184,10 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(data_cube.coord('time').points, out_cube.coord('time').points)
 
     @istest
     def test_gridded_gridded_li_with_one_grid_containing_altitude(self):
@@ -229,7 +198,10 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        assert check_cubes_have_equal_data_values_and_dimension_coordinates(data_cube, out_cube)
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(data_cube.coord('altitude').points, out_cube.coord('altitude').points)
 
     @istest
     def test_gridded_gridded_nn_with_one_grid_containing_time_and_slightly_offset(self):
@@ -240,7 +212,7 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        assert check_cubes_have_equal_data_values(data_cube, out_cube)
+        assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(data_cube.coord('time').points, out_cube.coord('time').points)
@@ -322,7 +294,7 @@ class GriddedGriddedColocatorTests():
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        assert check_cubes_have_equal_data_values(data_cube, out_cube)
+        assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert not does_coord_exist_in_cube(out_cube, 'time')
@@ -376,7 +348,7 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        assert check_cubes_have_equal_data_values(data_cube, out_cube)
+        assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
