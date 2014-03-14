@@ -569,7 +569,8 @@ class GriddedColocator(DefaultColocator):
 
         # Finally return the new cube with the colocated data. jasmin_cis.col requires this be returned as a list of
         # Cube objects.
-        new_cube_list = [iris.cube.Cube(new_data, dim_coords_and_dims=new_dim_coord_list)]
+        new_cube_list = [iris.cube.Cube(new_data, dim_coords_and_dims=new_dim_coord_list, var_name=data.var_name,
+                                        long_name=data.long_name, units=data.units, attributes=data.attributes)]
 
         return new_cube_list
 
