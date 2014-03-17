@@ -315,8 +315,6 @@ class GriddedGriddedColocatorTests():
                               [9.92, 10.92, 11.92],
                               [12.92, 13.92, 14.92]])
 
-        print out_cube.data
-
         assert numpy.allclose(out_cube.data, result)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
@@ -562,8 +560,6 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
                                [[84.37714286, 85.37714286, 86.37714286],
                                 [87.37714286, 88.37714286, 89.37714286]]]])
 
-        print out_cube.data
-
         assert numpy.allclose(result, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
@@ -606,6 +602,142 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
 
     @istest
+    def test_gridded_gridded_ni_with_data_grid_4d_sample_grid_with_time_with_moderate_offset_and_different_grids(self):
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(lat_dim_length=3, lon_dim_length=3, alt_dim_length=2, time_dim_length=2,
+                                   horizontal_offset=2.6, time_offset=1.5)
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        result = numpy.array([[[[1., 3.],
+                                [1., 3.],
+                                [1., 3.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.]],
+
+                               [[1., 3.],
+                                [1., 3.],
+                                [1., 3.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.]],
+
+                               [[5., 7.],
+                                [5., 7.],
+                                [5., 7.],
+                                [6., 8.],
+                                [6., 8.],
+                                [6., 8.],
+                                [6., 8.]]],
+
+                              [[[1., 3.],
+                                [1., 3.],
+                                [1., 3.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.]],
+
+                               [[1., 3.],
+                                [1., 3.],
+                                [1., 3.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.],
+                                [2., 4.]],
+
+                               [[5., 7.],
+                                [5., 7.],
+                                [5., 7.],
+                                [6., 8.],
+                                [6., 8.],
+                                [6., 8.],
+                                [6., 8.]]],
+
+                              [[[13., 15.],
+                                [13., 15.],
+                                [13., 15.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.]],
+
+                               [[13., 15.],
+                                [13., 15.],
+                                [13., 15.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.]],
+
+                               [[17., 19.],
+                                [17., 19.],
+                                [17., 19.],
+                                [18., 20.],
+                                [18., 20.],
+                                [18., 20.],
+                                [18., 20.]]],
+
+                              [[[13., 15.],
+                                [13., 15.],
+                                [13., 15.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.]],
+
+                               [[13., 15.],
+                                [13., 15.],
+                                [13., 15.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.],
+                                [14., 16.]],
+
+                               [[17., 19.],
+                                [17., 19.],
+                                [17., 19.],
+                                [18., 20.],
+                                [18., 20.],
+                                [18., 20.],
+                                [18., 20.]]],
+
+                              [[[25., 27.],
+                                [25., 27.],
+                                [25., 27.],
+                                [26., 28.],
+                                [26., 28.],
+                                [26., 28.],
+                                [26., 28.]],
+
+                               [[25., 27.],
+                                [25., 27.],
+                                [25., 27.],
+                                [26., 28.],
+                                [26., 28.],
+                                [26., 28.],
+                                [26., 28.]],
+
+                               [[29., 31.],
+                                [29., 31.],
+                                [29., 31.],
+                                [30., 32.],
+                                [30., 32.],
+                                [30., 32.],
+                                [30., 32.]]]])
+
+        assert numpy.allclose(out_cube.data, result)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+        assert numpy.array_equal(data_cube.coord('altitude').points, out_cube.coord('altitude').points)
+
+    @istest
     def test_gridded_gridded_li_with_data_grid_4d_sample_grid_with_time_with_moderate_offset_and_different_grids(self):
         sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
         data_cube = make_mock_cube(lat_dim_length=3, lon_dim_length=3, alt_dim_length=2, time_dim_length=2,
@@ -615,132 +747,80 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
 
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        result = numpy.array([[[[-5.7, -3.7],
-                                [-4.7, -2.7],
-                                [-3.7, -1.7],
-                                [-2.7, -0.7],
-                                [-1.7,  0.3],
-                                [-0.7, 1.3],
-                                [0.3, 2.3]],
+        # Note the result here has a different shape, (5, 3, 7, 2) to the same test that uses nn instead of li. The nn
+        # test has a shape of (5, 3, 2, 7), but this should not make any difference to anything subsequently done with
+        # the output.
 
-                               [[-1.7, 0.3],
-                                [-0.7, 1.3],
-                                [0.3, 2.3],
-                                [1.3, 3.3],
-                                [2.3, 4.3],
-                                [3.3, 5.3],
-                                [4.3, 6.3]],
+        result = numpy.array([[[[-5.7, -4.7, -3.7, -2.7, -1.7, -0.7, 0.3],
+                                [-3.7, -2.7, -1.7, -0.7,  0.3, 1.3, 2.3]],
 
-                               [[2.3, 4.3],
-                                [3.3, 5.3],
-                                [4.3, 6.3],
-                                [5.3, 7.3],
-                                [6.3, 8.3],
-                                [7.3, 9.3],
-                                [8.3, 10.3]]],
+                               [[-1.7, -0.7, 0.3, 1.3, 2.3, 3.3, 4.3],
+                                [0.3, 1.3, 2.3, 3.3, 4.3, 5.3, 6.3]],
 
-                             [[[0.3, 2.3],
-                               [1.3, 3.3],
-                               [2.3, 4.3],
-                               [3.3, 5.3],
-                               [4.3, 6.3],
-                               [5.3, 7.3],
-                               [6.3, 8.3]],
+                               [[2.3, 3.3, 4.3, 5.3, 6.3, 7.3, 8.3],
+                                [4.3, 5.3, 6.3, 7.3, 8.3, 9.3, 10.3]]],
 
-                              [[4.3, 6.3],
-                               [5.3, 7.3],
-                               [6.3, 8.3],
-                               [7.3, 9.3],
-                               [8.3, 10.3],
-                               [9.3, 11.3],
-                               [10.3, 12.3]],
+                              [[[0.3, 1.3, 2.3, 3.3, 4.3, 5.3, 6.3],
+                                [2.3, 3.3, 4.3, 5.3, 6.3, 7.3, 8.3]],
 
-                              [[8.3, 10.3],
-                               [9.3, 11.3],
-                               [10.3, 12.3],
-                               [11.3, 13.3],
-                               [12.3, 14.3],
-                               [13.3, 15.3],
-                               [14.3, 16.3]]],
+                               [[4.3, 5.3, 6.3, 7.3, 8.3, 9.3, 10.3],
+                                [6.3, 7.3, 8.3, 9.3, 10.3, 11.3, 12.3]],
 
+                               [[8.3, 9.3, 10.3, 11.3, 12.3, 13.3, 14.3],
+                                [10.3, 11.3, 12.3, 13.3, 14.3, 15.3, 16.3]]],
 
-                             [[[6.3, 8.3],
-                               [7.3, 9.3],
-                               [8.3, 10.3],
-                               [9.3, 11.3],
-                               [10.3, 12.3],
-                               [11.3, 13.3],
-                               [12.3, 14.3]],
+                              [[[6.3, 7.3, 8.3, 9.3, 10.3, 11.3, 12.3],
+                                [8.3, 9.3, 10.3, 11.3, 12.3, 13.3, 14.3]],
 
-                              [[10.3, 12.3],
-                               [11.3, 13.3],
-                               [12.3, 14.3],
-                               [13.3, 15.3],
-                               [14.3, 16.3],
-                               [15.3, 17.3],
-                               [16.3, 18.3]],
+                               [[10.3, 11.3, 12.3, 13.3, 14.3, 15.3, 16.3],
+                                [12.3, 13.3, 14.3, 15.3, 16.3, 17.3, 18.3]],
 
-                              [[14.3, 16.3],
-                               [15.3, 17.3],
-                               [16.3, 18.3],
-                               [17.3, 19.3],
-                               [18.3, 20.3],
-                               [19.3, 21.3],
-                               [20.3, 22.3]]],
+                               [[14.3, 15.3, 16.3, 17.3, 18.3, 19.3, 20.3],
+                                [16.3, 17.3, 18.3, 19.3, 20.3, 21.3, 22.3]]],
 
-                             [[[12.3, 14.3],
-                               [13.3, 15.3],
-                               [14.3, 16.3],
-                               [15.3, 17.3],
-                               [16.3, 18.3],
-                               [17.3, 19.3],
-                               [18.3, 20.3]],
+                              [[[12.3, 13.3, 14.3, 15.3, 16.3, 17.3, 18.3],
+                                [14.3, 15.3, 16.3, 17.3, 18.3, 19.3, 20.3]],
 
-                              [[16.3, 18.3],
-                               [17.3, 19.3],
-                               [18.3, 20.3],
-                               [19.3, 21.3],
-                               [20.3, 22.3],
-                               [21.3, 23.3],
-                               [22.3, 24.3]],
+                               [[16.3, 17.3, 18.3, 19.3, 20.3, 21.3, 22.3],
+                                [18.3, 19.3, 20.3, 21.3, 22.3, 23.3, 24.3]],
 
-                              [[20.3, 22.3],
-                               [21.3, 23.3],
-                               [22.3, 24.3],
-                               [23.3, 25.3],
-                               [24.3, 26.3],
-                               [25.3, 27.3],
-                               [26.3, 28.3]]],
+                               [[20.3, 21.3, 22.3, 23.3, 24.3, 25.3, 26.3],
+                                [22.3, 23.3, 24.3, 25.3, 26.3, 27.3, 28.3]]],
 
-                             [[[18.3, 20.3],
-                               [19.3, 21.3],
-                               [20.3, 22.3],
-                               [21.3, 23.3],
-                               [22.3, 24.3],
-                               [23.3, 25.3],
-                               [24.3, 26.3]],
+                              [[[18.3, 19.3, 20.3, 21.3, 22.3, 23.3, 24.3],
+                                [20.3, 21.3, 22.3, 23.3, 24.3, 25.3, 26.3]],
 
-                              [[22.3, 24.3],
-                               [23.3, 25.3],
-                               [24.3, 26.3],
-                               [25.3, 27.3],
-                               [26.3, 28.3],
-                               [27.3, 29.3],
-                               [28.3, 30.3]],
+                               [[22.3, 23.3, 24.3, 25.3, 26.3, 27.3, 28.3],
+                                [24.3, 25.3, 26.3, 27.3, 28.3, 29.3, 30.3]],
 
-                              [[26.3, 28.3],
-                               [27.3, 29.3],
-                               [28.3, 30.3],
-                               [29.3, 31.3],
-                               [30.3, 32.3],
-                               [31.3, 33.3],
-                               [32.3, 34.3]]]])
+                               [[26.3, 27.3, 28.3, 29.3, 30.3, 31.3, 32.3],
+                                [28.3, 29.3, 30.3, 31.3, 32.3, 33.3, 34.3]]]])
 
         assert numpy.allclose(out_cube.data, result)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
         assert numpy.array_equal(data_cube.coord('altitude').points, out_cube.coord('altitude').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_very_different_grids(self):
+        sample_cube = make_mock_cube(lon_dim_length=0, alt_dim_length=10, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(lat_dim_length=0, pres_dim_length=6, time_dim_length=15,
+                                   horizontal_offset=2.6, time_offset=1.5)
+
+        # Result should maintain longitude, pressure and time, and discard latitude and altitude
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        # We will not verify the data here, just that the output has the correct shape
+        assert out_cube.data.shape == (7, 3, 6)
+        assert not does_coord_exist_in_cube(out_cube, 'laitude')
+        assert not does_coord_exist_in_cube(out_cube, 'altitude')
+        assert numpy.array_equal(data_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+        assert numpy.array_equal(data_cube.coord('air_pressure').points, out_cube.coord('air_pressure').points)
 
     @istest
     def test_gridded_gridded_li_with_very_different_grids(self):
@@ -755,6 +835,11 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
         out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         # We will not verify the data here, just that the output has the correct shape
+
+        # Note the result here has a different shape, (3, 6, 7) to the same test that uses nn instead of li. The nn
+        # test has a shape of (7, 3, 6), but this should not make any difference to anything subsequently done with
+        # the output.
+        assert out_cube.data.shape == (3, 6, 7)
         assert not does_coord_exist_in_cube(out_cube, 'laitude')
         assert not does_coord_exist_in_cube(out_cube, 'altitude')
         assert numpy.array_equal(data_cube.coord('longitude').points, out_cube.coord('longitude').points)

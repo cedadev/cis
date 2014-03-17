@@ -490,7 +490,6 @@ class GriddedColocator(DefaultColocator):
         # sample grid.
         coord_names_and_sizes_for_sample_grid = []
         coord_names_and_sizes_for_output_grid = []
-
         for coord in data.coords():
             # First try and find the coordinate in points, the sample grid. If an exception is thrown, it means that
             # name does not appear in the sample grid, and instead take the coordinate name and length from the original
@@ -528,51 +527,66 @@ class GriddedColocator(DefaultColocator):
         # Use the new_data array to recreate points, without the DimCoords not in the data cube
         points = iris.cube.Cube(new_points_array, dim_coords_and_dims=new_dim_coord_list)
 
-        # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid. Now
-        # for each point in the sample grid we do the interpolation.
-        for i in index_iterator([i[1] for i in coord_names_and_sizes_for_sample_grid]):
+        # Iris has a different interface for iris.analysis.interpolate.extract_nearest_neighbour, compared to
+        # iris.analysis.interpolate.linear, so we need need to make an exception for how we treat the linear
+        # interpolation case.
+        if kernel.name == 'bilinear':
             coordinate_point_pairs = []
             for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
                 # For each coordinate make the list of tuple pair Iris requires, for example
                 # [('latitude', -90), ('longitude, 0')]
                 coordinate_point_pairs.append((coord_names_and_sizes_for_sample_grid[j][0],
-                                               points.dim_coords[j].points[i[j]]))
+                                               points.dim_coords[j].points))
 
-            # The result here will either be a single data value, if the sample grid and data have matching coordinates,
-            # or an array if the data grid as more coordinate dimensions than the sample grid. The Iris interpolation
-            # functions actually return a Cube.
-            new_data[i] = kernel.interpolater(data, coordinate_point_pairs).data
+            # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
+            # in coord_names_and_sizes_for_output_grid.
+            return [kernel.interpolater(data, coordinate_point_pairs)]
+        else:
+            # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid.
+            # Now for each point in the sample grid we do the interpolation.
+            for i in index_iterator([i[1] for i in coord_names_and_sizes_for_sample_grid]):
+                coordinate_point_pairs = []
+                for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
+                    # For each coordinate make the list of tuple pair Iris requires, for example
+                    # [('latitude', -90), ('longitude, 0')]
+                    coordinate_point_pairs.append((coord_names_and_sizes_for_sample_grid[j][0],
+                                                   points.dim_coords[j].points[i[j]]))
 
-            # Log a progress update, as this can take a long time.
-            if all(x == 0 for x in i[1:]):
-                logging.info('Currently on {0} coordinate at {1}'.format(coord_names_and_sizes_for_sample_grid[0][0],
-                                                                         points.dim_coords[0].points[i[0]]))
+                # The result here will either be a single data value, if the sample grid and data have matching
+                # coordinates, or an array if the data grid as more coordinate dimensions than the sample grid. The Iris
+                # interpolation functions actually return a Cube.
+                new_data[i] = kernel.interpolater(data, coordinate_point_pairs).data
 
-        # Now we need to make a list with the appropriate coordinates, i.e. based on that in
-        # coord_names_and_sizes_for_output_grid. This means choosing the grid points from the sampling grid in the case
-        # of coordinates that exist in both the data and the sample grid, and taking the points from the sampling grid
-        # otherwise.
-        new_dim_coord_list = []
-        for i in range(0, len(coord_names_and_sizes_for_output_grid)):
-            # Try and find the coordinate in the sample grid
-            coord_found = points.coords(coord_names_and_sizes_for_output_grid[i][0])
+                # Log a progress update, as this can take a long time.
+                if all(x == 0 for x in i[1:]):
+                    logging.info('Currently on {0} coordinate at {1}'.format(
+                        coord_names_and_sizes_for_sample_grid[0][0], points.dim_coords[0].points[i[0]]))
 
-            # If the coordinate did not exist in the sample grid then look for it in the data grid
-            if len(coord_found) == 0:
-                coord_found = data.coords(coord_names_and_sizes_for_output_grid[i][0])
+            # Now we need to make a list with the appropriate coordinates, i.e. based on that in
+            # coord_names_and_sizes_for_output_grid. This means choosing the grid points from the sampling grid in the
+            # case of coordinates that exist in both the data and the sample grid, and taking the points from the
+            # sampling grid otherwise.
+            new_dim_coord_list = []
+            for i in range(0, len(coord_names_and_sizes_for_output_grid)):
+                # Try and find the coordinate in the sample grid
+                coord_found = points.coords(coord_names_and_sizes_for_output_grid[i][0])
 
-            # Append the new coordinate to the list. Iris requires this be given as a DimCoord object, along with a
-            # axis number, in a tuple pair.
-            new_dim_coord_list.append((iris.coords.DimCoord(coord_found[0].points,
-                                                            standard_name=coord_found[0].standard_name,
-                                                            long_name=coord_found[0].long_name), i))
+                # If the coordinate did not exist in the sample grid then look for it in the data grid
+                if len(coord_found) == 0:
+                    coord_found = data.coords(coord_names_and_sizes_for_output_grid[i][0])
 
-        # Finally return the new cube with the colocated data. jasmin_cis.col requires this be returned as a list of
-        # Cube objects.
-        new_cube_list = [iris.cube.Cube(new_data, dim_coords_and_dims=new_dim_coord_list, var_name=data.var_name,
-                                        long_name=data.long_name, units=data.units, attributes=data.attributes)]
+                # Append the new coordinate to the list. Iris requires this be given as a DimCoord object, along with a
+                # axis number, in a tuple pair.
+                new_dim_coord_list.append((iris.coords.DimCoord(coord_found[0].points,
+                                                                standard_name=coord_found[0].standard_name,
+                                                                long_name=coord_found[0].long_name), i))
 
-        return new_cube_list
+            # Finally return the new cube with the colocated data. jasmin_cis.col requires this be returned as a list of
+            # Cube objects.
+            new_cube_list = [iris.cube.Cube(new_data, dim_coords_and_dims=new_dim_coord_list, var_name=data.var_name,
+                                            long_name=data.long_name, units=data.units, attributes=data.attributes)]
+
+            return new_cube_list
 
 
 class gridded_gridded_nn(Kernel):
@@ -850,7 +864,7 @@ class CubeCellConstraint(CellConstraint):
 class BinningCubeCellConstraint(IndexedConstraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
 
-    Uses the index_data method to bin all the points 
+    Uses the index_data method to bin all the points
     """
     def __init__(self, fill_value=None):
         super(BinningCubeCellConstraint, self).__init__()
