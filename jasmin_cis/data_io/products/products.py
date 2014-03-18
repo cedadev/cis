@@ -1,6 +1,7 @@
 import logging
 
 import iris
+from iris.exceptions import CoordinateNotFoundError
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
@@ -358,7 +359,7 @@ class Aerosol_CCI(AProduct):
         time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
         time_coord.convert_TAI_time_to_std_time(datetime.datetime(1970,1,1))
         coords.append(time_coord)
-        
+
         return coords
 
     def create_data_object(self, filenames, variable):
@@ -788,7 +789,10 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
         cube = super(NetCDFGriddedByVariableName, self).create_coords(filenames, variable_constraint)
-        cube = convert_cube_time_coord_to_standard_time(cube)
+        try:
+            cube = convert_cube_time_coord_to_standard_time(cube)
+        except CoordinateNotFoundError:
+            pass
         return cube
 
     def create_data_object(self, filenames, variable):
