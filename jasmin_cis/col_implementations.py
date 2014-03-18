@@ -579,7 +579,8 @@ class GriddedColocator(DefaultColocator):
                 # axis number, in a tuple pair.
                 new_dim_coord_list.append((iris.coords.DimCoord(coord_found[0].points,
                                                                 standard_name=coord_found[0].standard_name,
-                                                                long_name=coord_found[0].long_name), i))
+                                                                long_name=coord_found[0].long_name,
+                                                                units=coord_found[0].units), i))
 
             # Finally return the new cube with the colocated data. jasmin_cis.col requires this be returned as a list of
             # Cube objects.

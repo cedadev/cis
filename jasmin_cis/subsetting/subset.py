@@ -61,7 +61,7 @@ class Subset(object):
                       "\nusing limits: " + str(subset_constraint)
 
             if isinstance(subset, cube.Cube):
-                subset.add_history(history)
+                subset.attributes['history'] += history
                 iris.save(subset, self._output_file)
             else:
                 if hasattr(subset.metadata, 'history') and len(subset.metadata.history) > 0:
