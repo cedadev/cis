@@ -440,6 +440,15 @@ class GriddedColocatorUsingIrisRegrid(DefaultColocator):
         self.var_long_name = var_long_name
         self.var_units = var_units
 
+    def check_for_valid_kernel(self, kernel):
+        from jasmin_cis.exceptions import ClassNotFoundError
+
+        if not (isinstance(kernel, gridded_gridded_nn) or isinstance(kernel, gridded_gridded_li)):
+            raise ClassNotFoundError("Expected kernel of one of classes {}; found one of class {}".format(
+                str([jasmin_cis.utils.get_class_name(gridded_gridded_nn),
+                    jasmin_cis.utils.get_class_name(gridded_gridded_li)]),
+                    jasmin_cis.utils.get_class_name(type(kernel))))
+
     def colocate(self, points, data, constraint, kernel):
         """
         This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the points cube. The
@@ -452,26 +461,13 @@ class GriddedColocatorUsingIrisRegrid(DefaultColocator):
         @return: An Iris cube with the colocated data.
         """
         import iris
-        from jasmin_cis.exceptions import ClassNotFoundError
-
-        if not (isinstance(kernel, gridded_gridded_nn) or isinstance(kernel, gridded_gridded_li)):
-            raise ClassNotFoundError("Expected kernel of one of classes {}; found one of class {}".format(
-                str([jasmin_cis.utils.get_class_name(gridded_gridded_nn),
-                    jasmin_cis.utils.get_class_name(gridded_gridded_li)]),
-                    jasmin_cis.utils.get_class_name(type(kernel))))
-
+        self.check_for_valid_kernel(kernel)
         new_data = iris.analysis.interpolate.regrid(data, points, mode=kernel.name)#, **kwargs)
 
         return [new_data]
 
 
-class GriddedColocator(DefaultColocator):
-
-    def __init__(self, var_name='', var_long_name='', var_units=''):
-        super(DefaultColocator, self).__init__()
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
+class GriddedColocator(GriddedColocatorUsingIrisRegrid):
 
     def colocate(self, points, data, constraint, kernel):
         """
@@ -483,6 +479,8 @@ class GriddedColocator(DefaultColocator):
         @param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
         @return: An Iris cube with the colocated data.
         """
+
+        self.check_for_valid_kernel(kernel)
 
         # Make a list of the coordinates we have, with each entry containing a list with the name of the coordinate and
         # the number of points along its axis. One is for the sample grid, which contains the points where we

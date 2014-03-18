@@ -1,8 +1,9 @@
-from nose.tools import istest
+from nose.tools import istest, raises
 from iris.exceptions import CoordinateNotFoundError
 import numpy
+from jasmin_cis.exceptions import ClassNotFoundError
 from jasmin_cis.col_implementations import GriddedColocator, GriddedColocatorUsingIrisRegrid, gridded_gridded_nn, \
-    gridded_gridded_li
+    gridded_gridded_li, nn_gridded
 from jasmin_cis.test.test_util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
     make_dummy_2d_cube_with_small_offset_in_lat, make_dummy_2d_cube_with_small_offset_in_lon, \
     make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres, make_mock_cube
@@ -20,6 +21,16 @@ class GriddedGriddedColocatorTests():
 
     def __init__(self):
         self.colocator = None
+
+    @istest
+    @raises(ClassNotFoundError)
+    def invalid_kernel_throws_error(self):
+        sample_cube = make_mock_cube()
+        data_cube = make_mock_cube()
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=nn_gridded())[0]
 
     @istest
     def test_gridded_gridded_nn_for_same_grids_check_returns_original_data(self):
