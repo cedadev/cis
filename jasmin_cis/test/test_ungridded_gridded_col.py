@@ -4,7 +4,7 @@ import numpy
 from jasmin_cis.data_io.Coord import CoordList
 from jasmin_cis.col_implementations import UngriddedGriddedColocator, mean, CubeCellConstraint, \
     BinningCubeCellConstraint
-from jasmin_cis.test.test_util.mock import make_dummy_ungridded_data_single_point, make_square_5x3_2d_cube, \
+from jasmin_cis.test.test_util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
     make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
@@ -14,18 +14,21 @@ from jasmin_cis.test.test_util.mock import make_dummy_ungridded_data_single_poin
 @istest
 @raises(ValueError)
 def test_throws_value_error_with_empty_coord_list():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     empty_coord_list = CoordList()
 
     col = UngriddedGriddedColocator()
     con = CubeCellConstraint(fill_value=-999.9)
 
-    col.colocate(points=sample_cube, data=empty_coord_list, constraint=con, kernel=mean())[0]
+    try:
+        col.colocate(points=sample_cube, data=empty_coord_list, constraint=con, kernel=mean())[0]
+    except ValueError:
+        raise
 
 
 @istest
 def test_fill_value_for_cube_cell_constraint():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
 
     col = UngriddedGriddedColocator()
@@ -39,12 +42,12 @@ def test_fill_value_for_cube_cell_constraint():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_fill_value_for_cube_cell_constraint_default_fill_value():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
 
     col = UngriddedGriddedColocator()
@@ -58,12 +61,12 @@ def test_fill_value_for_cube_cell_constraint_default_fill_value():
                                    [float('Inf'), float('Inf'), float('Inf')],
                                    [float('Inf'), float('Inf'), float('Inf')]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_single_point_results_in_single_value_in_cell():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -77,12 +80,12 @@ def test_single_point_results_in_single_value_in_cell():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_single_point_results_in_single_value_in_cell_using_binning():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -96,12 +99,12 @@ def test_single_point_results_in_single_value_in_cell_using_binning():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_two_points_in_a_cell_results_in_mean_value_in_cell():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_two_points_with_different_values(0.5, 0.5, 1.2, 1.4)
 
     col = UngriddedGriddedColocator()
@@ -115,12 +118,12 @@ def test_two_points_in_a_cell_results_in_mean_value_in_cell():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert numpy.allclose(out_cube.data.filled(), expected_result, atol=1.0e-15)
+    assert numpy.allclose(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_two_points_in_a_cell_results_in_mean_value_in_cell_using_binning():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_two_points_with_different_values(0.5, 0.5, 1.2, 1.4)
 
     col = UngriddedGriddedColocator()
@@ -139,7 +142,7 @@ def test_two_points_in_a_cell_results_in_mean_value_in_cell_using_binning():
 
 @istest
 def test_point_on_a_lat_boundary_appears_in_higher_cell():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -158,7 +161,7 @@ def test_point_on_a_lat_boundary_appears_in_higher_cell():
 
 @istest
 def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binning():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -177,7 +180,7 @@ def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binning():
 
 @istest
 def test_point_on_a_lon_boundary_appears_in_higher_cell():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -196,7 +199,7 @@ def test_point_on_a_lon_boundary_appears_in_higher_cell():
 
 @istest
 def test_point_on_a_lon_boundary_appears_in_higher_cell_using_binning():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -215,7 +218,7 @@ def test_point_on_a_lon_boundary_appears_in_higher_cell_using_binning():
 
 @istest
 def test_point_on_a_lat_lon_boundary_appears_in_highest_cell():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -234,7 +237,7 @@ def test_point_on_a_lat_lon_boundary_appears_in_highest_cell():
 
 @istest
 def test_point_on_a_lat_lon_boundary_appears_in_highest_cell_using_binning():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -253,7 +256,7 @@ def test_point_on_a_lat_lon_boundary_appears_in_highest_cell_using_binning():
 
 @istest
 def test_single_point_outside_grid_is_excluded():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -267,12 +270,12 @@ def test_single_point_outside_grid_is_excluded():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_single_point_outside_grid_is_excluded_using_binning():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -286,12 +289,12 @@ def test_single_point_outside_grid_is_excluded_using_binning():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_single_point_on_grid_corner_is_counted_once():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(10, 5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -305,12 +308,12 @@ def test_single_point_on_grid_corner_is_counted_once():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, 1.2]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_single_point_on_grid_corner_is_counted_once_using_binning():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(10, 5, 1.2)
 
     col = UngriddedGriddedColocator()
@@ -324,7 +327,7 @@ def test_single_point_on_grid_corner_is_counted_once_using_binning():
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, 1.2]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
@@ -343,7 +346,7 @@ def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_wit
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
@@ -376,7 +379,7 @@ def test_single_point_results_in_single_value_in_cell_with_time_on_boundary_with
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
@@ -397,7 +400,7 @@ def test_single_point_results_in_single_value_in_cell_with_no_altitude_with_cube
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
@@ -430,7 +433,7 @@ def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_wi
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
@@ -451,7 +454,7 @@ def test_single_point_results_in_single_value_in_cell_with_no_pressure_with_cube
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
@@ -486,12 +489,12 @@ def test_single_point_results_in_single_value_in_cell_with_pressure_with_cube_wi
 
     print out_cube.data.filled()
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
 def test_data_with_no_standard_name():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_points = make_dummy_1d_ungridded_data()
 
     col = UngriddedGriddedColocator()
@@ -502,7 +505,7 @@ def test_data_with_no_standard_name():
 
 @istest
 def test_data_with_invalid_standard_name():
-    sample_cube = make_square_5x3_2d_cube()
+    sample_cube = make_mock_cube()
     data_points = make_dummy_1d_ungridded_data_with_invalid_standard_name()
 
     col = UngriddedGriddedColocator()
@@ -527,7 +530,7 @@ def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude()
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)
 
 
 @istest
@@ -546,4 +549,4 @@ def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude_u
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9]])
 
-    assert (out_cube.data.filled() == expected_result).all()
+    assert numpy.array_equal(out_cube.data.filled(), expected_result)

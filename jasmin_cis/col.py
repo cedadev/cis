@@ -124,17 +124,18 @@ class Colocate(object):
 
         logging.info("Appending data to "+self.output_file)
         for data in new_data:
-            history = "Colocated onto sampling from: " + str(self.sample_files) + " using CIS version " + __version__ + \
-                                      "\nvariable: " + str(variable) + \
-                                      "\nwith files: " + str(filenames) + \
-                                      "\nusing colocator: " + str(col_name) + \
-                                      "\ncolocator parameters: " + str(col_params) + \
-                                      "\nconstraint method: " + str(con_method) + \
-                                      "\nconstraint parameters: " + str(con_params) + \
-                                      "\nkernel: " + str(kern) + \
+            history = "Colocated onto sampling from: " + str(self.sample_files) + " "\
+                                      "\nusing CIS version " + __version__ + " " +\
+                                      "\nvariable: " + str(variable) + " " +\
+                                      "\nwith files: " + str(filenames) + " " +\
+                                      "\nusing colocator: " + str(col_name) + " " +\
+                                      "\ncolocator parameters: " + str(col_params) + " " +\
+                                      "\nconstraint method: " + str(con_method) + " " +\
+                                      "\nconstraint parameters: " + str(con_params) + " " +\
+                                      "\nkernel: " + str(kern) + " " +\
                                       "\nkernel parameters: " + str(kern_params)
             if isinstance(data, iris.cube.Cube):
-                data.add_history(history)
+                data.attributes['history'] += history
                 iris.save(data, self.output_file)
             else:
                 data.metadata.history += history

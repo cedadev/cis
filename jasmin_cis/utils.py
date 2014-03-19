@@ -118,6 +118,27 @@ def create_masked_array_for_missing_values(data, missing_values):
 
     return mdata
 
+
+def array_equal_including_nan(array1, array2):
+    """
+    @param array1: A numpy array
+    @param array2: Another numpy array (can be of a different shape)
+    @return True or false if the arrays are equal, inclduing NaNs.
+    """
+    import numpy
+
+    if array1.shape != array2.shape:
+        return False
+    else:
+        for i, j in numpy.nditer([array1, array2]):
+            if i != i:
+                pass
+            elif i != j:
+                return False
+
+    return True
+
+
 def unpack_data_object(data_object, x_variable, y_variable):
     '''
     @param data_object    A cube or an UngriddedData object
@@ -158,13 +179,14 @@ def unpack_data_object(data_object, x_variable, y_variable):
     x = __get_coord(data_object, x_variable, data)
     y = __get_coord(data_object, y_variable, data)
 
-    # Must use np.all here, as np.array_equal will return false if missing values are present
-    if np.all(y == data) or np.all(y == x):
+    # Must use special function to check equality of array here, so NaNs are returned as equal and False is returned if
+    # arrays have a diffent shape
+    if array_equal_including_nan(y, data) or array_equal_including_nan(y, x):
         y = None
 
-    if np.all(x == data):
-            data = y
-            y = None
+    if array_equal_including_nan(x, data):
+        data = y
+        y = None
 
     if isinstance(data_object, Cube):
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)

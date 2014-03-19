@@ -9,7 +9,7 @@ from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, Ce
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
-import jasmin_cis.utils
+from jasmin_cis.utils import index_iterator
 
 
 class DefaultColocator(Colocator):
@@ -458,7 +458,7 @@ class li(Kernel):
         return linear(data, point.coord_tuple).data
 
 
-class GriddedColocator(DefaultColocator):
+class GriddedColocatorUsingIrisRegrid(DefaultColocator):
 
     def __init__(self, var_name='', var_long_name='', var_units=''):
         super(DefaultColocator, self).__init__()
@@ -466,19 +466,7 @@ class GriddedColocator(DefaultColocator):
         self.var_long_name = var_long_name
         self.var_units = var_units
 
-    def colocate(self, points, data, constraint, kernel):
-        '''
-            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
-             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
-             for the output LazyData object is copied from the input data object.
-        @param points: A list of HyperPoints
-        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
-                            based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a numberof points and returns a single value
-        @return: A single LazyData object
-        '''
-        import iris
+    def check_for_valid_kernel(self, kernel):
         from jasmin_cis.exceptions import ClassNotFoundError
 
         if not (isinstance(kernel, gridded_gridded_nn) or isinstance(kernel, gridded_gridded_li)):
@@ -487,23 +475,160 @@ class GriddedColocator(DefaultColocator):
                     jasmin_cis.utils.get_class_name(gridded_gridded_li)]),
                     jasmin_cis.utils.get_class_name(type(kernel))))
 
+    def colocate(self, points, data, constraint, kernel):
+        """
+        This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the points cube. The
+        colocator then returns another Iris cube. This uses Iris' implementation, which only works onto a horizontal
+        grid.
+        @param points: An Iris cube with the sampling grid to colocate onto.
+        @param data: The Iris cube with the data to be colocated.
+        @param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
+        @param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
+        @return: An Iris cube with the colocated data.
+        """
+        import iris
+        self.check_for_valid_kernel(kernel)
         new_data = iris.analysis.interpolate.regrid(data, points, mode=kernel.name)#, **kwargs)
 
         return [new_data]
 
 
+class GriddedColocator(GriddedColocatorUsingIrisRegrid):
+
+    def colocate(self, points, data, constraint, kernel):
+        """
+        This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the 'points' cube. The
+        colocator then returns another Iris cube.
+        @param points: An Iris cube with the sampling grid to colocate onto.
+        @param data: The Iris cube with the data to be colocated.
+        @param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
+        @param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
+        @return: An Iris cube with the colocated data.
+        """
+
+        self.check_for_valid_kernel(kernel)
+
+        # Make a list of the coordinates we have, with each entry containing a list with the name of the coordinate and
+        # the number of points along its axis. One is for the sample grid, which contains the points where we
+        # interpolate too, and one is for the output grid, which will additionally contain any dimensions missing in the
+        # sample grid.
+        coord_names_and_sizes_for_sample_grid = []
+        coord_names_and_sizes_for_output_grid = []
+        for coord in data.coords():
+            # First try and find the coordinate in points, the sample grid. If an exception is thrown, it means that
+            # name does not appear in the sample grid, and instead take the coordinate name and length from the original
+            # data, as this is what we will be keeping.
+            try:
+                coord_names_and_sizes_for_sample_grid.append([coord.name(), len(points.coords(coord.name())[0].points)])
+            except IndexError:
+                coord_names_and_sizes_for_output_grid.append([coord.name(), len(coord.points)])
+
+        # Adding the lists together in this way ensures that the coordinates not in the sample grid appear in the final
+        # position, which is important for adding the points from the Iris interpolater to the new array. The data
+        # returned from the Iris interpolater method will have dimensions of these missing coordinates, which needs
+        # to be the final dimensions in the numpy array, as the iterator will give the position of the other dimensions.
+        coord_names_and_sizes_for_output_grid = coord_names_and_sizes_for_sample_grid + \
+                                                coord_names_and_sizes_for_output_grid
+
+        # An array for the colocated data, with the correct shape
+        new_data = np.zeros(tuple(i[1] for i in coord_names_and_sizes_for_output_grid))
+
+        # Now recreate the points cube, while ignoring any DimCoords in points that are not in the data cube
+        new_dim_coord_list = []
+        new_points_array_shape = []
+        for i in range(0, len(coord_names_and_sizes_for_output_grid)):
+            # Try and find the coordinate in the sample grid
+            coord_found = points.coords(coord_names_and_sizes_for_output_grid[i][0])
+
+            # If the coordinate exists in the sample grid then append the new coordinate to the list. Iris requires
+            # this be given as a DimCoord object, along with a axis number, in a tuple pair.
+            if len(coord_found) != 0:
+                new_dim_coord_list.append((coord_found[0], len(new_dim_coord_list)))
+                new_points_array_shape.append(coord_found[0].points.size)
+
+        new_points_array = np.zeros(tuple(new_points_array_shape))
+
+        # Use the new_data array to recreate points, without the DimCoords not in the data cube
+        points = iris.cube.Cube(new_points_array, dim_coords_and_dims=new_dim_coord_list)
+
+        # Iris has a different interface for iris.analysis.interpolate.extract_nearest_neighbour, compared to
+        # iris.analysis.interpolate.linear, so we need need to make an exception for how we treat the linear
+        # interpolation case.
+        if kernel.name == 'bilinear':
+            coordinate_point_pairs = []
+            for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
+                # For each coordinate make the list of tuple pair Iris requires, for example
+                # [('latitude', -90), ('longitude, 0')]
+                coordinate_point_pairs.append((coord_names_and_sizes_for_sample_grid[j][0],
+                                               points.dim_coords[j].points))
+
+            # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
+            # in coord_names_and_sizes_for_output_grid.
+            return [kernel.interpolater(data, coordinate_point_pairs)]
+        else:
+            # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid.
+            # Now for each point in the sample grid we do the interpolation.
+            for i in index_iterator([i[1] for i in coord_names_and_sizes_for_sample_grid]):
+                coordinate_point_pairs = []
+                for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
+                    # For each coordinate make the list of tuple pair Iris requires, for example
+                    # [('latitude', -90), ('longitude, 0')]
+                    coordinate_point_pairs.append((coord_names_and_sizes_for_sample_grid[j][0],
+                                                   points.dim_coords[j].points[i[j]]))
+
+                # The result here will either be a single data value, if the sample grid and data have matching
+                # coordinates, or an array if the data grid as more coordinate dimensions than the sample grid. The Iris
+                # interpolation functions actually return a Cube.
+                new_data[i] = kernel.interpolater(data, coordinate_point_pairs).data
+
+                # Log a progress update, as this can take a long time.
+                if all(x == 0 for x in i[1:]):
+                    logging.info('Currently on {0} coordinate at {1}'.format(
+                        coord_names_and_sizes_for_sample_grid[0][0], points.dim_coords[0].points[i[0]]))
+
+            # Now we need to make a list with the appropriate coordinates, i.e. based on that in
+            # coord_names_and_sizes_for_output_grid. This means choosing the grid points from the sampling grid in the
+            # case of coordinates that exist in both the data and the sample grid, and taking the points from the
+            # sampling grid otherwise.
+            new_dim_coord_list = []
+            for i in range(0, len(coord_names_and_sizes_for_output_grid)):
+                # Try and find the coordinate in the sample grid
+                coord_found = points.coords(coord_names_and_sizes_for_output_grid[i][0])
+
+                # If the coordinate did not exist in the sample grid then look for it in the data grid
+                if len(coord_found) == 0:
+                    coord_found = data.coords(coord_names_and_sizes_for_output_grid[i][0])
+
+                # Append the new coordinate to the list. Iris requires this be given as a DimCoord object, along with a
+                # axis number, in a tuple pair.
+                new_dim_coord_list.append((iris.coords.DimCoord(coord_found[0].points,
+                                                                standard_name=coord_found[0].standard_name,
+                                                                long_name=coord_found[0].long_name,
+                                                                units=coord_found[0].units), i))
+
+            # Finally return the new cube with the colocated data. jasmin_cis.col requires this be returned as a list of
+            # Cube objects.
+            new_cube_list = [iris.cube.Cube(new_data, dim_coords_and_dims=new_dim_coord_list, var_name=data.var_name,
+                                            long_name=data.long_name, units=data.units, attributes=data.attributes)]
+
+            return new_cube_list
+
+
 class gridded_gridded_nn(Kernel):
     def __init__(self):
         self.name = 'nearest'
+        self.interpolater = iris.analysis.interpolate.extract_nearest_neighbour
 
     def get_value(self, point, data):
         '''Not needed for gridded/gridded co-location.
         '''
         raise ValueError("gridded_gridded_nn kernel selected for use with colocator other than GriddedColocator")
 
+
 class gridded_gridded_li(Kernel):
     def __init__(self):
         self.name = 'bilinear'
+        self.interpolater = iris.analysis.interpolate.linear
 
     def get_value(self, point, data):
         '''Not needed for gridded/gridded co-location.
@@ -764,7 +889,7 @@ class CubeCellConstraint(CellConstraint):
 class BinningCubeCellConstraint(IndexedConstraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
 
-    Uses the index_data method to bin all the points 
+    Uses the index_data method to bin all the points
     """
     def __init__(self, fill_value=None):
         super(BinningCubeCellConstraint, self).__init__()
