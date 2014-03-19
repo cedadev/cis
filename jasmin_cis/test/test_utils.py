@@ -1,6 +1,8 @@
+import numpy
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 from jasmin_cis.utils import apply_intersection_mask_to_two_arrays, calculate_histogram_bin_edges, \
-    split_into_float_and_units, parse_distance_with_units_to_float_km, parse_distance_with_units_to_float_m
+    split_into_float_and_units, parse_distance_with_units_to_float_km, parse_distance_with_units_to_float_m, \
+    array_equal_including_nan
 from nose.tools import istest, eq_, raises
 
 @istest
@@ -214,4 +216,14 @@ def test_parse_distance_with_units_of_km_to_float_m():
 @istest
 def test_parse_distance_without_units_to_float_m():
     eq_(parse_distance_with_units_to_float_m('10'), 10)
+
+@istest
+def test_array_equal_including_nan():
+    array1 = numpy.array([[1, 2], [3, 4]])
+    array2 = numpy.array([[1, 2], [3, 4.1]])
+    array3 = numpy.array([[1, 2], [3, float('nan')]])
+    assert array_equal_including_nan(array1, array1)
+    assert not array_equal_including_nan(array1, array2)
+    assert not array_equal_including_nan(array1, array3)
+    assert array_equal_including_nan(array3, array3)
 
