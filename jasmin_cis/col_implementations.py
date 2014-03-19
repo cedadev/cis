@@ -7,9 +7,10 @@ import numpy as np
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
+from jasmin_cis.data_io.gridded_data import GriddedData
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
-from jasmin_cis.utils import index_iterator
+import jasmin_cis.utils
 
 
 class DefaultColocator(Colocator):
@@ -568,7 +569,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         else:
             # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid.
             # Now for each point in the sample grid we do the interpolation.
-            for i in index_iterator([i[1] for i in coord_names_and_sizes_for_sample_grid]):
+            for i in jasmin_cis.utils.index_iterator([i[1] for i in coord_names_and_sizes_for_sample_grid]):
                 coordinate_point_pairs = []
                 for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
                     # For each coordinate make the list of tuple pair Iris requires, for example
@@ -608,8 +609,8 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
 
             # Finally return the new cube with the colocated data. jasmin_cis.col requires this be returned as a list of
             # Cube objects.
-            new_cube_list = [iris.cube.Cube(new_data, dim_coords_and_dims=new_dim_coord_list, var_name=data.var_name,
-                                            long_name=data.long_name, units=data.units, attributes=data.attributes)]
+            new_cube_list = [GriddedData(new_data, dim_coords_and_dims=new_dim_coord_list, var_name=data.var_name,
+                                         long_name=data.long_name, units=data.units, attributes=data.attributes)]
 
             return new_cube_list
 
@@ -843,11 +844,11 @@ class UngriddedGriddedColocator(Colocator):
             dim_coords_and_dims.append((coord, idx))
         metadata = src_data.metadata
         metadata.missing_value = fill_value
-        cube = iris.cube.Cube(data, standard_name=src_data.standard_name,
-                              long_name=src_data.long_name,
-                              var_name=metadata._name,
-                              units=src_data.units,
-                              dim_coords_and_dims=dim_coords_and_dims)
+        cube = GriddedData(data, standard_name=src_data.standard_name,
+                           long_name=src_data.long_name,
+                           var_name=metadata._name,
+                           units=src_data.units,
+                           dim_coords_and_dims=dim_coords_and_dims)
         #TODO Check if any other keyword arguments should be set:
         # cube = iris.cube.Cube(data, standard_name=None, long_name=None, var_name=None, units=None,
         #                       attributes=None, cell_methods=None, dim_coords_and_dims=None, aux_coords_and_dims=None,

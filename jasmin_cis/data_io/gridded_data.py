@@ -1,3 +1,5 @@
+from time import gmtime, strftime
+
 import iris
 
 from jasmin_cis.data_io.common_data import CommonData
@@ -70,3 +72,10 @@ class GriddedData(iris.cube.Cube, CommonData):
             ret_list.append(coord_and_dim)
 
         return ret_list
+
+    def add_history(self, new_history):
+        timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
+        if 'history' not in self.attributes:
+            self.attributes['history'] = timestamp + new_history
+        else:
+            self.attributes['history'] += '\n' + timestamp + new_history

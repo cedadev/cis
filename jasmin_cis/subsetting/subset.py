@@ -59,15 +59,11 @@ class Subset(object):
                       "\nvariable: " + str(variable) + \
                       "\nfrom files: " + str(filenames) + \
                       "\nusing limits: " + str(subset_constraint)
+            subset.add_history(history)
 
             if isinstance(subset, cube.Cube):
-                subset.attributes['history'] += history
                 iris.save(subset, self._output_file)
             else:
-                if hasattr(subset.metadata, 'history') and len(subset.metadata.history) > 0:
-                    subset.metadata.history += '\n' + history
-                else:
-                    subset.metadata.history = history
                 write_coordinates(subset.coords(), self._output_file)
                 add_data_to_file(subset, self._output_file)
 

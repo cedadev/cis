@@ -2,8 +2,8 @@
     Module for the UngriddedData class
 '''
 import logging
+from time import gmtime, strftime
 
-import numpy as np
 from netCDF4 import _Variable, Variable
 from netcdf import get_data as netcdf_get_data
 from hdf_vd import get_data as hdf_vd_get_data, VDS
@@ -11,7 +11,6 @@ from pyhdf.SD import SDS
 from hdf_sd import get_data as hdf_sd_get_data
 
 from jasmin_cis.data_io.common_data import CommonData
-from jasmin_cis.data_io.hyperpoint import HyperPoint
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 
 
@@ -199,6 +198,13 @@ class LazyData(object):
         # Actually implementing it would be very tricky as you have to keep track of the data and the coordinates without
         #  necessarily actually reading them
 
+    def add_history(self, new_history):
+        timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
+        if hasattr(self.metadata, 'history') and len(self.metadata.history) > 0:
+            self.metadata.history += '\n' + timestamp + new_history
+        else:
+            self.metadata.history = timestamp + new_history
+
 
 class UngriddedData(LazyData, CommonData):
     '''
@@ -287,77 +293,11 @@ class UngriddedData(LazyData, CommonData):
         """
         return UngriddedHyperPointView(self.coords_flattened, self.data_flattened)
 
-    def x_get_all_points(self):
-        """
-             Pack a list of coordinates into a list of x, y, z, t points.
-
-        @param coords: A CoordList of Coord objects
-        @return: A list of HyperPoints
-        """
-        import numpy as np
-        from hyperpoint import HyperPoint, HyperPointList
-
-        points = HyperPointList()
-
-        logging.info("--> Converting ungridded data to a list of HyperPoints...")
-
-        # We want the data to be flat whether it's masked or not
-        data = self.data.flatten()
-
-        # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
-        #  it were the full length of the array
-        data_len = len(data)
-        all_coords = self._coords.get_standard_coords(data_len)
-
-        for i, val in enumerate(data):
-                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
-                                         all_coords[4][i], val))
-
-        return points
-
     def get_non_masked_points(self):
         """Returns a HyperPointView for which the default iterator omits masked points.
         @return: HyperPointView of the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, self.data_flattened, non_masked_iteration=True)
-
-    def x_get_non_masked_points(self):
-        """
-             Pack a list of coordinates into a list of x, y, z, t points. If the internal data is a masked array then
-             only valid (unmasked) points will be returned in the list.
-
-        @param coords: A CoordList of Coord objects
-        @return: A list of HyperPoints
-        """
-        import numpy as np
-        from hyperpoint import HyperPoint, HyperPointList
-
-        points = HyperPointList()
-
-        logging.info("--> Converting ungridded data to a list of HyperPoints...")
-
-        # We want the data to be flat whether it's masked or not
-        data = self.data.flatten()
-
-        # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
-        #  it were the full length of the array
-        data_len = len(data)
-        all_coords = self._coords.get_standard_coords(data_len)
-
-        if isinstance(self.data, np.ma.masked_array):
-            # Loop over all of the elements in the array, so that i goes from 0 to len(data)-1, but
-            #  only access those entries which the mask is False, that is for which not the mask is True...
-            for i, val in enumerate(data):
-                if not data.mask[i]:
-                    points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
-                                             all_coords[4][i], val))
-        else:
-            for i, val in enumerate(data):
-                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
-                                         all_coords[4][i], val))
-
-        return points
-
 
 ##     @classmethod
 ##     def from_points_array(cls, hyperpoints):

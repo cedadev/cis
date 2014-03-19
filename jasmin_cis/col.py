@@ -134,9 +134,8 @@ class Colocate(object):
                                       "\nconstraint parameters: " + str(con_params) + " " +\
                                       "\nkernel: " + str(kern) + " " +\
                                       "\nkernel parameters: " + str(kern_params)
+            data.add_history(history)
             if isinstance(data, iris.cube.Cube):
-                data.attributes['history'] += history
                 iris.save(data, self.output_file)
             else:
-                data.metadata.history += history
                 add_data_to_file(data, self.output_file)
