@@ -91,12 +91,26 @@ class UngriddedHyperPointView(HyperPointView):
                 continue
             yield (idx, self.__getitem__(idx))
 
+    def __setitem__(self, key, value):
+        if key < 0 or key >= self.length:
+            raise IndexError("list index out of range")
+
+        if isinstance(value, HyperPoint):
+            for idx in xrange(HyperPoint.number_standard_names):
+                val = value[idx]
+                coord = self.coords[idx]
+                if coord is not None:
+                    coord[key] = val
+            self.data[key] = value[HyperPoint.number_standard_names][0]
+        else:
+            self.data[key] = value
+
 
 class GriddedHyperPointView(HyperPointView):
     """
     List view of data points as HyperPoints.
     """
-    def __init__(self, dim_coords_and_dims, data, non_masked_iteration=False, cube=None):
+    def __init__(self, dim_coords_and_dims, data, non_masked_iteration=False):
         """
         @param coords: coordinate values at points
         @type coords: list of tuples of (1D numpy array of coordinate values, index of corresponding dimension) or None
@@ -115,7 +129,7 @@ class GriddedHyperPointView(HyperPointView):
                 self.dims_to_std_coords_map[cd[1]] = sc_idx
         self.length = data.size
         self.non_masked_iteration = non_masked_iteration
-        self.cube = cube
+        self._verify_no_coord_change_on_setting = True
 
     def __getitem__(self, item):
         """Get HyperPoint specified by index.
@@ -192,3 +206,35 @@ class GriddedHyperPointView(HyperPointView):
                 if self.data[indices] is np.ma.masked:
                     continue
             yield (idx, self.__getitem__(idx))
+
+    def __setitem__(self, key, value):
+        if isinstance(key, tuple):
+            if any(isinstance(i, slice) for i in key):
+                # Cannot handle multidimensional slicing.
+                raise NotImplementedError
+            indices = key
+        else:
+            if isinstance(key, slice):
+                raise NotImplementedError
+            else:
+                # Index is over flattened (or 1-D) data - convert to unflattened tuple of indices.
+                indices = np.unravel_index(key, self.data.shape, order='C')
+
+        if isinstance(value, HyperPoint):
+            # Allow for value to be a HyperPoint, but don't allow it to change the coordinates since
+            # this affects all points in the corresponding grid slice.
+            if self._verify_no_coord_change_on_setting:
+                for idx, coord_idx in enumerate(indices):
+                    coord = self.coords[idx]
+                    if coord is not None:
+                        sc_idx = self.dims_to_std_coords_map[idx]
+                        curr_value = coord[coord_idx]
+                        new_value = value[sc_idx]
+                        if not np.isclose(curr_value, new_value):
+                            raise ValueError("GriddedHyperPointView assignment cannot be used to modify coordinate values")
+
+            if self.data is not None:
+                self.data[key] = value[HyperPoint.number_standard_names][0]
+        else:
+            # Since only the data value can be changed, allow the value to be passed in directly.
+            self.data[key] = value

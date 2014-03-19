@@ -38,9 +38,10 @@ class DefaultColocator(Colocator):
         metadata = data.metadata
 
         # Convert ungridded data to a list of points
-        # if isinstance(data, UngriddedData):
-        #     data = data.get_non_masked_points()
-        data_points = data.get_non_masked_points()
+        if isinstance(data, UngriddedData):
+            data_points = data.get_non_masked_points()
+        else:
+            data_points = data
 
         logging.info("--> colocating...")
 
@@ -101,7 +102,9 @@ class AverageColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_non_masked_points()
+            data_points = data.get_non_masked_points()
+        else:
+            data_points = data
 
         logging.info("--> colocating...")
 
@@ -111,7 +114,7 @@ class AverageColocator(Colocator):
         nopoints = np.zeros(len(points)) + constraint.fill_value
 
         for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data)
+            con_points = constraint.constrain_points(point, data_points)
             try:
                 means[i], stddev[i], nopoints[i] = kernel.get_value(point, con_points)
             except ValueError:
@@ -171,7 +174,9 @@ class DifferenceColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_non_masked_points()
+            data_points = data.get_non_masked_points()
+        else:
+            data_points = data
 
         logging.info("--> colocating...")
 
@@ -180,7 +185,7 @@ class DifferenceColocator(Colocator):
         difference = np.zeros(len(points)) + constraint.fill_value
 
         for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data)
+            con_points = constraint.constrain_points(point, data_points)
             try:
                 values[i] = kernel.get_value(point, con_points)
                 difference[i] = values[i] - point.val[0]
@@ -220,7 +225,9 @@ class DebugColocator(Colocator):
 
         # Convert ungridded data to a list of points
         if isinstance(data, UngriddedData):
-            data = data.get_non_masked_points()
+            data_points = data.get_non_masked_points()
+        else:
+            data_points = data
 
         logging.info("--> colocating...")
 
@@ -236,7 +243,7 @@ class DebugColocator(Colocator):
             t1 = time()
 
             # colocate using a constraint and a kernel
-            con_points = constraint.constrain_points(point, data)
+            con_points = constraint.constrain_points(point, data_points)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
@@ -362,17 +369,6 @@ class full_average(Kernel):
 
 class nn_horizontal(Kernel):
 
-    def x_get_value(self, point, data):
-        '''
-            Colocation using nearest neighbours along the face of the earth where both points and
-              data are a list of HyperPoints. The default point is the first point.
-        '''
-        if len(data) == 0: raise ValueError
-        nearest_point = data[0]
-        for data_point in data[1:]:
-            if point.compdist(nearest_point, data_point): nearest_point = data_point
-        return nearest_point.val[0]
-
     def get_value(self, point, data):
         '''
             Colocation using nearest neighbours along the face of the earth where both points and
@@ -396,9 +392,12 @@ class nn_altitude(Kernel):
             Colocation using nearest neighbours in altitude, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
-        if len(data) == 0: raise ValueError
         iterator = data.__iter__()
-        nearest_point = iterator.next()
+        try:
+            nearest_point = iterator.next()
+        except StopIteration:
+            # No points to check
+            raise ValueError
         for data_point in iterator:
             if point.compalt(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
@@ -411,9 +410,12 @@ class nn_pressure(Kernel):
             Colocation using nearest neighbours in pressure, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
-        if len(data) == 0: raise ValueError
         iterator = data.__iter__()
-        nearest_point = iterator.next()
+        try:
+            nearest_point = iterator.next()
+        except StopIteration:
+            # No points to check
+            raise ValueError
         for data_point in iterator:
             if point.comppres(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
@@ -426,9 +428,12 @@ class nn_time(Kernel):
             Colocation using nearest neighbours in time, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
-        if len(data) == 0: raise ValueError
         iterator = data.__iter__()
-        nearest_point = iterator.next()
+        try:
+            nearest_point = iterator.next()
+        except StopIteration:
+            # No points to check
+            raise ValueError
         for data_point in iterator:
             if point.comptime(nearest_point, data_point): nearest_point = data_point
         return nearest_point.val[0]
@@ -441,7 +446,7 @@ class nn_gridded(Kernel):
              This calls out to iris to do the work.
         '''
         from iris.analysis.interpolate import nearest_neighbour_data_value
-        return nearest_neighbour_data_value(data.cube, point.coord_tuple)
+        return nearest_neighbour_data_value(data, point.coord_tuple)
 
 
 class li(Kernel):
@@ -450,7 +455,7 @@ class li(Kernel):
             Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
         '''
         from iris.analysis.interpolate import linear
-        return linear(data.cube, point.coord_tuple).data
+        return linear(data, point.coord_tuple).data
 
 
 class GriddedColocator(DefaultColocator):
@@ -569,8 +574,8 @@ class UngriddedGriddedColocator(Colocator):
                     coord.guess_bounds()
                 shape.append(coord.shape[0])
                 output_coords.append(coord)
-        #TODO reinstate ##################################################################
-##        self._fix_longitude_range(coords, data)
+
+        self._fix_longitude_range(coords, data_points)
 
         # Create index if constraint supports it.
         indexed_constraint = isinstance(constraint, IndexedConstraint)
@@ -678,15 +683,15 @@ class UngriddedGriddedColocator(Colocator):
                     low = -180.0
         return low
 
-    def _fix_longitude_range(self, coords, data):
+    def _fix_longitude_range(self, coords, data_points):
         """
         @param coords: coordinates for grid on which to colocate
-        @param data: HyperPointList of data to fix
+        @param data_points: HyperPointList of data to fix
         """
         range_start = self._find_longitude_range(coords)
         if range_start is not None:
             range_end = range_start + 360.0
-            for idx, point in enumerate(data):
+            for idx, point in enumerate(data_points):
                 modified = False
                 if point.longitude < range_start:
                     new_long = point.longitude + 360.0
@@ -695,8 +700,8 @@ class UngriddedGriddedColocator(Colocator):
                     new_long = point.longitude - 360.0
                     modified = True
                 if modified:
-                    new_point = HyperPoint(point[0], new_long, point[2], point[3], point[4], point[5][0])
-                    data[idx] = new_point
+                    new_point = point.modified(lon=new_long)
+                    data_points[idx] = new_point
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.

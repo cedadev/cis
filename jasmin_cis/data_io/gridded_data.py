@@ -43,14 +43,14 @@ class GriddedData(iris.cube.Cube, CommonData):
         @return: HyperPointView of all the data points
         """
         all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
-        return GriddedHyperPointView(all_coords, self.data, cube=self)
+        return GriddedHyperPointView(all_coords, self.data)
 
     def get_non_masked_points(self):
         """Returns a HyperPointView of the points.
         @return: HyperPointView of all the data points
         """
         all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
-        return GriddedHyperPointView(all_coords, self.data, non_masked_iteration=True, cube=self)
+        return GriddedHyperPointView(all_coords, self.data, non_masked_iteration=True)
 
     def find_standard_coords(self):
         """Constructs a list of the standard coordinates.
