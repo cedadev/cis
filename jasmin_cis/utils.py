@@ -191,7 +191,7 @@ def unpack_data_object(data_object, x_variable, y_variable):
         data = y
         y = None
 
-    if type(data_object) is Cube:
+    if isinstance(data_object, Cube):
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
         if plot_defn.transpose:
             data = data.T

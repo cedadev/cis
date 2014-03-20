@@ -2,6 +2,7 @@
  Module to test the colocation routines
 '''
 from nose.tools import istest, eq_, assert_almost_equal, raises
+from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.exceptions import ClassNotFoundError
 from test_util import mock
 
@@ -33,7 +34,6 @@ class TestAverageColocator(ColocatorTests):
     @istest
     @raises(ClassNotFoundError)
     def should_throw_error_if_full_average_kernel_is_not_used(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import AverageColocator, mean, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -47,7 +47,6 @@ class TestAverageColocator(ColocatorTests):
 
     @istest
     def test_basic_col_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import AverageColocator, full_average, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -70,7 +69,6 @@ class TestDifferenceColocator(ColocatorTests):
 
     @istest
     def test_basic_col_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DifferenceColocator, mean, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -98,7 +96,6 @@ class Test_full_average(KernelTests):
 
     @istest
     def test_basic_col_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import AverageColocator, full_average, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -118,7 +115,6 @@ class Test_full_average(KernelTests):
 
     @istest
     def test_basic_col_in_4d_with_pressure_not_altitude(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import AverageColocator, full_average, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -141,10 +137,9 @@ class Test_nn_gridded(KernelTests):
 
     @istest
     def test_basic_col_gridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = [ HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)]
+        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
@@ -153,11 +148,10 @@ class Test_nn_gridded(KernelTests):
 
     @istest
     def test_already_colocated_in_col_gridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
-        sample_points = [HyperPoint(0.0, 0.0)]
+        sample_points = HyperPointList([HyperPoint(0.0, 0.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
@@ -170,10 +164,9 @@ class Test_nn_gridded(KernelTests):
                 bound and less than or equal to it's upper bound. Where a cell is an imaginary boundary around a datapoint
                 which divides the grid.
         '''
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)]
+        sample_points = HyperPointList([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
@@ -183,10 +176,9 @@ class Test_nn_gridded(KernelTests):
 
     @istest
     def test_coordinates_outside_grid_in_col_gridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)]
+        sample_points = HyperPointList([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 12.0)
@@ -196,7 +188,6 @@ class Test_nn_gridded(KernelTests):
 
     @istest
     def test_basic_col_gridded_to_ungridded_in_2d_with_time(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         import datetime as dt
         cube = mock.make_square_5x3_2d_cube_with_time()
@@ -216,10 +207,9 @@ class Test_nn_horizontal(KernelTests):
 
     @istest
     def test_basic_col_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = [HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)]
+        sample_points = HyperPointList([HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 8.0)
@@ -228,11 +218,10 @@ class Test_nn_horizontal(KernelTests):
 
     @istest
     def test_already_colocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
-        sample_points = [HyperPoint(0.0, 0.0)]
+        sample_points = HyperPointList([HyperPoint(0.0, 0.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 8.0)
@@ -247,10 +236,9 @@ class Test_nn_horizontal(KernelTests):
                 down to floating points errors in the haversine calculation as these test points are pretty close
                 together. This test is only really for documenting the behaviour for equidistant points.
         '''
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)]
+        sample_points = HyperPointList([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 11.0)
@@ -260,10 +248,9 @@ class Test_nn_horizontal(KernelTests):
 
     @istest
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = [ HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5) ]
+        sample_points = HyperPointList([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 12.0)
@@ -276,17 +263,15 @@ class Test_nn_time(KernelTests):
     @istest
     @raises(TypeError)
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = [HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0)]
+        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
 
     @istest
     def test_basic_col_in_2d_with_time(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
@@ -302,7 +287,6 @@ class Test_nn_time(KernelTests):
 
     @istest
     def test_basic_col_with_time(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         import numpy as np
 
@@ -322,7 +306,6 @@ class Test_nn_time(KernelTests):
 
     @istest
     def test_already_colocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         import datetime as dt
         import numpy as np
@@ -345,7 +328,6 @@ class Test_nn_time(KernelTests):
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
         '''
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
@@ -358,7 +340,6 @@ class Test_nn_time(KernelTests):
 
     @istest
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
@@ -378,17 +359,15 @@ class Test_nn_altitude(KernelTests):
     @istest
     @raises(TypeError)
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)]
+        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_altitude())[0]
 
     @istest
     def test_basic_col_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -404,7 +383,6 @@ class Test_nn_altitude(KernelTests):
 
     @istest
     def test_already_colocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -422,7 +400,6 @@ class Test_nn_altitude(KernelTests):
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
         '''
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -435,7 +412,6 @@ class Test_nn_altitude(KernelTests):
 
     @istest
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -455,17 +431,15 @@ class Test_nn_pressure(KernelTests):
     @istest
     @raises(TypeError)
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)]
+        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_pressure())[0]
 
     @istest
     def test_basic_col_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -481,7 +455,6 @@ class Test_nn_pressure(KernelTests):
 
     @istest
     def test_already_colocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -499,7 +472,6 @@ class Test_nn_pressure(KernelTests):
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
         '''
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -512,7 +484,6 @@ class Test_nn_pressure(KernelTests):
 
     @istest
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -531,7 +502,6 @@ class Test_mean(KernelTests):
 
     @istest
     def test_basic_col_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
         from jasmin_cis.col_implementations import DefaultColocator, mean, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -549,9 +519,8 @@ class Test_li(KernelTests):
     @istest
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
         from jasmin_cis.col_implementations import DefaultColocator, li, DummyConstraint
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)]
+        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), li())[0]
         assert_almost_equal(new_data.data[0], 8.8)
@@ -565,7 +534,6 @@ class TestSepConstraint(ConstraintTests):
 
     @istest
     def test_all_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
@@ -599,7 +567,6 @@ class TestSepConstraint(ConstraintTests):
 
     @istest
     def test_alt_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
@@ -626,7 +593,6 @@ class TestSepConstraint(ConstraintTests):
 
     @istest
     def test_horizontal_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
@@ -650,7 +616,6 @@ class TestSepConstraint(ConstraintTests):
 
     @istest
     def test_time_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
@@ -674,7 +639,6 @@ class TestSepConstraint(ConstraintTests):
 
     @istest
     def test_pressure_constraint_in_4d(self):
-        from jasmin_cis.data_io.hyperpoint import HyperPoint
         from jasmin_cis.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np

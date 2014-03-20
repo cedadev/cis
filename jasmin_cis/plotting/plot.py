@@ -136,7 +136,7 @@ class Plotter(object):
         try:
             if number_of_coords == 1:
                 plot_type = "line"
-            elif type(data[0]) is Cube:
+            elif isinstance(data[0], Cube):
                 plot_type = "heatmap"
             else:
                 plot_type = "scatter"
