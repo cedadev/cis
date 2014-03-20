@@ -1,15 +1,20 @@
-import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import logging
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values = True, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0,
+                 *mplargs, **mplkwargs):
         '''
         Constructor for Generic_Plot.
         Note: This also calls the plot method
+        @param calculate_min_and_max_values: If true calculates min and max for the data values
+        @param datagroup: The data group number in an overlay plot, 0 is the 'base' plot
         @param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
         @param plot_args: A dictionary of plot args that was created by plot.py
         @param mplargs: Any arguments to be passed directly into matplotlib
@@ -17,6 +22,7 @@ class Generic_Plot(object):
         '''
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
+        self.datagroup = datagroup
 
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
@@ -375,18 +381,44 @@ class Generic_Plot(object):
         self.mplkwargs["vmax"] = float(vmax)
 
     def contour_plot(self, filled):
-        '''
+        """
         Used by both contour and contourf to plot a contour plot
         @param filled: A boolean specifying whether or not the contour plot should be filled
-        '''
-        from numpy import linspace
+        """
+
+        # Set the options specific to a datagroup with the contour type
+
+        if self.plot_args['datagroups'][self.datagroup]['contlabel'] is None:
+            # Default to contour labels on
+            self.plot_args['datagroups'][self.datagroup]['contlabel'] = True
+
+        self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
+        self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
+        self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
+        self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
+
+        if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
+            self.plot_args["valrange"]["vmin"] = self.plot_args['datagroups'][self.datagroup]['cmin']
+        if self.plot_args['datagroups'][self.datagroup]['cmax'] is not None:
+            self.plot_args["valrange"]["vmax"] = self.plot_args['datagroups'][self.datagroup]['cmax']
+
+        self.calculate_min_and_max_values()
+
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        if self.plot_args["valrange"].get("vstep", None) is None:
-            step = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
+        if self.plot_args["valrange"].get("vstep", None) is None and \
+                self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
+            nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
+        elif self.plot_args["valrange"].get("vstep", None) is None:
+            nconts = self.plot_args['datagroups'][self.datagroup]['contnlevels']
         else:
-            step = (vmax - vmin) / self.plot_args["valrange"]["vstep"]
+            nconts = (vmax - vmin) / self.plot_args["valrange"]["vstep"]
+
+        if self.plot_args['datagroups'][self.datagroup]['contlevels'] is None:
+            contour_level_list = np.linspace(vmin, vmax, nconts)
+        else:
+            contour_level_list = self.plot_args['datagroups'][self.datagroup]['contlevels']
 
         if filled:
             contour_type = self.plotting_library.contourf
@@ -399,11 +431,14 @@ class Generic_Plot(object):
         if self.unpacked_data_items[0]["data"].ndim == 1:
             self.mplkwargs["tri"] = True
 
-        contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"], self.unpacked_data_items[0]["data"], linspace(vmin, vmax, step), *self.mplargs, **self.mplkwargs)
+        cs = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
+                          self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
+        if self.mplkwargs["contlabel"]:
+            plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
 
         self.mplkwargs.pop("latlon", None)
         self.mplkwargs.pop("tri", None)
-        
+
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
@@ -460,14 +495,18 @@ class Generic_Plot(object):
         if len(self.packed_data_items) > 1: self.create_legend()
 
     def drawcoastlines(self):
-        colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
-        self.basemap.drawcoastlines(color = colour)
+        if self.plot_args["nasabluemarble"] is not False:
+            self.basemap.bluemarble()
+        else:
+            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
+            self.basemap.drawcoastlines(color = colour)
 
     def format_3d_plot(self):
         '''
         Used by 3d subclasses to format the plot
         '''
         from jasmin_cis.plotting.plot import plot_options
+        import jasmin_cis.plotting.overlay
 
         logx = self.plot_args.get("logx", False)
         logy = self.plot_args.get("logy", False)
@@ -497,7 +536,8 @@ class Generic_Plot(object):
 
         if not self.plot_args["nocolourbar"]: self.add_color_bar()
 
-        if len(self.packed_data_items) > 1: self.create_legend()
+        if len(self.packed_data_items) > 1 and not isinstance(self, jasmin_cis.plotting.overlay.Overlay):
+            self.create_legend()
 
     def set_3daxis_label(self, axis):
         '''

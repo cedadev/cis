@@ -49,7 +49,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--xtickangle", metavar = "X tick angle", nargs = "?", help = "The angle (in degrees) of the ticks on the x axis")
     parser.add_argument("--ytickangle", metavar = "Y tick angle", nargs = "?", help = "The angle (in degrees) of the ticks on the y axis")
 
-    parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")    
+    parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")
     parser.add_argument("--itemwidth", metavar = "Item width", nargs = "?", help = "The width of an item. Unit are points in the case of a line, and point^2 in the case of a scatter point.")
     parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font in points")
     parser.add_argument("--cmap", metavar = "Colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
@@ -83,6 +83,10 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
 
     parser.add_argument("--coastlinescolour", metavar = "Coastlines Colour", nargs = "?", help = "The colour of the coastlines on a map. Any valid html colour (e.g. red)")
+    parser.add_argument("--nasabluemarble", metavar = "NASA Blue Marble background", default=False, nargs = "?", help = "Add the NASA 'Blue Marble' image as the background to a map, instead of coastlines")
+
+    parser.add_argument("--plotwidth", metavar = "Width of the plot in inches", default = 8, nargs="?", help="Set the width of the plot when outputting to file")
+    parser.add_argument("--plotheight", metavar = "Height of the plot in inches", default = 6, nargs="?", help="Set the height of the plot when outputting to file")
     return parser
 
 
@@ -170,7 +174,7 @@ def check_file_exists(filename, parser):
 def parse_float(arg, name, parser):
     '''
     Tries to parse a string as a float.
-    
+
     @param arg:    The arg to parse as a float
     @param name:   A description of the argument used for error messages
     @param parser: The parser used to report an error message
@@ -183,6 +187,10 @@ def parse_float(arg, name, parser):
         except ValueError:
             parser.error("'" + arg + "' is not a valid " + name)
             return None
+
+
+def check_float(arg, parser):
+    return parse_float(arg, 'unknown', parser)
 
 
 def parse_int(arg, name, parser):
@@ -203,6 +211,10 @@ def parse_int(arg, name, parser):
             return None
 
 
+def check_int(arg, parser):
+    return parse_int(arg, 'unknown', parser)
+
+
 def check_product(product, parser):
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
@@ -215,15 +227,23 @@ def check_product(product, parser):
         product = None
     return product
 
+
 def get_plot_datagroups(datagroups, parser):
     '''
     @param datagroups:    A list of datagroups (possibly containing colons)
-    @param parser:       The parser used to report errors    
+    @param parser:       The parser used to report errors
     @return The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions',[ "variable", "filenames", "color", "edgecolor", "itemstyle", "label", "product"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing, check_nothing, check_product)
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "color", "edgecolor", "itemstyle",
+                                                       "label", "product", "type", "cmap", "cmin", "cmax",
+                                                       "contnlevels", "contlevels", "contlabel", "contwidth",
+                                                       "contfontsize"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
+                                         check_nothing, check_product, check_plot_type, check_nothing, check_float,
+                                         check_float, check_int, convert_to_list_of_floats, check_boolean, check_float,
+                                         check_float)
+    print parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
@@ -325,20 +345,20 @@ def parse_colonic_arguments(inputs, parser, options, min_args=1):
     @return A list of dictionaries containing the parsed arguments
     '''
     input_dicts = []
-    
+
     for input_string in inputs:
         split_input = input_string.split(":")
         if len(split_input) < min_args:
             parser.error("A mandatory data group option is missing")
         input_dict = {}
-        
+
         for i, option in enumerate(options._asdict().keys()):
             try:
                 current_option = split_input[i]
                 input_dict[option] = options[i](current_option, parser)
             except IndexError:
                 input_dict[option] = None
-        
+
         input_dicts.append(input_dict)
     return input_dicts
 
@@ -469,8 +489,12 @@ def check_is_not_empty(item, parser):
     return item
 
 
+def convert_to_list_of_floats(arg, parser):
+    # Given a string such as '[10.0,11.1,12.2]' retruns a list containing, 10.0, 11.1, 12.2
+    return [float(x) for x in arg[1:-1].split(',')]
 
-def check_plot_type(plot_type, datagroups, parser):
+
+def check_plot_type(plot_type, parser):
     '''
     Checks plot type is valid option for number of variables if specified
     '''
@@ -478,6 +502,8 @@ def check_plot_type(plot_type, datagroups, parser):
     if plot_type is not None:
         if plot_type not in Plotter.plot_types.keys():
             parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
+
+    return plot_type
 
 def check_color(color, parser):
     if color:
@@ -555,16 +581,25 @@ def check_boolean_argument(argument):
         return False
 
 
+def check_boolean(arg, parser):
+    if arg is None or arg.lower() == "true":
+        return True
+    elif arg.lower() == "false":
+        return False
+    else:
+        parser.error("'" + arg + "' is not either True or False")
+
+
 def assign_logs(arguments):
     arguments.logx = check_boolean_argument(arguments.logx)
     arguments.logy = check_boolean_argument(arguments.logy)
     arguments.logv = check_boolean_argument(arguments.logv)
-    
+
     if arguments.logx:
         arguments.logx = 10
     else:
         arguments.logx = None
-        
+
     if arguments.logy:
         arguments.logy = 10
     else:
@@ -574,12 +609,12 @@ def assign_logs(arguments):
         arguments.logv = 10
     else:
         arguments.logv = None
-    
+
     return arguments
 
 def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
-    check_plot_type(arguments.type, arguments.datagroups, parser)
+    check_plot_type(arguments.type, parser)
 
     arguments.valrange = check_valid_min_max_args(arguments.vmin, arguments.vmax, arguments.vstep, parser, "v")
     arguments.xrange = check_valid_min_max_args(arguments.xmin, arguments.xmax, arguments.xstep, parser, "x")
@@ -593,7 +628,7 @@ def validate_plot_args(arguments, parser):
 
     arguments = assign_logs(arguments)
     # Try and parse numbers
-    arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)   
+    arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)
     arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)
     arguments.height = parse_float(arguments.height, "height", parser)
     arguments.width = parse_float(arguments.width, "width", parser)
@@ -601,7 +636,7 @@ def validate_plot_args(arguments, parser):
     arguments.ytickangle = parse_float(arguments.ytickangle, "y tick angle", parser)
     arguments.xbinwidth = parse_float(arguments.xbinwidth, "x bin width", parser)
     arguments.ybinwidth = parse_float(arguments.ybinwidth, "y bin width", parser)
-    
+
     return arguments
 
 

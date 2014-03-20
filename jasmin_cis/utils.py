@@ -127,14 +127,17 @@ def array_equal_including_nan(array1, array2):
     """
     import numpy
 
-    if array1.shape != array2.shape:
+    try:
+        if array1.shape != array2.shape:
+            return False
+        else:
+            for i, j in numpy.nditer([array1, array2]):
+                if i != i:
+                    pass
+                elif i != j:
+                    return False
+    except AttributeError:
         return False
-    else:
-        for i, j in numpy.nditer([array1, array2]):
-            if i != i:
-                pass
-            elif i != j:
-                return False
 
     return True
 
