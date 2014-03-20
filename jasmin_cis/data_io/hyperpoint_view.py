@@ -259,7 +259,7 @@ class GriddedHyperPointView(HyperPointView):
                             raise ValueError("GriddedHyperPointView assignment cannot be used to modify coordinate values")
 
             if self.data is not None:
-                self.data[key] = value[HyperPoint.number_standard_names][0]
+                self.data[indices] = value[HyperPoint.number_standard_names][0]
         else:
             # Since only the data value can be changed, allow the value to be passed in directly.
-            self.data[key] = value
+            self.data[indices] = value
