@@ -231,6 +231,38 @@ def make_square_5x3_2d_cube_with_missing_data():
     return cube
 
 
+def make_5x3_lon_lat_2d_cube_with_missing_data():
+    """
+    Makes a well defined cube of shape 5x3 with data as follows
+    array([[1,2,3],
+           [4,M,6],
+           [7,8,M],
+           [10,11,12],
+           [M,14,15]])
+    and coordinates in longitude:
+        array([ -10, -5, 0, 5, 10 ])
+    latitude:
+        array([ -5, 0, 5 ])
+
+    They are different lengths to make it easier to distinguish. Note the longitude increases
+    as you step through the array in order - so downwards as it's written above
+    """
+    import numpy as np
+    from iris.coords import DimCoord
+    from iris.cube import Cube
+
+    longitude = DimCoord(np.arange(-10, 11, 5), standard_name='longitude', units='degrees')
+    latitude = DimCoord(np.arange(-5, 6, 5), standard_name='latitude', units='degrees')
+    values = np.ma.arange(15) + 1.0
+    values[4] = np.ma.masked
+    values[8] = np.ma.masked
+    values[12] = np.ma.masked
+    data = np.reshape(values, (5, 3))
+    cube = Cube(data, dim_coords_and_dims=[(longitude, 0), (latitude, 1)])
+
+    return cube
+
+
 def make_square_5x3_2d_cube_with_decreasing_latitude():
     """
     Makes a well defined cube of shape 5x3 with data as follows
