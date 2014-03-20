@@ -38,7 +38,11 @@ class GriddedData(iris.cube.Cube, CommonData):
         return self._wrap_cube_iterator(super(GriddedData, self).slices(*args, **kwargs))
 
     def get_coordinates_points(self):
-        raise NotImplementedError
+        """Returns a HyperPointView of the points.
+        @return: HyperPointView of all the data points
+        """
+        all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
+        return GriddedHyperPointView(all_coords, self.data)
 
     def get_all_points(self):
         """Returns a HyperPointView of the points.
@@ -74,6 +78,11 @@ class GriddedData(iris.cube.Cube, CommonData):
         return ret_list
 
     def add_history(self, new_history):
+        """Appends to, or creates, the history attribute using the supplied history string.
+
+        The new entry is prefixed with a timestamp.
+        @param new_history: history string
+        """
         timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
         if 'history' not in self.attributes:
             self.attributes['history'] = timestamp + new_history

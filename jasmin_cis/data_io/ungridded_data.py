@@ -199,6 +199,11 @@ class LazyData(object):
         #  necessarily actually reading them
 
     def add_history(self, new_history):
+        """Appends to, or creates, the metadata history attribute using the supplied history string.
+
+        The new entry is prefixed with a timestamp.
+        @param new_history: history string
+        """
         timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
         if hasattr(self.metadata, 'history') and len(self.metadata.history) > 0:
             self.metadata.history += '\n' + timestamp + new_history

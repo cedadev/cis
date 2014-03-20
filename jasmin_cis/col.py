@@ -8,28 +8,12 @@ class Colocate(object):
 
     def __init__(self, sample_files, sample_var, sample_product, output_file):
         from jasmin_cis.data_io.read import read_coordinates, read_data
-        from jasmin_cis.data_io.write_netcdf import write_coordinates
-        from iris.cube import Cube
 
         self.sample_files = sample_files
         if sample_var is None:
             sample_points = read_coordinates(sample_files, sample_product)
-            # coords = read_coordinates(sample_files, sample_product)
-            # if isinstance(coords, Cube):
-            #     sample_points = coords
-            # else:
-            #     sample_points = coords.get_coordinates_points()
         else:
             sample_points = read_data(sample_files, sample_var, sample_product)
-            # data = read_data(sample_files, sample_var, sample_product)
-            # coords = data.coords()
-            # if isinstance(data, Cube):
-            #     sample_points = data
-            # else:
-            #     sample_points = data.get_all_points()
-
-        if not isinstance(sample_points, Cube):
-            write_coordinates(sample_points.coords(), output_file)
 
         self.sample_points = sample_points
         self.output_file = output_file
@@ -95,6 +79,7 @@ class Colocate(object):
     def colocate(self, variable, filenames, col_name=None, col_params=None, con_method=None, con_params=None, kern=None, kern_params=None, product = None):
         from jasmin_cis.data_io.read import read_data
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
+        from jasmin_cis.data_io.write_netcdf import write_coordinates
         from jasmin_cis.exceptions import CoordinateNotFoundError
         from time import time
         import iris
@@ -123,6 +108,10 @@ class Colocate(object):
         logging.info("Completed. Total time taken: " + str(time()-t1))
 
         logging.info("Appending data to "+self.output_file)
+
+        # Must explicitly write coordinates for ungridded data.
+        coords_to_be_written = not isinstance(new_data[0], iris.cube.Cube)
+
         for data in new_data:
             history = "Colocated onto sampling from: " + str(self.sample_files) + " "\
                                       "\nusing CIS version " + __version__ + " " +\
@@ -135,6 +124,11 @@ class Colocate(object):
                                       "\nkernel: " + str(kern) + " " +\
                                       "\nkernel parameters: " + str(kern_params)
             data.add_history(history)
+
+            if coords_to_be_written:
+                write_coordinates(self.sample_points, self.output_file)
+                coords_to_be_written = False
+
             if isinstance(data, iris.cube.Cube):
                 iris.save(data, self.output_file)
             else:

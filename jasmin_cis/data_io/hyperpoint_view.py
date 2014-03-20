@@ -105,6 +105,30 @@ class UngriddedHyperPointView(HyperPointView):
         else:
             self.data[key] = value
 
+    @property
+    def vals(self):
+        return self.data
+
+    @property
+    def latitudes(self):
+        return self.coords[HyperPoint.LATITUDE]
+
+    @property
+    def longitudes(self):
+        return self.coords[HyperPoint.LONGITUDE]
+
+    @property
+    def altitudes(self):
+        return self.coords[HyperPoint.ALTITUDE]
+
+    @property
+    def air_pressures(self):
+        return self.coords[HyperPoint.AIR_PRESSURE]
+
+    @property
+    def times(self):
+        return self.coords[HyperPoint.TIME]
+
 
 class GriddedHyperPointView(HyperPointView):
     """
@@ -129,7 +153,7 @@ class GriddedHyperPointView(HyperPointView):
                 self.dims_to_std_coords_map[cd[1]] = sc_idx
         self.length = data.size
         self.non_masked_iteration = non_masked_iteration
-        self._verify_no_coord_change_on_setting = True
+        self._verify_no_coord_change_on_setting = False
 
     def __getitem__(self, item):
         """Get HyperPoint specified by index.
@@ -222,7 +246,8 @@ class GriddedHyperPointView(HyperPointView):
 
         if isinstance(value, HyperPoint):
             # Allow for value to be a HyperPoint, but don't allow it to change the coordinates since
-            # this affects all points in the corresponding grid slice.
+            # this affects all points in the corresponding grid slice. The check below gives an
+            # error if the coordinates don't match the original values.
             if self._verify_no_coord_change_on_setting:
                 for idx, coord_idx in enumerate(indices):
                     coord = self.coords[idx]

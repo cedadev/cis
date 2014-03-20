@@ -64,7 +64,7 @@ class Subset(object):
             if isinstance(subset, cube.Cube):
                 iris.save(subset, self._output_file)
             else:
-                write_coordinates(subset.coords(), self._output_file)
+                write_coordinates(subset, self._output_file)
                 add_data_to_file(subset, self._output_file)
 
     def _set_constraint_limits(self, data, subset_constraint):

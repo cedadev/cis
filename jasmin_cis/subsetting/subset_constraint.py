@@ -7,6 +7,7 @@ import iris
 
 from jasmin_cis.subsetting.subset_framework import SubsetConstraintInterface
 from jasmin_cis.data_io.Coord import Coord, CoordList
+import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
 
 
@@ -91,10 +92,10 @@ class GriddedSubsetConstraint(SubsetConstraint):
         @param data: data to be subsetted
         @type data: iris.cube.Cube
         @return: subsetted data
-        @rtype: iris.cube.Cube
+        @rtype: jasmin_cis.data_io.gridded_data.GriddedData
         """
         iris_constraint = self.make_iris_constraint()
-        return data.extract(iris_constraint)
+        return gridded_data.make_from_cube(data.extract(iris_constraint))
 
 
 class UngriddedSubsetConstraint(SubsetConstraint):

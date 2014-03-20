@@ -36,11 +36,12 @@ class ProductTests():
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
         coords = self.product().create_coords([self.filename])
+        coord_list = coords.coords()
 
-        for coord in coords:
+        for coord in coord_list:
             logging.debug(coord.metadata.standard_name)
 
-        assert(all([ coord.metadata.standard_name in valid_standard_names for coord in coords ]))
+        assert(all([coord.metadata.standard_name in valid_standard_names for coord in coord_list]))
 
     @istest
     def test_write_coords(self):

@@ -659,7 +659,8 @@ class UngriddedGriddedColocator(Colocator):
         from jasmin_cis.exceptions import ClassNotFoundError
 
         # Constraint must be appropriate for gridded sample.
-        if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)):
+        if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)
+                or isinstance(constraint, DummyConstraint)):
             raise ClassNotFoundError("Expected constraint of subclass of one of {}; found one of class {}".format(
                 str([jasmin_cis.utils.get_class_name(CellConstraint),
                      jasmin_cis.utils.get_class_name(IndexedConstraint)]),

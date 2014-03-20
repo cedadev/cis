@@ -10,6 +10,12 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
     '''
     standard_names = ['latitude', 'longitude', 'altitude', 'air_pressure', 'time']
     number_standard_names = len(standard_names)
+    LATITUDE = 0
+    LONGITUDE = 1
+    ALTITUDE = 2
+    AIR_PRESSURE = 3
+    TIME = 4
+    VAL = 5
 
     def __new__(cls, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
         '''
@@ -47,21 +53,21 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
         """
         values = [v for v in self]
         if lat is not None:
-            values[0] = lat
+            values[HyperPoint.LATITUDE] = lat
         if lon is not None:
-            values[1] = lon
+            values[HyperPoint.LONGITUDE] = lon
         if alt is not None:
-            values[2] = alt
+            values[HyperPoint.ALTITUDE] = alt
         if pres is not None:
-            values[3] = pres
+            values[HyperPoint.AIR_PRESSURE] = pres
         if t is not None:
             if isinstance(t, datetime.datetime):
-                values[4] = convert_datetime_to_std_time(t)
+                values[HyperPoint.TIME] = convert_datetime_to_std_time(t)
         if val is not None:
             if val == []:
-                values[5] = []
+                values[HyperPoint.VAL] = []
             else:
-                values[5] = [val]
+                values[HyperPoint.VAL] = [val]
         point = super(HyperPoint, self).__new__(HyperPoint, *values)
         point.coord_tuple = point.get_coord_tuple()
         return point
@@ -249,3 +255,6 @@ class HyperPointList(list):
         else:
             values = None
         return values
+
+    def get_coordinates_points(self):
+        return self
