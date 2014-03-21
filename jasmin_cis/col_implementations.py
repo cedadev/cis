@@ -109,6 +109,8 @@ class AverageColocator(Colocator):
 
         logging.info("--> colocating...")
 
+        points = points.get_coordinates_points()
+
         # Fill will the FillValue from the start
         means = np.zeros(len(points)) + constraint.fill_value
         stddev = np.zeros(len(points)) + constraint.fill_value
@@ -181,6 +183,8 @@ class DifferenceColocator(Colocator):
 
         logging.info("--> colocating...")
 
+        points = points.get_all_points()
+
         # Fill will the FillValue from the start
         values = np.zeros(len(points)) + constraint.fill_value
         difference = np.zeros(len(points)) + constraint.fill_value
@@ -232,14 +236,19 @@ class DebugColocator(Colocator):
 
         logging.info("--> colocating...")
 
+        points = points.get_coordinates_points()
+
         # Only colocate a certain number of points, as a quick test
-        short_points = points if len(points)<self.max_vals else points[:self.max_vals-1]
+        num_points = len(points)
+        num_short_points = num_points if num_points < self.max_vals else self.max_vals
 
         # We still need to output the full size list, to match the size of the coordinates
         values = np.zeros(len(points)) + constraint.fill_value
 
-        times = np.zeros(len(short_points))
-        for i, point in enumerate(short_points):
+        times = np.zeros(num_short_points)
+        for i, point in enumerate(points):
+            if i >= num_short_points:
+                break
 
             t1 = time()
 
@@ -255,7 +264,7 @@ class DebugColocator(Colocator):
             frac, rem = math.modf(i/self.print_step)
             if frac == 0: print str(i) + " - took: " + str(times[i]) + "s" + " -  sample: " + str(point) + " - colocated value: " + str(values[i])
 
-        logging.info("Average time per point: " + str(np.sum(times)/len(short_points)))
+        logging.info("Average time per point: " + str(np.sum(times)/num_short_points))
         new_data = LazyData(values, metadata)
         new_data.metadata.shape = (len(points),)
         new_data.metadata.missing_value = constraint.fill_value
