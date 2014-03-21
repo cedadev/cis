@@ -1,10 +1,5 @@
 /jasmin_cis/test/test_details.txt
 /jasmin_cis/test/manual/.~lock.test_plot_script_expected_results.ods#
-/jasmin_cis/test/manual/test_plot_script_single~
-/jasmin_cis/test/manual/test_plot_script~
-/jasmin_cis/test/test_plot_script~
-/.gitignore~
-/jasmin_cis/data_io/ungridded_netcdf.nc
 .project
 .pydevproject
 /.idea
@@ -12,4 +7,6 @@
 *.pyc
 doc/api/
 build/
-
+dist/
+jasmin_cis.egg-info/
+*~

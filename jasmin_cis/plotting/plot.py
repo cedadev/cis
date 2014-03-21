@@ -10,6 +10,7 @@ from jasmin_cis.plotting.line_plot import Line_Plot
 from jasmin_cis.plotting.scatter_overlay import Scatter_Overlay
 from jasmin_cis.plotting.scatter_plot import Scatter_Plot
 from jasmin_cis.plotting.comparative_scatter import Comparative_Scatter
+from jasmin_cis.plotting.overlay import Overlay
 from jasmin_cis.plotting.histogram2d import Histogram_2D
 from jasmin_cis.plotting.histogram3d import Histogram_3D
 import matplotlib.pyplot as mpl
@@ -28,6 +29,7 @@ class Plotter(object):
                   "scatteroverlay" : Scatter_Overlay,
                   "scatter" : Scatter_Plot,
                   "comparativescatter" : Comparative_Scatter,
+                  "overlay" : Overlay,
                   "histogram2d" : Histogram_2D,
                   "histogram3d" : Histogram_3D}
 
@@ -75,15 +77,22 @@ class Plotter(object):
                      "xbinwidth" : mplkwargs.pop("xbinwidth", None),
                      "ybinwidth" : mplkwargs.pop("ybinwidth", None),
                      "coastlinescolour" : mplkwargs.pop("coastlinescolour", "k"),
+                     "nasabluemarble" : mplkwargs.pop("nasabluemarble", False),
                      "x_variable" : mplkwargs.pop("x_variable"),
-                     "y_variable" : mplkwargs.pop("y_variable")}
+                     "y_variable" : mplkwargs.pop("y_variable"),
+                     "plotwidth" : mplkwargs.pop("plotwidth"),
+                     "plotheight" : mplkwargs.pop("plotheight"),
+                     "cbarscale" : mplkwargs.pop("cbarscale") }
 
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
-        
+
         if plot_type is None: plot_type = self.set_default_plot_type(packed_data_items)
 
         # Do plot
+        f = mpl.gcf()
+        f.set_figwidth(plot_args["plotwidth"])
+        f.set_figheight(plot_args["plotheight"])
         plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
         plot.format_plot()
         plot.apply_axis_limits(plot_args["xrange"], "x")
@@ -102,7 +111,9 @@ class Plotter(object):
             plt.show()
         else:
             logging.info("saving plot to file: " + out_filename)
-            plt.savefig(out_filename) # Will overwrite if file already exists
+            f = plt.gcf()
+            width = f.get_figwidth()
+            plt.savefig(out_filename, bbox_inches='tight', pad_inches=0.05 * width)  # Will overwrite if file already exists
 
     def remove_unassigned_arguments(self):
         '''
@@ -128,7 +139,7 @@ class Plotter(object):
         try:
             if number_of_coords == 1:
                 plot_type = "line"
-            elif type(data[0]) is Cube:
+            elif isinstance(data[0], Cube):
                 plot_type = "heatmap"
             else:
                 plot_type = "scatter"

@@ -1,12 +1,15 @@
 import logging
 
 import iris
+from iris.exceptions import CoordinateNotFoundError
 from jasmin_cis.data_io.Coord import Coord, CoordList
+import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.products.AProduct import AProduct
-from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedCoordinates
 import jasmin_cis.exceptions
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
+
 
 class Cloudsat_2B_CWC_RVOD(AProduct):
 
@@ -30,7 +33,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
             arrays.append(time)
         return utils.concatenate(arrays)
 
-    def create_coords(self, filenames):
+    def _create_coord_list(self, filenames):
         from jasmin_cis.time_util import cis_standard_time_unit
         # list of coordinate variables we are interested in
         variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
@@ -77,12 +80,15 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         return coords
 
+    def create_coords(self, filenames):
+        return UngriddedCoordinates(self._create_coord_list(filenames))
+
     def create_data_object(self, filenames, variable):
 
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
-        coords = self.create_coords(filenames)
+        coords = self._create_coord_list(filenames)
 
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
@@ -141,7 +147,7 @@ class MODIS_L3(AProduct):
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 
-    def create_coords(self, filenames):
+    def _create_coord_list(self, filenames):
         import numpy as np
         from jasmin_cis.time_util import calculate_mid_time, cis_standard_time_unit
 
@@ -189,6 +195,8 @@ class MODIS_L3(AProduct):
 
         return coords
 
+    def create_coords(self, filenames):
+        return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
 
@@ -196,7 +204,7 @@ class MODIS_L3(AProduct):
 
         # reading coordinates
         # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self.create_coords(filenames)
+        coords = self._create_coord_list(filenames)
 
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
@@ -252,7 +260,7 @@ class MODIS_L2(AProduct):
                                                                     /float(factor))+output[:,int(factor/2):(-1*factor):factor]
         return output
 
-    def create_coords(self, filenames, variable=None):
+    def _create_coord_list(self, filenames, variable=None):
         import datetime as dt
 
         variables = [ 'Latitude','Longitude','Scan_Start_Time']
@@ -284,12 +292,15 @@ class MODIS_L2(AProduct):
 
         return CoordList([lat_coord,lon_coord,time_coord])
 
+    def create_coords(self, filenames):
+        return UngriddedCoordinates(self._create_coord_list(filenames))
+
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
         # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self.create_coords(filenames, variable)
+        coords = self._create_coord_list(filenames, variable)
 
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
@@ -305,7 +316,7 @@ class Cloud_CCI(AProduct):
     def get_file_signature(self):
         return [r'..*ESACCI.*CLOUD.*']
 
-    def create_coords(self, filenames):
+    def _create_coord_list(self, filenames):
 
         from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata
         from jasmin_cis.data_io.Coord import Coord
@@ -326,11 +337,14 @@ class Cloud_CCI(AProduct):
 
         return coords
 
+    def create_coords(self, filenames):
+        return UngriddedCoordinates(self._create_coord_list(filenames))
+
     def create_data_object(self, filenames, variable):
 
         from jasmin_cis.data_io.netcdf import get_metadata, read_many_files_individually
 
-        coords = self.create_coords(filenames)
+        coords = self._create_coord_list(filenames)
         var = read_many_files_individually(filenames, [variable])
         metadata = get_metadata(var[variable][0])
 
@@ -341,7 +355,7 @@ class Aerosol_CCI(AProduct):
     def get_file_signature(self):
         return [r'.*ESACCI.*AEROSOL.*']
 
-    def create_coords(self, filenames):
+    def _create_coord_list(self, filenames):
 
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
         from jasmin_cis.data_io.Coord import Coord
@@ -358,13 +372,16 @@ class Aerosol_CCI(AProduct):
         time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
         time_coord.convert_TAI_time_to_std_time(datetime.datetime(1970,1,1))
         coords.append(time_coord)
-        
+
         return coords
+
+    def create_coords(self, filenames):
+        return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
 
-        coords = self.create_coords(filenames)
+        coords = self._create_coord_list(filenames)
         data = read_many_files(filenames, variable, dim="pixel_number")
         metadata = get_metadata(data[variable])
 
@@ -380,7 +397,7 @@ class Caliop(AProduct):
         '''
         return []
 
-    def create_coords(self, filenames, index_offset=0):
+    def _create_coord_list(self, filenames, index_offset=0):
         from jasmin_cis.data_io.hdf_vd import get_data
         from jasmin_cis.data_io.hdf_vd import VDS
         from pyhdf.error import HDF4Error
@@ -468,6 +485,8 @@ class Caliop(AProduct):
 
         return coords
 
+    def create_coords(self, filenames):
+        return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
         '''
@@ -540,14 +559,14 @@ class Caliop_L2(Caliop):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
 
     def create_coords(self, filenames):
-        return super(Caliop_L2, self).create_coords(filenames, index_offset=1)
+        return UngriddedCoordinates(super(Caliop_L2, self)._create_coord_list(filenames, index_offset=1))
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
         # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self.create_coords(filenames)
+        coords = self._create_coord_list(filenames)
 
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
@@ -572,7 +591,7 @@ class Caliop_L1(Caliop):
 
         # reading coordinates
         # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self.create_coords(filenames)
+        coords = self._create_coord_list(filenames)
 
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
@@ -610,7 +629,7 @@ class Cis(AProduct):
         #  'standard' time unit
 
         if usr_variable is None:
-            res = coords
+            res = UngriddedCoordinates(coords)
         else:
             usr_var_data = read_many_files_individually(filenames,usr_variable)[usr_variable]
             res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
@@ -645,7 +664,7 @@ class NetCDF_CF(AProduct):
         coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
 
         if variable is None:
-            return coords
+            return UngriddedCoordinates(coords)
         else:
             return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
 
@@ -680,7 +699,7 @@ class NCAR_NetCDF_RAF(NetCDF_CF):
         coords.append(Coord(data_variables["PSXC"], get_metadata(data_variables["PSXC"]), "P"))
 
         if variable is None:
-            return coords
+            return UngriddedCoordinates(coords)
         else:
             return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
 
@@ -726,7 +745,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
             with open(filename) as f: pass
 
         try:
-            cube = iris.load_cube(filenames, variable)
+            cube = gridded_data.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
             raise InvalidVariableError("Variable not found: " + str(variable) +
                                        "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
@@ -788,7 +807,10 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
         cube = super(NetCDFGriddedByVariableName, self).create_coords(filenames, variable_constraint)
-        cube = convert_cube_time_coord_to_standard_time(cube)
+        try:
+            cube = convert_cube_time_coord_to_standard_time(cube)
+        except CoordinateNotFoundError:
+            pass
         return cube
 
     def create_data_object(self, filenames, variable):
@@ -803,7 +825,10 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
         cube = super(NetCDFGriddedByVariableName, self).create_data_object(filenames, variable_constraint)
-        cube = convert_cube_time_coord_to_standard_time(cube)
+        try:
+            cube = convert_cube_time_coord_to_standard_time(cube)
+        except CoordinateNotFoundError:
+            pass
         return cube
 
 
@@ -812,6 +837,7 @@ class Xglnwa_vprof(NetCDF_CF_Gridded):
     def get_file_signature(self):
         return [r'.*xglnwa.*vprof.*\.nc']
 
+    #TODO Why does this return UngriddedData/Coordinates when create_data_object returns a cube?
     def create_coords(self, filenames, variable = None):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
         from jasmin_cis.data_io.Coord import Coord
@@ -828,10 +854,9 @@ class Xglnwa_vprof(NetCDF_CF_Gridded):
         coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "X"))
 
         if variable is None:
-            return coords
+            return UngriddedCoordinates(coords)
         else:
             return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
-
 
     def create_data_object(self, filenames, variable):
         from iris import AttributeConstraint
@@ -870,6 +895,7 @@ class Xenida(NetCDF_CF_Gridded):
     def get_file_signature(self):
         return [r'.*xenida.*\.nc']
 
+    #TODO Why does this return UngriddedCoordinates when create_data_object returns a cube?
     def create_coords(self, filenames, variable=None):
         # TODO Expand coordinates and read multiple files
         # For gridded data sets this will actually return coordinates which are too short
@@ -904,7 +930,7 @@ class Xenida(NetCDF_CF_Gridded):
         time.convert_to_std_time()
         coords.append(time)
 
-        return coords
+        return UngriddedCoordinates(coords)
 
     def create_data_object(self, filenames, variable):
         from iris.aux_factory import HybridHeightFactory
@@ -921,7 +947,7 @@ class Aeronet(AProduct):
     def get_file_signature(self):
         return [r'.*\.lev20']
 
-    def create_coords(self, filenames, data = None):
+    def _create_coord_list(self, filenames, data = None):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from jasmin_cis.data_io.aeronet import load_multiple_aeronet
 
@@ -938,6 +964,9 @@ class Aeronet(AProduct):
 
         return coords
 
+    def create_coords(self, filenames):
+        return UngriddedCoordinates(self._create_coord_list(filenames))
+
     def create_data_object(self, filenames, variable):
         from jasmin_cis.data_io.aeronet import load_multiple_aeronet
         from jasmin_cis.exceptions import InvalidVariableError
@@ -947,7 +976,7 @@ class Aeronet(AProduct):
         except ValueError:
             raise InvalidVariableError(variable + " does not exist in " + str(filenames))
 
-        coords = self.create_coords(filenames, data_obj)
+        coords = self._create_coord_list(filenames, data_obj)
 
         return UngriddedData(data_obj[variable], Metadata(name=variable, long_name=variable,shape=(len(data_obj),)), coords)
 
@@ -991,7 +1020,7 @@ class ASCII_Hyperpoints(AProduct):
                 InvalidVariableError("Value column does not exist in file " + filenames)
             return data
         else:
-            return coords
+            return UngriddedCoordinates(coords)
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, True)

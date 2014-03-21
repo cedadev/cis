@@ -1,5 +1,6 @@
 import logging, collections
 from jasmin_cis.data_io.hyperpoint import HyperPoint
+from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.ungridded_data import LazyData
 
 class Coord(LazyData):
@@ -146,6 +147,11 @@ class CoordList(list):
         return coords[0]
 
     def get_coordinates_points(self):
+        all_coords = self.find_standard_coords()
+        flattened_coords = [(c.data_flattened if c is not None else None) for c in all_coords]
+        return UngriddedHyperPointView(flattened_coords, None)
+
+    def x_get_coordinates_points(self):
         """
              Pack a list of coordinates into a list of x, y, z, t points to be passed to Colocator
         @param coords: A CoordList of Coord objects
@@ -184,6 +190,25 @@ class CoordList(list):
                 coord = self.get_coord(standard_name=name).data.flatten()
             except CoordinateNotFoundError:
                 coord = empty_data
+            ret_list.append(coord)
+
+        return ret_list
+
+    def find_standard_coords(self):
+        """Constructs a list of the standard coordinates.
+        The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
+        list in this order.
+        @return: list of coordinates or None if coordinate not present
+        """
+        from jasmin_cis.exceptions import CoordinateNotFoundError
+
+        ret_list = []
+
+        for name in HyperPoint.standard_names:
+            try:
+                coord = self.get_coord(standard_name=name)
+            except CoordinateNotFoundError:
+                coord = None
             ret_list.append(coord)
 
         return ret_list

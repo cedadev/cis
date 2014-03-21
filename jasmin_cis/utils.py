@@ -118,7 +118,31 @@ def create_masked_array_for_missing_values(data, missing_values):
 
     return mdata
 
-def unpack_data_object(data_object, x_variable, y_variable):
+
+def array_equal_including_nan(array1, array2):
+    """
+    @param array1: A numpy array
+    @param array2: Another numpy array (can be of a different shape)
+    @return True or false if the arrays are equal, inclduing NaNs.
+    """
+    import numpy
+
+    try:
+        if array1.shape != array2.shape:
+            return False
+        else:
+            for i, j in numpy.nditer([array1, array2]):
+                if i != i:
+                    pass
+                elif i != j:
+                    return False
+    except AttributeError:
+        return False
+
+    return True
+
+
+def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
     '''
     @param data_object    A cube or an UngriddedData object
     @return A dictionary containing x, y and data as numpy arrays
@@ -158,14 +182,16 @@ def unpack_data_object(data_object, x_variable, y_variable):
     x = __get_coord(data_object, x_variable, data)
     y = __get_coord(data_object, y_variable, data)
 
-    if np.array_equal(y, data) or np.array_equal(y, x):
+    # Must use special function to check equality of array here, so NaNs are returned as equal and False is returned if
+    # arrays have a diffent shape
+    if array_equal_including_nan(y, data) or array_equal_including_nan(y, x):
         y = None
 
-    if np.array_equal(x, data):
-            data = y
-            y = None
+    if array_equal_including_nan(x, data):
+        data = y
+        y = None
 
-    if type(data_object) is Cube:
+    if isinstance(data_object, Cube):
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
         if plot_defn.transpose:
             data = data.T
@@ -201,6 +227,9 @@ def unpack_data_object(data_object, x_variable, y_variable):
                 except:
                     data, y = addcyclic(data, y)
                     y, x = np.meshgrid(y, x)
+
+    if x_variable == 'longitude' and wrap:
+        x = iris.analysis.cartography.wrap_lons(x, -180, 360)
 
     logging.debug("Shape of x: " + str(x.shape))
     if y is not None: logging.debug("Shape of y: " + str(y.shape))

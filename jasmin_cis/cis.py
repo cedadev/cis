@@ -10,14 +10,14 @@ from jasmin_cis.exceptions import CISError, NoDataInSubsetError
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "0.6.3"
-__status__ = "Phase 2, Sprint 3 Release"
+__version__ = "0.6.4"
+__status__ = "Phase 2, Sprint 4 Release"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
 def __error_occurred(e):
     '''
     Wrapper method used to print error messages and exit the program.
-    
+
     @param e: An error object or any string
     '''
     sys.stderr.write(str(e) + "\n")
@@ -44,7 +44,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
 
 def plot_cmd(main_arguments):
     '''
-    Main routine for handling calls to the 'plot' command. 
+    Main routine for handling calls to the 'plot' command.
     Reads in the data files specified and passes the rest of the arguments to the plot function.
 
     @param main_arguments:    The command line arguments

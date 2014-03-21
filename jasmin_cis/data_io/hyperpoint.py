@@ -1,4 +1,6 @@
 from collections import namedtuple
+import datetime
+from jasmin_cis.time_util import convert_datetime_to_std_time
 
 
 class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 'air_pressure', 'time', 'val'])):
@@ -8,14 +10,18 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
     '''
     standard_names = ['latitude', 'longitude', 'altitude', 'air_pressure', 'time']
     number_standard_names = len(standard_names)
+    LATITUDE = 0
+    LONGITUDE = 1
+    ALTITUDE = 2
+    AIR_PRESSURE = 3
+    TIME = 4
+    VAL = 5
 
     def __new__(cls, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
         '''
             Small constructor for the HyperPoint named tuple to allow optional arguments
              and set-up value list.
         '''
-        import datetime
-        from jasmin_cis.time_util import convert_datetime_to_std_time
 
         # If no value was specified create an empty list, otherwise create a list with one entry
         if val is None or val == []:
@@ -32,6 +38,38 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
         # Store the coordinate tuple for this point in case we need it later
         point.coord_tuple = point.get_coord_tuple()
 
+        return point
+
+    def modified(self, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
+        """Creates a HyperPoint with modified values.
+
+        @param lat:
+        @param lon:
+        @param alt:
+        @param pres:
+        @param t:
+        @param val:
+        @return:
+        """
+        values = [v for v in self]
+        if lat is not None:
+            values[HyperPoint.LATITUDE] = lat
+        if lon is not None:
+            values[HyperPoint.LONGITUDE] = lon
+        if alt is not None:
+            values[HyperPoint.ALTITUDE] = alt
+        if pres is not None:
+            values[HyperPoint.AIR_PRESSURE] = pres
+        if t is not None:
+            if isinstance(t, datetime.datetime):
+                values[HyperPoint.TIME] = convert_datetime_to_std_time(t)
+        if val is not None:
+            if val == []:
+                values[HyperPoint.VAL] = []
+            else:
+                values[HyperPoint.VAL] = [val]
+        point = super(HyperPoint, self).__new__(HyperPoint, *values)
+        point.coord_tuple = point.get_coord_tuple()
         return point
 
     def same_point_in_time(self, other):
@@ -131,6 +169,8 @@ class HyperPointList(list):
         # Check that all items in the incoming list are HyperPoints. Note that this checking
         # does not guarantee that a HyperPointList instance *always* has just HyperPoints in its list as
         # the append & __getitem__ methods have not been overridden.
+        #TODO In fact it doesn't even check here because the list is not initialised yet. Override __init__ for
+        # mutable objects.
         if not all([isinstance(point, HyperPoint) for point in point_list]):
             raise ValueError('All items in list_of_coords must be Coord instances.')
         return point_list
@@ -215,3 +255,6 @@ class HyperPointList(list):
         else:
             values = None
         return values
+
+    def get_coordinates_points(self):
+        return self

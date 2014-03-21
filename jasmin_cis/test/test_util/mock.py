@@ -2,7 +2,77 @@
 Module for creating mock, dummies and fakes
 '''
 from nose.tools import raises
+import numpy as np
+from iris.cube import Cube
+from iris.coords import DimCoord
+import datetime
+from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
+def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
+                   horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0):
+    """
+    Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
+    given get a 5x3 cube of the form:
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+    @param lat_dim_length: Latitude grid length
+    @param lon_dim_length: Longitude grid length
+    @param alt_dim_length: Altitude grid length
+    @param pres_dim_length: Pressure grid length
+    @param time_dim_length: Time grid length
+    @param horizontal_offset: Offset from the default grid, in degrees, in lat and lon
+    @param altitude_offset: Offset from the default grid in altitude
+    @param pressure_offset: Offset from the default grid in pressure
+    @param time_offset: Offset from the default grid in time
+    @return: A cube with well defined data.
+    """
+
+    coord_list = []
+    coord_number = 0
+    data_size = 1
+
+    if lat_dim_length:
+        coord_list.append((DimCoord(np.linspace(-10., 10., lat_dim_length) + horizontal_offset,
+                                    standard_name='latitude', units='degrees'), coord_number))
+        coord_number += 1
+        data_size *= lat_dim_length
+
+    if lon_dim_length:
+        coord_list.append((DimCoord(np.linspace(-5., 5., lon_dim_length) + horizontal_offset,
+                                    standard_name='longitude', units='degrees'), coord_number))
+        coord_number += 1
+        data_size *= lon_dim_length
+
+    if alt_dim_length:
+        coord_list.append((DimCoord(np.linspace(0., 7., alt_dim_length) + altitude_offset,
+                                    standard_name='altitude', units='metres'), coord_number))
+        coord_number += 1
+        data_size *= alt_dim_length
+
+    if pres_dim_length:
+        coord_list.append((DimCoord(np.linspace(0., 7., pres_dim_length) + pressure_offset,
+                                    standard_name='air_pressure', units='hPa'), coord_number))
+        coord_number += 1
+        data_size *= pres_dim_length
+
+    if time_dim_length:
+        t0 = datetime.datetime(1984, 8, 27)
+        times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(time_dim_length)])
+        time_nums = convert_obj_to_standard_date_array(times)
+        coord_list.append((DimCoord(time_nums, standard_name='time'), coord_number))
+        coord_number += 1
+        data_size *= time_dim_length
+
+    data = np.reshape(np.arange(data_size) + data_offset + 1., tuple(len(i[0].points) for i in coord_list))
+
+    return Cube(data, dim_coords_and_dims=coord_list)
 
 def make_dummy_2d_cube():
     '''
@@ -161,7 +231,67 @@ def make_square_5x3_2d_cube_with_missing_data():
     return cube
 
 
-def make_square_5x3_2d_cube_with_time(offset=0):
+def make_5x3_lon_lat_2d_cube_with_missing_data():
+    """
+    Makes a well defined cube of shape 5x3 with data as follows
+    array([[1,2,3],
+           [4,M,6],
+           [7,8,M],
+           [10,11,12],
+           [M,14,15]])
+    and coordinates in longitude:
+        array([ -10, -5, 0, 5, 10 ])
+    latitude:
+        array([ -5, 0, 5 ])
+
+    They are different lengths to make it easier to distinguish. Note the longitude increases
+    as you step through the array in order - so downwards as it's written above
+    """
+    import numpy as np
+    from iris.coords import DimCoord
+    from iris.cube import Cube
+
+    longitude = DimCoord(np.arange(-10, 11, 5), standard_name='longitude', units='degrees')
+    latitude = DimCoord(np.arange(-5, 6, 5), standard_name='latitude', units='degrees')
+    values = np.ma.arange(15) + 1.0
+    values[4] = np.ma.masked
+    values[8] = np.ma.masked
+    values[12] = np.ma.masked
+    data = np.reshape(values, (5, 3))
+    cube = Cube(data, dim_coords_and_dims=[(longitude, 0), (latitude, 1)])
+
+    return cube
+
+
+def make_square_5x3_2d_cube_with_decreasing_latitude():
+    """
+    Makes a well defined cube of shape 5x3 with data as follows
+    array([[1,2,3],
+           [4,5,6],
+           [7,8,9],
+           [10,11,12],
+           [13,14,15]])
+    and coordinates in latitude:
+        array([ 10, 5, 0, -5, -10 ])
+    longitude:
+        array([ -5, 0, 5 ])
+
+    They are different lengths to make it easier to distinguish. Note the latitude increases
+    as you step through the array in order - so downwards as it's written above
+    """
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(np.arange(10, -11, -5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(15) + 1.0, (5, 3))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
+def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     '''
         Makes a well defined cube of shape 5x3 with data as follows
         arr([[[   1.    2.    3.    4.    5.    6.    7.]
@@ -200,7 +330,7 @@ def make_square_5x3_2d_cube_with_time(offset=0):
     from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
     t0 = datetime.datetime(1984,8,27)
-    times = np.array([t0+datetime.timedelta(days=d) for d in xrange(7)])
+    times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(7)])
 
     time_nums = convert_obj_to_standard_date_array(times)
 
@@ -213,7 +343,7 @@ def make_square_5x3_2d_cube_with_time(offset=0):
     return cube
 
 
-def make_square_5x3_2d_cube_with_altitude(offset=0):
+def make_square_5x3_2d_cube_with_altitude(offset=0, altitude_offset=0):
     """
     Makes a well defined cube of shape 5x3 with data as follows
     arr([[[   1.    2.    3.    4.    5.    6.    7.]
@@ -249,7 +379,7 @@ def make_square_5x3_2d_cube_with_altitude(offset=0):
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    altitude = DimCoord(np.arange(0, 7, 1), standard_name='altitude', units='metres')
+    altitude = DimCoord(np.arange(0, 7, 1)+altitude_offset, standard_name='altitude', units='metres')
     latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(105)+1.0,(5,3,7))

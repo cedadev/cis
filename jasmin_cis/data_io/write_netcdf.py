@@ -65,20 +65,29 @@ def write(data_object, filename):
     @param filename:
     @return:
     """
-    write_coordinates(data_object.coords(), filename)
+    write_coordinate_list(data_object.coords(), filename)
     add_data_to_file(data_object, filename)
 
 
 def write_coordinates(coords, filename):
-    """
+    """Writes coordinates to a netCDF file.
 
-    @param coords:
-    @param filename:
-    @return:
+    @param coords: UngriddedData or UngriddedCoordinates object for which the coordinates are to be written
+    @param filename: file to which to write
+    """
+    coord_list = coords.coords()
+    write_coordinate_list(coord_list, filename)
+
+
+def write_coordinate_list(coord_list, filename):
+    """Writes coordinates to a netCDF file.
+
+    @param coord_list: list of Coord objects
+    @param filename: file to which to write
     """
     netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
-    index_dim = __create_index(netcdf_file, len(coords[0].data.flatten()))
-    for data in coords:
+    index_dim = __create_index(netcdf_file, len(coord_list[0].data.flatten()))
+    for data in coord_list:
         __create_variable(netcdf_file, data)
     netcdf_file.close()
 

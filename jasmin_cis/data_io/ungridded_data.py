@@ -1,12 +1,17 @@
 '''
     Module for the UngriddedData class
 '''
+import logging
+from time import gmtime, strftime
+
 from netCDF4 import _Variable, Variable
 from netcdf import get_data as netcdf_get_data
 from hdf_vd import get_data as hdf_vd_get_data, VDS
 from pyhdf.SD import SDS
 from hdf_sd import get_data as hdf_sd_get_data
-import logging
+
+from jasmin_cis.data_io.common_data import CommonData
+from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 
 
 class Metadata(object):
@@ -193,8 +198,20 @@ class LazyData(object):
         # Actually implementing it would be very tricky as you have to keep track of the data and the coordinates without
         #  necessarily actually reading them
 
+    def add_history(self, new_history):
+        """Appends to, or creates, the metadata history attribute using the supplied history string.
 
-class UngriddedData(LazyData):
+        The new entry is prefixed with a timestamp.
+        @param new_history: history string
+        """
+        timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
+        if hasattr(self.metadata, 'history') and len(self.metadata.history) > 0:
+            self.metadata.history += '\n' + timestamp + new_history
+        else:
+            self.metadata.history = timestamp + new_history
+
+
+class UngriddedData(LazyData, CommonData):
     '''
         Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
@@ -221,6 +238,9 @@ class UngriddedData(LazyData):
             self._coords = CoordList([coords])
         else:
             raise ValueError("Invalid Coords type")
+        all_coords = self._coords.find_standard_coords()
+        self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
+        #TODO Remove
         self.coords_on_grid = False
     
     @property
@@ -269,94 +289,130 @@ class UngriddedData(LazyData):
         """
         return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
 
+    def get_coordinates_points(self):
+        return UngriddedHyperPointView(self.coords_flattened, None)
+
     def get_all_points(self):
+        """Returns a HyperPointView of the points.
+        @return: HyperPointView of all the data points
         """
-             Pack a list of coordinates into a list of x, y, z, t points.
-
-        @param coords: A CoordList of Coord objects
-        @return: A list of HyperPoints
-        """
-        import numpy as np
-        from hyperpoint import HyperPoint, HyperPointList
-
-        points = HyperPointList()
-
-        logging.info("--> Converting ungridded data to a list of HyperPoints...")
-
-        # We want the data to be flat whether it's masked or not
-        data = self.data.flatten()
-
-        # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
-        #  it were the full length of the array
-        data_len = len(data)
-        all_coords = self._coords.get_standard_coords(data_len)
-
-        for i, val in enumerate(data):
-                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
-                                         all_coords[4][i], val))
-
-        return points
-
+        return UngriddedHyperPointView(self.coords_flattened, self.data_flattened)
 
     def get_non_masked_points(self):
+        """Returns a HyperPointView for which the default iterator omits masked points.
+        @return: HyperPointView of the data points
         """
-             Pack a list of coordinates into a list of x, y, z, t points. If the internal data is a masked array then
-             only valid (unmasked) points will be returned in the list.
+        return UngriddedHyperPointView(self.coords_flattened, self.data_flattened, non_masked_iteration=True)
 
-        @param coords: A CoordList of Coord objects
-        @return: A list of HyperPoints
-        """
-        import numpy as np
-        from hyperpoint import HyperPoint, HyperPointList
+##     @classmethod
+##     def from_points_array(cls, hyperpoints):
+##         """
+##          A constuctor for building an UngriddedData object from a list of hyper points
+##         @param hyperpoints:    A list of HyperPoints
+##         """
+##         from jasmin_cis.data_io.Coord import Coord, CoordList
+##         from jasmin_cis.data_io.hyperpoint import HyperPointList
 
-        points = HyperPointList()
+##         if not isinstance(hyperpoints, HyperPointList):
+##             hyperpoints = HyperPointList(hyperpoints)
 
-        logging.info("--> Converting ungridded data to a list of HyperPoints...")
+##         values = hyperpoints.vals
+##         latitude = hyperpoints.latitudes
+##         longitude = hyperpoints.longitudes
+##         altitude = hyperpoints.altitudes
+##         time = hyperpoints.times
 
-        # We want the data to be flat whether it's masked or not
-        data = self.data.flatten()
+##         coords = CoordList( [Coord(latitude, Metadata(standard_name='latitude', units='degrees north')),
+##                              Coord(longitude, Metadata(standard_name='longitude', units='degrees east')),
+##                              Coord(altitude, Metadata(standard_name='altitude', units='meters')),
+##                              Coord(time, Metadata(standard_name='time', units='seconds'))])
 
-        # We want the coordinates to be the full length - the way we access masked arrays gives us the indices as if
-        #  it were the full length of the array
-        data_len = len(data)
-        all_coords = self._coords.get_standard_coords(data_len)
+##         return cls(values, Metadata(), coords)
 
-        if isinstance(self.data, np.ma.masked_array):
-            # Loop over all of the elements in the array, so that i goes from 0 to len(data)-1, but
-            #  only access those entries which the mask is False, that is for which not the mask is True...
-            for i, val in enumerate(data):
-                if not data.mask[i]:
-                    points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
-                                             all_coords[4][i], val))
+
+class UngriddedCoordinates(CommonData):
+    '''
+        Wrapper (adaptor) class for the different types of possible ungridded data.
+    '''
+
+    def __init__(self, coords):
+        '''
+        Constructor
+
+        @param coords: A list of the associated Coord objects
+        '''
+        from jasmin_cis.data_io.Coord import CoordList, Coord
+
+        if isinstance(coords, list):
+            self._coords = CoordList(coords)
+        elif isinstance(coords, CoordList):
+            self._coords = coords
+        elif isinstance(coords, Coord):
+            self._coords = CoordList([coords])
         else:
-            for i, val in enumerate(data):
-                points.append(HyperPoint(all_coords[0][i], all_coords[1][i], all_coords[2][i], all_coords[3][i],
-                                         all_coords[4][i], val))
+            raise ValueError("Invalid Coords type")
+        all_coords = self._coords.find_standard_coords()
+        self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
+        #TODO Remove
+        self.coords_on_grid = False
 
-        return points
+    @property
+    def x(self):
+        return self.coord(axis='X')
 
+    @property
+    def y(self):
+        return self.coord(axis='Y')
 
-    @classmethod
-    def from_points_array(cls, hyperpoints):
+    @property
+    def lat(self):
+        return self.coord(standard_name='latitude')
+
+    @property
+    def lon(self):
+        return self.coord(standard_name='longitude')
+
+    def hyper_point(self, index):
         """
-         A constuctor for building an UngriddedData object from a list of hyper points
-        @param hyperpoints:    A list of HyperPoints
+
+        @param index: The index in the array to find the point for
+        @return: A hyperpoint representing the data at that point
         """
-        from jasmin_cis.data_io.Coord import Coord, CoordList
-        from jasmin_cis.data_io.hyperpoint import HyperPointList
+        from jasmin_cis.data_io.hyperpoint import HyperPoint
+        return HyperPoint(self.coord(standard_name='latitude').data.flat[index],
+                          self.coord(standard_name='longitude').data.flat[index],
+                          self.coord(standard_name='altitude').data.flat[index],
+                          self.coord(standard_name='time').data.flat[index],
+                          self.coord(standard_name='air_pressure').data.flat[index],
+                          None)
 
-        if not isinstance(hyperpoints, HyperPointList):
-            hyperpoints = HyperPointList(hyperpoints)
+    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+        """
 
-        values = hyperpoints.vals
-        latitude = hyperpoints.latitudes
-        longitude = hyperpoints.longitudes
-        altitude = hyperpoints.altitudes
-        time = hyperpoints.times
+        @return: A list of coordinates in this UngriddedData object fitting the given criteria
+        """
+        return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
 
-        coords = CoordList( [Coord(latitude, Metadata(standard_name='latitude', units='degrees north')),
-                             Coord(longitude, Metadata(standard_name='longitude', units='degrees east')),
-                             Coord(altitude, Metadata(standard_name='altitude', units='meters')),
-                             Coord(time, Metadata(standard_name='time', units='seconds'))])
+    def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
+        """
 
-        return cls(values, Metadata(), coords)
+        @raise: CoordinateNotFoundError
+        @return: A single coord given the same arguments as L(coords).
+
+        """
+        return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
+
+    def get_coordinates_points(self):
+        return UngriddedHyperPointView(self.coords_flattened, None)
+
+    def get_all_points(self):
+        """Returns a HyperPointView of the points.
+        @return: HyperPointView of all the data points
+        """
+        return UngriddedHyperPointView(self.coords_flattened, None)
+
+    def get_non_masked_points(self):
+        """Returns a HyperPointView for which the default iterator omits masked points.
+        @return: HyperPointView of the data points
+        """
+        return UngriddedHyperPointView(self.coords_flattened, None, non_masked_iteration=True)
