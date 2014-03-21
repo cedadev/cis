@@ -825,7 +825,10 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
         cube = super(NetCDFGriddedByVariableName, self).create_data_object(filenames, variable_constraint)
-        cube = convert_cube_time_coord_to_standard_time(cube)
+        try:
+            cube = convert_cube_time_coord_to_standard_time(cube)
+        except CoordinateNotFoundError:
+            pass
         return cube
 
 
