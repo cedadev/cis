@@ -89,6 +89,25 @@ class TestUngriddedData(object):
         assert(num_points == 15)
 
 
+    @istest
+    def test_can_add_history(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+        data = np.reshape(np.arange(15) + 1.0, (5, 3))
+
+        coords = CoordList([x, y])
+        ug = UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                          units="kg m-2 s-1", missing_value=-999), coords)
+
+        new_history = 'This is a new history entry.'
+        ug.add_history(new_history)
+        assert(ug.metadata.history.find(new_history) >= 0)
+
+
 class TestUngriddedCoordinates(object):
     @istest
     def test_can_create_ungridded_coordinates(self):
