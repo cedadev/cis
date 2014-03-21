@@ -48,7 +48,11 @@ class Generic_Plot(object):
 
     def set_plotting_library(self):
         if self.is_map():
-            self.basemap = Basemap(lon_0=(self.unpacked_data_items[0])["x"].max()-180.0)
+            if self.unpacked_data_items[0]["x"].max() > 180:
+                lon_0 = 180
+            else:
+                lon_0 = 0
+            self.basemap = Basemap(lon_0=lon_0)
             return self.basemap
         else:
             return self.matplotlib
