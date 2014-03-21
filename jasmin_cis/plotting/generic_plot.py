@@ -193,7 +193,8 @@ class Generic_Plot(object):
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
 
-        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
+        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks,
+                                        shrink=float(self.plot_args["cbarscale"]))
 
         if not self.plot_args["logv"]:
             cbar.formatter.set_scientific(True)

@@ -87,6 +87,7 @@ def add_plot_parser_arguments(parser):
 
     parser.add_argument("--plotwidth", metavar = "Width of the plot in inches", default = 8, nargs="?", help="Set the width of the plot when outputting to file")
     parser.add_argument("--plotheight", metavar = "Height of the plot in inches", default = 6, nargs="?", help="Set the height of the plot when outputting to file")
+    parser.add_argument("--cbarscale", metavar = "A scaling for the color bar", default = 1, nargs="?", help="Scale the color bar, use when color bar does not match plot size")
     return parser
 
 
