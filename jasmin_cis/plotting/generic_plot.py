@@ -395,8 +395,8 @@ class Generic_Plot(object):
         # Set the options specific to a datagroup with the contour type
 
         if self.plot_args['datagroups'][self.datagroup]['contlabel'] is None:
-            # Default to contour labels on
-            self.plot_args['datagroups'][self.datagroup]['contlabel'] = True
+            # Default to contour labels on if not filled, off if filled
+            self.plot_args['datagroups'][self.datagroup]['contlabel'] = not filled
 
         self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
         self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
@@ -439,7 +439,7 @@ class Generic_Plot(object):
 
         cs = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
                           self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
-        if self.mplkwargs["contlabel"] and not filled:
+        if self.mplkwargs["contlabel"]:
             plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
 
         self.mplkwargs.pop("latlon", None)
