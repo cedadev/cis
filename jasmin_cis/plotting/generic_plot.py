@@ -404,7 +404,8 @@ class Generic_Plot(object):
 
         self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
         self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
-        if self.plot_args['datagroups'][self.datagroup]['color'] is None and not filled:
+        if self.plot_args['datagroups'][self.datagroup]['color'] is None and\
+           self.plot_args['datagroups'][self.datagroup]['cmap'] is None and not filled:
             self.mplkwargs["colors"] = "black"
         else:
             self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
