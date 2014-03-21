@@ -173,7 +173,10 @@ class GriddedHyperPointView(HyperPointView):
                 raise NotImplementedError
             else:
                 # Index is over flattened (or 1-D) data - convert to unflattened tuple of indices.
-                indices = np.unravel_index(item, self.data.shape, order='C')
+                try:
+                    indices = np.unravel_index(item, self.data.shape, order='C')
+                except ValueError:
+                    raise IndexError
         for idx, coord_idx in enumerate(indices):
             coord = self.coords[idx]
             if coord is not None:
