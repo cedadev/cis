@@ -16,13 +16,15 @@ class Overlay(Generic_Plot):
             self.mplkwargs['alpha'] = self.plot_args['datagroups'][i]['alpha']
 
             if self.plot_args['datagroups'][i]['type'] == 'heatmap':
-                Heatmap([self.packed_data_items[i]], self.plot_args, *self.mplargs, **self.mplkwargs)
+                Heatmap([self.packed_data_items[i]], self.plot_args, wrap=True, *self.mplargs, **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contour':
-                Contour_Plot([self.packed_data_items[i]], self.plot_args, datagroup=i, *self.mplargs, **self.mplkwargs)
+                Contour_Plot([self.packed_data_items[i]], self.plot_args, datagroup=i, wrap=True, *self.mplargs,
+                             **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contourf':
-                Contourf_Plot([self.packed_data_items[i]], self.plot_args, datagroup=i, *self.mplargs, **self.mplkwargs)
+                Contourf_Plot([self.packed_data_items[i]], self.plot_args, datagroup=i, wrap=True, *self.mplargs,
+                              **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'scatter':
-                Scatter_Plot([self.packed_data_items[i]], self.plot_args, *self.mplargs, **self.mplkwargs)
+                Scatter_Plot([self.packed_data_items[i]], self.plot_args, wrap=True, *self.mplargs, **self.mplkwargs)
             else:
                 raise InvalidPlotTypeError
 

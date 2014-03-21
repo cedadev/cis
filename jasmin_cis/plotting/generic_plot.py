@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0,
+    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0, wrap=False,
                  *mplargs, **mplkwargs):
         '''
         Constructor for Generic_Plot.
@@ -23,6 +23,7 @@ class Generic_Plot(object):
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.datagroup = datagroup
+        self.wrap = wrap
 
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
@@ -80,6 +81,7 @@ class Generic_Plot(object):
         from jasmin_cis.utils import unpack_data_object
         from iris.cube import Cube
         import logging
+        from jasmin_cis.plotting.overlay import Overlay
         if len(self.packed_data_items[0].shape) == 1:
             x_data = __get_data("x")
             y_data = __get_data("y")
@@ -96,7 +98,11 @@ class Generic_Plot(object):
                     if x_data == y_data:
                         __swap_x_and_y_variables()
 
-        return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"]) for packed_data_item in self.packed_data_items]
+        if isinstance(self, Overlay):
+            self.wrap = True
+
+        return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"],
+                                   wrap=self.wrap) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]

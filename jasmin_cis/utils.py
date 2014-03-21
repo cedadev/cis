@@ -142,7 +142,7 @@ def array_equal_including_nan(array1, array2):
     return True
 
 
-def unpack_data_object(data_object, x_variable, y_variable):
+def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
     '''
     @param data_object    A cube or an UngriddedData object
     @return A dictionary containing x, y and data as numpy arrays
@@ -227,6 +227,9 @@ def unpack_data_object(data_object, x_variable, y_variable):
                 except:
                     data, y = addcyclic(data, y)
                     y, x = np.meshgrid(y, x)
+
+    if x_variable == 'longitude' and wrap:
+        x = iris.analysis.cartography.wrap_lons(x, -180, 360)
 
     logging.debug("Shape of x: " + str(x.shape))
     if y is not None: logging.debug("Shape of y: " + str(y.shape))
