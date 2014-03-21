@@ -236,13 +236,13 @@ def get_plot_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "color", "edgecolor", "itemstyle",
-                                                       "label", "product", "type", "cmap", "cmin", "cmax",
+                                                       "label", "product", "type", "alpha", "cmap", "cmin", "cmax",
                                                        "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "contfontsize"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
-                                         check_nothing, check_product, check_plot_type, check_nothing, check_float,
-                                         check_float, check_int, convert_to_list_of_floats, check_boolean, check_float,
-                                         check_float)
+                                         check_nothing, check_product, check_plot_type, check_float, check_nothing,
+                                         check_float, check_float, check_int, convert_to_list_of_floats, check_boolean,
+                                         check_float, check_float)
     print parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
