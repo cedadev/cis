@@ -404,7 +404,10 @@ class Generic_Plot(object):
 
         self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
         self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
-        self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
+        if self.plot_args['datagroups'][self.datagroup]['color'] is None and not filled:
+            self.mplkwargs["colors"] = "black"
+        else:
+            self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
         self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
 
         if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
@@ -443,8 +446,10 @@ class Generic_Plot(object):
 
         cs = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
                           self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
-        if self.mplkwargs["contlabel"]:
+        if self.mplkwargs["contlabel"] and not filled:
             plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
+        elif self.mplkwargs["contlabel"] and filled:
+            plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
 
         self.mplkwargs.pop("latlon", None)
         self.mplkwargs.pop("tri", None)
