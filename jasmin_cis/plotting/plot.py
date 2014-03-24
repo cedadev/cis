@@ -81,7 +81,8 @@ class Plotter(object):
                      "x_variable" : mplkwargs.pop("x_variable"),
                      "y_variable" : mplkwargs.pop("y_variable"),
                      "plotwidth" : mplkwargs.pop("plotwidth"),
-                     "plotheight" : mplkwargs.pop("plotheight")}
+                     "plotheight" : mplkwargs.pop("plotheight"),
+                     "cbarscale" : mplkwargs.pop("cbarscale") }
 
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
@@ -110,7 +111,9 @@ class Plotter(object):
             plt.show()
         else:
             logging.info("saving plot to file: " + out_filename)
-            plt.savefig(out_filename) # Will overwrite if file already exists
+            f = plt.gcf()
+            width = f.get_figwidth()
+            plt.savefig(out_filename, bbox_inches='tight', pad_inches=0.05 * width)  # Will overwrite if file already exists
 
     def remove_unassigned_arguments(self):
         '''
