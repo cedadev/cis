@@ -255,6 +255,3 @@ class HyperPointList(list):
         else:
             values = None
         return values
-
-    def get_coordinates_points(self):
-        return self

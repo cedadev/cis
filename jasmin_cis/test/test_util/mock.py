@@ -6,6 +6,8 @@ import numpy as np
 from iris.cube import Cube
 from iris.coords import DimCoord
 import datetime
+from jasmin_cis.data_io.common_data import CommonData
+from jasmin_cis.data_io.hyperpoint import HyperPointList
 from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
@@ -861,3 +863,25 @@ def gen_random_lat_array(shape):
 def gen_random_data_array(shape, mean=0.0, var=1.0):
     from numpy.random import randn
     return var*randn(*shape) + mean
+
+
+class MockUngriddedData(CommonData):
+    """
+    Fake UngriddedData that uses data in a HyperPointList.
+    """
+    def __init__(self, hyperpointlist):
+        if isinstance(hyperpointlist, HyperPointList):
+            self.hyperpointlist = hyperpointlist
+        elif isinstance(hyperpointlist, list):
+            self.hyperpointlist = HyperPointList(hyperpointlist)
+        else:
+            raise ValueError("Expected HyperPointList or list of HyperPoints")
+
+    def get_coordinates_points(self):
+        return self.hyperpointlist
+
+    def get_all_points(self):
+        return self.hyperpointlist
+
+    def get_non_masked_points(self):
+        return self.hyperpointlist

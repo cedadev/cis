@@ -290,6 +290,9 @@ class UngriddedData(LazyData, CommonData):
         return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
 
     def get_coordinates_points(self):
+        """Returns a HyperPointView of the coordinates of points.
+        @return: HyperPointView of the coordinates of points
+        """
         return UngriddedHyperPointView(self.coords_flattened, None)
 
     def get_all_points(self):
