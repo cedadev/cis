@@ -6,6 +6,7 @@ import sys
 import logging
 
 from jasmin_cis.exceptions import CISError, NoDataInSubsetError
+from jasmin_cis.utils import add_file_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,6 @@ def col_cmd(main_arguments):
     '''
     from jasmin_cis.exceptions import ClassNotFoundError, CISError
     from jasmin_cis.col import Colocate
-    from jasmin_cis.utils import add_file_prefix
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
@@ -150,7 +150,6 @@ def subset_cmd(main_arguments):
     @param main_arguments:    The command line arguments (minus the subset command)
     '''
     from jasmin_cis.subsetting.subset import Subset
-    from jasmin_cis.utils import add_file_prefix
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Subsetting can only be performed on one data group")
@@ -169,6 +168,29 @@ def subset_cmd(main_arguments):
          __error_occurred(exc)
 
 
+def aggregate_cmd(main_arguments):
+    """
+    Main routine for handling calls to the aggregation command.
+
+    @param main_arguments: The command line arguments (minus the aggregate command)
+    """
+    from jasmin_cis.aggregation.aggregate import Aggregate
+
+    if len(main_arguments.datagroups) > 1:
+        __error_occurred("Aggregation can only be performed on one data group")
+    input_group = main_arguments.datagroups[0]
+
+    variable = input_group['variable']
+    filenames = input_group['filenames']
+    product = input_group["product"] if input_group["product"] is not None else None
+    kernel = input_group["kernel"] if input_group["kernel"] is not None else None
+
+    # Add a prefix to the output file so that we have a signature to use when we read it in again
+    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
+    aggregate = Aggregate(main_arguments.grid, output_file)
+    aggregate.aggregate(variable, filenames, product, kernel)
+
+
 def version_cmd(_main_arguments):
     print "Using CIS version:", __version__, "("+__status__+")"
 
@@ -176,6 +198,7 @@ def version_cmd(_main_arguments):
 commands = {'plot': plot_cmd,
             'info': info_cmd,
             'col': col_cmd,
+            'aggregate' : aggregate_cmd,
             'subset': subset_cmd,
             'version': version_cmd}
 
