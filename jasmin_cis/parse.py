@@ -20,6 +20,8 @@ def initialise_top_parser():
     add_info_parser_arguments(info_parser)
     col_parser = subparsers.add_parser("col", help = "Perform colocation")
     add_col_parser_arguments(col_parser)
+    aggregate_parser = subparsers.add_parser("aggregate", help = "Perform aggregation")
+    add_aggregate_parser_arguments(aggregate_parser)
     subset_parser = subparsers.add_parser("subset", help = "Perform subsetting")
     add_subset_parser_arguments(subset_parser)
     subparsers.add_parser("version", help = "Display the CIS version number")
@@ -109,6 +111,19 @@ def add_col_parser_arguments(parser):
                         "filename of the output file containing the colocated data. The name specified will be "
                         "prefixed with \"cis-\" and suffixed with \".nc\" so that cis can recognise it when using the "
                         "file for further operations.")
+    return parser
+
+
+def add_aggregate_parser_arguments(parser):
+    parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
+                        help = "Variable to aggregat with filenames, optional product and optional kernel separated by "
+                               "colon(s)")
+    parser.add_argument("aggregategrid", metavar="AggregateGrid",
+                        help = "Grid for new aggregation, e.g. t,x=[-180,5] would collapse t completly and aggregate "
+                               "longitude onto a new grid, which would start at -180 and then proceed in 5 degree "
+                               "increments")
+    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
+                        help = "The filename of the output file")
     return parser
 
 
@@ -271,6 +286,69 @@ def get_col_samplegroup(samplegroup, parser):
     samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args, extract_method_and_args, extract_method_and_args, check_product)
 
     return parse_colon_and_comma_separated_arguments(samplegroup, parser, samplegroup_options, compulsary_args=1)[0]
+
+
+def get_aggregate_datagroups(datagroups, parser):
+    '''
+    @param datagroups:    A list of datagroups (possibly containing colons)
+    @param parser:       The parser used to report errors
+    @return The parsed datagroups as a list of dictionaries
+    '''
+    from collections import namedtuple
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product, check_nothing)
+
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+
+
+def get_aggregate_grid(aggregategrid, parser):
+    '''
+    @param aggregategrid: List of aggregate grid specifications 
+    @param parser:        The parser used to report errors
+    @return The parsed datagroups as a list of dictionaries
+    '''
+    from jasmin_cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
+    from jasmin_cis.aggregation.aggregation_grid import AggregationGrid
+
+    # Split into the limits for each dimension.
+    split_input = split_outside_brackets(aggregategrid)
+    if len(split_input) == 0:
+        parser.error("Limits for at least one dimension must be specified for aggregation")
+
+    grid_dict = {}
+    for seg in split_input:
+        # Parse out dimension name and new grid spacing; the expected format is:
+        # <dim_name>=[<start_value>,<delta>]
+        match = re.match(r'(?P<dim>[^=]+)(?:=)?(?:\[(?P<start>[^],]+)?(?:,(?P<delta>[^]]+))?\])?', seg)
+        if match is None or match.group('dim') is None:
+            parser.error("A dimension for aggregation does not have a valid dimension name")
+        elif match.group('start') is not None and match.group('delta') is not None:
+            dim_name = match.group('dim')
+            start = match.group('start')
+            delta = match.group('delta')
+
+            # If the dimension is specified as x, y, z, p or t, assume that the dimension is spatial or temporal in the
+            # obvious way. Otherwise, parse what is found as a date/time or number.
+            is_time = None
+            if dim_name.lower() == 't':
+                start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser)
+                delta_parsed = parse_datetime(delta, 'aggregation grid delta date/time', parser)
+                is_time = True
+            elif dim_name.lower() in ['x', 'y', 'z', 'p']:
+                start_parsed = parse_float(start, 'aggregation grid start coordinate', parser)
+                delta_parsed = parse_float(delta, 'aggregation grid delta coordinate', parser)
+                is_time = False
+            else:
+                start_parsed = parse_as_number_or_datetime(start, 'aggregation grid start coordinate', parser)
+                delta_parsed = parse_as_number_or_datetime(delta, 'aggregation grid delta coordinate', parser)
+            grid_dict[dim_name] = AggregationGrid(start_parsed, delta_parsed, is_time)
+        elif match.group('start') is None and match.group('delta') is None:
+            dim_name = match.group('dim')            
+            grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), None)
+        else:
+            parser.error("A dimension for aggregation has a start point but no delta value, a delta value must be "
+                         "supplied")
+    return grid_dict
 
 
 def get_subset_datagroups(datagroups, parser):
@@ -663,6 +741,12 @@ def validate_col_args(arguments, parser):
     return arguments
 
 
+def validate_aggregate_args(arguments, parser):
+    arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
+    arguments.grid = get_aggregate_grid(arguments.aggregategrid, parser)
+    return arguments
+
+
 def validate_subset_args(arguments, parser):
     arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
@@ -677,6 +761,7 @@ def validate_version_args(arguments, parser):
 validators = {'plot': validate_plot_args,
               'info': validate_info_args,
               'col': validate_col_args,
+              'aggregate' : validate_aggregate_args,
               'subset': validate_subset_args,
               'version': validate_version_args}
 

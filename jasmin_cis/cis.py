@@ -169,6 +169,13 @@ def subset_cmd(main_arguments):
          __error_occurred(exc)
 
 
+def aggregate_cmd(main_arguments):
+    """
+    @param main_arguments: The command line arguments (minus the aggregate command)
+    """
+    print main_arguments
+
+
 def version_cmd(_main_arguments):
     print "Using CIS version:", __version__, "("+__status__+")"
 
@@ -176,6 +183,7 @@ def version_cmd(_main_arguments):
 commands = {'plot': plot_cmd,
             'info': info_cmd,
             'col': col_cmd,
+            'aggregate' : aggregate_cmd,
             'subset': subset_cmd,
             'version': version_cmd}
 
