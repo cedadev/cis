@@ -367,6 +367,67 @@ class SepConstraint(PointConstraint):
         return con_points
 
 
+class IndexedSepConstraint(PointConstraint):
+
+    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
+        from jasmin_cis.exceptions import InvalidCommandLineOptionError
+
+        self.haversine_distance_kd_tree_index = False
+
+        super(IndexedSepConstraint, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise InvalidCommandLineOptionError('Separation Constraint fill_value must be a valid float')
+
+        self.checks = []
+        if h_sep is not None:
+            self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
+            self.checks.append(self.horizontal_constraint)
+            self.haversine_distance_kd_tree_index = None
+        if a_sep is not None:
+            self.a_sep = jasmin_cis.utils.parse_distance_with_units_to_float_m(a_sep)
+            self.checks.append(self.alt_constraint)
+        if p_sep is not None:
+            try:
+                self.p_sep = float(p_sep)
+            except:
+                raise InvalidCommandLineOptionError('Separation Constraint p_sep must be a valid float')
+            self.checks.append(self.pressure_constraint)
+        if t_sep is not None:
+            from jasmin_cis.time_util import parse_datetimestr_delta_to_float_days
+            try:
+                self.t_sep = parse_datetimestr_delta_to_float_days(t_sep)
+            except ValueError as e:
+                raise InvalidCommandLineOptionError(e)
+            self.checks.append(self.time_constraint)
+
+    def time_constraint(self, point, ref_point):
+        return point.time_sep(ref_point) < self.t_sep
+
+    def alt_constraint(self, point, ref_point):
+        return point.alt_sep(ref_point) < self.a_sep
+
+    def pressure_constraint(self, point, ref_point):
+        return point.pres_sep(ref_point) < self.p_sep
+
+    def horizontal_constraint(self, point, ref_point):
+        return point.haversine_dist(ref_point) < self.h_sep
+
+    def constrain_points(self, ref_point, data):
+        point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
+        if len(point_indices) == 0:
+            raise ValueError
+
+        con_points = HyperPointList()
+        for idx in point_indices:
+            con_points.append(data[idx])
+            # if all(check(point, ref_point) for check in self.checks):
+            #     con_points.append(point)
+        return con_points
+
+
 class mean(Kernel):
 
     def get_value(self, point, data):
@@ -422,6 +483,8 @@ class nn_horizontal_kdtree(Kernel):
         nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(point)
         if nearest_index is None:
             raise ValueError
+        if nearest_index > len(data):
+            pass
         nearest_point = data[nearest_index]
         return nearest_point.val[0]
 
