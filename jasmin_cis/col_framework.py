@@ -87,16 +87,7 @@ class IndexedConstraint(Constraint):
     coordinates over which co-location is occurring.
     """
     __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def index_data(self, coords, data, coord_map):
-        """
-        @param coords: coordinates of grid
-        @param data: list of HyperPoints to index
-        @param coord_map: list of tuples relating index in HyperPoint to index in coords and in
-                          coords to be iterated over
-                          (HyperPoint_coordinate_index, coord_index, index_of_coord_iterated_over)
-        """
+    pass
 
 
 def __get_class(parent_class, name=None):
