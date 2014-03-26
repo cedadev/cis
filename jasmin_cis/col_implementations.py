@@ -955,6 +955,8 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
         coord_descreasing = [False] * len(coords)
         coord_lengths = [0] * len(coords)
+        lower_bounds = [None] * len(coords)
+        upper_bounds = [None] * len(coords)
         for (hpi, ci, shi) in coord_map:
             if ci is not None:
                 coord = coords[ci]
@@ -963,33 +965,29 @@ class BinningCubeCellConstraint(IndexedConstraint):
                     if coord.points[1] < coord.points[0]:
                         coord_descreasing[ci] = True
                 coord_lengths[ci] = len(coord.points)
+                if coord_descreasing[ci]:
+                    lower_bounds[ci] = coord.bounds[::-1, 1]
+                    upper_bounds[ci] = coord.bounds[::-1, 0]
+                else:
+                    lower_bounds[ci] = coord.bounds[::, 0]
+                    upper_bounds[ci] = coord.bounds[::, 1]
 
         # Populate the index by finding the cell containing each data point.
         num_points = len(data)
         pt_count = 0
         pt_total = 0
         for pt_idx, point in data.enumerate_non_masked_points():
-            if point.val[0] is np.ma.masked:
-                continue
             point_cell_indices = [None] * num_cell_indices
 
             # Find the interval that the point resides in for each relevant coordinate.
             for (hpi, ci, shi) in coord_map:
                 if ci is not None:
-                    coord = coords[ci]
-                    if coord_descreasing[ci]:
-                        # Use reversed view of bounds array.
-                        lower_bounds = coord.bounds[::-1, 1]
-                        upper_bounds = coord.bounds[::-1, 0]
-                        search_index = np.searchsorted(lower_bounds, point[hpi], side='right') - 1
-                        cell_index = coord_lengths[ci] - search_index - 1
-                    else:
-                        lower_bounds = coord.bounds[::, 0]
-                        upper_bounds = coord.bounds[::, 1]
-                        search_index = np.searchsorted(lower_bounds, point[hpi], side='right') - 1
-                        cell_index = search_index
-                    if (search_index >= 0) and (point[hpi] <= upper_bounds[search_index]):
-                        point_cell_indices[shi] = cell_index
+                    search_index = np.searchsorted(lower_bounds[ci], point[hpi], side='right') - 1
+                    if (search_index >= 0) and (point[hpi] <= upper_bounds[ci][search_index]):
+                        if coord_descreasing[ci]:
+                            point_cell_indices[shi] = coord_lengths[ci] - search_index - 1
+                        else:
+                            point_cell_indices[shi] = search_index
 
             # Add point to index if a containing interval was found for each coordinate.
             if point_cell_indices.count(None) == 0:
