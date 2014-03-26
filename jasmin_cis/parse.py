@@ -116,12 +116,13 @@ def add_col_parser_arguments(parser):
 
 def add_aggregate_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
-                        help = "Variable to aggregat with filenames, optional product and optional kernel separated by "
-                               "colon(s)")
+                        help = "Variable to aggregate with filenames, and optional arguments seperated by colon(s). "
+                               "Optional arguments are product and kernel, which are entered as keyword=value in a "
+                               "comma separated list. Example: var:filename:product=MODIS_L3,kernel=mean")
     parser.add_argument("aggregategrid", metavar="AggregateGrid",
-                        help = "Grid for new aggregation, e.g. t,x=[-180,5] would collapse t completly and aggregate "
-                               "longitude onto a new grid, which would start at -180 and then proceed in 5 degree "
-                               "increments")
+                        help = "Grid for new aggregation, e.g. t,x=[-180,5] would collapse time completely and "
+                               "aggregate longitude onto a new grid, which would start at -180 and then proceed in 5 "
+                               "degree increments")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help = "The filename of the output file")
     return parser
@@ -244,6 +245,14 @@ def check_product(product, parser):
     return product
 
 
+def check_aggregate_kernel(arg, parser):
+    from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels
+    if arg in aggregation_kernels.keys():
+        return arg
+    else:
+        parser.error(arg + " is not a valid aggregation kernel. Please use one of " + str(aggregation_kernels.keys()))
+
+
 def get_plot_datagroups(datagroups, parser):
     '''
     @param datagroups:    A list of datagroups (possibly containing colons)
@@ -296,7 +305,7 @@ def get_aggregate_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product, check_nothing)
+    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product, check_aggregate_kernel)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
@@ -343,7 +352,7 @@ def get_aggregate_grid(aggregategrid, parser):
                 delta_parsed = parse_as_number_or_datetime(delta, 'aggregation grid delta coordinate', parser)
             grid_dict[dim_name] = AggregationGrid(start_parsed, delta_parsed, is_time)
         elif match.group('start') is None and match.group('delta') is None:
-            dim_name = match.group('dim')            
+            dim_name = match.group('dim')
             grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), None)
         else:
             parser.error("A dimension for aggregation has a start point but no delta value, a delta value must be "
