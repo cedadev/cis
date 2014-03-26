@@ -32,10 +32,23 @@ def __get_missing_value(coord):
     return f
 
 
-def __create_variable(nc_file, data):
+def __create_variable(nc_file, data, prefer_standard_name=False):
+    """Creates and writes a variable to a netCDF file.
+    @param nc_file: netCDF file to which to write
+    @param data: LazyData for variable to write
+    @param prefer_standard_name: if True, use the standard name of the variable if defined,
+           otherwise use the variable name
+    @return: created netCDF variable
+    """
     from jasmin_cis.exceptions import InconsistentDimensionsError
-    logging.info("Creating variable: " + data.standard_name + "("+index_name+")" + " " + types[str(data.data.dtype)])
-    var = nc_file.createVariable(data.standard_name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
+    name = None
+    if (data.metadata._name is not None) and (len(data.metadata._name) > 0):
+        name = data.metadata._name
+    if (name is None) or prefer_standard_name:
+        if (data.metadata.standard_name is not None) and (len(data.metadata.standard_name) > 0):
+            name = data.metadata.standard_name
+    logging.info("Creating variable: " + name + "("+index_name+")" + " " + types[str(data.data.dtype)])
+    var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
     var = __add_metadata(var, data)
     try:
         var[:] = data.data.flatten()
@@ -88,7 +101,7 @@ def write_coordinate_list(coord_list, filename):
     netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
     index_dim = __create_index(netcdf_file, len(coord_list[0].data.flatten()))
     for data in coord_list:
-        __create_variable(netcdf_file, data)
+        __create_variable(netcdf_file, data, prefer_standard_name=True)
     netcdf_file.close()
 
 
@@ -100,5 +113,5 @@ def add_data_to_file(data_object, filename):
     @return:
     """
     netcdf_file = Dataset(filename, 'a', format="NETCDF4_CLASSIC")
-    var = __create_variable(netcdf_file, data_object)
+    var = __create_variable(netcdf_file, data_object, prefer_standard_name=False)
     netcdf_file.close()
