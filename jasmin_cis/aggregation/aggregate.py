@@ -20,7 +20,7 @@ def find_nearest(array, value):
 
 def categorise_coord_function(start, end, delta):
     def returned_func(_coordinate, value):
-        new_grid = numpy.arange(start, end, delta)
+        new_grid = numpy.arange(start+delta/2, end+delta/2, delta)
         return find_nearest(new_grid, value)
     return returned_func
 
@@ -69,14 +69,20 @@ class Aggregate():
                     else:
                         start = min(coord.bounds[-1])
                         end = max(coord.bounds[0])
-                    if grid.start - grid.delta/2 < start:
-                        raise CISError('Specified a start and delta such that the aggregation grid starts before the '
-                                       'data grid. Please increase the value of start or reduce the value of delta. '
-                                       'The requested starting point would be ' + str(grid.start - grid.delta/2) +
+                    if grid.start < start:
+                        raise CISError('Specified a start such that the aggregation grid starts before the '
+                                       'data grid. Please increase the value of start. '
+                                       'The requested starting point would be ' + str(grid.start) +
                                        ' but the data grid only starts at ' + str(start) + '.')
+                    if grid.end > end:
+                        raise CISError('Specified an end such that the aggregation grid ends after the '
+                                       'data grid. Please decrease the value of end. '
+                                       'The requested starting point would be ' + str(grid.end) +
+                                       ' but the data grid only starts at ' + str(end) + '.')
                     iris.coord_categorisation.add_categorised_coord(data, 'aggregation_coord_for_'+coord.name(),
                                                                     coord.name(),
-                                                                    categorise_coord_function(start, end, grid.delta),
+                                                                    categorise_coord_function(grid.start, grid.end,
+                                                                                              grid.delta),
                                                                     units=coord.units)
                     data = data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
                 # 'data' will have ended up as a cube again, now change it back to a GriddedData object

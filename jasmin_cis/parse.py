@@ -327,13 +327,24 @@ def get_aggregate_grid(aggregategrid, parser):
     grid_dict = {}
     for seg in split_input:
         # Parse out dimension name and new grid spacing; the expected format is:
-        # <dim_name>=[<start_value>,<delta>]
-        match = re.match(r'(?P<dim>[^=]+)(?:=)?(?:\[(?P<start>[^],]+)?(?:,(?P<delta>[^]]+))?\])?', seg)
+        # <dim_name>=[<start_value>,<end_value,<delta>]
+        match = re.match(r'(?P<dim>[^=]+)(?:=)?(?:\[(?P<start>[^],]+)?(?:,(?P<end>[^],]+))?(?:,(?P<delta>[^]]+))?\])?',
+                         seg)
         if match is None or match.group('dim') is None:
             parser.error("A dimension for aggregation does not have a valid dimension name")
-        elif match.group('start') is not None and match.group('delta') is not None:
+        elif match.group('start') is None and match.group('delta') is None:
+            dim_name = match.group('dim')
+            grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), float('NaN'), None)
+        elif match.group('end') is None:
+            parser.error("A dimension for aggregation has a start point but no end or delta value, an end and a delta "
+                         "value must be supplied, for example x=[0,360,30].")
+        elif match.group('delta') is None:
+            parser.error("A dimension for aggregation has a start point but no delta value, a delta value must be "
+                         "supplied, for example x=[0,360,30].")
+        else:
             dim_name = match.group('dim')
             start = match.group('start')
+            end = match.group('end')
             delta = match.group('delta')
 
             # If the dimension is specified as x, y, z, p or t, assume that the dimension is spatial or temporal in the
@@ -341,22 +352,20 @@ def get_aggregate_grid(aggregategrid, parser):
             is_time = None
             if dim_name.lower() == 't':
                 start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser)
+                end_parsed = parse_datetime(end, 'aggregation grid end date/time', parser)
                 delta_parsed = parse_datetime(delta, 'aggregation grid delta date/time', parser)
                 is_time = True
             elif dim_name.lower() in ['x', 'y', 'z', 'p']:
                 start_parsed = parse_float(start, 'aggregation grid start coordinate', parser)
+                end_parsed = parse_float(end, 'aggregation grid end coordinate', parser)
                 delta_parsed = parse_float(delta, 'aggregation grid delta coordinate', parser)
                 is_time = False
             else:
                 start_parsed = parse_as_number_or_datetime(start, 'aggregation grid start coordinate', parser)
+                end_parsed = parse_as_number_or_datetime(end, 'aggregation grid end coordinate', parser)
                 delta_parsed = parse_as_number_or_datetime(delta, 'aggregation grid delta coordinate', parser)
-            grid_dict[dim_name] = AggregationGrid(start_parsed, delta_parsed, is_time)
-        elif match.group('start') is None and match.group('delta') is None:
-            dim_name = match.group('dim')
-            grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), None)
-        else:
-            parser.error("A dimension for aggregation has a start point but no delta value, a delta value must be "
-                         "supplied")
+            grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed, is_time)
+
     return grid_dict
 
 
