@@ -1,13 +1,28 @@
 import logging
+import iris
+import iris.analysis
+import iris.coords
+import iris.coord_categorisation
 from jasmin_cis.data_io.read import read_data
 from jasmin_cis.exceptions import CISError, InvalidVariableError
 from jasmin_cis.utils import isnan, guess_coord_axis
 from jasmin_cis.cis import __version__
 from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels
 from jasmin_cis.data_io.gridded_data import GriddedData
-import iris
-import iris.analysis
 from iris.exceptions import IrisError
+import numpy
+
+
+def find_nearest(array, value):
+    idx = (numpy.abs(array-value)).argmin()
+    return array[idx]
+
+
+def categorise_coord_function(start, end, delta):
+    def returned_func(_coordinate, value):
+        new_grid = numpy.arange(start, end, delta)
+        return find_nearest(new_grid, value)
+    return returned_func
 
 
 class Aggregate():
@@ -45,12 +60,27 @@ class Aggregate():
                     grid = self._grid[guessed_axis.lower()]
 
             if grid is not None:
-                if isnan(grid[0]):
+                if isnan(grid.delta):
                     data = data.collapsed(coord.name(), kernel)
-                    # data will have ended up a cube again, now change it back to a GriddedData object
-                    data.__class__ = GriddedData
                 else:
-                    raise CISError('Incomplete coordinate collapse not yet supported')
+                    if coord.points[0] < coord.points[-1]:
+                        start = min(coord.bounds[0])
+                        end = max(coord.bounds[-1])
+                    else:
+                        start = min(coord.bounds[-1])
+                        end = max(coord.bounds[0])
+                    if grid.start - grid.delta/2 < start:
+                        raise CISError('Specified a start and delta such that the aggregation grid starts before the '
+                                       'data grid. Please increase the value of start or reduce the value of delta. '
+                                       'The requested starting point would be ' + str(grid.start - grid.delta/2) +
+                                       ' but the data grid only starts at ' + str(start) + '.')
+                    iris.coord_categorisation.add_categorised_coord(data, 'aggregation_coord_for_'+coord.name(),
+                                                                    coord.name(),
+                                                                    categorise_coord_function(start, end, grid.delta),
+                                                                    units=coord.units)
+                    data = data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
+                # 'data' will have ended up as a cube again, now change it back to a GriddedData object
+                data.__class__ = GriddedData
 
         history = "Subsetted using CIS version " + __version__ + \
                   "\nvariable: " + str(variable) + \
@@ -61,3 +91,4 @@ class Aggregate():
 
         if isinstance(data, iris.cube.Cube):
             iris.save(data, self._output_file)
+
