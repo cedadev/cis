@@ -16,8 +16,9 @@ Contents:
    file_information
    subsetting
    colocation
+   colocation_examples
    plotting
-
+   data_products
 
 
 Indices and tables
@@ -27,3 +28,5 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+.. todolist::

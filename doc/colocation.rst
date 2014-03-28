@@ -99,7 +99,7 @@ where:
 ``product``
   is an optional argument used to specify the type of files being read. If omitted, the program will attempt to figure out which product to use based on the filename. 
 
-.. todo: Link to DataProduct wiki page.  Click [CommunityIntercomparisonSuite/DataProduct here] to see a list of available products and their file signatures.
+.. todo:: Link to DataProduct wiki page.  Click [CommunityIntercomparisonSuite/DataProduct here] to see a list of available products and their file signatures.
 
 `` outputfile ``
   is an optional argument to specify the name to use for the file output. This is automatically given a .nc extension and prepended with cis-col out to make it distinguishable as a colocated file.
@@ -113,7 +113,7 @@ More Examples
 
 The following pages give more examples of colocation:
 
-.. todo: link to the Colocation examples UngriddedGriddedColationExamples, etc.
+.. todo:: link to the Colocation examples UngriddedGriddedColationExamples, etc.
 
 Colocation output files
 =======================
@@ -144,7 +144,8 @@ Basic colocation design
 
 The diagram below demonstrates the basic design of the co-location system, and the roles of each of the components. In the simple case of the default co-locator (which returns only one value) the Colocator loops over each of the sample points, calls the relevant Constraint to reduce the number of data points, and then the kernel which returns a single value which the co-locator stores.
 
-.. todo: insert this image [[Image(ColocationDiagram.png,600px)]]
+.. image:: img/ColocationDiagram.png
+   :width: 600px
 
 It is useful to understand that when a sample variable is specified that contains masked values (those with a fill_value) this is not taken into account when creating the list of sample points. E.g. the full list of coordinates is used from the file, regardless of the values of the sample variable.
 
@@ -152,7 +153,21 @@ On the contrary when a data variable is read in (which is to be co-located onto 
 
 On their own each of these statements seem sensible, but together may lead to unexpected results if, for example, a variable from a file is co-located onto itself using the !DefaultColocator. In this situation, the sampling from the file is used to determine the sample points regardless of fill_value, and the variable is co-located on to this (ignoring any fill_values). This results in an output file where the masked (or missing) values are 'filled-in' by the co-locator using whichever kernel was specified - see Figure 2a below. Using the !DummyColocator simply returns the original masked values as no filling in is done (see 2b), and similarly for the difference co-locator when co-located onto itself the difference variable retains the mask as a non-value minus any other number is still a non-value (see 2c).
 
-.. todo: this table|| [[Image(default.png,400px)]] || [[Image(dummy.png,400px)]] || [[Image(diff.png,400px)]] || || Figure 2a || Figure 2b || Figure 2c ||
+.. figure:: img/default.png
+   :width: 400px
+   
+   Figure 2a
+
+.. figure:: img/dummy.png
+   :width: 400px
+
+   Figure 2b
+
+
+.. figure:: img/diff.png
+   :width: 400px
+
+   Figure 2c
 
 
 Writing your own plugins
@@ -160,6 +175,6 @@ Writing your own plugins
 
 The colocation framework was designed to make it easy to write your own plugins. Plugins can be written to create new kernels, new constraint methods and even whole colocation methods. See Design#Colocation for more details
 
-.. todo: link to Design wiki
+.. todo:: link to Design wiki
 
 
