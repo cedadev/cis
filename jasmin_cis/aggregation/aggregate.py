@@ -84,7 +84,19 @@ class Aggregate():
                                                                     categorise_coord_function(grid.start, grid.end,
                                                                                               grid.delta),
                                                                     units=coord.units)
+                    # Get Iris to do the aggregation
                     data = data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
+
+                    # Now make a new_coord, as the exiting coord will have the wrong coordinate points
+                    new_coord = data.coord(coord.name())
+                    new_coord.points = data.coord('aggregation_coord_for_'+coord.name()).points
+                    new_coord.bounds = None
+                    new_coord.guess_bounds()
+                    new_coord_number = data.coord_dims(coord)
+
+                    # Remove the old coord and add the new one
+                    data.remove_coord(coord.name())
+                    data.add_dim_coord(new_coord, new_coord_number)
                 # 'data' will have ended up as a cube again, now change it back to a GriddedData object
                 data.__class__ = GriddedData
 
