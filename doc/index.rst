@@ -12,13 +12,14 @@ Contents:
    :maxdepth: 2
 
    installation
+   data_products
    command_line
    file_information
    subsetting
    colocation
    colocation_examples
    plotting
-   data_products
+   maintenance_and_development
 
 
 Indices and tables
