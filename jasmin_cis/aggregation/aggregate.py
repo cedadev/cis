@@ -5,12 +5,17 @@ import iris.coords
 import iris.coord_categorisation
 from jasmin_cis.data_io.read import read_data
 from jasmin_cis.exceptions import CISError, InvalidVariableError
-from jasmin_cis.utils import isnan, guess_coord_axis
+from jasmin_cis.utils import isnan
 from jasmin_cis.cis import __version__
 from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels
 from jasmin_cis.data_io.gridded_data import GriddedData
 from iris.exceptions import IrisError
 import numpy
+
+from jasmin_cis.subsetting.subset import Subset
+import jasmin_cis.parse_datetime as parse_datetime
+
+import datetime
 
 
 def find_nearest(array, value):
@@ -18,10 +23,39 @@ def find_nearest(array, value):
     return array[idx]
 
 
-def categorise_coord_function(start, end, delta):
-    def returned_func(_coordinate, value):
+def categorise_coord_function(start, end, delta, is_time):
+    if is_time:
+        def returned_func(coordinate, value):
+            start_dt = Subset._convert_coord_unit_to_datetime(coordinate, start)
+            end_dt = Subset._convert_coord_unit_to_datetime(coordinate, end)
+            new_time_grid = []
+            new_time = start_dt
+            while new_time < end_dt:
+                new_time_grid.append(Subset._convert_datetime_to_coord_unit(coordinate, new_time))
+                new_year = new_time.year + delta.year
+                new_time = datetime.datetime(new_year, new_time.month, new_time.day, new_time.hour, new_time.minute,
+                                             new_time.second)
+                new_month = (new_time.month + delta.month)
+                #TODO This will fail for cases such as January 30th -> +1 month -> February 30th.
+                # Need to work out what correct behaivour should be in this case.
+                if new_month > 12:
+                    new_year += new_month//12
+                    new_month %= 12
+                    if new_month == 0:
+                        new_month = 12
+                new_time = datetime.datetime(new_year, new_month, new_time.day, new_time.hour, new_time.minute,
+                                             new_time.second)
+                new_time += datetime.timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
+                                               minutes=delta.minute, hours=delta.hour, weeks=0)
+            new_time_grid = numpy.array(new_time_grid)
+
+            return find_nearest(new_time_grid, value)
+    else:
         new_grid = numpy.arange(start+delta/2, end+delta/2, delta)
-        return find_nearest(new_grid, value)
+
+        def returned_func(_coordinate, value):
+            return find_nearest(new_grid, value)
+
     return returned_func
 
 
@@ -50,7 +84,7 @@ class Aggregate():
 
         for coord in data.coords():
             grid = None
-            guessed_axis = guess_coord_axis(coord)
+            guessed_axis = Subset._guess_coord_axis(coord)
             if coord.name() in self._grid:
                 grid = self._grid[coord.name()]
             elif guessed_axis is not None:
@@ -62,6 +96,8 @@ class Aggregate():
             if grid is not None:
                 if isnan(grid.delta):
                     data = data.collapsed(coord.name(), kernel)
+                    logging.info('Aggregating on ' + coord.name() + ', collapsing completely and using ' + kernel_name +
+                                 ' kernel.')
                 else:
                     if coord.points[0] < coord.points[-1]:
                         start = min(coord.bounds[0])
@@ -69,22 +105,52 @@ class Aggregate():
                     else:
                         start = min(coord.bounds[-1])
                         end = max(coord.bounds[0])
-                    if grid.start < start:
-                        raise CISError('Specified a start such that the aggregation grid starts before the '
-                                       'data grid. Please increase the value of start. '
-                                       'The requested starting point would be ' + str(grid.start) +
-                                       ' but the data grid only starts at ' + str(start) + '.')
-                    if grid.end > end:
-                        raise CISError('Specified an end such that the aggregation grid ends after the '
-                                       'data grid. Please decrease the value of end. '
-                                       'The requested starting point would be ' + str(grid.end) +
-                                       ' but the data grid only starts at ' + str(end) + '.')
+
+                    if grid.is_time or guessed_axis == 'T':
+                        # Ensure that the limits are date/times.
+                        dt = parse_datetime.convert_datetime_components_to_datetime(grid.start, True)
+                        grid_start = Subset._convert_datetime_to_coord_unit(coord, dt)
+                        dt = parse_datetime.convert_datetime_components_to_datetime(grid.end, False)
+                        grid_end = Subset._convert_datetime_to_coord_unit(coord, dt)
+                        grid_delta = grid.delta
+
+                        # The following are used to generate helpful error messages, with the time in a user friendly
+                        # format
+                        start_of_grid = Subset._convert_coord_unit_to_datetime(coord, start)
+                        end_of_grid = Subset._convert_coord_unit_to_datetime(coord, end)
+                        start_requested = Subset._convert_coord_unit_to_datetime(coord, grid_start)
+                        end_requested = Subset._convert_coord_unit_to_datetime(coord, grid_end)
+                    else:
+                        # Assume to be a non-time axis
+                        (grid_start, grid_end) = Subset._fix_non_circular_limits(float(grid.start), float(grid.end))
+                        grid_delta = grid.delta
+
+                        # The following are used to generate helpful error messages
+                        start_of_grid = start
+                        end_of_grid = end
+                        start_requested = grid.start
+                        end_requested = grid.end
+                    if grid_start < start:
+                        logging.warning('Specified a start such that the aggregation grid starts before the '
+                                        'data grid. The requested starting point would be ' + str(start_requested) +
+                                        ' this will now be changed to the start of the grid at ' + str(start_of_grid) +
+                                        '.')
+                        grid_start = start
+                    if grid_end > end:
+                        logging.warning('Specified an end such that the aggregation grid ends after the '
+                                        'data grid. The requested ending point would be ' + str(end_requested) +
+                                        ' this will now be changed to the end of the grid at ' + str(end_of_grid) + '.')
+                        grid_end = end
                     iris.coord_categorisation.add_categorised_coord(data, 'aggregation_coord_for_'+coord.name(),
                                                                     coord.name(),
-                                                                    categorise_coord_function(grid.start, grid.end,
-                                                                                              grid.delta),
+                                                                    categorise_coord_function(grid_start, grid_end,
+                                                                                              grid_delta, grid.is_time),
                                                                     units=coord.units)
                     # Get Iris to do the aggregation
+                    logging.info('Aggregating on ' + coord.name() + ' over range ' +
+                                 str(Subset._convert_coord_unit_to_datetime(coord, grid_start)) + ' to ' +
+                                 str(Subset._convert_coord_unit_to_datetime(coord, grid_end)) + ' using steps of '
+                                 + str(grid_delta) + ' and ' +  kernel_name + ' kernel.')
                     data = data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
 
                     # Now make a new_coord, as the exiting coord will have the wrong coordinate points
