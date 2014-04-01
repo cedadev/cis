@@ -136,21 +136,22 @@ class Aggregate():
                                         ' this will now be changed to the start of the grid at ' + str(start_of_grid) +
                                         '.')
                         grid_start = start
+                        start_requested = Subset._convert_coord_unit_to_datetime(coord, start)
                     if grid_end > end:
                         logging.warning('Specified an end such that the aggregation grid ends after the '
                                         'data grid. The requested ending point would be ' + str(end_requested) +
                                         ' this will now be changed to the end of the grid at ' + str(end_of_grid) + '.')
                         grid_end = end
+                        end_requested = Subset._convert_coord_unit_to_datetime(coord, end)
                     iris.coord_categorisation.add_categorised_coord(data, 'aggregation_coord_for_'+coord.name(),
                                                                     coord.name(),
                                                                     categorise_coord_function(grid_start, grid_end,
                                                                                               grid_delta, grid.is_time),
                                                                     units=coord.units)
                     # Get Iris to do the aggregation
-                    logging.info('Aggregating on ' + coord.name() + ' over range ' +
-                                 str(Subset._convert_coord_unit_to_datetime(coord, grid_start)) + ' to ' +
-                                 str(Subset._convert_coord_unit_to_datetime(coord, grid_end)) + ' using steps of '
-                                 + str(grid_delta) + ' and ' +  kernel_name + ' kernel.')
+                    logging.info('Aggregating on ' + coord.name() + ' over range ' + str(start_requested) + ' to ' +
+                                 str(end_requested) + ' using steps of ' + str(grid_delta) + ' and ' + kernel_name +
+                                 ' kernel.')
                     data = data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
 
                     # Now make a new_coord, as the exiting coord will have the wrong coordinate points
