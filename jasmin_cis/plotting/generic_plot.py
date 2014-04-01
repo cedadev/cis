@@ -318,7 +318,7 @@ class Generic_Plot(object):
             # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
             date_time = convert_std_time_to_datetime(x)
             if date_time.hour == 0 and date_time.minute == 0 and date_time.second == 0:
-                return date_time.strftime("%Y-%m-%d")
+                return str(date_time.date())
             elif date_time.second == 0:
                 return date_time.strftime("%Y-%m-%d %H:%M")
             else:
