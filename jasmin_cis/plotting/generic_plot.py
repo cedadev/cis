@@ -320,7 +320,7 @@ class Generic_Plot(object):
             if date_time.hour == 0 and date_time.minute == 0 and date_time.second == 0:
                 return str(date_time.date())
             elif date_time.second == 0:
-                return date_time.strftime("%Y-%m-%d %H:%M")
+                return str(date_time.date()) + ' ' + str(date_time.hour) + ':' + str(date_time.minute)
             else:
                 return date_time.isoformat(' ')
 
