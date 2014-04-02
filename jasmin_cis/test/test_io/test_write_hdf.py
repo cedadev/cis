@@ -13,7 +13,7 @@ def delete_tmp_file():
 def test_write_hdf():
     '''
     Test currently fails. Will not be fixed as there is no use case.
-    @return:
+    :return:
     '''
     from jasmin_cis.data_io.write_hdf import write
     obj = make_dummy_2d_ungridded_data()

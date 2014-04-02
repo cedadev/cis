@@ -43,13 +43,13 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
     def modified(self, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
         """Creates a HyperPoint with modified values.
 
-        @param lat:
-        @param lon:
-        @param alt:
-        @param pres:
-        @param t:
-        @param val:
-        @return:
+        :param lat:
+        :param lon:
+        :param alt:
+        :param pres:
+        :param t:
+        :param val:
+        :return:
         """
         values = [v for v in self]
         if lat is not None:

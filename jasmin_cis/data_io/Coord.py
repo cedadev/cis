@@ -8,10 +8,10 @@ class Coord(LazyData):
     def __init__(self, data, metadata, axis=''):
         """
 
-        @param data:
-        @param metadata:
-        @param axis: A string label for the axis, e.g. 'X', 'Y', 'Z', or 'T'
-        @return:
+        :param data:
+        :param metadata:
+        :param axis: A string label for the axis, e.g. 'X', 'Y', 'Z', or 'T'
+        :return:
         """
         super(Coord, self).__init__(data, metadata)
         self.axis = axis.upper()
@@ -19,7 +19,7 @@ class Coord(LazyData):
     @property
     def points(self):
         """Alias for data to match iris.coords.Coord.points
-        @return: coordinate data
+        :return: coordinate data
         """
         return self.data
 
@@ -59,7 +59,7 @@ class CoordList(list):
         """
         Given a `list` of Coords, return a CoordList instance.
 
-        @param list_of_coords: list of coordinates with which to initialise the list
+        :param list_of_coords: list of coordinates with which to initialise the list
         """
         list.__init__(self, *args)
 
@@ -72,9 +72,9 @@ class CoordList(list):
     def append(self, other):
         """
             Safely add a new coordinate object to the list, this checks for a unique axis and standard_name
-        @param other: Other coord to add
-        @raise: DuplicateCoordinateError
-        @return:
+        :param other: Other coord to add
+        :raise: DuplicateCoordinateError
+        :return:
         """
         from jasmin_cis.exceptions import DuplicateCoordinateError
         if any([ other == item for item in self ]):
@@ -87,15 +87,15 @@ class CoordList(list):
          similar to Cube.coords() to maintain a similar interface and because the functionality is similar. There
           is no distrinction between dimension coordinates and auxilliary coordinates here though.
 
-        @param name:  The standard name or long name or default name of the desired coordinate.
+        :param name:  The standard name or long name or default name of the desired coordinate.
             If None, does not check for name. Also see, :attr:`Cube.name`.
-        @param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
-        @param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
-        @param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes.
-        @param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for axis.
+        :param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
+        :param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
+        :param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes.
+        :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for axis.
             Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
 
-        @return: A list of coordinates in this UngriddedData object fitting the given criteria
+        :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
         from collections import Mapping
         coords = self
@@ -126,8 +126,8 @@ class CoordList(list):
         Return a single coord given the same arguments as L(coords). If the arguments given do not result in precisely
          1 coordinate being matched, a CoordinateNotFoundError is raised.
 
-        @raise: CoordinateNotFoundError
-        @return: A single coord given the same arguments as L(coords).
+        :raise: CoordinateNotFoundError
+        :return: A single coord given the same arguments as L(coords).
 
         """
         from jasmin_cis.exceptions import CoordinateNotFoundError
@@ -154,8 +154,8 @@ class CoordList(list):
     def x_get_coordinates_points(self):
         """
              Pack a list of coordinates into a list of x, y, z, t points to be passed to Colocator
-        @param coords: A CoordList of Coord objects
-        @return: A list of HyperPoints
+        :param coords: A CoordList of Coord objects
+        :return: A list of HyperPoints
         """
         from jasmin_cis.exceptions import CoordinateNotFoundError
         from hyperpoint import HyperPoint, HyperPointList
@@ -177,8 +177,8 @@ class CoordList(list):
         """Constructs a list of the standard coordinate values.
         The standard coordinates are latitude, longitude, altitude, time and air_pressure; they occur in the return
         list in this order.
-        @param data_len: expected length of coordinate data
-        @return: list of indexed sequences of coordinate values
+        :param data_len: expected length of coordinate data
+        :return: list of indexed sequences of coordinate values
         """
         from jasmin_cis.exceptions import CoordinateNotFoundError
 
@@ -198,7 +198,7 @@ class CoordList(list):
         """Constructs a list of the standard coordinates.
         The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
         list in this order.
-        @return: list of coordinates or None if coordinate not present
+        :return: list of coordinates or None if coordinate not present
         """
         from jasmin_cis.exceptions import CoordinateNotFoundError
 

@@ -31,8 +31,8 @@ class GriddedData(iris.cube.Cube, CommonData):
     @staticmethod
     def _wrap_cube_iterator(itr):
         """Makes a generator that returns a GriddedData object from each Cube returned by an iterator.
-        @param itr: iterator over Cubes
-        @return: yields GriddedData objects created from Cubes
+        :param itr: iterator over Cubes
+        :return: yields GriddedData objects created from Cubes
         """
         for c in itr:
             yield make_from_cube(c)
@@ -42,21 +42,21 @@ class GriddedData(iris.cube.Cube, CommonData):
 
     def get_coordinates_points(self):
         """Returns a HyperPointView of the points.
-        @return: HyperPointView of all the data points
+        :return: HyperPointView of all the data points
         """
         all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
         return GriddedHyperPointView(all_coords, self.data)
 
     def get_all_points(self):
         """Returns a HyperPointView of the points.
-        @return: HyperPointView of all the data points
+        :return: HyperPointView of all the data points
         """
         all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
         return GriddedHyperPointView(all_coords, self.data)
 
     def get_non_masked_points(self):
         """Returns a HyperPointView of the points.
-        @return: HyperPointView of all the data points
+        :return: HyperPointView of all the data points
         """
         all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
         return GriddedHyperPointView(all_coords, self.data, non_masked_iteration=True)
@@ -65,7 +65,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         """Constructs a list of the standard coordinates.
         The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
         list in this order.
-        @return: list of coordinates or None if coordinate not present
+        :return: list of coordinates or None if coordinate not present
         """
         ret_list = []
 
@@ -84,7 +84,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         """Appends to, or creates, the history attribute using the supplied history string.
 
         The new entry is prefixed with a timestamp.
-        @param new_history: history string
+        :param new_history: history string
         """
         timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
         if 'history' not in self.attributes:

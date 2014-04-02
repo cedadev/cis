@@ -7,7 +7,7 @@ class Contour_Plot(Generic_Plot):
         Plots a contour plot
         Stores the plot in a list to be used for when adding the legend
 
-        @param data_item:    A dictionary containing the x coords, y coords and data as arrays
+        :param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
         self.contour_plot(False)
 

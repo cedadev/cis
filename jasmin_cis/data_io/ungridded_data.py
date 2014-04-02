@@ -68,10 +68,10 @@ class LazyData(object):
 
     def __init__(self, data, metadata, data_retrieval_callback=None):
         '''
-        @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
+        :param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
                         This can be a list of data handlers, or a single data handler
-        @param metadata: Any associated metadata
-        @param data_retrieval_callback: An, optional, method for retrieving data when needed
+        :param metadata: Any associated metadata
+        :param data_retrieval_callback: An, optional, method for retrieving data when needed
         '''
         from jasmin_cis.exceptions import InvalidDataTypeError
         from iris.cube import CubeMetadata
@@ -112,7 +112,7 @@ class LazyData(object):
         """
             This routine returns the first name property which is not empty out of: _name, standard_name and long_name
                 If they are all empty it returns an empty string
-        @return: The name of the data object as a string
+        :return: The name of the data object as a string
         """
 
         for name in [self.metadata._name, self.metadata.standard_name, self.metadata.long_name]:
@@ -202,7 +202,7 @@ class LazyData(object):
         """Appends to, or creates, the metadata history attribute using the supplied history string.
 
         The new entry is prefixed with a timestamp.
-        @param new_history: history string
+        :param new_history: history string
         """
         timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
         if hasattr(self.metadata, 'history') and len(self.metadata.history) > 0:
@@ -220,11 +220,11 @@ class UngriddedData(LazyData, CommonData):
         '''
         Constructor
 
-        @param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
+        :param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
                         This can be a list of data handlers, or a single data handler
-        @param metadata: Any associated metadata
-        @param coords: A list of the associated Coord objects
-        @param data_retrieval_callback: A method for retrieving data when needed
+        :param metadata: Any associated metadata
+        :param coords: A list of the associated Coord objects
+        :param data_retrieval_callback: A method for retrieving data when needed
         '''
         from jasmin_cis.data_io.Coord import CoordList, Coord
 
@@ -262,8 +262,8 @@ class UngriddedData(LazyData, CommonData):
     def hyper_point(self, index):
         """
 
-        @param index: The index in the array to find the point for
-        @return: A hyperpoint representing the data at that point
+        :param index: The index in the array to find the point for
+        :return: A hyperpoint representing the data at that point
         """
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         return HyperPoint(self.coord(standard_name='latitude').data.flat[index],
@@ -276,34 +276,34 @@ class UngriddedData(LazyData, CommonData):
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
 
-        @return: A list of coordinates in this UngriddedData object fitting the given criteria
+        :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
         return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
 
     def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
 
-        @raise: CoordinateNotFoundError
-        @return: A single coord given the same arguments as L(coords).
+        :raise: CoordinateNotFoundError
+        :return: A single coord given the same arguments as L(coords).
 
         """
         return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
 
     def get_coordinates_points(self):
         """Returns a HyperPointView of the coordinates of points.
-        @return: HyperPointView of the coordinates of points
+        :return: HyperPointView of the coordinates of points
         """
         return UngriddedHyperPointView(self.coords_flattened, None)
 
     def get_all_points(self):
         """Returns a HyperPointView of the points.
-        @return: HyperPointView of all the data points
+        :return: HyperPointView of all the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, self.data_flattened)
 
     def get_non_masked_points(self):
         """Returns a HyperPointView for which the default iterator omits masked points.
-        @return: HyperPointView of the data points
+        :return: HyperPointView of the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, self.data_flattened, non_masked_iteration=True)
 
@@ -311,7 +311,7 @@ class UngriddedData(LazyData, CommonData):
 ##     def from_points_array(cls, hyperpoints):
 ##         """
 ##          A constuctor for building an UngriddedData object from a list of hyper points
-##         @param hyperpoints:    A list of HyperPoints
+##         :param hyperpoints:    A list of HyperPoints
 ##         """
 ##         from jasmin_cis.data_io.Coord import Coord, CoordList
 ##         from jasmin_cis.data_io.hyperpoint import HyperPointList
@@ -342,7 +342,7 @@ class UngriddedCoordinates(CommonData):
         '''
         Constructor
 
-        @param coords: A list of the associated Coord objects
+        :param coords: A list of the associated Coord objects
         '''
         from jasmin_cis.data_io.Coord import CoordList, Coord
 
@@ -378,8 +378,8 @@ class UngriddedCoordinates(CommonData):
     def hyper_point(self, index):
         """
 
-        @param index: The index in the array to find the point for
-        @return: A hyperpoint representing the data at that point
+        :param index: The index in the array to find the point for
+        :return: A hyperpoint representing the data at that point
         """
         from jasmin_cis.data_io.hyperpoint import HyperPoint
         return HyperPoint(self.coord(standard_name='latitude').data.flat[index],
@@ -392,15 +392,15 @@ class UngriddedCoordinates(CommonData):
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
 
-        @return: A list of coordinates in this UngriddedData object fitting the given criteria
+        :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
         return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
 
     def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
 
-        @raise: CoordinateNotFoundError
-        @return: A single coord given the same arguments as L(coords).
+        :raise: CoordinateNotFoundError
+        :return: A single coord given the same arguments as L(coords).
 
         """
         return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
@@ -410,12 +410,12 @@ class UngriddedCoordinates(CommonData):
 
     def get_all_points(self):
         """Returns a HyperPointView of the points.
-        @return: HyperPointView of all the data points
+        :return: HyperPointView of all the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, None)
 
     def get_non_masked_points(self):
         """Returns a HyperPointView for which the default iterator omits masked points.
-        @return: HyperPointView of the data points
+        :return: HyperPointView of the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, None, non_masked_iteration=True)

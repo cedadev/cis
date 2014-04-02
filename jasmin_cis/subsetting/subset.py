@@ -174,8 +174,8 @@ class Subset(object):
     @staticmethod
     def _fix_angular_limit(value, range_start):
         """Force an angular variable to be within the 360 range starting from limit_start.
-        @param value: value to be fixed to be within the range
-        @param range_start: value at start of 360 range assuming -180 <= range_start <= 0.0
+        :param value: value to be fixed to be within the range
+        :param range_start: value at start of 360 range assuming -180 <= range_start <= 0.0
         """
         # Narrow to range -360 to 360.
         ret = math.fmod(value, 360.0)
