@@ -26,12 +26,12 @@ class DefaultColocator(Colocator):
             This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
              one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
              for the output LazyData object is copied from the input data object.
-        @param points: A list of HyperPoints
-        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+        :param points: A list of HyperPoints
+        :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
                             based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
-        @return: A single LazyData object
+        :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
+        :return: A single LazyData object
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
         import numpy as np
@@ -82,13 +82,13 @@ class AverageColocator(Colocator):
             This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
              one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
              for the output LazyData object is copied from the input data object.
-        @param points: A list of HyperPoints
-        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+        :param points: A list of HyperPoints
+        :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
                             based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value - This
+        :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value - This
                             should be full_average - no other kernels currently return multiple values
-        @return: One LazyData object for the mean of the constrained values, one for the standard deviation and another
+        :return: One LazyData object for the mean of the constrained values, one for the standard deviation and another
                     for the number of points in the constrained set for which the mean was calculated
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
@@ -163,12 +163,12 @@ class DifferenceColocator(Colocator):
             This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
              one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
              for the output LazyData object is copied from the input data object.
-        @param points: A list of HyperPoints
-        @param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        @param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+        :param points: A list of HyperPoints
+        :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
                             based on it's internal parameters
-        @param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
-        @return: One LazyData object for the colocated data, and another for the difference between that data and the sample data
+        :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
+        :return: One LazyData object for the colocated data, and another for the difference between that data and the sample data
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
         import numpy as np
@@ -278,11 +278,11 @@ class DummyColocator(Colocator):
             This colocator does no colocation at all - it just returns the original data values. This might be useful
             if the input data for one variable is already known to be on the same grid as points. This routine could
             check the coordinates are the same but currently does no such check.
-        @param points: A list of HyperPoints
-        @param data: An UngriddedData object or Cube
-        @param constraint: Unused
-        @param kernel: Unused
-        @return: A single LazyData object
+        :param points: A list of HyperPoints
+        :param data: An UngriddedData object or Cube
+        :param constraint: Unused
+        :param kernel: Unused
+        :return: A single LazyData object
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData
 
@@ -490,11 +490,11 @@ class GriddedColocatorUsingIrisRegrid(DefaultColocator):
         This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the points cube. The
         colocator then returns another Iris cube. This uses Iris' implementation, which only works onto a horizontal
         grid.
-        @param points: An Iris cube with the sampling grid to colocate onto.
-        @param data: The Iris cube with the data to be colocated.
-        @param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
-        @param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
-        @return: An Iris cube with the colocated data.
+        :param points: An Iris cube with the sampling grid to colocate onto.
+        :param data: The Iris cube with the data to be colocated.
+        :param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
+        :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
+        :return: An Iris cube with the colocated data.
         """
         import iris
         self.check_for_valid_kernel(kernel)
@@ -509,11 +509,11 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         """
         This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the 'points' cube. The
         colocator then returns another Iris cube.
-        @param points: An Iris cube with the sampling grid to colocate onto.
-        @param data: The Iris cube with the data to be colocated.
-        @param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
-        @param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
-        @return: An Iris cube with the colocated data.
+        :param points: An Iris cube with the sampling grid to colocate onto.
+        :param data: The Iris cube with the data to be colocated.
+        :param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
+        :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
+        :return: An Iris cube with the colocated data.
         """
 
         self.check_for_valid_kernel(kernel)
@@ -658,12 +658,12 @@ class UngriddedGriddedColocator(Colocator):
 
     def colocate(self, points, data, constraint, kernel):
         """
-        @param points: cube defining the sample points
-        @param data: UngriddedData object providing data to be co-located
-        @param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
+        :param points: cube defining the sample points
+        :param data: UngriddedData object providing data to be co-located
+        :param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
                            data based on it's internal parameters
-        @param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
-        @return: Cube of co-located data
+        :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
+        :return: Cube of co-located data
         """
         from jasmin_cis.exceptions import ClassNotFoundError
 
@@ -765,8 +765,8 @@ class UngriddedGriddedColocator(Colocator):
 
     def _find_data_coords(self, data):
         """Checks the first data point to determine which coordinates are present.
-        @param data: HyperPointList of data
-        @return: list of booleans indicating HyperPoint coordinates that are present
+        :param data: HyperPointList of data
+        :return: list of booleans indicating HyperPoint coordinates that are present
         """
         point = data[0]
         coordinate_mask = [True] * HyperPoint.number_standard_names
@@ -778,9 +778,9 @@ class UngriddedGriddedColocator(Colocator):
     def _find_standard_coords(self, cube, coordinate_mask):
         """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
 
-        @param cube: cube among the coordinates of which to find the standard coordinates
-        @param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
-        @return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
+        :param cube: cube among the coordinates of which to find the standard coordinates
+        :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
+        :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
         """
         coord_map = []
         coord_lookup = {}
@@ -807,8 +807,8 @@ class UngriddedGriddedColocator(Colocator):
 
     def _find_longitude_range(self, coords):
         """Finds the start of the longitude range, assumed to be either 0,360 or -180,180
-        @param coords: coordinates to check
-        @return: starting value for longitude range or None if no longitude coordinate found
+        :param coords: coordinates to check
+        :return: starting value for longitude range or None if no longitude coordinate found
         """
         low = None
         for coord in coords:
@@ -821,8 +821,8 @@ class UngriddedGriddedColocator(Colocator):
 
     def _fix_longitude_range(self, coords, data_points):
         """
-        @param coords: coordinates for grid on which to colocate
-        @param data_points: HyperPointList of data to fix
+        :param coords: coordinates for grid on which to colocate
+        :param data_points: HyperPointList of data to fix
         """
         range_start = self._find_longitude_range(coords)
         if range_start is not None:
@@ -842,12 +842,12 @@ class UngriddedGriddedColocator(Colocator):
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.
 
-        @param src_cube: cube of sample points
-        @param src_data: ungridded data that was to be colocated
-        @param data: colocated data values
-        @param coords: coordinates for output cube
-        @param fill_value: value that has been used as the fill value in data
-        @return: cube of colocated data
+        :param src_cube: cube of sample points
+        :param src_data: ungridded data that was to be colocated
+        :param data: colocated data values
+        :param coords: coordinates for output cube
+        :param fill_value: value that has been used as the fill value in data
+        :return: cube of colocated data
         """
         dim_coords_and_dims = []
         for idx, coord in enumerate(coords):
@@ -880,9 +880,9 @@ class CubeCellConstraint(CellConstraint):
 
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.
-        @param sample_point: HyperPoint of cells defining sample region
-        @param data: list of HyperPoints to check
-        @return: HyperPointList of points found within cell
+        :param sample_point: HyperPoint of cells defining sample region
+        :param data: list of HyperPoints to check
+        :return: HyperPointList of points found within cell
         """
         con_points = HyperPointList()
         for point in data:
@@ -917,9 +917,9 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
         This implementation returns the points that have been stored in the
         appropriate bin by the index_data method.
-        @param sample_point: HyperPoint of cells defining sample region
-        @param data: list of HyperPoints to check
-        @return: HyperPointList of points found within cell
+        :param sample_point: HyperPoint of cells defining sample region
+        :param data: list of HyperPoints to check
+        :return: HyperPointList of points found within cell
         """
         point_list = self.index[tuple(sample_point)]
         con_points = HyperPointList()
@@ -930,9 +930,9 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
     def index_data(self, coords, data, coord_map):
         """
-        @param coords: coordinates of grid
-        @param data: list of HyperPoints to index
-        @param coord_map: list of tuples relating index in HyperPoint to index in coords and in
+        :param coords: coordinates of grid
+        :param data: list of HyperPoints to index
+        :param coord_map: list of tuples relating index in HyperPoint to index in coords and in
                           coords to be iterated over
         """
         # Create an index array matching the shape of the coordinates to be iterated over.
@@ -955,6 +955,8 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
         coord_descreasing = [False] * len(coords)
         coord_lengths = [0] * len(coords)
+        lower_bounds = [None] * len(coords)
+        upper_bounds = [None] * len(coords)
         for (hpi, ci, shi) in coord_map:
             if ci is not None:
                 coord = coords[ci]
@@ -963,33 +965,29 @@ class BinningCubeCellConstraint(IndexedConstraint):
                     if coord.points[1] < coord.points[0]:
                         coord_descreasing[ci] = True
                 coord_lengths[ci] = len(coord.points)
+                if coord_descreasing[ci]:
+                    lower_bounds[ci] = coord.bounds[::-1, 1]
+                    upper_bounds[ci] = coord.bounds[::-1, 0]
+                else:
+                    lower_bounds[ci] = coord.bounds[::, 0]
+                    upper_bounds[ci] = coord.bounds[::, 1]
 
         # Populate the index by finding the cell containing each data point.
         num_points = len(data)
         pt_count = 0
         pt_total = 0
         for pt_idx, point in data.enumerate_non_masked_points():
-            if point.val[0] is np.ma.masked:
-                continue
             point_cell_indices = [None] * num_cell_indices
 
             # Find the interval that the point resides in for each relevant coordinate.
             for (hpi, ci, shi) in coord_map:
                 if ci is not None:
-                    coord = coords[ci]
-                    if coord_descreasing[ci]:
-                        # Use reversed view of bounds array.
-                        lower_bounds = coord.bounds[::-1, 1]
-                        upper_bounds = coord.bounds[::-1, 0]
-                        search_index = np.searchsorted(lower_bounds, point[hpi], side='right') - 1
-                        cell_index = coord_lengths[ci] - search_index - 1
-                    else:
-                        lower_bounds = coord.bounds[::, 0]
-                        upper_bounds = coord.bounds[::, 1]
-                        search_index = np.searchsorted(lower_bounds, point[hpi], side='right') - 1
-                        cell_index = search_index
-                    if (search_index >= 0) and (point[hpi] <= upper_bounds[search_index]):
-                        point_cell_indices[shi] = cell_index
+                    search_index = np.searchsorted(lower_bounds[ci], point[hpi], side='right') - 1
+                    if (search_index >= 0) and (point[hpi] <= upper_bounds[ci][search_index]):
+                        if coord_descreasing[ci]:
+                            point_cell_indices[shi] = coord_lengths[ci] - search_index - 1
+                        else:
+                            point_cell_indices[shi] = search_index
 
             # Add point to index if a containing interval was found for each coordinate.
             if point_cell_indices.count(None) == 0:

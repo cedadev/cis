@@ -1,15 +1,16 @@
+from collections import namedtuple
 import datetime
 import re
 
 
-def _parse_datetime(dt_string):
+def _parse_datetime(dt_string, aggregation=False):
     """Parse a date/time string.
 
     The string should be in an ISO 8601 format except that the date and time
     parts may be separated by a space or colon instead of T. 
-    @param dt_string: String to parse
-    @return: list of datetime components
-    @raise ValueError: if the string cannot be parsed as a date/time
+    :param dt_string: String to parse
+    :return: list of datetime components
+    :raise ValueError: if the string cannot be parsed as a date/time
     """
     # Separate date and time at first character that is one of 'T', ' ' or ':'.
     match = re.match(r'(?P<date>[^T :]+)(?:[T :])(?P<time>.+)$', dt_string)
@@ -29,27 +30,74 @@ def _parse_datetime(dt_string):
     else:
         dt_components.extend(time_components)
 
-    # Check that the components are valid (assuming month and/or date is 1 if missing).
-    tmp_components = list(dt_components)
-    if len(tmp_components) < 3:
-        tmp_components.extend([1] * (3 - len(tmp_components)))
-    dt = datetime.datetime(*tmp_components)
+    if aggregation:
+        # Check that the components are valid, and use defaults of middle of year or month, depending on number of
+        # arguments supplied.
+        tmp_components = list(dt_components)
+        print tmp_components
+        if len(tmp_components) == 1:
+            tmp_components.extend([7, 1])
+        elif len(tmp_components) == 2:
+            tmp_components.extend([15])
+        dt = datetime.datetime(*tmp_components)
 
-    return dt_components
+        return tmp_components
+    else:
+        # Check that the components are valid (assuming month and/or date is 1 if missing).
+        tmp_components = list(dt_components)
+        if len(tmp_components) < 3:
+            tmp_components.extend([1] * (3 - len(tmp_components)))
+        dt = datetime.datetime(*tmp_components)
+
+        return dt_components
 
 
-def parse_datetime(dt_string, name, parser):
+def parse_datetime(dt_string, name, parser, aggregation=False):
     """Parse a date/time string from the command line, reporting parse errors.
 
     The string should be in an ISO 8601 format except that the date and time
     parts may be separated by a space or colon instead of T.
-    @param dt_string: String to parse
-    @param name:      A description of the argument used for error messages
-    @param parser:    The parser used to report errors
-    @return: datetime value
+    :param dt_string: String to parse
+    :param name:      A description of the argument used for error messages
+    :param parser:    The parser used to report errors
+    :return: datetime value
     """
     try:
-        dt = _parse_datetime(dt_string)
+        dt = _parse_datetime(dt_string, aggregation)
+    except ValueError:
+        parser.error("'" + dt_string + "' is not a valid " + name)
+        dt = None
+    return dt
+
+
+def date_delta_creator(year, month=0, day=0, hour=0, minute=0, second=0):
+    date_delta_tuple = namedtuple('date_delta', ['year', 'month', 'day', 'hour', 'minute', 'second'])
+    return date_delta_tuple(int(year), int(month), int(day), int(hour), int(minute), int(second))
+
+
+def _parse_datetime_delta(dt_string):
+    """Parse a date/time delta string.
+
+    :param dt_string: String to parse
+    :return: list of datetime components
+    :raise ValueError: if the string cannot be parsed as a date/time
+    """
+    # Expect an input such as 2014:03:28:17:41:57
+    split = dt_string.split(':')
+
+    return date_delta_creator(*split)
+
+
+def parse_datetime_delta(dt_string, name, parser):
+    """Parse a date/time delta string from the command line, reporting parse errors.
+
+    :param dt_string: String to parse
+    :param name:      A description of the argument used for error messages
+    :param parser:    The parser used to report errors
+    :return: timedelta value
+    """
+    try:
+        dt = _parse_datetime_delta(dt_string)
     except ValueError:
         parser.error("'" + dt_string + "' is not a valid " + name)
         dt = None
@@ -61,10 +109,10 @@ def parse_as_number_or_datetime(in_string, name, parser):
 
     The string should be in an ISO 8601 format except that the date and time
     parts may be separated by a space or colon instead of T.
-    @param in_string: String to parse
-    @param name:      A description of the argument used for error messages
-    @param parser:    The parser used to report errors
-    @return: int, float or datetime value
+    :param in_string: String to parse
+    :param name:      A description of the argument used for error messages
+    :param parser:    The parser used to report errors
+    :return: int, float or datetime value
     """
     try:
         ret = int(in_string)
@@ -86,9 +134,9 @@ def convert_datetime_components_to_datetime(dt_components, is_lower_limit):
 
     Components beyond the year are defaulted if absent, taking minimum or maximum values if the value of
     is_lower_limit is True or False respectively.
-    @param dt_components: list of date/time components as integers in the order:year, month, day, hours, minutes,
+    :param dt_components: list of date/time components as integers in the order:year, month, day, hours, minutes,
         seconds. At least the year must be specified. If only the year is specified it may be passed as an integer.
-    @param is_lower_limit: If True, use minimum value for missing date/time components, otherwise use maximum.
+    :param is_lower_limit: If True, use minimum value for missing date/time components, otherwise use maximum.
     """
     YEAR_INDEX = 0
     DAY_INDEX = 2
@@ -119,9 +167,9 @@ def convert_datetime_components_to_datetime(dt_components, is_lower_limit):
 def find_last_day_of_month(year, month):
     """Finds the last day of a month.
 
-    @param year: year as integer
-    @param month: month as integer
-    @return: last day of month as integer
+    :param year: year as integer
+    :param month: month as integer
+    :return: last day of month as integer
     """
     next_month = datetime.datetime(year, month, 28) + datetime.timedelta(days=4)
     last_date = next_month - datetime.timedelta(days=next_month.day)

@@ -8,10 +8,10 @@ def read_data(filenames, variable, product=None):
     Files can be either gridded or ungridded but not a mix of both.
     First tries to read data as gridded, if that fails, tries as ungridded.
     
-    @param filenames:   The filenames of the files to read
-    @param variable:    The variable to read from the files
+    :param filenames:   The filenames of the files to read
+    :param variable:    The variable to read from the files
         
-    @return:  The specified data with unnecessary dimensions removed
+    :return:  The specified data with unnecessary dimensions removed
     '''
     from jasmin_cis.data_io.products.AProduct import get_data
 
@@ -25,9 +25,9 @@ def read_coordinates(filenames, product=None):
     '''
     Read the coordinates from a file
 
-    @param filenames:   The filename of the files to read
+    :param filenames:   The filename of the files to read
         
-    @return: A CoordList object
+    :return: A CoordList object
     '''
     from jasmin_cis.data_io.products.AProduct import get_coordinates
 

@@ -28,11 +28,11 @@ def concatenate(arrays, axis=0):
 
 def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = False):
     '''
-    @param data: A numpy array
-    @param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
-    @param user_range: A dictionary containing the min and max values for the edges specified by the user. The data min and max is used if the user did not specify
-    @param step: The distance between each bin edge/the width of each bin
-    @return: An array containing a list of bin edges (i.e. when each bin starts and ends)
+    :param data: A numpy array
+    :param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
+    :param user_range: A dictionary containing the min and max values for the edges specified by the user. The data min and max is used if the user did not specify
+    :param step: The distance between each bin edge/the width of each bin
+    :return: An array containing a list of bin edges (i.e. when each bin starts and ends)
     '''
     from decimal import Decimal
     from numpy import array, append, logspace, log10
@@ -91,10 +91,10 @@ def expand_1d_to_2d_array(array_1d,length,axis=0):
      [3 3 3 3]
      [4 4 4 4]]
 
-    @param array_1d:
-    @param length:
-    @param axis:
-    @return:
+    :param array_1d:
+    :param length:
+    :param axis:
+    :return:
     '''
     import numpy as np
 
@@ -121,9 +121,9 @@ def create_masked_array_for_missing_values(data, missing_values):
 
 def array_equal_including_nan(array1, array2):
     """
-    @param array1: A numpy array
-    @param array2: Another numpy array (can be of a different shape)
-    @return True or false if the arrays are equal, inclduing NaNs.
+    :param array1: A numpy array
+    :param array2: Another numpy array (can be of a different shape)
+    :return: True or false if the arrays are equal, inclduing NaNs.
     """
     import numpy
 
@@ -144,8 +144,8 @@ def array_equal_including_nan(array1, array2):
 
 def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
     '''
-    @param data_object    A cube or an UngriddedData object
-    @return A dictionary containing x, y and data as numpy arrays
+    :param data_object    A cube or an UngriddedData object
+    :return: A dictionary containing x, y and data as numpy arrays
     '''
     from iris.cube import Cube
     import iris.plot as iplt
@@ -240,9 +240,9 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
 def copy_attributes(source, dest):
     '''
      Copy all attributes from one object to another
-    @param source: Object to copy attributes from
-    @param dest: Object to copy attributes to
-    @return: None
+    :param source: Object to copy attributes from
+    :param dest: Object to copy attributes to
+    :return: None
     '''
     if source:
         if isinstance(source, dict):
@@ -254,9 +254,9 @@ def copy_attributes(source, dest):
 def add_file_prefix(prefix, filepath):
     '''
         Add a prefix to a filename taking into account any path that might be present before that actual filename
-    @param prefix: A string to prefix the filename with
-    @param filepath: Filename, optionally including path
-    @return: A string with the full path to the prefixed file
+    :param prefix: A string to prefix the filename with
+    :param filepath: Filename, optionally including path
+    :return: A string with the full path to the prefixed file
     '''
     import os.path
     filename = os.path.basename(filepath)
@@ -267,9 +267,9 @@ def add_file_prefix(prefix, filepath):
 def parse_key_val_string(arguments, seperator):
     '''
         Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and values
-    @param arguments: A string which is a seperated list of keyword value pairs
-    @param seperator: String which is used to split the string into a list
-    @return: A dictionary of the keywords and values
+    :param arguments: A string which is a seperated list of keyword value pairs
+    :param seperator: String which is used to split the string into a list
+    :return: A dictionary of the keywords and values
     '''
     input_list = arguments.split(seperator)
     return parse_key_val_list(input_list)
@@ -279,8 +279,8 @@ def parse_key_val_list(input_list):
     '''
      Takes list of keyword value strings (seperated by =) and returns a dictionary with those keys and values
         NOTE - if a key has no value, the key is stored and given the value True
-    @param input_list: A list of strings which are keyword value pairs seperated by =
-    @return: A dictionary of the keywords and values
+    :param input_list: A list of strings which are keyword value pairs seperated by =
+    :return: A dictionary of the keywords and values
     '''
     key_val_dict = {}
     for element in input_list:
@@ -373,9 +373,9 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
         If one array is masked and the other is not, the mask from the masked array is applied
           to the unmasked array
         If neither array is masked then both arrays are returned as masked arrays with an empty mask
-    @param array1: An (optionally masked) array
-    @param array2: Another (optionally masked) array
-    @return: Two masked arrays with a common mask
+    :param array1: An (optionally masked) array
+    :param array2: Another (optionally masked) array
+    :return: Two masked arrays with a common mask
     '''
     import numpy.ma as ma
     if isinstance(array1, ma.MaskedArray):
@@ -399,8 +399,8 @@ def index_iterator(shape):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
 
     The last index changes most rapidly.
-    @param shape: sequence of array dimensions
-    @return: yields tuples of array indexes
+    :param shape: sequence of array dimensions
+    :return: yields tuples of array indexes
     """
     dim = len(shape)
     idx = [0] * dim
@@ -419,8 +419,8 @@ def index_iterator(shape):
 
 def parse_distance_with_units_to_float_km(distance):
     """Parse a string such as '10km' or '1.0e3m' to a distance in km
-    @param distance: string to parse
-    @return: A distance in km
+    :param distance: string to parse
+    :return: A distance in km
     """
     measurement = split_into_float_and_units(distance)
     distance_in_km = measurement['value']
@@ -436,8 +436,8 @@ def parse_distance_with_units_to_float_km(distance):
 
 def parse_distance_with_units_to_float_m(distance):
     """Parse a string such as '10km' or '1.0e3m' to a distance in m
-    @param distance: string to parse
-    @return: A distance in m
+    :param distance: string to parse
+    :return: A distance in m
     """
     measurement = split_into_float_and_units(distance)
     if measurement['units'] is None:
@@ -448,8 +448,8 @@ def parse_distance_with_units_to_float_m(distance):
 
 def split_into_float_and_units(measurement):
     """Split a string such as '1000m' or '1.0e3' to a value and, optionally, units
-    @param distance: string to parse
-    @return: A distance in m
+    :param distance: string to parse
+    :return: A distance in m
     """
 
     # Convert to a string, just in case the number comes in as something else
@@ -480,7 +480,11 @@ def split_into_float_and_units(measurement):
 
 def get_class_name(cls):
     """Returns the qualified class name of a class.
-    @param cls: class
-    @return: class name
+    :param cls: class
+    :return: class name
     """
     return cls.__module__ + '.' + cls.__name__
+
+
+def isnan(number):
+    return number != number

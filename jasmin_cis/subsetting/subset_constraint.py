@@ -13,10 +13,10 @@ from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
 
 class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
     """Holds the start and end values for subsetting limits.
-    @ivar coord: the coordinate the limit applies to
-    @ivar start: subsetting limit start
-    @ivar end: subsetting limit end
-    @ivar constraint_function: function determining whether the constraint is satisfied
+    :ivar coord: the coordinate the limit applies to
+    :ivar start: subsetting limit start
+    :ivar end: subsetting limit end
+    :ivar constraint_function: function determining whether the constraint is satisfied
     """
     pass
 
@@ -35,9 +35,9 @@ class SubsetConstraint(SubsetConstraintInterface):
     def set_limit(self, coord, dim_min, dim_max):
         """Sets boundary values for a dimension to be used in subsetting.
 
-        @param coord: coordinate to which limit applies
-        @param dim_min: lower bound on dimension or None to indicate no lower bound
-        @param dim_max: upper bound on dimension or None to indicate no upper bound
+        :param coord: coordinate to which limit applies
+        :param dim_min: lower bound on dimension or None to indicate no lower bound
+        :param dim_max: upper bound on dimension or None to indicate no upper bound
         """
         if dim_min is not None or dim_max is not None:
             logging.info("Setting limit for dimension '%s' [%s, %s]", coord.name(), str(dim_min), str(dim_max))
@@ -49,9 +49,9 @@ class SubsetConstraint(SubsetConstraintInterface):
         """Constructs a function enforcing the specified bounds on the values of a dimension.
 
         The boundary values are included in the constrained interval.
-        @param dim_min: lower bound on dimension or None to indicate no lower bound
-        @param dim_max: upper bound on dimension or None to indicate no upper bound
-        @return: lambda function with one argument returning bool
+        :param dim_min: lower bound on dimension or None to indicate no lower bound
+        :param dim_max: upper bound on dimension or None to indicate no upper bound
+        :return: lambda function with one argument returning bool
         """
         if dim_min is not None and dim_max is not None:
             return lambda x: dim_min <= x <= dim_max
@@ -75,7 +75,7 @@ class GriddedSubsetConstraint(SubsetConstraint):
     def make_iris_constraint(self):
         """Constructs an Iris constraint corresponding to the limits set for each dimension.
 
-        @return: iris.Constraint object
+        :return: iris.Constraint object
         """
         constraint = None
         for coord, limits in self._limits.iteritems():
@@ -89,9 +89,9 @@ class GriddedSubsetConstraint(SubsetConstraint):
     def constrain(self, data):
         """Subsets the supplied data.
 
-        @param data: data to be subsetted
-        @type data: iris.cube.Cube
-        @return: subsetted data
+        :param data: data to be subsetted
+        :type data: iris.cube.Cube
+        :return: subsetted data
         @rtype: jasmin_cis.data_io.gridded_data.GriddedData
         """
         iris_constraint = self.make_iris_constraint()
@@ -104,8 +104,8 @@ class UngriddedSubsetConstraint(SubsetConstraint):
     def constrain(self, data):
         """Subsets the supplied data.
 
-        @param data: data to be subsetted
-        @return: subsetted data
+        :param data: data to be subsetted
+        :return: subsetted data
         """
         CoordPair = namedtuple('CoordPair', ['input', 'output'])
 
@@ -157,8 +157,8 @@ class UngriddedOnGridSubsetConstraint(SubsetConstraint):
     def constrain(self, data):
         """Subsets the supplied data.
 
-        @param data: data to be subsetted
-        @return: subsetted data
+        :param data: data to be subsetted
+        :return: subsetted data
         """
         shape = data.data.shape
         ndim = len(shape)
@@ -216,8 +216,8 @@ def _index_iterator(shape):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
 
     The last index changes most rapidly.
-    @param shape: sequence of array dimensions
-    @return: yields tuples of array indexes
+    :param shape: sequence of array dimensions
+    :return: yields tuples of array indexes
     """
     dim = len(shape)
     idx = [0] * dim

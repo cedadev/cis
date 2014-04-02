@@ -7,8 +7,8 @@ def get_hdf4_file_variables(filename, data_type):
     Get all variables from a file containing ungridded data.
     Concatenate variable from both VD and SD data
 
-    @param filename: The filename of the file to get the variables from
-    @param data_type: String representing the HDF data type, i.e. 'VD' or 'SD'. if None, both are computed.
+    :param filename: The filename of the file to get the variables from
+    :param data_type: String representing the HDF data type, i.e. 'VD' or 'SD'. if None, both are computed.
     """
 
     SD_vars = VD_vars = None
@@ -31,8 +31,8 @@ def get_hdf4_file_metadata(filename):
     This returns a dictionary of file attributes, which often contains metadata information
     about the whole file. The value of each attribute can simply be a big string
     which will often need to be parsed manually thereafter.
-    @param filename
-    @return: dictionary of string attributes
+    :param filename
+    :return: dictionary of string attributes
     """
     from pyhdf.SD import SD
     return SD(filename).attributes()
@@ -42,10 +42,10 @@ def __read_hdf4(filename,variables):
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
          for each VD and SD data types.
 
-        @param filename:     A name of a file to read
-        @param variables:    List of variables to read from the files
+        :param filename:     A name of a file to read
+        :param variables:    List of variables to read from the files
 
-        @return (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds
+        :return: (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds
     '''
     from jasmin_cis.exceptions import InvalidVariableError
     from pyhdf.error import HDF4Error

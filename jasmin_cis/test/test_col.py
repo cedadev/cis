@@ -38,8 +38,7 @@ class TestAverageColocator(ColocatorTests):
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
 
         col = AverageColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), mean())
@@ -51,8 +50,7 @@ class TestAverageColocator(ColocatorTests):
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
 
         col = AverageColocator(stddev_name='my_std_dev',nopoints_name='my_no_points')
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), full_average())
@@ -73,8 +71,7 @@ class TestDifferenceColocator(ColocatorTests):
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34), val=25.0))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34), val=25.0)])
 
         col = DifferenceColocator(diff_name='my_diff')
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), mean())
@@ -100,8 +97,7 @@ class Test_full_average(KernelTests):
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
 
         col = AverageColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), full_average())
@@ -119,8 +115,7 @@ class Test_full_average(KernelTests):
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, pres=12.0, t=dt.datetime(1984,8,29,8,34)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=1.0, lon=1.0, pres=12.0, t=dt.datetime(1984,8,29,8,34))])
 
         col = AverageColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), full_average())
@@ -139,7 +134,7 @@ class Test_nn_gridded(KernelTests):
     def test_basic_col_gridded_to_ungridded_in_2d(self):
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
@@ -151,7 +146,7 @@ class Test_nn_gridded(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
-        sample_points = HyperPointList([HyperPoint(0.0, 0.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(0.0, 0.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
@@ -166,7 +161,7 @@ class Test_nn_gridded(KernelTests):
         '''
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = HyperPointList([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
+        sample_points = mock.MockUngriddedData([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
@@ -178,7 +173,7 @@ class Test_nn_gridded(KernelTests):
     def test_coordinates_outside_grid_in_col_gridded_to_ungridded_in_2d(self):
         from jasmin_cis.col_implementations import DefaultColocator, nn_gridded, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = HyperPointList([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
+        sample_points = mock.MockUngriddedData([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 12.0)
@@ -196,6 +191,7 @@ class Test_nn_gridded(KernelTests):
         sample_points.append(HyperPoint(lat=1.0, lon=1.0, t=dt.datetime(1984,8,28,8,34)))
         sample_points.append(HyperPoint(lat=4.0, lon=4.0, t=dt.datetime(1984,8,31,1,23)))
         sample_points.append(HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984,9,2,15,54)))
+        sample_points = mock.MockUngriddedData(sample_points)
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 51.0)
@@ -209,7 +205,7 @@ class Test_nn_horizontal(KernelTests):
     def test_basic_col_in_2d(self):
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = HyperPointList([HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 8.0)
@@ -221,7 +217,7 @@ class Test_nn_horizontal(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
-        sample_points = HyperPointList([HyperPoint(0.0, 0.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(0.0, 0.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 8.0)
@@ -238,7 +234,7 @@ class Test_nn_horizontal(KernelTests):
         '''
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = HyperPointList([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
+        sample_points = mock.MockUngriddedData([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 11.0)
@@ -250,7 +246,7 @@ class Test_nn_horizontal(KernelTests):
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
         from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal, DummyConstraint
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = HyperPointList([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
+        sample_points = mock.MockUngriddedData([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal())[0]
         eq_(new_data.data[0], 12.0)
@@ -266,7 +262,7 @@ class Test_nn_time(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(1.0, 1.0), HyperPoint(4.0,4.0), HyperPoint(-4.0,-4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
 
@@ -279,6 +275,7 @@ class Test_nn_time(KernelTests):
         sample_points.append(HyperPoint(lat=1.0, lon=1.0, t=dt.datetime(1984,8,29,8,34)))
         sample_points.append(HyperPoint(lat=4.0, lon=4.0, t=dt.datetime(1984,9,2,1,23)))
         sample_points.append(HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984,9,4,15,54)))
+        sample_points = mock.MockUngriddedData(sample_points)
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
         eq_(new_data.data[0], 3.0)
@@ -299,6 +296,7 @@ class Test_nn_time(KernelTests):
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=149759.378055556,))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=149766.373969907))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=149776.375995371))
+        sample_points = mock.MockUngriddedData(sample_points)
 
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
@@ -315,6 +313,7 @@ class Test_nn_time(KernelTests):
         t0 = dt.datetime(1984,8,27)
         for d in xrange(15):
             sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=t0+dt.timedelta(days=d)))
+        sample_points = mock.MockUngriddedData(sample_points)
 
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
@@ -331,9 +330,8 @@ class Test_nn_time(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_time, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
-        sample_points = HyperPointList()
         # Choose a time at midday
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984,8,29,12)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984,8,29,12))])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
         eq_(new_data.data[0], 3.0)
@@ -347,6 +345,7 @@ class Test_nn_time(KernelTests):
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984,8,26)))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1884,8,26)))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1994,8,27)))
+        sample_points = mock.MockUngriddedData(sample_points)
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_time())[0]
         eq_(new_data.data[0], 1.0)
@@ -362,7 +361,7 @@ class Test_nn_altitude(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_altitude())[0]
 
@@ -375,6 +374,7 @@ class Test_nn_altitude(KernelTests):
         sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34)))
         sample_points.append(HyperPoint(lat=4.0, lon=4.0, alt=34.0, t=dt.datetime(1984,9,2,1,23)))
         sample_points.append(HyperPoint(lat=-4.0, lon=-4.0, alt=89.0, t=dt.datetime(1984,9,4,15,54)))
+        sample_points = mock.MockUngriddedData(sample_points)
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_altitude())[0]
         eq_(new_data.data[0], 6.0)
@@ -386,8 +386,7 @@ class Test_nn_altitude(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=80.0, t=dt.datetime(1984,9,4,15,54)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=0.0, lon=0.0, alt=80.0, t=dt.datetime(1984,9,4,15,54))])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_altitude())[0]
         eq_(new_data.data[0], 41.0)
@@ -403,9 +402,8 @@ class Test_nn_altitude(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_altitude, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
         # Choose a time at midday
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=35.0, t=dt.datetime(1984,8,29,12)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=0.0, lon=0.0, alt=35.0, t=dt.datetime(1984,8,29,12))])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_altitude())[0]
         eq_(new_data.data[0], 16.0)
@@ -419,6 +417,7 @@ class Test_nn_altitude(KernelTests):
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=-12.0, t=dt.datetime(1984,8,29,8,34)))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=91.0, t=dt.datetime(1984,9,2,1,23)))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=890.0, t=dt.datetime(1984,9,4,15,54)))
+        sample_points = mock.MockUngriddedData(sample_points)
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_altitude())[0]
         eq_(new_data.data[0], 1.0)
@@ -434,7 +433,7 @@ class Test_nn_pressure(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_pressure())[0]
 
@@ -447,6 +446,7 @@ class Test_nn_pressure(KernelTests):
         sample_points.append(HyperPoint(lat=1.0, lon=1.0, pres=12.0, t=dt.datetime(1984,8,29,8,34)))
         sample_points.append(HyperPoint(lat=4.0, lon=4.0, pres=34.0, t=dt.datetime(1984,9,2,1,23)))
         sample_points.append(HyperPoint(lat=-4.0,lon=-4.0, pres=89.0, t=dt.datetime(1984,9,4,15,54)))
+        sample_points = mock.MockUngriddedData(sample_points)
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_pressure())[0]
         eq_(new_data.data[0], 6.0)
@@ -458,8 +458,7 @@ class Test_nn_pressure(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=80.0, t=dt.datetime(1984,9,4,15,54)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=0.0, lon=0.0, pres=80.0, t=dt.datetime(1984,9,4,15,54))])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_pressure())[0]
         eq_(new_data.data[0], 41.0)
@@ -475,9 +474,8 @@ class Test_nn_pressure(KernelTests):
         from jasmin_cis.col_implementations import DefaultColocator, nn_pressure, DummyConstraint
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
         # Choose a time at midday
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=8, t=dt.datetime(1984,8,29,12)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=0.0, lon=0.0, pres=8, t=dt.datetime(1984,8,29,12))])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_pressure())[0]
         eq_(new_data.data[0], 1.0)
@@ -491,6 +489,7 @@ class Test_nn_pressure(KernelTests):
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=0.1, t=dt.datetime(1984,8,29,8,34)))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=91.0, t=dt.datetime(1984,9,2,1,23)))
         sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=890.0, t=dt.datetime(1984,9,4,15,54)))
+        sample_points = mock.MockUngriddedData(sample_points)
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_pressure())[0]
         eq_(new_data.data[0], 1.0)
@@ -506,8 +505,7 @@ class Test_mean(KernelTests):
         import datetime as dt
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34)))
+        sample_points = mock.MockUngriddedData([HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984,8,29,8,34))])
 
         col = DefaultColocator()
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), mean())[0]
@@ -520,7 +518,7 @@ class Test_li(KernelTests):
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
         from jasmin_cis.col_implementations import DefaultColocator, li, DummyConstraint
         cube = mock.make_square_5x3_2d_cube()
-        sample_points = HyperPointList([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        sample_points = mock.MockUngriddedData([HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = DefaultColocator()
         new_data = col.colocate(sample_points, cube, DummyConstraint(), li())[0]
         assert_almost_equal(new_data.data[0], 8.8)
@@ -662,3 +660,7 @@ class TestSepConstraint(ConstraintTests):
         eq_(ref_vals.size, new_vals.size)
         assert(np.equal(ref_vals, new_vals).all())
 
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule()

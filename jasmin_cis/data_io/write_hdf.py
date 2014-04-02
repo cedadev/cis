@@ -51,9 +51,9 @@ def __create_variable(hdf_file, name, data, **kwargs):
     '''
     Create a variable in the given hdf file
     
-    @param hdf_file:    The hdf file in which to create the variable
-    @param name:        The name of the variable
-    @param data:        An (numpy) array containing the data
+    :param hdf_file:    The hdf file in which to create the variable
+    :param name:        The name of the variable
+    :param data:        An (numpy) array containing the data
     '''
     # Create the variable
     var = hdf_file.create(name, SDC.FLOAT32, len(data))
@@ -76,8 +76,8 @@ def write(obj, filename):
     '''
     Writes an object to a file
     
-    @param obj:        The ungridded data object to write
-    @param filename:   The filename of the file to be written 
+    :param obj:        The ungridded data object to write
+    :param filename:   The filename of the file to be written 
     '''
     # Create file, open in read-write mode, and overwrite any existing data
     hdf_file = SD(filename, SDC.WRITE|SDC.CREATE|SDC.TRUNC)
