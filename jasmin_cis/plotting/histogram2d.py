@@ -49,8 +49,8 @@ class Histogram_2D(Generic_Plot):
         '''
         Calculates the number of bins for a given axis.
         Uses 10 as the default
-        @param axis: The axis to calculate the number of bins for
-        @return: The number of bins for the given axis
+        :param axis: The axis to calculate the number of bins for
+        :return: The number of bins for the given axis
         '''
         from jasmin_cis.utils import calculate_histogram_bin_edges
         from numpy import array
@@ -73,7 +73,7 @@ class Histogram_2D(Generic_Plot):
         '''
         Sets the default axis label for the given axis.
         If the axis is "y", then labels it "Frequency", else works it out based on the name and units of the data
-        @param axis: The axis to calculate the default axis label for
+        :param axis: The axis to calculate the default axis label for
         '''
         axis = axis.lower()
         axislabel = axis + "label"
@@ -97,8 +97,8 @@ class Histogram_2D(Generic_Plot):
         '''
         Calculates the limits for a given axis.
         If the axis is "y" then looks at the "data" as this is where the values are stored
-        @param axis: The axis to calculate the limits for
-        @return: A dictionary containing the min and max values for the given axis
+        :param axis: The axis to calculate the limits for
+        :return: A dictionary containing the min and max values for the given axis
         '''
         if axis == "x":
             coord_axis = "x"
@@ -131,8 +131,8 @@ class Histogram_2D(Generic_Plot):
         '''
         Applies the limits (if given) to the specified axis.
         Sets the "y" axis as having a minimum value of 0 as can never have a negative frequency
-        @param valrange: A dictionary containing the min and/or max values for the axis
-        @param axis: The axis to apply the limits to
+        :param valrange: A dictionary containing the min and/or max values for the axis
+        :param axis: The axis to apply the limits to
         '''
         if len(valrange) != 0:
             if axis == "x":

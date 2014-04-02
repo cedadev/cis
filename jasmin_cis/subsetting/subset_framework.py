@@ -10,9 +10,9 @@ class SubsetterInterface(object):
     def subset(self, data, constraint):
         """Subsets the supplied data using the supplied constraint.
 
-        @param data: data to be subsetted
-        @param constraint: SubsetConstraint object to be used to subset data
-        @return: subsetted data
+        :param data: data to be subsetted
+        :param constraint: SubsetConstraint object to be used to subset data
+        :return: subsetted data
         """
 
 
@@ -25,6 +25,6 @@ class SubsetConstraintInterface(object):
     def constrain(self, data):
         """Subsets the supplied data.
 
-        @param data: data to be subsetted
-        @return: subsetted data
+        :param data: data to be subsetted
+        :return: subsetted data
         """

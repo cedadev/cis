@@ -44,11 +44,11 @@ class Scatter_Plot(Generic_Plot):
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
-        @param axis: The axis to calculate the limits for
-        @param min_val: The user specified minimum value for the axis
-        @param max_val: The user specified maximum value for the axis
-        @param step: The distance between each tick on the axis
-        @return: A dictionary containing the min and max values for the axis, and the step between each tick
+        :param axis: The axis to calculate the limits for
+        :param min_val: The user specified minimum value for the axis
+        :param max_val: The user specified maximum value for the axis
+        :param step: The distance between each tick on the axis
+        :return: A dictionary containing the min and max values for the axis, and the step between each tick
         '''
         if axis == "x":
             coord_axis = "x"

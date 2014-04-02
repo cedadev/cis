@@ -204,7 +204,7 @@ class TestASCII(ProductTests):
     def should_raise_error_when_variable_does_not_exist_in_file(self):
         '''
          This product throws an IO error rather than an InvalidVariable error as the file can only have one variable
-        @return:
+        :return:
         '''
         self.product().create_data_object([self.no_value_filename], True)
 
@@ -212,7 +212,7 @@ class TestASCII(ProductTests):
     def test_create_data_object_with_missing_values(self):
         '''
          Check that missing values get masked correctly
-        @return:
+        :return:
         '''
         data = self.product().create_data_object([self.filename], True)
         assert(all(data.data.mask == [False, False, False, True, False, True, False, False]))

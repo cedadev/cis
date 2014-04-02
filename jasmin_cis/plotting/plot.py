@@ -37,11 +37,11 @@ class Plotter(object):
         '''
         Constructor for the plotter
 
-        @param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
-        @param plot_type: The plot type to be used, as a string
-        @param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be used, with png being the default
-        @param mplargs: Any other arguments received from the parser
-        @param mplkwargs: Any other keyword arguments received from the plotter
+        :param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
+        :param plot_type: The plot type to be used, as a string
+        :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be used, with png being the default
+        :param mplargs: Any other arguments received from the parser
+        :param mplkwargs: Any other keyword arguments received from the plotter
         '''
         mplkwargs.pop("xmin", None)
         mplkwargs.pop("xmax", None)
@@ -103,7 +103,7 @@ class Plotter(object):
     def output_to_file_or_screen(self, out_filename = None):
         '''
         Outputs to screen unless a filename is given
-        @param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
+        :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
         '''
         import logging
         import matplotlib.pyplot as plt
@@ -126,8 +126,8 @@ class Plotter(object):
     def set_default_plot_type(self, data):
         '''
         Sets the default plot type based on the number of dimensions of the data
-        @param data: A list of packed data items
-        @return The default plot type as a string
+        :param data: A list of packed data items
+        :return: The default plot type as a string
         '''
         from jasmin_cis.exceptions import InvalidPlotTypeError
         from iris.cube import Cube

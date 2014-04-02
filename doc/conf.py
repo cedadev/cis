@@ -267,3 +267,6 @@ texinfo_documents = [
 # Enable todos
 # Use ``SPHINXOPTS="-D todo_include_todos=True" make -e html`` to enable this on build.
 #todo_include_todos = True
+
+# Configure autodoc
+autodoc_default_flags = ['members']

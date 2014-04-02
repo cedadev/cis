@@ -393,7 +393,7 @@ class Caliop(AProduct):
     def get_file_signature(self):
         '''
         To be implemented by subclcass
-        @return:
+        :return:
         '''
         return []
 
@@ -491,9 +491,9 @@ class Caliop(AProduct):
     def create_data_object(self, filenames, variable):
         '''
         To be implemented by subclass
-        @param filenames:
-        @param variable:
-        @return:
+        :param filenames:
+        :param variable:
+        :return:
         '''
         return None
 
@@ -546,10 +546,10 @@ class Caliop(AProduct):
     def apply_scaling_factor_CALIPSO(self,data, scale_factor, offset):
         '''
         Apply scaling factor Calipso data
-        @param data:
-        @param scale_factor:
-        @param offset:
-        @return:
+        :param data:
+        :param scale_factor:
+        :param offset:
+        :return:
         '''
         return (data/scale_factor) + offset
 
@@ -716,27 +716,27 @@ class NetCDF_CF_Gridded(NetCDF_CF):
     def create_coords(self, filenames, variable=None):
         """Reads the coordinates on which a variable depends.
         Note: This calls create_data_object because the coordinates are returned as a Cube.
-        @param filenames: list of names of files from which to read coordinates
-        @param variable: name of variable for which the coordinates are required
+        :param filenames: list of names of files from which to read coordinates
+        :param variable: name of variable for which the coordinates are required
                          (optional if file contains only one cube)
-        @return: iris.cube.Cube
+        :return: iris.cube.Cube
         """
         return self._create_cube(filenames, variable, False)
 
     def create_data_object(self, filenames, variable):
         """
 
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        :param filenames: List of filenames to read coordinates from
+        :param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
+        :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         return self._create_cube(filenames, variable, True)
 
     def _create_cube(self, filenames, variable, remove_length_one_dimensions):
         """Creates a cube for the specified variable.
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        :param filenames: List of filenames to read coordinates from
+        :param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
+        :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         from jasmin_cis.exceptions import InvalidVariableError
 
@@ -796,10 +796,10 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
     def create_coords(self, filenames, variable=None):
         """Reads the coordinates on which a variable depends.
         Note: This calls create_data_object because the coordinates are returned as a Cube.
-        @param filenames: list of names of files from which to read coordinates
-        @param variable: name of variable for which the coordinates are required
+        :param filenames: list of names of files from which to read coordinates
+        :param variable: name of variable for which the coordinates are required
                          (optional if file contains only one cube)
-        @return: iris.cube.Cube
+        :return: iris.cube.Cube
         """
         from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
 
@@ -815,9 +815,9 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
 
     def create_data_object(self, filenames, variable):
         """Reads the data for a variable.
-        @param filenames: list of names of files from which to read data
-        @param variable: (optional) name of variable; if None, the file(s) must contain data for only one cube
-        @return: iris.cube.Cube
+        :param filenames: list of names of files from which to read data
+        :param variable: (optional) name of variable; if None, the file(s) must contain data for only one cube
+        :return: iris.cube.Cube
         """
         from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
 
@@ -876,9 +876,9 @@ class Xglnwa(NetCDF_CF_Gridded):
         #  we need to think about how to expand them here
         """
 
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        :param filenames: List of filenames to read coordinates from
+        :param variable: Optional variable to read while we're reading the coordinates
+        :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         return super(Xglnwa, self).create_coords(filenames, variable)
 
@@ -902,9 +902,9 @@ class Xenida(NetCDF_CF_Gridded):
         #  we need to think about how to expand them here
         """
 
-        @param filenames: List of filenames to read coordinates from
-        @param variable: Optional variable to read while we're reading the coordinates
-        @return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
+        :param filenames: List of filenames to read coordinates from
+        :param variable: Optional variable to read while we're reading the coordinates
+        :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         from jasmin_cis.data_io.netcdf import read, get_metadata
         from jasmin_cis.data_io.Coord import Coord
