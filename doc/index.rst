@@ -20,7 +20,7 @@ Contents:
    colocation_examples
    plotting
    maintenance_and_development
-
+   api/jasmin_cis
 
 Indices and tables
 ==================
