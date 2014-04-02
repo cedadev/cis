@@ -141,9 +141,9 @@ def add_subset_parser_arguments(parser):
 def expand_file_list(filenames, parser):
     '''
 
-    @param filenames: A string which is a comma seperated list of filenames, wildcarded filenames or directories
-    @param parser: A reference parser for raising errors on
-    @return: A flat list of files which exist - with no duplicate
+    :param filenames: A string which is a comma seperated list of filenames, wildcarded filenames or directories
+    :param parser: A reference parser for raising errors on
+    :return: A flat list of files which exist - with no duplicate
     '''
     from glob import glob
     from jasmin_cis.utils import OrderedSet
@@ -192,10 +192,10 @@ def parse_float(arg, name, parser):
     '''
     Tries to parse a string as a float.
 
-    @param arg:    The arg to parse as a float
-    @param name:   A description of the argument used for error messages
-    @param parser: The parser used to report an error message
-    @return The parsed float if succeeds or the original argument if fails
+    :param arg:    The arg to parse as a float
+    :param name:   A description of the argument used for error messages
+    :param parser: The parser used to report an error message
+    :return: The parsed float if succeeds or the original argument if fails
     '''
     if arg:
         try:
@@ -214,10 +214,10 @@ def parse_int(arg, name, parser):
     '''
     Tries to parse a string as an integer.
 
-    @param arg:    The arg to parse as an integer
-    @param name:   A description of the argument used for error messages
-    @param parser: The parser used to report an error message
-    @return: The parsed integer if succeeds or None if fails
+    :param arg:    The arg to parse as an integer
+    :param name:   A description of the argument used for error messages
+    :param parser: The parser used to report an error message
+    :return: The parsed integer if succeeds or None if fails
     '''
     if arg:
         try:
@@ -255,9 +255,9 @@ def check_aggregate_kernel(arg, parser):
 
 def get_plot_datagroups(datagroups, parser):
     '''
-    @param datagroups:    A list of datagroups (possibly containing colons)
-    @param parser:       The parser used to report errors
-    @return The parsed datagroups as a list of dictionaries
+    :param datagroups:    A list of datagroups (possibly containing colons)
+    :param parser:       The parser used to report errors
+    :return: The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "color", "edgecolor", "itemstyle",
@@ -273,9 +273,9 @@ def get_plot_datagroups(datagroups, parser):
 
 def get_col_datagroups(datagroups, parser):
     '''
-    @param datagroups:    A list of datagroups (possibly containing colons)
-    @param parser:       The parser used to report errors
-    @return The parsed datagroups as a list of dictionaries
+    :param datagroups:    A list of datagroups (possibly containing colons)
+    :param parser:       The parser used to report errors
+    :return: The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "product"])
@@ -286,9 +286,9 @@ def get_col_datagroups(datagroups, parser):
 
 def get_col_samplegroup(samplegroup, parser):
     '''
-    @param samplegroups:    A list of datagroups (possibly containing colons)
-    @param parser:       The parser used to report errors
-    @return The parsed samplegroups as a list of dictionaries
+    :param samplegroups:    A list of datagroups (possibly containing colons)
+    :param parser:       The parser used to report errors
+    :return: The parsed samplegroups as a list of dictionaries
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable", "colocator", "constraint", "kernel", "product"])
@@ -299,9 +299,9 @@ def get_col_samplegroup(samplegroup, parser):
 
 def get_aggregate_datagroups(datagroups, parser):
     '''
-    @param datagroups:    A list of datagroups (possibly containing colons)
-    @param parser:       The parser used to report errors
-    @return The parsed datagroups as a list of dictionaries
+    :param datagroups:    A list of datagroups (possibly containing colons)
+    :param parser:       The parser used to report errors
+    :return: The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
@@ -312,11 +312,11 @@ def get_aggregate_datagroups(datagroups, parser):
 
 def get_aggregate_grid(aggregategrid, parser):
     '''
-    @param aggregategrid: List of aggregate grid specifications 
-    @param parser:        The parser used to report errors
-    @return The parsed datagroups as a list of dictionaries
+    :param aggregategrid: List of aggregate grid specifications 
+    :param parser:        The parser used to report errors
+    :return: The parsed datagroups as a list of dictionaries
     '''
-    from jasmin_cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
+    from jasmin_cis.parse_datetime import parse_datetime, parse_datetime_delta, parse_as_number_or_datetime
     from jasmin_cis.aggregation.aggregation_grid import AggregationGrid
 
     # Split into the limits for each dimension.
@@ -327,13 +327,24 @@ def get_aggregate_grid(aggregategrid, parser):
     grid_dict = {}
     for seg in split_input:
         # Parse out dimension name and new grid spacing; the expected format is:
-        # <dim_name>=[<start_value>,<delta>]
-        match = re.match(r'(?P<dim>[^=]+)(?:=)?(?:\[(?P<start>[^],]+)?(?:,(?P<delta>[^]]+))?\])?', seg)
+        # <dim_name>=[<start_value>,<end_value,<delta>]
+        match = re.match(r'(?P<dim>[^=]+)(?:=)?(?:\[(?P<start>[^],]+)?(?:,(?P<end>[^],]+))?(?:,(?P<delta>[^]]+))?\])?',
+                         seg)
         if match is None or match.group('dim') is None:
             parser.error("A dimension for aggregation does not have a valid dimension name")
-        elif match.group('start') is not None and match.group('delta') is not None:
+        elif match.group('start') is None and match.group('delta') is None:
+            dim_name = match.group('dim')
+            grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), float('NaN'), None)
+        elif match.group('end') is None:
+            parser.error("A dimension for aggregation has a start point but no end or delta value, an end and a delta "
+                         "value must be supplied, for example x=[0,360,30].")
+        elif match.group('delta') is None:
+            parser.error("A dimension for aggregation has a start point but no delta value, a delta value must be "
+                         "supplied, for example x=[0,360,30].")
+        else:
             dim_name = match.group('dim')
             start = match.group('start')
+            end = match.group('end')
             delta = match.group('delta')
 
             # If the dimension is specified as x, y, z, p or t, assume that the dimension is spatial or temporal in the
@@ -341,30 +352,28 @@ def get_aggregate_grid(aggregategrid, parser):
             is_time = None
             if dim_name.lower() == 't':
                 start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser)
-                delta_parsed = parse_datetime(delta, 'aggregation grid delta date/time', parser)
+                end_parsed = parse_datetime(end, 'aggregation grid end date/time', parser)
+                delta_parsed = parse_datetime_delta(delta, 'aggregation grid delta date/time', parser)
                 is_time = True
             elif dim_name.lower() in ['x', 'y', 'z', 'p']:
                 start_parsed = parse_float(start, 'aggregation grid start coordinate', parser)
+                end_parsed = parse_float(end, 'aggregation grid end coordinate', parser)
                 delta_parsed = parse_float(delta, 'aggregation grid delta coordinate', parser)
                 is_time = False
             else:
                 start_parsed = parse_as_number_or_datetime(start, 'aggregation grid start coordinate', parser)
+                end_parsed = parse_as_number_or_datetime(end, 'aggregation grid end coordinate', parser)
                 delta_parsed = parse_as_number_or_datetime(delta, 'aggregation grid delta coordinate', parser)
-            grid_dict[dim_name] = AggregationGrid(start_parsed, delta_parsed, is_time)
-        elif match.group('start') is None and match.group('delta') is None:
-            dim_name = match.group('dim')
-            grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), None)
-        else:
-            parser.error("A dimension for aggregation has a start point but no delta value, a delta value must be "
-                         "supplied")
+            grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed, is_time)
+
     return grid_dict
 
 
 def get_subset_datagroups(datagroups, parser):
     '''
-    @param datagroups:    A list of datagroups (possibly containing colons)
-    @param parser:       The parser used to report errors
-    @return The parsed datagroups as a list of dictionaries
+    :param datagroups:    A list of datagroups (possibly containing colons)
+    :param parser:       The parser used to report errors
+    :return: The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
@@ -375,9 +384,9 @@ def get_subset_datagroups(datagroups, parser):
 
 def get_subset_limits(subsetlimits, parser):
     '''
-    @param subsetlimits:  List of subset limit strings
-    @param parser:        The parser used to report errors
-    @return The parsed datagroups as a list of dictionaries
+    :param subsetlimits:  List of subset limit strings
+    :param parser:        The parser used to report errors
+    :return: The parsed datagroups as a list of dictionaries
     '''
     from jasmin_cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
     from jasmin_cis.subsetting.subset_limits import SubsetLimits
@@ -425,11 +434,11 @@ def get_subset_limits(subsetlimits, parser):
 
 def parse_colonic_arguments(inputs, parser, options, min_args=1):
     '''
-    @param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
-    @param parser:    The parser used to raise an error if one occurs
-    @param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
-    @param min_args:   The minimum number of arguments to expect - we can't say which arguments are compulsory, just how many are
-    @return A list of dictionaries containing the parsed arguments
+    :param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
+    :param parser:    The parser used to raise an error if one occurs
+    :param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    :param min_args:   The minimum number of arguments to expect - we can't say which arguments are compulsory, just how many are
+    :return: A list of dictionaries containing the parsed arguments
     '''
     input_dicts = []
 
@@ -452,11 +461,11 @@ def parse_colonic_arguments(inputs, parser, options, min_args=1):
 
 def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsary_args):
     '''
-    @param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
-    @param parser:    The parser used to raise an error if one occurs
-    @param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
-    @param compulsary_args:   The exact number of compulsary arguments (colon separated)
-    @return A list of dictionaries containing the parsed arguments
+    :param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
+    :param parser:    The parser used to raise an error if one occurs
+    :param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    :param compulsary_args:   The exact number of compulsary arguments (colon separated)
+    :return: A list of dictionaries containing the parsed arguments
     '''
     input_dicts = []
 
@@ -502,10 +511,10 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
 
 def split_outside_brackets(input, seps=[','], brackets={'[': ']'}):
     """Splits an input string at separators that are not within brackets.
-    @param input: input string to parse
-    @param seps: list of separator characters - default: comma
-    @param brackets: map of open brackets to corresponding close brackets: default: square brackets
-    @return: list of strings formed by breaking the input at colons
+    :param input: input string to parse
+    :param seps: list of separator characters - default: comma
+    :param brackets: map of open brackets to corresponding close brackets: default: square brackets
+    :return: list of strings formed by breaking the input at colons
     """
     match_brackets = []
     match_bracket = None
@@ -548,8 +557,8 @@ def extract_method_and_args(arguments, parser):
 
 def multi_split(s, seps):
     """Does a string split for multiple separators, and removes any blanks
-    @param s: input string to parse
-    @param seps: separators to use - the order of these matter
+    :param s: input string to parse
+    :param seps: separators to use - the order of these matter
     """
     res = [s]
     for sep in seps:

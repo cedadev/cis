@@ -24,16 +24,16 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
             array([ -10, -5, 0, 5, 10 ])
         longitude:
             array([ -5, 0, 5 ])
-    @param lat_dim_length: Latitude grid length
-    @param lon_dim_length: Longitude grid length
-    @param alt_dim_length: Altitude grid length
-    @param pres_dim_length: Pressure grid length
-    @param time_dim_length: Time grid length
-    @param horizontal_offset: Offset from the default grid, in degrees, in lat and lon
-    @param altitude_offset: Offset from the default grid in altitude
-    @param pressure_offset: Offset from the default grid in pressure
-    @param time_offset: Offset from the default grid in time
-    @return: A cube with well defined data.
+    :param lat_dim_length: Latitude grid length
+    :param lon_dim_length: Longitude grid length
+    :param alt_dim_length: Altitude grid length
+    :param pres_dim_length: Pressure grid length
+    :param time_dim_length: Time grid length
+    :param horizontal_offset: Offset from the default grid, in degrees, in lat and lon
+    :param altitude_offset: Offset from the default grid in altitude
+    :param pressure_offset: Offset from the default grid in pressure
+    :param time_offset: Offset from the default grid in time
+    :return: A cube with well defined data.
     """
 
     coord_list = []
@@ -691,7 +691,7 @@ def make_regular_2d_with_time_ungridded_data():
 def make_MODIS_time_steps():
     '''
         Useful for debugging MODIS colocation
-    @return:
+    :return:
     '''
     import numpy as np
     from jasmin_cis.data_io.Coord import CoordList, Coord

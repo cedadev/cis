@@ -10,3 +10,4 @@ build/
 dist/
 jasmin_cis.egg-info/
 *~
+doc/_build

@@ -19,8 +19,8 @@ def parse_datetimestr_to_std_time_array(string_time_array):
 def parse_datetimestr_delta_to_float_days(s):
     """
     parsing "1y2m3d4H5M6S" into a fractional day
-    @param s: string to be parsed
-    @return: a float representation of a day
+    :param s: string to be parsed
+    :return: a float representation of a day
     """
     import re
     from datetime import timedelta
@@ -55,9 +55,9 @@ def parse_datetimestr_delta_to_float_days(s):
 def calculate_mid_time(t1, t2):
     '''
         Find the mid time between two times expressed as floats
-    @param t1: a time represented as a float
-    @param t2: a time in the same representation as t1
-    @return: a float representing the time between t1 and t2
+    :param t1: a time represented as a float
+    :param t2: a time in the same representation as t1
+    :return: a float representing the time between t1 and t2
     '''
     return t1 + (t2 - t1)/2.0
 
@@ -85,9 +85,9 @@ def convert_sec_since_to_std_time(seconds, ref):
         Convert a number of seconds since a given reference datetime to a number of days since our standard time.
         This in principle could avoid the intermediate step converting to a datetime object except we don't know which
          calander the reference is on, e.g. it could be a 360 day calendar
-    @param seconds:
-    @param ref:
-    @return:
+    :param seconds:
+    :param ref:
+    :return:
     '''
     from datetime import timedelta
     return cis_standard_time_unit.date2num(timedelta(seconds=float(seconds)) + ref)
@@ -148,8 +148,8 @@ def convert_numpy_array(array, new_type, operation, *args, **kwargs):
 
 def convert_cube_time_coord_to_standard_time(cube):
     """Converts the time coordinate from the one in the cube to one based on a standard time unit.
-    @param cube: cube to modify
-    @return: the cube
+    :param cube: cube to modify
+    :return: the cube
     """
     # Find the time coordinate.
     t_coord = cube.coord(standard_name='time')
@@ -165,8 +165,8 @@ def convert_cube_time_coord_to_standard_time(cube):
             year across the conversion. If the source calendar has fewer days in a year, there are
             dates in the destination calendar that can never be returned. If the source calendar has
             more days, an error can result.
-            @param in_date: date as a number from a reference date set by the coordinate unit
-            @return: modified date as a number from the reference date for the standard time unit
+            :param in_date: date as a number from a reference date set by the coordinate unit
+            :return: modified date as a number from the reference date for the standard time unit
             """
             dt = t_coord.units.num2date(in_date)
             year = dt.year
@@ -195,8 +195,8 @@ def convert_cube_time_coord_to_standard_time_assuming_gregorian_calendar(cube):
 
     This approach assumes that source date is valid as a date in the calendar set for the
     standard time unit (Gregorian) which will not always be true.
-    @param cube: cube to modify
-    @return: the cube
+    :param cube: cube to modify
+    :return: the cube
     """
     # Get the current time coordinate and it's data dimension
     t_coord = cube.coord(standard_name='time')

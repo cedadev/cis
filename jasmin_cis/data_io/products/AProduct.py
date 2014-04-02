@@ -13,26 +13,26 @@ class AProduct(object):
         '''
         Create a an ungridded data object for a given variable from many files
 
-        @param filenames:    List of filenames of files to read
-        @param usr_variable:    Variable to read from the files
-        @return: An UngriddedData object for the specified variable
+        :param filenames:    List of filenames of files to read
+        :param usr_variable:    Variable to read from the files
+        :return: An UngriddedData object for the specified variable
 
-        @raise FileIOError: Unable to read a file
-        @raise InvalidVariableError: Variable not present in file
+        :raise FileIOError: Unable to read a file
+        :raise InvalidVariableError: Variable not present in file
         '''
 
     @abstractmethod
     def create_coords(self, filenames):
         '''
         Reads the coordinates from a bunch of files
-        @param filenames: List of filenames to read coordinates from
-        @return: L{CoordList} object
+        :param filenames: List of filenames to read coordinates from
+        :return: L{CoordList} object
         '''
 
     @abstractmethod
     def get_file_signature(self):
         '''
-        @return: a list of regex to match the product's file naming convention.
+        :return: a list of regex to match the product's file naming convention.
 
         Example
         -------
@@ -50,9 +50,9 @@ def __get_class(filename, product=None):
 
     Note, only the first filename of the list is use here.
 
-    @param filename: A single filename
-    @param product: name of the product
-    @return: a subclass of L{AProduct}
+    :param filename: A single filename
+    :param product: name of the product
+    :return: a subclass of L{AProduct}
     '''
     import re
     import os
@@ -89,10 +89,10 @@ def get_data(filenames, variable, product=None):
     '''
     Top level routine for calling the correct product's create_ungridded_data routine.
 
-    @param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
-    @param filenames: A list of filenames to read data from
-    @param variable: The variable to create the UngriddedData object from
-    @return: An Ungridded data variable
+    :param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
+    :param filenames: A list of filenames to read data from
+    :param variable: The variable to create the UngriddedData object from
+    :return: An Ungridded data variable
     '''
     product_cls = __get_class(filenames[0], product)
 
@@ -105,9 +105,9 @@ def get_coordinates(filenames, product=None):
     '''
     Top level routine for calling the correct product's create_coords routine.
 
-    @param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
-    @param filenames: A list of filenames to read data from
-    @return: A CoordList object
+    :param product: The product to read data from - this should be a string which matches the name of one of the subclasses of AProduct
+    :param filenames: A list of filenames to read data from
+    :return: A CoordList object
     '''
     product_cls = __get_class(filenames[0], product)
 

@@ -127,6 +127,17 @@ class Subset(object):
         return iris_unit.date2num(dt)
 
     @staticmethod
+    def _convert_coord_unit_to_datetime(coord, dt):
+        """Converts a datetime to be in the unit of a specified Coord.
+        """
+        if isinstance(coord, iris.coords.Coord):
+            # The unit class is then iris.unit.Unit.
+            iris_unit = coord.units
+        else:
+            iris_unit = iris.unit.Unit(coord.units)
+        return iris_unit.num2date(dt)
+
+    @staticmethod
     def _fix_longitude_limits_for_coord(limit_start, limit_end, coord):
         #TODO Also check unit as degrees or degrees_east?
         # Would like to do the following but UngriddedData coord does not have circular attribute.
@@ -163,8 +174,8 @@ class Subset(object):
     @staticmethod
     def _fix_angular_limit(value, range_start):
         """Force an angular variable to be within the 360 range starting from limit_start.
-        @param value: value to be fixed to be within the range
-        @param range_start: value at start of 360 range assuming -180 <= range_start <= 0.0
+        :param value: value to be fixed to be within the range
+        :param range_start: value at start of 360 range assuming -180 <= range_start <= 0.0
         """
         # Narrow to range -360 to 360.
         ret = math.fmod(value, 360.0)
