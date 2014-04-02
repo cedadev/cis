@@ -27,11 +27,11 @@ class UngriddedHyperPointView(HyperPointView):
     """
     def __init__(self, coords, data, non_masked_iteration=False):
         """
-        @param coords: coordinate values at points
-        @type coords: list of 1D numpy arrays or None
-        @param data: data values at points (optional)
-        @type data: 1D numpy array or None
-        @param non_masked_iteration: if true, the default iterator omits masked points
+        :param coords: coordinate values at points
+        :type coords: list of 1D numpy arrays or None
+        :param data: data values at points (optional)
+        :type data: 1D numpy array or None
+        :param non_masked_iteration: if true, the default iterator omits masked points
         """
         self.data = data
         self.coords = coords
@@ -52,13 +52,13 @@ class UngriddedHyperPointView(HyperPointView):
 
     def __len__(self):
         """Returns the number of points (including masked ones)
-        @return: number of points
+        :return: number of points
         """
         return self.length
 
     def __iter__(self):
         """Iterates over all or non-masked points according to the value of non_masked_iteration
-        @return: next HyperPoint
+        :return: next HyperPoint
         """
         for idx in xrange(self.length):
             if self.non_masked_iteration and self.data is not None and self.data[idx] is np.ma.masked:
@@ -67,14 +67,14 @@ class UngriddedHyperPointView(HyperPointView):
 
     def iter_all_points(self):
         """Iterates over all points regardless of the value of non_masked_iteration
-        @return: next HyperPoint
+        :return: next HyperPoint
         """
         for idx in xrange(self.length):
             yield self.__getitem__(idx)
 
     def iter_non_masked_points(self):
         """Iterates over non-masked points regardless of the value of non_masked_iteration
-        @return: next HyperPoint
+        :return: next HyperPoint
         """
         for idx in xrange(self.length):
             if self.data is not None and self.data[idx] is np.ma.masked:
@@ -84,7 +84,7 @@ class UngriddedHyperPointView(HyperPointView):
     def enumerate_non_masked_points(self):
         """Iterates over non-masked points returning the index in the full
         data array and the corresponding HyperPoint.
-        @return: tuple(index of point, HyperPoint)
+        :return: tuple(index of point, HyperPoint)
         """
         for idx in xrange(self.length):
             if self.data is not None and self.data[idx] is np.ma.masked:
@@ -136,11 +136,11 @@ class GriddedHyperPointView(HyperPointView):
     """
     def __init__(self, dim_coords_and_dims, data, non_masked_iteration=False):
         """
-        @param coords: coordinate values at points
-        @type coords: list of tuples of (1D numpy array of coordinate values, index of corresponding dimension) or None
-        @param data: data values at points
-        @type data: n-D numpy array with one dimension for each coordinate
-        @param non_masked_iteration: if true, the default iterator omits masked points
+        :param coords: coordinate values at points
+        :type coords: list of tuples of (1D numpy array of coordinate values, index of corresponding dimension) or None
+        :param data: data values at points
+        :type data: n-D numpy array with one dimension for each coordinate
+        :param non_masked_iteration: if true, the default iterator omits masked points
         """
         self.data = data
         self.num_dimensions = len(data.shape)
@@ -157,10 +157,10 @@ class GriddedHyperPointView(HyperPointView):
 
     def __getitem__(self, item):
         """Get HyperPoint specified by index.
-        @param item: index of item, either a scalar int over flattened data or
+        :param item: index of item, either a scalar int over flattened data or
                      a tuple of coordinate indices
-        @type item: tuple or int
-        @return: HyperPoint corresponding to data point
+        :type item: tuple or int
+        :return: HyperPoint corresponding to data point
         """
         val = [None] * HyperPoint.number_standard_names
         if isinstance(item, tuple):
@@ -189,13 +189,13 @@ class GriddedHyperPointView(HyperPointView):
 
     def __len__(self):
         """Returns the number of points (including masked ones)
-        @return: number of points
+        :return: number of points
         """
         return self.length
 
     def __iter__(self):
         """Iterates over all or non-masked points according to the value of non_masked_iteration
-        @return: next HyperPoint
+        :return: next HyperPoint
         """
         shape = [c.size for c in self.coords if (c is not None and c.size > 1)]
         for idx in jasmin_cis.utils.index_iterator(shape):
@@ -205,7 +205,7 @@ class GriddedHyperPointView(HyperPointView):
 
     def iter_all_points(self):
         """Iterates over all points regardless of the value of non_masked_iteration
-        @return: next HyperPoint
+        :return: next HyperPoint
         """
         shape = [c.size for c in self.coords if c is not None]
         for idx in jasmin_cis.utils.index_iterator(shape):
@@ -213,7 +213,7 @@ class GriddedHyperPointView(HyperPointView):
 
     def iter_non_masked_points(self):
         """Iterates over non-masked points regardless of the value of non_masked_iteration
-        @return: next HyperPoint
+        :return: next HyperPoint
         """
         shape = [c.size for c in self.coords if c is not None]
         for idx in jasmin_cis.utils.index_iterator(shape):
@@ -224,7 +224,7 @@ class GriddedHyperPointView(HyperPointView):
     def enumerate_non_masked_points(self):
         """Iterates over non-masked points returning the index in the full
         data array and the corresponding HyperPoint.
-        @return: tuple(index of point in flattened view of data, HyperPoint)
+        :return: tuple(index of point in flattened view of data, HyperPoint)
         """
         shape = tuple([c.size for c in self.coords if c is not None])
         for idx in xrange(self.length):

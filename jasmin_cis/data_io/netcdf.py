@@ -7,8 +7,8 @@ def get_netcdf_file_variables(filename):
     '''
     Get all the variables from a NetCDF file
     
-    @param filename: The filename of the file to get the variables from
-    @return: An OrderedDict containing the variables from the file
+    :param filename: The filename of the file to get the variables from
+    :return: An OrderedDict containing the variables from the file
     '''
     from netCDF4 import Dataset    
     f = Dataset(filename)
@@ -18,12 +18,12 @@ def read_many_files(filenames, usr_variables, dim=None):
     """
     Reads a single Variable from many NetCDF files.
 
-        @param filenames: A list of NetCDF filenames to read, or a string with wildcards.
-        @param usr_variables: A list of variable (dataset) names to read from the
+        :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
+        :param usr_variables: A list of variable (dataset) names to read from the
                        files. The names must appear exactly as in in the NetCDF file.
-        @param dim: The name of the dimension on which to aggregate the data. None is the default
+        :param dim: The name of the dimension on which to aggregate the data. None is the default
                      which tries to aggregate over the unlimited dimension
-        @return: A list of variable instances constructed from all of the input files
+        :return: A list of variable instances constructed from all of the input files
     """
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
@@ -51,10 +51,10 @@ def read_many_files_individually(filenames, usr_variables):
     """
     Read multiple Variables from many NetCDF files manually - i.e. not with MFDataset as this doesn't alays work
 
-        @param filenames: A list of NetCDF filenames to read, or a string with wildcards.
-        @param usr_variables: A list of variable (dataset) names to read from the
+        :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
+        :param usr_variables: A list of variable (dataset) names to read from the
                        files. The names must appear exactly as in in the NetCDF file.
-        @return: A dictionary of lists of variable instances constructed from all of the input files with the variable
+        :return: A dictionary of lists of variable instances constructed from all of the input files with the variable
                     name as the key
     """
     from jasmin_cis.utils import add_element_to_list_in_dict
@@ -77,10 +77,10 @@ def read(filename, usr_variables):
     """
     Reads a Variable from a NetCDF file
 
-        @param filename: The name (with path) of the NetCDF file to read.
-        @param usr_variables: A variable (dataset) name to read from the
+        :param filename: The name (with path) of the NetCDF file to read.
+        :param usr_variables: A variable (dataset) name to read from the
                        files. The name must appear exactly as in in the NetCDF file.
-        @return: A Variable instance constructed from  the input file
+        :return: A Variable instance constructed from  the input file
 
     """
     from netCDF4 import Dataset
@@ -108,8 +108,8 @@ def get_metadata(var):
     '''
     Retrieves all metadata
 
-    @param var: the Variable to read metadata from
-    @return: A metadata object
+    :param var: the Variable to read metadata from
+    :return: A metadata object
     '''
     from jasmin_cis.data_io.ungridded_data import Metadata
 
@@ -144,8 +144,8 @@ def get_data(var, calipso_scaling=False):
     """
     Reads raw data from a NetCDF.Variable instance.
 
-        @param var: The specific Variable instance to read
-        @return:  A numpy maskedarray. Missing values are False in the mask.
+        :param var: The specific Variable instance to read
+        :return:  A numpy maskedarray. Missing values are False in the mask.
     """
     from jasmin_cis.utils import create_masked_array_for_missing_data
     # Note that this will automatically apply any specified scalings and

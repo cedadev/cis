@@ -2,25 +2,6 @@
 Plotting
 ========
 
-
-Saving to a File
-================
-
-Plot Formatting
-===============
-
-range Plotting a Specific Range of Values
-=========================================
-
-Overlaying Multiple Plots
-=========================
-
-Plot Using a Log Scale
-======================
-
-Available Colours
-=================
-
 Plotting is straightforward::
 
   $ cis plot $var:$filenames

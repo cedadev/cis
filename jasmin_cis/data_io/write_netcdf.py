@@ -34,11 +34,11 @@ def __get_missing_value(coord):
 
 def __create_variable(nc_file, data, prefer_standard_name=False):
     """Creates and writes a variable to a netCDF file.
-    @param nc_file: netCDF file to which to write
-    @param data: LazyData for variable to write
-    @param prefer_standard_name: if True, use the standard name of the variable if defined,
+    :param nc_file: netCDF file to which to write
+    :param data: LazyData for variable to write
+    :param prefer_standard_name: if True, use the standard name of the variable if defined,
            otherwise use the variable name
-    @return: created netCDF variable
+    :return: created netCDF variable
     """
     from jasmin_cis.exceptions import InconsistentDimensionsError
     name = None
@@ -74,9 +74,9 @@ def __create_index(nc_file, length):
 def write(data_object, filename):
     """
 
-    @param data_object:
-    @param filename:
-    @return:
+    :param data_object:
+    :param filename:
+    :return:
     """
     write_coordinate_list(data_object.coords(), filename)
     add_data_to_file(data_object, filename)
@@ -85,8 +85,8 @@ def write(data_object, filename):
 def write_coordinates(coords, filename):
     """Writes coordinates to a netCDF file.
 
-    @param coords: UngriddedData or UngriddedCoordinates object for which the coordinates are to be written
-    @param filename: file to which to write
+    :param coords: UngriddedData or UngriddedCoordinates object for which the coordinates are to be written
+    :param filename: file to which to write
     """
     coord_list = coords.coords()
     write_coordinate_list(coord_list, filename)
@@ -95,8 +95,8 @@ def write_coordinates(coords, filename):
 def write_coordinate_list(coord_list, filename):
     """Writes coordinates to a netCDF file.
 
-    @param coord_list: list of Coord objects
-    @param filename: file to which to write
+    :param coord_list: list of Coord objects
+    :param filename: file to which to write
     """
     netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
     index_dim = __create_index(netcdf_file, len(coord_list[0].data.flatten()))
@@ -108,9 +108,9 @@ def write_coordinate_list(coord_list, filename):
 def add_data_to_file(data_object, filename):
     """
 
-    @param data_object:
-    @param filename:
-    @return:
+    :param data_object:
+    :param filename:
+    :return:
     """
     netcdf_file = Dataset(filename, 'a', format="NETCDF4_CLASSIC")
     var = __create_variable(netcdf_file, data_object, prefer_standard_name=False)

@@ -57,8 +57,8 @@ class Histogram_3D(Generic_Plot):
         '''
         Calculates the number of bins for a given axis.
         Uses 10 as the default
-        @param axis: The axis to calculate the number of bins for
-        @return: The number of bins for the given axis
+        :param axis: The axis to calculate the number of bins for
+        :return: The number of bins for the given axis
         '''
         from jasmin_cis.utils import calculate_histogram_bin_edges
         if axis == "x":
@@ -86,8 +86,8 @@ class Histogram_3D(Generic_Plot):
         Calculates the limits for a given axis.
         If the axis is "x" then looks at the data of the first data item
         If the axis is "y" then looks at the data of the second data item
-        @param axis: The axis to calculate the limits for
-        @return: A dictionary containing the min and max values for the given axis
+        :param axis: The axis to calculate the limits for
+        :return: A dictionary containing the min and max values for the given axis
         '''
         if axis == "x":
             coord_axis = 0

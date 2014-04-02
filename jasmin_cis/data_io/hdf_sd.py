@@ -181,10 +181,10 @@ def get_metadata(sds):
 def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
     '''
     Apply scaling factor Calipso data
-    @param data:
-    @param scale_factor:
-    @param offset:
-    @return:
+    :param data:
+    :param scale_factor:
+    :param offset:
+    :return:
     '''
 
     data = (data/scale_factor) + offset
@@ -194,10 +194,10 @@ def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
 def __apply_scaling_factor_MODIS(data, scale_factor, offset):
     '''
     Apply scaling factor for MODIS data
-    @param data:
-    @param scale_factor:
-    @param offset:
-    @return:
+    :param data:
+    :param scale_factor:
+    :param offset:
+    :return:
     '''
     data = (data - offset) * scale_factor
     return data

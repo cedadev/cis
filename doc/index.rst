@@ -10,6 +10,7 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    installation
    data_products
@@ -20,7 +21,7 @@ Contents:
    colocation_examples
    plotting
    maintenance_and_development
-
+   Python API Reference <api/jasmin_cis>
 
 Indices and tables
 ==================

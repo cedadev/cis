@@ -19,7 +19,7 @@ def __error_occurred(e):
     '''
     Wrapper method used to print error messages and exit the program.
 
-    @param e: An error object or any string
+    :param e: An error object or any string
     '''
     sys.stderr.write(str(e) + "\n")
     exit(1)
@@ -28,10 +28,10 @@ def __check_variable_is_valid(main_arguments, data, axis):
     '''
     Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to assign
     the variable to the specified axis
-    @param main_arguments: The arguments received from the parser
-    @param data: A list of packed data objects
-    @param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it will be plotted on.
-    @param axis: The axis on which to plot the variable on
+    :param main_arguments: The arguments received from the parser
+    :param data: A list of packed data objects
+    :param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it will be plotted on.
+    :param axis: The axis on which to plot the variable on
     '''
     from jasmin_cis.exceptions import InvalidVariableError
 
@@ -48,7 +48,7 @@ def plot_cmd(main_arguments):
     Main routine for handling calls to the 'plot' command.
     Reads in the data files specified and passes the rest of the arguments to the plot function.
 
-    @param main_arguments:    The command line arguments
+    :param main_arguments:    The command line arguments
     '''
     from plotting.plot import Plotter
     from jasmin_cis.data_io.read import read_data
@@ -92,7 +92,7 @@ def info_cmd(main_arguments):
     particular variable was specified, otherwise prints detailed information about each
     variable specified
 
-    @param main_arguments:    The command line arguments (minus the info command)
+    :param main_arguments:    The command line arguments (minus the info command)
     '''
     variables = main_arguments.variables
     filename = main_arguments.filename
@@ -110,7 +110,7 @@ def col_cmd(main_arguments):
     '''
     Main routine for handling calls to the co-locate ('col') command.
 
-    @param main_arguments:    The command line arguments (minus the col command)
+    :param main_arguments:    The command line arguments (minus the col command)
     '''
     from jasmin_cis.exceptions import ClassNotFoundError, CISError
     from jasmin_cis.col import Colocate
@@ -147,7 +147,7 @@ def subset_cmd(main_arguments):
     '''
     Main routine for handling calls to the subset command.
 
-    @param main_arguments:    The command line arguments (minus the subset command)
+    :param main_arguments:    The command line arguments (minus the subset command)
     '''
     from jasmin_cis.subsetting.subset import Subset
 
@@ -172,7 +172,7 @@ def aggregate_cmd(main_arguments):
     """
     Main routine for handling calls to the aggregation command.
 
-    @param main_arguments: The command line arguments (minus the aggregate command)
+    :param main_arguments: The command line arguments (minus the aggregate command)
     """
     from jasmin_cis.aggregation.aggregate import Aggregate
 
