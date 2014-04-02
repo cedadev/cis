@@ -978,7 +978,9 @@ class Aeronet(AProduct):
 
         coords = self._create_coord_list(filenames, data_obj)
 
-        return UngriddedData(data_obj[variable], Metadata(name=variable, long_name=variable,shape=(len(data_obj),)), coords)
+        return UngriddedData(data_obj[variable],
+                             Metadata(name=variable, long_name=variable, shape=(len(data_obj),), missing_value=-999.0),
+                             coords)
 
 class ASCII_Hyperpoints(AProduct):
 
