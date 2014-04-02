@@ -13,7 +13,7 @@ __all__ = ['minkowski_distance_p', 'minkowski_distance', 'haversine_distance',
            'distance_matrix',
            'Rectangle', 'KDTree']
 
-RADIUS_EARTH = 6378000
+RADIUS_EARTH = 6378.0
 
 
 def minkowski_distance_p(x, y, p=2):
@@ -83,8 +83,14 @@ def haversine_distance(x, y, p=99):
 
 def haversine(x, y):
     """Computes the Haversine distance in metres between two points"""
-    lat1, lon1 = x[:, 0], x[:, 1]
-    lat2, lon2 = y[:, 0], y[:, 1]
+    if x.ndim == 1:
+        lat1, lon1 = x[0], x[1]
+    else:
+        lat1, lon1 = x[:, 0], x[:, 1]
+    if y.ndim == 1:
+        lat2, lon2 = y[0], y[1]
+    else:
+        lat2, lon2 = y[:, 0], y[:, 1]
     lat1 = lat1 * math.pi / 180
     lat2 = lat2 * math.pi / 180
     lon1 = lon1 * math.pi / 180
@@ -94,7 +100,7 @@ def haversine(x, y):
     return arclen * RADIUS_EARTH
 
 
-class Rectangle(object):
+class RectangleBase(object):
     """Hyperrectangle class.
 
     Represents a Cartesian product of intervals.
@@ -130,12 +136,16 @@ class Rectangle(object):
         """
         mid = np.copy(self.maxes)
         mid[d] = split
-        less = Rectangle(self.mins, mid)
+        less = self.__class__(self.mins, mid)
         mid = np.copy(self.mins)
         mid[d] = split
-        greater = Rectangle(mid, self.maxes)
+        greater = self.__class__(mid, self.maxes)
         return less, greater
 
+
+class Rectangle(RectangleBase):
+    """Rectangle using Euclidean metric.
+    """
     def min_distance_point(self, x, p=2.):
         """
         Return the minimum distance between input and points in the hyperrectangle.
@@ -148,12 +158,11 @@ class Rectangle(object):
             Input.
 
         """
-        a = self.mins - x
-        b = x - self.maxes
-        c = np.maximum(a, b)
-        d = np.maximum(0, c)
-        return haversine_distance(0, np.maximum(0, np.maximum(self.mins - x, x - self.maxes)), p)
-        # return minkowski_distance(0, np.maximum(0,np.maximum(self.mins-x,x-self.maxes)),p)
+        # a = self.mins - x
+        # b = x - self.maxes
+        # c = np.maximum(a, b)
+        # d = np.maximum(0, c)
+        return minkowski_distance(0, np.maximum(0,np.maximum(self.mins-x,x-self.maxes)),p)
 
     def max_distance_point(self, x, p=2.):
         """
@@ -167,8 +176,7 @@ class Rectangle(object):
             Input.
 
         """
-        return haversine_distance(0, np.maximum(self.maxes-x,x-self.mins),p)
-        # return minkowski_distance(0, np.maximum(self.maxes-x,x-self.mins),p)
+        return minkowski_distance(0, np.maximum(self.maxes-x,x-self.mins),p)
 
     def min_distance_rectangle(self, other, p=2.):
         """
@@ -182,8 +190,7 @@ class Rectangle(object):
             Input.
 
         """
-        return haversine_distance(0, np.maximum(0,np.maximum(self.mins-other.maxes,other.mins-self.maxes)),p)
-        # return minkowski_distance(0, np.maximum(0,np.maximum(self.mins-other.maxes,other.mins-self.maxes)),p)
+        return minkowski_distance(0, np.maximum(0,np.maximum(self.mins-other.maxes,other.mins-self.maxes)),p)
 
     def max_distance_rectangle(self, other, p=2.):
         """
@@ -197,8 +204,45 @@ class Rectangle(object):
             Input.
 
         """
-        return haversine_distance(0, np.maximum(self.maxes-other.mins,other.maxes-self.mins),p)
-        # return minkowski_distance(0, np.maximum(self.maxes-other.mins,other.maxes-self.mins),p)
+        return minkowski_distance(0, np.maximum(self.maxes-other.mins,other.maxes-self.mins),p)
+
+
+class RectangleHaversine(RectangleBase):
+    """Rectangle approximating distances on a sphere.
+    """
+    def min_distance_point(self, x, p=2.):
+        """
+        Return the minimum distance between input and points in the hyperrectangle.
+
+        Parameters
+        ----------
+        x : array_like
+            Input.
+        p : float, optional
+            Input.
+
+        """
+        closest_point = np.minimum(np.maximum(x, self.mins), self.maxes)
+        h = haversine_distance(x, closest_point, p)
+        # print(x, self.mins, self.maxes, h)
+        return h
+
+    def max_distance_point(self, x, p=2.):
+        """
+        Return the maximum distance between input and points in the hyperrectangle.
+
+        Parameters
+        ----------
+        x : array_like
+            Input.
+        p : float, optional
+            Input.
+
+        """
+        furthest_point = np.where(self.maxes - x > x - self.mins, self.maxes, self.mins)
+        h = haversine_distance(x, furthest_point, p)
+        # print(x, self.mins, self.maxes, h)
+        return h
 
 
 class KDTree(object):
@@ -941,7 +985,7 @@ class HaversineDistanceKDTree(KDTree):
     def __init__(self, data, leafsize=10, mask=None):
         self.data = np.ma.asarray(data)
         if mask is not None:
-            self.data.mask = mask
+            self.data.mask = np.column_stack([mask] * data.shape[1])
         self.n, self.m = np.shape(self.data)
         self.leafsize = int(leafsize)
         if self.leafsize<1:
@@ -957,7 +1001,9 @@ class HaversineDistanceKDTree(KDTree):
 
     def _query(self, x, k=1, eps=0, p=2, distance_upper_bound=np.inf):
 
-        side_distances = np.maximum(0,np.maximum(x-self.maxes,self.mins-x))
+        metric = np.array([1.0] * x.size)
+        metric[1] = math.cos(x[1] * math.pi / 180.0)
+        side_distances = np.maximum(0,np.maximum(x-self.maxes,self.mins-x)) * metric
         if p!=np.inf:
             side_distances**=p
             min_distance = np.sum(side_distances)
@@ -1038,7 +1084,7 @@ class HaversineDistanceKDTree(KDTree):
             return sorted([((-d)**(1./p),i) for (d,i) in neighbors])
 
     def _query_ball_point(self, x, r, p=2., eps=0):
-        R = Rectangle(self.maxes, self.mins)
+        R = RectangleHaversine(self.maxes, self.mins)
 
         def traverse_checking(node, rect):
             if rect.min_distance_point(x, p) > r / (1. + eps):

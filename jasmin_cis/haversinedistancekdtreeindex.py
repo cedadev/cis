@@ -10,7 +10,7 @@ class HaversineDistanceKDTreeIndex(object):
     def __init__(self):
         self.index = None
 
-    def index_data(self, points, data, coord_map):
+    def index_data(self, points, data, coord_map, leafsize=10):
         """
         @param points: sample points
         @param data: list of HyperPoints to index
@@ -23,7 +23,7 @@ class HaversineDistanceKDTreeIndex(object):
         spatial_points[:, 0] = lat
         spatial_points[:, 1] = lon
         mask = np.ma.getmask(data.data)
-        self.index = HaversineDistanceKDTree(spatial_points, mask=mask)
+        self.index = HaversineDistanceKDTree(spatial_points, mask=mask, leafsize=leafsize)
 
     def find_nearest_point(self, point):
         query_pt = [[point.latitude, point.longitude]]

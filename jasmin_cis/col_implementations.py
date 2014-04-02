@@ -384,8 +384,11 @@ class IndexedSepConstraint(PointConstraint):
         self.checks = []
         if h_sep is not None:
             self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
-            self.checks.append(self.horizontal_constraint)
             self.haversine_distance_kd_tree_index = None
+        else:
+            raise InvalidCommandLineOptionError(
+                'A horizontal separation must be specified for the Indexed Separation Constraint ')
+
         if a_sep is not None:
             self.a_sep = jasmin_cis.utils.parse_distance_with_units_to_float_m(a_sep)
             self.checks.append(self.alt_constraint)
@@ -417,14 +420,12 @@ class IndexedSepConstraint(PointConstraint):
 
     def constrain_points(self, ref_point, data):
         point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
-        if len(point_indices) == 0:
-            raise ValueError
 
         con_points = HyperPointList()
         for idx in point_indices:
-            con_points.append(data[idx])
-            # if all(check(point, ref_point) for check in self.checks):
-            #     con_points.append(point)
+            point = data[idx]
+            if all(check(point, ref_point) for check in self.checks):
+                con_points.append(point)
         return con_points
 
 
