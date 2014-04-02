@@ -1,3 +1,6 @@
+===================
+Colocation Examples
+===================
 
 Ungridded to Ungridded Colocation Examples
 ==========================================

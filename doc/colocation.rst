@@ -108,12 +108,6 @@ A full example would be::
 
   $ cis col rain:"my_data_??.*" my_sample_file:constraint=SepConstraint[h_sep=50km,t_sep=6000S],kernel=nn_time -o my_col
 
-More Examples
-=============
-
-The following pages give more examples of colocation:
-
-.. todo:: link to the Colocation examples UngriddedGriddedColationExamples, etc.
 
 Colocation output files
 =======================
