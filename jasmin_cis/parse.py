@@ -351,8 +351,8 @@ def get_aggregate_grid(aggregategrid, parser):
             # obvious way. Otherwise, parse what is found as a date/time or number.
             is_time = None
             if dim_name.lower() == 't':
-                start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser, aggregation=True)
-                end_parsed = parse_datetime(end, 'aggregation grid end date/time', parser, aggregation=True)
+                start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser)
+                end_parsed = parse_datetime(end, 'aggregation grid end date/time', parser)
                 delta_parsed = parse_datetime_delta(delta, 'aggregation grid delta date/time', parser)
                 is_time = True
             elif dim_name.lower() in ['x', 'y', 'z', 'p']:
