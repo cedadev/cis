@@ -40,9 +40,9 @@ def load_aeronet(fname, variables=None):
         Originally from http://code.google.com/p/metamet/
         License: GNU GPL v3
 
-    @param fname: data file name
-    @param keep_fields: A list of variables to return
-    @return: A
+    :param fname: data file name
+    :param keep_fields: A list of variables to return
+    :return: A
     """
     import numpy as np
     from numpy import ma

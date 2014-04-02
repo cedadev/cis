@@ -13,12 +13,12 @@ class Generic_Plot(object):
         '''
         Constructor for Generic_Plot.
         Note: This also calls the plot method
-        @param calculate_min_and_max_values: If true calculates min and max for the data values
-        @param datagroup: The data group number in an overlay plot, 0 is the 'base' plot
-        @param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
-        @param plot_args: A dictionary of plot args that was created by plot.py
-        @param mplargs: Any arguments to be passed directly into matplotlib
-        @param mplkwargs: Any keyword arguments to be passed directly into matplotlib
+        :param calculate_min_and_max_values: If true calculates min and max for the data values
+        :param datagroup: The data group number in an overlay plot, 0 is the 'base' plot
+        :param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
+        :param plot_args: A dictionary of plot args that was created by plot.py
+        :param mplargs: Any arguments to be passed directly into matplotlib
+        :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         '''
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
@@ -125,7 +125,7 @@ class Generic_Plot(object):
     def set_default_axis_label(self, axis):
         '''
         The method that will set the default axis label. To be implemented by each subclass of Generic_Plot.
-        @param axis: The axis of which to set the default label for. Either "x" or "y".
+        :param axis: The axis of which to set the default label for. Either "x" or "y".
         '''
         raise NotImplementedError()
 
@@ -147,8 +147,8 @@ class Generic_Plot(object):
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         '''
         Calculates the axis limits for a given axis
-        @param axis: The axis for the limits to be calculated
-        @return: A dictionary containing the min and max values of an array along a given axis
+        :param axis: The axis for the limits to be calculated
+        :return: A dictionary containing the min and max values of an array along a given axis
         '''
         calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
         valrange = {}
@@ -165,8 +165,8 @@ class Generic_Plot(object):
     def apply_axis_limits(self, valrange, axis):
         '''
         Applies the limits to the specified axis if given, or calculates them otherwise
-        @param valrange    A dictionary containing xmin, xmax or ymin, ymax
-        @param axis        The axis to apply the limits to
+        :param valrange    A dictionary containing xmin, xmax or ymin, ymax
+        :param axis        The axis to apply the limits to
         '''
         valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
 
@@ -255,7 +255,7 @@ class Generic_Plot(object):
     def set_default_axis_label_for_comparative_plot(self, axis):
         '''
         Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
-        @param axis: The axis to set the default label for
+        :param axis: The axis to set the default label for
         '''
         axis = axis.lower()
         axislabel = axis + "label"
@@ -290,9 +290,9 @@ class Generic_Plot(object):
         '''
         Calculates the min and max values of a given array.
         If a log scale is being used on the given axis, only positive values are taken into account
-        @param axis: The axis to check if a log scale is being used for
-        @param array: The array to calculate the min and max values of
-        @return: The min and max values of the array
+        :param axis: The axis to check if a log scale is being used for
+        :param array: The array to calculate the min and max values of
+        :return: The min and max values of the array
         '''
         log_axis = self.plot_args.get("log" + axis, False)
 
@@ -350,7 +350,7 @@ class Generic_Plot(object):
 
     def is_map(self):
         '''
-        @return: A boolean saying if the first packed data item contains lat and lon coordinates
+        :return: A boolean saying if the first packed data item contains lat and lon coordinates
         '''
         from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
         from jasmin_cis.exceptions import CoordinateNotFoundError as JasminNotFoundError
@@ -393,7 +393,7 @@ class Generic_Plot(object):
     def contour_plot(self, filled):
         """
         Used by both contour and contourf to plot a contour plot
-        @param filled: A boolean specifying whether or not the contour plot should be filled
+        :param filled: A boolean specifying whether or not the contour plot should be filled
         """
 
         # Set the options specific to a datagroup with the contour type
@@ -461,8 +461,8 @@ class Generic_Plot(object):
     def set_log_scale(self, logx, logy):
         '''
         Sets a log (base 10) scale (if specified) on the axes
-        @param logx: A boolean specifying whether or not to apply a log scale to the x axis
-        @param logy: A boolean specifying whether or not to apply a log scale to the y axis
+        :param logx: A boolean specifying whether or not to apply a log scale to the x axis
+        :param logy: A boolean specifying whether or not to apply a log scale to the y axis
         '''
         if logx: self.matplotlib.xscale("log")
         if logy: self.matplotlib.yscale("log")
@@ -559,7 +559,7 @@ class Generic_Plot(object):
         '''
         Used by 3d plots to calculate the default axis label.
         Uses Latitude or Longitude if a map is being plotted
-        @param axis: The axis to calculate the default label for
+        :param axis: The axis to calculate the default label for
         '''
         import jasmin_cis.exceptions as cisex
         import iris.exceptions as irisex
@@ -585,8 +585,8 @@ class Generic_Plot(object):
 
     def format_units(self, units):
         '''
-        @param units: The units of a variable, as a string
-        @return: The units surrounding brackets, or the empty string if no units given
+        :param units: The units of a variable, as a string
+        :return: The units surrounding brackets, or the empty string if no units given
         '''
         if units:
             return "(" + str(units) + ")"
@@ -597,8 +597,8 @@ class Generic_Plot(object):
         '''
         Overwrites which variable to used for the x and y axis
         Does not work for Iris Cubes
-        @param main_arguments: The arguments received from the parser
-        @param data: A list of packed data objects
+        :param main_arguments: The arguments received from the parser
+        :param data: A list of packed data objects
         '''
         import logging
         from jasmin_cis.exceptions import NotEnoughAxesSpecifiedError
