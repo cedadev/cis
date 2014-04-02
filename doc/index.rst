@@ -17,6 +17,7 @@ Contents:
    command_line
    file_information
    subsetting
+   aggregation
    colocation
    colocation_examples
    plotting
