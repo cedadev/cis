@@ -5,7 +5,6 @@
 /.idea
 *.log
 *.pyc
-doc/api/
 build/
 dist/
 jasmin_cis.egg-info/
