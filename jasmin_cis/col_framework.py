@@ -80,11 +80,7 @@ class CellConstraint(Constraint):
 
 
 class IndexedConstraint(Constraint):
-    """Superclass of constraints that create an index prior to constraining.
-
-    The index_data method is called before any calls to constrain_points. The
-    point argument in constrain_points is a tuple of indices into the
-    coordinates over which co-location is occurring.
+    """Superclass of constraints that expect points to be referenced by index.
     """
     __metaclass__ = ABCMeta
     pass

@@ -50,7 +50,7 @@ class DefaultColocator(Colocator):
         data_index.create_indexes(constraint, points, data_points, coord_map)
         data_index.create_indexes(kernel, points, data_points, coord_map)
 
-        logging.info("--> colocating...")
+        logging.info("--> Colocating...")
 
         points = points.get_coordinates_points()
 
@@ -113,7 +113,12 @@ class AverageColocator(Colocator):
         else:
             data_points = data
 
-        logging.info("--> colocating...")
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
 
         points = points.get_coordinates_points()
 
@@ -187,7 +192,12 @@ class DifferenceColocator(Colocator):
         else:
             data_points = data
 
-        logging.info("--> colocating...")
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
 
         points = points.get_all_points()
 
@@ -240,7 +250,12 @@ class DebugColocator(Colocator):
         else:
             data_points = data
 
-        logging.info("--> colocating...")
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
 
         points = points.get_coordinates_points()
 
@@ -298,12 +313,12 @@ class DummyColocator(Colocator):
         return [new_data]
 
 
-class DummyConstraint(Constraint):
+class DummyConstraint(PointConstraint):
 
     def __init__(self, fill_value=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
-        super(Constraint, self).__init__()
+        super(DummyConstraint, self).__init__()
         if fill_value is not None:
             try:
                 self.fill_value = float(fill_value)
@@ -960,7 +975,7 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
         This implementation returns the points that have been stored in the
         appropriate bin by the index_data method.
-        :param sample_point: HyperPoint of cells defining sample region
+        :param sample_point: HyperPoint of indices of cells defining sample region
         :param data: list of HyperPoints to check
         :return: HyperPointList of points found within cell
         """

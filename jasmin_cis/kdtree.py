@@ -14,6 +14,9 @@ __all__ = ['minkowski_distance_p', 'minkowski_distance', 'haversine_distance',
            'Rectangle', 'KDTree']
 
 RADIUS_EARTH = 6378.0
+HALF_PI = np.pi / 2.0
+PI = np.pi
+TWO_PI = np.pi * 2.0
 
 
 def minkowski_distance_p(x, y, p=2):
@@ -75,14 +78,23 @@ def minkowski_distance(x, y, p=2):
         return minkowski_distance_p(x, y, p)**(1./p)
 
 
-def haversine_distance(x, y, p=99):
+def haversine_distance(x, y):
+    """Computes the Haversine distance in kilometres between two points
+    :param x: first point or array of points, each as array of latitude, longitude in degrees
+    :param y: second point or array of points, each as array of latitude, longitude in degrees
+    :return: distance between the two points in kilometres
+    """
     x = np.asarray(x)
     y = np.asarray(y)
     return haversine(x, y)
 
 
 def haversine(x, y):
-    """Computes the Haversine distance in metres between two points"""
+    """Computes the Haversine distance in kilometres between two points
+    :param x: first point or points as array, each as array of latitude, longitude in degrees
+    :param y: second point or points as array, each as array of latitude, longitude in degrees
+    :return: distance between the two points in kilometres
+    """
     if x.ndim == 1:
         lat1, lon1 = x[0], x[1]
     else:
@@ -98,6 +110,52 @@ def haversine(x, y):
     arclen = 2 * np.arcsin(np.sqrt((np.sin((lat2 - lat1) / 2)) ** 2
                                    + np.cos(lat1) * np.cos(lat2) * (np.sin((lon2 - lon1) / 2)) ** 2))
     return arclen * RADIUS_EARTH
+
+
+def haversine_distance_from_radians(x, y):
+    """Computes the Haversine distance in kilometres between two points
+    :param x: first point as array of latitude, longitude in radians
+    :param y: second point as array of latitude, longitude in radians
+    :return: distance between the two points in kilometres
+    """
+    lat1, lon1 = x[0], x[1]
+    lat2, lon2 = y[0], y[1]
+    arclen = 2 * np.arcsin(np.sqrt((np.sin((lat2 - lat1) / 2)) ** 2
+                                   + np.cos(lat1) * np.cos(lat2) * (np.sin((lon2 - lon1) / 2)) ** 2))
+    return arclen * RADIUS_EARTH
+
+
+def geodesic_to_line_of_longitude_crossing_latitude(point, longitude):
+    """Given a line of longitude and a point, finds the latitude at which the
+    geodesic of shortest distance to the line of longitude crosses the line of
+    longitude.
+    :param point: point as array of latitude, longitude in radians
+    :param longitude: longitude in radians
+    :return: latitude at point of intersection in radians
+    """
+    pt_lat = point[0]
+    pt_lon = point[1]
+
+    sin_lat_sq = math.sin(pt_lat) ** 2 / (1 - math.cos(pt_lat) ** 2 * math.sin(pt_lon - longitude) ** 2)
+    sin_lat = math.copysign(math.sqrt(sin_lat_sq), pt_lat)
+    latitude = math.asin(sin_lat)
+
+    return latitude
+
+
+def line_of_longitude_segment_nearer_end_latitude(edge_lat_min, edge_lat_max, edge_lon, pt_lat, pt_lon):
+    """Given a segment of a line of longitude and a point, determines the end
+    of the segment nearer to the point.
+    :param edge_lat_min: lower latitude on line of longitude segment in radians
+    :param edge_lat_max: upper latitude on line of longitude segment in radians
+    :param edge_lon: longitude of segment in radians
+    :param pt_lat: latitude of point in radians
+    :param pt_lon: longitude of point in radians
+    :return: latitude of nearer segment endpoint in radians
+    """
+    lat_mid = (edge_lat_min + edge_lat_max) / 2.0
+    tan_lat_equi = math.tan(lat_mid) * math.cos(pt_lon - edge_lon)
+    return edge_lat_min if math.tan(pt_lat) < tan_lat_equi else edge_lat_max
 
 
 class RectangleBase(object):
@@ -208,11 +266,97 @@ class Rectangle(RectangleBase):
 
 
 class RectangleHaversine(RectangleBase):
-    """Rectangle approximating distances on a sphere.
+    """Rectangular region in latitude/longitude coordinates on a sphere.
     """
     def min_distance_point(self, x, p=2.):
+        """Find the distance to the point in the rectangle closest to x.
+        :param x: point as array of latitude, longitude in degrees
+        :param p: unused
+        :return: distance in kilometres
         """
-        Return the minimum distance between input and points in the hyperrectangle.
+        return self._min_distance_point(np.radians(x))
+
+    def max_distance_point(self, x, p=2.):
+        """Find the distance to the point in the rectangle furthest from x.
+        This is the semi-circumference minus the distance to the point closest
+        to the polar opposite point.
+        :param x: point as array of latitude, longitude in degrees
+        :param p: unused
+        :return: distance in kilometres
+        """
+        point = np.radians(x)
+        opp_pt = [-point[0], point[1] + PI]
+        opp_dist = self._min_distance_point(opp_pt)
+        return PI * RADIUS_EARTH - opp_dist
+
+    def _min_distance_point(self, point):
+        """Find the distance to the point in the rectangle closest to x.
+        :param point: point as array of latitude, longitude in radians
+        :return: distance in kilometres
+        """
+        rect_lat_min, rect_lon_min = np.radians(self.mins)
+        rect_lat_max, rect_lon_max = np.radians(self.maxes)
+
+        lat0 = point[0]
+        # Shift point longitude to be within pi of rectangle mid-longitude.
+        range_start = (rect_lon_min + rect_lon_max) / 2.0 - PI
+        lon0 = np.fmod(point[1] - range_start, TWO_PI) + range_start
+
+        inside = False
+
+        if rect_lon_min <= lon0 <= rect_lon_max:
+            # Within longitude range of rectangle - geodesic is line of longitude.
+            # Could simplify distance calculation.
+            lon1 = lon0
+            if lat0 < rect_lat_min:
+                lat1 = rect_lat_min
+            elif lat0 > rect_lat_max:
+                lat1 = rect_lat_max
+            else:
+                inside = True
+                # print("Inside")
+        else:
+            # Determine which side of the rectangle the point is nearer to allowing for longitude circularity.
+            lon_mid = (rect_lon_min + rect_lon_max) / 2.0
+            if ((lon0 < lon_mid and lon_mid - lon0 < PI)
+                    or (lon0 > lon_mid and lon0 - lon_mid > PI)):
+                # Point is nearest to left side of rectangle.
+                lon1 = rect_lon_min
+                lon_diff = rect_lon_min - lon0
+                if lon_diff < 0.0:
+                    lon_diff += TWO_PI
+                if lon_diff > HALF_PI:
+                    # Nearest point cannot be on rectangle edge - must be a vertex.
+                    lat1 = line_of_longitude_segment_nearer_end_latitude(rect_lat_min, rect_lat_max, lon1, lat0, lon0)
+                else:
+                    # To left of rectangle
+                    lat1 = geodesic_to_line_of_longitude_crossing_latitude(point, rect_lon_min)
+                    lat1 = np.minimum(np.maximum(lat1, rect_lat_min), rect_lat_max)
+            else:
+                # Point is nearest to right side of rectangle.
+                lon1 = rect_lon_max
+                lon_diff = lon0 - rect_lon_max
+                if lon_diff < 0.0:
+                    lon_diff += TWO_PI
+                if lon_diff > HALF_PI:
+                    # Nearest point cannot be on rectangle edge - must be a vertex.
+                    lat1 = line_of_longitude_segment_nearer_end_latitude(rect_lat_min, rect_lat_max, lon1, lat0, lon0)
+                else:
+                    lat1 = geodesic_to_line_of_longitude_crossing_latitude(point, rect_lon_max)
+                    lat1 = np.minimum(np.maximum(lat1, rect_lat_min), rect_lat_max)
+
+        if inside:
+            dist = 0.0
+        else:
+            # print("Nearest point:", [np.degrees(lat1), np.degrees(lon1)])
+            dist = haversine_distance_from_radians([lat0, lon0], [lat1, lon1])
+        return dist
+
+    def min_distance_point_approx(self, x, p=2.):
+        """Return the minimum distance between input and points in the hyperrectangle.
+
+        Approximate implementation determining the point to which to measure as if
+        in Euclidean space.
 
         Parameters
         ----------
@@ -222,15 +366,17 @@ class RectangleHaversine(RectangleBase):
             Input.
 
         """
-        closest_point = np.minimum(np.maximum(x, self.mins), self.maxes)
-        h = haversine_distance(x, closest_point, p)
-        # print(x, self.mins, self.maxes, h)
-        return h
+        point_radians = np.radians(x)
+        closest_point = np.minimum(np.maximum(point_radians, self.mins), self.maxes)
+        return haversine_distance_from_radians(point_radians, closest_point)
 
-    def max_distance_point(self, x, p=2.):
+    def max_distance_point_approx(self, x, p=2.):
         """
         Return the maximum distance between input and points in the hyperrectangle.
 
+        Approximate implementation determining the point to which to measure as if
+        in Euclidean space.
+
         Parameters
         ----------
         x : array_like
@@ -239,10 +385,9 @@ class RectangleHaversine(RectangleBase):
             Input.
 
         """
-        furthest_point = np.where(self.maxes - x > x - self.mins, self.maxes, self.mins)
-        h = haversine_distance(x, furthest_point, p)
-        # print(x, self.mins, self.maxes, h)
-        return h
+        point_radians = np.radians(x)
+        furthest_point = np.where(self.maxes - point_radians > point_radians - self.mins, self.maxes, self.mins)
+        return haversine_distance_from_radians(point_radians, furthest_point)
 
 
 class KDTree(object):
