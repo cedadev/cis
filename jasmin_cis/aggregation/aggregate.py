@@ -40,6 +40,27 @@ def add_year_midpoint(dt_object, years):
     return dt_object.replace(year=new_year, month=new_month)
 
 
+def add_month_midpoint(dt_object, months):
+
+    if not isinstance(months, int):
+        raise TypeError
+    if not isinstance(dt_object, datetime.datetime):
+        raise TypeError
+
+    new_month = dt_object.month + months//2
+    new_year = dt_object.year
+    if new_month > 12:
+        new_month, new_year = month_past_end_of_year(new_month, new_year)
+
+    dt_object = dt_object.replace(year=new_year, month=new_month)
+
+    if months % 2 != 0:
+        dt_object += datetime.timedelta(days=14, seconds=0, microseconds=0, milliseconds=0,
+                                        minutes=0, hours=0, weeks=0)
+
+    return dt_object
+
+
 def month_past_end_of_year(month, year):
     year += month//12
     month %= 12
@@ -61,10 +82,9 @@ def categorise_coord_function(start, end, delta, is_time):
 
             # We make an assumption here that half a month is always 15 days.
             if delta.month > 0:
-                start_dt += datetime.timedelta(days=14, seconds=0, microseconds=0, milliseconds=0,
-                                               minutes=0, hours=0, weeks=0)
+                start_dt = add_month_midpoint(start_dt, delta.month)
 
-            dt = datetime.timedelta(days=delta.day-1, seconds=delta.second, microseconds=0, milliseconds=0,
+            dt = datetime.timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
                                     minutes=delta.minute, hours=delta.hour, weeks=0)
 
             start_dt += dt/2
