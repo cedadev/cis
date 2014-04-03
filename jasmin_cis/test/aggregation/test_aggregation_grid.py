@@ -4,7 +4,7 @@ import datetime
 from nose.tools import assert_equal, with_setup
 
 import numpy as np
-from jasmin_cis.aggregation.aggregate import categorise_coord_function
+from jasmin_cis.aggregation.aggregator import categorise_coord_function
 from jasmin_cis.parse_datetime import date_delta_creator
 import iris.unit
 import iris.coords
@@ -72,3 +72,26 @@ class TestCategoriseCoordFunctionForTime:
         assert_equal(result_function(self.coord, self.u.date2num(datetime.datetime(2000, 1, 1, 0, 0, 0))), expected[0])
         assert_equal(result_function(self.coord, self.u.date2num(datetime.datetime(2001, 7, 3, 0, 0, 0))), expected[1])
         assert_equal(result_function(self.coord, self.u.date2num(datetime.datetime(2002, 9, 8, 0, 0, 0))), expected[2])
+
+
+class TestCategoriseCoordFunctionForSpatial:
+
+    def __init__(self):
+        self.u = iris.unit.Unit('hPa')
+        self.points = np.arange(1, 5, 1)
+        self.coord = iris.coords.DimCoord(self.points, units=self.u)
+        self.start = 1
+        self.end = 7
+
+    def setup_func(self):
+        self.__init__()
+
+    @with_setup(setup_func)
+    def test_categorise_coord_function(self):
+        delta = 1.5
+        result_function = categorise_coord_function(self.start, self.end, delta, False)
+        expected = np.array([1.75, 3.25, 4.75, 6.25])
+        assert_equal(result_function(self.coord, -1), expected[0])
+        assert_equal(result_function(self.coord, 3.25), expected[1])
+        assert_equal(result_function(self.coord, 5.5), expected[2])
+        assert_equal(result_function(self.coord, 6.5), expected[3])
