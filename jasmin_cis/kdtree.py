@@ -366,9 +366,8 @@ class RectangleHaversine(RectangleBase):
             Input.
 
         """
-        point_radians = np.radians(x)
-        closest_point = np.minimum(np.maximum(point_radians, self.mins), self.maxes)
-        return haversine_distance_from_radians(point_radians, closest_point)
+        closest_point = np.minimum(np.maximum(x, self.mins), self.maxes)
+        return haversine_distance(x, closest_point)
 
     def max_distance_point_approx(self, x, p=2.):
         """
@@ -385,9 +384,8 @@ class RectangleHaversine(RectangleBase):
             Input.
 
         """
-        point_radians = np.radians(x)
-        furthest_point = np.where(self.maxes - point_radians > point_radians - self.mins, self.maxes, self.mins)
-        return haversine_distance_from_radians(point_radians, furthest_point)
+        furthest_point = np.where(self.maxes - x > x - self.mins, self.maxes, self.mins)
+        return haversine_distance(x, furthest_point)
 
 
 class KDTree(object):

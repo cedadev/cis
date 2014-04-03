@@ -313,7 +313,7 @@ class DummyColocator(Colocator):
         return [new_data]
 
 
-class DummyConstraint(PointConstraint):
+class DummyConstraint(Constraint):
 
     def __init__(self, fill_value=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
