@@ -58,7 +58,7 @@ class Aggregator:
                     else:
                         # Assume to be a non-time axis
                         (grid_start, grid_end) = Subset._fix_non_circular_limits(float(grid.start), float(grid.end))
-                        grid_delta = grid.delta
+                        grid_delta = float(grid.delta)
 
                         # The following are used to generate helpful error messages
                         start_of_grid = start

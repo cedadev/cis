@@ -74,7 +74,12 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
 
     data = np.reshape(np.arange(data_size) + data_offset + 1., tuple(len(i[0].points) for i in coord_list))
 
-    return Cube(data, dim_coords_and_dims=coord_list)
+    return_cube = Cube(data, dim_coords_and_dims=coord_list)
+
+    for coord in return_cube.coords():
+        coord.guess_bounds()
+
+    return return_cube
 
 def make_dummy_2d_cube():
     '''
