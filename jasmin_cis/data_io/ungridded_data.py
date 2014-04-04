@@ -18,7 +18,7 @@ class Metadata(object):
 
     @classmethod
     def from_CubeMetadata(cls, cube_meta):
-        return cls(name='',standard_name=cube_meta.standard_name,long_name=cube_meta.long_name, units=str(cube_meta.units), misc=cube_meta.attributes)
+        return cls(name=cube_meta.var_name,standard_name=cube_meta.standard_name,long_name=cube_meta.long_name, units=str(cube_meta.units), misc=cube_meta.attributes)
 
 
     def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='', missing_value='', calendar='', history = '', misc=None):
