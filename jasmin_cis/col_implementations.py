@@ -561,20 +561,32 @@ class nn_time(Kernel):
 
 class nn_gridded(Kernel):
     def get_value(self, point, data):
-        '''
-            Co-location routine using nearest neighbour algorithm optimized for gridded data.
-             This calls out to iris to do the work.
-        '''
+        """
+        Co-location routine using nearest neighbour algorithm optimized for gridded data.
+        This calls out to iris to do the work.
+        """
         from iris.analysis.interpolate import nearest_neighbour_data_value
+
+        # Remove any tuples in the list that do not correspond to a coordinate in the cube 'data'
+        for i in point.coord_tuple:
+            if len(data.coords(i[0])) == 0:
+                point.coord_tuple.remove(i)
+
         return nearest_neighbour_data_value(data, point.coord_tuple)
 
 
 class li(Kernel):
     def get_value(self, point, data):
-        '''
-            Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
-        '''
+        """
+        Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
+        """
         from iris.analysis.interpolate import linear
+
+         # Remove any tuples in the list that do not correspond to a coordinate in the cube 'data'
+        for i in point.coord_tuple:
+            if len(data.coords(i[0])) == 0:
+                point.coord_tuple.remove(i)
+
         return linear(data, point.coord_tuple).data
 
 
