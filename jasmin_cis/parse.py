@@ -261,8 +261,8 @@ def get_plot_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "color", "edgecolor", "itemstyle",
-                                                       "label", "product", "type", "alpha", "cmap", "cmin", "cmax",
-                                                       "contnlevels", "contlevels", "contlabel", "contwidth",
+                                                       "label", "product", "type", "transparency", "cmap", "cmin",
+                                                       "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "contfontsize"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
                                          check_nothing, check_product, check_plot_type, check_float, check_nothing,
