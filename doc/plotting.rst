@@ -219,7 +219,7 @@ To plot using a log scale:
 Overlaying Multiple Plots
 =========================
 
-Using ``--type overlay`` allows multiple files to be specified on the command line to be plotted, each with its own type, which is specified as e.g. ``type=heatmap``, along with the other datagroup options. Currently supported plot types are ``heatmap``, ``contour``, ``contourf`` and ``scatter``. An additional datagroup option available is ``alpha``, which allows the transparency for a layer to be set. ``alpha`` take a value between 0 and 1, where 0 is completely transparent and 1 full opaque.
+Using ``--type overlay`` allows multiple files to be specified on the command line to be plotted, each with its own type, which is specified as e.g. ``type=heatmap``, along with the other datagroup options. Currently supported plot types are ``heatmap``, ``contour``, ``contourf`` and ``scatter``. An additional datagroup option available is ``transparency``, which allows the transparency for a layer to be set. ``transparency`` take a value between 0 and 1, where 0 is completely opaque and 1 fully transparent.
 
 For example, to plot a heatmap and a contour plot the following options can be used::
 
