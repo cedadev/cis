@@ -14,10 +14,10 @@ class GridCellBinIndex(object):
         self.index = None
 
     def index_data(self, coords, data, coord_map):
-        """
-        @param coords: coordinates of grid
-        @param data: list of HyperPoints to index
-        @param coord_map: list of tuples relating index in HyperPoint to index in coords and in
+        """Creates an index of points that fall within grid cells.
+        :param coords: coordinates of grid
+        :param data: list of HyperPoints to index
+        :param coord_map: list of tuples relating index in HyperPoint to index in coords and in
                           coords to be iterated over
         """
         # Create an index array matching the shape of the coordinates to be iterated over.
@@ -91,11 +91,20 @@ class GridCellBinIndex(object):
         return self.index[tuple(indices)]
 
 
+# Map of names of attributes of a constraint or kernel to the class used to
+# create an index to which the attribute should be set
 _index_attributes = {'grid_cell_bin_index': GridCellBinIndex,
                      'haversine_distance_kd_tree_index': HaversineDistanceKDTreeIndex}
 
 
 def create_indexes(operator, coords, data, coord_map):
+    """
+    :param operator: constraint or kernel instance
+    :param coords: coordinates of grid
+    :param data: list of HyperPoints to index
+    :param coord_map: list of tuples relating index in HyperPoint to index in coords and in
+                      coords to be iterated over
+    """
     for attr, cls in _index_attributes.iteritems():
         if hasattr(operator, attr) and (getattr(operator, attr) is None):
             index = cls()
