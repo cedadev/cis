@@ -382,14 +382,14 @@ class SepConstraint(PointConstraint):
         return con_points
 
 
-class IndexedSepConstraint(PointConstraint):
+class SepConstraintKdtree(PointConstraint):
 
     def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
         self.haversine_distance_kd_tree_index = False
 
-        super(IndexedSepConstraint, self).__init__()
+        super(SepConstraintKdtree, self).__init__()
         if fill_value is not None:
             try:
                 self.fill_value = float(fill_value)

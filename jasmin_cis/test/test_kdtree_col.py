@@ -6,7 +6,7 @@ import numpy as np
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.test.test_util import mock
 from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal_kdtree, DummyConstraint
-from jasmin_cis.col_implementations import IndexedSepConstraint
+from jasmin_cis.col_implementations import SepConstraintKdtree
 from jasmin_cis.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 
 
@@ -91,7 +91,7 @@ class TestSepConstraint(object):
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
-        constraint = IndexedSepConstraint(h_sep=400)
+        constraint = SepConstraintKdtree(h_sep=400)
 
         index = HaversineDistanceKDTreeIndex()
         index.index_data(sample_points, ug_data_points, coord_map, leafsize=2)
@@ -114,7 +114,7 @@ class TestSepConstraint(object):
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
-        constraint = IndexedSepConstraint(h_sep=400)
+        constraint = SepConstraintKdtree(h_sep=400)
 
         index = HaversineDistanceKDTreeIndex()
         sample_points = None  # Not used
@@ -141,7 +141,7 @@ class TestSepConstraint(object):
         coord_map = None
 
         # Constraint distance selects the central three points.
-        constraint = IndexedSepConstraint(h_sep=1000)
+        constraint = SepConstraintKdtree(h_sep=1000)
 
         index = HaversineDistanceKDTreeIndex()
         index.index_data(sample_points, ug_data_points, coord_map)
@@ -172,7 +172,7 @@ class TestSepConstraint(object):
         # Pressure constraint is 50/40 < p_sep < 60/50
         p_sep = 1.22
 
-        constraint = IndexedSepConstraint(h_sep=h_sep, a_sep=a_sep, p_sep=p_sep, t_sep=t_sep)
+        constraint = SepConstraintKdtree(h_sep=h_sep, a_sep=a_sep, p_sep=p_sep, t_sep=t_sep)
 
         index = HaversineDistanceKDTreeIndex()
         index.index_data(None, ug_data_points, None)
