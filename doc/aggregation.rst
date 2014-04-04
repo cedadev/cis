@@ -109,3 +109,13 @@ Standard deviation kernel::
    :width: 400px
    :align: center
 
+File Locations
+--------------
+
+The files used above can be found at::
+
+  /group_workspaces/jasmin/cis/gridded-test-data/cmip5.output1.MOHC.HadGEM2-ES.rcp45.day.atmos.day.r1i1p1.v20111128
+    tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc
+  /group_workspaces/jasmin/cis/data/CMIP5
+    rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc
+
