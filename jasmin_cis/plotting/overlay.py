@@ -13,7 +13,7 @@ class Overlay(Generic_Plot):
         for i in numpy.arange(0, len(self.plot_args['datagroups'])):
 
             self.mplkwargs['cmap'] = self.plot_args['datagroups'][i]['cmap']
-            self.mplkwargs['alpha'] = self.plot_args['datagroups'][i]['transparency']
+            self.mplkwargs['alpha'] = 1.0 - self.plot_args['datagroups'][i]['transparency']  # change to an opacity
 
             if self.plot_args['datagroups'][i]['type'] == 'heatmap':
                 Heatmap([self.packed_data_items[i]], self.plot_args, wrap=True, *self.mplargs, **self.mplkwargs)
