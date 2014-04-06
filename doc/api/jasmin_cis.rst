@@ -10,7 +10,6 @@ Subpackages
     jasmin_cis.data_io
     jasmin_cis.plotting
     jasmin_cis.subsetting
-    jasmin_cis.test
 
 Submodules
 ----------
@@ -47,6 +46,14 @@ jasmin_cis.col_implementations module
     :undoc-members:
     :show-inheritance:
 
+jasmin_cis.data_index module
+----------------------------
+
+.. automodule:: jasmin_cis.data_index
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 jasmin_cis.exceptions module
 ----------------------------
 
@@ -63,10 +70,26 @@ jasmin_cis.find module
     :undoc-members:
     :show-inheritance:
 
+jasmin_cis.haversinedistancekdtreeindex module
+----------------------------------------------
+
+.. automodule:: jasmin_cis.haversinedistancekdtreeindex
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 jasmin_cis.info module
 ----------------------
 
 .. automodule:: jasmin_cis.info
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+jasmin_cis.kdtree module
+------------------------
+
+.. automodule:: jasmin_cis.kdtree
     :members:
     :undoc-members:
     :show-inheritance:

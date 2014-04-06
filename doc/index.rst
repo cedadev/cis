@@ -21,6 +21,7 @@ Contents:
    colocation
    colocation_examples
    plotting
+   overlay_examples
    maintenance_and_development
    Python API Reference <api/jasmin_cis>
 
