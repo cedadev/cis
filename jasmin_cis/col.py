@@ -17,6 +17,7 @@ class Colocate(object):
 
         self.sample_points = sample_points
         self.output_file = output_file
+        self.coords_to_be_written = True
 
     @staticmethod
     def _get_valid_colocator_instance(col_name, col_params):
@@ -110,7 +111,7 @@ class Colocate(object):
         logging.info("Appending data to "+self.output_file)
 
         # Must explicitly write coordinates for ungridded data.
-        coords_to_be_written = not isinstance(new_data[0], iris.cube.Cube)
+        self.coords_to_be_written = self.coords_to_be_written and not isinstance(new_data[0], iris.cube.Cube)
 
         for data in new_data:
             history = "Colocated onto sampling from: " + str(self.sample_files) + " "\
@@ -125,9 +126,9 @@ class Colocate(object):
                                       "\nkernel parameters: " + str(kern_params)
             data.add_history(history)
 
-            if coords_to_be_written:
+            if self.coords_to_be_written:
                 write_coordinates(self.sample_points, self.output_file)
-                coords_to_be_written = False
+                self.coords_to_be_written = False
 
             if isinstance(data, iris.cube.Cube):
                 iris.save(data, self.output_file)

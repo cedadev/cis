@@ -10,6 +10,7 @@ import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
+import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
 
 
@@ -44,7 +45,12 @@ class DefaultColocator(Colocator):
         else:
             data_points = data
 
-        logging.info("--> colocating...")
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
 
         points = points.get_coordinates_points()
 
@@ -107,7 +113,12 @@ class AverageColocator(Colocator):
         else:
             data_points = data
 
-        logging.info("--> colocating...")
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
 
         points = points.get_coordinates_points()
 
@@ -181,7 +192,12 @@ class DifferenceColocator(Colocator):
         else:
             data_points = data
 
-        logging.info("--> colocating...")
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
 
         points = points.get_all_points()
 
@@ -234,7 +250,12 @@ class DebugColocator(Colocator):
         else:
             data_points = data
 
-        logging.info("--> colocating...")
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
 
         points = points.get_coordinates_points()
 
@@ -294,6 +315,16 @@ class DummyColocator(Colocator):
 
 class DummyConstraint(Constraint):
 
+    def __init__(self, fill_value=None):
+        from jasmin_cis.exceptions import InvalidCommandLineOptionError
+
+        super(DummyConstraint, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise InvalidCommandLineOptionError('Dummy Constraint fill_value must be a valid float')
+
     def constrain_points(self, point, data):
         # This is a null constraint - all of the points just get passed back
         return data
@@ -351,6 +382,68 @@ class SepConstraint(PointConstraint):
         return con_points
 
 
+class SepConstraintKdtree(PointConstraint):
+
+    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
+        from jasmin_cis.exceptions import InvalidCommandLineOptionError
+
+        self.haversine_distance_kd_tree_index = False
+
+        super(SepConstraintKdtree, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise InvalidCommandLineOptionError('Separation Constraint fill_value must be a valid float')
+
+        self.checks = []
+        if h_sep is not None:
+            self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
+            self.haversine_distance_kd_tree_index = None
+        else:
+            raise InvalidCommandLineOptionError(
+                'A horizontal separation must be specified for the Indexed Separation Constraint ')
+
+        if a_sep is not None:
+            self.a_sep = jasmin_cis.utils.parse_distance_with_units_to_float_m(a_sep)
+            self.checks.append(self.alt_constraint)
+        if p_sep is not None:
+            try:
+                self.p_sep = float(p_sep)
+            except:
+                raise InvalidCommandLineOptionError('Separation Constraint p_sep must be a valid float')
+            self.checks.append(self.pressure_constraint)
+        if t_sep is not None:
+            from jasmin_cis.time_util import parse_datetimestr_delta_to_float_days
+            try:
+                self.t_sep = parse_datetimestr_delta_to_float_days(t_sep)
+            except ValueError as e:
+                raise InvalidCommandLineOptionError(e)
+            self.checks.append(self.time_constraint)
+
+    def time_constraint(self, point, ref_point):
+        return point.time_sep(ref_point) < self.t_sep
+
+    def alt_constraint(self, point, ref_point):
+        return point.alt_sep(ref_point) < self.a_sep
+
+    def pressure_constraint(self, point, ref_point):
+        return point.pres_sep(ref_point) < self.p_sep
+
+    def horizontal_constraint(self, point, ref_point):
+        return point.haversine_dist(ref_point) < self.h_sep
+
+    def constrain_points(self, ref_point, data):
+        point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
+
+        con_points = HyperPointList()
+        for idx in point_indices:
+            point = data[idx]
+            if all(check(point, ref_point) for check in self.checks):
+                con_points.append(point)
+        return con_points
+
+
 class mean(Kernel):
 
     def get_value(self, point, data):
@@ -392,6 +485,23 @@ class nn_horizontal(Kernel):
             raise ValueError
         for data_point in iterator:
             if point.compdist(nearest_point, data_point): nearest_point = data_point
+        return nearest_point.val[0]
+
+
+class nn_horizontal_kdtree(Kernel):
+    def __init__(self):
+        self.haversine_distance_kd_tree_index = None
+
+    def get_value(self, point, data):
+        """
+        Colocation using nearest neighbours along the face of the earth using a k-D tree index.
+        """
+        nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(point)
+        if nearest_index is None:
+            raise ValueError
+        if nearest_index > len(data):
+            pass
+        nearest_point = data[nearest_index]
         return nearest_point.val[0]
 
 
@@ -451,20 +561,32 @@ class nn_time(Kernel):
 
 class nn_gridded(Kernel):
     def get_value(self, point, data):
-        '''
-            Co-location routine using nearest neighbour algorithm optimized for gridded data.
-             This calls out to iris to do the work.
-        '''
+        """
+        Co-location routine using nearest neighbour algorithm optimized for gridded data.
+        This calls out to iris to do the work.
+        """
         from iris.analysis.interpolate import nearest_neighbour_data_value
+
+        # Remove any tuples in the list that do not correspond to a coordinate in the cube 'data'
+        for i in point.coord_tuple:
+            if len(data.coords(i[0])) == 0:
+                point.coord_tuple.remove(i)
+
         return nearest_neighbour_data_value(data, point.coord_tuple)
 
 
 class li(Kernel):
     def get_value(self, point, data):
-        '''
-            Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
-        '''
+        """
+        Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
+        """
         from iris.analysis.interpolate import linear
+
+         # Remove any tuples in the list that do not correspond to a coordinate in the cube 'data'
+        for i in point.coord_tuple:
+            if len(data.coords(i[0])) == 0:
+                point.coord_tuple.remove(i)
+
         return linear(data, point.coord_tuple).data
 
 
@@ -685,39 +807,29 @@ class UngriddedGriddedColocator(Colocator):
         else:
             raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
 
-        # If there are coordinates in the sample grid that are not present for the data,
-        # omit the from the set of coordinates in the output grid. Find a mask of coordinates
-        # that are present to use when determining the output grid shape.
-        # coordinate_mask = self._find_data_coords(data)
-        coordinate_mask = [False if c is None else True for c in data.coords().find_standard_coords()]
-
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
-        coord_map = self._find_standard_coords(points, coordinate_mask)
+        coord_map = make_coord_map(points, data)
         coords = points.coords()
         shape = []
         output_coords = []
 
         # Find shape of coordinates to be iterated over.
         for (hpi, ci, shi) in coord_map:
-            if ci is not None:
-                coord = coords[ci]
-                if coord.ndim > 1:
-                    raise NotImplementedError("Co-location of data onto a cube with a coordinate of dimension greater"
-                                              " than one is not supported (coordinate %s)", coord.name())
-                # Ensure that bounds exist.
-                if not coord.has_bounds():
-                    logging.info("Creating guessed bounds as none exist in file")
-                    coord.guess_bounds()
-                shape.append(coord.shape[0])
-                output_coords.append(coord)
+            coord = coords[ci]
+            if coord.ndim > 1:
+                raise NotImplementedError("Co-location of data onto a cube with a coordinate of dimension greater"
+                                          " than one is not supported (coordinate %s)", coord.name())
+            # Ensure that bounds exist.
+            if not coord.has_bounds():
+                logging.info("Creating guessed bounds as none exist in file")
+                coord.guess_bounds()
+            shape.append(coord.shape[0])
+            output_coords.append(coord)
 
         self._fix_longitude_range(coords, data_points)
 
         # Create index if constraint supports it.
-        indexed_constraint = isinstance(constraint, IndexedConstraint)
-        if indexed_constraint:
-            logging.info("--> Indexing data...")
-            constraint.index_data(coords, data_points, coord_map)
+        data_index.create_indexes(constraint, coords, data_points, coord_map)
 
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = np.ma.zeros(shape)
@@ -730,13 +842,13 @@ class UngriddedGriddedColocator(Colocator):
         num_cells = np.product(shape)
         cell_count = 0
         cell_total = 0
+        indexed_constraint = isinstance(constraint, IndexedConstraint)
         for indices in jasmin_cis.utils.index_iterator(shape):
             hp_values = [None] * HyperPoint.number_standard_names
             hp_cell_values = [None] * HyperPoint.number_standard_names
             for (hpi, ci, shi) in coord_map:
-                if ci is not None:
-                    hp_values[hpi] = coords[ci].points[indices[shi]]
-                    hp_cell_values[hpi] = coords[ci].cell(indices[shi])
+                hp_values[hpi] = coords[ci].points[indices[shi]]
+                hp_cell_values[hpi] = coords[ci].cell(indices[shi])
 
             hp_cell = HyperPoint(*hp_cell_values)
             hp = HyperPoint(*hp_values)
@@ -745,7 +857,6 @@ class UngriddedGriddedColocator(Colocator):
             else:
                 arg = hp_cell
             con_points = constraint.constrain_points(arg, data_points)
-            # logging.debug("UngriddedGriddedColocator: point {} number constrained points {}".format(str(hp), len(con_points)))
             try:
                 values[indices] = kernel.get_value(hp, con_points)
             except ValueError:
@@ -762,48 +873,6 @@ class UngriddedGriddedColocator(Colocator):
         cube = self._create_colocated_cube(points, data, values, output_coords, constraint.fill_value)
 
         return [cube]
-
-    def _find_data_coords(self, data):
-        """Checks the first data point to determine which coordinates are present.
-        :param data: HyperPointList of data
-        :return: list of booleans indicating HyperPoint coordinates that are present
-        """
-        point = data[0]
-        coordinate_mask = [True] * HyperPoint.number_standard_names
-        for idx in xrange(HyperPoint.number_standard_names):
-            if point[idx] is None:
-                coordinate_mask[idx] = False
-        return coordinate_mask
-
-    def _find_standard_coords(self, cube, coordinate_mask):
-        """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
-
-        :param cube: cube among the coordinates of which to find the standard coordinates
-        :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
-        :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
-        """
-        coord_map = []
-        coord_lookup = {}
-        for idx, coord in enumerate(cube.coords()):
-            coord_lookup[coord] = idx
-
-        shape_idx = 0
-        for hpi, name in enumerate(HyperPoint.standard_names):
-            if coordinate_mask[hpi]:
-                coords = cube.coords(standard_name=name)
-                if len(coords) > 1:
-                    msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
-                           % (len(coords), ', '.join(coord.name() for coord in coords)))
-                    raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
-                elif len(coords) == 1:
-                    coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
-                    shape_idx += 1
-                else:
-                    coord_map.append((hpi, None, None))
-            else:
-                # Ignore this coordinate.
-                coord_map.append((hpi, None, None))
-        return coord_map
 
     def _find_longitude_range(self, coords):
         """Finds the start of the longitude range, assumed to be either 0,360 or -180,180
@@ -904,7 +973,8 @@ class BinningCubeCellConstraint(IndexedConstraint):
     """
     def __init__(self, fill_value=None):
         super(BinningCubeCellConstraint, self).__init__()
-        self.index = None
+        self.grid_cell_bin_index = None
+
         if fill_value is not None:
             try:
                 self.fill_value = float(fill_value)
@@ -917,90 +987,50 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
         This implementation returns the points that have been stored in the
         appropriate bin by the index_data method.
-        :param sample_point: HyperPoint of cells defining sample region
+        :param sample_point: HyperPoint of indices of cells defining sample region
         :param data: list of HyperPoints to check
         :return: HyperPointList of points found within cell
         """
-        point_list = self.index[tuple(sample_point)]
+        point_list = self.grid_cell_bin_index.get_points_by_indices(sample_point)
         con_points = HyperPointList()
         if point_list is not None:
             for point in point_list:
                 con_points.append(data[point])
         return con_points
 
-    def index_data(self, coords, data, coord_map):
-        """
-        :param coords: coordinates of grid
-        :param data: list of HyperPoints to index
-        :param coord_map: list of tuples relating index in HyperPoint to index in coords and in
-                          coords to be iterated over
-        """
-        # Create an index array matching the shape of the coordinates to be iterated over.
-        shape = []
-        for (hpi, ci, shi) in coord_map:
-            if ci is not None:
-                shape.append(len(coords[ci].points))
-        num_cell_indices = len(shape)
 
-        # Set a logging interval.
-        num_bin_checks = sum([math.log(x) for x in shape])
-        log_every_points = 2000000 / num_bin_checks
-        log_every_points -= log_every_points % 100
-        log_every_points = max(log_every_points, 100)
+def make_coord_map(points, data):
+    # If there are coordinates in the sample grid that are not present for the data,
+    # omit the from the set of coordinates in the output grid. Find a mask of coordinates
+    # that are present to use when determining the output grid shape.
+    coordinate_mask = [False if c is None else True for c in data.coords().find_standard_coords()]
 
-        # Create the index, which will be an array containing of a lists of data points that are
-        # within each cell.
-        self.index = np.empty(tuple(shape), dtype=np.dtype(object))
-        self.index.fill(None)
+    # Find the mapping of standard coordinates to those in the sample points and those to be used
+    # in the output data.
+    return _find_standard_coords(points, coordinate_mask)
 
-        coord_descreasing = [False] * len(coords)
-        coord_lengths = [0] * len(coords)
-        lower_bounds = [None] * len(coords)
-        upper_bounds = [None] * len(coords)
-        for (hpi, ci, shi) in coord_map:
-            if ci is not None:
-                coord = coords[ci]
-                # Coordinates must be monotonic; determine whether increasing or decreasing.
-                if len(coord.points) > 1:
-                    if coord.points[1] < coord.points[0]:
-                        coord_descreasing[ci] = True
-                coord_lengths[ci] = len(coord.points)
-                if coord_descreasing[ci]:
-                    lower_bounds[ci] = coord.bounds[::-1, 1]
-                    upper_bounds[ci] = coord.bounds[::-1, 0]
-                else:
-                    lower_bounds[ci] = coord.bounds[::, 0]
-                    upper_bounds[ci] = coord.bounds[::, 1]
 
-        # Populate the index by finding the cell containing each data point.
-        num_points = len(data)
-        pt_count = 0
-        pt_total = 0
-        for pt_idx, point in data.enumerate_non_masked_points():
-            point_cell_indices = [None] * num_cell_indices
+def _find_standard_coords(cube, coordinate_mask):
+    """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
 
-            # Find the interval that the point resides in for each relevant coordinate.
-            for (hpi, ci, shi) in coord_map:
-                if ci is not None:
-                    search_index = np.searchsorted(lower_bounds[ci], point[hpi], side='right') - 1
-                    if (search_index >= 0) and (point[hpi] <= upper_bounds[ci][search_index]):
-                        if coord_descreasing[ci]:
-                            point_cell_indices[shi] = coord_lengths[ci] - search_index - 1
-                        else:
-                            point_cell_indices[shi] = search_index
+    :param cube: cube among the coordinates of which to find the standard coordinates
+    :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
+    :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
+    """
+    coord_map = []
+    coord_lookup = {}
+    for idx, coord in enumerate(cube.coords()):
+        coord_lookup[coord] = idx
 
-            # Add point to index if a containing interval was found for each coordinate.
-            if point_cell_indices.count(None) == 0:
-                index_entry = self.index[tuple(point_cell_indices)]
-                if index_entry is None:
-                    index_entry = []
-                index_entry.append(pt_idx)
-                self.index[tuple(point_cell_indices)] = index_entry
-
-            # Periodically log progress.
-            pt_count += 1
-            pt_total += 1
-            if pt_count == log_every_points:
-                logging.info("    Indexed %d points of %d (%d%%)",
-                             pt_total, num_points, int(pt_total * 100 / num_points))
-                pt_count = 0
+    shape_idx = 0
+    for hpi, name in enumerate(HyperPoint.standard_names):
+        if coordinate_mask[hpi]:
+            coords = cube.coords(standard_name=name)
+            if len(coords) > 1:
+                msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
+                       % (len(coords), ', '.join(coord.name() for coord in coords)))
+                raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
+            elif len(coords) == 1:
+                coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
+                shape_idx += 1
+    return coord_map

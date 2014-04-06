@@ -39,15 +39,112 @@ The output for the two subset data files, and the colocated data should look lik
 
 
 File Locations
---------------
+^^^^^^^^^^^^^^
 
 The files used above can be found at::
 
   /group_workspaces/jasmin/cis/data/caliop/CAL-LID-L2-05km-APro
 
 
+Ungridded data colocation using k-D tree indexing
+-------------------------------------------------
 
+These examples show the syntax for using the k-D tree optimisation of the nearest-neighbour kernel and separation constraint. The indexing is only by horizontal position.
 
+Nearest-Neighbour Kernel
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The first example is of Aerosol CCI data on to the points of a MODIS L3 file (which is an ungridded data file but with points lying on a grid).
+
+Subset to a relevant region::
+
+  $ cis subset AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[-6,0],y=[20,30] -o AOD550n_3
+  $ cis subset Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf x=[-6,0],y=[20,30] -o MOD08n_3
+
+The results of subsetting can be plotted with::
+
+  $ cis plot AOD550:cis-AOD550n_3.nc --itemwidth 10
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc --itemwidth 20
+
+These should look like:
+
+.. image:: img/AOD550n_3.png
+   :width: 300px
+
+.. image:: img/MOD08n_3.png
+   :width: 300px
+
+To colocate with the nearest-neighbour kernel use::
+
+  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:kernel=nn_horizontal_kdtree -o MOD08_on_AOD550_nn_kdt
+
+This can be plotted with::
+
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_nn_kdt.nc --itemwidth 10
+
+The sample points are more closely spaced than the data points, hence a patchwork effect is produced.
+
+.. image:: img/MOD08_on_AOD550_nn_kdt.png
+   :width: 300px
+
+Colocating the full Aerosol CCI file on to the MODIS L3 (taking around 2 hours) with::
+
+  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc MOD08_E3.A2010009.005.2010026072315.hdf:variable=Cloud_Top_Temperature_Mean_Mean,kernel=nn_horizontal_kdtree -o AOD550_on_MOD08_kdt_nn_full.nc
+
+gives the following result
+
+.. image:: img/AOD550_on_MOD08_kdt_nn_full.png
+   :width: 300px
+
+A separation constraint is needed to obtain a more useful result.
+
+Separation Constraint
+^^^^^^^^^^^^^^^^^^^^^
+This exmple is similar to the first nearest-neighbour colocation above::
+
+  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:kernel=mean,constraint=SepConstraintKdtree[h_sep=75] -o MOD08_on_AOD550_hsep_75km
+
+Plotting this again gives a granular result::
+
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_hsep_75km.nc --itemwidth 10
+
+.. image:: img/MOD08_on_AOD550_hsep_75km.png
+   :width: 300px
+
+This example colocates the Aerosol CCI data on to the MODIS L3 grid::
+
+  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc MOD08_E3.A2010009.005.2010026072315.hdf:variable=Cloud_Top_Temperature_Mean_Mean,kernel=mean,constraint=SepConstraintKdtree[h_sep=50,fill_value=-999] -o AOD550_on_MOD08_kdt_hsep_50km_full.nc
+
+This can be plotted as follows, with the full image and zoomed into a representative section show below::
+
+  $ cis plot AOD550:cis-AOD550_on_MOD08_kdt_hsep_50km_full.nc --itemwidth 50
+
+.. image:: img/AOD550_on_MOD08_kdt_hsep_50km_full.png
+   :width: 300px
+
+.. image:: img/AOD550_on_MOD08_kdt_hsep_50km_full_zoom.png
+   :width: 300px
+
+The reverse colocation can be performed with this command (taking about 30 minutes)::
+
+  $ cis col Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc:variable=AOD550,kernel=mean,constraint=SepConstraintKdtree[h_sep=100,fill_value=-999] -o MOD08_on_AOD550_kdt_hsep_100km_full
+
+Plotting it with this command gives the result below::
+
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_kdt_hsep_100km_full.nc
+
+.. image:: img/MOD08_on_AOD550_kdt_hsep_100km_full.png
+   :width: 300px
+
+File Locations
+^^^^^^^^^^^^^^
+
+The files used above can be found at::
+
+  /group_workspaces/jasmin/cis/jasmin_cis_repo_test_files/
+    20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc
+    MOD08_E3.A2010009.005.2010026072315.hdf
+  
 
 Examples of co-location of ungridded data on to gridded
 =======================================================

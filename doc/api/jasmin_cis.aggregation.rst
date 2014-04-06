@@ -28,6 +28,14 @@ jasmin_cis.aggregation.aggregation_kernels module
     :undoc-members:
     :show-inheritance:
 
+jasmin_cis.aggregation.aggregator module
+----------------------------------------
+
+.. automodule:: jasmin_cis.aggregation.aggregator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

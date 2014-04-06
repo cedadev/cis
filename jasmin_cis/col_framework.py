@@ -80,23 +80,10 @@ class CellConstraint(Constraint):
 
 
 class IndexedConstraint(Constraint):
-    """Superclass of constraints that create an index prior to constraining.
-
-    The index_data method is called before any calls to constrain_points. The
-    point argument in constrain_points is a tuple of indices into the
-    coordinates over which co-location is occurring.
+    """Superclass of constraints that expect points to be referenced by index.
     """
     __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def index_data(self, coords, data, coord_map):
-        """
-        :param coords: coordinates of grid
-        :param data: list of HyperPoints to index
-        :param coord_map: list of tuples relating index in HyperPoint to index in coords and in
-                          coords to be iterated over
-                          (HyperPoint_coordinate_index, coord_index, index_of_coord_iterated_over)
-        """
+    pass
 
 
 def __get_class(parent_class, name=None):
