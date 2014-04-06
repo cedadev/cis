@@ -50,7 +50,7 @@ clean:
 	rm -rf $(BUILDDIR)/*
 
 apidoc:
-	sphinx-apidoc -f -T -o api ../jasmin_cis
+	sphinx-apidoc -f -T -o api ../jasmin_cis ../jasmin_cis/test
 	@echo
 	@echo "apidoc generation finished."
 

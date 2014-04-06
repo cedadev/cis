@@ -17,9 +17,11 @@ Contents:
    command_line
    file_information
    subsetting
+   aggregation
    colocation
    colocation_examples
    plotting
+   overlay_examples
    maintenance_and_development
    Python API Reference <api/jasmin_cis>
 
