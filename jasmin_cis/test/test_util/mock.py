@@ -68,13 +68,19 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
         t0 = datetime.datetime(1984, 8, 27)
         times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(time_dim_length)])
         time_nums = convert_obj_to_standard_date_array(times)
-        coord_list.append((DimCoord(time_nums, standard_name='time'), coord_number))
+        coord_list.append((DimCoord(time_nums, standard_name='time', units='days since 1600-01-01 00:00:00'),
+                           coord_number))
         coord_number += 1
         data_size *= time_dim_length
 
     data = np.reshape(np.arange(data_size) + data_offset + 1., tuple(len(i[0].points) for i in coord_list))
 
-    return Cube(data, dim_coords_and_dims=coord_list)
+    return_cube = Cube(data, dim_coords_and_dims=coord_list)
+
+    for coord in return_cube.coords():
+        coord.guess_bounds()
+
+    return return_cube
 
 def make_dummy_2d_cube():
     '''

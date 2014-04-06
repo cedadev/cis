@@ -11,8 +11,8 @@ from jasmin_cis.utils import add_file_prefix
 logger = logging.getLogger(__name__)
 
 __author__ = "David Michel, Daniel Wallis and Duncan Watson-Parris"
-__version__ = "0.6.4"
-__status__ = "Phase 2, Sprint 4 Release"
+__version__ = "0.6.5"
+__status__ = "Phase 2, Sprint 5 Release"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
 
 def __error_occurred(e):

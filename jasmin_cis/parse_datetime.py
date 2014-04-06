@@ -3,7 +3,7 @@ import datetime
 import re
 
 
-def _parse_datetime(dt_string, aggregation=False):
+def _parse_datetime(dt_string):
     """Parse a date/time string.
 
     The string should be in an ISO 8601 format except that the date and time
@@ -30,29 +30,16 @@ def _parse_datetime(dt_string, aggregation=False):
     else:
         dt_components.extend(time_components)
 
-    if aggregation:
-        # Check that the components are valid, and use defaults of middle of year or month, depending on number of
-        # arguments supplied.
-        tmp_components = list(dt_components)
-        print tmp_components
-        if len(tmp_components) == 1:
-            tmp_components.extend([7, 1])
-        elif len(tmp_components) == 2:
-            tmp_components.extend([15])
-        dt = datetime.datetime(*tmp_components)
+    # Check that the components are valid (assuming month and/or date is 1 if missing).
+    tmp_components = list(dt_components)
+    if len(tmp_components) < 3:
+        tmp_components.extend([1] * (3 - len(tmp_components)))
+    datetime.datetime(*tmp_components)
 
-        return tmp_components
-    else:
-        # Check that the components are valid (assuming month and/or date is 1 if missing).
-        tmp_components = list(dt_components)
-        if len(tmp_components) < 3:
-            tmp_components.extend([1] * (3 - len(tmp_components)))
-        dt = datetime.datetime(*tmp_components)
-
-        return dt_components
+    return dt_components
 
 
-def parse_datetime(dt_string, name, parser, aggregation=False):
+def parse_datetime(dt_string, name, parser):
     """Parse a date/time string from the command line, reporting parse errors.
 
     The string should be in an ISO 8601 format except that the date and time
@@ -63,7 +50,7 @@ def parse_datetime(dt_string, name, parser, aggregation=False):
     :return: datetime value
     """
     try:
-        dt = _parse_datetime(dt_string, aggregation)
+        dt = _parse_datetime(dt_string)
     except ValueError:
         parser.error("'" + dt_string + "' is not a valid " + name)
         dt = None
@@ -76,16 +63,42 @@ def date_delta_creator(year, month=0, day=0, hour=0, minute=0, second=0):
 
 
 def _parse_datetime_delta(dt_string):
-    """Parse a date/time delta string.
+    """Parse a date/time delta string into years, months, days, hours, minutes and seconds.
 
-    :param dt_string: String to parse
-    :return: list of datetime components
-    :raise ValueError: if the string cannot be parsed as a date/time
+    :param dt_string: String to parse, for example '1y2m3d4H5M6S'
+    :return: Named tuple 'date_delta' containing, 'year', 'month', 'day', 'hour', 'minute', 'second'
+    :raise ValueError: if the string cannot be parsed as a date/time delta
     """
-    # Expect an input such as 2014:03:28:17:41:57
-    split = dt_string.split(':')
 
-    return date_delta_creator(*split)
+    tokens = re.findall('[0-9]*[ymdHMS]', dt_string)
+
+    years = 0
+    months = 0
+    days = 0
+    hours = 0
+    minutes = 0
+    seconds = 0
+
+    for token in tokens:
+        val = int(token[:-1])
+        if token[-1:] == "y":
+            years = val
+        elif token[-1:] == "m":
+            months = val
+        elif token[-1:] == "d":
+            days = val
+        elif token[-1:] == "H":
+            hours = val
+        elif token[-1:] == "M":
+            minutes = val
+        elif token[-1:] == "S":
+            seconds = val
+        else:
+            raise ValueError("Invalid time delta format. Must be '1y2m3d4H5M6S'")
+
+    times = [years, months, days, hours, minutes, seconds]
+
+    return date_delta_creator(*times)
 
 
 def parse_datetime_delta(dt_string, name, parser):

@@ -261,8 +261,8 @@ def get_plot_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "color", "edgecolor", "itemstyle",
-                                                       "label", "product", "type", "alpha", "cmap", "cmin", "cmax",
-                                                       "contnlevels", "contlevels", "contlabel", "contwidth",
+                                                       "label", "product", "type", "transparency", "cmap", "cmin",
+                                                       "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "contfontsize"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
                                          check_nothing, check_product, check_plot_type, check_float, check_nothing,
@@ -351,8 +351,8 @@ def get_aggregate_grid(aggregategrid, parser):
             # obvious way. Otherwise, parse what is found as a date/time or number.
             is_time = None
             if dim_name.lower() == 't':
-                start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser, aggregation=True)
-                end_parsed = parse_datetime(end, 'aggregation grid end date/time', parser, aggregation=True)
+                start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser)
+                end_parsed = parse_datetime(end, 'aggregation grid end date/time', parser)
                 delta_parsed = parse_datetime_delta(delta, 'aggregation grid delta date/time', parser)
                 is_time = True
             elif dim_name.lower() in ['x', 'y', 'z', 'p']:
