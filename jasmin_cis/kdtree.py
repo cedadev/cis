@@ -136,8 +136,10 @@ def geodesic_to_line_of_longitude_crossing_latitude(point, longitude):
     pt_lat = point[0]
     pt_lon = point[1]
 
-    sin_lat_sq = math.sin(pt_lat) ** 2 / (1 - math.cos(pt_lat) ** 2 * math.sin(pt_lon - longitude) ** 2)
-    sin_lat = math.copysign(math.sqrt(sin_lat_sq), pt_lat)
+    # Derived from one of Napier's rules for right angled spherical triangles:
+    # tan(pt_lat) = tan(latitude) * cos(pt_lon - longitude)
+    # - behaves better as |pt_lon - longitude| -> pi/2
+    sin_lat = math.sin(pt_lat) / math.sqrt(1 - math.cos(pt_lat) ** 2 * math.sin(pt_lon - longitude) ** 2)
     latitude = math.asin(sin_lat)
 
     return latitude
@@ -153,7 +155,10 @@ def line_of_longitude_segment_nearer_end_latitude(edge_lat_min, edge_lat_max, ed
     :param pt_lon: longitude of point in radians
     :return: latitude of nearer segment endpoint in radians
     """
+    # Determine which side of a great circle perpendicular to the mid-point of
+    # the edge that the point lies on.
     lat_mid = (edge_lat_min + edge_lat_max) / 2.0
+    # One of Napier's rules for right angled spherical triangles:
     tan_lat_equi = math.tan(lat_mid) * math.cos(pt_lon - edge_lon)
     return edge_lat_min if math.tan(pt_lat) < tan_lat_equi else edge_lat_max
 
