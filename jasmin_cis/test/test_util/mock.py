@@ -643,7 +643,8 @@ def make_regular_2d_ungridded_data_with_missing_values():
 
     coords = CoordList([x, y])
     return UngriddedData(data,
-                         Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                         Metadata(name='rain', standard_name='rainfall_rate',
+                                  long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                   units="kg m-2 s-1", missing_value=-999),
                          coords)
 
