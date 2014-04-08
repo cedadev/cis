@@ -246,11 +246,16 @@ def check_product(product, parser):
 
 
 def check_aggregate_kernel(arg, parser):
+    import jasmin_cis.plugin as plugin
+    from jasmin_cis.col_framework import Kernel
     from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels
-    if arg in aggregation_kernels.keys():
+
+    aggregation_classes = plugin.find_plugin_classes(Kernel, 'jasmin_cis.col_implementations')
+    aggregation_names = [cls().__class__.__name__ for cls in aggregation_classes]
+    if arg in aggregation_kernels.keys() or arg in aggregation_names:
         return arg
     else:
-        parser.error(arg + " is not a valid aggregation kernel. Please use one of " + str(aggregation_kernels.keys()))
+        parser.error(arg + " is not a valid aggregation kernel. Please use one of " + str(aggregation_names))
 
 
 def get_plot_datagroups(datagroups, parser):

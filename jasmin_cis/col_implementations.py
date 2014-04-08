@@ -1,15 +1,16 @@
 import logging
-import math
-
-import iris
+import __builtin__
 import numpy as np
+
+import iris.analysis.interpolate
+import iris.coords
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
+from jasmin_cis.data_io.ungridded_data import UngriddedData
 import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
 
@@ -454,6 +455,45 @@ class mean(Kernel):
         values = data.vals
         if len(values) == 0: raise ValueError
         return mean(values)
+
+
+class stddev(Kernel):
+
+    def get_value(self, point, data):
+        """
+        Colocation using the standard deviation of any points left after a constraint.
+        """
+        from numpy import std
+        values = data.vals
+        if len(values) == 0:
+            raise ValueError
+        return std(values)
+
+
+class min(Kernel):
+
+    def get_value(self, point, data):
+        """
+        Colocation using the standard deviation of any points left after a constraint.
+        """
+        values = data.vals
+        if len(values) == 0:
+            raise ValueError
+        # Using builtin is required so that the class can be called min
+        return __builtin__.min(values)
+
+
+class max(Kernel):
+
+    def get_value(self, point, data):
+        """
+        Colocation using the standard deviation of any points left after a constraint.
+        """
+        values = data.vals
+        if len(values) == 0:
+            raise ValueError
+        # Using builtin is required so that the class can be called max
+        return __builtin__.max(values)
 
 
 class full_average(Kernel):

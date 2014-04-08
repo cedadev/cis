@@ -20,8 +20,8 @@ class TestGriddedAggregation():
     def test_aggregating_to_same_grid_returns_original_data(self):
         grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         assert numpy.array_equal(self.cube.data, cube_out.data)
         assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
@@ -31,8 +31,8 @@ class TestGriddedAggregation():
     def test_collapsing_coordinate_collapses_coordinate(self):
         grid = {'x': AggregationGrid(0, 0, float('NaN'), False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         result = numpy.array([2, 5, 8, 11, 14])
 
@@ -43,8 +43,8 @@ class TestGriddedAggregation():
     def test_collapsing_everything_returns_a_single_value(self):
         grid = {'x': AggregationGrid(-12.5, 12.5, float('NaN'), False), 'y': AggregationGrid(0, 1, float('NaN'), False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         result = numpy.array([8])
 
@@ -55,8 +55,8 @@ class TestGriddedAggregation():
         self.kernel = iris.analysis.MAX
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(0, 0, float('NaN'), False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         result = numpy.array([13, 14, 15])
 
@@ -68,8 +68,8 @@ class TestGriddedAggregation():
         self.kernel = iris.analysis.MIN
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(0, 0, float('NaN'), False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         result = numpy.array([1, 2, 3])
 
@@ -81,8 +81,8 @@ class TestGriddedAggregation():
         self.kernel = iris.analysis.STD_DEV
         grid = {'y': AggregationGrid(0, 0, float('NaN'), False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         result = numpy.array([numpy.sqrt(22.5), numpy.sqrt(22.5), numpy.sqrt(22.5)])
 
@@ -93,8 +93,8 @@ class TestGriddedAggregation():
     def test_aggregating_using_mean_and_coarser_grid(self):
         grid = {'x': AggregationGrid(0, 0, float('NaN'), False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         result = numpy.array([5, 12.5])
 
@@ -110,8 +110,8 @@ class TestGriddedAggregation():
                 'x': AggregationGrid(0, 0, float('NaN'), False),
                 'y': AggregationGrid(0, 0, float('NaN'), False)}
 
-        agg = Aggregator(self.cube, self.kernel, grid)
-        cube_out = agg.aggregate_gridded()
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
 
         result_data = numpy.array([51, 53.5, 55.5])
 
