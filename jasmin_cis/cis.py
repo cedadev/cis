@@ -183,7 +183,7 @@ def aggregate_cmd(main_arguments):
     variable = input_group['variable']
     filenames = input_group['filenames']
     product = input_group["product"] if input_group["product"] is not None else None
-    kernel = input_group["kernel"] if input_group["kernel"] is not None else None
+    kernel = input_group["kernel"] if input_group["kernel"] is not None else 'mean'
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-", main_arguments.output + ".nc")

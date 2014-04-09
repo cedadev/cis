@@ -32,7 +32,7 @@ class Aggregate():
         aggregator = Aggregator(data, self.grid)
 
         if isinstance(data, iris.cube.Cube):
-            kernel = aggregation_kernels[kernel_name] if kernel_name is not None else aggregation_kernels['mean']
+            kernel = aggregation_kernels[kernel_name]
             data = aggregator.aggregate_gridded(kernel)
         else:
             kernel = Colocate._get_valid_kernel_instance(kernel_name, None)
