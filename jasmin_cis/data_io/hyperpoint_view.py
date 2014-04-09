@@ -207,7 +207,8 @@ class GriddedHyperPointView(HyperPointView):
         """Iterates over all points regardless of the value of non_masked_iteration
         :return: next HyperPoint
         """
-        shape = [c.size for c in self.coords if c is not None]
+        # shape = tuple([c.size for c in self.coords if c is not None])
+        shape = self.data.shape
         for idx in jasmin_cis.utils.index_iterator(shape):
             yield self.__getitem__(idx)
 
@@ -215,7 +216,8 @@ class GriddedHyperPointView(HyperPointView):
         """Iterates over non-masked points regardless of the value of non_masked_iteration
         :return: next HyperPoint
         """
-        shape = [c.size for c in self.coords if c is not None]
+        # shape = tuple([c.size for c in self.coords if c is not None])
+        shape = self.data.shape
         for idx in jasmin_cis.utils.index_iterator(shape):
             if self.data is not None and self.data[idx] is np.ma.masked:
                 continue
@@ -226,7 +228,8 @@ class GriddedHyperPointView(HyperPointView):
         data array and the corresponding HyperPoint.
         :return: tuple(index of point in flattened view of data, HyperPoint)
         """
-        shape = tuple([c.size for c in self.coords if c is not None])
+        # shape = tuple([c.size for c in self.coords if c is not None])
+        shape = self.data.shape
         for idx in xrange(self.length):
             if self.data is not None:
                 indices = np.unravel_index(idx, shape, order='C')

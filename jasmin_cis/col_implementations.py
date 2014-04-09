@@ -1,18 +1,79 @@
-import logging
 import __builtin__
-import numpy as np
+import logging
 
-import iris.analysis.interpolate
-import iris.coords
+import iris
+import numpy as np
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from jasmin_cis.data_io.ungridded_data import UngriddedData
+from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
 import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
+
+
+class GeneralUngriddedColocator(Colocator):
+
+    def __init__(self, var_name='', var_long_name='', var_units=''):
+        super(GeneralUngriddedColocator, self).__init__()
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+
+    def colocate(self, points, data, constraint, kernel):
+        """
+        This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
+        one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
+        for the output LazyData object is copied from the input data object.
+
+        :param points: A list of HyperPoints
+        :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
+        :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
+                            based on it's internal parameters
+        :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
+        :return: A single LazyData object
+        """
+        metadata = data.metadata
+
+        # Convert ungridded data to a list of points if kernel needs it.
+        #TODO Do this properly.
+        if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
+            if not isinstance(data, iris.cube.Cube):
+                raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
+            if constraint is not None:
+                raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
+            data_points = data
+        else:
+            data_points = data.get_non_masked_points()
+
+        # Create index if constraint and/or kernel require one.
+        coord_map = None
+        data_index.create_indexes(constraint, points, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        logging.info("--> Colocating...")
+
+        points = points.get_coordinates_points()
+
+        # Fill will the FillValue from the start
+        values = np.zeros(len(points)) + constraint.fill_value
+
+        for i, point in enumerate(points):
+            con_points = constraint.constrain_points(point, data_points)
+            try:
+                values[i] = kernel.get_value(point, con_points)
+            except ValueError:
+                pass
+        new_data = LazyData(values, metadata)
+        if self.var_name: new_data.metadata._name = self.var_name
+        if self.var_long_name: new_data.metadata.long_name = self.var_long_name
+        if self.var_units: new_data.units = self.var_units
+        new_data.metadata.shape = (len(points),)
+        new_data.metadata.missing_value = constraint.fill_value
+
+        return [new_data]
 
 
 class DefaultColocator(Colocator):
@@ -808,11 +869,11 @@ class gridded_gridded_li(Kernel):
         raise ValueError("gridded_gridded_li kernel selected for use with colocator other than GriddedColocator")
 
 
-class UngriddedGriddedColocator(Colocator):
-    """Performs co-location of ungridded data onto a the points of a cube.
+class GeneralGriddedColocator(Colocator):
+    """Performs co-location of data on to a the points of a cube.
     """
     def __init__(self, var_name='', var_long_name='', var_units=''):
-        super(UngriddedGriddedColocator, self).__init__()
+        super(GeneralGriddedColocator, self).__init__()
         #TODO These are not used - use or remove everywhere.
         self.var_name = var_name
         self.var_long_name = var_long_name
@@ -830,22 +891,23 @@ class UngriddedGriddedColocator(Colocator):
         from jasmin_cis.exceptions import ClassNotFoundError
 
         # Constraint must be appropriate for gridded sample.
-        if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)
-                or isinstance(constraint, DummyConstraint)):
-            raise ClassNotFoundError("Expected constraint of subclass of one of {}; found one of class {}".format(
-                str([jasmin_cis.utils.get_class_name(CellConstraint),
-                     jasmin_cis.utils.get_class_name(IndexedConstraint)]),
-                jasmin_cis.utils.get_class_name(type(constraint))))
+        # if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)
+        #         or isinstance(constraint, DummyConstraint)):
+        #     raise ClassNotFoundError("Expected constraint of subclass of one of {}; found one of class {}".format(
+        #         str([jasmin_cis.utils.get_class_name(CellConstraint),
+        #              jasmin_cis.utils.get_class_name(IndexedConstraint)]),
+        #         jasmin_cis.utils.get_class_name(type(constraint))))
 
         # Only support the mean kernel currently.
         # if not isinstance(kernel, mean):
         #     raise ClassNotFoundError("Expected kernel of class {}; found one of class {}".format(
         #         jasmin_cis.utils.get_class_name(mean), jasmin_cis.utils.get_class_name(type(kernel))))
 
-        if isinstance(data, UngriddedData):
-            data_points = data.get_non_masked_points()
-        else:
-            raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
+        # if isinstance(data, UngriddedData):
+        #     data_points = data.get_non_masked_points()
+        # else:
+        #     raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
+        data_points = data.get_non_masked_points()
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = make_coord_map(points, data)
@@ -870,6 +932,7 @@ class UngriddedGriddedColocator(Colocator):
 
         # Create index if constraint supports it.
         data_index.create_indexes(constraint, coords, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
 
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = np.ma.zeros(shape)
@@ -882,7 +945,8 @@ class UngriddedGriddedColocator(Colocator):
         num_cells = np.product(shape)
         cell_count = 0
         cell_total = 0
-        indexed_constraint = isinstance(constraint, IndexedConstraint)
+        is_indexed_constraint = isinstance(constraint, IndexedConstraint)
+        is_cell_constraint = isinstance(constraint, CellConstraint)
         for indices in jasmin_cis.utils.index_iterator(shape):
             hp_values = [None] * HyperPoint.number_standard_names
             hp_cell_values = [None] * HyperPoint.number_standard_names
@@ -890,12 +954,13 @@ class UngriddedGriddedColocator(Colocator):
                 hp_values[hpi] = coords[ci].points[indices[shi]]
                 hp_cell_values[hpi] = coords[ci].cell(indices[shi])
 
-            hp_cell = HyperPoint(*hp_cell_values)
             hp = HyperPoint(*hp_values)
-            if indexed_constraint:
+            if is_indexed_constraint:
                 arg = indices
+            elif is_cell_constraint:
+                arg = HyperPoint(*hp_cell_values)
             else:
-                arg = hp_cell
+                arg = hp
             con_points = constraint.constrain_points(arg, data_points)
             try:
                 values[indices] = kernel.get_value(hp, con_points)
@@ -965,7 +1030,7 @@ class UngriddedGriddedColocator(Colocator):
         metadata.missing_value = fill_value
         cube = GriddedData(data, standard_name=src_data.standard_name,
                            long_name=src_data.long_name,
-                           var_name=metadata._name,
+                           var_name=src_data.var_name,
                            units=src_data.units,
                            dim_coords_and_dims=dim_coords_and_dims)
         #TODO Check if any other keyword arguments should be set:
@@ -1043,7 +1108,7 @@ def make_coord_map(points, data):
     # If there are coordinates in the sample grid that are not present for the data,
     # omit the from the set of coordinates in the output grid. Find a mask of coordinates
     # that are present to use when determining the output grid shape.
-    coordinate_mask = [False if c is None else True for c in data.coords().find_standard_coords()]
+    coordinate_mask = [False if c is None else True for c in data.find_standard_coords()]
 
     # Find the mapping of standard coordinates to those in the sample points and those to be used
     # in the output data.
@@ -1051,7 +1116,7 @@ def make_coord_map(points, data):
 
 
 def _find_standard_coords(cube, coordinate_mask):
-    """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
+    """Finds the mapping of sample point coordinates to the standard ones used by HyperPoint.
 
     :param cube: cube among the coordinates of which to find the standard coordinates
     :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
@@ -1059,13 +1124,16 @@ def _find_standard_coords(cube, coordinate_mask):
     """
     coord_map = []
     coord_lookup = {}
-    for idx, coord in enumerate(cube.coords()):
+    # for idx, coord in enumerate(cube.coords()):
+    coords = cube.coords()
+    for idx, coord in enumerate(coords):
         coord_lookup[coord] = idx
 
     shape_idx = 0
     for hpi, name in enumerate(HyperPoint.standard_names):
         if coordinate_mask[hpi]:
-            coords = cube.coords(standard_name=name)
+            # Get the dimension coordinates only - these correspond to dimensions of data array.
+            coords = cube.coords(standard_name=name, dim_coords=True)
             if len(coords) > 1:
                 msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
                        % (len(coords), ', '.join(coord.name() for coord in coords)))
