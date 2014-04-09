@@ -2,7 +2,7 @@
 Aggregation
 ***********
 
-The Community Intercomparison Suite (CIS) has the ability to aggregate along one or more coordinates, currently for **gridded data only**. This page describes how to perform aggregation and the options available.
+The Community Intercomparison Suite (CIS) has the ability to aggregate along one or more coordinates, for both gridded and ungridded data. This page describes how to perform aggregation and the options available.
 
 To perform aggregation, run a command of the format::
 
@@ -33,13 +33,15 @@ where:
 
   * ``t,y=[-45,45,10]``
 
+  .. note:: For ungridded data a coordinate with no grid given is always collapsed completely, if this example was used for ungridded data specifying ``t`` would have no effect.
+
   Date/times are specified in the format: ``YYYY-MM-DDThh:mm:ss`` in which ``YYYY-MM-DD`` is a date and ``hh:mm:ss`` is a time. A colon or space can be used instead of the 'T' separator (but if a space is used, the argument must be quoted). Any trailing components of the date/time may be omitted. When a date/time is used as a range start, the earliest date/time compatible with the supplied components is used (e.g., ``2010-04`` is treated as ``2010-04-01T00:00:00``) and when used as a range end, the latest compatible date/time is used. Including optional and alternative components, the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``. When the ``t=[value]`` form is used, value is interpretted as both the start and end value, as described above, giving a range spanning the specified date/time, e.g., ``t=[2010]`` gives a range spanning the whole of the year 2010.
 
   Date/time steps are specified as ``$y$m$d$H$M$s``, where any particular time period is optional, for example ``1m30M`` would specify a time interval of 1 month and 30 minutes. Years and months are treated as calendar years and months, meaning they are not necessarily fixed in length. For example a date interval of 1 year and 1 month would mean going from 12:00 15th April 2013 to 12:00 15th May 2013. The are two exceptions to this, in rare cases such as starting at 30th January and going forward 1 month, the month is instead treated as a period of 28 days. Also, for the purposes of finding midpoints for the start in a month the month is always treated as 30 days. For example, to start on the 3rd November 2011 at 12:00 and aggregate over each month up to 3rd January 2013 at 12:00:
 
   * ``t=[2011-11-03T12:00,2013-01,1m]``
 
-.. note::  
+  .. note::  
    The range specified is the very start and end of the grid, the actual midpoints of the aggregation cells will start at ``start + delta/2``.  CIS will throw a warning and automatically reduce the range if the grid requested goes outside the range of the gridded data. The start and end of the gridded data are considered to be from the start of the bounding box of the first cell to the end of the bounding box for the last cell.
   
 ``outputfile``
@@ -52,8 +54,106 @@ A full example would be::
 Aggregation Examples
 ====================
 
-Gridded-gridded aggregation
----------------------------
+Ungridded aggregation
+---------------------
+
+Aircraft Track
+^^^^^^^^^^^^^^
+
+Original data::
+
+  $ cis plot TT_A:RF04.20090114.192600_035100.PNI.nc --xmin -180 --xmax -120 --ymin 0 --ymax 90
+
+.. figure:: img/aggregation/NCAR-RAF-1.png
+   :width: 400px
+   :align: center
+
+Aggregating onto a coarse grid::
+
+  $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc x=[-180,-120,3],y=[0,90,3] -o NCAR_RAF-1
+  $ cis plot TT_A:cis-NCAR_RAF-1.nc:product=NetCDFGriddedByVariableName
+
+.. figure:: img/aggregation/NCAR-RAF-2.png
+   :width: 400px
+   :align: center
+
+Aggregating onto a fine grid::
+
+  $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc x=[180,240,0.3],y=[0,90,0.3] -o NCAR_RAF-2
+  $ cis plot TT_A:cis-NCAR_RAF-2.nc:product=NetCDFGriddedByVariableName
+
+.. figure:: img/aggregation/NCAR-RAF-3.png
+   :width: 400px
+   :align: center
+
+Aggregating with altitude and time::
+
+  $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc t=[2009-01-14T19:30,2009-01-15T03:45,30M],z=[0,15000,1000] -o NCAR_RAF-3
+  $ cis plot TT_A:cis-NCAR_RAF-3.nc:product=NetCDFGriddedByVariableName --xaxis time --yaxis altitude
+
+.. figure:: img/aggregation/NCAR-RAF-4.png
+   :width: 400px
+   :align: center
+
+Aggregating with altitude and pressure::
+
+  $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc p=[100,1100,20],z=[0,15000,500] -o NCAR_RAF-4
+  $ cis plot TT_A:cis-NCAR_RAF-4.nc:product=NetCDFGriddedByVariableName --xaxis altitude --yaxis air_pressure --logy
+
+.. figure:: img/aggregation/NCAR-RAF-5.png
+   :width: 400px
+   :align: center
+
+MODIS L3 Data
+^^^^^^^^^^^^^
+
+Original data::
+
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf
+
+.. figure:: img/aggregation/MODIS-6.png
+   :width: 400px
+   :align: center
+
+Aggregating with a mean kernel::
+
+  $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf x=[-180,180,10],y=[-90,90,10] -o cloud-mean
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-mean.nc:product=NetCDFGriddedByVariableName
+
+.. figure:: img/aggregation/MODIS-7.png
+   :width: 400px
+   :align: center
+
+Aggregating with the standard deviation kernel::
+
+  $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=stddev x=[-180,180,10],y=[-90,90,10] -o cloud-stddev
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-stddev.nc:product=NetCDFGriddedByVariableName &
+
+.. figure:: img/aggregation/MODIS-7.png
+   :width: 400px
+   :align: center
+
+Aggregating with the maximum kernel::
+
+  $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=max x=[-180,180,10],y=[-90,90,10] -o cloud-max
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-max.nc:product=NetCDFGriddedByVariableName
+
+.. figure:: img/aggregation/MODIS-9.png
+   :width: 400px
+   :align: center
+
+Aggregating with the minimum kernel::
+
+  $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=min x=[-180,180,10],y=[-90,90,10] -o cloud-min
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-min.nc:product=NetCDFGriddedByVariableName
+
+.. figure:: img/aggregation/MODIS-10.png
+   :width: 400px
+   :align: center
+
+
+Gridded aggregation
+-------------------
 
 Aggregating onto a coarser grid::
 
