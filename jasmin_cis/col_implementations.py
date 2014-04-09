@@ -467,7 +467,7 @@ class stddev(Kernel):
         values = data.vals
         if len(values) == 0:
             raise ValueError
-        return std(values)
+        return std(values, ddof=1)
 
 
 class min(Kernel):
@@ -507,7 +507,7 @@ class full_average(Kernel):
         values = data.vals
         num_values = len(values)
         if num_values == 0: raise ValueError
-        return (mean(values), std(values), num_values)
+        return (mean(values), std(values, ddof=1), num_values)
 
 
 class nn_horizontal(Kernel):
@@ -911,6 +911,9 @@ class UngriddedGriddedColocator(Colocator):
 
         # Construct an output cube containing the colocated data.
         cube = self._create_colocated_cube(points, data, values, output_coords, constraint.fill_value)
+        data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
+        data_with_nan_and_inf_removed.set_fill_value(constraint.fill_value)
+        cube.data = data_with_nan_and_inf_removed
 
         return [cube]
 

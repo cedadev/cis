@@ -5,6 +5,7 @@ from nose.tools import istest, eq_, assert_almost_equal, raises
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.exceptions import ClassNotFoundError
 from test_util import mock
+import numpy as np
 
 
 def is_colocated(data1, data2):
@@ -106,7 +107,7 @@ class Test_full_average(KernelTests):
         no_points = new_data[2]
 
         eq_(means.data[0], 25.5)
-        assert_almost_equal(std_dev.data[0], 14.4308696897)
+        assert_almost_equal(std_dev.data[0], np.sqrt(212.5))
         eq_(no_points.data[0], 50)
 
     @istest
@@ -124,7 +125,7 @@ class Test_full_average(KernelTests):
         no_points = new_data[2]
 
         eq_(means.data[0], 25.5)
-        assert_almost_equal(std_dev.data[0], 14.4308696897)
+        assert_almost_equal(std_dev.data[0], np.sqrt(212.5))
         eq_(no_points.data[0], 50)
 
 
