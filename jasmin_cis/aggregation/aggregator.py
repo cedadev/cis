@@ -20,6 +20,15 @@ class Aggregator:
         self._grid = grid
 
     def aggregate_gridded(self, kernel):
+        # Make sure all coordinate have bounds - important for weighting and aggregating
+        for coord in self.data.coords():
+            if not coord.has_bounds():
+                coord.guess_bounds()
+                logging.warning("Creating guessed bounds as none exist in file")
+                new_coord_number = self.data.coord_dims(coord)
+                self.data.remove_coord(coord.name())
+                self.data.add_dim_coord(coord, new_coord_number)
+
         for coord in self.data.coords():
             grid, guessed_axis = self.get_grid(coord)
 
