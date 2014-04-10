@@ -821,7 +821,7 @@ class UngriddedGriddedColocator(Colocator):
                                           " than one is not supported (coordinate %s)", coord.name())
             # Ensure that bounds exist.
             if not coord.has_bounds():
-                logging.warning("Creating guessed bounds as none exist in file")
+                logging.info("Creating guessed bounds as none exist in file")
                 coord.guess_bounds()
             shape.append(coord.shape[0])
             output_coords.append(coord)
