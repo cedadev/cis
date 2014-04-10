@@ -39,7 +39,8 @@ class TestGriddedAggregation():
 
         result = numpy.array([2, 5, 8, 11, 14])
 
-        assert numpy.array_equal(result, cube_out.data)
+        # There is a small deviation to the weighting correction applied by Iris when completely collapsing
+        assert numpy.allclose(result, cube_out.data)
         assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     @istest
@@ -101,7 +102,7 @@ class TestGriddedAggregation():
 
         result = numpy.array([5, 12.5])
 
-        assert numpy.array_equal(result, cube_out.data)
+        assert numpy.allclose(result, cube_out.data)
 
     @istest
     def test_aggregation_on_three_dimensional_grid_with_time(self):
@@ -124,7 +125,7 @@ class TestGriddedAggregation():
                                     units.date2num(datetime.datetime(1984, 8, 30, 12, 0, 0)),
                                     units.date2num(datetime.datetime(1984, 9, 1, 20, 0))])
 
-        assert numpy.array_equal(result_data, cube_out.data)
+        assert numpy.allclose(result_data, cube_out.data)
         assert numpy.array_equal(result_coord, cube_out.coords('time')[0].points)
 
 
