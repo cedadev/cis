@@ -41,9 +41,11 @@ where:
 
   * ``t=[2011-11-03T12:00,2013-01,1m]``
 
-  .. note::  
-   The range specified is the very start and end of the grid, the actual midpoints of the aggregation cells will start at ``start + delta/2``.  CIS will throw a warning and automatically reduce the range if the grid requested goes outside the range of the gridded data. The start and end of the gridded data are considered to be from the start of the bounding box of the first cell to the end of the bounding box for the last cell.
-  
+  .. note:: The range specified is the very start and end of the grid, the actual midpoints of the aggregation cells will start at ``start + delta/2``.  CIS will throw a warning and automatically reduce the range if the grid requested goes outside the range of the gridded data. The start and end of the gridded data are considered to be from the start of the bounding box of the first cell to the end of the bounding box for the last cell.
+
+  .. warning:: When aggregating gridded data weighting for cell areas is only applied when using the ``mean`` kernel and collapsing a coordinate completely. In all other situations no weighting is applied.
+
+
 ``outputfile``
   is an optional argument to specify the name to use for the file output. This is automatically given a .nc extension and prepended with cis- to make it distinguishable as a colocated file. The default filename is cis-out.nc.
 
