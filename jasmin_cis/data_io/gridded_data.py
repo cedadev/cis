@@ -1,4 +1,5 @@
 from time import gmtime, strftime
+import logging
 
 import iris
 
@@ -26,7 +27,13 @@ def make_from_cube(cube):
 
 class GriddedData(iris.cube.Cube, CommonData):
     def __init__(self, *args, **kwargs):
-        super(GriddedData, self).__init__(*args, **kwargs)
+        try:
+            super(GriddedData, self).__init__(*args, **kwargs)
+        except ValueError:
+            # If standard name is not considered valid by Iris
+            rejected_name = kwargs.pop('standard_name')
+            logging.warning('Attempted to set invalid standard_name \'' + rejected_name + '\'.')
+            super(GriddedData, self).__init__(*args, **kwargs)
 
     @staticmethod
     def _wrap_cube_iterator(itr):
