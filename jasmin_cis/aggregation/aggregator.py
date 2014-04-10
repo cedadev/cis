@@ -29,6 +29,12 @@ class Aggregator:
                     grid = self._grid[guessed_axis.lower()]
 
             if grid is not None:
+                if not coord.has_bounds():
+                    coord.guess_bounds()
+                    logging.warning("Creating guessed bounds as none exist in file")
+                    new_coord_number = self.data.coord_dims(coord)
+                    self.data.remove_coord(coord.name())
+                    self.data.add_dim_coord(coord, new_coord_number)
                 if isnan(grid.delta):
                     self.data = self.data.collapsed(coord.name(), self.kernel)
                     logging.info('Aggregating on ' + coord.name() + ', collapsing completely and using ' +
