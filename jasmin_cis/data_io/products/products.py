@@ -388,7 +388,7 @@ class Aerosol_CCI(AProduct):
         return UngriddedData(data[variable], metadata, coords)
 
 
-class Caliop(AProduct):
+class abstract_Caliop(AProduct):
 
     def get_file_signature(self):
         '''
@@ -553,10 +553,10 @@ class Caliop(AProduct):
         '''
         return (data/scale_factor) + offset
 
-class Caliop_L2(Caliop):
+class Caliop_L2(abstract_Caliop):
 
     def get_file_signature(self):
-        return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
+        return [r'CAL_LID_L2_05kmAPro-Prov-V3.*hdf']
 
     def create_coords(self, filenames):
         return UngriddedCoordinates(super(Caliop_L2, self)._create_coord_list(filenames, index_offset=1))
@@ -578,10 +578,10 @@ class Caliop_L2(Caliop):
         return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
-class Caliop_L1(Caliop):
+class Caliop_L1(abstract_Caliop):
 
     def get_file_signature(self):
-        return [r'CAL_LID_L1-ValStage1-V3-01.*hdf']
+        return [r'CAL_LID_L1-ValStage1-V3.*hdf']
 
     def offset(self):
         return 0
