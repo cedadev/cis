@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type contour --cmap RdBu --xlabel "Overidden X Label" --title "Overidded Title" --height 5 --width 5 --xmin 15 --xmax 45 --xstep 20 --cbarorient vertical --fontsize 10 --output "O$SUBJECT.png"
+cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc:cmap=RdBu --type contour --xlabel "Overidden X Label" --title "Overidded Title" --height 5 --width 5 --xmin 15 --xmax 45 --xstep 20 --cbarorient vertical --fontsize 10 --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"
