@@ -98,3 +98,6 @@ class GriddedData(iris.cube.Cube, CommonData):
             self.attributes['history'] = timestamp + new_history
         else:
             self.attributes['history'] += '\n' + timestamp + new_history
+
+    def name(self):
+        return self.var_name

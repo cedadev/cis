@@ -59,7 +59,8 @@ class Generic_Plot(object):
     def unpack_data_items(self):
         def __get_data(axis):
             variable = self.plot_args[axis + "_variable"]
-            if variable == "default" or variable == self.packed_data_items[0].standard_name or variable == self.packed_data_items[0].long_name:
+            if variable == "default" or variable == self.packed_data_items[0].name() or \
+               variable == self.packed_data_items[0].standard_name or variable == self.packed_data_items[0].long_name:
                 return self.packed_data_items[0].data
             else:
                 if variable.startswith("search"):
