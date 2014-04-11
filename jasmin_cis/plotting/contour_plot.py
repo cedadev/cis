@@ -9,7 +9,6 @@ class Contour_Plot(Generic_Plot):
 
         :param data_item:    A dictionary containing the x coords, y coords and data as arrays
         '''
-        self.mplkwargs['cmap'] = self.plot_args['datagroups'][0]['cmap']
         self.contour_plot(False)
 
     def set_default_axis_label(self, axis):

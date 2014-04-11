@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc --type heatmap --cmap RdBu --ylabel OveriddenY --title OveriddenTitle --vmax 0.000135 --fontsize 10 --height 3.5 --cbarorient horizontal --output "O$SUBJECT.png"
+cis plot rain:${source_dir}xglnwa.pm.k8dec-k9nov.col.tm.nc:cmap=RdBu --type heatmap --ylabel OveriddenY --title OveriddenTitle --vmax 0.000135 --fontsize 10 --height 3.5 --cbarorient horizontal --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"

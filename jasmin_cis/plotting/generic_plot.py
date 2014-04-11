@@ -398,18 +398,10 @@ class Generic_Plot(object):
         """
 
         # Set the options specific to a datagroup with the contour type
-
-        if self.plot_args['datagroups'][self.datagroup]['contlabel'] is None:
-            # Default to contour labels on if not filled, off if filled
-            self.plot_args['datagroups'][self.datagroup]['contlabel'] = not filled
-
+        self.mplkwargs['cmap'] = self.plot_args['datagroups'][self.datagroup]['cmap']
         self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
         self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
-        if self.plot_args['datagroups'][self.datagroup]['color'] is None and\
-           self.plot_args['datagroups'][self.datagroup]['cmap'] is None and not filled:
-            self.mplkwargs["colors"] = "black"
-        else:
-            self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
+        self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
         self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
 
         if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
