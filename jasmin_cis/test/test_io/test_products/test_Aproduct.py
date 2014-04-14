@@ -15,8 +15,8 @@ def test_automatic_detection_of_product_for_existing_product():
     product_cls = __get_class(valid_cloudsat_RVOD_file)
     eq_(product_cls.__name__,'Cloudsat_2B_CWC_RVOD')
 
-    product_cls = __get_class(valid_1d_filename)
-    eq_(product_cls.__name__,'Xglnwa_vprof')
+    product_cls = __get_class(valid_caliop_l2_filename)
+    eq_(product_cls.__name__,'Caliop_L2')
 
 @istest
 @raises(ClassNotFoundError)

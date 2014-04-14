@@ -145,39 +145,6 @@ class TestNCAR_NetCDF_RAF(ProductTests):
         self.valid_variable = valid_NCAR_NetCDF_RAF_variable
         self.product = NCAR_NetCDF_RAF
 
-# class TestXglnwa(ProductTests):
-#
-#     def __init__(self):
-#         self.filename = valid_1d_filename
-#         self.invalid_filename = "im_an_invalid_file"
-#         self.invalid_format = non_netcdf_file
-#         self.valid_variable = valid_variable_in_valid_filename
-#         self.invalid_variable = "im_an_invalid_variable"
-#         self.file_without_read_permissions = file_without_read_permissions
-#         self.product = Xglnwa
-
-class TestXglnwa_vprof(ProductTests):
-
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_1d_filename, valid_variable_in_valid_filename
-        self.filename = valid_1d_filename
-        self.valid_variable = valid_variable_in_valid_filename
-        self.product = Xglnwa_vprof
-
-
-class TestXenida(ProductTests):
-
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_xenida_filename, valid_xenida_variable
-        self.filename = valid_xenida_filename
-        self.valid_variable = valid_xenida_variable
-        self.product = Xenida
-
-    @nottest
-    def test_write_coords(self):
-        # This won't work for model data yet as the coordinates aren't all the same shape,
-        #  they need to be 'expanded'
-        pass
 
 class TestAeronet(ProductTests):
     def __init__(self):

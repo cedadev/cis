@@ -53,7 +53,7 @@ valid_NCAR_NetCDF_RAF_variable = 'ATX'
 
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
-valid_zonal_time_mean_CMIP5_variable = "toa_outgoing_shortwave_flux_assuming_clear_sky"
+valid_zonal_time_mean_CMIP5_variable = "rsutcs"
 
 test_directory = make_pathname('test_directory_for_parser')
 test_directory_file1 = test_directory + "/test_file_for_parser_1"
