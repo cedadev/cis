@@ -36,10 +36,10 @@ valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010
 valid_caliop_l1_variable = "Tropopause_Temperature"
 
 valid_xenida_filename = make_pathname("xenida.pah9440.nc")
-valid_xenida_variable = "mass_fraction_of_cloud_liquid_water_in_air"
+valid_xenida_variable = "specific_humidity"
 
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
-valid_1d_vairable = "q"
+valid_1d_variable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
 valid_cis_col_file = make_pathname("cis-col-Agoufou_seasonal_average.nc")

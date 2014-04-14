@@ -79,7 +79,7 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -194,7 +194,7 @@ class MODIS_L3(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -291,7 +291,7 @@ class MODIS_L2(AProduct):
 
         return CoordList([lat_coord,lon_coord,time_coord])
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -336,7 +336,7 @@ class Cloud_CCI(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -374,7 +374,7 @@ class Aerosol_CCI(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -484,7 +484,7 @@ class abstract_Caliop(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -557,7 +557,7 @@ class Caliop_L2(abstract_Caliop):
     def get_file_signature(self):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3.*hdf']
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(super(Caliop_L2, self)._create_coord_list(filenames, index_offset=1))
 
     def create_data_object(self, filenames, variable):
@@ -748,7 +748,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
             cube = gridded_data.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
             raise InvalidVariableError("Variable not found: " + str(variable) +
-                                       "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
+                                       "\nTo see a list of variables run: cis info " + filenames[0])
         except ValueError as e:
             raise IOError(e)
 
@@ -854,7 +854,7 @@ class Aeronet(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):

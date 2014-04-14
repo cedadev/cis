@@ -35,20 +35,23 @@ class ProductTests():
     @istest
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
-        coords = self.product().create_coords([self.filename])
+        coords = self.product().create_coords([self.filename], self.valid_variable)
         coord_list = coords.coords()
 
         for coord in coord_list:
-            logging.debug(coord.metadata.standard_name)
+            logging.debug(coord.standard_name)
 
-        assert(all([coord.metadata.standard_name in valid_standard_names for coord in coord_list]))
+        for coord in coord_list:
+            print coord.standard_name
+
+        assert(all([coord.standard_name in valid_standard_names for coord in coord_list]))
 
     @istest
     def test_write_coords(self):
         from jasmin_cis.data_io.write_netcdf import write_coordinates
         from os import remove
         test_file = '/tmp/test_out.nc'
-        coords = self.product().create_coords([self.filename])
+        coords = self.product().create_coords([self.filename], self.valid_variable)
         write_coordinates(coords, test_file)
         remove(test_file)
 
@@ -113,7 +116,6 @@ class TestMODIS_L2(ProductTests):
         self.filename = valid_modis_l2_filename
         self.valid_variable = valid_modis_l2_variable
         self.product = MODIS_L2
-
 
 class TestCloud_CCI(ProductTests):
     def __init__(self):
@@ -191,3 +193,43 @@ class TestASCII(ProductTests):
         data = self.product().create_data_object([self.filename], True)
         assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012,8,25,15,32,03)))
         assert(data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012,8,26)))
+
+
+class TestNetCDF_Gridded_xenida(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_xenida_filename, valid_xenida_variable
+        self.filename = valid_xenida_filename
+        self.valid_variable = valid_xenida_variable
+        self.product = default_NetCDF
+
+    #TODO Create a new implementation of bypassed tests
+    @nottest
+    def test_write_coords(self):
+        # This won't work for model data yet as the coordinates aren't all the same shape, they need to be 'expanded'
+        pass
+
+    @nottest
+    def test_create_coords(self):
+        # This won't work for model data yet as the coordinates can have names other than the expected ones
+        pass
+
+
+class TestNetCDF_Gridded_xglnwa(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_1d_filename, valid_1d_variable
+        self.filename = valid_1d_filename
+        self.valid_variable = valid_1d_variable
+        self.product = default_NetCDF
+
+    #TODO Create a new implementation of bypassed tests
+    @nottest
+    def test_write_coords(self):
+        # This won't work for model data yet as the coordinates aren't all the same shape, they need to be 'expanded'
+        pass
+
+    @nottest
+    def test_create_coords(self):
+        # This won't work for model data yet as the coordinates can have names other than the expected ones
+        pass
