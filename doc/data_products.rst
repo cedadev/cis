@@ -39,7 +39,7 @@ It can also read the following gridded data types:
   ==================== =========================== ================== =================================================================================
   MODIS L3 daily       MODIS_L3                    Satellite          \*MYD08_D3*.hdf, \*MOD08_D3*.hdf, \*MOD08_E3*.hdf  
   Net_CDF Gridded Data NetCDFGridded               Gridded Model Data \*.nc (this is the default for NetCDF Files that do not match any other signature)
-  ====================  =========================== ================== =================================================================================
+  ==================== =========================== ================== =================================================================================
 
 
 The file signature is used to automatically recognise which product definition to use. Note the product can overridden easily by being specified at the command line.
