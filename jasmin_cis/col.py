@@ -131,6 +131,7 @@ class Colocate(object):
                 self.coords_to_be_written = False
 
             if isinstance(data, iris.cube.Cube):
+                self.output_file = self.output_file.replace('cis-', '')
                 iris.save(data, self.output_file)
             else:
                 add_data_to_file(data, self.output_file)

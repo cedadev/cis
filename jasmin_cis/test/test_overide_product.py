@@ -5,10 +5,10 @@ from jasmin_cis.parse import parse_args
 
 @istest
 def can_overide_default_product():
-    from jasmin_cis.data_io.products.products import Caliop_L2, NetCDFGriddedByVariableName
+    from jasmin_cis.data_io.products.products import Caliop_L2, NetCDF_Gridded
     filename = valid_caliop_l2_filename
     eq_(__get_class(filename), Caliop_L2)
-    eq_(__get_class(filename, "NetCDFGriddedByVariableName"), NetCDFGriddedByVariableName)
+    eq_(__get_class(filename, "NetCDF_Gridded"), NetCDF_Gridded)
 
 @istest
 def should_raise_error_with_unknown_product_specified():

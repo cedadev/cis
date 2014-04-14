@@ -47,6 +47,7 @@ class Aggregate():
         data.add_history(history)
 
         if isinstance(data, iris.cube.Cube):
+            self._output_file = self._output_file.replace('cis-', '')
             iris.save(data, self._output_file)
         else:
             raise IOError('Expecting an Iris cube to be returned after aggegation, but got something else.')

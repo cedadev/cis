@@ -6,7 +6,6 @@ from jasmin_cis.data_io.Coord import Coord, CoordList
 import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedCoordinates
-import jasmin_cis.exceptions
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
 
@@ -603,7 +602,7 @@ class Caliop_L1(abstract_Caliop):
         return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
-class Cis(AProduct):
+class cis(AProduct):
 
     def get_file_signature(self):
         return [r'cis\-.*\.nc']
@@ -639,7 +638,8 @@ class Cis(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
-class NetCDF_CF(AProduct):
+
+class abstract_NetCDF_CF(AProduct):
 
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF data yet...
@@ -672,7 +672,7 @@ class NetCDF_CF(AProduct):
         return self.create_coords(filenames, variable)
 
 
-class NCAR_NetCDF_RAF(NetCDF_CF):
+class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
 
     def get_file_signature(self):
         return [r'RF.*\.nc']
@@ -707,7 +707,7 @@ class NCAR_NetCDF_RAF(NetCDF_CF):
         return self.create_coords(filenames, variable)
 
 
-class NetCDF_CF_Gridded(NetCDF_CF):
+class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
 
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF model data yet...
@@ -786,7 +786,7 @@ class DisplayConstraint(iris.Constraint):
             return super(DisplayConstraint, self).__str__()
 
 
-class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
+class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
     """Reads gridded netCDF identifying variable by variable name.
     """
     def get_file_signature(self):
@@ -806,7 +806,7 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         variable_constraint = None
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
-        cube = super(NetCDFGriddedByVariableName, self).create_coords(filenames, variable_constraint)
+        cube = super(NetCDF_Gridded, self).create_coords(filenames, variable_constraint)
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)
         except CoordinateNotFoundError:
@@ -824,7 +824,7 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         variable_constraint = None
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
-        cube = super(NetCDFGriddedByVariableName, self).create_data_object(filenames, variable_constraint)
+        cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable_constraint)
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)
         except CoordinateNotFoundError:
@@ -872,6 +872,7 @@ class Aeronet(AProduct):
                              Metadata(name=variable, long_name=variable, shape=(len(data_obj),), missing_value=-999.0),
                              coords)
 
+
 class ASCII_Hyperpoints(AProduct):
 
     def get_file_signature(self):
@@ -916,3 +917,12 @@ class ASCII_Hyperpoints(AProduct):
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, True)
+
+
+class default_NetCDF(NetCDF_Gridded):
+    """
+    This class should always be the last in the sorted list (last alphabetically) - and hence the default for *.nc
+    files which have not otherwise been matched.
+    """
+    def get_file_signature(self):
+        return [r'.*\.nc']

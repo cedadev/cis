@@ -135,7 +135,7 @@ class TestCis(ProductTests):
         from jasmin_cis.test.test_files.data import valid_cis_col_file
         self.filename = valid_cis_col_file
         self.valid_variable = 'AOT_440'
-        self.product = Cis
+        self.product = cis
 
 class TestNCAR_NetCDF_RAF(ProductTests):
 

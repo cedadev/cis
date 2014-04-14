@@ -62,6 +62,7 @@ class Subset(object):
             subset.add_history(history)
 
             if isinstance(subset, cube.Cube):
+                self._output_file = self._output_file.replace('cis-', '')
                 iris.save(subset, self._output_file)
             else:
                 write_coordinates(subset, self._output_file)
