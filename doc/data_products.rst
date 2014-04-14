@@ -23,8 +23,9 @@ So far, CIS can read the following ungridded data files:
   CloudSAT           Cloudsat_2B_CWC_RVOD   Satellite         LWP,precip,Z(2,3,3D)   .*2B.CWC.RVOD.*.hdf                                                                                     
   MODIS L2           MODIS_L2               Satellite         AOT(2D),CTP(2D)        .*MYD06_L2.*.hdf,.*MOD06_L2.*.hdf,.*MYD04_L2.*.hdf,.*MOD04_L2.*.hdf, .*MYDATML2.*.hdf,.*MODATML2.*.hdf  
   Cloud CCI          Cloud_CCI              Satellite         ?                      .*ESACCI.*CLOUD.*                                                                                       
-  Aerosol CCI        Aerosol_CCI            Satellite         ?                      .*ESACCI.*AEROSOL.*                                                                                     
-  CALIOP             Caliop                 Satellite         CTT(2D),Beta(3D)       CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf                                                                     
+  Aerosol CCI        Aerosol_CCI            Satellite         ?                      .*ESACCI.*AEROSOL.*          
+  CALIOP L1          Caliop                 Satellite         ?                      CAL_LID_L1-ValStage1-V3.*hdf                                                                                                                                                
+  CALIOP L2          Caliop                 Satellite         CTT(2D),Beta(3D)       CAL_LID_L2_05kmAPro-Prov-V3.*hdf                                                                     
   AERONET            Aeronet                Ground-stations   AOT(2D)                .*.lev20                                                                                                
   (internal)         CisCol                 N/A               N/A                    cis-.*.nc                                                                                           
   csv datapoints     ASCII_Hyperpoints      N/A               N/A                    .*.txt                                                                                                  
@@ -33,14 +34,12 @@ So far, CIS can read the following ungridded data files:
 
 It can also read the following gridded data types:
 
-================= ============== =========== ==================== =====================================================
-  Dataset          Product name   Type        Scientific Product   File Signature                                      
-================= ============== =========== ==================== =====================================================
-  ?                Xglnwa_vprof   Model       ?                    .*xglnwa.*vprof.*.nc                                
-  ?                Xglnwa         Model       ?                    .*xglnwa.*.nc                                       
-  ?                Xenida         Model       ?                    .*xenida.*.nc                                       
-  MODIS L3 daily   MODIS_L3       Satellite   AOT(2D)              .*MYD08_D3.*.hdf,.*MOD08_D3.*.hdf,.*MOD08_E3.*.hdf  
-================= ============== =========== ==================== =====================================================
+===================== =========================== ================== ==================== =====================================================
+  Dataset             Product name                Type               Scientific Product   File Signature                                      
+===================== =========================== ================== ==================== =====================================================
+  NetCDF CF Compliant NetCDFGriddedByVariableName Gridded Model Data Simulation Data      None - specify manually                   
+  MODIS L3 daily      MODIS_L3                    Satellite          AOT(2D)              .*MYD08_D3.*.hdf,.*MOD08_D3.*.hdf,.*MOD08_E3.*.hdf  
+===================== =========================== ================== ==================== =====================================================
 
 
 The file signature is used to automatically recognise which product definition to use. Note the product can overridden easily by being specified at the command line.

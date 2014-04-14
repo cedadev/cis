@@ -388,7 +388,7 @@ class Aerosol_CCI(AProduct):
         return UngriddedData(data[variable], metadata, coords)
 
 
-class Caliop(AProduct):
+class abstract_Caliop(AProduct):
 
     def get_file_signature(self):
         '''
@@ -553,10 +553,10 @@ class Caliop(AProduct):
         '''
         return (data/scale_factor) + offset
 
-class Caliop_L2(Caliop):
+class Caliop_L2(abstract_Caliop):
 
     def get_file_signature(self):
-        return [r'CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf']
+        return [r'CAL_LID_L2_05kmAPro-Prov-V3.*hdf']
 
     def create_coords(self, filenames):
         return UngriddedCoordinates(super(Caliop_L2, self)._create_coord_list(filenames, index_offset=1))
@@ -578,10 +578,10 @@ class Caliop_L2(Caliop):
         return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
-class Caliop_L1(Caliop):
+class Caliop_L1(abstract_Caliop):
 
     def get_file_signature(self):
-        return [r'CAL_LID_L1-ValStage1-V3-01.*hdf']
+        return [r'CAL_LID_L1-ValStage1-V3.*hdf']
 
     def offset(self):
         return 0
@@ -831,116 +831,6 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
             pass
         return cube
 
-
-class Xglnwa_vprof(NetCDF_CF_Gridded):
-
-    def get_file_signature(self):
-        return [r'.*xglnwa.*vprof.*\.nc']
-
-    #TODO Why does this return UngriddedData/Coordinates when create_data_object returns a cube?
-    def create_coords(self, filenames, variable = None):
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-
-        variables = [ "latitude" ]
-        logging.info("Listing coordinates: " + str(variables))
-
-        if variable is not None:
-            variables.append(variable)
-
-        data_variables = read_many_files(filenames, variables)
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "X"))
-
-        if variable is None:
-            return UngriddedCoordinates(coords)
-        else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
-
-    def create_data_object(self, filenames, variable):
-        from iris import AttributeConstraint
-        # In this case we use the variable as a name constraint as the variable names themselves aren't obvious
-        var_constraint = AttributeConstraint(name=variable)
-
-        return super(Xglnwa_vprof, self).create_data_object(filenames, var_constraint)
-
-class Xglnwa(NetCDF_CF_Gridded):
-
-    def get_file_signature(self):
-        return [r'.*xglnwa.*\.nc']
-
-    def create_coords(self, filenames, variable = None):
-        # TODO Expand coordinates
-        # For gridded data sets this will actually return coordinates which are too short
-        #  we need to think about how to expand them here
-        """
-
-        :param filenames: List of filenames to read coordinates from
-        :param variable: Optional variable to read while we're reading the coordinates
-        :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
-        return super(Xglnwa, self).create_coords(filenames, variable)
-
-
-    def create_data_object(self, filenames, variable):
-        from iris import AttributeConstraint
-        # In this case we use the variable as a name constraint as the variable names themselves aren't obvious
-        var_constraint = AttributeConstraint(name=variable)
-
-        return super(Xglnwa, self).create_data_object(filenames, var_constraint)
-
-class Xenida(NetCDF_CF_Gridded):
-
-    def get_file_signature(self):
-        return [r'.*xenida.*\.nc']
-
-    #TODO Why does this return UngriddedCoordinates when create_data_object returns a cube?
-    def create_coords(self, filenames, variable=None):
-        # TODO Expand coordinates and read multiple files
-        # For gridded data sets this will actually return coordinates which are too short
-        #  we need to think about how to expand them here
-        """
-
-        :param filenames: List of filenames to read coordinates from
-        :param variable: Optional variable to read while we're reading the coordinates
-        :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
-        from jasmin_cis.data_io.netcdf import read, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-
-        variables = [ "latitude", "longitude", "atmosphere_hybrid_height_coordinate_ak", "time" ]
-        logging.info("Listing coordinates: " + str(variables))
-
-        data_variables = read(filenames[0], variables)
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
-        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
-
-
-        altitude = Coord(data_variables["atmosphere_hybrid_height_coordinate_ak"], get_metadata(data_variables["atmosphere_hybrid_height_coordinate_ak"]), "Z")
-        altitude.standard_name = 'altitude'
-
-
-        coords.append(altitude)
-
-        #days since 1979-4-1
-        time = Coord(data_variables["time"], get_metadata(data_variables["time"]), "T")
-        time.convert_to_std_time()
-        coords.append(time)
-
-        return UngriddedCoordinates(coords)
-
-    def create_data_object(self, filenames, variable):
-        from iris.aux_factory import HybridHeightFactory
-        from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
-
-        cube = super(Xenida, self).create_data_object(filenames, variable)
-        cube.add_aux_factory(HybridHeightFactory(cube.coords()[4]))
-        cube = convert_cube_time_coord_to_standard_time(cube)
-
-        return cube
 
 class Aeronet(AProduct):
 

@@ -38,7 +38,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
     user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
-        if len(data_item.coords(name=user_specified_variable)) == 0 and len(data_item.coords(standard_name=user_specified_variable)) == 0 and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
+        if len(data_item.coords(name=user_specified_variable)) == 0 and len(data_item.coords(standard_name=user_specified_variable)) == 0 and data_item.name() != user_specified_variable and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
             raise InvalidVariableError(user_specified_variable + " is not a valid variable")
 
     return user_specified_variable
@@ -183,7 +183,7 @@ def aggregate_cmd(main_arguments):
     variable = input_group['variable']
     filenames = input_group['filenames']
     product = input_group["product"] if input_group["product"] is not None else None
-    kernel = input_group["kernel"] if input_group["kernel"] is not None else None
+    kernel = input_group["kernel"] if input_group["kernel"] is not None else 'mean'
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-", main_arguments.output + ".nc")

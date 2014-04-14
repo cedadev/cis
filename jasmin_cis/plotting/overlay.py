@@ -12,8 +12,17 @@ class Overlay(Generic_Plot):
     def plot(self):
         for i in numpy.arange(0, len(self.plot_args['datagroups'])):
 
-            self.mplkwargs['cmap'] = self.plot_args['datagroups'][i]['cmap']
-            self.mplkwargs['alpha'] = 1.0 - self.plot_args['datagroups'][i]['transparency']  # change to an opacity
+            if self.plot_args['datagroups'][i]['color'] is None and self.plot_args['datagroups'][i]['cmap'] is None \
+               and self.plot_args['datagroups'][i]['type'] == 'contour':
+                self.plot_args['datagroups'][i]['color'] = "black"
+
+            if self.plot_args['datagroups'][i]['contlabel'] is None:
+                # Default to contour labels on if not filled, off if filled
+                self.plot_args['datagroups'][i]['contlabel'] = \
+                    self.plot_args['datagroups'][i]['type'] == 'contour'
+
+            if self.plot_args['datagroups'][i]['transparency'] is not None:
+                self.mplkwargs['alpha'] = 1.0 - self.plot_args['datagroups'][i]['transparency']  # change to an opacity
 
             if self.plot_args['datagroups'][i]['type'] == 'heatmap':
                 Heatmap([self.packed_data_items[i]], self.plot_args, wrap=True, *self.mplargs, **self.mplkwargs)

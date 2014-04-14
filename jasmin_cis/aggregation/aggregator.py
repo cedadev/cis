@@ -1,15 +1,17 @@
 import logging
 import datetime
 import iris.coord_categorisation
+import iris.analysis.cartography
 from iris.coords import DimCoord
 import numpy
-from jasmin_cis.col_implementations import GeneralGriddedColocator, BinningCubeCellConstraint, mean, CubeCellConstraint
+from jasmin_cis.col_implementations import GeneralGriddedColocator, BinningCubeCellConstraint
 from jasmin_cis.data_io.gridded_data import GriddedData
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint
 from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.utils import isnan
+from jasmin_cis.exceptions import ClassNotFoundError
 
 
 class Aggregator:
@@ -18,12 +20,29 @@ class Aggregator:
         self._grid = grid
 
     def aggregate_gridded(self, kernel):
+        # Make sure all coordinate have bounds - important for weighting and aggregating
+        for coord in self.data.coords():
+            if not coord.has_bounds():
+                coord.guess_bounds()
+                logging.warning("Creating guessed bounds as none exist in file")
+                new_coord_number = self.data.coord_dims(coord)
+                self.data.remove_coord(coord.name())
+                self.data.add_dim_coord(coord, new_coord_number)
+
         for coord in self.data.coords():
             grid, guessed_axis = self.get_grid(coord)
 
             if grid is not None:
                 if isnan(grid.delta):
-                    self.data = self.data.collapsed(coord.name(), kernel)
+                    if isinstance(kernel, iris.analysis.WeightedAggregator):
+                        # Weights to correctly calculate areas. We need to remove the aux_coords first though, to
+                        # prevent Iris getting confused between new and old coordinates.
+                        area_weights = iris.analysis.cartography.area_weights(self.data)
+                        self.data = self.data.collapsed(coord.name(), kernel, weights=area_weights)
+                    elif isinstance(kernel, iris.analysis.Aggregator):
+                        self.data = self.data.collapsed(coord.name(), kernel)
+                    else:
+                        raise ClassNotFoundError('Error - unexpected aggregator type.')
                     logging.info('Aggregating on ' + coord.name() + ', collapsing completely and using ' +
                                  kernel.cell_method + ' kernel.')
                 else:
@@ -124,8 +143,9 @@ class Aggregator:
                                      'information will be missing for this coordinate.')
                     new_coord_number = self.data.coord_dims(coord)
 
-                    # Remove the old coord and add the new one
+                    # Remove the old coord, and the aux categroisation coord, and add the new one
                     self.data.remove_coord(coord.name())
+                    self.data.remove_coord('aggregation_coord_for_'+coord.name())
                     self.data.add_dim_coord(new_coord, new_coord_number)
                 # 'data' will have ended up as a cube again, now change it back to a GriddedData object
                 self.data.__class__ = GriddedData

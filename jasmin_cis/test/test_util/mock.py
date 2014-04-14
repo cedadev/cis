@@ -558,7 +558,8 @@ def make_dummy_1d_ungridded_data_with_invalid_standard_name():
     x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
     coords = CoordList([x])
     data = gen_random_data_array((5,),4.0,1.0)
-    return UngriddedData(data, Metadata(standard_name='notavalidname', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(name='rain', standard_name='notavalidname',
+                                        long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 
@@ -609,7 +610,9 @@ def make_regular_2d_ungridded_data():
     data = np.reshape(np.arange(15)+1.0,(5,3))
 
     coords = CoordList([x, y])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_rate',
+                                        long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
 
 
 def make_regular_2d_ungridded_data_with_missing_values():
@@ -655,7 +658,8 @@ def make_regular_2d_ungridded_data_with_missing_values():
 
     coords = CoordList([x, y])
     return UngriddedData(data,
-                         Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                         Metadata(name='rain', standard_name='rainfall_rate',
+                                  long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                   units="kg m-2 s-1", missing_value=-999),
                          coords)
 

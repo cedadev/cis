@@ -47,7 +47,7 @@ Scatter plus Filled Contour
 
   cis subset rsutcs:cis-HadGEM_rsutcs-subset.nc:NetCDFGriddedByVariableName x=[-180,-90],y=[0,90] -o HadGEM_rsutcs-subset2
 
-  cis plot GGALT:RF04.20090114.192600_035100.PNI.nc:type=scatter rsutcs:cis-HadGEM_rsutcs-subset2.nc:product=NetCDFGriddedByVariableName,type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.3,contlabel=true,contfontsize=18 --type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 -o overlay4.png
+  cis plot GGALT:RF04.20090114.192600_035100.PNI.nc:type=scatter rsutcs:cis-HadGEM_rsutcs-subset2.nc:product=NetCDFGriddedByVariableName,type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,contlabel=true,contfontsize=18 --type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 -o overlay4.png
 
 
 .. image:: img/overlay4.png
@@ -55,7 +55,7 @@ Scatter plus Filled Contour
 
 ::
 
-  cis plot GGALT:RF04.20090114.192600_035100.PNI.nc:type=scatter rsutcs:cis-HadGEM_rsutcs-subset2.nc:product=NetCDFGriddedByVariableName,type=contourf,contlevels=[40,50,100],transparency=0.7,contlabel=true,contfontsize=18,cmap=Reds --type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 --nasabluemarble -o overlay5.png
+  cis plot GGALT:RF04.20090114.192600_035100.PNI.nc:type=scatter rsutcs:cis-HadGEM_rsutcs-subset2.nc:product=NetCDFGriddedByVariableName,type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,contfontsize=18,cmap=Reds --type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 --nasabluemarble -o overlay5.png
 
 
 .. image:: img/overlay5.png
