@@ -219,71 +219,81 @@ def make_square_5x3_2d_cube():
 
 
 class TestSepConstraintWithGriddedData(object):
-    # def test_gridded_gridded_nn_for_same_grids_check_returns_original_data(self):
-    #     sample_cube = mock.make_mock_cube()
-    #     data_cube = mock.make_mock_cube()
-    #
-    #     col = self.colocator
-    #
-    #     out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
-    #
-    #     assert np.array_equal(data_cube.data, out_cube.data)
-    #     assert np.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
-    #     assert np.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
-
-
     @istest
-    def test_horizontal_constraint_in_2d_for_same_grids_check_returns_original_data(self):
-        sample_cube = gridded_data.make_from_cube(make_square_5x3_2d_cube())
+    def test_horizontal_constraint_for_same_2d_grids_returns_original_data(self):
+        # Simple case of lat/lon grid with dimensions in that order.
+        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube())
         data_cube = gridded_data.make_from_cube(mock.make_mock_cube())
 
-        g_data_points = data_cube.get_non_masked_points()
+        data_points = data_cube.get_non_masked_points()
 
         sample_points = sample_cube.get_all_points()
         coord_map = make_coord_map(sample_cube, data_cube)
 
-        # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
-        #  in each direction
+        # Make separation constraint small enough to include only the corresponding point in the data cube.
         constraint = SepConstraintKdtree(h_sep=400)
 
         index = HaversineDistanceKDTreeIndex()
-        index.index_data(sample_points, g_data_points, coord_map, leafsize=2)
+        index.index_data(sample_points, data_points, coord_map, leafsize=2)
         constraint.haversine_distance_kd_tree_index = index
 
-        # This should leave us with 4 points
-        ref_vals = np.array([10, 11, 13, 14])
+        for idx, sample_point in enumerate(sample_points):
+            out_points = constraint.constrain_points(sample_point, data_points)
+            assert(len(out_points) == 1)
+            assert(out_points[0].val[0] == data_points[idx].val[0])
 
-        new_points = constraint.constrain_points(sample_points[0], g_data_points)
-        new_vals = new_points.vals
 
-        eq_(ref_vals.size, new_vals.size)
-        assert(np.equal(ref_vals, new_vals).all())
+    @istest
+    def test_horizontal_constraint_for_same_3d_grids_returns_original_data(self):
+        # Create sample and data cubes that include a time coordinate with the dimensions in reverse of normal order.
+        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube(
+            lat_dim_length=5, lon_dim_length=3, time_dim_length=2, dim_order=['time', 'lon', 'lat']))
+        data_cube = gridded_data.make_from_cube(mock.make_mock_cube(
+            lat_dim_length=5, lon_dim_length=3, time_dim_length=2, dim_order=['time', 'lon', 'lat']))
+
+        data_points = data_cube.get_non_masked_points()
+
+        sample_points = sample_cube.get_all_points()
+        coord_map = make_coord_map(sample_cube, data_cube)
+
+        # Make separation constraint small enough to include only the corresponding point in the data cube.
+        constraint = SepConstraintKdtree(h_sep=400)
+
+        index = HaversineDistanceKDTreeIndex()
+        index.index_data(sample_points, data_points, coord_map, leafsize=2)
+        constraint.haversine_distance_kd_tree_index = index
+
+        for idx, sample_point in enumerate(sample_points):
+            out_points = constraint.constrain_points(sample_point, data_points)
+            # Two times for each spatial position.
+            assert(len(out_points) == 2)
+            assert(data_points[idx].val[0] in [p.val[0] for p in out_points])
 
     @istest
     def test_horizontal_constraint_in_2d_with_missing_values(self):
-        ug_data = mock.make_regular_2d_ungridded_data_with_missing_values()
-        ug_data_points = ug_data.get_non_masked_points()
-        coord_map = None
+        # Test with standard 2d grids but with missing data.
+        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube())
+        data_cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube_with_missing_data())
 
-        # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
-        #  in each direction
+        data_points = data_cube.get_non_masked_points()
+
+        sample_points = sample_cube.get_all_points()
+        coord_map = make_coord_map(sample_cube, data_cube)
+
+        # Make separation constraint small enough to include only the corresponding point in the data cube.
         constraint = SepConstraintKdtree(h_sep=400)
 
         index = HaversineDistanceKDTreeIndex()
-        sample_points = None  # Not used
-        index.index_data(sample_points, ug_data_points, coord_map, leafsize=2)
+        index.index_data(sample_points, data_points, coord_map, leafsize=2)
         constraint.haversine_distance_kd_tree_index = index
 
-        for sample_point in ug_data.get_all_points():
-            new_points = constraint.constrain_points(sample_point, ug_data_points)
-            new_vals = new_points.vals
-            if sample_point.val[0] is np.ma.masked:
-                ref_vals = np.array([])
+        for idx, sample_point in enumerate(sample_points):
+            out_points = constraint.constrain_points(sample_point, data_points)
+            if data_points[idx].val[0] is np.ma.masked:
+                assert(len(out_points) == 0)
             else:
-                ref_vals = np.array([sample_point.val])
-
-            eq_(ref_vals.size, new_vals.size)
-            assert(np.equal(ref_vals, new_vals).all())
+                assert(len(out_points) == 1)
+                assert(out_points[0].val[0] == data_points[idx].val[0])
 
 
 if __name__ == '__main__':

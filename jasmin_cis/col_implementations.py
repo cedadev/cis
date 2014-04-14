@@ -882,7 +882,7 @@ class GeneralGriddedColocator(Colocator):
     def colocate(self, points, data, constraint, kernel):
         """
         :param points: cube defining the sample points
-        :param data: UngriddedData object providing data to be co-located
+        :param data: CommonData object providing data to be co-located
         :param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
                            data based on it's internal parameters
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
@@ -906,7 +906,7 @@ class GeneralGriddedColocator(Colocator):
         # if isinstance(data, UngriddedData):
         #     data_points = data.get_non_masked_points()
         # else:
-        #     raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
+        #     raise ValueError("GeneralGriddedColocator requires ungridded data to colocate")
         data_points = data.get_non_masked_points()
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.

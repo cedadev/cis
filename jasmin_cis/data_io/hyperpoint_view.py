@@ -144,9 +144,10 @@ class GriddedHyperPointView(HyperPointView):
         """
         self.data = data
         self.num_dimensions = len(data.shape)
-        self.coords = [None] * len(dim_coords_and_dims)
+        self.coords = [None] * self.num_dimensions
         self.dims_to_std_coords_map = {}
         # Determine which standard coordinate corresponds to which cube dimension.
+        # self.coords holds coordinates in the order of the array dimensions.
         for sc_idx, cd in enumerate(dim_coords_and_dims):
             if cd is not None:
                 self.coords[cd[1]] = cd[0]

@@ -1,7 +1,6 @@
 from nose.tools import istest, raises
 import datetime
 import numpy
-from jasmin_cis.data_io.Coord import CoordList
 from jasmin_cis.col_implementations import GeneralGriddedColocator, mean, CubeCellConstraint, \
     BinningCubeCellConstraint
 from jasmin_cis.test.test_util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
@@ -9,21 +8,6 @@ from jasmin_cis.test.test_util.mock import make_mock_cube, make_dummy_ungridded_
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
     make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
     make_square_5x3_2d_cube_with_decreasing_latitude
-
-
-@istest
-@raises(ValueError)
-def test_throws_value_error_with_empty_coord_list():
-    sample_cube = make_mock_cube()
-    empty_coord_list = CoordList()
-
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
-
-    try:
-        col.colocate(points=sample_cube, data=empty_coord_list, constraint=con, kernel=mean())[0]
-    except ValueError:
-        raise
 
 
 @istest
