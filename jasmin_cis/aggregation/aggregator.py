@@ -22,7 +22,7 @@ class Aggregator:
     def aggregate_gridded(self, kernel):
         # Make sure all coordinate have bounds - important for weighting and aggregating
         for coord in self.data.coords():
-            if not coord.has_bounds():
+            if not coord.has_bounds() and len(coord.points) > 1:
                 coord.guess_bounds()
                 logging.warning("Creating guessed bounds as none exist in file")
                 new_coord_number = self.data.coord_dims(coord)

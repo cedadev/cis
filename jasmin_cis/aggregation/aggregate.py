@@ -9,6 +9,7 @@ from jasmin_cis.exceptions import CISError, InvalidVariableError
 from jasmin_cis.cis import __version__
 from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels
 from iris.exceptions import IrisError
+from jasmin_cis.utils import remove_file_prefix
 
 
 class Aggregate():
@@ -47,7 +48,7 @@ class Aggregate():
         data.add_history(history)
 
         if isinstance(data, iris.cube.Cube):
-            self._output_file = self._output_file.replace('cis-', '')
+            self._output_file = remove_file_prefix('cis-', self._output_file)
             iris.save(data, self._output_file)
         else:
             raise IOError('Expecting an Iris cube to be returned after aggegation, but got something else.')

@@ -265,6 +265,23 @@ def add_file_prefix(prefix, filepath):
     return os.path.join(path,prefix+filename)
 
 
+def remove_file_prefix(prefix, filepath):
+    """
+    Remove a prefix from a filename, taking into account any path that might be present before that actual filename
+    :param prefix: The prefix to remove
+    :param filepath: Filename, optionall including path
+    :return: A sring with the full path to the unprefixed file
+    """
+    import os.path
+
+    filename = os.path.basename(filepath)
+    path = os.path.dirname(filepath)
+
+    filename = filename.replace(prefix, '', 1)
+
+    return os.path.join(path, filename)
+
+
 def parse_key_val_string(arguments, seperator):
     '''
         Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and values
