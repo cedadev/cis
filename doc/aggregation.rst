@@ -160,7 +160,7 @@ Gridded aggregation
 Aggregating onto a coarser grid::
 
   $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,y=[-90,90,20],x=[-0.9375,359.0625,20]
-  $ cis plot rsutcs:cis-out.nc:itemstyle=s --type scatter --itemwidth 400 --ymin -90 --ymax 90
+  $ cis plot rsutcs:out.nc:itemstyle=s --type scatter --itemwidth 400 --ymin -90 --ymax 90
 
 .. figure:: img/aggregation/lat-lon-coarser.png
    :width: 400px
@@ -169,7 +169,7 @@ Aggregating onto a coarser grid::
 Aggregating a subset of latitude, ignoring longitude::
 
   $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,y=[-45,45,15]
-  $ cis plot rsutcs:cis-out.nc:itemstyle=s --ymin -45 --ymax 45 --type scatter --itemwidth 300
+  $ cis plot rsutcs:out.nc:itemstyle=s --ymin -45 --ymax 45 --type scatter --itemwidth 300
 
 .. figure:: img/aggregation/lat-subset.png
    :width: 400px
@@ -178,7 +178,7 @@ Aggregating a subset of latitude, ignoring longitude::
 Aggregating in time - years::
 
   $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t=[1859-11-27,1869-11-27,1y],y=[-90,90,20],x
-  $ cis plot rsutcs:cis-out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 400 --ymin -90 --ymax 90
+  $ cis plot rsutcs:out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 400 --ymin -90 --ymax 90
 
 .. figure:: img/aggregation/years.png
    :width: 400px
@@ -187,7 +187,7 @@ Aggregating in time - years::
 Aggregating in time - months, days and hours::
 
   $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=mean t=[2003,2015,1m1d1H],x
-  $ cis plot tas:cis-out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 10 
+  $ cis plot tas:out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 10 
 
 .. figure:: img/aggregation/months-days.png
    :width: 400px
@@ -196,7 +196,7 @@ Aggregating in time - months, days and hours::
 Maximum kernel::
 
   $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=max t
-  $ cis plot tas:cis-out.nc:itemstyle=s
+  $ cis plot tas:out.nc:itemstyle=s
 
 .. figure:: img/aggregation/max.png
    :width: 400px
@@ -205,7 +205,7 @@ Maximum kernel::
 Standard deviation kernel::
 
   $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=stddev t
-  $ cis plot tas:cis-out.nc:itemstyle=s
+  $ cis plot tas:out.nc:itemstyle=s
 
 .. figure:: img/aggregation/stddev.png
    :width: 400px

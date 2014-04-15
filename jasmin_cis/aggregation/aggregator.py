@@ -5,7 +5,7 @@ import iris.analysis.cartography
 from iris.coords import DimCoord
 import numpy
 from jasmin_cis.col_implementations import UngriddedGriddedColocator, BinningCubeCellConstraint
-from jasmin_cis.data_io.gridded_data import GriddedData
+from jasmin_cis.data_io.gridded_data import make_from_cube
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint
@@ -148,7 +148,7 @@ class Aggregator:
                     self.data.remove_coord('aggregation_coord_for_'+coord.name())
                     self.data.add_dim_coord(new_coord, new_coord_number)
                 # 'data' will have ended up as a cube again, now change it back to a GriddedData object
-                self.data.__class__ = GriddedData
+                self.data = make_from_cube(self.data)
 
         return self.data
 

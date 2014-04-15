@@ -17,11 +17,8 @@ def make_from_cube(cube):
     if cube is None:
         gd = None
     else:
-        gd = GriddedData(cube.data, standard_name=cube.standard_name, long_name=cube.long_name,
-                         var_name=cube.var_name, units=cube.units, attributes=cube.attributes,
-                         cell_methods=cube.cell_methods, dim_coords_and_dims=cube._dim_coords_and_dims,
-                         aux_coords_and_dims=cube._aux_coords_and_dims, aux_factories=cube._aux_factories,
-                         data_manager=cube._data_manager)
+        gd = cube
+        gd.__class__ = GriddedData
     return gd
 
 
