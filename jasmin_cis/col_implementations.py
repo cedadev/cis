@@ -686,7 +686,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         # sample grid.
         coord_names_and_sizes_for_sample_grid = []
         coord_names_and_sizes_for_output_grid = []
-        for coord in data.coords():
+        for coord in data.coords(dim_coords=True):
             # First try and find the coordinate in points, the sample grid. If an exception is thrown, it means that
             # name does not appear in the sample grid, and instead take the coordinate name and length from the original
             # data, as this is what we will be keeping.
