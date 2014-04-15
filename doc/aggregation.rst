@@ -73,7 +73,7 @@ Original data::
 Aggregating onto a coarse grid::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc x=[-180,-120,3],y=[0,90,3] -o NCAR_RAF-1
-  $ cis plot TT_A:cis-NCAR_RAF-1.nc
+  $ cis plot TT_A:NCAR_RAF-1.nc
 
 .. figure:: img/aggregation/NCAR-RAF-2.png
    :width: 400px
@@ -82,7 +82,7 @@ Aggregating onto a coarse grid::
 Aggregating onto a fine grid::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc x=[180,240,0.3],y=[0,90,0.3] -o NCAR_RAF-2
-  $ cis plot TT_A:cis-NCAR_RAF-2.nc
+  $ cis plot TT_A:NCAR_RAF-2.nc
 
 .. figure:: img/aggregation/NCAR-RAF-3.png
    :width: 400px
@@ -91,7 +91,7 @@ Aggregating onto a fine grid::
 Aggregating with altitude and time::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc t=[2009-01-14T19:30,2009-01-15T03:45,30M],z=[0,15000,1000] -o NCAR_RAF-3
-  $ cis plot TT_A:cis-NCAR_RAF-3.nc --xaxis time --yaxis altitude
+  $ cis plot TT_A:NCAR_RAF-3.nc --xaxis time --yaxis altitude
 
 .. figure:: img/aggregation/NCAR-RAF-4.png
    :width: 400px
@@ -100,7 +100,7 @@ Aggregating with altitude and time::
 Aggregating with altitude and pressure::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc p=[100,1100,20],z=[0,15000,500] -o NCAR_RAF-4
-  $ cis plot TT_A:cis-NCAR_RAF-4.nc --xaxis altitude --yaxis air_pressure --logy
+  $ cis plot TT_A:NCAR_RAF-4.nc --xaxis altitude --yaxis air_pressure --logy
 
 .. figure:: img/aggregation/NCAR-RAF-5.png
    :width: 400px
@@ -120,7 +120,7 @@ Original data::
 Aggregating with a mean kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf x=[-180,180,10],y=[-90,90,10] -o cloud-mean
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-mean.nc
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cloud-mean.nc
 
 .. figure:: img/aggregation/MODIS-7.png
    :width: 400px
@@ -129,7 +129,7 @@ Aggregating with a mean kernel::
 Aggregating with the standard deviation kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=stddev x=[-180,180,10],y=[-90,90,10] -o cloud-stddev
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-stddev.nc &
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cloud-stddev.nc &
 
 .. figure:: img/aggregation/MODIS-7.png
    :width: 400px
@@ -138,7 +138,7 @@ Aggregating with the standard deviation kernel::
 Aggregating with the maximum kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=max x=[-180,180,10],y=[-90,90,10] -o cloud-max
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-max.nc
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cloud-max.nc
 
 .. figure:: img/aggregation/MODIS-9.png
    :width: 400px
@@ -147,7 +147,7 @@ Aggregating with the maximum kernel::
 Aggregating with the minimum kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=min x=[-180,180,10],y=[-90,90,10] -o cloud-min
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-min.nc
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cloud-min.nc
 
 .. figure:: img/aggregation/MODIS-10.png
    :width: 400px
