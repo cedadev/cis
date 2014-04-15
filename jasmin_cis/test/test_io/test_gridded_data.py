@@ -8,11 +8,12 @@ import jasmin_cis.data_io.gridded_data as gridded_data
 
 
 @istest
-def test_can_create_ungridded_data():
+def test_can_create_gridded_data():
     gd = gridded_data.make_from_cube(mock.make_5x3_lon_lat_2d_cube_with_missing_data())
     assert(gd.coord(standard_name='latitude') is not None)
     assert(gd.coord(standard_name='longitude') is not None)
     assert(gd.data.size == 15)
+    assert(isinstance(gd, gridded_data.GriddedData))
 
 
 @istest

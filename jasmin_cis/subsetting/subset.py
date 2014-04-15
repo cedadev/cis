@@ -16,6 +16,7 @@ from jasmin_cis.subsetting.subset_constraint import (GriddedSubsetConstraint, Un
                                                      UngriddedSubsetConstraint)
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from jasmin_cis.cis import __version__
+from jasmin_cis.utils import remove_file_prefix
 
 
 class Subset(object):
@@ -62,6 +63,7 @@ class Subset(object):
             subset.add_history(history)
 
             if isinstance(subset, cube.Cube):
+                self._output_file = remove_file_prefix('cis-', self._output_file)
                 iris.save(subset, self._output_file)
             else:
                 write_coordinates(subset, self._output_file)

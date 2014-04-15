@@ -1,15 +1,16 @@
 import logging
-import math
-
-import iris
+import __builtin__
 import numpy as np
+
+import iris.analysis.interpolate
+import iris.coords
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
+from jasmin_cis.data_io.ungridded_data import UngriddedData
 import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
 
@@ -456,6 +457,45 @@ class mean(Kernel):
         return mean(values)
 
 
+class stddev(Kernel):
+
+    def get_value(self, point, data):
+        """
+        Colocation using the standard deviation of any points left after a constraint.
+        """
+        from numpy import std
+        values = data.vals
+        if len(values) == 0:
+            raise ValueError
+        return std(values, ddof=1)
+
+
+class min(Kernel):
+
+    def get_value(self, point, data):
+        """
+        Colocation using the standard deviation of any points left after a constraint.
+        """
+        values = data.vals
+        if len(values) == 0:
+            raise ValueError
+        # Using builtin is required so that the class can be called min
+        return __builtin__.min(values)
+
+
+class max(Kernel):
+
+    def get_value(self, point, data):
+        """
+        Colocation using the standard deviation of any points left after a constraint.
+        """
+        values = data.vals
+        if len(values) == 0:
+            raise ValueError
+        # Using builtin is required so that the class can be called max
+        return __builtin__.max(values)
+
+
 class full_average(Kernel):
 
     def get_value(self, point, data):
@@ -467,7 +507,7 @@ class full_average(Kernel):
         values = data.vals
         num_values = len(values)
         if num_values == 0: raise ValueError
-        return (mean(values), std(values), num_values)
+        return (mean(values), std(values, ddof=1), num_values)
 
 
 class nn_horizontal(Kernel):
@@ -646,7 +686,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         # sample grid.
         coord_names_and_sizes_for_sample_grid = []
         coord_names_and_sizes_for_output_grid = []
-        for coord in data.coords():
+        for coord in data.coords(dim_coords=True):
             # First try and find the coordinate in points, the sample grid. If an exception is thrown, it means that
             # name does not appear in the sample grid, and instead take the coordinate name and length from the original
             # data, as this is what we will be keeping.
@@ -821,7 +861,7 @@ class UngriddedGriddedColocator(Colocator):
                                           " than one is not supported (coordinate %s)", coord.name())
             # Ensure that bounds exist.
             if not coord.has_bounds():
-                logging.info("Creating guessed bounds as none exist in file")
+                logging.warning("Creating guessed bounds as none exist in file")
                 coord.guess_bounds()
             shape.append(coord.shape[0])
             output_coords.append(coord)
@@ -871,6 +911,9 @@ class UngriddedGriddedColocator(Colocator):
 
         # Construct an output cube containing the colocated data.
         cube = self._create_colocated_cube(points, data, values, output_coords, constraint.fill_value)
+        data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
+        data_with_nan_and_inf_removed.set_fill_value(constraint.fill_value)
+        cube.data = data_with_nan_and_inf_removed
 
         return [cube]
 

@@ -23,7 +23,7 @@ rm -f "O$SUBJECT.png"
 #################################
 start_time="$(date +%s)"
 
-cis plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf --type heatmap --cmap RdBu --ylabel overiddenylabel --width 7 --ymin 0 --ymax 5000 --nocolourbar --grid --xaxis Latitude --yaxis Height --output "O$SUBJECT.png"
+cis plot RVOD_liq_water_content:${source_dir}2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf:cmap=RdBu --type heatmap --ylabel overiddenylabel --width 7 --ymin 0 --ymax 5000 --nocolourbar --grid --xaxis Latitude --yaxis Height --output "O$SUBJECT.png"
 
 end_time="$(($(date +%s)-start_time))"
 echo "Time taken: ${end_time}s"

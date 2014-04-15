@@ -201,7 +201,7 @@ def make_square_5x3_2d_cube():
     latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(15)+1.0,(5,3))
-    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)], var_name='dummy')
     
     return cube
 
@@ -346,7 +346,7 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(105)+1.0,(5,3,7))
-    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)])
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
 
     return cube
 
@@ -546,7 +546,8 @@ def make_dummy_1d_ungridded_data_with_invalid_standard_name():
     x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
     coords = CoordList([x])
     data = gen_random_data_array((5,),4.0,1.0)
-    return UngriddedData(data, Metadata(standard_name='notavalidname', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(name='rain', standard_name='notavalidname',
+                                        long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 
@@ -597,7 +598,9 @@ def make_regular_2d_ungridded_data():
     data = np.reshape(np.arange(15)+1.0,(5,3))
 
     coords = CoordList([x, y])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_rate',
+                                        long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
 
 
 def make_regular_2d_ungridded_data_with_missing_values():
@@ -643,7 +646,8 @@ def make_regular_2d_ungridded_data_with_missing_values():
 
     coords = CoordList([x, y])
     return UngriddedData(data,
-                         Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                         Metadata(name='rain', standard_name='rainfall_rate',
+                                  long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                   units="kg m-2 s-1", missing_value=-999),
                          coords)
 

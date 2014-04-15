@@ -48,7 +48,7 @@ def should_do_contourf_plot_of_valid_aerosol_cci_file():
 @istest
 def should_do_scatter_plot_of_valid_2d_file():
     # Actual file name: xglnwa.pm.k8dec-k9nov.col.tm.nc
-    arguments = ['plot', valid_1d_vairable+':'+valid_2d_filename+':product=Xglnwa', '--output', valid_2d_filename+'.png']
+    arguments = ['plot', valid_1d_variable+':'+valid_2d_filename, '--output', valid_2d_filename+'.png']
     main_arguments = parse_args(arguments)
     plot_cmd(main_arguments)
 
@@ -60,8 +60,8 @@ def should_do_scatter_plot_of_valid_2d_file():
 def should_do_scatter_plot_of_valid_2d_file_with_x_as_lat_y_as_long():
     # Actual file name: xglnwa.pm.k8dec-k9nov.col.tm.nc
     # Trac issue #153
-    arguments = ['plot', valid_1d_vairable+':'+valid_2d_filename+':product=Xglnwa', '--xaxis', 'latitude', '--yaxis',
-                 'longitude', '--output', valid_2d_filename+'.png']
+    arguments = ['plot', valid_1d_variable+':'+valid_2d_filename, '--xaxis', 'latitude', '--yaxis', 'longitude',
+                 '--output', valid_2d_filename+'.png']
     main_arguments = parse_args(arguments)
     plot_cmd(main_arguments)
 
@@ -73,7 +73,7 @@ def should_do_scatter_plot_of_valid_2d_file_with_x_as_lat_y_as_long():
 def should_do_heatmap_plot_of_valid_1d_file():
     # Actual file name: xglnwa.pm.k8dec-k9nov.vprof.tm.nc
     # Trac issue #145
-    arguments = ['plot', valid_1d_vairable+':'+valid_1d_filename+':product=Xglnwa_vprof', '--output',
+    arguments = ['plot', valid_1d_variable+':'+valid_1d_filename, '--output',
                  valid_1d_filename+'.png']
     main_arguments = parse_args(arguments)
     plot_cmd(main_arguments)
@@ -87,7 +87,7 @@ def should_do_line_plot_of_valid_zonal_time_mean_cmip5_file():
     # Actual file name: rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc
     # Trac issue #130
     arguments = ['plot',
-            valid_zonal_time_mean_CMIP5_variable+':'+valid_zonal_time_mean_CMIP5_filename+':product=NetCDF_CF_Gridded',
+            valid_zonal_time_mean_CMIP5_variable+':'+valid_zonal_time_mean_CMIP5_filename,
                  '--output', valid_zonal_time_mean_CMIP5_filename+'.png']
     main_arguments = parse_args(arguments)
     plot_cmd(main_arguments)

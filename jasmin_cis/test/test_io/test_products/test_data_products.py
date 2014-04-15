@@ -35,20 +35,23 @@ class ProductTests():
     @istest
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
-        coords = self.product().create_coords([self.filename])
+        coords = self.product().create_coords([self.filename], self.valid_variable)
         coord_list = coords.coords()
 
         for coord in coord_list:
-            logging.debug(coord.metadata.standard_name)
+            logging.debug(coord.standard_name)
 
-        assert(all([coord.metadata.standard_name in valid_standard_names for coord in coord_list]))
+        for coord in coord_list:
+            print coord.standard_name
+
+        assert(all([coord.standard_name in valid_standard_names for coord in coord_list]))
 
     @istest
     def test_write_coords(self):
         from jasmin_cis.data_io.write_netcdf import write_coordinates
         from os import remove
         test_file = '/tmp/test_out.nc'
-        coords = self.product().create_coords([self.filename])
+        coords = self.product().create_coords([self.filename], self.valid_variable)
         write_coordinates(coords, test_file)
         remove(test_file)
 
@@ -68,19 +71,31 @@ class ProductTests():
         self.product().create_data_object([self.filename], invalid_variable)
 
 
-class TestCloudsat(ProductTests):
+class TestCloudsatRVODsdata(ProductTests):
 
     def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable
         self.filename = valid_cloudsat_RVOD_file
-        self.valid_variable = valid_cloudsat_RVOD_variable
-        self.product = Cloudsat_2B_CWC_RVOD
+        self.valid_variable = valid_cloudsat_RVOD_sdata_variable
+        self.product = CloudSat
 
-    @istest
-    @raises(InvalidVariableError)
-    def should_raise_error_when_variable_does_not_exist_in_file(self):
-        # workaround for HDF library bug in Jasmin
-        raise InvalidVariableError
+
+class TestCloudsatRVODvdata(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable
+        self.filename = valid_cloudsat_RVOD_file
+        self.valid_variable = valid_cloudsat_RVOD_vdata_variable
+        self.product = CloudSat
+
+
+class TestCloudsatPRECIP(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable
+        self.filename = valid_cloudsat_PRECIP_file
+        self.valid_variable = valid_cloudsat_PRECIP_variable
+        self.product = CloudSat
 
 
 class TestMODIS_L3(ProductTests):
@@ -114,7 +129,6 @@ class TestMODIS_L2(ProductTests):
         self.valid_variable = valid_modis_l2_variable
         self.product = MODIS_L2
 
-
 class TestCloud_CCI(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
@@ -135,7 +149,7 @@ class TestCis(ProductTests):
         from jasmin_cis.test.test_files.data import valid_cis_col_file
         self.filename = valid_cis_col_file
         self.valid_variable = 'AOT_440'
-        self.product = Cis
+        self.product = cis
 
 class TestNCAR_NetCDF_RAF(ProductTests):
 
@@ -145,39 +159,6 @@ class TestNCAR_NetCDF_RAF(ProductTests):
         self.valid_variable = valid_NCAR_NetCDF_RAF_variable
         self.product = NCAR_NetCDF_RAF
 
-# class TestXglnwa(ProductTests):
-#
-#     def __init__(self):
-#         self.filename = valid_1d_filename
-#         self.invalid_filename = "im_an_invalid_file"
-#         self.invalid_format = non_netcdf_file
-#         self.valid_variable = valid_variable_in_valid_filename
-#         self.invalid_variable = "im_an_invalid_variable"
-#         self.file_without_read_permissions = file_without_read_permissions
-#         self.product = Xglnwa
-
-class TestXglnwa_vprof(ProductTests):
-
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_1d_filename, valid_variable_in_valid_filename
-        self.filename = valid_1d_filename
-        self.valid_variable = valid_variable_in_valid_filename
-        self.product = Xglnwa_vprof
-
-
-class TestXenida(ProductTests):
-
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_xenida_filename, valid_xenida_variable
-        self.filename = valid_xenida_filename
-        self.valid_variable = valid_xenida_variable
-        self.product = Xenida
-
-    @nottest
-    def test_write_coords(self):
-        # This won't work for model data yet as the coordinates aren't all the same shape,
-        #  they need to be 'expanded'
-        pass
 
 class TestAeronet(ProductTests):
     def __init__(self):
@@ -224,3 +205,43 @@ class TestASCII(ProductTests):
         data = self.product().create_data_object([self.filename], True)
         assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012,8,25,15,32,03)))
         assert(data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012,8,26)))
+
+
+class TestNetCDF_Gridded_xenida(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_xenida_filename, valid_xenida_variable
+        self.filename = valid_xenida_filename
+        self.valid_variable = valid_xenida_variable
+        self.product = default_NetCDF
+
+    #TODO Create a new implementation of bypassed tests
+    @nottest
+    def test_write_coords(self):
+        # This won't work for model data yet as the coordinates aren't all the same shape, they need to be 'expanded'
+        pass
+
+    @nottest
+    def test_create_coords(self):
+        # This won't work for model data yet as the coordinates can have names other than the expected ones
+        pass
+
+
+class TestNetCDF_Gridded_xglnwa(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_1d_filename, valid_1d_variable
+        self.filename = valid_1d_filename
+        self.valid_variable = valid_1d_variable
+        self.product = default_NetCDF
+
+    #TODO Create a new implementation of bypassed tests
+    @nottest
+    def test_write_coords(self):
+        # This won't work for model data yet as the coordinates aren't all the same shape, they need to be 'expanded'
+        pass
+
+    @nottest
+    def test_create_coords(self):
+        # This won't work for model data yet as the coordinates can have names other than the expected ones
+        pass

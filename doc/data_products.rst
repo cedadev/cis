@@ -5,7 +5,7 @@ What kind of data can CIS deal with?
 Writing
 =======
 
-When creating files (from co-located data) CIS uses the NetCDF 4 classic format.
+When creating files (from co-located data) CIS uses the NetCDF 4 classic format. Ungridded output files are always prefixed with ``cis-``, and both ungridded and gridded output are always suffixed with ``.nc``.
 
 .. _data-products-reading:
 
@@ -16,31 +16,30 @@ CIS has built-in support for NetCDF and HDF4 file formats. That said, most data 
 
 So far, CIS can read the following ungridded data files:
 
- ================== ====================== ================= ====================== ======================================================================================================== 
-  Dataset            Product name           Type              Scientific Product     File Signature                                                                                          
- ================== ====================== ================= ====================== ======================================================================================================== 
-  Flight campaigns   NCAR_NetCDF_RAF        Airplane          masses                 RF.*\.nc                                                                                                
-  CloudSAT           Cloudsat_2B_CWC_RVOD   Satellite         LWP,precip,Z(2,3,3D)   .*2B.CWC.RVOD.*.hdf                                                                                     
-  MODIS L2           MODIS_L2               Satellite         AOT(2D),CTP(2D)        .*MYD06_L2.*.hdf,.*MOD06_L2.*.hdf,.*MYD04_L2.*.hdf,.*MOD04_L2.*.hdf, .*MYDATML2.*.hdf,.*MODATML2.*.hdf  
-  Cloud CCI          Cloud_CCI              Satellite         ?                      .*ESACCI.*CLOUD.*                                                                                       
-  Aerosol CCI        Aerosol_CCI            Satellite         ?                      .*ESACCI.*AEROSOL.*                                                                                     
-  CALIOP             Caliop                 Satellite         CTT(2D),Beta(3D)       CAL_LID_L2_05kmAPro-Prov-V3-01.*hdf                                                                     
-  AERONET            Aeronet                Ground-stations   AOT(2D)                .*.lev20                                                                                                
-  (internal)         CisCol                 N/A               N/A                    cis-.*.nc                                                                                           
-  csv datapoints     ASCII_Hyperpoints      N/A               N/A                    .*.txt                                                                                                  
- ================== ====================== ================= ====================== ======================================================================================================== 
+  ================ ====================== ================= ======================================================================================================== 
+  Dataset          Product name           Type              File Signature                                                                                          
+  ================ ====================== ================= ======================================================================================================== 
+  AERONET          Aeronet                Ground-stations   \*.lev20                                                                                                
+  Aerosol CCI      Aerosol_CCI            Satellite         \*ESACCI*AEROSOL*          
+  CALIOP L1        Caliop_L1              Satellite         CAL_LID_L1-ValStage1-V3*.hdf                                                                                                                                                
+  CALIOP L2        Caliop_L2              Satellite         CAL_LID_L2_05kmAPro-Prov-V3*.hdf                                                                     
+  CloudSat         CloudSat               Satellite         \*_CS_*GRANULE*.hdf                                                                                     
+  Flight campaigns NCAR_NetCDF_RAF        Aircraft          RF*.nc                                                                                                
+  MODIS L2         MODIS_L2               Satellite         \*MYD06_L2*.hdf, \*MOD06_L2*.hdf, \*MYD04_L2*.hdf, \*MOD04_L2*.hdf, \*MYDATML2.*.hdf, \*MODATML2*.hdf
+  Cloud CCI        Cloud_CCI              Satellite         \*ESACCI*CLOUD*                                                                                       
+  CSV datapoints   ASCII_Hyperpoints      N/A               \*.txt                                                                                                  
+  CIS ungridded    cis                    CIS output        cis-\*.nc       
+  ================ ====================== ================= ======================================================================================================== 
 
 
 It can also read the following gridded data types:
 
-================= ============== =========== ==================== =====================================================
-  Dataset          Product name   Type        Scientific Product   File Signature                                      
-================= ============== =========== ==================== =====================================================
-  ?                Xglnwa_vprof   Model       ?                    .*xglnwa.*vprof.*.nc                                
-  ?                Xglnwa         Model       ?                    .*xglnwa.*.nc                                       
-  ?                Xenida         Model       ?                    .*xenida.*.nc                                       
-  MODIS L3 daily   MODIS_L3       Satellite   AOT(2D)              .*MYD08_D3.*.hdf,.*MOD08_D3.*.hdf,.*MOD08_E3.*.hdf  
-================= ============== =========== ==================== =====================================================
+  ==================== =========================== ================== =================================================================================
+  Dataset              Product name                Type               File Signature                                      
+  ==================== =========================== ================== =================================================================================
+  MODIS L3 daily       MODIS_L3                    Satellite          \*MYD08_D3*.hdf, \*MOD08_D3*.hdf, \*MOD08_E3*.hdf  
+  Net_CDF Gridded Data NetCDFGridded               Gridded Model Data \*.nc (this is the default for NetCDF Files that do not match any other signature)
+  ==================== =========================== ================== =================================================================================
 
 
 The file signature is used to automatically recognise which product definition to use. Note the product can overridden easily by being specified at the command line.

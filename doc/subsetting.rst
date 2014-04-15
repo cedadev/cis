@@ -38,7 +38,7 @@ where:
     * Other coordinates ranges are interpreted so that the subset includes values for which the coordinate value is greater than the smaller of start and end, and less than the larger of start and end (so the order in which start and end are specified is not significant).
 
 `` outputfile ``
-  is an optional argument to specify the name to use for the file output. This is automatically given a .nc extension and prepended with cis- to make it distinguishable as a CIS output file.
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
 
 A full example would be::
 

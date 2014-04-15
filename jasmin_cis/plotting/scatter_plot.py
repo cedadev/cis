@@ -16,6 +16,8 @@ class Scatter_Plot(Generic_Plot):
             else:
                 self.mplkwargs.pop("marker", None)
 
+            self.mplkwargs["cmap"] = datafile["cmap"]
+
             self.mplkwargs["c"] = datafile.get("color", None)
             if self.mplkwargs["c"] is None:
                 if unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D

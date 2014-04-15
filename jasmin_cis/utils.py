@@ -157,7 +157,8 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
     def __get_coord(data_object, variable, data):
         from iris.exceptions import CoordinateNotFoundError
 
-        if variable == data_object.name() or variable == "default":
+        if variable == data_object.name() or variable == "default" or variable == data_object.standard_name or \
+           variable == data_object.long_name:
             return data
         else:
             if variable.startswith("search:"):
@@ -262,6 +263,23 @@ def add_file_prefix(prefix, filepath):
     filename = os.path.basename(filepath)
     path = os.path.dirname(filepath)
     return os.path.join(path,prefix+filename)
+
+
+def remove_file_prefix(prefix, filepath):
+    """
+    Remove a prefix from a filename, taking into account any path that might be present before that actual filename
+    :param prefix: The prefix to remove
+    :param filepath: Filename, optionall including path
+    :return: A sring with the full path to the unprefixed file
+    """
+    import os.path
+
+    filename = os.path.basename(filepath)
+    path = os.path.dirname(filepath)
+
+    filename = filename.replace(prefix, '', 1)
+
+    return os.path.join(path, filename)
 
 
 def parse_key_val_string(arguments, seperator):
