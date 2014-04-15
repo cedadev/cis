@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
+import numpy as np
+
 
 class Colocator(object):
     '''
@@ -7,6 +9,9 @@ class Colocator(object):
     the subclasses must implement.
     '''
     __metaclass__ = ABCMeta
+
+    def __init__(self):
+        self.fill_value = np.Infinity
 
     @abstractmethod
     def colocate(self, points, data, constraint, kernel):
@@ -44,10 +49,6 @@ class Constraint(object):
      be reduced ultimately may be of any type. This just defines the interface which the subclasses must implement.
     '''
     __metaclass__ = ABCMeta
-
-    def __init__(self):
-        import numpy as np
-        self.fill_value = np.Infinity
 
     @abstractmethod
     def constrain_points(self, point, data):

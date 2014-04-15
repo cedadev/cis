@@ -16,8 +16,14 @@ import jasmin_cis.utils
 
 class GeneralUngriddedColocator(Colocator):
 
-    def __init__(self, var_name='', var_long_name='', var_units=''):
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units=''):
         super(GeneralUngriddedColocator, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
+                    'Dummy Constraint fill_value must be a valid float')
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -42,7 +48,7 @@ class GeneralUngriddedColocator(Colocator):
         if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
             if not isinstance(data, iris.cube.Cube):
                 raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
-            if constraint is not None:
+            if constraint is not None and not isinstance(constraint, DummyConstraint):
                 raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
             data_points = data
         else:
@@ -58,10 +64,13 @@ class GeneralUngriddedColocator(Colocator):
         points = points.get_coordinates_points()
 
         # Fill will the FillValue from the start
-        values = np.zeros(len(points)) + constraint.fill_value
+        values = np.zeros(len(points)) + self.fill_value
 
         for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data_points)
+            if constraint is None:
+                con_points = data_points
+            else:
+                con_points = constraint.constrain_points(point, data_points)
             try:
                 values[i] = kernel.get_value(point, con_points)
             except ValueError:
@@ -71,7 +80,7 @@ class GeneralUngriddedColocator(Colocator):
         if self.var_long_name: new_data.metadata.long_name = self.var_long_name
         if self.var_units: new_data.units = self.var_units
         new_data.metadata.shape = (len(points),)
-        new_data.metadata.missing_value = constraint.fill_value
+        new_data.metadata.missing_value = self.fill_value
 
         return [new_data]
 
@@ -377,16 +386,6 @@ class DummyColocator(Colocator):
 
 class DummyConstraint(Constraint):
 
-    def __init__(self, fill_value=None):
-        from jasmin_cis.exceptions import InvalidCommandLineOptionError
-
-        super(DummyConstraint, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise InvalidCommandLineOptionError('Dummy Constraint fill_value must be a valid float')
-
     def constrain_points(self, point, data):
         # This is a null constraint - all of the points just get passed back
         return data
@@ -394,16 +393,13 @@ class DummyConstraint(Constraint):
 
 class SepConstraint(PointConstraint):
 
-    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
+    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
         super(SepConstraint, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise InvalidCommandLineOptionError('Separation Constraint fill_value must be a valid float')
+
         self.checks = []
+
         if h_sep is not None:
             self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
             self.checks.append(self.horizontal_constraint)
@@ -446,17 +442,12 @@ class SepConstraint(PointConstraint):
 
 class SepConstraintKdtree(PointConstraint):
 
-    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
+    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
         self.haversine_distance_kd_tree_index = False
 
         super(SepConstraintKdtree, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise InvalidCommandLineOptionError('Separation Constraint fill_value must be a valid float')
 
         self.checks = []
         if h_sep is not None:
@@ -872,9 +863,15 @@ class gridded_gridded_li(Kernel):
 class GeneralGriddedColocator(Colocator):
     """Performs co-location of data on to a the points of a cube.
     """
-    def __init__(self, var_name='', var_long_name='', var_units=''):
+
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units=''):
         super(GeneralGriddedColocator, self).__init__()
-        #TODO These are not used - use or remove everywhere.
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
+                    'Dummy Constraint fill_value must be a valid float')
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -888,8 +885,6 @@ class GeneralGriddedColocator(Colocator):
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
         :return: Cube of co-located data
         """
-        from jasmin_cis.exceptions import ClassNotFoundError
-
         # Constraint must be appropriate for gridded sample.
         # if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)
         #         or isinstance(constraint, DummyConstraint)):
@@ -937,7 +932,7 @@ class GeneralGriddedColocator(Colocator):
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = np.ma.zeros(shape)
         values.mask = True
-        values.fill_value = constraint.fill_value
+        values.fill_value = self.fill_value
 
         logging.info("--> Co-locating...")
 
@@ -975,9 +970,9 @@ class GeneralGriddedColocator(Colocator):
                 cell_count = 0
 
         # Construct an output cube containing the colocated data.
-        cube = self._create_colocated_cube(points, data, values, output_coords, constraint.fill_value)
+        cube = self._create_colocated_cube(points, data, values, output_coords, self.fill_value)
         data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
-        data_with_nan_and_inf_removed.set_fill_value(constraint.fill_value)
+        data_with_nan_and_inf_removed.set_fill_value(self.fill_value)
         cube.data = data_with_nan_and_inf_removed
 
         return [cube]
@@ -1046,15 +1041,6 @@ class GeneralGriddedColocator(Colocator):
 class CubeCellConstraint(CellConstraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
     """
-    def __init__(self, fill_value=None):
-        super(CubeCellConstraint, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
-                    'Cube Cell Constraint fill_value must be a valid float')
-
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.
         :param sample_point: HyperPoint of cells defining sample region
@@ -1079,16 +1065,9 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
     Uses the index_data method to bin all the points
     """
-    def __init__(self, fill_value=None):
+    def __init__(self):
         super(BinningCubeCellConstraint, self).__init__()
         self.grid_cell_bin_index = None
-
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
-                    'Cube Cell Constraint fill_value must be a valid float')
 
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.

@@ -101,3 +101,9 @@ class GriddedData(iris.cube.Cube, CommonData):
 
     def name(self):
         return self.var_name
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return True

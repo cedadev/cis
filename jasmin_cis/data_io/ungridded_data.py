@@ -319,6 +319,12 @@ class UngriddedData(LazyData, CommonData):
         """
         return self._coords.find_standard_coords()
 
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return False
+
 ##     @classmethod
 ##     def from_points_array(cls, hyperpoints):
 ##         """
@@ -431,3 +437,9 @@ class UngriddedCoordinates(CommonData):
         :return: HyperPointView of the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, None, non_masked_iteration=True)
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return False
