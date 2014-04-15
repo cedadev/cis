@@ -17,7 +17,11 @@ valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf
 valid_modis_l3_variable = "Pressure_Level"
 
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
-valid_cloudsat_RVOD_variable = "RVOD_liq_water_content"
+valid_cloudsat_RVOD_sdata_variable = "RVOD_liq_water_content"
+valid_cloudsat_RVOD_vdata_variable = "RVOD_ice_water_path"
+
+valid_cloudsat_PRECIP_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")
+valid_cloudsat_PRECIP_variable = "Precip_rate"
 
 valid_aerosol_cci_filename = make_pathname("20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc")
 valid_aerosol_cci_variable = "AOD550"

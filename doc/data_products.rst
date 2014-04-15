@@ -23,7 +23,7 @@ So far, CIS can read the following ungridded data files:
   Aerosol CCI      Aerosol_CCI            Satellite         \*ESACCI*AEROSOL*          
   CALIOP L1        Caliop_L1              Satellite         CAL_LID_L1-ValStage1-V3*.hdf                                                                                                                                                
   CALIOP L2        Caliop_L2              Satellite         CAL_LID_L2_05kmAPro-Prov-V3*.hdf                                                                     
-  CloudSAT         Cloudsat_2B_CWC_RVOD   Satellite         \*2B.CWC.RVOD*.hdf                                                                                     
+  CloudSat         CloudSat               Satellite         \*_CS_*GRANULE*.hdf                                                                                     
   Flight campaigns NCAR_NetCDF_RAF        Aircraft          RF*.nc                                                                                                
   MODIS L2         MODIS_L2               Satellite         \*MYD06_L2*.hdf, \*MOD06_L2*.hdf, \*MYD04_L2*.hdf, \*MOD04_L2*.hdf, \*MYDATML2.*.hdf, \*MODATML2*.hdf
   Cloud CCI        Cloud_CCI              Satellite         \*ESACCI*CLOUD*                                                                                       

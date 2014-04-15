@@ -71,19 +71,31 @@ class ProductTests():
         self.product().create_data_object([self.filename], invalid_variable)
 
 
-class TestCloudsat(ProductTests):
+class TestCloudsatRVODsdata(ProductTests):
 
     def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable
         self.filename = valid_cloudsat_RVOD_file
-        self.valid_variable = valid_cloudsat_RVOD_variable
-        self.product = Cloudsat_2B_CWC_RVOD
+        self.valid_variable = valid_cloudsat_RVOD_sdata_variable
+        self.product = CloudSat
 
-    @istest
-    @raises(InvalidVariableError)
-    def should_raise_error_when_variable_does_not_exist_in_file(self):
-        # workaround for HDF library bug in Jasmin
-        raise InvalidVariableError
+
+class TestCloudsatRVODvdata(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable
+        self.filename = valid_cloudsat_RVOD_file
+        self.valid_variable = valid_cloudsat_RVOD_vdata_variable
+        self.product = CloudSat
+
+
+class TestCloudsatPRECIP(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable
+        self.filename = valid_cloudsat_PRECIP_file
+        self.valid_variable = valid_cloudsat_PRECIP_variable
+        self.product = CloudSat
 
 
 class TestMODIS_L3(ProductTests):
