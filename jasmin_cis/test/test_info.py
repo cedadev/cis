@@ -22,7 +22,7 @@ def can_get_info_on_a_cloudsat_file():
 
 @istest
 def can_get_info_on_a_variable_in_a_cloudsat_file():
-    info(valid_cloudsat_RVOD_file, [valid_cloudsat_RVOD_variable])
+    info(valid_cloudsat_RVOD_file, [valid_cloudsat_RVOD_sdata_variable])
 
 @istest
 def can_get_info_on_a_modis_file():

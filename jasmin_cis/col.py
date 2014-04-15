@@ -171,6 +171,7 @@ class Colocate(object):
         from jasmin_cis.data_io.read import read_data
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.data_io.write_netcdf import write_coordinates
+        from jasmin_cis.utils import remove_file_prefix
         from jasmin_cis.exceptions import CoordinateNotFoundError
         from time import time
         import iris
@@ -224,6 +225,7 @@ class Colocate(object):
                 self.coords_to_be_written = False
 
             if isinstance(data, iris.cube.Cube):
+                self.output_file = remove_file_prefix('cis-', self.output_file)
                 iris.save(data, self.output_file)
             else:
                 add_data_to_file(data, self.output_file)

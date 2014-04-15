@@ -1,20 +1,20 @@
 import logging
 
 import iris
-from iris.exceptions import CoordinateNotFoundError
+import iris.exceptions
+from jasmin_cis.exceptions import InvalidVariableError, CoordinateNotFoundError
 from jasmin_cis.data_io.Coord import Coord, CoordList
 import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedCoordinates
-import jasmin_cis.exceptions
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
 
 
-class Cloudsat_2B_CWC_RVOD(AProduct):
+class CloudSat(AProduct):
 
     def get_file_signature(self):
-        return [r'.*2B.CWC.RVOD.*\.hdf']
+        return [r'.*_CS_.*GRANULE.*\.hdf']
 
     def _generate_time_array(self, vdata):
         import jasmin_cis.data_io.hdf_vd as hdf_vd
@@ -36,36 +36,50 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
     def _create_coord_list(self, filenames):
         from jasmin_cis.time_util import cis_standard_time_unit
         # list of coordinate variables we are interested in
-        variables = [ 'Latitude','Longitude','TAI_start','Profile_time','Height']
-
-        logging.info("Listing coordinates: " + str(variables))
+        variables = ['Latitude', 'Longitude', 'TAI_start', 'Profile_time', 'Height']
 
         # reading the various files
-        sdata, vdata = hdf.read(filenames,variables)
+        try:
+            logging.info("Listing coordinates: " + str(variables))
+            sdata, vdata = hdf.read(filenames, variables)
 
-        # altitude coordinate
-        height = sdata['Height']
-        height_data = hdf.read_data(height, "SD")
-        height_metadata = hdf.read_metadata(height, "SD")
-        height_coord = Coord(height_data, height_metadata, "Y")
+            # altitude coordinate
+            height = sdata['Height']
+            height_data = hdf.read_data(height, "SD")
+            height_metadata = hdf.read_metadata(height, "SD")
+            height_coord = Coord(height_data, height_metadata, "Y")
+
+        except InvalidVariableError:
+            # This means we are reading a Cloudsat file without height, so remove height from the variables list
+            variables.remove('Height')
+            logging.info("Listing coordinates: " + str(variables))
+            sdata, vdata = hdf.read(filenames, variables)
+
+            height_data = None
+            height_coord = None
 
         # latitude
         lat = vdata['Latitude']
-        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "VD"),len(height_data[0]),axis=1)
+        lat_data = hdf.read_data(lat, "VD")
+        if height_data is not None:
+            lat_data = utils.expand_1d_to_2d_array(lat_data, len(height_data[0]), axis=1)
         lat_metadata = hdf.read_metadata(lat,"VD")
         lat_metadata.shape = lat_data.shape
         lat_coord = Coord(lat_data, lat_metadata)
 
         # longitude
         lon = vdata['Longitude']
-        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "VD"),len(height_data[0]),axis=1)
+        lon_data = hdf.read_data(lon, "VD")
+        if height_data is not None:
+            lon_data = utils.expand_1d_to_2d_array(lon_data, len(height_data[0]), axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
         lon_metadata.shape = lon_data.shape
         lon_coord = Coord(lon_data, lon_metadata)
 
         # time coordinate
         time_data = self._generate_time_array(vdata)
-        time_data = utils.expand_1d_to_2d_array(time_data,len(height_data[0]),axis=1)
+        if height_data is not None:
+            time_data = utils.expand_1d_to_2d_array(time_data, len(height_data[0]), axis=1)
         time_coord = Coord(time_data,Metadata(name='Profile_time', standard_name='time', shape=time_data.shape,
                                               units=str(cis_standard_time_unit),
                                               calendar=cis_standard_time_unit.calendar),"X")
@@ -75,12 +89,13 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
         coords = CoordList()
         coords.append(lat_coord)
         coords.append(lon_coord)
-        coords.append(height_coord)
+        if height_coord is not None:
+            coords.append(height_coord)
         coords.append(time_coord)
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -98,7 +113,13 @@ class Cloudsat_2B_CWC_RVOD(AProduct):
 
         # retrieve data + its metadata
         if variable in vdata:
-            var = hdf.read_data(vdata[variable], "VD",missing_values)
+            # vdata should be expanded in the same way as the coordinates are expanded
+            try:
+                height_length = coords.get_coord('Height').shape[1]
+                var = utils.expand_1d_to_2d_array(hdf.read_data(vdata[variable], "VD", missing_values),
+                                                  height_length, axis=1)
+            except CoordinateNotFoundError:
+                var = hdf.read_data(vdata[variable], "VD", missing_values)
             metadata = hdf.read_metadata(vdata[variable],"VD")
         elif variable in sdata:
             var = hdf.read_data(sdata[variable], "SD",missing_values)
@@ -195,7 +216,7 @@ class MODIS_L3(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -292,7 +313,7 @@ class MODIS_L2(AProduct):
 
         return CoordList([lat_coord,lon_coord,time_coord])
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -337,7 +358,7 @@ class Cloud_CCI(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -375,7 +396,7 @@ class Aerosol_CCI(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -485,7 +506,7 @@ class abstract_Caliop(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -558,7 +579,7 @@ class Caliop_L2(abstract_Caliop):
     def get_file_signature(self):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3.*hdf']
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(super(Caliop_L2, self)._create_coord_list(filenames, index_offset=1))
 
     def create_data_object(self, filenames, variable):
@@ -603,7 +624,7 @@ class Caliop_L1(abstract_Caliop):
         return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
 
-class Cis(AProduct):
+class cis(AProduct):
 
     def get_file_signature(self):
         return [r'cis\-.*\.nc']
@@ -639,7 +660,8 @@ class Cis(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
-class NetCDF_CF(AProduct):
+
+class abstract_NetCDF_CF(AProduct):
 
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF data yet...
@@ -672,7 +694,7 @@ class NetCDF_CF(AProduct):
         return self.create_coords(filenames, variable)
 
 
-class NCAR_NetCDF_RAF(NetCDF_CF):
+class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
 
     def get_file_signature(self):
         return [r'RF.*\.nc']
@@ -707,7 +729,7 @@ class NCAR_NetCDF_RAF(NetCDF_CF):
         return self.create_coords(filenames, variable)
 
 
-class NetCDF_CF_Gridded(NetCDF_CF):
+class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
 
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF model data yet...
@@ -748,7 +770,7 @@ class NetCDF_CF_Gridded(NetCDF_CF):
             cube = gridded_data.load_cube(filenames, variable)
         except iris.exceptions.ConstraintMismatchError:
             raise InvalidVariableError("Variable not found: " + str(variable) +
-                                       "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
+                                       "\nTo see a list of variables run: cis info " + filenames[0])
         except ValueError as e:
             raise IOError(e)
 
@@ -786,7 +808,7 @@ class DisplayConstraint(iris.Constraint):
             return super(DisplayConstraint, self).__str__()
 
 
-class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
+class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
     """Reads gridded netCDF identifying variable by variable name.
     """
     def get_file_signature(self):
@@ -806,10 +828,10 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         variable_constraint = None
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
-        cube = super(NetCDFGriddedByVariableName, self).create_coords(filenames, variable_constraint)
+        cube = super(NetCDF_Gridded, self).create_coords(filenames, variable_constraint)
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)
-        except CoordinateNotFoundError:
+        except iris.exceptions.CoordinateNotFoundError:
             pass
         return cube
 
@@ -824,10 +846,10 @@ class NetCDFGriddedByVariableName(NetCDF_CF_Gridded):
         variable_constraint = None
         if variable is not None:
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
-        cube = super(NetCDFGriddedByVariableName, self).create_data_object(filenames, variable_constraint)
+        cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable_constraint)
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)
-        except CoordinateNotFoundError:
+        except iris.exceptions.CoordinateNotFoundError:
             pass
         return cube
 
@@ -854,7 +876,7 @@ class Aeronet(AProduct):
 
         return coords
 
-    def create_coords(self, filenames):
+    def create_coords(self, filenames, variable=None):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
@@ -871,6 +893,7 @@ class Aeronet(AProduct):
         return UngriddedData(data_obj[variable],
                              Metadata(name=variable, long_name=variable, shape=(len(data_obj),), missing_value=-999.0),
                              coords)
+
 
 class ASCII_Hyperpoints(AProduct):
 
@@ -916,3 +939,12 @@ class ASCII_Hyperpoints(AProduct):
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, True)
+
+
+class default_NetCDF(NetCDF_Gridded):
+    """
+    This class should always be the last in the sorted list (last alphabetically) - and hence the default for *.nc
+    files which have not otherwise been matched.
+    """
+    def get_file_signature(self):
+        return [r'.*\.nc']

@@ -116,7 +116,7 @@ where:
 .. todo:: Link to DataProduct wiki page.  Click [CommunityIntercomparisonSuite/DataProduct here] to see a list of available products and their file signatures.
 
 ``outputfile``
-  is an optional argument to specify the name to use for the file output. This is automatically given a .nc extension and prepended with ``cis-`` to make it distinguishable as a colocated file.
+  is an optional argument to specify the name to use for the file output. For ungridded data this is automatically given a ``.nc`` extension and prepended with ``cis-`` to make it distinguishable as a colocated file. For gridded this is only given the ``.nc`` extenstion.
 
 A full example would be::
 
@@ -126,7 +126,7 @@ A full example would be::
 Colocation output files
 =======================
 
-All co-location output files are prefixed with ``cis-`` and suffixed with ``.nc`` (so there is no need to specify the extension in the output parameter). This is to ensure the Cis data product is always used to read co-located data.
+All ungridded co-location output files are prefixed with ``cis-`` and both ungridded and gridded data files are suffixed with ``.nc`` (so there is no need to specify the extension in the output parameter). This is to ensure the cis data product is always used to read co-located ungridded data.
 
 It is worth noting that in the process of colocation all of the data and sample points are represented as 1-d lists, so any structural information about the input files is lost. This is done to ensure consistency in the colocation output. This means, however, that input files which may have been plotable as, for example, a heatmap may not be after co-location. In this situation plotting the data as a scatter plot will yield the required results.
 

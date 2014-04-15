@@ -47,11 +47,11 @@ where:
 
 
 ``outputfile``
-  is an optional argument to specify the name to use for the file output. This is automatically given a .nc extension and prepended with cis- to make it distinguishable as a colocated file. The default filename is cis-out.nc.
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
 
 A full example would be::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:product=NetCDFGriddedByVariableName,kernel=mean t,y=[-90,90,20],x -o rsutcs-mean
+  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:product=NetCDF_Gridded,kernel=mean t,y=[-90,90,20],x -o rsutcs-mean
 
 Aggregation Examples
 ====================
@@ -73,7 +73,7 @@ Original data::
 Aggregating onto a coarse grid::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc x=[-180,-120,3],y=[0,90,3] -o NCAR_RAF-1
-  $ cis plot TT_A:cis-NCAR_RAF-1.nc:product=NetCDFGriddedByVariableName
+  $ cis plot TT_A:cis-NCAR_RAF-1.nc
 
 .. figure:: img/aggregation/NCAR-RAF-2.png
    :width: 400px
@@ -82,7 +82,7 @@ Aggregating onto a coarse grid::
 Aggregating onto a fine grid::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc x=[180,240,0.3],y=[0,90,0.3] -o NCAR_RAF-2
-  $ cis plot TT_A:cis-NCAR_RAF-2.nc:product=NetCDFGriddedByVariableName
+  $ cis plot TT_A:cis-NCAR_RAF-2.nc
 
 .. figure:: img/aggregation/NCAR-RAF-3.png
    :width: 400px
@@ -91,7 +91,7 @@ Aggregating onto a fine grid::
 Aggregating with altitude and time::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc t=[2009-01-14T19:30,2009-01-15T03:45,30M],z=[0,15000,1000] -o NCAR_RAF-3
-  $ cis plot TT_A:cis-NCAR_RAF-3.nc:product=NetCDFGriddedByVariableName --xaxis time --yaxis altitude
+  $ cis plot TT_A:cis-NCAR_RAF-3.nc --xaxis time --yaxis altitude
 
 .. figure:: img/aggregation/NCAR-RAF-4.png
    :width: 400px
@@ -100,7 +100,7 @@ Aggregating with altitude and time::
 Aggregating with altitude and pressure::
 
   $ cis aggregate TT_A:RF04.20090114.192600_035100.PNI.nc p=[100,1100,20],z=[0,15000,500] -o NCAR_RAF-4
-  $ cis plot TT_A:cis-NCAR_RAF-4.nc:product=NetCDFGriddedByVariableName --xaxis altitude --yaxis air_pressure --logy
+  $ cis plot TT_A:cis-NCAR_RAF-4.nc --xaxis altitude --yaxis air_pressure --logy
 
 .. figure:: img/aggregation/NCAR-RAF-5.png
    :width: 400px
@@ -120,7 +120,7 @@ Original data::
 Aggregating with a mean kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf x=[-180,180,10],y=[-90,90,10] -o cloud-mean
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-mean.nc:product=NetCDFGriddedByVariableName
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-mean.nc
 
 .. figure:: img/aggregation/MODIS-7.png
    :width: 400px
@@ -129,7 +129,7 @@ Aggregating with a mean kernel::
 Aggregating with the standard deviation kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=stddev x=[-180,180,10],y=[-90,90,10] -o cloud-stddev
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-stddev.nc:product=NetCDFGriddedByVariableName &
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-stddev.nc &
 
 .. figure:: img/aggregation/MODIS-7.png
    :width: 400px
@@ -138,7 +138,7 @@ Aggregating with the standard deviation kernel::
 Aggregating with the maximum kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=max x=[-180,180,10],y=[-90,90,10] -o cloud-max
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-max.nc:product=NetCDFGriddedByVariableName
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-max.nc
 
 .. figure:: img/aggregation/MODIS-9.png
    :width: 400px
@@ -147,7 +147,7 @@ Aggregating with the maximum kernel::
 Aggregating with the minimum kernel::
 
   $ cis aggregate Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf:kernel=min x=[-180,180,10],y=[-90,90,10] -o cloud-min
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-min.nc:product=NetCDFGriddedByVariableName
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-cloud-min.nc
 
 .. figure:: img/aggregation/MODIS-10.png
    :width: 400px
@@ -159,8 +159,8 @@ Gridded aggregation
 
 Aggregating onto a coarser grid::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:product=NetCDFGriddedByVariableName,kernel=mean t,y=[-90,90,20],x=[-0.9375,359.0625,20]
-  $ cis plot rsutcs:cis-out.nc:product=NetCDFGriddedByVariableName,itemstyle=s --type scatter --itemwidth 400 --ymin -90 --ymax 90
+  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,y=[-90,90,20],x=[-0.9375,359.0625,20]
+  $ cis plot rsutcs:out.nc:itemstyle=s --type scatter --itemwidth 400 --ymin -90 --ymax 90
 
 .. figure:: img/aggregation/lat-lon-coarser.png
    :width: 400px
@@ -168,8 +168,8 @@ Aggregating onto a coarser grid::
 
 Aggregating a subset of latitude, ignoring longitude::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:product=NetCDFGriddedByVariableName,kernel=mean t,y=[-45,45,15]
-  $ cis plot rsutcs:cis-out.nc:product=NetCDFGriddedByVariableName,itemstyle=s --ymin -45 --ymax 45 --type scatter --itemwidth 300
+  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,y=[-45,45,15]
+  $ cis plot rsutcs:out.nc:itemstyle=s --ymin -45 --ymax 45 --type scatter --itemwidth 300
 
 .. figure:: img/aggregation/lat-subset.png
    :width: 400px
@@ -177,8 +177,8 @@ Aggregating a subset of latitude, ignoring longitude::
 
 Aggregating in time - years::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:product=NetCDFGriddedByVariableName,kernel=mean t=[1859-11-27,1869-11-27,1y],y=[-90,90,20],x
-  $ cis plot rsutcs:cis-out.nc:product=NetCDFGriddedByVariableName,itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 400 --ymin -90 --ymax 90
+  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t=[1859-11-27,1869-11-27,1y],y=[-90,90,20],x
+  $ cis plot rsutcs:out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 400 --ymin -90 --ymax 90
 
 .. figure:: img/aggregation/years.png
    :width: 400px
@@ -186,8 +186,8 @@ Aggregating in time - years::
 
 Aggregating in time - months, days and hours::
 
-  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:product=NetCDFGriddedByVariableName,kernel=mean t=[2003,2015,1m1d1H],x
-  $ cis plot tas:cis-out.nc:product=NetCDFGriddedByVariableName,itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 10 
+  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=mean t=[2003,2015,1m1d1H],x
+  $ cis plot tas:out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 10 
 
 .. figure:: img/aggregation/months-days.png
    :width: 400px
@@ -195,8 +195,8 @@ Aggregating in time - months, days and hours::
 
 Maximum kernel::
 
-  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:product=NetCDFGriddedByVariableName,kernel=max t
-  $ cis plot tas:cis-out.nc:product=NetCDFGriddedByVariableName,itemstyle=s
+  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=max t
+  $ cis plot tas:out.nc:itemstyle=s
 
 .. figure:: img/aggregation/max.png
    :width: 400px
@@ -204,8 +204,8 @@ Maximum kernel::
 
 Standard deviation kernel::
 
-  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:product=NetCDFGriddedByVariableName,kernel=stddev t
-  $ cis plot tas:cis-out.nc:product=NetCDFGriddedByVariableName,itemstyle=s
+  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=stddev t
+  $ cis plot tas:out.nc:itemstyle=s
 
 .. figure:: img/aggregation/stddev.png
    :width: 400px

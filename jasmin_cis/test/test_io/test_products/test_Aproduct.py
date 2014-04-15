@@ -8,12 +8,12 @@ from jasmin_cis.exceptions import ClassNotFoundError
 
 @istest
 def test_that_get_data_accepts_valid_product():
-    __get_class(valid_cloudsat_RVOD_file, product='Cloudsat_2B_CWC_RVOD')
+    __get_class(valid_cloudsat_RVOD_file, product='CloudSat')
 
 @istest
 def test_automatic_detection_of_product_for_existing_product():
     product_cls = __get_class(valid_cloudsat_RVOD_file)
-    eq_(product_cls.__name__,'Cloudsat_2B_CWC_RVOD')
+    eq_(product_cls.__name__,'CloudSat')
 
     product_cls = __get_class(valid_caliop_l2_filename)
     eq_(product_cls.__name__,'Caliop_L2')
@@ -26,7 +26,8 @@ def test_that_get_class_raises_ClassNotFoundError_for_non_existing_product():
 @istest
 @raises(ClassNotFoundError)
 def test_that_get_data_raises_ClassNotFoundError_for_missing_product():
-    get_data(valid_cloudsat_RVOD_file,[valid_cloudsat_RVOD_variable], product='Product_Not_Yet_Implemented')
+    get_data(valid_cloudsat_RVOD_file,[valid_cloudsat_RVOD_sdata_variable],
+             product='Product_Not_Yet_Implemented')
 
 @istest
 @raises(TypeError)

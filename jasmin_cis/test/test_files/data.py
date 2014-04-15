@@ -17,7 +17,11 @@ valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf
 valid_modis_l3_variable = "Pressure_Level"
 
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
-valid_cloudsat_RVOD_variable = "RVOD_liq_water_content"
+valid_cloudsat_RVOD_sdata_variable = "RVOD_liq_water_content"
+valid_cloudsat_RVOD_vdata_variable = "RVOD_ice_water_path"
+
+valid_cloudsat_PRECIP_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")
+valid_cloudsat_PRECIP_variable = "Precip_rate"
 
 valid_aerosol_cci_filename = make_pathname("20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc")
 valid_aerosol_cci_variable = "AOD550"
@@ -36,10 +40,10 @@ valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010
 valid_caliop_l1_variable = "Tropopause_Temperature"
 
 valid_xenida_filename = make_pathname("xenida.pah9440.nc")
-valid_xenida_variable = "mass_fraction_of_cloud_liquid_water_in_air"
+valid_xenida_variable = "specific_humidity"
 
 valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
-valid_1d_vairable = "q"
+valid_1d_variable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
 valid_cis_col_file = make_pathname("cis-col-Agoufou_seasonal_average.nc")

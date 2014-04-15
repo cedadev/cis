@@ -69,6 +69,8 @@ def find_plugin_classes(parent_class, built_in_module, verbose=True):
         if subclass.__name__.startswith('abstract'):
             all_classes.remove(subclass)
 
+    all_classes = sorted(all_classes, key=lambda subclass: subclass.__name__)
+
     if verbose:
         logging.debug(parent_class.__name__+" subclasses are: " + str(all_classes))
 

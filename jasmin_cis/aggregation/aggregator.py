@@ -4,8 +4,8 @@ import iris.coord_categorisation
 import iris.analysis.cartography
 from iris.coords import DimCoord
 import numpy
-from jasmin_cis.col_implementations import GeneralGriddedColocator, BinningCubeCellConstraint
-from jasmin_cis.data_io.gridded_data import GriddedData
+from jasmin_cis.col_implementations import UngriddedGriddedColocator, BinningCubeCellConstraint
+from jasmin_cis.data_io.gridded_data import make_from_cube
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint
@@ -22,7 +22,7 @@ class Aggregator:
     def aggregate_gridded(self, kernel):
         # Make sure all coordinate have bounds - important for weighting and aggregating
         for coord in self.data.coords():
-            if not coord.has_bounds():
+            if not coord.has_bounds() and len(coord.points) > 1:
                 coord.guess_bounds()
                 logging.warning("Creating guessed bounds as none exist in file")
                 new_coord_number = self.data.coord_dims(coord)
@@ -148,7 +148,7 @@ class Aggregator:
                     self.data.remove_coord('aggregation_coord_for_'+coord.name())
                     self.data.add_dim_coord(new_coord, new_coord_number)
                 # 'data' will have ended up as a cube again, now change it back to a GriddedData object
-                self.data.__class__ = GriddedData
+                self.data = make_from_cube(self.data)
 
         return self.data
 
