@@ -63,26 +63,50 @@ class GeneralUngriddedColocator(Colocator):
 
         points = points.get_coordinates_points()
 
-        # Fill will the FillValue from the start
-        values = np.zeros(len(points)) + self.fill_value
+        # Create output arrays.
+        if self.var_name == '':
+            self.var_name = data.name()
+        if self.var_long_name == '':
+            self.var_long_name = metadata.long_name
+        if self.var_units == '':
+            self.var_units = data.units
+        extra_vars = kernel.get_extra_variable_names(self.var_name, self.var_long_name, self.var_units)
+        values = np.zeros((1 + len(extra_vars), len(points))) + self.fill_value
 
+        # Apply constraint and/or kernel to each sample point.
         for i, point in enumerate(points):
             if constraint is None:
                 con_points = data_points
             else:
                 con_points = constraint.constrain_points(point, data_points)
             try:
-                values[i] = kernel.get_value(point, con_points)
+                value_obj = kernel.get_value(point, con_points)
+                # Kernel returns either a single value or a tuple of values to insert into each output variable.
+                if isinstance(value_obj, tuple):
+                    for idx, val in enumerate(value_obj):
+                        if not np.isnan(val):
+                            values[idx, i] = val
+                else:
+                    values[0, i] = value_obj
             except ValueError:
                 pass
-        new_data = LazyData(values, metadata)
-        if self.var_name: new_data.metadata._name = self.var_name
-        if self.var_long_name: new_data.metadata.long_name = self.var_long_name
-        if self.var_units: new_data.units = self.var_units
+
+        return_data = []
+        new_data = LazyData(values[0, :], metadata)
+        new_data.metadata._name = self.var_name
+        new_data.metadata.long_name = self.var_long_name
         new_data.metadata.shape = (len(points),)
         new_data.metadata.missing_value = self.fill_value
+        new_data.units = self.var_units
+        return_data.append(new_data)
 
-        return [new_data]
+        for idx, var_names in enumerate(extra_vars):
+            var_metadata = Metadata(name=var_names[0], long_name=var_names[1], shape=(len(points),),
+                                    missing_value=self.fill_value, units=var_names[2])
+            new_data = LazyData(values[idx + 1, :], var_metadata)
+            return_data.append(new_data)
+
+        return return_data
 
 
 class DefaultColocator(Colocator):
@@ -517,7 +541,7 @@ class stddev(Kernel):
         """
         from numpy import std
         values = data.vals
-        if len(values) == 0:
+        if len(values) < 2:
             raise ValueError
         return std(values, ddof=1)
 
@@ -560,6 +584,46 @@ class full_average(Kernel):
         num_values = len(values)
         if num_values == 0: raise ValueError
         return (mean(values), std(values, ddof=1), num_values)
+
+
+class moments(Kernel):
+    def __init__(self, stddev_name='', nopoints_name=''):
+        self.stddev_name = stddev_name
+        self.nopoints_name = nopoints_name
+
+    def get_extra_variable_names(self, var_name, var_long_name, var_units):
+        """Sets name and units for standard deviation and number of points variables,
+        those of the base variable.
+        :param var_name: base variable name
+        :param var_long_name: base variable long name
+        :param var_units: base variable units
+        :return: tuple of tuples each containing (variable name, variable long name, variable units)
+        """
+        if self.stddev_name == '':
+            self.stddev_name = var_name + '_std_dev'
+        stdev_long_name = 'Standard deviation from the mean in ' + var_name
+        stddev_units = var_units
+        if self.nopoints_name == '':
+            self.nopoints_name = var_name + '_no_points'
+        npoints_long_name = 'Number of points used to calculate the mean of ' + var_name
+        npoints_units = '1'
+        return ((self.stddev_name, stdev_long_name, stddev_units),
+                (self.nopoints_name, npoints_long_name, npoints_units))
+
+    def get_value(self, point, data):
+        """
+        Returns the mean, standard deviation and number of values
+        """
+        from numpy import mean, std
+        values = data.vals
+        num_values = len(values)
+        if num_values == 0:
+            raise ValueError
+        elif num_values == 1:
+            std_dev = np.nan
+        else:
+            std_dev = std(values, ddof=1)
+        return mean(values), std_dev, num_values
 
 
 class nn_horizontal(Kernel):

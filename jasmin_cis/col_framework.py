@@ -42,6 +42,14 @@ class Kernel(object):
 
         '''
 
+    def get_extra_variable_names(self, var_name, var_long_name, var_units):
+        """Returns details of extra variables to be created for outputs of kernel.
+        :param var_name: base variable name
+        :param var_long_name: base variable long name
+        :param var_units: base variable units
+        :return: tuple of tuples each containing (variable name, variable long name, variable units)
+        """
+        return ()
 
 class Constraint(object):
     '''

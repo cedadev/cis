@@ -156,6 +156,10 @@ class Colocate(object):
 
     @staticmethod
     def _get_colocator_params(params):
+        """Separates the parameters understood by the colocator from those for the constraint.
+        :param params: combined colocator/constraint parameters
+        :return: tuple containing (dict of colocator parameters, dict of constraint parameters)
+        """
         col_param_names = ['fill_value', 'var_name', 'var_long_name', 'var_units']
         col_params = {}
         con_params = {}
