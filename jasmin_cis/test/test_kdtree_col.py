@@ -168,7 +168,7 @@ class TestSepConstraint(object):
         # 15m altitude separation
         a_sep = 15
         # 1 day (and a little bit) time separation
-        t_sep = '1d1M'
+        t_sep = 'P1dT1M'
         # Pressure constraint is 50/40 < p_sep < 60/50
         p_sep = 1.22
 

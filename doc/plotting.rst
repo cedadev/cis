@@ -190,11 +190,11 @@ Setting Plot Ranges
 
 The arguments ``--xmin``, ``--xmax``, ``--xstep``, ``--ymin``, ``--ymax``, ``--ystep``, ``--vmin``, ``--vmax``, ``--vstep`` can be used to specify the range of values to plot, where x and y correspond to the axes and v corresponds to the colours.
 
-When the arguments refer to dates or times, they should be in the format ``"YYYY-MM-DD hh:mm:ss"``, where the time is optional. **Note:** The double quotes are necessary.
+When the arguments refer to dates or times, they should be in the format ``YYYY-MM-DDThh:mm:ss``, where the time is optional. A colon or a space is also a valid date and time separator (if using a space quotes are necessary).
 
 The ``step`` arguments are used to specify the tick spacing on the axes and ``vstep`` is used to specify the tick spacing on the colorbar.
 
-When the ``step`` arguments refer to an amount of time, they should be in the format ``"$y$m$d$H$M$S"``. 
+When the ``step`` arguments refer to an amount of time, they should be in the ISO 8061 format ``PnYnMnDTnHnMnS``, where any particular time group is optional, case does not matter, and ``T`` can be substituted for either a colon or a space (if using a space quotes are necessary). 
 
 For example, to specify a tick spacing of one month and six seconds on the x axis, the following argument should be given:
 ``--xstep 1m6S`` 
