@@ -511,14 +511,14 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
             if len(split_input_variable) == 1:
                 input_dict[option[0]] = split_input_variable[0]
                 option.pop(0)
+                split_input_comma.pop(0)
             elif len(split_input_variable) == 2:
                 if option[0] == split_input_variable[0]:
                     input_dict[option[0]] = split_input_variable[1]
                     option.pop(0)
+                    split_input_comma.pop(0)
             else:
                 raise InvalidCommandLineOptionError('Something is wrong with this argument: ', split_input_comma)
-
-        print option, input_dict
 
         for i, option in enumerate(option):
             # Make sure an entry for each option is created, even if it is None
