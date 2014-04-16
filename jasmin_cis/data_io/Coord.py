@@ -151,28 +151,6 @@ class CoordList(list):
         flattened_coords = [(c.data_flattened if c is not None else None) for c in all_coords]
         return UngriddedHyperPointView(flattened_coords, None)
 
-    def x_get_coordinates_points(self):
-        """
-             Pack a list of coordinates into a list of x, y, z, t points to be passed to Colocator
-        :param coords: A CoordList of Coord objects
-        :return: A list of HyperPoints
-        """
-        from jasmin_cis.exceptions import CoordinateNotFoundError
-        from hyperpoint import HyperPoint, HyperPointList
-        points = HyperPointList()
-
-        logging.info("Converting coordinates to a list of HyperPoints")
-
-        # Pick the length of the 0th element in the list as our length - all coordinates should have the same length anyway
-        data_len = len(self[0].data.flatten())
-
-        all_coords = self.get_standard_coords(data_len)
-
-        for x in xrange(data_len):
-            points.append(HyperPoint(lat=all_coords[0][x], lon=all_coords[1][x], alt=all_coords[2][x],
-                                     pres=all_coords[3][x], t=all_coords[4][x]))
-        return points
-
     def get_standard_coords(self, data_len):
         """Constructs a list of the standard coordinate values.
         The standard coordinates are latitude, longitude, altitude, time and air_pressure; they occur in the return

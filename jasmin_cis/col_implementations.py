@@ -1,50 +1,58 @@
-import logging
 import __builtin__
-import numpy as np
+import logging
 
-import iris.analysis.interpolate
-import iris.coords
+import iris
+import numpy as np
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
-from jasmin_cis.data_io.gridded_data import GriddedData
+from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from jasmin_cis.data_io.ungridded_data import UngriddedData
+from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
 import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
 
 
-class DefaultColocator(Colocator):
+class GeneralUngriddedColocator(Colocator):
 
-    def __init__(self, var_name='', var_long_name='', var_units=''):
-        super(DefaultColocator, self).__init__()
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units=''):
+        super(GeneralUngriddedColocator, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
+                    'Dummy Constraint fill_value must be a valid float')
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
 
     def colocate(self, points, data, constraint, kernel):
-        '''
-            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
-             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
-             for the output LazyData object is copied from the input data object.
+        """
+        This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
+        one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
+        for the output LazyData object is copied from the input data object.
+
         :param points: A list of HyperPoints
         :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
         :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
                             based on it's internal parameters
         :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
         :return: A single LazyData object
-        '''
-        from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
-        import numpy as np
-
+        """
         metadata = data.metadata
 
-        # Convert ungridded data to a list of points
-        if isinstance(data, UngriddedData):
-            data_points = data.get_non_masked_points()
-        else:
+        # Convert ungridded data to a list of points if kernel needs it.
+        # Special case checks for kernels that use a cube - this could be done more elegantly.
+        if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
+            if not isinstance(data, iris.cube.Cube):
+                raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
+            if constraint is not None and not isinstance(constraint, DummyConstraint):
+                raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
             data_points = data
+        else:
+            data_points = data.get_non_masked_points()
 
         # Create index if constraint and/or kernel require one.
         coord_map = None
@@ -55,242 +63,52 @@ class DefaultColocator(Colocator):
 
         points = points.get_coordinates_points()
 
-        # Fill will the FillValue from the start
-        values = np.zeros(len(points)) + constraint.fill_value
+        # Create output arrays.
+        if self.var_name == '':
+            self.var_name = data.name()
+        if self.var_long_name == '':
+            self.var_long_name = metadata.long_name
+        if self.var_units == '':
+            self.var_units = data.units
+        var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name, self.var_units)
+        if var_set_details is None:
+            var_set_details = ((self.var_name, self.var_long_name, self.var_units),)
+        values = np.zeros((len(var_set_details), len(points))) + self.fill_value
 
+        # Apply constraint and/or kernel to each sample point.
         for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data_points)
+            if constraint is None:
+                con_points = data_points
+            else:
+                con_points = constraint.constrain_points(point, data_points)
             try:
-                values[i] = kernel.get_value(point, con_points)
-            except ValueError:
-                pass
-        new_data = LazyData(values, metadata)
-        if self.var_name: new_data.metadata._name = self.var_name
-        if self.var_long_name: new_data.metadata.long_name = self.var_long_name
-        if self.var_units: new_data.units = self.var_units
-        new_data.metadata.shape = (len(points),)
-        new_data.metadata.missing_value = constraint.fill_value
-
-        return [new_data]
-
-
-class AverageColocator(Colocator):
-
-    def __init__(self, var_name='', var_long_name='', var_units='',stddev_name='',nopoints_name=''):
-        super(AverageColocator, self).__init__()
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.stddev_name = stddev_name
-        self.nopoints_name = nopoints_name
-
-    def colocate(self, points, data, constraint, kernel):
-        '''
-            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
-             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
-             for the output LazyData object is copied from the input data object.
-        :param points: A list of HyperPoints
-        :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
-                            based on it's internal parameters
-        :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value - This
-                            should be full_average - no other kernels currently return multiple values
-        :return: One LazyData object for the mean of the constrained values, one for the standard deviation and another
-                    for the number of points in the constrained set for which the mean was calculated
-        '''
-        from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
-        from jasmin_cis.exceptions import ClassNotFoundError
-
-        import numpy as np
-
-        metadata = data.metadata
-
-        if not isinstance(kernel, full_average):
-            raise ClassNotFoundError("Invalid kernel specified for this colocator. Should be 'full_average'.")
-
-        # Convert ungridded data to a list of points
-        if isinstance(data, UngriddedData):
-            data_points = data.get_non_masked_points()
-        else:
-            data_points = data
-
-        # Create index if constraint and/or kernel require one.
-        coord_map = None
-        data_index.create_indexes(constraint, points, data_points, coord_map)
-        data_index.create_indexes(kernel, points, data_points, coord_map)
-
-        logging.info("--> Colocating...")
-
-        points = points.get_coordinates_points()
-
-        # Fill will the FillValue from the start
-        means = np.zeros(len(points)) + constraint.fill_value
-        stddev = np.zeros(len(points)) + constraint.fill_value
-        nopoints = np.zeros(len(points)) + constraint.fill_value
-
-        for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data_points)
-            try:
-                means[i], stddev[i], nopoints[i] = kernel.get_value(point, con_points)
+                value_obj = kernel.get_value(point, con_points)
+                # Kernel returns either a single value or a tuple of values to insert into each output variable.
+                if isinstance(value_obj, tuple):
+                    for idx, val in enumerate(value_obj):
+                        if not np.isnan(val):
+                            values[idx, i] = val
+                else:
+                    values[0, i] = value_obj
             except ValueError:
                 pass
 
-        mean_data = LazyData(means, metadata)
-        if self.var_name:
-            mean_data.metadata._name = self.var_name
-        else:
-            mean_data.metadata._name = mean_data.name() + '_mean'
-        if self.var_long_name: mean_data.metadata.long_name = self.var_long_name
-        if self.var_units: mean_data.units = self.var_units
-        mean_data.metadata.shape = (len(points),)
-        mean_data.metadata.missing_value = constraint.fill_value
+        return_data = []
+        for idx, var_details in enumerate(var_set_details):
+            if idx == 0:
+                new_data = LazyData(values[0, :], metadata)
+                new_data.metadata._name = var_details[0]
+                new_data.metadata.long_name = var_details[1]
+                new_data.metadata.shape = (len(points),)
+                new_data.metadata.missing_value = self.fill_value
+                new_data.units = var_details[2]
+            else:
+                var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(points),),
+                                        missing_value=self.fill_value, units=var_details[2])
+                new_data = LazyData(values[idx, :], var_metadata)
+            return_data.append(new_data)
 
-        if not self.stddev_name:
-            self.stddev_name = mean_data.name()+'_std_dev'
-        stddev_data = LazyData(stddev, Metadata(name=self.stddev_name,
-                                                long_name='Standard deviation from the mean in '+metadata._name,
-                                                shape=(len(points),), missing_value=constraint.fill_value, units=mean_data.units))
-
-        if not self.nopoints_name:
-            self.nopoints_name = mean_data.name()+'_no_points'
-        nopoints_data = LazyData(nopoints, Metadata(name=self.nopoints_name,
-                                                    long_name='Number of points used to calculate the mean of '+metadata._name,
-                                                    shape=(len(points),), missing_value=constraint.fill_value, units='1'))
-
-        return [mean_data, stddev_data, nopoints_data]
-
-
-class DifferenceColocator(Colocator):
-
-    def __init__(self, var_name='', var_long_name='', var_units='', diff_name='difference', diff_long_name=''):
-        super(DifferenceColocator, self).__init__()
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.diff_name = diff_name
-        self.diff_long_name= diff_long_name
-
-    def colocate(self, points, data, constraint, kernel):
-        '''
-            This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
-             one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
-             for the output LazyData object is copied from the input data object.
-        :param points: A list of HyperPoints
-        :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
-                            based on it's internal parameters
-        :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
-        :return: One LazyData object for the colocated data, and another for the difference between that data and the sample data
-        '''
-        from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
-        import numpy as np
-
-        metadata = data.metadata
-
-        # Convert ungridded data to a list of points
-        if isinstance(data, UngriddedData):
-            data_points = data.get_non_masked_points()
-        else:
-            data_points = data
-
-        # Create index if constraint and/or kernel require one.
-        coord_map = None
-        data_index.create_indexes(constraint, points, data_points, coord_map)
-        data_index.create_indexes(kernel, points, data_points, coord_map)
-
-        logging.info("--> Colocating...")
-
-        points = points.get_all_points()
-
-        # Fill will the FillValue from the start
-        values = np.zeros(len(points)) + constraint.fill_value
-        difference = np.zeros(len(points)) + constraint.fill_value
-
-        for i, point in enumerate(points):
-            con_points = constraint.constrain_points(point, data_points)
-            try:
-                values[i] = kernel.get_value(point, con_points)
-                difference[i] = values[i] - point.val[0]
-            except ValueError:
-                pass
-
-        val_data = LazyData(values, metadata)
-        if self.var_name: val_data.metadata._name = self.var_name
-        if self.var_long_name: val_data.metadata.long_name = self.var_long_name
-        if self.var_units: val_data.units = self.var_units
-        val_data.metadata.shape = (len(points),)
-        val_data.metadata.missing_value = constraint.fill_value
-
-        if not self.diff_long_name: self.diff_long_name = 'Difference between given variable and sampling values'
-        diff_data = LazyData(difference, Metadata(name=self.diff_name, long_name=self.diff_long_name, shape=(len(points),),
-                                                  missing_value=constraint.fill_value, units=val_data.units))
-
-        return [val_data, diff_data]
-
-
-class DebugColocator(Colocator):
-
-    def __init__(self, max_vals=1000, print_step=10.0):
-        super(DebugColocator, self).__init__()
-        self.max_vals = int(max_vals)
-        self.print_step = float(print_step)
-
-    def colocate(self, points, data, constraint, kernel):
-        # This is the same colocate method as above with extra logging and timing steps. This is useful for debugging
-        #  but will be slower than the default colocator.
-        from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
-        import numpy as np
-        import math
-        from time import time
-
-        metadata = data.metadata
-
-        # Convert ungridded data to a list of points
-        if isinstance(data, UngriddedData):
-            data_points = data.get_non_masked_points()
-        else:
-            data_points = data
-
-        # Create index if constraint and/or kernel require one.
-        coord_map = None
-        data_index.create_indexes(constraint, points, data_points, coord_map)
-        data_index.create_indexes(kernel, points, data_points, coord_map)
-
-        logging.info("--> Colocating...")
-
-        points = points.get_coordinates_points()
-
-        # Only colocate a certain number of points, as a quick test
-        num_points = len(points)
-        num_short_points = num_points if num_points < self.max_vals else self.max_vals
-
-        # We still need to output the full size list, to match the size of the coordinates
-        values = np.zeros(len(points)) + constraint.fill_value
-
-        times = np.zeros(num_short_points)
-        for i, point in enumerate(points):
-            if i >= num_short_points:
-                break
-
-            t1 = time()
-
-            # colocate using a constraint and a kernel
-            con_points = constraint.constrain_points(point, data_points)
-            try:
-                values[i] = kernel.get_value(point, con_points)
-            except ValueError:
-                pass
-
-            # print debug information to screen
-            times[i] = time() - t1
-            frac, rem = math.modf(i/self.print_step)
-            if frac == 0: print str(i) + " - took: " + str(times[i]) + "s" + " -  sample: " + str(point) + " - colocated value: " + str(values[i])
-
-        logging.info("Average time per point: " + str(np.sum(times)/num_short_points))
-        new_data = LazyData(values, metadata)
-        new_data.metadata.shape = (len(points),)
-        new_data.metadata.missing_value = constraint.fill_value
-        return [new_data]
+        return return_data
 
 
 class DummyColocator(Colocator):
@@ -308,23 +126,13 @@ class DummyColocator(Colocator):
         '''
         from jasmin_cis.data_io.ungridded_data import LazyData
 
-        logging.info("--> colocating...")
+        logging.info("--> Colocating...")
 
         new_data = LazyData(data.data, data.metadata)
         return [new_data]
 
 
 class DummyConstraint(Constraint):
-
-    def __init__(self, fill_value=None):
-        from jasmin_cis.exceptions import InvalidCommandLineOptionError
-
-        super(DummyConstraint, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise InvalidCommandLineOptionError('Dummy Constraint fill_value must be a valid float')
 
     def constrain_points(self, point, data):
         # This is a null constraint - all of the points just get passed back
@@ -333,16 +141,13 @@ class DummyConstraint(Constraint):
 
 class SepConstraint(PointConstraint):
 
-    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
+    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
         super(SepConstraint, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise InvalidCommandLineOptionError('Separation Constraint fill_value must be a valid float')
+
         self.checks = []
+
         if h_sep is not None:
             self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
             self.checks.append(self.horizontal_constraint)
@@ -385,17 +190,12 @@ class SepConstraint(PointConstraint):
 
 class SepConstraintKdtree(PointConstraint):
 
-    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None, fill_value=None):
+    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
         self.haversine_distance_kd_tree_index = False
 
         super(SepConstraintKdtree, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise InvalidCommandLineOptionError('Separation Constraint fill_value must be a valid float')
 
         self.checks = []
         if h_sep is not None:
@@ -465,7 +265,7 @@ class stddev(Kernel):
         """
         from numpy import std
         values = data.vals
-        if len(values) == 0:
+        if len(values) < 2:
             raise ValueError
         return std(values, ddof=1)
 
@@ -496,18 +296,48 @@ class max(Kernel):
         return __builtin__.max(values)
 
 
-class full_average(Kernel):
+class moments(Kernel):
+    def __init__(self, mean_name='', stddev_name='', nopoints_name=''):
+        self.mean_name = mean_name
+        self.stddev_name = stddev_name
+        self.nopoints_name = nopoints_name
+
+    def get_variable_details(self, var_name, var_long_name, var_units):
+        """Sets name and units for mean, standard deviation and number of points variables, based
+        on those of the base variable or overridden by those specified as kernel parameters.
+        :param var_name: base variable name
+        :param var_long_name: base variable long name
+        :param var_units: base variable units
+        :return: tuple of tuples each containing (variable name, variable long name, variable units)
+        """
+        if self.mean_name == '':
+            self.mean_name = var_name + '_mean'
+        if self.stddev_name == '':
+            self.stddev_name = var_name + '_std_dev'
+        stdev_long_name = 'Standard deviation from the mean in ' + var_name
+        stddev_units = var_units
+        if self.nopoints_name == '':
+            self.nopoints_name = var_name + '_no_points'
+        npoints_long_name = 'Number of points used to calculate the mean of ' + var_name
+        npoints_units = '1'
+        return ((self.mean_name, var_long_name, var_units),
+                (self.stddev_name, stdev_long_name, stddev_units),
+                (self.nopoints_name, npoints_long_name, npoints_units))
 
     def get_value(self, point, data):
-        '''
-            Colocation using the mean of any points left after a constraint. Also returns the standard
-             deviation and the number of points
-        '''
+        """
+        Returns the mean, standard deviation and number of values
+        """
         from numpy import mean, std
         values = data.vals
         num_values = len(values)
-        if num_values == 0: raise ValueError
-        return (mean(values), std(values, ddof=1), num_values)
+        if num_values == 0:
+            raise ValueError
+        elif num_values == 1:
+            std_dev = np.nan
+        else:
+            std_dev = std(values, ddof=1)
+        return mean(values), std_dev, num_values
 
 
 class nn_horizontal(Kernel):
@@ -599,6 +429,31 @@ class nn_time(Kernel):
         return nearest_point.val[0]
 
 
+# These classes act as abbreviations for kernel classes above:
+class nn_h(nn_horizontal):
+    """Nearest neighbour horizontal kernel - alias for nn_horizontal.
+    """
+    pass
+
+
+class nn_a(nn_altitude):
+    """Nearest neighbour altitude kernel - alias for nn_altitude.
+    """
+    pass
+
+
+class nn_p(nn_pressure):
+    """Nearest neighbour pressure kernel - alias for nn_pressure.
+    """
+    pass
+
+
+class nn_t(nn_time):
+    """Nearest neighbour time kernel - alias for nn_time.
+    """
+    pass
+
+
 class nn_gridded(Kernel):
     def get_value(self, point, data):
         """
@@ -607,9 +462,9 @@ class nn_gridded(Kernel):
         """
         from iris.analysis.interpolate import nearest_neighbour_data_value
 
-        # Remove any tuples in the list that do not correspond to a coordinate in the cube 'data'
+        # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         for i in point.coord_tuple:
-            if len(data.coords(i[0])) == 0:
+            if len(data.coords(i[0], dim_coords=True)) == 0:
                 point.coord_tuple.remove(i)
 
         return nearest_neighbour_data_value(data, point.coord_tuple)
@@ -622,18 +477,18 @@ class li(Kernel):
         """
         from iris.analysis.interpolate import linear
 
-         # Remove any tuples in the list that do not correspond to a coordinate in the cube 'data'
+        # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         for i in point.coord_tuple:
-            if len(data.coords(i[0])) == 0:
+            if len(data.coords(i[0], dim_coords=True)) == 0:
                 point.coord_tuple.remove(i)
 
         return linear(data, point.coord_tuple).data
 
 
-class GriddedColocatorUsingIrisRegrid(DefaultColocator):
+class GriddedColocatorUsingIrisRegrid(Colocator):
 
     def __init__(self, var_name='', var_long_name='', var_units=''):
-        super(DefaultColocator, self).__init__()
+        super(Colocator, self).__init__()
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -736,7 +591,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
 
             # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
             # in coord_names_and_sizes_for_output_grid.
-            return [kernel.interpolater(data, coordinate_point_pairs)]
+            return [make_from_cube(kernel.interpolater(data, coordinate_point_pairs))]
         else:
             # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid.
             # Now for each point in the sample grid we do the interpolation.
@@ -808,12 +663,18 @@ class gridded_gridded_li(Kernel):
         raise ValueError("gridded_gridded_li kernel selected for use with colocator other than GriddedColocator")
 
 
-class UngriddedGriddedColocator(Colocator):
-    """Performs co-location of ungridded data onto a the points of a cube.
+class GeneralGriddedColocator(Colocator):
+    """Performs co-location of data on to a the points of a cube.
     """
-    def __init__(self, var_name='', var_long_name='', var_units=''):
-        super(UngriddedGriddedColocator, self).__init__()
-        #TODO These are not used - use or remove everywhere.
+
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units=''):
+        super(GeneralGriddedColocator, self).__init__()
+        if fill_value is not None:
+            try:
+                self.fill_value = float(fill_value)
+            except ValueError:
+                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
+                    'Dummy Constraint fill_value must be a valid float')
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -821,31 +682,30 @@ class UngriddedGriddedColocator(Colocator):
     def colocate(self, points, data, constraint, kernel):
         """
         :param points: cube defining the sample points
-        :param data: UngriddedData object providing data to be co-located
+        :param data: CommonData object providing data to be co-located
         :param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
                            data based on it's internal parameters
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
         :return: Cube of co-located data
         """
-        from jasmin_cis.exceptions import ClassNotFoundError
-
         # Constraint must be appropriate for gridded sample.
-        if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)
-                or isinstance(constraint, DummyConstraint)):
-            raise ClassNotFoundError("Expected constraint of subclass of one of {}; found one of class {}".format(
-                str([jasmin_cis.utils.get_class_name(CellConstraint),
-                     jasmin_cis.utils.get_class_name(IndexedConstraint)]),
-                jasmin_cis.utils.get_class_name(type(constraint))))
+        # if not (isinstance(constraint, CellConstraint) or isinstance(constraint, IndexedConstraint)
+        #         or isinstance(constraint, DummyConstraint)):
+        #     raise ClassNotFoundError("Expected constraint of subclass of one of {}; found one of class {}".format(
+        #         str([jasmin_cis.utils.get_class_name(CellConstraint),
+        #              jasmin_cis.utils.get_class_name(IndexedConstraint)]),
+        #         jasmin_cis.utils.get_class_name(type(constraint))))
 
         # Only support the mean kernel currently.
         # if not isinstance(kernel, mean):
         #     raise ClassNotFoundError("Expected kernel of class {}; found one of class {}".format(
         #         jasmin_cis.utils.get_class_name(mean), jasmin_cis.utils.get_class_name(type(kernel))))
 
-        if isinstance(data, UngriddedData):
-            data_points = data.get_non_masked_points()
-        else:
-            raise ValueError("UngriddedGriddedColocator requires ungridded data to colocate")
+        # if isinstance(data, UngriddedData):
+        #     data_points = data.get_non_masked_points()
+        # else:
+        #     raise ValueError("GeneralGriddedColocator requires ungridded data to colocate")
+        data_points = data.get_non_masked_points()
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = make_coord_map(points, data)
@@ -870,11 +730,12 @@ class UngriddedGriddedColocator(Colocator):
 
         # Create index if constraint supports it.
         data_index.create_indexes(constraint, coords, data_points, coord_map)
+        data_index.create_indexes(kernel, points, data_points, coord_map)
 
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = np.ma.zeros(shape)
         values.mask = True
-        values.fill_value = constraint.fill_value
+        values.fill_value = self.fill_value
 
         logging.info("--> Co-locating...")
 
@@ -882,7 +743,8 @@ class UngriddedGriddedColocator(Colocator):
         num_cells = np.product(shape)
         cell_count = 0
         cell_total = 0
-        indexed_constraint = isinstance(constraint, IndexedConstraint)
+        is_indexed_constraint = isinstance(constraint, IndexedConstraint)
+        is_cell_constraint = isinstance(constraint, CellConstraint)
         for indices in jasmin_cis.utils.index_iterator(shape):
             hp_values = [None] * HyperPoint.number_standard_names
             hp_cell_values = [None] * HyperPoint.number_standard_names
@@ -890,12 +752,13 @@ class UngriddedGriddedColocator(Colocator):
                 hp_values[hpi] = coords[ci].points[indices[shi]]
                 hp_cell_values[hpi] = coords[ci].cell(indices[shi])
 
-            hp_cell = HyperPoint(*hp_cell_values)
             hp = HyperPoint(*hp_values)
-            if indexed_constraint:
+            if is_indexed_constraint:
                 arg = indices
+            elif is_cell_constraint:
+                arg = HyperPoint(*hp_cell_values)
             else:
-                arg = hp_cell
+                arg = hp
             con_points = constraint.constrain_points(arg, data_points)
             try:
                 values[indices] = kernel.get_value(hp, con_points)
@@ -910,9 +773,9 @@ class UngriddedGriddedColocator(Colocator):
                 cell_count = 0
 
         # Construct an output cube containing the colocated data.
-        cube = self._create_colocated_cube(points, data, values, output_coords, constraint.fill_value)
+        cube = self._create_colocated_cube(points, data, values, output_coords, self.fill_value)
         data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
-        data_with_nan_and_inf_removed.set_fill_value(constraint.fill_value)
+        data_with_nan_and_inf_removed.set_fill_value(self.fill_value)
         cube.data = data_with_nan_and_inf_removed
 
         return [cube]
@@ -968,7 +831,7 @@ class UngriddedGriddedColocator(Colocator):
         metadata.missing_value = fill_value
         cube = GriddedData(data, standard_name=src_data.standard_name,
                            long_name=src_data.long_name,
-                           var_name=metadata._name,
+                           var_name=src_data.var_name,
                            units=src_data.units,
                            dim_coords_and_dims=dim_coords_and_dims)
         #TODO Check if any other keyword arguments should be set:
@@ -981,15 +844,6 @@ class UngriddedGriddedColocator(Colocator):
 class CubeCellConstraint(CellConstraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
     """
-    def __init__(self, fill_value=None):
-        super(CubeCellConstraint, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
-                    'Cube Cell Constraint fill_value must be a valid float')
-
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.
         :param sample_point: HyperPoint of cells defining sample region
@@ -1014,16 +868,9 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
     Uses the index_data method to bin all the points
     """
-    def __init__(self, fill_value=None):
+    def __init__(self):
         super(BinningCubeCellConstraint, self).__init__()
         self.grid_cell_bin_index = None
-
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise jasmin_cis.exceptions.InvalidCommandLineOptionError(
-                    'Cube Cell Constraint fill_value must be a valid float')
 
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.
@@ -1046,7 +893,7 @@ def make_coord_map(points, data):
     # If there are coordinates in the sample grid that are not present for the data,
     # omit the from the set of coordinates in the output grid. Find a mask of coordinates
     # that are present to use when determining the output grid shape.
-    coordinate_mask = [False if c is None else True for c in data.coords().find_standard_coords()]
+    coordinate_mask = [False if c is None else True for c in data.find_standard_coords()]
 
     # Find the mapping of standard coordinates to those in the sample points and those to be used
     # in the output data.
@@ -1054,7 +901,7 @@ def make_coord_map(points, data):
 
 
 def _find_standard_coords(cube, coordinate_mask):
-    """Finds the mapping of cube coordinates to the standard ones used by HyperPoint.
+    """Finds the mapping of sample point coordinates to the standard ones used by HyperPoint.
 
     :param cube: cube among the coordinates of which to find the standard coordinates
     :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
@@ -1062,13 +909,16 @@ def _find_standard_coords(cube, coordinate_mask):
     """
     coord_map = []
     coord_lookup = {}
-    for idx, coord in enumerate(cube.coords()):
+    # for idx, coord in enumerate(cube.coords()):
+    coords = cube.coords()
+    for idx, coord in enumerate(coords):
         coord_lookup[coord] = idx
 
     shape_idx = 0
     for hpi, name in enumerate(HyperPoint.standard_names):
         if coordinate_mask[hpi]:
-            coords = cube.coords(standard_name=name)
+            # Get the dimension coordinates only - these correspond to dimensions of data array.
+            coords = cube.coords(standard_name=name, dim_coords=True)
             if len(coords) > 1:
                 msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
                        % (len(coords), ', '.join(coord.name() for coord in coords)))

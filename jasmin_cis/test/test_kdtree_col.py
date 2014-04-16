@@ -3,10 +3,11 @@ from nose.tools import istest, eq_, assert_almost_equal, raises
 
 import numpy as np
 
+import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.test.test_util import mock
-from jasmin_cis.col_implementations import DefaultColocator, nn_horizontal_kdtree, DummyConstraint
-from jasmin_cis.col_implementations import SepConstraintKdtree
+from jasmin_cis.col_implementations import (GeneralUngriddedColocator, nn_horizontal_kdtree, DummyConstraint,
+                                            SepConstraintKdtree, make_coord_map)
 from jasmin_cis.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 
 
@@ -32,8 +33,8 @@ class Test_nn_horizontal_kdtree(object):
         ug_data = mock.make_regular_2d_ungridded_data()
         sample_points = mock.MockUngriddedData(
             [HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(fill_value=-999), nn_horizontal_kdtree())[0]
+        col = GeneralUngriddedColocator(fill_value=-999)
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 8.0)
         eq_(new_data.data[1], 12.0)
         eq_(new_data.data[2], 4.0)
@@ -43,8 +44,8 @@ class Test_nn_horizontal_kdtree(object):
         ug_data = mock.make_regular_2d_ungridded_data()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = mock.MockUngriddedData([HyperPoint(0.0, 0.0)])
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(fill_value=-999), nn_horizontal_kdtree())[0]
+        col = GeneralUngriddedColocator(fill_value=-999)
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 8.0)
 
     @istest
@@ -60,8 +61,8 @@ class Test_nn_horizontal_kdtree(object):
         ug_data = mock.make_regular_2d_ungridded_data()
         sample_points = mock.MockUngriddedData([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5),
                                                 HyperPoint(-2.5, -2.5)])
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(fill_value=-999), nn_horizontal_kdtree())[0]
+        col = GeneralUngriddedColocator(fill_value=-999)
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 11.0)
         eq_(new_data.data[1], 5.0)
         eq_(new_data.data[2], 10.0)
@@ -72,8 +73,8 @@ class Test_nn_horizontal_kdtree(object):
         ug_data = mock.make_regular_2d_ungridded_data()
         sample_points = mock.MockUngriddedData([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5),
                                                 HyperPoint(-5.5, -5.5)])
-        col = DefaultColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(fill_value=-999), nn_horizontal_kdtree())[0]
+        col = GeneralUngriddedColocator(fill_value=-999)
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 12.0)
         eq_(new_data.data[1], 6.0)
         eq_(new_data.data[2], 10.0)
@@ -188,6 +189,111 @@ class TestSepConstraint(object):
 
         eq_(ref_vals.size, new_vals.size)
         assert(np.equal(ref_vals, new_vals).all())
+
+
+def make_square_5x3_2d_cube():
+    """
+    Makes a well defined cube of shape 5x3 with data as follows
+    array([[1,2,3],
+           [4,5,6],
+           [7,8,9],
+           [10,11,12],
+           [13,14,15]])
+    and coordinates in longitude:
+        array([ -10, -5, 0, 5, 10 ])
+    latitude:
+        array([ -5, 0, 5 ])
+
+    They are different lengths to make it easier to distinguish. Note the longitude increases
+    as you step through the array in order - so downwards as it's written above
+    """
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    longitude = DimCoord(np.arange(-10, 11, 5), standard_name='longitude', units='degrees')
+    latitude = DimCoord(np.arange(-5, 6, 5), standard_name='latitude', units='degrees')
+    data = np.reshape(np.arange(15) + 1.0, (5, 3))
+    cube = Cube(data, dim_coords_and_dims=[(longitude, 0), (latitude, 1)], var_name='dummy')
+
+    return cube
+
+
+class TestSepConstraintWithGriddedData(object):
+    @istest
+    def test_horizontal_constraint_for_same_2d_grids_returns_original_data(self):
+        # Simple case of lat/lon grid with dimensions in that order.
+        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube())
+        data_cube = gridded_data.make_from_cube(mock.make_mock_cube())
+
+        data_points = data_cube.get_non_masked_points()
+
+        sample_points = sample_cube.get_all_points()
+        coord_map = make_coord_map(sample_cube, data_cube)
+
+        # Make separation constraint small enough to include only the corresponding point in the data cube.
+        constraint = SepConstraintKdtree(h_sep=400)
+
+        index = HaversineDistanceKDTreeIndex()
+        index.index_data(sample_points, data_points, coord_map, leafsize=2)
+        constraint.haversine_distance_kd_tree_index = index
+
+        for idx, sample_point in enumerate(sample_points):
+            out_points = constraint.constrain_points(sample_point, data_points)
+            assert(len(out_points) == 1)
+            assert(out_points[0].val[0] == data_points[idx].val[0])
+
+
+    @istest
+    def test_horizontal_constraint_for_same_3d_grids_returns_original_data(self):
+        # Create sample and data cubes that include a time coordinate with the dimensions in reverse of normal order.
+        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube(
+            lat_dim_length=5, lon_dim_length=3, time_dim_length=2, dim_order=['time', 'lon', 'lat']))
+        data_cube = gridded_data.make_from_cube(mock.make_mock_cube(
+            lat_dim_length=5, lon_dim_length=3, time_dim_length=2, dim_order=['time', 'lon', 'lat']))
+
+        data_points = data_cube.get_non_masked_points()
+
+        sample_points = sample_cube.get_all_points()
+        coord_map = make_coord_map(sample_cube, data_cube)
+
+        # Make separation constraint small enough to include only the corresponding point in the data cube.
+        constraint = SepConstraintKdtree(h_sep=400)
+
+        index = HaversineDistanceKDTreeIndex()
+        index.index_data(sample_points, data_points, coord_map, leafsize=2)
+        constraint.haversine_distance_kd_tree_index = index
+
+        for idx, sample_point in enumerate(sample_points):
+            out_points = constraint.constrain_points(sample_point, data_points)
+            # Two times for each spatial position.
+            assert(len(out_points) == 2)
+            assert(data_points[idx].val[0] in [p.val[0] for p in out_points])
+
+    @istest
+    def test_horizontal_constraint_in_2d_with_missing_values(self):
+        # Test with standard 2d grids but with missing data.
+        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube())
+        data_cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube_with_missing_data())
+
+        data_points = data_cube.get_non_masked_points()
+
+        sample_points = sample_cube.get_all_points()
+        coord_map = make_coord_map(sample_cube, data_cube)
+
+        # Make separation constraint small enough to include only the corresponding point in the data cube.
+        constraint = SepConstraintKdtree(h_sep=400)
+
+        index = HaversineDistanceKDTreeIndex()
+        index.index_data(sample_points, data_points, coord_map, leafsize=2)
+        constraint.haversine_distance_kd_tree_index = index
+
+        for idx, sample_point in enumerate(sample_points):
+            out_points = constraint.constrain_points(sample_point, data_points)
+            if data_points[idx].val[0] is np.ma.masked:
+                assert(len(out_points) == 0)
+            else:
+                assert(len(out_points) == 1)
+                assert(out_points[0].val[0] == data_points[idx].val[0])
 
 
 if __name__ == '__main__':

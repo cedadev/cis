@@ -17,12 +17,22 @@ class HaversineDistanceKDTreeIndex(object):
         :param coord_map: (not used) list of tuples relating index in HyperPoint
                           to index in sample point coords and in coords to be output
         """
-        lat = data.coords[HyperPoint.LATITUDE]
-        lon = data.coords[HyperPoint.LONGITUDE]
+        if len(data.data.shape) > 1:
+            # Flatten coordinates.
+            lat_idx = [key for key, value in data.dims_to_std_coords_map.items()
+                       if value == HyperPoint.LATITUDE][0]
+            lon_idx = [key for key, value in data.dims_to_std_coords_map.items()
+                       if value == HyperPoint.LONGITUDE][0]
+            flattened_coords = np.meshgrid(*data.coords, indexing='ij')
+            lat = flattened_coords[lat_idx].ravel()
+            lon = flattened_coords[lon_idx].ravel()
+        else:
+            lat = data.coords[HyperPoint.LATITUDE]
+            lon = data.coords[HyperPoint.LONGITUDE]
         spatial_points = np.ma.empty((len(data), 2))
         spatial_points[:, 0] = lat
         spatial_points[:, 1] = lon
-        mask = np.ma.getmask(data.data)
+        mask = np.ma.getmask(data.data).ravel()
         self.index = HaversineDistanceKDTree(spatial_points, mask=mask, leafsize=leafsize)
 
     def find_nearest_point(self, point):

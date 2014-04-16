@@ -73,7 +73,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         """
         ret_list = []
 
-        coords = self.coords()
+        coords = self.coords(dim_coords=True)
         for name in HyperPoint.standard_names:
             coord_and_dim = None
             for idx, coord in enumerate(coords):
@@ -98,3 +98,9 @@ class GriddedData(iris.cube.Cube, CommonData):
 
     def name(self):
         return self.var_name
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return True

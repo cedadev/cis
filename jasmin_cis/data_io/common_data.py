@@ -30,3 +30,9 @@ class CommonData(object):
         :return: list-like object of data points
         """
         pass
+
+    @abstractmethod
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        pass
