@@ -907,3 +907,6 @@ class MockUngriddedData(CommonData):
 
     def get_non_masked_points(self):
         return self.hyperpointlist
+
+    def is_gridded(self):
+        return False

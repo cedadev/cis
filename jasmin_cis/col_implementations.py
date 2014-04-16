@@ -44,7 +44,7 @@ class GeneralUngriddedColocator(Colocator):
         metadata = data.metadata
 
         # Convert ungridded data to a list of points if kernel needs it.
-        #TODO Do this properly.
+        # Special case checks for kernels that use a cube - this could be done more elegantly.
         if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
             if not isinstance(data, iris.cube.Cube):
                 raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
@@ -70,8 +70,10 @@ class GeneralUngriddedColocator(Colocator):
             self.var_long_name = metadata.long_name
         if self.var_units == '':
             self.var_units = data.units
-        extra_vars = kernel.get_extra_variable_names(self.var_name, self.var_long_name, self.var_units)
-        values = np.zeros((1 + len(extra_vars), len(points))) + self.fill_value
+        var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name, self.var_units)
+        if var_set_details is None:
+            var_set_details = ((self.var_name, self.var_long_name, self.var_units),)
+        values = np.zeros((len(var_set_details), len(points))) + self.fill_value
 
         # Apply constraint and/or kernel to each sample point.
         for i, point in enumerate(points):
@@ -92,18 +94,18 @@ class GeneralUngriddedColocator(Colocator):
                 pass
 
         return_data = []
-        new_data = LazyData(values[0, :], metadata)
-        new_data.metadata._name = self.var_name
-        new_data.metadata.long_name = self.var_long_name
-        new_data.metadata.shape = (len(points),)
-        new_data.metadata.missing_value = self.fill_value
-        new_data.units = self.var_units
-        return_data.append(new_data)
-
-        for idx, var_names in enumerate(extra_vars):
-            var_metadata = Metadata(name=var_names[0], long_name=var_names[1], shape=(len(points),),
-                                    missing_value=self.fill_value, units=var_names[2])
-            new_data = LazyData(values[idx + 1, :], var_metadata)
+        for idx, var_details in enumerate(var_set_details):
+            if idx == 0:
+                new_data = LazyData(values[0, :], metadata)
+                new_data.metadata._name = var_details[0]
+                new_data.metadata.long_name = var_details[1]
+                new_data.metadata.shape = (len(points),)
+                new_data.metadata.missing_value = self.fill_value
+                new_data.units = var_details[2]
+            else:
+                var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(points),),
+                                        missing_value=self.fill_value, units=var_details[2])
+                new_data = LazyData(values[idx, :], var_metadata)
             return_data.append(new_data)
 
         return return_data
@@ -295,18 +297,21 @@ class max(Kernel):
 
 
 class moments(Kernel):
-    def __init__(self, stddev_name='', nopoints_name=''):
+    def __init__(self, mean_name='', stddev_name='', nopoints_name=''):
+        self.mean_name = mean_name
         self.stddev_name = stddev_name
         self.nopoints_name = nopoints_name
 
-    def get_extra_variable_names(self, var_name, var_long_name, var_units):
-        """Sets name and units for standard deviation and number of points variables,
-        those of the base variable.
+    def get_variable_details(self, var_name, var_long_name, var_units):
+        """Sets name and units for mean, standard deviation and number of points variables, based
+        on those of the base variable or overridden by those specified as kernel parameters.
         :param var_name: base variable name
         :param var_long_name: base variable long name
         :param var_units: base variable units
         :return: tuple of tuples each containing (variable name, variable long name, variable units)
         """
+        if self.mean_name == '':
+            self.mean_name = var_name + '_mean'
         if self.stddev_name == '':
             self.stddev_name = var_name + '_std_dev'
         stdev_long_name = 'Standard deviation from the mean in ' + var_name
@@ -315,7 +320,8 @@ class moments(Kernel):
             self.nopoints_name = var_name + '_no_points'
         npoints_long_name = 'Number of points used to calculate the mean of ' + var_name
         npoints_units = '1'
-        return ((self.stddev_name, stdev_long_name, stddev_units),
+        return ((self.mean_name, var_long_name, var_units),
+                (self.stddev_name, stdev_long_name, stddev_units),
                 (self.nopoints_name, npoints_long_name, npoints_units))
 
     def get_value(self, point, data):

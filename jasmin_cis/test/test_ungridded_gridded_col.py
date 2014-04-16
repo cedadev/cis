@@ -15,8 +15,8 @@ def test_fill_value_for_cube_cell_constraint():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -53,8 +53,8 @@ def test_single_point_results_in_single_value_in_cell():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -72,8 +72,8 @@ def test_single_point_results_in_single_value_in_cell_using_binning():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -91,8 +91,8 @@ def test_two_points_in_a_cell_results_in_mean_value_in_cell():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_two_points_with_different_values(0.5, 0.5, 1.2, 1.4)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -110,8 +110,8 @@ def test_two_points_in_a_cell_results_in_mean_value_in_cell_using_binning():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_two_points_with_different_values(0.5, 0.5, 1.2, 1.4)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -129,8 +129,8 @@ def test_point_on_a_lat_boundary_appears_in_higher_cell():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -148,8 +148,8 @@ def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binning():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -167,8 +167,8 @@ def test_point_on_a_lon_boundary_appears_in_higher_cell():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -186,8 +186,8 @@ def test_point_on_a_lon_boundary_appears_in_higher_cell_using_binning():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -205,8 +205,8 @@ def test_point_on_a_lat_lon_boundary_appears_in_highest_cell():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -224,8 +224,8 @@ def test_point_on_a_lat_lon_boundary_appears_in_highest_cell_using_binning():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -243,8 +243,8 @@ def test_single_point_outside_grid_is_excluded():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -262,8 +262,8 @@ def test_single_point_outside_grid_is_excluded_using_binning():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -281,8 +281,8 @@ def test_single_point_on_grid_corner_is_counted_once():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(10, 5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -300,8 +300,8 @@ def test_single_point_on_grid_corner_is_counted_once_using_binning():
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(10, 5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -319,8 +319,8 @@ def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_wit
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -338,8 +338,8 @@ def test_single_point_results_in_single_value_in_cell_with_time_on_boundary_with
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, time=datetime.datetime(1984, 8, 28, 0, 0))
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -373,8 +373,8 @@ def test_single_point_results_in_single_value_in_cell_with_no_altitude_with_cube
 
     print sample_cube.data
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -392,8 +392,8 @@ def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_wi
     sample_cube = make_square_5x3_2d_cube_with_altitude()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=1.0)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -427,8 +427,8 @@ def test_single_point_results_in_single_value_in_cell_with_no_pressure_with_cube
 
     print sample_cube.data
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -446,8 +446,8 @@ def test_single_point_results_in_single_value_in_cell_with_pressure_with_cube_wi
     sample_cube = make_square_5x3_2d_cube_with_pressure()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, pressure=1.0)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -481,8 +481,8 @@ def test_data_with_no_standard_name():
     sample_cube = make_mock_cube()
     data_points = make_dummy_1d_ungridded_data()
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_points, constraint=con, kernel=mean())[0]
 
@@ -492,8 +492,8 @@ def test_data_with_invalid_standard_name():
     sample_cube = make_mock_cube()
     data_points = make_dummy_1d_ungridded_data_with_invalid_standard_name()
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_points, constraint=con, kernel=mean())[0]
 
@@ -503,8 +503,8 @@ def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude()
     sample_cube = make_square_5x3_2d_cube_with_decreasing_latitude()
     data_point = make_dummy_ungridded_data_single_point(3.0, 0.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = CubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = CubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 
@@ -522,8 +522,8 @@ def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude_u
     sample_cube = make_square_5x3_2d_cube_with_decreasing_latitude()
     data_point = make_dummy_ungridded_data_single_point(3.0, 0.5, 1.2)
 
-    col = GeneralGriddedColocator()
-    con = BinningCubeCellConstraint(fill_value=-999.9)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    con = BinningCubeCellConstraint()
 
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=mean())[0]
 

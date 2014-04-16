@@ -4,7 +4,7 @@ import iris.coord_categorisation
 import iris.analysis.cartography
 from iris.coords import DimCoord
 import numpy
-from jasmin_cis.col_implementations import UngriddedGriddedColocator, BinningCubeCellConstraint
+from jasmin_cis.col_implementations import GeneralGriddedColocator, BinningCubeCellConstraint
 from jasmin_cis.data_io.gridded_data import make_from_cube
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
