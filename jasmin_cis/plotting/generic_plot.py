@@ -581,7 +581,10 @@ class Generic_Plot(object):
         :param units: The units of a variable, as a string
         :return: The units surrounding brackets, or the empty string if no units given
         '''
-        if units:
+        if "since" in str(units):
+            # Assume we are on a time if the units contain since.
+            return ""
+        elif units:
             return "(" + str(units) + ")"
         else:
             return ""
