@@ -124,22 +124,26 @@ class Colocate(object):
         #   Method Sample  Data    colocator                      constraint                    kernel
         #   name   gridded gridded
         options = {
-            'lin_False_False': None,
-            'lin_True_False':  None,
-            'lin_False_True':  [ci.GeneralUngriddedColocator, None,                         ci.li],
-            'lin_True_True':   [ci.GriddedColocator,          None,                         ci.gridded_gridded_li],
-            'nn_False_False':  None,
-            'nn_True_False':   None,
-            'nn_False_True':   [ci.GeneralUngriddedColocator, None,                         ci.nn_gridded],
-            'nn_True_True':    [ci.GriddedColocator,          None,                         ci.gridded_gridded_nn],
-            'bin_False_False': None,
-            'bin_True_False':  [ci.GeneralGriddedColocator,   ci.BinningCubeCellConstraint, _GenericKernel],
-            'bin_False_True':  None,
-            'bin_True_True':   [ci.GeneralGriddedColocator,   ci.BinningCubeCellConstraint, _GenericKernel],
-            'box_False_False': [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree,       _GenericKernel],
-            'box_True_False':  [ci.GeneralGriddedColocator,   ci.SepConstraintKdtree,       _GenericKernel],
-            'box_False_True':  [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree,       _GenericKernel],
-            'box_True_True':   [ci.GeneralGriddedColocator,   ci.SepConstraintKdtree,       _GenericKernel]
+            'lin_False_False':   None,
+            'lin_True_False':    None,
+            'lin_False_True':    [ci.GeneralUngriddedColocator, None,                         ci.li],
+            'lin_True_True':     [ci.GriddedColocator,          None,                         ci.gridded_gridded_li],
+            'nn_False_False':    None,
+            'nn_True_False':     None,
+            'nn_False_True':     [ci.GeneralUngriddedColocator, None,                         ci.nn_gridded],
+            'nn_True_True':      [ci.GriddedColocator,          None,                         ci.gridded_gridded_nn],
+            'bin_False_False':   None,
+            'bin_True_False':    [ci.GeneralGriddedColocator,   ci.BinningCubeCellConstraint, _GenericKernel],
+            'bin_False_True':    None,
+            'bin_True_True':     [ci.GeneralGriddedColocator,   ci.BinningCubeCellConstraint, _GenericKernel],
+            'box_False_False':   [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree,       _GenericKernel],
+            'box_True_False':    [ci.GeneralGriddedColocator,   ci.SepConstraintKdtree,       _GenericKernel],
+            'box_False_True':    [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree,       _GenericKernel],
+            'box_True_True':     [ci.GeneralGriddedColocator,   ci.SepConstraintKdtree,       _GenericKernel],
+            'dummy_False_False': [ci.DummyColocator,            None,                         None],
+            'dummy_True_False':  None,
+            'dummy_False_True':  None,
+            'dummy_True_True':   None
         }
         option = options[key]
         if option is None:
