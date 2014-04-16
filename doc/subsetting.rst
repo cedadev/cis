@@ -1,6 +1,6 @@
-=============================
-Performing Subsetting of Data
-=============================
+==========
+Subsetting
+==========
 
 Subsetting allows the reduction of data by extracting a variable and restricting to ranges of one or more coordinates.
 
@@ -10,11 +10,11 @@ To perform subsetting, run a command of the format::
 
 where:
 
-`` datagroup ``
-  is of the format ``variable:filenames:product`` in which product is optional. Each is described in more detail below.
+``datagroup``
+  is of the format ``variable:filenames[:product]`` in which product is optional. Each is described in more detail below.
 
-    #. ``variable`` is a non-optional argument used to specify the variable to use.
-    #. ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma seperated list of the following possibilities:
+    * ``variable`` is a non-optional argument used to specify the variable to use.
+    * ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma seperated list of the following possibilities:
 
       #. A single filename - this should be the full path to the file
       #. A single directory - all files in this directory will be read
@@ -24,9 +24,9 @@ where:
 
       The order of the comma separated list will however remain as the user specified, e.g.``filename1,filename2,wildc*rd,/my/dir/,filename3 `` would read filename1, then filename2, then all the files that match "wildc*rd" (in alphabetical order), then all the files in the directory "/my/dir/" (in alphabetical order) and then finally filename3.
 
-    #. ``product`` is an optional argument used to specify the type of files being read. If omitted, the program will attempt to figure out which product to use based on the filename. Click CommunityIntercomparisonSuite/DataProduct to see a list of available products and their file signatures.
+    * ``product`` is an optional argument used to specify the type of files being read. If omitted, the program will attempt to figure out which product to use based on the filename. See :ref:`data-products-reading` to see a list of available products and their file signatures. As there is only one optional argument available the ``product=`` keyword, as used elsewhere, is optional.
 
-`` limits ``
+``limits``
   is a comma separated sequence of one or more coordinate range assignments of the form ``variable=[start,end]`` or ``variable=[value]`` in which
 
     * ``variable`` is the name of the variable to be subsetted, or one of x, y, z or t, which refer to longitude, latitude, altitude or time, respectively.
@@ -37,7 +37,7 @@ where:
     * Longitude coordinates are considered to be circular, so that 370 is equivalent to 10. The values are constrained to be within the range 0 to 360 or -180 to 180, depending on the coordinate values found in the file, as follows: If the subset range is already within the range of the coordinate no change is made. If the range of values for the coordinate in the file is such that 180 <= coord_min < 0 and coord_max <= 180.0 the range -180 to 180 is used. Otherwise, if 0 <= coord_min and coord_max <= 360, the range 0 to 360 is used.
     * Other coordinates ranges are interpreted so that the subset includes values for which the coordinate value is greater than the smaller of start and end, and less than the larger of start and end (so the order in which start and end are specified is not significant).
 
-`` outputfile ``
+``outputfile``
   is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
 
 A full example would be::
