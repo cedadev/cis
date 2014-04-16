@@ -5,6 +5,7 @@ import argparse
 import re
 import sys
 import os.path
+from jasmin_cis.exceptions import InvalidCommandLineOptionError
 from plotting.plot import Plotter
 import logging
 
@@ -384,7 +385,7 @@ def get_subset_datagroups(datagroups, parser):
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product)
 
-    return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
 def get_subset_limits(subsetlimits, parser):
@@ -501,6 +502,24 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
         else:
             split_input_comma = []  # need to loop over options to set optional arguments to None
 
+        if len(split_input_comma) > len(option):
+            raise InvalidCommandLineOptionError('More options specified than are actually available.')
+
+        # If there is only one optional argument do not require the 'keyword=' syntax
+        if len(option) == 1 and len(split_input_comma) == 1:
+            split_input_variable = split_outside_brackets(split_input_comma[0], '=')
+            if len(split_input_variable) == 1:
+                input_dict[option[0]] = split_input_variable[0]
+                option.pop(0)
+            elif len(split_input_variable) == 2:
+                if option[0] == split_input_variable[0]:
+                    input_dict[option[0]] = split_input_variable[1]
+                    option.pop(0)
+            else:
+                raise InvalidCommandLineOptionError('Something is wrong with this argument: ', split_input_comma)
+
+        print option, input_dict
+
         for i, option in enumerate(option):
             # Make sure an entry for each option is created, even if it is None
             input_dict[option] = None
@@ -509,6 +528,11 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
                     split_input_variable = split_outside_brackets(j, '=')
                     if split_input_variable[0] == option:
                         input_dict[option] = options[i+compulsary_args](split_input_variable[1], parser)
+                        split_input_comma.remove(j)
+
+        if len(split_input_comma) != 0:
+            raise InvalidCommandLineOptionError('The following optional arguments could not be parsed: ' +
+                                                str(split_input_comma))
 
         input_dicts.append(input_dict)
     return input_dicts
