@@ -45,7 +45,7 @@ def test_that_can_parse_time_deltas():
     assert_almost_equal(1190.45829861, delta)
 
 @istest
-@raises(InvalidCommandLineOptionError)
+@raises(ValueError)
 def test_that_raise_an_error_when_datetimestr_delta_is_invalid():
     parse_datetimestr_delta_to_float_days("some wierd string")
 
