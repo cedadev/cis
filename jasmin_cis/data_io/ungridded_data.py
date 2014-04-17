@@ -244,8 +244,6 @@ class UngriddedData(LazyData, CommonData):
             raise ValueError("Invalid Coords type")
         all_coords = self._coords.find_standard_coords()
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
-        #TODO Remove
-        self.coords_on_grid = False
     
     @property
     def x(self):
@@ -374,8 +372,6 @@ class UngriddedCoordinates(CommonData):
             raise ValueError("Invalid Coords type")
         all_coords = self._coords.find_standard_coords()
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
-        #TODO Remove
-        self.coords_on_grid = False
 
     @property
     def x(self):

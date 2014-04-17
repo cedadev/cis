@@ -41,9 +41,6 @@ class Subset(object):
         if isinstance(data, cube.Cube):
             # Gridded data on Cube
             subset_constraint = GriddedSubsetConstraint()
-##         elif data.coords_on_grid:
-##             # UngriddedData object with data lying on grid
-##             subset_constraint = UngriddedOnGridSubsetConstraint()
         else:
             # Generic ungridded data
             subset_constraint = UngriddedSubsetConstraint()

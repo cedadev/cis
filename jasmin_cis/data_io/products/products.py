@@ -235,7 +235,6 @@ class MODIS_L3(AProduct):
         metadata = hdf.read_metadata(var, "SD")
 
         data = UngriddedData(var, metadata, coords)
-        data.coords_on_grid = True
         return data
 
 class MODIS_L2(AProduct):
