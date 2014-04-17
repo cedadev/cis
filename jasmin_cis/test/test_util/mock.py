@@ -12,7 +12,7 @@ from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
-                   dim_order=None):
+                   dim_order=None, mask=False):
     """
     Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
     given get a 5x3 cube of the form:
@@ -86,6 +86,9 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
         data_size *= time_dim_length
 
     data = np.reshape(np.arange(data_size) + data_offset + 1., tuple(len(i[0].points) for i in coord_list))
+    if mask:
+        data = np.ma.asarray(data)
+        data.mask = mask
 
     return_cube = Cube(data, dim_coords_and_dims=coord_list)
 

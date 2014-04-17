@@ -42,10 +42,12 @@ class Colocate(object):
         from jasmin_cis.data_io.read import read_coordinates, read_data
 
         self.sample_files = sample_files
+        self.missing_data_for_missing_sample = False
         if sample_var is None:
             sample_points = read_coordinates(sample_files, sample_product)
         else:
             sample_points = read_data(sample_files, sample_var, sample_product)
+            self.missing_data_for_missing_sample = True
 
         self.sample_points = sample_points
         self.output_file = output_file
@@ -192,6 +194,7 @@ class Colocate(object):
         col_classes = self._get_colocator_classes_for_method(col_name, kern, self.sample_points.is_gridded,
                                                              data.is_gridded)
         col_params, con_params = self._get_colocator_params(col_params)
+        col_params['missing_data_for_missing_sample'] = self.missing_data_for_missing_sample
         col = _instantiate_with_params(col_classes.colocator, col_params)
         con = _instantiate_with_params(col_classes.constraint, con_params)
         kernel = _instantiate_with_params(col_classes.kernel, kern_params)

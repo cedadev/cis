@@ -119,6 +119,25 @@ def create_masked_array_for_missing_values(data, missing_values):
     return mdata
 
 
+def apply_mask_to_numpy_array(in_array, mask):
+    """Elementwise ORs the mask with the mask of the array.
+
+    If the mask masks no elements, no change is made. If the array is not masked, it is converted to a masked array.
+    :param in_array: input array
+    :type in_array: numpy array or masked array
+    :param mask: mask
+    :type mask: numpy array of boolean
+    """
+    import numpy as np
+
+    if mask is not np.ma.nomask and np.any(mask):
+        out_array = np.ma.asarray(in_array)
+        out_array.mask = out_array.mask | mask
+    else:
+        out_array = in_array
+    return out_array
+
+
 def array_equal_including_nan(array1, array2):
     """
     :param array1: A numpy array

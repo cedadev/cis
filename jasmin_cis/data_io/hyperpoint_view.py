@@ -18,6 +18,41 @@ class HyperPointView(object):
 
     @abstractmethod
     def __len__(self):
+        """Returns the number of points (including masked ones)
+        :return: number of points
+        """
+        pass
+
+    @abstractmethod
+    def __iter__(self):
+        """Iterates over all or non-masked points according to the value of non_masked_iteration
+        :return: next HyperPoint
+        """
+        pass
+
+    @abstractmethod
+    def iter_all_points(self):
+        """Iterates over all points regardless of the value of non_masked_iteration
+        :return: next HyperPoint
+        """
+
+    @abstractmethod
+    def iter_non_masked_points(self):
+        """Iterates over non-masked points regardless of the value of non_masked_iteration
+        :return: next HyperPoint
+        """
+        pass
+
+    @abstractmethod
+    def enumerate_non_masked_points(self):
+        """Iterates over non-masked points returning the index in the full
+        data array and the corresponding HyperPoint.
+        :return: tuple(index of point in flattened view of data, HyperPoint)
+        """
+        pass
+
+    @abstractmethod
+    def __setitem__(self, key, value):
         pass
 
 
