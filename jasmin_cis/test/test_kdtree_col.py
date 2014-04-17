@@ -191,31 +191,83 @@ class TestSepConstraint(object):
         assert(np.equal(ref_vals, new_vals).all())
 
 
-def make_square_5x3_2d_cube():
+class TestSepConstraintWithoutHorizontalSeparation(object):
+    """Tests that SepConstraintKdtree behaves as an unoptimized constraint for non-spatial separations
+    if the spatial separation parameter is not specified.
     """
-    Makes a well defined cube of shape 5x3 with data as follows
-    array([[1,2,3],
-           [4,5,6],
-           [7,8,9],
-           [10,11,12],
-           [13,14,15]])
-    and coordinates in longitude:
-        array([ -10, -5, 0, 5, 10 ])
-    latitude:
-        array([ -5, 0, 5 ])
+    @istest
+    def test_alt_constraint_in_4d(self):
+        from jasmin_cis.col_implementations import SepConstraintKdtree
+        import datetime as dt
+        import numpy as np
 
-    They are different lengths to make it easier to distinguish. Note the longitude increases
-    as you step through the array in order - so downwards as it's written above
-    """
-    from iris.cube import Cube
-    from iris.coords import DimCoord
+        ug_data = mock.make_regular_4d_ungridded_data()
+        ug_data_points = ug_data.get_non_masked_points()
+        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984,8,29))
 
-    longitude = DimCoord(np.arange(-10, 11, 5), standard_name='longitude', units='degrees')
-    latitude = DimCoord(np.arange(-5, 6, 5), standard_name='latitude', units='degrees')
-    data = np.reshape(np.arange(15) + 1.0, (5, 3))
-    cube = Cube(data, dim_coords_and_dims=[(longitude, 0), (latitude, 1)], var_name='dummy')
+        # 15m altitude separation
+        a_sep = 15
 
-    return cube
+        constraint = SepConstraintKdtree(a_sep=a_sep)
+
+        # This should leave us with 15 points:  [ 21.  22.  23.  24.  25.]
+        #                                       [ 26.  27.  28.  29.  30.]
+        #                                       [ 31.  32.  33.  34.  35.]
+        ref_vals = np.array([21., 22., 23., 24., 25., 26., 27., 28., 29., 30., 31., 32., 33., 34., 35.])
+
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(np.equal(ref_vals, new_vals).all())
+
+    @istest
+    def test_time_constraint_in_4d(self):
+        from jasmin_cis.col_implementations import SepConstraintKdtree
+        import datetime as dt
+        import numpy as np
+
+        ug_data = mock.make_regular_4d_ungridded_data()
+        ug_data_points = ug_data.get_non_masked_points()
+        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984,8,29))
+
+        # 1 day (and a little bit) time seperation
+        constraint = SepConstraintKdtree(t_sep='P1dT1M')
+
+        # This should leave us with 30 points
+        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[:,1:4].flatten()
+
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(np.equal(ref_vals, new_vals).all())
+
+
+    @istest
+    def test_pressure_constraint_in_4d(self):
+        from jasmin_cis.col_implementations import SepConstraintKdtree
+        import datetime as dt
+        import numpy as np
+
+        ug_data = mock.make_regular_4d_ungridded_data()
+        ug_data_points = ug_data.get_non_masked_points()
+        sample_point = HyperPoint(0.0, 0.0, 50.0, 24.0, dt.datetime(1984,8,29))
+
+        constraint = SepConstraintKdtree(p_sep=2)
+
+        # This should leave us with 20 points:  [  6.   7.   8.   9.  10.]
+        #                                       [ 11.  12.  13.  14.  15.]
+        #                                       [ 16.  17.  18.  19.  20.]
+        #                                       [ 21.  22.  23.  24.  25.]
+        ref_vals = np.array([6., 7., 8., 9., 10., 11., 12., 13., 14., 15., 16., 17., 18., 19., 20., 21., 22., 23.,
+                             24., 25.])
+
+        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_vals = new_points.vals
+
+        eq_(ref_vals.size, new_vals.size)
+        assert(np.equal(ref_vals, new_vals).all())
 
 
 class TestSepConstraintWithGriddedData(object):

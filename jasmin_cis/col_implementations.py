@@ -191,7 +191,10 @@ class SepConstraint(PointConstraint):
 
 
 class SepConstraintKdtree(PointConstraint):
-
+    """A separation constraint that uses a k-D tree to optimise spatial constraining.
+    If no horizontal separation parameter is supplied, this reduces to an exhaustive
+    search using the other parameter(s).
+    """
     def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
         from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
@@ -203,9 +206,6 @@ class SepConstraintKdtree(PointConstraint):
         if h_sep is not None:
             self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
             self.haversine_distance_kd_tree_index = None
-        else:
-            raise InvalidCommandLineOptionError(
-                'A horizontal separation must be specified for the Indexed Separation Constraint ')
 
         if a_sep is not None:
             self.a_sep = jasmin_cis.utils.parse_distance_with_units_to_float_m(a_sep)
@@ -237,13 +237,17 @@ class SepConstraintKdtree(PointConstraint):
         return point.haversine_dist(ref_point) < self.h_sep
 
     def constrain_points(self, ref_point, data):
-        point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
-
         con_points = HyperPointList()
-        for idx in point_indices:
-            point = data[idx]
-            if all(check(point, ref_point) for check in self.checks):
-                con_points.append(point)
+        if self.haversine_distance_kd_tree_index:
+            point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
+            for idx in point_indices:
+                point = data[idx]
+                if all(check(point, ref_point) for check in self.checks):
+                    con_points.append(point)
+        else:
+            for point in data:
+                if all(check(point, ref_point) for check in self.checks):
+                    con_points.append(point)
         return con_points
 
 
