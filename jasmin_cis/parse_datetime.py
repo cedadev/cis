@@ -65,12 +65,30 @@ def date_delta_creator(year, month=0, day=0, hour=0, minute=0, second=0):
 def _parse_datetime_delta(dt_string):
     """Parse a date/time delta string into years, months, days, hours, minutes and seconds.
 
-    :param dt_string: String to parse, for example '1y2m3d4H5M6S'
+    :param dt_string: String to parse, for example 'PY2M3DT4H5M6S' (ISO 8061)
     :return: Named tuple 'date_delta' containing, 'year', 'month', 'day', 'hour', 'minute', 'second'
     :raise ValueError: if the string cannot be parsed as a date/time delta
     """
 
-    tokens = re.findall('[0-9]*[ymdHMS]', dt_string)
+    dt_string = dt_string.upper()
+
+    match = re.match(r'(?:[P])(?P<date>[^T :]+)?(?:[T :])?(?P<time>.+)?$', dt_string)
+
+    if match is None:
+        raise ValueError('Date step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
+
+    if match.group('date') is not None:
+        date_string = match.group('date')
+    else:
+        date_string = ''
+
+    if match.group('time') is not None:
+        time_string = match.group('time')
+    else:
+        time_string = ''
+
+    date_tokens = re.findall('[0-9]*[A-Z]', date_string)
+    time_tokens = re.findall('[0-9]*[A-Z]', time_string)
 
     years = 0
     months = 0
@@ -79,22 +97,27 @@ def _parse_datetime_delta(dt_string):
     minutes = 0
     seconds = 0
 
-    for token in tokens:
+    for token in date_tokens:
         val = int(token[:-1])
-        if token[-1:] == "y":
+        if token[-1:] == "Y":
             years = val
-        elif token[-1:] == "m":
+        elif token[-1:] == "M":
             months = val
-        elif token[-1:] == "d":
+        elif token[-1:] == "D":
             days = val
-        elif token[-1:] == "H":
+        else:
+            raise ValueError("Date step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
+
+    for token in time_tokens:
+        val = int(token[:-1])
+        if token[-1:] == "H":
             hours = val
         elif token[-1:] == "M":
             minutes = val
         elif token[-1:] == "S":
             seconds = val
         else:
-            raise ValueError("Invalid time delta format. Must be '1y2m3d4H5M6S'")
+            raise ValueError("Date step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
 
     times = [years, months, days, hours, minutes, seconds]
 

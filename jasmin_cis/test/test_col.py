@@ -513,7 +513,7 @@ class TestSepConstraint(ConstraintTests):
         # 15m altitude seperation
         a_sep = 15
         # 1 day (and a little bit) time seperation
-        t_sep = '1d1M'
+        t_sep = 'P1DT1M'
         # Pressure constraint is 50/40 < p_sep < 60/50
         p_sep = 1.22
 
@@ -590,7 +590,7 @@ class TestSepConstraint(ConstraintTests):
         sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984,8,29))
 
         # 1 day (and a little bit) time seperation
-        constraint = SepConstraint(t_sep='1d1M')
+        constraint = SepConstraint(t_sep='P1dT1M')
 
         # This should leave us with 30 points
         ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[:,1:4].flatten()

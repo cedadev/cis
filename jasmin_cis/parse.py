@@ -685,13 +685,18 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
     '''
+    from jasmin_cis.parse_datetime import parse_as_number_or_datetime
+    from jasmin_cis.time_util import parse_datetimestr_to_std_time
+    import datetime
     ax_range = {}
 
     if min_val is not None:
-        ax_range[range_axis + "min"] = parse_as_float_or_date(min_val, range_axis + "min", parser)
+        dt = parse_as_number_or_datetime(min_val, range_axis + "min", parser)
+        ax_range[range_axis + "min"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
 
     if max_val is not None:
-        ax_range[range_axis + "max"] = parse_as_float_or_date(max_val, range_axis + "max", parser)
+        dt = parse_as_number_or_datetime(max_val, range_axis + "max", parser)
+        ax_range[range_axis + "max"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
 
     if step is not None:
         ax_range[range_axis + "step"] = parse_as_float_or_time_delta(step, range_axis + "step", parser)
