@@ -1,19 +1,16 @@
 import logging
 import math
-import sys
 
 from iris import cube, coords
 from iris.exceptions import IrisError
 import iris.unit
 import iris.util
 
-import jasmin_cis.cis as cis
 import jasmin_cis.exceptions as ex
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.data_io.read import read_data
 from jasmin_cis.subsetting.subsetter import Subsetter
-from jasmin_cis.subsetting.subset_constraint import (GriddedSubsetConstraint, UngriddedOnGridSubsetConstraint,
-                                                     UngriddedSubsetConstraint)
+from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from jasmin_cis.cis import __version__
 from jasmin_cis.utils import remove_file_prefix
