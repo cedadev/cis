@@ -75,7 +75,7 @@ def _parse_datetime_delta(dt_string):
     match = re.match(r'(?:[P])(?P<date>[^T :]+)?(?:[T :])?(?P<time>.+)?$', dt_string)
 
     if match is None:
-        raise ValueError('Date step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
+        raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
 
     if match.group('date') is not None:
         date_string = match.group('date')
@@ -106,7 +106,7 @@ def _parse_datetime_delta(dt_string):
         elif token[-1:] == "D":
             days = val
         else:
-            raise ValueError("Date step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
+            raise ValueError("Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
 
     for token in time_tokens:
         val = int(token[:-1])
@@ -117,7 +117,7 @@ def _parse_datetime_delta(dt_string):
         elif token[-1:] == "S":
             seconds = val
         else:
-            raise ValueError("Date step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
+            raise ValueError("Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
 
     times = [years, months, days, hours, minutes, seconds]
 

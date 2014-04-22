@@ -30,7 +30,7 @@ def parse_datetimestr_delta_to_float_days(s):
     match = re.match(r'(?:[P])(?P<date>[^T :]+)?(?:[T :])?(?P<time>.+)?$', s)
 
     if match is None:
-        raise ValueError('Date step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
+        raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
 
     if match.group('date') is not None:
         date_string = match.group('date')
@@ -57,7 +57,7 @@ def parse_datetimestr_delta_to_float_days(s):
         elif token[-1:] == "D":
             days += val
         else:
-            raise ValueError("Invalid time delta format. Must be '1y2m3d4H5M6S'")
+            raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
 
     for token in time_tokens:
         val = int(token[:-1])
@@ -68,7 +68,7 @@ def parse_datetimestr_delta_to_float_days(s):
         elif token[-1:] == "S":
             seconds = val
         else:
-            raise ValueError("Invalid time delta format. Must be '1y2m3d4H5M6S'")
+            raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
 
     print days, hours, minutes, seconds
 
