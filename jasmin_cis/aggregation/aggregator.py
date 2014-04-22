@@ -4,7 +4,7 @@ import iris.coord_categorisation
 import iris.analysis.cartography
 from iris.coords import DimCoord
 import numpy
-from jasmin_cis.col_implementations import UngriddedGriddedColocator, BinningCubeCellConstraint
+from jasmin_cis.col_implementations import GeneralGriddedColocator, BinningCubeCellConstraint
 from jasmin_cis.data_io.gridded_data import make_from_cube
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
@@ -193,7 +193,7 @@ class Aggregator:
         dummy_data = numpy.reshape(numpy.arange(int(numpy.prod(new_cube_shape)))+1.0, tuple(new_cube_shape))
         aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
 
-        colocator = UngriddedGriddedColocator()
+        colocator = GeneralGriddedColocator()
         constraint = BinningCubeCellConstraint()
         aggregated_cube = colocator.colocate(aggregation_cube, self.data, constraint, kernel)
 

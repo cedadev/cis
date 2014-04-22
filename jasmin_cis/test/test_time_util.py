@@ -41,7 +41,7 @@ def test_that_can_parse_datetimestr_to_obj():
 
 @istest
 def test_that_can_parse_time_deltas():
-    delta = parse_datetimestr_delta_to_float_days("2y15m3d5M10H3S")
+    delta = parse_datetimestr_delta_to_float_days("P2y15m3dT5M10H3S")
     assert_almost_equal(1190.45829861, delta)
 
 @istest

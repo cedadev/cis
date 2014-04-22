@@ -235,7 +235,6 @@ class MODIS_L3(AProduct):
         metadata = hdf.read_metadata(var, "SD")
 
         data = UngriddedData(var, metadata, coords)
-        data.coords_on_grid = True
         return data
 
 class MODIS_L2(AProduct):
@@ -823,17 +822,8 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
                          (optional if file contains only one cube)
         :return: iris.cube.Cube
         """
-        from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
 
-        variable_constraint = None
-        if variable is not None:
-            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
-        cube = super(NetCDF_Gridded, self).create_coords(filenames, variable_constraint)
-        try:
-            cube = convert_cube_time_coord_to_standard_time(cube)
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
-        return cube
+        return self.create_data_object(filenames, variable)
 
     def create_data_object(self, filenames, variable):
         """Reads the data for a variable.
@@ -845,8 +835,11 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
 
         variable_constraint = None
         if variable is not None:
-            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable), display=variable)
+            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
+                                                                         c.standard_name == variable or
+                                                                         c.long_name == variable), display=variable)
         cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable_constraint)
+
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)
         except iris.exceptions.CoordinateNotFoundError:

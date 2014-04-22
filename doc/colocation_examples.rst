@@ -22,7 +22,7 @@ Results of subset can be plotted with::
 
 Then colocate data, and plot output::
 
-  $ cis col Temperature:cis-2010.nc cis-2009.nc:kernel=nn_pressure
+  $ cis col Temperature:cis-2010.nc cis-2009.nc:colocator=box[p_sep=1.1],kernel=nn_p
   $ cis plot Temperature:cis-out.nc --itemwidth 25 --xaxis time --yaxis air_pressure
 
 
@@ -49,7 +49,7 @@ The files used above can be found at::
 Ungridded data colocation using k-D tree indexing
 -------------------------------------------------
 
-These examples show the syntax for using the k-D tree optimisation of the nearest-neighbour kernel and separation constraint. The indexing is only by horizontal position.
+These examples show the syntax for using the k-D tree optimisation of the separation constraint. The indexing is only by horizontal position.
 
 Nearest-Neighbour Kernel
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -76,7 +76,7 @@ These should look like:
 
 To colocate with the nearest-neighbour kernel use::
 
-  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:kernel=nn_horizontal_kdtree -o MOD08_on_AOD550_nn_kdt
+  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:colocator=box[h_sep=150],kernel=nn_h -o MOD08_on_AOD550_nn_kdt
 
 This can be plotted with::
 
@@ -87,22 +87,20 @@ The sample points are more closely spaced than the data points, hence a patchwor
 .. image:: img/MOD08_on_AOD550_nn_kdt.png
    :width: 300px
 
-Colocating the full Aerosol CCI file on to the MODIS L3 (taking around 2 hours) with::
+Colocating the full Aerosol CCI file on to the MODIS L3 with::
 
-  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc MOD08_E3.A2010009.005.2010026072315.hdf:variable=Cloud_Top_Temperature_Mean_Mean,kernel=nn_horizontal_kdtree -o AOD550_on_MOD08_kdt_nn_full.nc
+  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc MOD08_E3.A2010009.005.2010026072315.hdf:variable=Cloud_Top_Temperature_Mean_Mean,colocator=box[h_sep=150],kernel=nn_h -o AOD550_on_MOD08_kdt_nn_full
 
 gives the following result
 
 .. image:: img/AOD550_on_MOD08_kdt_nn_full.png
    :width: 300px
 
-A separation constraint is needed to obtain a more useful result.
+Mean Kernel
+^^^^^^^^^^^
+This example is similar to the first nearest-neighbour colocation above::
 
-Separation Constraint
-^^^^^^^^^^^^^^^^^^^^^
-This exmple is similar to the first nearest-neighbour colocation above::
-
-  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:kernel=mean,constraint=SepConstraintKdtree[h_sep=75] -o MOD08_on_AOD550_hsep_75km
+  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:colocator=box[h_sep=75],kernel=mean -o MOD08_on_AOD550_hsep_75km
 
 Plotting this again gives a granular result::
 
@@ -113,7 +111,7 @@ Plotting this again gives a granular result::
 
 This example colocates the Aerosol CCI data on to the MODIS L3 grid::
 
-  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc MOD08_E3.A2010009.005.2010026072315.hdf:variable=Cloud_Top_Temperature_Mean_Mean,kernel=mean,constraint=SepConstraintKdtree[h_sep=50,fill_value=-999] -o AOD550_on_MOD08_kdt_hsep_50km_full.nc
+  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc MOD08_E3.A2010009.005.2010026072315.hdf:variable=Cloud_Top_Temperature_Mean_Mean,colocator=box[h_sep=50,fill_value=-999],kernel=mean -o AOD550_on_MOD08_kdt_hsep_50km_full
 
 This can be plotted as follows, with the full image and zoomed into a representative section show below::
 
@@ -125,9 +123,20 @@ This can be plotted as follows, with the full image and zoomed into a representa
 .. image:: img/AOD550_on_MOD08_kdt_hsep_50km_full_zoom.png
    :width: 300px
 
-The reverse colocation can be performed with this command (taking about 30 minutes)::
+The reverse colocation can be performed with this command (taking about 7 minutes)::
 
-  $ cis col Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc:variable=AOD550,kernel=mean,constraint=SepConstraintKdtree[h_sep=100,fill_value=-999] -o MOD08_on_AOD550_kdt_hsep_100km_full
+  $ cis col Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc:variable=AOD550,colocator=box[h_sep=100,fill_value=-999],kernel=mean -o MOD08_on_AOD550_kdt_hsep_100km_var_full
+
+Plotting it with this command gives the result below::
+
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_kdt_hsep_100km_var_full.nc
+
+.. image:: img/MOD08_on_AOD550_kdt_hsep_100km_var_full.png
+   :width: 300px
+
+Omitting the variable option in the sample group gives colocated values over a full satellite track (taking about 30 minutes)::
+
+  $ cis col Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc:colocator=box[h_sep=100,fill_value=-999],kernel=mean -o MOD08_on_AOD550_kdt_hsep_100km_full
 
 Plotting it with this command gives the result below::
 
@@ -135,6 +144,7 @@ Plotting it with this command gives the result below::
 
 .. image:: img/MOD08_on_AOD550_kdt_hsep_100km_full.png
    :width: 300px
+
 
 File Locations
 ^^^^^^^^^^^^^^
@@ -156,20 +166,21 @@ This is a trivial example that co-locates on to a 4x4 spatial grid at a single t
 
   $ cis subset tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc x=[0,2],y=[24,26],t=[2008-06-12T1,2008-06-12] -o tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc -o tas_1
 
-  $ cis subset AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[0,2],y=[24,26] -o AOD550_1
+  $ cis subset AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[0,2],y=[24,26] -o AOD550n_1
 
-  $ cis col atmosphere_optical_thickness_due_to_aerosol:cis-AOD550_1.nc tas_1.nc:colocator=UngriddedGriddedColocator,constraint=CubeCellConstraint[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_1
+  $ cis col AOD550:cis-AOD550n_1.nc tas_1.nc:colocator=bin[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_1
 
-  $ cis plot atmosphere_optical_thickness_due_to_aerosol:cis-AOD550_on_tas_1.nc
+  $ cis plot AOD550:AOD550_on_tas_1.nc
 
 
-Note that the colocator is always UngriddedGriddedColocator for ungridded gridded co-location and the constraint must be one CubeCellConstraint or BinningCubeCellConstraint (the latter being faster at the expense of using more memory). The kernel "mean" would normally be used.
+Note that for ungridded gridded co-location, and the colocator must be one bin or box and a kernel such as "mean" must be used.
 
 The plotted image looks like:
 
 .. image:: img/Aerosol_CCI_4x4.png
    :width: 300px
    :align: center
+
 
 Aerosol CCI with Three Time Steps
 ---------------------------------
@@ -179,11 +190,11 @@ This example involves co-location on to a grid with three time steps. The ungrid
 
   $ cis subset tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc x=[-6,-.0001],y=[20,30],t=[2008-06-11T1,2008-06-13] -o tas_3day
 
-  $ cis subset AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[-6,0],y=[20,30] -o AOD550_3
+  $ cis subset AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[-6,0],y=[20,30] -o AOD550n_3
 
-  $ cis col atmosphere_optical_thickness_due_to_aerosol:cis-AOD550_3.nc tas_3day.nc:colocator=UngriddedGriddedColocator,constraint=BinningCubeCellConstraint[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_3day
+  $ cis col AOD550:cis-AOD550n_3.nc tas_3day.nc:colocator=bin[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_3day
 
-  $ ncdump cis-AOD550_on_tas_3day.nc |less
+  $ ncdump AOD550_on_tas_3day.nc |less
 
 
 Aerosol CCI with One Time Step
@@ -193,9 +204,9 @@ This is as above but subsetting the grid to one time step so that the output can
 
   $ cis subset tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc t=[2008-06-12T1,2008-06-12] -o tas_2008-06-12
 
-  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc tas_2008-06-12.nc:colocator=UngriddedGriddedColocator,constraint=BinningCubeCellConstraint[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_1day
+  $ cis col AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc tas_2008-06-12.nc:colocator=bin[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_1day
 
-  $ cis plot AOD550:cis-AOD550_on_tas_1day.nc
+  $ cis plot AOD550:AOD550_on_tas_1day.nc
   $ cis plot AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc
   $ cis plot tas:tas_2008-06-12.nc
 
@@ -217,9 +228,9 @@ This example uses the data in RF04.20090114.192600_035100.PNI.nc. However, this 
 
   $ cis subset tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc t=[2009-01-14T1,2009-01-14] -o tas_2009-01-14
 
-  $ cis col AO2CO2:RF04_fixed_AO2CO2.nc tas_2009-01-14.nc:colocator=UngriddedGriddedColocator,constraint=BinningCubeCellConstraint[fill_value=-9999.0],kernel=mean -o RF04_on_tas
+  $ cis col AO2CO2:RF04_fixed_AO2CO2.nc tas_2009-01-14.nc:colocator=bin[fill_value=-9999.0],kernel=mean -o RF04_on_tas
 
-  $ cis plot AO2CO2:cis-RF04_on_tas.nc
+  $ cis plot AO2CO2:RF04_on_tas.nc:product=NetCDF_Gridded
 
 
 These are the plots before and after co-location:
@@ -239,9 +250,9 @@ This is analogous to the Aerosol CCI example::
 
   $ cis subset tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc t=[2008-06-20T1,2008-06-20] -o tas_2008-06-20
 
-  $ cis col cwp:20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc tas_2008-06-20.nc:colocator=UngriddedGriddedColocator,constraint=BinningCubeCellConstraint[fill_value=-9999.0],kernel=mean -o Cloud_CCI_on_tas
+  $ cis col cwp:20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc tas_2008-06-20.nc:colocator=bin[fill_value=-9999.0],kernel=mean -o Cloud_CCI_on_tas
 
-  $ cis plot cwp:cis-Cloud_CCI_on_tas.nc
+  $ cis plot cwp:Cloud_CCI_on_tas.nc
   $ cis plot cwp:20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc
 
 
@@ -288,14 +299,14 @@ Plot for subset data::
 
 Colocate onto a finer grid, which was created using nearest neighbour::
 
-  $ cis col rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc dummy_high_res_cube_-180_180.nc:colocator=GriddedColocator,kernel=gridded_gridded_nn -o 2
+  $ cis col rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc dummy_high_res_cube_-180_180.nc:colocator=nn -o 2
   $ cis subset rsutcs:2.nc t=[1859-12-12] -o sub2
   $ cis plot rsutcs:sub2.nc
 
 
 Colocate onto a finer grid, which was created using linear interpolation::
 
-  $ cis col rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc dummy_high_res_cube_-180_180.nc:colocator=GriddedColocator,kernel=gridded_gridded_li -o 3
+  $ cis col rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc dummy_high_res_cube_-180_180.nc:colocator=lin -o 3
   $ cis subset rsutcs:3.nc t=[1859-12-12] -o sub3
   $ cis plot rsutcs:sub3.nc
 
@@ -316,12 +327,12 @@ Before, after nearest neighbour and after linear interpolation:
 
 ::
 
-  $ cis col temp:aerocom.INCA.A2.RAD-CTRL.monthly.temp.2006-fixed.nc dummy_low_res_cube_4D.nc:colocator=GriddedColocator,kernel=gridded_gridded_li -o 4D-col
+  $ cis col temp:aerocom.INCA.A2.RAD-CTRL.monthly.temp.2006-fixed.nc dummy_low_res_cube_4D.nc:colocator=lin -o 4D-col
 
 Note the file ``aerocom.INCA.A2.RAD-CTRL.monthly.temp.2006-fixed.nc`` has the standard name of ``presnivs`` changed to ``air_pressure``, in order to be read correctly.
 
 Slices at Different Pressures
-.............................
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -338,7 +349,7 @@ Slices at Different Pressures
    :width: 350px
 
 Pressure against time
-.....................
+^^^^^^^^^^^^^^^^^^^^^
 
 ::
 

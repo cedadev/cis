@@ -139,8 +139,19 @@ def geodesic_to_line_of_longitude_crossing_latitude(point, longitude):
     # Derived from one of Napier's rules for right angled spherical triangles:
     # tan(pt_lat) = tan(latitude) * cos(pt_lon - longitude)
     # - behaves better as |pt_lon - longitude| -> pi/2
-    sin_lat = math.sin(pt_lat) / math.sqrt(1 - math.cos(pt_lat) ** 2 * math.sin(pt_lon - longitude) ** 2)
-    latitude = math.asin(sin_lat)
+    try:
+        sin_lat = math.sin(pt_lat) / math.sqrt(1 - math.cos(pt_lat) ** 2 * math.sin(pt_lon - longitude) ** 2)
+    except ZeroDivisionError:
+        # pt_lat = +/- pi/2 and pt_lon - longitude = pi/2 + n pi
+        # - degenerate case - all points on line of longitude equidistant from point.
+        # Return arbitrary value since the distance to the point does not depend on the
+        # returned value.
+        sin_lat = 0.0
+    try:
+        latitude = math.asin(sin_lat)
+    except ValueError:
+        # Rounding error has made sin_lat slightly > 1.
+        latitude = math.copysign(HALF_PI, sin_lat)
 
     return latitude
 

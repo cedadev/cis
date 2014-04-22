@@ -318,10 +318,13 @@ class Generic_Plot(object):
         def format_datetime(x, pos=None):
             # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
             date_time = convert_std_time_to_datetime(x)
-            if date_time.hour == 0 and date_time.minute == 0 and date_time.second == 0:
+            day_range = self.matplotlib.gcf().axes[0].viewLim.x1 - self.matplotlib.gcf().axes[0].viewLim.x0
+            if day_range < 1 and date_time.second == 0:
+                return "%02d" % date_time.hour + ':' + "%02d" % date_time.minute
+            elif day_range < 1:
+                return "%02d" % date_time.hour + ':' + "%02d" % date_time.minute + ':' + "%02d" % date_time.second
+            elif day_range > 5:
                 return str(date_time.date())
-            elif date_time.second == 0:
-                return str(date_time.date()) + ' ' + str(date_time.hour) + ':' + str(date_time.minute)
             else:
                 return date_time.isoformat(' ')
 
@@ -581,7 +584,10 @@ class Generic_Plot(object):
         :param units: The units of a variable, as a string
         :return: The units surrounding brackets, or the empty string if no units given
         '''
-        if units:
+        if "since" in str(units):
+            # Assume we are on a time if the units contain since.
+            return ""
+        elif units:
             return "(" + str(units) + ")"
         else:
             return ""

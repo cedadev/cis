@@ -827,7 +827,7 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
 
         # We will not verify the data here, just that the output has the correct shape
         assert out_cube.data.shape == (7, 3, 6)
-        assert not does_coord_exist_in_cube(out_cube, 'laitude')
+        assert not does_coord_exist_in_cube(out_cube, 'latitude')
         assert not does_coord_exist_in_cube(out_cube, 'altitude')
         assert numpy.array_equal(data_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
@@ -851,8 +851,169 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests):
         # test has a shape of (7, 3, 6), but this should not make any difference to anything subsequently done with
         # the output.
         assert out_cube.data.shape == (3, 6, 7)
-        assert not does_coord_exist_in_cube(out_cube, 'laitude')
+        assert not does_coord_exist_in_cube(out_cube, 'latitude')
         assert not does_coord_exist_in_cube(out_cube, 'altitude')
         assert numpy.array_equal(data_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
         assert numpy.array_equal(data_cube.coord('air_pressure').points, out_cube.coord('air_pressure').points)
+
+    # Tests for missing values in sample data - nearest neighbour kernel
+    @istest
+    def test_gridded_gridded_nn_with_different_grids_and_missing_sample_values_in_2d(self):
+        mask = [[False, False, False, False, False],
+                [False, True,  False, True,  False],
+                [False, False, True, False, False]]
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, dim_order=['time', 'lat', 'lon'])
+
+        # Result should have latitude, longitude and time.
+
+        col = GriddedColocator(missing_data_for_missing_sample=True)
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        # Check that the output has the correct shape and missing values.
+        # The order of the dimensions is that of data with any dimensions not in the sample cube at the end.
+        assert out_cube.data.shape == (5, 3, 4)
+        assert out_cube.data[1, 1, 0] is numpy.ma.masked
+        assert out_cube.data[1, 1, 1] is numpy.ma.masked
+        assert out_cube.data[1, 1, 2] is numpy.ma.masked
+        assert out_cube.data[1, 1, 3] is numpy.ma.masked
+        assert out_cube.data[2, 2, 0] is numpy.ma.masked
+        assert out_cube.data[2, 2, 1] is numpy.ma.masked
+        assert out_cube.data[2, 2, 2] is numpy.ma.masked
+        assert out_cube.data[2, 2, 3] is numpy.ma.masked
+        assert out_cube.data[3, 1, 0] is numpy.ma.masked
+        assert out_cube.data[3, 1, 1] is numpy.ma.masked
+        assert out_cube.data[3, 1, 2] is numpy.ma.masked
+        assert out_cube.data[3, 1, 3] is numpy.ma.masked
+        c = 0
+        for m in out_cube.data.mask.ravel():
+            if m:
+                c += 1
+        assert c == 12
+
+    @istest
+    def test_gridded_gridded_nn_with_different_grids_and_missing_sample_values_in_3d(self):
+        mask = [[[False, False, False, False, False],
+                 [False, False, False, False, False],
+                 [False, False, False, False, False],
+                 [False, False, False, False, False]],
+                [[False, True,  False, True,  False],
+                 [False, False, False, False, False],
+                 [False, False, False, False, False],
+                 [False, False, False, False, False]],
+                [[False, False, True, False, False],
+                 [False, False, False, False, False],
+                 [False, False, False, False, False],
+                 [False, False, False, False, False]]]
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, time_dim_length=4,
+                                     dim_order=['lon', 'time', 'lat'], mask=mask)
+        data_cube = make_mock_cube(dim_order=['lat', 'lon'])
+
+        # Result should have latitude and longitude.
+
+        col = GriddedColocator(missing_data_for_missing_sample=True)
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        # Check that the output has the correct shape and missing values.
+        # The order of the dimensions is that of data with any dimensions not in the sample cube at the end.
+        assert out_cube.data.shape == (5, 3)
+        # No masking since time coordinate has been collapsed.
+        c = 0
+        if numpy.ma.getmask(out_cube.data) is not numpy.ma.nomask:
+            for m in out_cube.data.mask.ravel():
+                if m:
+                    c += 1
+            assert c == 0
+
+    # Tests for missing values in sample data - nearest neighbour kernel
+    @istest
+    def test_gridded_gridded_li_with_different_grids_and_missing_sample_values_1(self):
+        mask = [[False, False, False, False, False],
+                [False, True,  False, True,  False],
+                [False, False, False, False, False]]
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, dim_order=['lat', 'time', 'lon'])
+
+        # Result should have latitude, longitude and time.
+
+        col = GriddedColocator(missing_data_for_missing_sample=True)
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        assert out_cube.data.shape == (5, 4, 3)
+        assert out_cube.data[1, 0, 1] is numpy.ma.masked
+        assert out_cube.data[1, 1, 1] is numpy.ma.masked
+        assert out_cube.data[1, 2, 1] is numpy.ma.masked
+        assert out_cube.data[1, 3, 1] is numpy.ma.masked
+        assert out_cube.data[3, 0, 1] is numpy.ma.masked
+        assert out_cube.data[3, 1, 1] is numpy.ma.masked
+        assert out_cube.data[3, 2, 1] is numpy.ma.masked
+        assert out_cube.data[3, 3, 1] is numpy.ma.masked
+        c = 0
+        for m in out_cube.data.mask.ravel():
+            if m:
+                c += 1
+        assert c == 8
+
+    @istest
+    def test_gridded_gridded_li_with_different_grids_and_missing_sample_values_2(self):
+        mask = [[False, False, False, False, False],
+                [False, True,  False, True,  False],
+                [False, False, False, False, False]]
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, dim_order=['time', 'lat', 'lon'])
+
+        # Result should have latitude, longitude and time.
+
+        col = GriddedColocator(missing_data_for_missing_sample=True)
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        assert out_cube.data.shape == (4, 5, 3)
+        assert out_cube.data[0, 1, 1] is numpy.ma.masked
+        assert out_cube.data[1, 1, 1] is numpy.ma.masked
+        assert out_cube.data[2, 1, 1] is numpy.ma.masked
+        assert out_cube.data[3, 1, 1] is numpy.ma.masked
+        assert out_cube.data[0, 3, 1] is numpy.ma.masked
+        assert out_cube.data[1, 3, 1] is numpy.ma.masked
+        assert out_cube.data[2, 3, 1] is numpy.ma.masked
+        assert out_cube.data[3, 3, 1] is numpy.ma.masked
+        c = 0
+        for m in out_cube.data.mask.ravel():
+            if m:
+                c += 1
+        assert c == 8
+
+    @istest
+    def test_gridded_gridded_li_with_different_grids_and_missing_sample_values_3(self):
+        mask = [[False, False, False],
+                [False, False, False],
+                [False, False, False],
+                [False, False, True],
+                [False, False, False]]
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, dim_order=['lat', 'lon'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, pres_dim_length=2, dim_order=['lon', 'pres', 'lat', 'time'])
+
+        # Result should have latitude, longitude and time.
+
+        col = GriddedColocator(missing_data_for_missing_sample=True)
+
+        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        assert out_cube.data.shape == (3, 2, 5, 4)
+        assert out_cube.data[2, 0, 3, 0] is numpy.ma.masked
+        assert out_cube.data[2, 0, 3, 1] is numpy.ma.masked
+        assert out_cube.data[2, 0, 3, 2] is numpy.ma.masked
+        assert out_cube.data[2, 0, 3, 3] is numpy.ma.masked
+        assert out_cube.data[2, 1, 3, 0] is numpy.ma.masked
+        assert out_cube.data[2, 1, 3, 1] is numpy.ma.masked
+        assert out_cube.data[2, 1, 3, 2] is numpy.ma.masked
+        assert out_cube.data[2, 1, 3, 3] is numpy.ma.masked
+        c = 0
+        for m in out_cube.data.mask.ravel():
+            if m:
+                c += 1
+        assert c == 8

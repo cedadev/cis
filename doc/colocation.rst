@@ -1,3 +1,5 @@
+.. |nbsp| unicode:: 0xA0 
+
 ==============================
 Performing co-location of data
 ==============================
@@ -11,107 +13,70 @@ To perform co-location, run a command of the format::
 where:
 
 ``datagroup``
-  is of the format ``variable:filenames[:product]``, where ``product`` is optional. One or more datagroups should be specified.
+  is of the format ``variable:filenames[:product_option]``. One or more datagroups should be specified. 
 
-``filenames``
-  is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
+    * ``variable`` is the name of the variable the data of which is to be colocated.
 
-    #. A single filename - this should be the full path to the file
-    #. A single directory - all files in this directory will be read
-    #. A wildcarded filename - A filename with any wildcards compatible with the python module glob, so that *, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
+    * ``filenames`` specifies the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
 
-  Note that when using option 2, the filenames in the directory will be automatically sorted into alphabetical order. When using option 3, the filenames matching the wildcard will also be sorted into alphabetical order. The order of the comma separated list will however remain as the user specified, e.g. ``filename1,filename2,wildc*rd,/my/dir/,filename3``, would read ``filename1``, then ``filename2``, then all the files that match ``"wildc*rd"`` (in alphabetical order), then all the files in the directory ``"/my/dir/"`` (in alphabetical order) and then finally ``filename3``.
+      \1. |nbsp| a single filename - this should be the full path to the file
+
+      \2. |nbsp| a single directory - all files in this directory will be read
+
+      \3. |nbsp| a wildcarded filename - A filename with any wildcards compatible with the python module glob, so that \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
+
+      Note that when using option 2, the filenames in the directory will be automatically sorted into alphabetical order. When using option 3, the filenames matching the wildcard will also be sorted into alphabetical order. The order of the comma separated list will however remain as the user specified, e.g. ``filename1,filename2,wildc*rd,/my/dir/,filename3``, would read ``filename1``, then ``filename2``, then all the files that match ``"wildc*rd"`` (in alphabetical order), then all the files in the directory ``"/my/dir/"`` (in alphabetical order) and then finally ``filename3``.
+
+    * ``product_option`` is of the form ``product=<product name>``. It should be supplied if the data file name does not match the signature for the correct product type as listed at :ref:`data-products-reading`.
 
 ``samplegroup``
-  is of the format ``filename:options`` The available options are described in more detail below. They are entered in a comma separated list, such as ``variable=Temperature,kernel=nn_horizontal``. Not all combinations of colocator, constraint and kernel options can be used - see the desciptions below.
+  is of the format ``filename:options`` The available options are described in more detail below. They are entered in a comma separated list, such as ``variable=Temperature,colocator=bin,kernel=mean``. Not all combinations of colocator and kernel options can be used - see the desciptions below.
 
-    #. ``filename`` is a single filename with the points to colocate onto.
-    #. ``variable`` is an optional argument used to specify which variable's coordinates to use for colocation.
-    #. ``colocationmethod`` is an optional argument used to specify the colocation method to use, DefaultColocator is used if none is specified. The built-in colocation methods currently available are:
+    * ``filename`` is a single filename with the points to colocate onto.
 
-       #. DefaultColocator - For each point in the sampling this colocation method performs one call to the given constraint method and then a single call to the kernel, returning exactly one data object. The user is able to specify a number of parameters to refine the output variable, each of these are assumed to be as from the original data file if not specified:
+    * ``variable`` is an optional argument used to specify which variable's coordinates to use for colocation. If a variable is specified, a missing value will be set in the output file at every point for which the sample variable has a missing value. If a variable is not specified, non-missing values will be set at all sample points unless colocation at a point does not result in a valid value.
 
-          #. var_name - Specify the name of the variable in the resulting NetCDF file
-          #. var_long_name - Specify the variable's long name
-          #. var_units - Specify the variable's units
+    * ``colocator`` specifies the colocation method. Parameters for the colocator, if any, are placed in square brackets after the colocator name, for example, ``colocator=box[fill_value=-999,h_sep=1km]``. The colocators available are:
 
-       #. DebugColocator - As the default colocation method but with added timing messages, useful for debugging.
+      * ``bin`` For use only with gridded sample points. Data points are placed in bins corresponding to the cell bounds surrounding each grid point. The bounds are taken from the gridded data if they are defined, otherwise the mid-points between grid points are used. The binned points should then be processed by one of the kernels to give a numeric value for each bin.
 
-          #. max_vals - Specify the maximum number of sample points to evaluate
-          #. print_step - Specify the frequency of printing timing information e.g. print_step=100 would print every 100 steps
+      * ``box`` For use with gridded and ungridded sample points and data. A search region is defined by the parameters and points within the defined separation of each sample point are associated with the point. The points should then be processed by one of the kernels to give a numeric value for each bin. The parameters defining the search box are:
 
-       #. DummyColocator - This performs a null colocation, that is it just returns the original data object for writing to file. This might be useful if variables from the original sample file are wanted in the output file but are already on the correct grid.
+        * h_sep - the horizontal separation. The units can be specified as km or m (for example ``h_sep=1.5km``); if none are specified then the default is km.
+        * a_sep - the altitude separation. The units can be specified as km or m, as for h_sep; if none are specified then the default is m.
+        * p_sep - the pressure separation. This is not an absolute separation as for h_sep and a_sep, but a relative one, so is specified as a ratio. For example a constraint of p_sep = 2, for a point at 10 hPa, would cover the range 5 hPa < points < 20 hPa. Note that p_sep >= 1.
+        * t_sep - the time separation. This can be specified in years, months, days, hours, minutes or seconds using ``PnYnMnDTnHnMnS`` (the T separator can be replaced with a colon or a space, but if using a space quotes are required). For example to specify a time separation of one and a half months and thirty minutes you could use ``t_sep=P1M15DT30M``. It is worth noting that the units for time comparison are fractional days, so that years are converted to the number of days in a Gregorian year, and months are 1/12th of a Gregorian year.
 
-       #. AverageColocator - A special co-locator which returns three separate variables, one for each for the mean, standard deviation and the number of points which went into calculating those values. This must be used with the full_average kernel.
+        If h_sep is specified, a k-d tree index based on longitudes and latitudes of data points is used to speed up the search for points. It h_sep is not specified, an exhaustive search is performed for points satisfying the other separation constraints.
 
-          #. var_name - Specify the name of the variable in the resulting NetCDF file. The default is the data variable name suffixed with ``_mean``
-          #. var_long_name - Specify the variable's long name
-          #. var_units - Specify the variable's units
-          #. stddev_name - Specify the name of the standard deviation variable in the resulting NetCDF file. The default is the variable name suffixed with ``_std_dev``.
-          #. nopoints_name - Specify the name of the variable containing the number of points in the resulting NetCDF file. The default is the variable name suffixed with ``_no_points``
+      * ``lin`` For use with gridded source data only. A value is calculated by linear interpolation for each sample point.
 
-       #. DifferenceColocator - A special co-locator which returns two separate variables. The value obtained using the kernel specified and the difference between this value and the value specified from the sample variable. Obviously, this requires a variable to be specified in the samplegroup.
+      * ``nn`` For use with gridded source data only. The data point closest to each sample point is found, and the data value is set at the sample point.
 
-          #. var_name - Specify the name of the variable in the resulting NetCDF file
-          #. var_long_name - Specify the variable's long name
-          #. var_units - Specify the variable's units
-          #. diff_name - Specify the name of the difference variable in the resulting NetCDF file. The default is ``difference``
-          #. diff_long_name - Specify the long name of the difference variable.
+      * ``dummy`` For use with ungridded data only. Returns the source data as the colocated data irrespective of the sample points. This might be useful if variables from the original sample file are wanted in the output file but are already on the correct sample points.
 
-       #. GriddedColocator - A colocator for colocating gridded data onto a new grid. All coordinates that are present in both files will be colocated. Any coordinates in the new grid, that are not in the data grid, are lost. Any coordinates in the data grid, that are not in the new grid, are kept as they are.
+      Colocators have the following general optional parameters, which can be used in addition to any specific ones listed above:
 
-       #. GriddedColocatorUsingIrisRegrid - As for GriddedColocator, but uses Iris's regrid method. This only works for colocating on to a new horizontal grid, no other coordinates are colocated.
+      * fill_value - The numerical value to apply to the colocated point if there are no points which satisfy the constraint.
+      * var_name - Specifies the name of the variable in the resulting NetCDF file.
+      * var_long_name - Specifies the variable's long name.
+      * var_units - Specifies the variable's units.
 
-       #. UngriddedGriddedColocator - This is for colocating ungridded data on to a grid. It should be used with either the CubeCellConstraint or BinningCubeCellConstraint constraint and the 'mean' kernel.
 
-``constraint``
-  is an optional argument used to specify the constraint method to use, no constraints are used if none is specified. The built-in constraint methods currently available are:
+    ``kernel`` is used to specify the kernel to use for colocation methods that create an intermediate set of points for further processing, i.e., box and bin. The built-in kernel methods currently available are:
 
-  For ungridded data colocating on to ungridded sample points:
-    #. SepConstraint - A method which constrains the sample points based on spatial and temporal separation. This method takes five optional arguments, enclosed in square braces such as ``SepConstraint[h_sep=5km,p_sep=2,t_sep=1d]``. This constraint can be used for ungridded data with the following colocators: DefaultColocator, AverageColocator and DifferenceColocator.
+      * nn_t (or nn_time) - nearest neighbour in time algorithm
+      * nn_h (or nn_horizontal) - nearest neighbour in horizontal distance
+      * nn_a (or nn_altitude) - nearest neighbour in altitude
+      * nn_p (or nn_pressure) - nearest neighbour in pressure (as in a vertical coordinate). Note that similarly to the p_sep constraint that this works on the ratio of pressure, so the nearest neighbour to a point with a value of 10 hPa, out of a choice of 5 hPa and 19 hPa, would be 19 hPa, as 19/10 < 10/5.
+      * mean - an averaging kernel that returns the mean values of any points found by the colocation method
+      * moments - an averaging kernel that returns the mean, standard deviation and the number of points remaining after the specified constraint has been applied. This can only be used for ungridded sample points. This kernel has some optional parameters, specified in square brackets, for example, ``kernel=moments[stddev_name=tas_stddev]``:
 
-       #. h_sep - the horizontal separation in kilometres. The units can be specified as km or m (for example ``h_sep=1.5km``), if none are specified then the default is km.
-       #. a_sep - the altitude separation. The units can be specified as km or m, as for h_sep.
-       #. p_sep - the pressure separation. This is not an absolute separation as for h_sep and a_sep, but a relative one, so is specified as a ratio. For example a constraint of p_sep = 2, for a point at 10 hPa, would cover the range 5 hPa < points < 20 hPa. Note that p_sep >= 1.
-       #. t_sep - the time separation. This can be specified in years, months, days, hours, minutes or seconds using "$y$m$d$H$M$S". For example to specify a time separation of one and a half months you could use ``t_sep=1m15d``. It is worth noting that the units for time comparison are fractional days, so that years are converted to the number of days in a Gregorian year, and months are 1/12th of a Gregorian year.
-       #. fill_value - The numerical value to apply to the colocated point if there are no points which satisfy the constraint.
+        * stddev_name - Specify the name of the standard deviation variable in the resulting NetCDF file. The default is the variable name suffixed with ``_std_dev``.
+        * nopoints_name - Specify the name of the variable containing the number of points in the resulting NetCDF file. The default is the variable name suffixed with ``_no_points``
 
-    #. SepConstraintKdtree - This performs the same function as SepConstraint but creates a k-D tree index of the data points to make colocation more efficient. The indexing is by latitude and longitude values. The horizontal constraint is applied first, using the index, then other other constraints are applied to the remaining points. This constraint can be used for ungridded data with the following colocators: DefaultColocator, AverageColocator and DifferenceColocator. The arguments are the same as for SepConstraint except that the h_sep argument is mandatory.
 
-  For ungridded data colocating on to gridded sample points:
-    #. CubeCellConstraint - This can only be used for colocating on to a grid with UngriddedGriddedColocator. It constrains to points within the bounds surrounding each grid point. The bounds are taken from the gridded data if they are defined, otherwise the mid-points between grid points are used. This constraint is implemented by checking every data point for every grid point with nested iteration, so can be slow. One option is available:
-
-       #. fill_value - The numerical value to apply to the colocated point if there are no points which satisfy the constraint.
-
-    #. BinningCubeCellConstraint - This returns the same result as CubeCellConstraint but using a different algorithm. It should be used with UngriddedGriddedColocator. The grid cell in which each data point falls is determined by iterating over the data points and assigning them to bins. The constraint then iterates over the grid points, retrieving the binned data points for each grid point. This is computationally much more efficient, but uses more memory. One option is available:
-
-       #. fill_value - The numerical value to apply to the colocated point if there are no points which satisfy the constraint.
-
-``kernel``
-  is an optional argument used to specify the kernel to use, a nearest neighbour algorithm is used if none is specified (nn_gridded for gridded-ungridded colocation and nn_horizontal otherwise). The built-in kernel methods currently available are:
-
-  For ungridded data colocating on to ungridded sample points:
-    #. nn_time - nearest neighbour in time algorithm for ungridded data.
-    #. nn_horizontal - nearest neighbour in horizontal distance, for ungridded data.
-    #. nn_horizontal_kdtree - nearest neighbour in horizontal distance, for ungridded data, using a k-D tree index of the data. This cannot be used with a constraint.
-    #. nn_altitude - nearest neighbour in altitude, for ungridded data.
-    #. nn_pressure - nearest neighbour in pressure (as in a vertical coordinate), for ungridded data. Note that similarly to the p_sep constraint that this works on the ratio of pressure, so the nearest neighbour to a point with a value of 10 hPa, out of a choice of 5 hPa and 19 hPa, would be 19 hPa, as 19/10 < 10/5.
-    #. mean - an averaging kernel which returns the mean values of any points remaining after the specified constraint has been applied (note that no constraint is the default)
-    #. full_average - an averaging kernel which returns the mean, standard deviation and the number of points remaining after the specified constraint has been applied. This must be used with AverageColocator.
-
-  For gridded data colocating on to ungridded sample points:
-    #. nn_gridded - nearest neighbour algorithm optimized for gridded data. This is the default for gridded data.
-    #. li - a linear interpolation algorithm. This is only suitable for gridded data.
-
-  For ungridded data colocating on to gridded sample points:
-    #. mean - returns the mean values of any points within the grid cell
-
-  For gridded data colocating on to gridded data the default kernel is gridded_gridded_nn. The two options available are:
-    #. gridded_gridded_nn - nearest neighbour for gridded-gridded colocation
-    #. gridded_gridded_li - linear interpolation for gridded-gridded colocation
-
-``product``
-  is an optional argument used to specify the type of files being read. If omitted, the program will attempt to figure out which product to use based on the filename.
+    ``product`` is an optional argument used to specify the type of files being read. If omitted, the program will attempt to determine which product to use based on the filename, as listed at :ref:`data-products-reading`.
 
 .. todo:: Link to DataProduct wiki page.  Click [CommunityIntercomparisonSuite/DataProduct here] to see a list of available products and their file signatures.
 
@@ -120,7 +85,7 @@ where:
 
 A full example would be::
 
-  $ cis col rain:"my_data_??.*" my_sample_file:constraint=SepConstraint[h_sep=50km,t_sep=6000S],kernel=nn_time -o my_col
+  $ cis col rain:"my_data_??.*" my_sample_file:colocator=box[h_sep=50km,t_sep=6000S],kernel=nn_t -o my_col
 
 
 Colocation output files

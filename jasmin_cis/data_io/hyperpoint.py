@@ -175,6 +175,10 @@ class HyperPointList(list):
             raise ValueError('All items in list_of_coords must be Coord instances.')
         return point_list
 
+    def enumerate_non_masked_points(self):
+        for idx, point in enumerate(self):
+            yield idx, point
+
     @property
     def vals(self):
         from numpy import zeros

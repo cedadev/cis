@@ -18,36 +18,61 @@ def parse_datetimestr_to_std_time_array(string_time_array):
 
 def parse_datetimestr_delta_to_float_days(s):
     """
-    parsing "1y2m3d4H5M6S" into a fractional day
+    Parses "PY2M3DT4H5M6S" (ISO 8061) into a fractional day
     :param s: string to be parsed
     :return: a float representation of a day
     """
     import re
     from datetime import timedelta
 
-    tokens = re.findall('[0-9]*[ymdHMS]',s)
-    sec = 1.0/(24.0*60.0*60.0) # Conversion from sec to day
+    s = s.upper()
+
+    match = re.match(r'(?:[P])(?P<date>[^T :]+)?(?:[T :])?(?P<time>.+)?$', s)
+
+    if match is None:
+        raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
+
+    if match.group('date') is not None:
+        date_string = match.group('date')
+    else:
+        date_string = ''
+
+    if match.group('time') is not None:
+        time_string = match.group('time')
+    else:
+        time_string = ''
+
+    date_tokens = re.findall('[0-9]*[A-Z]', date_string)
+    time_tokens = re.findall('[0-9]*[A-Z]', time_string)
+
+    sec = 1.0/(24.0*60.0*60.0)  # Conversion from sec to day
 
     days = hours = minutes = seconds = 0
-    for token in tokens:
-
+    for token in date_tokens:
         val = int(token[:-1])
-        if token[-1:] == "y":
+        if token[-1:] == "Y":
             days += val*365.2425
-        elif token[-1:] == "m":
+        elif token[-1:] == "M":
             days += val*365.2425/12.0
-        elif token[-1:] == "d":
+        elif token[-1:] == "D":
             days += val
-        elif token[-1:] == "H":
+        else:
+            raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
+
+    for token in time_tokens:
+        val = int(token[:-1])
+        if token[-1:] == "H":
             hours = val
         elif token[-1:] == "M":
             minutes = val
         elif token[-1:] == "S":
             seconds = val
         else:
-            raise ValueError("Invalid time delta format. Must be '1y2m3d4H5M6S'")
+            raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
 
-    td = timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds)
+    print days, hours, minutes, seconds
+
+    td = timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
 
     return td.total_seconds()*sec
 

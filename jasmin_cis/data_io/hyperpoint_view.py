@@ -18,6 +18,41 @@ class HyperPointView(object):
 
     @abstractmethod
     def __len__(self):
+        """Returns the number of points (including masked ones)
+        :return: number of points
+        """
+        pass
+
+    @abstractmethod
+    def __iter__(self):
+        """Iterates over all or non-masked points according to the value of non_masked_iteration
+        :return: next HyperPoint
+        """
+        pass
+
+    @abstractmethod
+    def iter_all_points(self):
+        """Iterates over all points regardless of the value of non_masked_iteration
+        :return: next HyperPoint
+        """
+
+    @abstractmethod
+    def iter_non_masked_points(self):
+        """Iterates over non-masked points regardless of the value of non_masked_iteration
+        :return: next HyperPoint
+        """
+        pass
+
+    @abstractmethod
+    def enumerate_non_masked_points(self):
+        """Iterates over non-masked points returning the index in the full
+        data array and the corresponding HyperPoint.
+        :return: tuple(index of point in flattened view of data, HyperPoint)
+        """
+        pass
+
+    @abstractmethod
+    def __setitem__(self, key, value):
         pass
 
 
@@ -144,9 +179,10 @@ class GriddedHyperPointView(HyperPointView):
         """
         self.data = data
         self.num_dimensions = len(data.shape)
-        self.coords = [None] * len(dim_coords_and_dims)
+        self.coords = [None] * self.num_dimensions
         self.dims_to_std_coords_map = {}
         # Determine which standard coordinate corresponds to which cube dimension.
+        # self.coords holds coordinates in the order of the array dimensions.
         for sc_idx, cd in enumerate(dim_coords_and_dims):
             if cd is not None:
                 self.coords[cd[1]] = cd[0]
@@ -207,7 +243,8 @@ class GriddedHyperPointView(HyperPointView):
         """Iterates over all points regardless of the value of non_masked_iteration
         :return: next HyperPoint
         """
-        shape = [c.size for c in self.coords if c is not None]
+        # shape = tuple([c.size for c in self.coords if c is not None])
+        shape = self.data.shape
         for idx in jasmin_cis.utils.index_iterator(shape):
             yield self.__getitem__(idx)
 
@@ -215,7 +252,8 @@ class GriddedHyperPointView(HyperPointView):
         """Iterates over non-masked points regardless of the value of non_masked_iteration
         :return: next HyperPoint
         """
-        shape = [c.size for c in self.coords if c is not None]
+        # shape = tuple([c.size for c in self.coords if c is not None])
+        shape = self.data.shape
         for idx in jasmin_cis.utils.index_iterator(shape):
             if self.data is not None and self.data[idx] is np.ma.masked:
                 continue
@@ -226,7 +264,8 @@ class GriddedHyperPointView(HyperPointView):
         data array and the corresponding HyperPoint.
         :return: tuple(index of point in flattened view of data, HyperPoint)
         """
-        shape = tuple([c.size for c in self.coords if c is not None])
+        # shape = tuple([c.size for c in self.coords if c is not None])
+        shape = self.data.shape
         for idx in xrange(self.length):
             if self.data is not None:
                 indices = np.unravel_index(idx, shape, order='C')

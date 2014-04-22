@@ -11,7 +11,8 @@ from jasmin_cis.data_io.hyperpoint import HyperPointList
 from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
-                   horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0):
+                   horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
+                   dim_order=None, mask=False):
     """
     Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
     given get a 5x3 cube of the form:
@@ -33,47 +34,61 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
     :param altitude_offset: Offset from the default grid in altitude
     :param pressure_offset: Offset from the default grid in pressure
     :param time_offset: Offset from the default grid in time
+    :param dim_order: List of 'lat', 'lon', 'alt', 'pres', 'time' in the order in which the dimensions occur
     :return: A cube with well defined data.
     """
 
-    coord_list = []
-    coord_number = 0
     data_size = 1
+    DIM_NAMES = ['lat', 'lon', 'alt', 'pres', 'time']
+    dim_lengths = [lat_dim_length, lon_dim_length, alt_dim_length, pres_dim_length, time_dim_length]
+
+    if dim_order is None:
+        dim_order = list(DIM_NAMES)
+
+    if any([True for d in dim_order if d not in DIM_NAMES]):
+        raise ValueError("dim_order contains unrecognised name")
+
+    for idx, dim in enumerate(DIM_NAMES):
+        if dim_lengths[idx] == 0 and dim in dim_order:
+            del dim_order[dim_order.index(dim)]
+
+    coord_map = {}
+    for idx, dim in enumerate(dim_order):
+        coord_map[dim] = dim_order.index(dim)
+    coord_list = [None] * len(coord_map)
 
     if lat_dim_length:
-        coord_list.append((DimCoord(np.linspace(-10., 10., lat_dim_length) + horizontal_offset,
-                                    standard_name='latitude', units='degrees'), coord_number))
-        coord_number += 1
+        coord_list[coord_map['lat']] = (DimCoord(np.linspace(-10., 10., lat_dim_length) + horizontal_offset,
+                                        standard_name='latitude', units='degrees'), coord_map['lat'])
         data_size *= lat_dim_length
 
     if lon_dim_length:
-        coord_list.append((DimCoord(np.linspace(-5., 5., lon_dim_length) + horizontal_offset,
-                                    standard_name='longitude', units='degrees'), coord_number))
-        coord_number += 1
+        coord_list[coord_map['lon']] = (DimCoord(np.linspace(-5., 5., lon_dim_length) + horizontal_offset,
+                                        standard_name='longitude', units='degrees'), coord_map['lon'])
         data_size *= lon_dim_length
 
     if alt_dim_length:
-        coord_list.append((DimCoord(np.linspace(0., 7., alt_dim_length) + altitude_offset,
-                                    standard_name='altitude', units='metres'), coord_number))
-        coord_number += 1
+        coord_list[coord_map['alt']] = (DimCoord(np.linspace(0., 7., alt_dim_length) + altitude_offset,
+                                        standard_name='altitude', units='metres'), coord_map['alt'])
         data_size *= alt_dim_length
 
     if pres_dim_length:
-        coord_list.append((DimCoord(np.linspace(0., 7., pres_dim_length) + pressure_offset,
-                                    standard_name='air_pressure', units='hPa'), coord_number))
-        coord_number += 1
+        coord_list[coord_map['pres']] = (DimCoord(np.linspace(0., 7., pres_dim_length) + pressure_offset,
+                                         standard_name='air_pressure', units='hPa'), coord_map['pres'])
         data_size *= pres_dim_length
 
     if time_dim_length:
         t0 = datetime.datetime(1984, 8, 27)
         times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(time_dim_length)])
         time_nums = convert_obj_to_standard_date_array(times)
-        coord_list.append((DimCoord(time_nums, standard_name='time', units='days since 1600-01-01 00:00:00'),
-                           coord_number))
-        coord_number += 1
+        coord_list[coord_map['time']] = (DimCoord(time_nums, standard_name='time', units='days since 1600-01-01 00:00:00'),
+                                         coord_map['time'])
         data_size *= time_dim_length
 
     data = np.reshape(np.arange(data_size) + data_offset + 1., tuple(len(i[0].points) for i in coord_list))
+    if mask:
+        data = np.ma.asarray(data)
+        data.mask = mask
 
     return_cube = Cube(data, dim_coords_and_dims=coord_list)
 
@@ -895,3 +910,6 @@ class MockUngriddedData(CommonData):
 
     def get_non_masked_points(self):
         return self.hyperpointlist
+
+    def is_gridded(self):
+        return False

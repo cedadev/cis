@@ -38,7 +38,7 @@ It can also read the following gridded data types:
   Dataset              Product name                Type               File Signature                                      
   ==================== =========================== ================== =================================================================================
   MODIS L3 daily       MODIS_L3                    Satellite          \*MYD08_D3*.hdf, \*MOD08_D3*.hdf, \*MOD08_E3*.hdf  
-  Net_CDF Gridded Data NetCDFGridded               Gridded Model Data \*.nc (this is the default for NetCDF Files that do not match any other signature)
+  Net_CDF Gridded Data NetCDF_Gridded              Gridded Model Data \*.nc (this is the default for NetCDF Files that do not match any other signature)
   ==================== =========================== ================== =================================================================================
 
 

@@ -145,6 +145,10 @@ class LazyData(object):
         self.metadata.standard_name = standard_name
 
     @property
+    def var_name(self):
+        return self.metadata._name
+
+    @property
     def units(self):
         return self.metadata.units
 
@@ -240,8 +244,6 @@ class UngriddedData(LazyData, CommonData):
             raise ValueError("Invalid Coords type")
         all_coords = self._coords.find_standard_coords()
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
-        #TODO Remove
-        self.coords_on_grid = False
     
     @property
     def x(self):
@@ -307,6 +309,20 @@ class UngriddedData(LazyData, CommonData):
         """
         return UngriddedHyperPointView(self.coords_flattened, self.data_flattened, non_masked_iteration=True)
 
+    def find_standard_coords(self):
+        """Constructs a list of the standard coordinates.
+        The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
+        list in this order.
+        :return: list of coordinates or None if coordinate not present
+        """
+        return self._coords.find_standard_coords()
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return False
+
 ##     @classmethod
 ##     def from_points_array(cls, hyperpoints):
 ##         """
@@ -356,8 +372,6 @@ class UngriddedCoordinates(CommonData):
             raise ValueError("Invalid Coords type")
         all_coords = self._coords.find_standard_coords()
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
-        #TODO Remove
-        self.coords_on_grid = False
 
     @property
     def x(self):
@@ -419,3 +433,9 @@ class UngriddedCoordinates(CommonData):
         :return: HyperPointView of the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, None, non_masked_iteration=True)
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return False

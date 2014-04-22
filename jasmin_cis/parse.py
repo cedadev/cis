@@ -5,6 +5,7 @@ import argparse
 import re
 import sys
 import os.path
+from jasmin_cis.exceptions import InvalidCommandLineOptionError
 from plotting.plot import Plotter
 import logging
 
@@ -102,15 +103,16 @@ def add_info_parser_arguments(parser):
 
 def add_col_parser_arguments(parser):
     parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variables and files to colocate, "
-                        "which needs to be entered in the format variable:filename[:product], with multiple files to "
+                        "which needs to be entered in the format variable:filename[:product=], with multiple files to "
                         "colocate separated by spaces.")
     parser.add_argument("samplegroup", metavar = "SampleGroup", help = "A filename with the points to colocate onto. "
-                        "Additional options are variable, colocator, constraint, kernel and product, entered as "
-                        "keyword=value. For example filename:variable=var1,kernel=nn_altitude.")
+                        "Additional parameters are variable, colocator, kernel and product, entered as "
+                        "keyword=value. Colocator must always be specified. For example "
+                        "filename:variable=var1,colocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?", help="The "
                         "filename of the output file containing the colocated data. The name specified will be "
-                        "prefixed with \"cis-\" and suffixed with \".nc\" so that cis can recognise it when using the "
-                        "file for further operations.")
+                        "suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and so that "
+                        "cis can recognise it when using the file for further operations.")
     return parser
 
 
@@ -384,7 +386,7 @@ def get_subset_datagroups(datagroups, parser):
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product)
 
-    return parse_colonic_arguments(datagroups, parser, datagroup_options, min_args=2)
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
 def get_subset_limits(subsetlimits, parser):
@@ -501,6 +503,24 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
         else:
             split_input_comma = []  # need to loop over options to set optional arguments to None
 
+        if len(split_input_comma) > len(option):
+            raise InvalidCommandLineOptionError('More options specified than are actually available.')
+
+        # If there is only one optional argument do not require the 'keyword=' syntax
+        if len(option) == 1 and len(split_input_comma) == 1:
+            split_input_variable = split_outside_brackets(split_input_comma[0], '=')
+            if len(split_input_variable) == 1:
+                input_dict[option[0]] = split_input_variable[0]
+                option.pop(0)
+                split_input_comma.pop(0)
+            elif len(split_input_variable) == 2:
+                if option[0] == split_input_variable[0]:
+                    input_dict[option[0]] = split_input_variable[1]
+                    option.pop(0)
+                    split_input_comma.pop(0)
+            else:
+                raise InvalidCommandLineOptionError('Something is wrong with this argument: ', split_input_comma)
+
         for i, option in enumerate(option):
             # Make sure an entry for each option is created, even if it is None
             input_dict[option] = None
@@ -509,6 +529,11 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
                     split_input_variable = split_outside_brackets(j, '=')
                     if split_input_variable[0] == option:
                         input_dict[option] = options[i+compulsary_args](split_input_variable[1], parser)
+                        split_input_comma.remove(j)
+
+        if len(split_input_comma) != 0:
+            raise InvalidCommandLineOptionError('The following optional arguments could not be parsed: ' +
+                                                str(split_input_comma))
 
         input_dicts.append(input_dict)
     return input_dicts
@@ -661,13 +686,18 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
     '''
+    from jasmin_cis.parse_datetime import parse_as_number_or_datetime
+    from jasmin_cis.time_util import parse_datetimestr_to_std_time
+    import datetime
     ax_range = {}
 
     if min_val is not None:
-        ax_range[range_axis + "min"] = parse_as_float_or_date(min_val, range_axis + "min", parser)
+        dt = parse_as_number_or_datetime(min_val, range_axis + "min", parser)
+        ax_range[range_axis + "min"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
 
     if max_val is not None:
-        ax_range[range_axis + "max"] = parse_as_float_or_date(max_val, range_axis + "max", parser)
+        dt = parse_as_number_or_datetime(max_val, range_axis + "max", parser)
+        ax_range[range_axis + "max"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
 
     if step is not None:
         ax_range[range_axis + "step"] = parse_as_float_or_time_delta(step, range_axis + "step", parser)

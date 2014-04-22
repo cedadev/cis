@@ -7,6 +7,8 @@ from jasmin_cis.data_io.common_data import CommonData
 from jasmin_cis.data_io.hyperpoint import HyperPoint
 from jasmin_cis.data_io.hyperpoint_view import GriddedHyperPointView
 
+from iris.std_names import STD_NAMES
+
 
 def load_cube(*args, **kwargs):
     iris_cube = iris.load_cube(*args, **kwargs)
@@ -24,12 +26,22 @@ def make_from_cube(cube):
 
 class GriddedData(iris.cube.Cube, CommonData):
     def __init__(self, *args, **kwargs):
+
+        try:
+            standard_name = kwargs['standard_name']
+            try:
+                iris.std_names.STD_NAMES[standard_name]
+            except KeyError:
+                rejected_name = kwargs.pop('standard_name')
+                logging.warning('Attempted to set invalid standard_name \'' + rejected_name + '\'.')
+        except KeyError:
+            pass
+
         try:
             super(GriddedData, self).__init__(*args, **kwargs)
         except ValueError:
-            # If standard name is not considered valid by Iris
-            rejected_name = kwargs.pop('standard_name')
-            logging.warning('Attempted to set invalid standard_name \'' + rejected_name + '\'.')
+            rejected_unit = kwargs.pop('units')
+            logging.warning('Attempted to set invalid unit \'' + rejected_unit + '\'.')
             super(GriddedData, self).__init__(*args, **kwargs)
 
     @staticmethod
@@ -73,7 +85,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         """
         ret_list = []
 
-        coords = self.coords()
+        coords = self.coords(dim_coords=True)
         for name in HyperPoint.standard_names:
             coord_and_dim = None
             for idx, coord in enumerate(coords):
@@ -98,3 +110,9 @@ class GriddedData(iris.cube.Cube, CommonData):
 
     def name(self):
         return self.var_name
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return True

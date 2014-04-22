@@ -2,7 +2,7 @@ import numpy
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 from jasmin_cis.utils import apply_intersection_mask_to_two_arrays, calculate_histogram_bin_edges, \
     split_into_float_and_units, parse_distance_with_units_to_float_km, parse_distance_with_units_to_float_m, \
-    array_equal_including_nan
+    array_equal_including_nan, apply_mask_to_numpy_array
 from nose.tools import istest, eq_, raises
 
 @istest
@@ -227,3 +227,46 @@ def test_array_equal_including_nan():
     assert not array_equal_including_nan(array1, array3)
     assert array_equal_including_nan(array3, array3)
 
+# Tests for apply_mask_to_numpy_array
+@istest
+def test_apply_mask_to_numpy_array_with_unmasked_array():
+    # Input array not a masked array to which is applied a mask containing 'True's
+    in_array = numpy.array([1, 2, 3, 4])
+    mask = numpy.array([False, False, True, False])
+    out_array = apply_mask_to_numpy_array(in_array, mask)
+    assert numpy.array_equal(out_array.mask, mask)
+
+@istest
+def test_apply_mask_to_numpy_array_with_masked_array():
+    # Input array has masked points to which is applied a mask containing 'True's
+    in_array = numpy.ma.array([1, 2, 3, 4], mask=numpy.array([True, False, False, False]))
+    mask = numpy.array([False, False, True, False])
+    out_array = apply_mask_to_numpy_array(in_array, mask)
+    assert numpy.array_equal(out_array.mask, numpy.array([True, False, True, False]))
+
+@istest
+def test_apply_mask_to_numpy_array_with_masked_array_with_nomask():
+    # Input array is a masked array but with mask 'nomask'. This is masked by a mask with no 'True's.
+    # The output array should not have had a mask created.
+    in_array = numpy.ma.array([1, 2, 3, 4], mask=numpy.ma.nomask)
+    mask = numpy.array([False, False, False, False])
+    out_array = apply_mask_to_numpy_array(in_array, mask)
+    assert numpy.ma.getmask(out_array) is numpy.ma.nomask
+
+@istest
+def test_apply_mask_to_numpy_array_with_masked_array_but_all_unmasked():
+    # Input array is a masked array but no elements are masked. The mask contains no 'True's.
+    # This is masked by a mask with no 'True's. The output array should not have had a mask created.
+    in_array = numpy.ma.array([1, 2, 3, 4], mask=numpy.array([False, False, False, False]))
+    mask = numpy.array([False, False, False, False])
+    out_array = apply_mask_to_numpy_array(in_array, mask)
+    assert numpy.array_equal(out_array.mask, mask)
+
+@istest
+def test_apply_mask_to_numpy_array_with_masked_array_with_array_unmasked():
+    # Input array is a masked array but with mask 'nomask'. This is masked by a mask with 'True's.
+    # The output array should not have had a mask created.
+    in_array = numpy.ma.array([1, 2, 3, 4], mask=numpy.ma.nomask)
+    mask = numpy.array([False, True, False, True])
+    out_array = apply_mask_to_numpy_array(in_array, mask)
+    assert numpy.array_equal(out_array.mask, mask)
