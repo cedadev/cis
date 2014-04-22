@@ -33,7 +33,7 @@ where:
 
   * ``t,y=[-45,45,10]``
 
-  .. note:: For ungridded data a coordinate with no grid given is always collapsed completely, if this example was used for ungridded data specifying ``t`` would have no effect.
+  .. note:: For ungridded data, if a coordinate is left unspecified it is collapsed completely. This is in contrast to gridded data where a coordinate left unspecified is not used in the aggregation at all. Ungridded data will also be collapsed if only the coordinate is specified (and no range), just as is the case for gridded data.
 
   Date/times are specified in the format: ``YYYY-MM-DDThh:mm:ss`` in which ``YYYY-MM-DD`` is a date and ``hh:mm:ss`` is a time. A colon or space can be used instead of the 'T' separator (but if a space is used, the argument must be quoted). Any trailing components of the date/time may be omitted. When a date/time is used as a range start, the earliest date/time compatible with the supplied components is used (e.g., ``2010-04`` is treated as ``2010-04-01T00:00:00``) and when used as a range end, the latest compatible date/time is used. Including optional and alternative components, the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``.
 
