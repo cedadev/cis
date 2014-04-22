@@ -562,7 +562,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
             # name does not appear in the sample grid, and instead take the coordinate name and length from the original
             # data, as this is what we will be keeping.
             try:
-                sample_coord = points.coords(coord.name())[0]
+                sample_coord = points.coords(coord.name(), dim_coords=True)[0]
                 coord_names_and_sizes_for_sample_grid.append([coord.name(), len(sample_coord.points)])
                 # Find the index of the sample coordinate corresponding to the data coordinate.
                 sample_coord_transpose_map.append(sample_coord_lookup[sample_coord])
