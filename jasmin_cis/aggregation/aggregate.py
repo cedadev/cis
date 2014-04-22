@@ -3,7 +3,7 @@ import iris.analysis
 import iris.coords
 import iris.coord_categorisation
 from jasmin_cis.aggregation.aggregator import Aggregator
-from jasmin_cis.col import Colocate
+from jasmin_cis.col_framework import get_kernel
 from jasmin_cis.data_io.read import read_data
 from jasmin_cis.exceptions import CISError, InvalidVariableError
 from jasmin_cis.cis import __version__
@@ -36,7 +36,8 @@ class Aggregate():
             kernel = aggregation_kernels[kernel_name]
             data = aggregator.aggregate_gridded(kernel)
         else:
-            kernel = Colocate._get_valid_kernel_instance(kernel_name, None)
+            kernel_class = get_kernel(kernel_name)
+            kernel = kernel_class()
             data = aggregator.aggregate_ungridded(kernel)
 
         #TODO Tidy up output of grid in the history
