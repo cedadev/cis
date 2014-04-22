@@ -54,64 +54,6 @@ class Colocate(object):
         self.coords_to_be_written = True
 
     @staticmethod
-    def _get_valid_colocator_instance(col_name, col_params):
-        from jasmin_cis.col_framework import get_colocator
-        from jasmin_cis.exceptions import InvalidCommandLineOptionError
-
-        if col_name is None:
-            col_name = 'DefaultColocator'
-        col_cls = get_colocator(col_name)
-
-        try:
-            if col_params is not None:
-                col = col_cls(**col_params)
-            else:
-                col = col_cls()
-        except TypeError as e:
-            raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified colocator.")
-        return col
-
-    @staticmethod
-    def _get_valid_constraint_instance(con_name, con_params):
-        from jasmin_cis.col_framework import get_constraint
-        from jasmin_cis.exceptions import InvalidCommandLineOptionError
-
-        if con_name is None:
-            con_name = 'DummyConstraint'
-        con_cls = get_constraint(con_name)
-
-        try:
-            if con_params is not None:
-                con = con_cls(**con_params)
-            else:
-                con = con_cls()
-        except TypeError as e:
-            raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified constraint method.")
-        return con
-
-    @staticmethod
-    def _get_valid_kernel_instance(kern_name, kern_params, cube=False):
-        from jasmin_cis.col_framework import get_kernel
-        from jasmin_cis.exceptions import InvalidCommandLineOptionError
-
-        if kern_name is None:
-            if cube:
-                kern_name = 'gridded_gridded_nn'
-            else:
-                kern_name = 'nn_horizontal'
-        kern_cls = get_kernel(kern_name)
-
-        try:
-            if kern_params is not None:
-                kernel = kern_cls(**kern_params)
-            else:
-                kernel = kern_cls()
-        except TypeError as e:
-            raise InvalidCommandLineOptionError(str(e)+"\nInvalid argument for specified kernel.")
-
-        return kernel
-
-    @staticmethod
     def _get_colocator_classes_for_method(method_name, kernel_name, sample_gridded, data_gridded):
         """Gets the colocator, constraint and kernel classes corresponding to a specified colocation method and kernel
         name.
@@ -121,6 +63,9 @@ class Colocate(object):
         :param data_gridded: True if data points are gridded, otherwise False
         :return: ColocationOptions containing relevant classes
         """
+        if method_name is None:
+            raise InvalidCommandLineOptionError("A colocator must be specified")
+
         key = method_name + ('_True' if sample_gridded else '_False') + ('_True' if data_gridded else '_False')
 
         #   Method Sample  Data    colocator                      constraint                    kernel
@@ -147,17 +92,18 @@ class Colocate(object):
             'dummy_False_True':  None,
             'dummy_True_True':   None
         }
-        option = options[key]
+        option = options.get(key)
         if option is None:
-            raise InvalidCommandLineOptionError("Colocator/kernel/data type combination not compatible")
+            raise InvalidCommandLineOptionError("Colocator/kernel/data type combination is not compatible")
         if option[2] is _GenericKernel:
             if kernel_name is None:
-                raise InvalidCommandLineOptionError("A kernel must be specified for colocator {}".format(method_name))
+                raise InvalidCommandLineOptionError('A kernel must be specified for colocator "{}"'.format(method_name))
             else:
                 option[2] = get_kernel(kernel_name)
         else:
             if kernel_name is not None:
-                raise InvalidCommandLineOptionError("A kernel cannot be specified for colocator {}".format(method_name))
+                raise InvalidCommandLineOptionError(
+                    'A kernel cannot be specified for colocator "{}"'.format(method_name))
         return ColocationOptions(*option)
 
     @staticmethod
@@ -176,8 +122,7 @@ class Colocate(object):
                 con_params[key] = value
         return col_params, con_params
 
-    def colocate(self, variable, filenames, col_name=None, col_params=None, con_method=None, con_params=None, kern=None,
-                 kern_params=None, product=None):
+    def colocate(self, variable, filenames, col_name=None, col_params=None, kern=None, kern_params=None, product=None):
         from jasmin_cis.data_io.read import read_data
         from jasmin_cis.data_io.write_netcdf import add_data_to_file
         from jasmin_cis.data_io.write_netcdf import write_coordinates
@@ -200,7 +145,6 @@ class Colocate(object):
         kernel = _instantiate_with_params(col_classes.kernel, kern_params)
 
         logging.info("Colocator: " + str(col_name))
-        logging.info("Constraints: " + str(con_method))
         logging.info("Kernel: " + str(kern))
 
         logging.info("Colocating, this could take a while...")
@@ -225,8 +169,6 @@ class Colocate(object):
                                       "\nwith files: " + str(filenames) + " " +\
                                       "\nusing colocator: " + str(col_name) + " " +\
                                       "\ncolocator parameters: " + str(col_params) + " " +\
-                                      "\nconstraint method: " + str(con_method) + " " +\
-                                      "\nconstraint parameters: " + str(con_params) + " " +\
                                       "\nkernel: " + str(kern) + " " +\
                                       "\nkernel parameters: " + str(kern_params)
             data.add_history(history)

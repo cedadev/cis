@@ -103,15 +103,16 @@ def add_info_parser_arguments(parser):
 
 def add_col_parser_arguments(parser):
     parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variables and files to colocate, "
-                        "which needs to be entered in the format variable:filename[:product], with multiple files to "
+                        "which needs to be entered in the format variable:filename[:product=], with multiple files to "
                         "colocate separated by spaces.")
     parser.add_argument("samplegroup", metavar = "SampleGroup", help = "A filename with the points to colocate onto. "
-                        "Additional options are variable, colocator, constraint, kernel and product, entered as "
-                        "keyword=value. For example filename:variable=var1,kernel=nn_altitude.")
+                        "Additional parameters are variable, colocator, kernel and product, entered as "
+                        "keyword=value. Colocator must always be specified. For example "
+                        "filename:variable=var1,colocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?", help="The "
                         "filename of the output file containing the colocated data. The name specified will be "
-                        "prefixed with \"cis-\" and suffixed with \".nc\" so that cis can recognise it when using the "
-                        "file for further operations.")
+                        "suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and so that "
+                        "cis can recognise it when using the file for further operations.")
     return parser
 
 

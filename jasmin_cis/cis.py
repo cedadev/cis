@@ -125,8 +125,6 @@ def col_cmd(main_arguments):
 
     col_name = main_arguments.samplegroup['colocator'][0] if main_arguments.samplegroup['colocator'] is not None else None
     col_options = main_arguments.samplegroup['colocator'][1] if main_arguments.samplegroup['colocator'] is not None else None
-    con_name = main_arguments.samplegroup['constraint'][0] if main_arguments.samplegroup['constraint'] is not None else None
-    con_options = main_arguments.samplegroup['constraint'][1] if main_arguments.samplegroup['constraint'] is not None else None
     kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
     kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
 
@@ -136,7 +134,7 @@ def col_cmd(main_arguments):
         product = input_group["product"] if input_group["product"] is not None else None
 
         try:
-            col.colocate(variable, filenames, col_name, col_options, con_name, con_options, kern_name, kern_options, product)
+            col.colocate(variable, filenames, col_name, col_options, kern_name, kern_options, product)
         except ClassNotFoundError as e:
             __error_occurred(str(e) + "\nInvalid co-location option.")
         except (CISError, IOError) as e:
