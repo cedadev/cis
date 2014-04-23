@@ -117,7 +117,7 @@ class Aggregator:
                         cell_end_index -= 1
                     actual_end = float(min(coord.cell(cell_end_index).bound))
 
-                    subset_constraint.set_limit(coord, actual_start, actual_end)
+                    subset_constraint.set_limit(coord, actual_start, actual_end, False)
                     self.data = subsetter.subset(self.data, subset_constraint)
 
                     iris.coord_categorisation.add_categorised_coord(self.data, 'aggregation_coord_for_'+coord.name(),
