@@ -8,7 +8,7 @@ import iris
 from jasmin_cis.subsetting.subset_framework import SubsetConstraintInterface
 from jasmin_cis.data_io.Coord import Coord, CoordList
 import jasmin_cis.data_io.gridded_data as gridded_data
-from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData
+from jasmin_cis.data_io.ungridded_data import UngriddedData
 
 
 class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
@@ -32,7 +32,7 @@ class SubsetConstraint(SubsetConstraintInterface):
         self._limits = {}
         logging.debug("Created SubsetConstraint of type %s", self.__class__.__name__)
 
-    def set_limit(self, coord, dim_min, dim_max):
+    def set_limit(self, coord, dim_min, dim_max, wrapped):
         """Sets boundary values for a dimension to be used in subsetting.
 
         :param coord: coordinate to which limit applies
@@ -42,25 +42,22 @@ class SubsetConstraint(SubsetConstraintInterface):
         if dim_min is not None or dim_max is not None:
             logging.info("Setting limit for dimension '%s' [%s, %s]", coord.name(), str(dim_min), str(dim_max))
             self._limits[coord.name()] = CoordLimits(coord, dim_min, dim_max,
-                                                     self._make_constraint_function(dim_min, dim_max))
+                                                     self._make_constraint_function(dim_min, dim_max, wrapped))
 
     @staticmethod
-    def _make_constraint_function(dim_min, dim_max):
+    def _make_constraint_function(dim_min, dim_max, wrapped):
         """Constructs a function enforcing the specified bounds on the values of a dimension.
 
         The boundary values are included in the constrained interval.
         :param dim_min: lower bound on dimension or None to indicate no lower bound
         :param dim_max: upper bound on dimension or None to indicate no upper bound
+        :param wrapped: True if the coordinate is circular and the included range is wrapped, otherwise False
         :return: lambda function with one argument returning bool
         """
-        if dim_min is not None and dim_max is not None:
-            return lambda x: dim_min <= x <= dim_max
-        elif dim_min is not None and dim_max is None:
-            return lambda x: dim_min <= x
-        elif dim_min is None and dim_max is not None:
-            return lambda x: x <= dim_max
+        if wrapped:
+            return lambda x: x >= dim_min or x <= dim_max
         else:
-            return None
+            return lambda x: dim_min <= x <= dim_max
 
     def __str__(self):
         limit_strs = []
@@ -140,7 +137,8 @@ class UngriddedSubsetConstraint(SubsetConstraint):
 
             subset_coords = CoordList()
             for coord in coord_pairs:
-                new_coord = Coord(np.array(coord.output, dtype=coord.input.data.dtype, copy=False), coord.input.metadata)
+                new_coord = Coord(np.array(coord.output, dtype=coord.input.data.dtype, copy=False),
+                                  coord.input.metadata)
                 new_coord.metadata.shape = (len(coord.output),)
                 subset_coords.append(new_coord)
             subset = UngriddedData(new_data, subset_metadata, subset_coords)
