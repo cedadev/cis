@@ -33,7 +33,7 @@ class GriddedData(iris.cube.Cube, CommonData):
                 iris.std_names.STD_NAMES[standard_name]
             except KeyError:
                 rejected_name = kwargs.pop('standard_name')
-                logging.warning('Attempted to set invalid standard_name \'' + rejected_name + '\'.')
+                logging.warning("Attempted to set invalid standard_name '{}'.".format(rejected_name))
         except KeyError:
             pass
 
@@ -41,7 +41,7 @@ class GriddedData(iris.cube.Cube, CommonData):
             super(GriddedData, self).__init__(*args, **kwargs)
         except ValueError:
             rejected_unit = kwargs.pop('units')
-            logging.warning('Attempted to set invalid unit \'' + rejected_unit + '\'.')
+            logging.warning("Attempted to set invalid unit '{}'.".format(rejected_unit))
             super(GriddedData, self).__init__(*args, **kwargs)
 
     @staticmethod
