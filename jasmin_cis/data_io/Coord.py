@@ -101,13 +101,13 @@ class CoordList(list):
         coords = self
 
         if name is not None:
-            coords = filter(lambda coord_: coord_.name() == name, coords)
+            coords = filter(lambda coord_: coord_.name().lower() == name.lower(), coords)
 
         if standard_name is not None:
-            coords = filter(lambda coord_: coord_.standard_name == standard_name, coords)
+            coords = filter(lambda coord_: coord_.standard_name.lower() == standard_name.lower(), coords)
 
         if long_name is not None:
-            coords = filter(lambda coord_: coord_.long_name == long_name, coords)
+            coords = filter(lambda coord_: coord_.long_name.lower() == long_name.lower(), coords)
 
         if axis is not None:
             axis = axis.upper()
