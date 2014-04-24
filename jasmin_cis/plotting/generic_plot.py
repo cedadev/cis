@@ -247,7 +247,11 @@ class Generic_Plot(object):
     def format_time_axis(self):
         from jasmin_cis.time_util import cis_standard_time_unit
 
-        coords = self.packed_data_items[0].coords(name=self.plot_args["x_variable"])
+        coords = self.packed_data_items[0].coords(standard_name=self.plot_args["x_variable"])
+        if len(coords) == 0:
+            coords = self.packed_data_items[0].coords(name=self.plot_args["x_variable"])
+        if len(coords) == 0:
+            coords = self.packed_data_items[0].coords(long_name=self.plot_args["x_variable"])
 
         if len(coords) == 1:
             if coords[0].units == str(cis_standard_time_unit):
