@@ -140,6 +140,27 @@ class UngriddedHyperPointView(HyperPointView):
         else:
             self.data[key] = value
 
+    def set_longitude_range(self, range_start):
+        """Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+
+        :param range_start: starting value of required longitude range
+        """
+        range_end = range_start + 360.0
+        new_lon = None
+        for idx, point in enumerate(self):
+            modified = False
+            if point.longitude < range_start:
+                new_lon = point.longitude + 360.0
+                modified = True
+            elif point.longitude > range_end:
+                new_lon = point.longitude - 360.0
+                modified = True
+            if modified:
+                new_point = point.modified(lon=new_lon)
+                self[idx] = new_point
+
     @property
     def vals(self):
         return self.data
@@ -171,8 +192,9 @@ class GriddedHyperPointView(HyperPointView):
     """
     def __init__(self, dim_coords_and_dims, data, non_masked_iteration=False):
         """
-        :param coords: coordinate values at points
-        :type coords: list of tuples of (1D numpy array of coordinate values, index of corresponding dimension) or None
+        :param dim_coords_and_dims: coordinate values at points
+        :type dim_coords_and_dims: list of tuples of (1D numpy array of coordinate values, index of corresponding
+                                   dimension) or None
         :param data: data values at points
         :type data: n-D numpy array with one dimension for each coordinate
         :param non_masked_iteration: if true, the default iterator omits masked points
@@ -298,10 +320,108 @@ class GriddedHyperPointView(HyperPointView):
                         curr_value = coord[coord_idx]
                         new_value = value[sc_idx]
                         if not np.isclose(curr_value, new_value):
-                            raise ValueError("GriddedHyperPointView assignment cannot be used to modify coordinate values")
+                            raise ValueError(
+                                "GriddedHyperPointView assignment cannot be used to modify coordinate values")
 
             if self.data is not None:
                 self.data[indices] = value[HyperPoint.number_standard_names][0]
         else:
             # Since only the data value can be changed, allow the value to be passed in directly.
             self.data[indices] = value
+
+    def set_longitude_range(self, range_start):
+        """Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+
+        :param range_start: starting value of required longitude range
+        """
+        range_end = range_start + 360.0
+        coord = self.longitudes
+        if coord is not None:
+            new_coord = np.empty_like(coord)
+            for i, lon in enumerate(coord):
+                if lon < range_start:
+                    new_lon = lon + 360.0
+                elif lon > range_end:
+                    new_lon = lon - 360.0
+                else:
+                    new_lon = lon
+                new_coord[i] = new_lon
+            self.longitudes = new_coord
+
+    def _dimension_index_for_hyperpoint_index(self, hp_index):
+        """Finds the index of the dimension corresponding to a hyperpoint coordinate index.
+        :param hp_index: hyperpoint coordinate index
+        :return: dimension index or None if the underlying cube does not have the coordinate
+        """
+        ret_idx = None
+        for dim_idx, sc_idx in self.dims_to_std_coords_map.iteritems():
+            if sc_idx == hp_index:
+                ret_idx = dim_idx
+        return ret_idx
+
+    @property
+    def latitudes(self):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.LATITUDE)
+        return self.coords[dim_idx] if dim_idx is not None else None
+
+    @latitudes.setter
+    def latitudes(self, coord):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.LATITUDE)
+        if dim_idx is None:
+            raise ValueError("Attempt to set latitude coordinate for GriddedData without latitudes")
+        else:
+            self.coords[dim_idx] = coord
+
+    @property
+    def longitudes(self):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.LONGITUDE)
+        return self.coords[dim_idx] if dim_idx is not None else None
+
+    @longitudes.setter
+    def longitudes(self, coord):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.LONGITUDE)
+        if dim_idx is None:
+            raise ValueError("Attempt to set longitude coordinate for GriddedData without longitudes")
+        else:
+            self.coords[dim_idx] = coord
+
+    @property
+    def altitudes(self):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.ALTITUDE)
+        return self.coords[dim_idx] if dim_idx is not None else None
+
+    @altitudes.setter
+    def altitudes(self, coord):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.ALTITUDE)
+        if dim_idx is None:
+            raise ValueError("Attempt to set altitude coordinate for GriddedData without altitudes")
+        else:
+            self.coords[dim_idx] = coord
+
+    @property
+    def air_pressures(self):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.AIR_PRESSURE)
+        return self.coords[dim_idx] if dim_idx is not None else None
+
+    @air_pressures.setter
+    def air_pressures(self, coord):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.AIR_PRESSURE)
+        if dim_idx is None:
+            raise ValueError("Attempt to set air_pressure coordinate for GriddedData without air_pressures")
+        else:
+            self.coords[dim_idx] = coord
+
+    @property
+    def times(self):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.TIME)
+        return self.coords[dim_idx] if dim_idx is not None else None
+
+    @times.setter
+    def times(self, coord):
+        dim_idx = self._dimension_index_for_hyperpoint_index(HyperPoint.TIME)
+        if dim_idx is None:
+            raise ValueError("Attempt to set time coordinate for GriddedData without times")
+        else:
+            self.coords[dim_idx] = coord
