@@ -121,9 +121,11 @@ class GriddedData(iris.cube.Cube, CommonData):
     def set_longitude_range(self, range_start):
         """Rotates the longitude coordinate array and changes its values by
         360 as necessary to force the values to be within a 360 range starting
-        at the specified value.
+        at the specified value, i.e.,
+        range_start <= longitude < range_start + 360
 
-        The data array rotated correspondingly.
+        The data array is rotated correspondingly around the dimension
+        corresponding to the longitude coordinate.
 
         :param range_start: starting value of required longitude range
         """
@@ -142,10 +144,10 @@ class GriddedData(iris.cube.Cube, CommonData):
             new_lon_points = np.roll(lon_coord.points, shift, 0)
             new_lon_points[new_lon_points < lon_min] += 360.0
         elif 0 < idx2 < len(lon_coord.points):
-            shift = len(lon_coord.points) - idx2 - 1
+            shift = len(lon_coord.points) - idx2
             lon_max = lon_coord.points[idx2]
             new_lon_points = np.roll(lon_coord.points, shift, 0)
-            new_lon_points[new_lon_points > lon_max] -= 360.0
+            new_lon_points[new_lon_points >= lon_max] -= 360.0
         if shift != 0:
             new_data = np.roll(self.data, shift, lon_idx)
             self.data = new_data

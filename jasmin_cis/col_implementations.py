@@ -474,9 +474,11 @@ class nn_gridded(Kernel):
         from iris.analysis.interpolate import nearest_neighbour_data_value
 
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
+        new_coord_tuple_list = []
         for i in point.coord_tuple:
-            if len(data.coords(i[0], dim_coords=True)) == 0:
-                point.coord_tuple.remove(i)
+            if len(data.coords(i[0], dim_coords=True)) > 0:
+                new_coord_tuple_list.append(i)
+        point.coord_tuple = new_coord_tuple_list
 
         return nearest_neighbour_data_value(data, point.coord_tuple)
 
@@ -489,9 +491,11 @@ class li(Kernel):
         from iris.analysis.interpolate import linear
 
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
+        new_coord_tuple_list = []
         for i in point.coord_tuple:
-            if len(data.coords(i[0], dim_coords=True)) == 0:
-                point.coord_tuple.remove(i)
+            if len(data.coords(i[0], dim_coords=True)) > 0:
+                new_coord_tuple_list.append(i)
+        point.coord_tuple = new_coord_tuple_list
 
         return linear(data, point.coord_tuple).data
 
@@ -1011,4 +1015,5 @@ def _fix_cube_longitude_range(coords, data):
     :param data: cube of data to fix
     """
     range_start = _find_longitude_range(coords)
-    data.set_longitude_range(range_start)
+    if range_start is not None:
+        data.set_longitude_range(range_start)

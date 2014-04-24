@@ -1,4 +1,5 @@
 from nose.tools import istest, nottest, raises
+import numpy as np
 
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView, GriddedHyperPointView
 import jasmin_cis.test.test_util.mock as mock
@@ -103,6 +104,40 @@ class TestUngriddedHyperPointView(object):
         assert(p.latitude == -5)
         assert(p.longitude == 5)
         assert(p.val[0] == 6)
+
+    @istest
+    def test_can_set_longitude_wrap_at_180(self):
+        ug = mock.make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-90, lat_max=90,
+                                                 lon_dim_length=9, lon_min=0, lon_max=360)
+        hpv = ug.get_non_masked_points()
+        hpv.set_longitude_range(-180.0)
+        assert(np.min(hpv.longitudes) >= -180.0)
+        assert(np.max(hpv.longitudes) < 180.0)
+        assert(hpv[0].longitude == 0.0)
+        assert(hpv[36].longitude == 0.0)
+        assert(hpv[4].longitude == -180.0)
+        assert(hpv[40].longitude == -180.0)
+        assert(hpv[7].longitude == -45.0)
+        assert(hpv[43].longitude == -45.0)
+        assert(hpv[8].longitude == 0.0)
+        assert(hpv[44].longitude == 0.0)
+
+    @istest
+    def test_can_set_longitude_wrap_at_360(self):
+        ug = mock.make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-90, lat_max=90,
+                                                 lon_dim_length=9, lon_min=-180, lon_max=180)
+        hpv = ug.get_non_masked_points()
+        hpv.set_longitude_range(0.0)
+        assert(np.min(hpv.longitudes) >= 0.0)
+        assert(np.max(hpv.longitudes) < 360.0)
+        assert(hpv[0].longitude == 180.0)
+        assert(hpv[36].longitude == 180.0)
+        assert(hpv[1].longitude == 225.0)
+        assert(hpv[37].longitude == 225.0)
+        assert(hpv[4].longitude == 0.0)
+        assert(hpv[40].longitude == 0.0)
+        assert(hpv[8].longitude == 180.0)
+        assert(hpv[44].longitude == 180.0)
 
 
 class TestGriddedHyperPointView(object):
@@ -253,6 +288,46 @@ class TestGriddedHyperPointView(object):
         assert(p.latitude == 5)
         assert(p.longitude == -5)
         assert(p.val[0] == 6)
+
+    @istest
+    def test_can_set_longitude_wrap_at_180(self):
+        gd = gridded_data.make_from_cube(mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
+        long_coord = gd.coord('longitude')
+        long_coord.points = np.array([0., 45., 90., 135., 180., 225., 270., 315., 360.])
+        long_coord.bounds = None
+        long_coord.guess_bounds()
+        hpv = gd.get_non_masked_points()
+        hpv.set_longitude_range(-180.0)
+        assert(np.min(hpv.longitudes) >= -180.0)
+        assert(np.max(hpv.longitudes) < 180.0)
+        assert(hpv[0, 0].longitude == 0.0)
+        assert(hpv[4, 0].longitude == 0.0)
+        assert(hpv[0, 4].longitude == -180.0)
+        assert(hpv[4, 4].longitude == -180.0)
+        assert(hpv[0, 7].longitude == -45.0)
+        assert(hpv[4, 7].longitude == -45.0)
+        assert(hpv[0, 8].longitude == 0.0)
+        assert(hpv[4, 8].longitude == 0.0)
+
+    @istest
+    def test_can_set_longitude_wrap_at_360(self):
+        gd = gridded_data.make_from_cube(mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
+        long_coord = gd.coord('longitude')
+        long_coord.points = np.array([-180., -135., -90., -45., 0., 45., 90., 135., 180.])
+        long_coord.bounds = None
+        long_coord.guess_bounds()
+        hpv = gd.get_non_masked_points()
+        hpv.set_longitude_range(0.0)
+        assert(np.min(hpv.longitudes) >= 0.0)
+        assert(np.max(hpv.longitudes) < 360.0)
+        assert(hpv[0, 0].longitude == 180.0)
+        assert(hpv[4, 0].longitude == 180.0)
+        assert(hpv[0, 1].longitude == 225.0)
+        assert(hpv[4, 1].longitude == 225.0)
+        assert(hpv[0, 4].longitude == 0.0)
+        assert(hpv[4, 4].longitude == 0.0)
+        assert(hpv[0, 8].longitude == 180.0)
+        assert(hpv[4, 8].longitude == 180.0)
 
 
 # if __name__ == '__main__':

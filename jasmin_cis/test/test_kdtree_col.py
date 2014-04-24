@@ -5,6 +5,7 @@ import numpy as np
 
 import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
+from jasmin_cis.data_io.ungridded_data import UngriddedData
 from jasmin_cis.test.test_util import mock
 from jasmin_cis.col_implementations import (GeneralUngriddedColocator, nn_horizontal_kdtree, DummyConstraint,
                                             SepConstraintKdtree, make_coord_map)
@@ -31,7 +32,7 @@ class Test_nn_horizontal_kdtree(object):
     def test_basic_col_in_2d(self):
         # lat: -10 to 10 step 5; lon -5 to 5 step 5
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = mock.MockUngriddedData(
+        sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
         col = GeneralUngriddedColocator(fill_value=-999)
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
@@ -43,7 +44,7 @@ class Test_nn_horizontal_kdtree(object):
     def test_already_colocated_in_col_ungridded_to_ungridded_in_2d(self):
         ug_data = mock.make_regular_2d_ungridded_data()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
-        sample_points = mock.MockUngriddedData([HyperPoint(0.0, 0.0)])
+        sample_points = UngriddedData.from_points_array([HyperPoint(0.0, 0.0)])
         col = GeneralUngriddedColocator(fill_value=-999)
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 8.0)
@@ -59,8 +60,9 @@ class Test_nn_horizontal_kdtree(object):
         together. This test is only really for documenting the behaviour for equidistant points.
         """
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = mock.MockUngriddedData([HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5),
-                                                HyperPoint(-2.5, -2.5)])
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5),
+             HyperPoint(-2.5, -2.5)])
         col = GeneralUngriddedColocator(fill_value=-999)
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 11.0)
@@ -71,8 +73,9 @@ class Test_nn_horizontal_kdtree(object):
     @istest
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = mock.MockUngriddedData([HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5),
-                                                HyperPoint(-5.5, -5.5)])
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5),
+             HyperPoint(-5.5, -5.5)])
         col = GeneralUngriddedColocator(fill_value=-999)
         new_data = col.colocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 12.0)

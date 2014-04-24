@@ -141,12 +141,15 @@ class UngriddedHyperPointView(HyperPointView):
             self.data[key] = value
 
     def set_longitude_range(self, range_start):
-        """Rotates the longitude coordinate array and changes its values by
-        360 as necessary to force the values to be within a 360 range starting
-        at the specified value.
+        """Changes the longitude coordinate values by 360 as necessary to
+        force the values to be within a 360 range starting at the specified value,
+        i.e., range_start <= longitude < range_start + 360
 
         :param range_start: starting value of required longitude range
         """
+        if self.longitudes is None:
+            return
+
         range_end = range_start + 360.0
         new_lon = None
         for idx, point in enumerate(self):
@@ -154,7 +157,7 @@ class UngriddedHyperPointView(HyperPointView):
             if point.longitude < range_start:
                 new_lon = point.longitude + 360.0
                 modified = True
-            elif point.longitude > range_end:
+            elif point.longitude >= range_end:
                 new_lon = point.longitude - 360.0
                 modified = True
             if modified:
@@ -330,20 +333,23 @@ class GriddedHyperPointView(HyperPointView):
             self.data[indices] = value
 
     def set_longitude_range(self, range_start):
-        """Rotates the longitude coordinate array and changes its values by
-        360 as necessary to force the values to be within a 360 range starting
-        at the specified value.
+        """Changes the longitude coordinate values by 360 as necessary to
+        force the values to be within a 360 range starting at the specified value,
+        i.e., range_start <= longitude < range_start + 360
 
         :param range_start: starting value of required longitude range
         """
-        range_end = range_start + 360.0
         coord = self.longitudes
+        if coord is None:
+            return
+
+        range_end = range_start + 360.0
         if coord is not None:
             new_coord = np.empty_like(coord)
             for i, lon in enumerate(coord):
                 if lon < range_start:
                     new_lon = lon + 360.0
-                elif lon > range_end:
+                elif lon >= range_end:
                     new_lon = lon - 360.0
                 else:
                     new_lon = lon

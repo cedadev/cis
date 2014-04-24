@@ -327,30 +327,39 @@ class UngriddedData(LazyData, CommonData):
         """
         return False
 
-##     @classmethod
-##     def from_points_array(cls, hyperpoints):
-##         """
-##          A constuctor for building an UngriddedData object from a list of hyper points
-##         :param hyperpoints:    A list of HyperPoints
-##         """
-##         from jasmin_cis.data_io.Coord import Coord, CoordList
-##         from jasmin_cis.data_io.hyperpoint import HyperPointList
+    @classmethod
+    def from_points_array(cls, hyperpoints):
+        """
+        Constuctor for building an UngriddedData object from a list of hyper points
+        :param hyperpoints: list of HyperPoints
+        """
+        from jasmin_cis.data_io.Coord import Coord, CoordList
+        from jasmin_cis.data_io.hyperpoint import HyperPointList
 
-##         if not isinstance(hyperpoints, HyperPointList):
-##             hyperpoints = HyperPointList(hyperpoints)
+        if not isinstance(hyperpoints, HyperPointList):
+            hyperpoints = HyperPointList(hyperpoints)
 
-##         values = hyperpoints.vals
-##         latitude = hyperpoints.latitudes
-##         longitude = hyperpoints.longitudes
-##         altitude = hyperpoints.altitudes
-##         time = hyperpoints.times
+        values = hyperpoints.vals
+        latitude = hyperpoints.latitudes
+        longitude = hyperpoints.longitudes
+        air_pressure = hyperpoints.air_pressures
+        altitude = hyperpoints.altitudes
+        time = hyperpoints.times
 
-##         coords = CoordList( [Coord(latitude, Metadata(standard_name='latitude', units='degrees north')),
-##                              Coord(longitude, Metadata(standard_name='longitude', units='degrees east')),
-##                              Coord(altitude, Metadata(standard_name='altitude', units='meters')),
-##                              Coord(time, Metadata(standard_name='time', units='seconds'))])
+        coord_list = []
+        if latitude is not None:
+            coord_list.append(Coord(latitude, Metadata(standard_name='latitude', units='degrees north')))
+        if longitude is not None:
+            coord_list.append(Coord(longitude, Metadata(standard_name='longitude', units='degrees east')))
+        if air_pressure is not None:
+            coord_list.append(Coord(air_pressure, Metadata(standard_name='air_pressure', units='Pa')))
+        if altitude is not None:
+            coord_list.append(Coord(altitude, Metadata(standard_name='altitude', units='meters')))
+        if time is not None:
+            coord_list.append(Coord(time, Metadata(standard_name='time', units='seconds')))
+        coords = CoordList(coord_list)
 
-##         return cls(values, Metadata(), coords)
+        return cls(values, Metadata(), coords)
 
 
 class UngriddedCoordinates(CommonData):
