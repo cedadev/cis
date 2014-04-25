@@ -3,12 +3,12 @@ import logging
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 import numpy as np
 import matplotlib.pyplot as plt
-
+from jasmin_cis.utils import find_longitude_wrap_start
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0, wrap=False,
+    def __init__(self, packed_data_items, plot_args, x_wrap_start=None, calculate_min_and_max_values=True, datagroup=0,
                  *mplargs, **mplkwargs):
         '''
         Constructor for Generic_Plot.
@@ -23,7 +23,6 @@ class Generic_Plot(object):
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.datagroup = datagroup
-        self.wrap = wrap
 
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
@@ -35,6 +34,11 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
+        if x_wrap_start is None:
+            self.x_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.plot_args.get('xrange'),
+                                                          self.packed_data_items)
+        else:
+            self.x_wrap_start = x_wrap_start
         self.unpacked_data_items = self.unpack_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
@@ -105,16 +109,8 @@ class Generic_Plot(object):
                     if x_data == y_data:
                         __swap_x_and_y_variables()
 
-        if isinstance(self, Overlay):
-            self.wrap = True
-
-        x_range = self.plot_args.get('xrange')
-        if x_range is not None:
-            x_min = x_range.get('xmin')
-            x_max = x_range.get('xmax')
-
         return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"],
-                                   wrap=self.wrap, x_min=x_min, x_max=x_max) for packed_data_item in self.packed_data_items]
+                                   self.x_wrap_start) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]

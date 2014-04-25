@@ -2,6 +2,7 @@ import collections
 import re
 import iris
 from iris.exceptions import CoordinateNotFoundError
+import numpy as np
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
 
@@ -163,7 +164,7 @@ def array_equal_including_nan(array1, array2):
     return True
 
 
-def unpack_data_object(data_object, x_variable, y_variable, wrap=False, x_min=None, x_max=None):
+def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     '''
     :param data_object    A cube or an UngriddedData object
     :return: A dictionary containing x, y and data as numpy arrays
@@ -172,7 +173,6 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False, x_min=No
     import iris.plot as iplt
     import iris
     import logging
-    import numpy as np
     from mpl_toolkits.basemap import addcyclic
 
     def __get_coord(data_object, variable, data):
@@ -255,10 +255,43 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False, x_min=No
                     data, y = addcyclic(data, y)
                     y, x = np.meshgrid(y, x)
 
-    if x_axis_name == 'X':
+    if x_axis_name == 'X' and x_wrap_start is not None:
+        x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
+
+    logging.debug("Shape of x: " + str(x.shape))
+    if y is not None: logging.debug("Shape of y: " + str(y.shape))
+    logging.debug("Shape of data: " + str(data.shape))
+
+    return { "data": data, "x" : x, "y" : y }
+
+
+def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
+    if x_range is not None:
+        x_min = x_range.get('xmin')
+        x_max = x_range.get('xmax')
+    else:
+        x_min = None
+        x_max = None
+
+    x_wrap_start = None
+    x_points_mins = []
+    x_points_maxs = []
+    for data_object in packed_data_items:
+        try:
+            coord = data_object.coord(name=x_variable)
+            x_axis_name = guess_coord_axis(coord)
+        except CoordinateNotFoundError:
+            x_axis_name = None
+        if x_axis_name == 'X':
+            x_points_mins.append(np.min(coord.points))
+            x_points_maxs.append(np.max(coord.points))
+
+    if len(x_points_mins) > 0:
+        x_points_min = min(x_points_mins)
+        x_points_max = max(x_points_maxs)
+
+        x_wrap_start = x_points_min
         if x_min is not None or x_max is not None:
-            x_points_min = np.min(x)
-            x_points_max = np.max(x)
             if x_min is None and x_max < x_points_min:
                 raise InvalidCommandLineOptionError(
                     'If specifying xmin only it must be within the original coordinate range. Please specify xmax too.')
@@ -266,17 +299,11 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False, x_min=No
                 raise InvalidCommandLineOptionError(
                     'If specifying xmax only it must be within the original coordinate range. Please specify xmin too.')
             if x_min is not None and x_min < x_points_min:
-                x = iris.analysis.cartography.wrap_lons(x, x_min, 360)
+                x_wrap_start = x_min
             elif x_max is not None and x_max > x_points_max:
-                x = iris.analysis.cartography.wrap_lons(x, x_max - 360, 360)
-        elif wrap:
-            x = iris.analysis.cartography.wrap_lons(x, -180, 360)
+                x_wrap_start = x_max - 360
+    return x_wrap_start
 
-    logging.debug("Shape of x: " + str(x.shape))
-    if y is not None: logging.debug("Shape of y: " + str(y.shape))
-    logging.debug("Shape of data: " + str(data.shape))
-
-    return { "data": data, "x" : x, "y" : y }
 
 def wrap_longitude_coordinate_values(x_min, x_max):
 
