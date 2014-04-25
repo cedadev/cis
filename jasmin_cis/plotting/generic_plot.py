@@ -49,6 +49,9 @@ class Generic_Plot(object):
     def set_plotting_library(self):
         if self.is_map():
             max_found = 180
+            x_range_dict = self.plot_args.get('xrange')
+            x_max_requested = x_range_dict.get('xmax')
+            max_found = max([max_found, x_max_requested])
             for i in self.unpacked_data_items:
                 max_found = max([i["x"].max(), max_found])
             self.basemap = Basemap(lon_0=(max_found-180.0))
@@ -105,8 +108,13 @@ class Generic_Plot(object):
         if isinstance(self, Overlay):
             self.wrap = True
 
+        x_range = self.plot_args.get('xrange')
+        if x_range is not None:
+            x_min = x_range.get('xmin')
+            x_max = x_range.get('xmax')
+
         return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"],
-                                   wrap=self.wrap) for packed_data_item in self.packed_data_items]
+                                   wrap=self.wrap, x_min=x_min, x_max=x_max) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]

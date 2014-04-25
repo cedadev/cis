@@ -10,7 +10,7 @@ import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint
 from jasmin_cis.subsetting.subsetter import Subsetter
-from jasmin_cis.utils import isnan
+from jasmin_cis.utils import isnan, guess_coord_axis
 from jasmin_cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
 
 
@@ -206,7 +206,7 @@ class Aggregator:
     def get_grid(self, coord):
 
         grid = None
-        guessed_axis = Subset._guess_coord_axis(coord)
+        guessed_axis = guess_coord_axis(coord)
         if coord.name() in self._grid:
             grid = self._grid.pop(coord.name())
         elif coord.standard_name in self._grid:

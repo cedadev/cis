@@ -13,7 +13,7 @@ from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from jasmin_cis.cis import __version__
-from jasmin_cis.utils import remove_file_prefix
+from jasmin_cis.utils import remove_file_prefix, guess_coord_axis
 
 
 class Subset(object):
@@ -66,7 +66,7 @@ class Subset(object):
     def _set_constraint_limits(self, data, subset_constraint):
         for coord in data.coords():
             # Match user-specified limits with dimensions found in data.
-            guessed_axis = self._guess_coord_axis(coord)
+            guessed_axis = guess_coord_axis(coord)
             limit = None
             if coord.name() in self._limits:
                 limit = self._limits[coord.name()]
@@ -93,24 +93,6 @@ class Subset(object):
                     # Assume to be a non-time axis.
                     (limit_start, limit_end) = self._fix_non_circular_limits(float(limit.start), float(limit.end))
                 subset_constraint.set_limit(coord, limit_start, limit_end, wrapped)
-
-    @staticmethod
-    def _guess_coord_axis(coord):
-        """Returns X, Y, Z or T corresponding to longitude, latitude,
-        altitude or time respectively if the coordinate can be determined
-        to be one of these (based on the standard name only, in this implementation).
-
-        This is intended to be similar to iris.util.guess_coord_axis.
-        """
-        #TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
-        standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
-                          'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
-                          'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
-        if isinstance(coord, iris.coords.Coord):
-            guessed_axis = iris.util.guess_coord_axis(coord)
-        else:
-            guessed_axis = standard_names.get(coord.standard_name.lower())
-        return guessed_axis
 
     @staticmethod
     def _convert_datetime_to_coord_unit(coord, dt):
