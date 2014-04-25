@@ -2,6 +2,7 @@ from time import gmtime, strftime
 import logging
 
 import iris
+import numpy as np
 
 from jasmin_cis.data_io.common_data import CommonData
 from jasmin_cis.data_io.hyperpoint import HyperPoint
@@ -33,7 +34,7 @@ class GriddedData(iris.cube.Cube, CommonData):
                 iris.std_names.STD_NAMES[standard_name]
             except KeyError:
                 rejected_name = kwargs.pop('standard_name')
-                logging.warning('Attempted to set invalid standard_name \'' + rejected_name + '\'.')
+                logging.warning("Attempted to set invalid standard_name '{}'.".format(rejected_name))
         except KeyError:
             pass
 
@@ -41,7 +42,7 @@ class GriddedData(iris.cube.Cube, CommonData):
             super(GriddedData, self).__init__(*args, **kwargs)
         except ValueError:
             rejected_unit = kwargs.pop('units')
-            logging.warning('Attempted to set invalid unit \'' + rejected_unit + '\'.')
+            logging.warning("Attempted to set invalid unit '{}'.".format(rejected_unit))
             super(GriddedData, self).__init__(*args, **kwargs)
 
     @staticmethod
@@ -116,3 +117,38 @@ class GriddedData(iris.cube.Cube, CommonData):
         """Returns value indicating whether the data/coordinates are gridded.
         """
         return True
+
+    def set_longitude_range(self, range_start):
+        """Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value, i.e.,
+        range_start <= longitude < range_start + 360
+
+        The data array is rotated correspondingly around the dimension
+        corresponding to the longitude coordinate.
+
+        :param range_start: starting value of required longitude range
+        """
+        lon_coord = self.coords(standard_name="longitude")
+        if len(lon_coord) == 0:
+            return
+        lon_coord = lon_coord[0]
+        lon_idx = self.dim_coords.index(lon_coord)
+        idx1 = np.searchsorted(lon_coord.points, range_start)
+        idx2 = np.searchsorted(lon_coord.points, range_start + 360.)
+        shift = 0
+        new_lon_points = None
+        if 0 < idx1 < len(lon_coord.points):
+            shift = -idx1
+            lon_min = lon_coord.points[idx1]
+            new_lon_points = np.roll(lon_coord.points, shift, 0)
+            new_lon_points[new_lon_points < lon_min] += 360.0
+        elif 0 < idx2 < len(lon_coord.points):
+            shift = len(lon_coord.points) - idx2
+            lon_max = lon_coord.points[idx2]
+            new_lon_points = np.roll(lon_coord.points, shift, 0)
+            new_lon_points[new_lon_points >= lon_max] -= 360.0
+        if shift != 0:
+            new_data = np.roll(self.data, shift, lon_idx)
+            self.data = new_data
+            self.dim_coords[lon_idx].points = new_lon_points

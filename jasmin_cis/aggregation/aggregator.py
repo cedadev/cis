@@ -11,7 +11,7 @@ from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint
 from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.utils import isnan
-from jasmin_cis.exceptions import ClassNotFoundError
+from jasmin_cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
 
 
 class Aggregator:
@@ -117,7 +117,7 @@ class Aggregator:
                         cell_end_index -= 1
                     actual_end = float(min(coord.cell(cell_end_index).bound))
 
-                    subset_constraint.set_limit(coord, actual_start, actual_end)
+                    subset_constraint.set_limit(coord, actual_start, actual_end, False)
                     self.data = subsetter.subset(self.data, subset_constraint)
 
                     iris.coord_categorisation.add_categorised_coord(self.data, 'aggregation_coord_for_'+coord.name(),
@@ -190,6 +190,10 @@ class Aggregator:
                 new_cube_shape.append(len(new_coord.points))
                 i += 1
 
+        if len(self._grid) != 0:
+            raise CoordinateNotFoundError('No coordinate found that matches {}. Please check the coordinate '
+                                          'name.'.format(self._grid.keys()))
+
         dummy_data = numpy.reshape(numpy.arange(int(numpy.prod(new_cube_shape)))+1.0, tuple(new_cube_shape))
         aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
 
@@ -204,12 +208,16 @@ class Aggregator:
         grid = None
         guessed_axis = Subset._guess_coord_axis(coord)
         if coord.name() in self._grid:
-            grid = self._grid[coord.name()]
+            grid = self._grid.pop(coord.name())
+        elif coord.standard_name in self._grid:
+            grid = self._grid.pop(coord.standard_name)
+        elif coord.long_name in self._grid:
+            grid = self._grid.pop(coord.long_name)
         elif guessed_axis is not None:
             if guessed_axis in self._grid:
-                grid = self._grid[guessed_axis]
+                grid = self._grid.pop(guessed_axis)
             elif guessed_axis.lower() in self._grid:
-                grid = self._grid[guessed_axis.lower()]
+                grid = self._grid.pop(guessed_axis.lower())
 
         return grid, guessed_axis
 

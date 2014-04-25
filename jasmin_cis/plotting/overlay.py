@@ -35,7 +35,10 @@ class Overlay(Generic_Plot):
             elif self.plot_args['datagroups'][i]['type'] == 'scatter':
                 Scatter_Plot([self.packed_data_items[i]], self.plot_args, wrap=True, *self.mplargs, **self.mplkwargs)
             else:
-                raise InvalidPlotTypeError
+                raise InvalidPlotTypeError("Invalid or no plot type requested for overlay plot, please choose from "
+                                           "heatmap, contour, contourf or scatter, for example: "
+                                           "'temperature:my_data.nc:type=contourf'. Requested option was "
+                                           "'{}'.".format(self.plot_args['datagroups'][i]['type']))
 
             if i == 0:
                 self.format_time_axis()

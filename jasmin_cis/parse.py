@@ -122,9 +122,9 @@ def add_aggregate_parser_arguments(parser):
                                "Optional arguments are product and kernel, which are entered as keyword=value in a "
                                "comma separated list. Example: var:filename:product=MODIS_L3,kernel=mean")
     parser.add_argument("aggregategrid", metavar="AggregateGrid",
-                        help = "Grid for new aggregation, e.g. t,x=[-180,5] would collapse time completely and "
+                        help = "Grid for new aggregation, e.g. t,x=[-180,90,5] would collapse time completely and "
                                "aggregate longitude onto a new grid, which would start at -180 and then proceed in 5 "
-                               "degree increments")
+                               "degree increments up to 90")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help = "The filename of the output file")
     return parser
@@ -695,15 +695,14 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
         dt = parse_as_number_or_datetime(min_val, range_axis + "min", parser)
         if isinstance(dt, datetime.datetime):
             ax_range[range_axis + "min"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
-        elif isinstance(dt, float):
+        else:
             ax_range[range_axis + "min"] = dt
 
     if max_val is not None:
         dt = parse_as_number_or_datetime(max_val, range_axis + "max", parser)
-        print dt.__class__
         if isinstance(dt, datetime.datetime):
             ax_range[range_axis + "max"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
-        elif isinstance(dt, float):
+        else:
             ax_range[range_axis + "max"] = dt
 
     if step is not None:

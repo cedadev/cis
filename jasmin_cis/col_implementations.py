@@ -9,7 +9,7 @@ from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, Ce
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from jasmin_cis.data_io.ungridded_data import LazyData, UngriddedData, Metadata
+from jasmin_cis.data_io.ungridded_data import LazyData, Metadata
 import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
 
@@ -32,15 +32,18 @@ class GeneralUngriddedColocator(Colocator):
 
     def colocate(self, points, data, constraint, kernel):
         """
-        This colocator takes a list of HyperPoints and a data object (currently either Ungridded data or a Cube) and returns
-        one new LazyData object with the values as determined by the constraint and kernel objects. The metadata
-        for the output LazyData object is copied from the input data object.
+        This colocator takes a list of HyperPoints and a data object (currently either Ungridded
+        data or a Cube) and returns one new LazyData object with the values as determined by the
+        constraint and kernel objects. The metadata for the output LazyData object is copied from
+        the input data object.
 
         :param points: UngriddedData or UngriddedCoordinates defining the sample points
-        :param data: An UngriddedData object or Cube, or any other object containing metadata that the constraint object can read
-        :param constraint: An instance of a Constraint subclass which takes a data object and returns a subset of that data
-                            based on it's internal parameters
-        :param kernel: An instance of a Kernel subclass which takes a number of points and returns a single value
+        :param data: An UngriddedData object or Cube, or any other object containing metadata that
+                     the constraint object can read
+        :param constraint: An instance of a Constraint subclass which takes a data object and
+                           returns a subset of that data based on it's internal parameters
+        :param kernel: An instance of a Kernel subclass which takes a number of points and returns
+                       a single value
         :return: A single LazyData object
         """
         metadata = data.metadata
@@ -53,8 +56,10 @@ class GeneralUngriddedColocator(Colocator):
             if constraint is not None and not isinstance(constraint, DummyConstraint):
                 raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
             data_points = data
+            _fix_cube_longitude_range(points.coords(), data)
         else:
             data_points = data.get_non_masked_points()
+            _fix_longitude_range(points.coords(), data_points)
 
         # Create index if constraint and/or kernel require one.
         coord_map = None
@@ -469,9 +474,11 @@ class nn_gridded(Kernel):
         from iris.analysis.interpolate import nearest_neighbour_data_value
 
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
+        new_coord_tuple_list = []
         for i in point.coord_tuple:
-            if len(data.coords(i[0], dim_coords=True)) == 0:
-                point.coord_tuple.remove(i)
+            if len(data.coords(i[0], dim_coords=True)) > 0:
+                new_coord_tuple_list.append(i)
+        point.coord_tuple = new_coord_tuple_list
 
         return nearest_neighbour_data_value(data, point.coord_tuple)
 
@@ -484,9 +491,11 @@ class li(Kernel):
         from iris.analysis.interpolate import linear
 
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
+        new_coord_tuple_list = []
         for i in point.coord_tuple:
-            if len(data.coords(i[0], dim_coords=True)) == 0:
-                point.coord_tuple.remove(i)
+            if len(data.coords(i[0], dim_coords=True)) > 0:
+                new_coord_tuple_list.append(i)
+        point.coord_tuple = new_coord_tuple_list
 
         return linear(data, point.coord_tuple).data
 
@@ -541,6 +550,9 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         """
 
         self.check_for_valid_kernel(kernel)
+
+        # Force the data longitude range to be the same as that of the sample grid.
+        _fix_cube_longitude_range(points.coords(), data)
 
         # Initialise variables used to create an output mask based on the sample data mask.
         sample_coord_lookup = {}
@@ -755,7 +767,7 @@ class gridded_gridded_li(Kernel):
 
 
 class GeneralGriddedColocator(Colocator):
-    """Performs co-location of data on to a the points of a cube.
+    """Performs co-location of data on to the points of a cube.
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
@@ -802,7 +814,7 @@ class GeneralGriddedColocator(Colocator):
             shape.append(coord.shape[0])
             output_coords.append(coord)
 
-        self._fix_longitude_range(coords, data_points)
+        _fix_longitude_range(coords, data_points)
 
         # Create index if constraint supports it.
         data_index.create_indexes(constraint, coords, data_points, coord_map)
@@ -822,7 +834,7 @@ class GeneralGriddedColocator(Colocator):
         is_indexed_constraint = isinstance(constraint, IndexedConstraint)
         is_cell_constraint = isinstance(constraint, CellConstraint)
         for indices in jasmin_cis.utils.index_iterator(shape):
-            if not self.missing_data_for_missing_sample or points.data[indices].val[0] is not np.ma.masked:
+            if not self.missing_data_for_missing_sample or points.data[indices] is not np.ma.masked:
                 hp_values = [None] * HyperPoint.number_standard_names
                 hp_cell_values = [None] * HyperPoint.number_standard_names
                 for (hpi, ci, shi) in coord_map:
@@ -856,40 +868,6 @@ class GeneralGriddedColocator(Colocator):
         cube.data = data_with_nan_and_inf_removed
 
         return [cube]
-
-    def _find_longitude_range(self, coords):
-        """Finds the start of the longitude range, assumed to be either 0,360 or -180,180
-        :param coords: coordinates to check
-        :return: starting value for longitude range or None if no longitude coordinate found
-        """
-        low = None
-        for coord in coords:
-            if coord.standard_name == 'longitude':
-                low = 0.0
-                min_val = coord.points.min()
-                if min_val < 0.0:
-                    low = -180.0
-        return low
-
-    def _fix_longitude_range(self, coords, data_points):
-        """
-        :param coords: coordinates for grid on which to colocate
-        :param data_points: HyperPointList of data to fix
-        """
-        range_start = self._find_longitude_range(coords)
-        if range_start is not None:
-            range_end = range_start + 360.0
-            for idx, point in enumerate(data_points):
-                modified = False
-                if point.longitude < range_start:
-                    new_long = point.longitude + 360.0
-                    modified = True
-                elif point.longitude > range_end:
-                    new_long = point.longitude - 360.0
-                    modified = True
-                if modified:
-                    new_point = point.modified(lon=new_long)
-                    data_points[idx] = new_point
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.
@@ -1004,3 +982,38 @@ def _find_standard_coords(cube, coordinate_mask):
                 coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
                 shape_idx += 1
     return coord_map
+
+
+def _find_longitude_range(coords):
+    """Finds the start of the longitude range, assumed to be either 0,360 or -180,180
+    :param coords: coordinates to check
+    :return: starting value for longitude range or None if no longitude coordinate found
+    """
+    low = None
+    for coord in coords:
+        if coord.standard_name == 'longitude':
+            low = 0.0
+            min_val = coord.points.min()
+            if min_val < 0.0:
+                low = -180.0
+    return low
+
+
+def _fix_longitude_range(coords, data_points):
+    """Sets the longitude range of the data points to match that of the sample coordinates.
+    :param coords: coordinates for grid on which to colocate
+    :param data_points: HyperPointList of data to fix
+    """
+    range_start = _find_longitude_range(coords)
+    if range_start is not None:
+        data_points.set_longitude_range(range_start)
+
+
+def _fix_cube_longitude_range(coords, data):
+    """Sets the longitude range of the data cube to match that of the sample coordinates.
+    :param coords: coordinates for grid on which to colocate
+    :param data: cube of data to fix
+    """
+    range_start = _find_longitude_range(coords)
+    if range_start is not None:
+        data.set_longitude_range(range_start)

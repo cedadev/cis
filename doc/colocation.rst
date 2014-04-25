@@ -1,8 +1,8 @@
 .. |nbsp| unicode:: 0xA0 
 
-==============================
-Performing co-location of data
-==============================
+===========
+Co-location
+===========
 
 One of the key features of the Community Intercomparison Suite (CIS) is the ability to co-locate one or more arbitrary data sets onto a common set of coordinates. This page briefly describes how to perform co-location in a number of scenarios.
 
@@ -30,13 +30,13 @@ where:
     * ``product_option`` is of the form ``product=<product name>``. It should be supplied if the data file name does not match the signature for the correct product type as listed at :ref:`data-products-reading`.
 
 ``samplegroup``
-  is of the format ``filename:options`` The available options are described in more detail below. They are entered in a comma separated list, such as ``variable=Temperature,colocator=bin,kernel=mean``. Not all combinations of colocator and kernel options can be used - see the desciptions below.
+  is of the format ``filename:options`` The available options are described in more detail below. They are entered in a comma separated list, such as ``variable=Temperature,colocator=bin,kernel=mean``. Not all combinations of colocator and kernel options can be used - see the descriptions below.
 
     * ``filename`` is a single filename with the points to colocate onto.
 
     * ``variable`` is an optional argument used to specify which variable's coordinates to use for colocation. If a variable is specified, a missing value will be set in the output file at every point for which the sample variable has a missing value. If a variable is not specified, non-missing values will be set at all sample points unless colocation at a point does not result in a valid value.
 
-    * ``colocator`` specifies the colocation method. Parameters for the colocator, if any, are placed in square brackets after the colocator name, for example, ``colocator=box[fill_value=-999,h_sep=1km]``. The colocators available are:
+    * ``colocator`` is a mandatory argument that specifies the colocation method. Parameters for the colocator, if any, are placed in square brackets after the colocator name, for example, ``colocator=box[fill_value=-999,h_sep=1km]``. The colocators available are:
 
       * ``bin`` For use only with gridded sample points. Data points are placed in bins corresponding to the cell bounds surrounding each grid point. The bounds are taken from the gridded data if they are defined, otherwise the mid-points between grid points are used. The binned points should then be processed by one of the kernels to give a numeric value for each bin.
 
@@ -62,8 +62,10 @@ where:
       * var_long_name - Specifies the variable's long name.
       * var_units - Specifies the variable's units.
 
+    .. warning:: When colocating two data sets with different spatio-temporal domains, the sampling points should be within the spatio-temporal domain of the source data. Otherwise, depending on the co-location options selected, strange artefacts can occur, particularly with linear interpolation. Spatio-temporal domains can be reducded in CIS with :ref:`aggregation` or :ref:`subsetting`.
 
-    ``kernel`` is used to specify the kernel to use for colocation methods that create an intermediate set of points for further processing, i.e., box and bin. The built-in kernel methods currently available are:
+
+    ``kernel`` is used to specify the kernel to use for colocation methods that create an intermediate set of points for further processing, that is box and bin. Choosing a kernel is mandatory for the box and bin colocators, no defaults are provided. The built-in kernel methods currently available are:
 
       * nn_t (or nn_time) - nearest neighbour in time algorithm
       * nn_h (or nn_horizontal) - nearest neighbour in horizontal distance
@@ -77,8 +79,6 @@ where:
 
 
     ``product`` is an optional argument used to specify the type of files being read. If omitted, the program will attempt to determine which product to use based on the filename, as listed at :ref:`data-products-reading`.
-
-.. todo:: Link to DataProduct wiki page.  Click [CommunityIntercomparisonSuite/DataProduct here] to see a list of available products and their file signatures.
 
 ``outputfile``
   is an optional argument to specify the name to use for the file output. For ungridded data this is automatically given a ``.nc`` extension and prepended with ``cis-`` to make it distinguishable as a colocated file. For gridded this is only given the ``.nc`` extenstion.

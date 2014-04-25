@@ -186,7 +186,10 @@ class HyperPointList(list):
 
         values = zeros(n_points)
         for i, point in enumerate(self):
-            values[i] = point.val[0]
+            try:
+                values[i] = point.val[0]
+            except IndexError:
+                pass
 
         return values
 
@@ -208,7 +211,7 @@ class HyperPointList(list):
     def latitudes(self):
         from numpy import zeros
 
-        if self[0].longitude is not None:
+        if self[0].latitude is not None:
             n_points = len(self)
 
             values = zeros(n_points)
@@ -222,7 +225,7 @@ class HyperPointList(list):
     def air_pressures(self):
         from numpy import zeros
 
-        if self[0].longitude is not None:
+        if self[0].air_pressure is not None:
             n_points = len(self)
 
             values = zeros(n_points)
@@ -236,7 +239,7 @@ class HyperPointList(list):
     def altitudes(self):
         from numpy import zeros
 
-        if self[0].longitude is not None:
+        if self[0].altitude is not None:
             n_points = len(self)
 
             values = zeros(n_points)
@@ -250,7 +253,7 @@ class HyperPointList(list):
     def times(self):
         from numpy import zeros
 
-        if self[0].longitude is not None:
+        if self[0].time is not None:
             n_points = len(self)
 
             values = zeros(n_points)

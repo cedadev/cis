@@ -863,7 +863,7 @@ class Aeronet(AProduct):
         coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),), units="degrees_east", range=(-180,180))))
         coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),), units="degrees_north", range=(-90,90))))
         coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters", range=(-90,90))))
-        time_coord = Coord(data["datetime"], Metadata(name="Date time",standard_name='time', shape=(len(data),), units="DateTime Object"), "X")
+        time_coord = Coord(data["datetime"], Metadata(name="DateTime",standard_name='time', shape=(len(data),), units="DateTime Object"), "X")
         time_coord.convert_datetime_to_standard_time()
         coords.append(time_coord)
 

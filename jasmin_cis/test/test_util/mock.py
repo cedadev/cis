@@ -576,9 +576,11 @@ def make_dummy_2d_ungridded_data():
     data = gen_random_data_array((5,5),4.0,1.0)
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
 
-def make_regular_2d_ungridded_data():
-    '''
-        Makes a well defined ungridded data object of shape 5x3 with data as follows
+
+def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lon_dim_length=3, lon_min=-5, lon_max=5,
+                                   data_offset=0, mask=False):
+    """
+    Makes a well defined ungridded data object. If no arguments are supplied, it is of shape 5x3 with data as follows
         array([[1,2,3],
                [4,5,6],
                [7,8,9],
@@ -597,20 +599,33 @@ def make_regular_2d_ungridded_data():
                [-5,0,5],
                [-5,0,5]])
 
-        They are different lengths to make it easier to distinguish. Note the latitude increases
-        as you step through the array in order - so downwards as it's written above
-    '''
+    They are different lengths to make it easier to distinguish. Note the latitude increases
+    as you step through the array in order - so downwards as it's written above
+
+    :param lat_dim_length: number of latitude coordinate values
+    :param lat_min: minimum latitude coordinate value
+    :param lat_max: maximum latitude coordinate value
+    :param lon_dim_length: number of longitude coordinate values
+    :param lon_min: minimum longitude coordinate value
+    :param lon_max: maximum longitude coordinate value
+    :param data_offset: value by which to increase data values
+    :param mask: missing value mask
+    :return: UngriddedData object as specified
+    """
     import numpy as np
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
 
-    x_points = np.arange(-10, 11, 5)
-    y_points = np.arange(-5, 6, 5)
-    y, x = np.meshgrid(y_points,x_points)
+    x_points = np.linspace(lat_min, lat_max, lat_dim_length)
+    y_points = np.linspace(lon_min, lon_max, lon_dim_length)
+    y, x = np.meshgrid(y_points, x_points)
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
-    data = np.reshape(np.arange(15)+1.0,(5,3))
+    data = np.reshape(np.arange(lat_dim_length * lon_dim_length) + data_offset + 1.0, (lat_dim_length, lon_dim_length))
+    if mask:
+        data = np.ma.asarray(data)
+        data.mask = mask
 
     coords = CoordList([x, y])
     return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_rate',

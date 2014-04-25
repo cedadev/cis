@@ -77,6 +77,7 @@ class Subset(object):
                     limit = self._limits[guessed_axis.lower()]
 
             if limit is not None:
+                wrapped = False
                 if limit.is_time or guessed_axis == 'T':
                     # Ensure that the limits are date/times.
                     dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
@@ -85,13 +86,13 @@ class Subset(object):
                     limit_end = self._convert_datetime_to_coord_unit(coord, dt)
                 elif guessed_axis == 'X':
                     # Handle circularity.
-                    (limit_start, limit_end) = self._fix_longitude_limits_for_coord(float(limit.start),
-                                                                                    float(limit.end),
-                                                                                    coord)
+                    (limit_start, limit_end, wrapped) = self._fix_longitude_limits_for_coord(float(limit.start),
+                                                                                             float(limit.end),
+                                                                                             coord)
                 else:
                     # Assume to be a non-time axis.
                     (limit_start, limit_end) = self._fix_non_circular_limits(float(limit.start), float(limit.end))
-                subset_constraint.set_limit(coord, limit_start, limit_end)
+                subset_constraint.set_limit(coord, limit_start, limit_end, wrapped)
 
     @staticmethod
     def _guess_coord_axis(coord):
@@ -149,7 +150,9 @@ class Subset(object):
 
     @staticmethod
     def _fix_longitude_limits(limit_start, limit_end, coord_min, coord_max):
-        new_limits = (limit_start, limit_end)
+        new_limit_start = limit_start
+        new_limit_end = limit_end
+        limit_min = 0.0
         do_fix = False
         # Only attempt to modify limits if outside of range of coordinate values.
         if not ((coord_min <= limit_start <= coord_max) and (coord_min <= limit_end <= coord_max)):
@@ -161,11 +164,14 @@ class Subset(object):
                 do_fix = True
                 limit_min = 0.0
         if do_fix:
-            new_limits = (Subset._fix_angular_limit(limit_start, limit_min),
-                          Subset._fix_angular_limit(limit_end, limit_min))
-            logging.info("Angular limits: original: %s  after fix: %s", (limit_start, limit_end), new_limits)
+            new_limit_start = Subset._fix_angular_limit(limit_start, limit_min)
+            new_limit_end = Subset._fix_angular_limit(limit_end, limit_min)
+            logging.info("Angular limits: original: %s  after fix: %s",
+                         (limit_start, limit_end), (new_limit_start, new_limit_end))
 
-        return new_limits
+        wrapped = new_limit_start > new_limit_end
+
+        return new_limit_start, new_limit_end, wrapped
 
     @staticmethod
     def _fix_angular_limit(value, range_start):
