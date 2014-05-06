@@ -443,7 +443,9 @@ class Generic_Plot(object):
         else:
             contour_type = self.plotting_library.contour
 
-        if self.is_map(): self.mplkwargs["latlon"] = True
+        if self.is_map() and self.unpacked_data_items[0]["data"].ndim == 2:
+            # This fails for an unknown reason on one dimensional data
+            self.mplkwargs["latlon"] = True
 
         # If data (and x, y) is one dimensional, "tri" is set to true to tell Basemap the data is unstructured
         if self.unpacked_data_items[0]["data"].ndim == 1:

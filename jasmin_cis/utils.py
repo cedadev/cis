@@ -256,13 +256,29 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                     y, x = np.meshgrid(y, x)
 
     if x_axis_name == 'X' and x_wrap_start is not None:
-        x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
+        #x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
+        x = fix_longitude_range(x, x_wrap_start)
 
     logging.debug("Shape of x: " + str(x.shape))
     if y is not None: logging.debug("Shape of y: " + str(y.shape))
     logging.debug("Shape of data: " + str(data.shape))
 
     return { "data": data, "x" : x, "y" : y }
+
+
+def fix_longitude_range(lons, range_start):
+    """Shifts longitude values by +/- 360 to fit within a 360 degree range starting at a specified value.
+
+    It is assumed that a no shifts larger than 360 are needed.
+    :param lons: numpy array of longitude values
+    :param range_start: longitude at start of 360 degree range into which values are required to fit
+    """
+
+    range_end = range_start + 360
+    lons[lons < range_start] += 360
+    lons[lons >= range_end] -= 360
+
+    return lons
 
 
 def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
@@ -306,7 +322,6 @@ def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
 
 
 def wrap_longitude_coordinate_values(x_min, x_max):
-
     if x_min > x_max:
         if x_min >= 180:
             x_min -= 360
@@ -314,6 +329,7 @@ def wrap_longitude_coordinate_values(x_min, x_max):
             x_max += 360
 
     return x_min, x_max
+
 
 def copy_attributes(source, dest):
     '''
