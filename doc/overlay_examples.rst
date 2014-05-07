@@ -23,7 +23,7 @@ Contour over heatmap
 
 ::
 
-  cis plot od550aer:HadGEM_od550aer-subset.nc:type=heatmap,cmap=binary rsutcs:HadGEM_rsutcs-subset.nc:type=contour,cmap=jet,contlevels=[1,10,25,50,175] --type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5 -o overlay2.png
+  cis plot od550aer:HadGEM_od550aer-subset.nc:type=heatmap,cmap=binary rsutcs:HadGEM_rsutcs-subset.nc:type=contour,cmap=jet,contlevels=[1,10,25,50,175] --type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5 -o overlay2.png
 
 
 .. image:: img/overlay2.png
@@ -34,7 +34,7 @@ Filled contour with transparency on NASA Blue Marble
 
 ::
 
-  cis plot od550aer:HadGEM_od550aer-subset.nc:cmap=Reds,type=contourf,transparency=0.5,cmin=0.15 --type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5 --nasabluemarble
+  cis plot od550aer:HadGEM_od550aer-subset.nc:cmap=Reds,type=contourf,transparency=0.5,cmin=0.15 --type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5 --nasabluemarble
 
 
 .. image:: img/overlay3.png
