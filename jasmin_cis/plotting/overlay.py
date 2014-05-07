@@ -9,6 +9,16 @@ import numpy
 
 class Overlay(Generic_Plot):
 
+    def set_x_wrap_start(self, x_wrap_start):
+        x_range = self.plot_args.get('xrange')
+        if x_range is not None:
+            x_min = x_range.get('xmin')
+            x_wrap_start = x_min
+        return x_wrap_start
+
+    def get_data_items_max(self):
+        return self.unpacked_data_items[0]['x'].max()
+
     def plot(self):
         x_wrap_start = None
         for i in numpy.arange(0, len(self.plot_args['datagroups'])):

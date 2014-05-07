@@ -34,11 +34,7 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        if x_wrap_start is None:
-            self.x_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.plot_args.get('xrange'),
-                                                          self.packed_data_items)
-        else:
-            self.x_wrap_start = x_wrap_start
+        self.x_wrap_start = self.set_x_wrap_start(x_wrap_start)
         self.unpacked_data_items = self.unpack_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
@@ -50,18 +46,30 @@ class Generic_Plot(object):
 
         self.plot()
 
+    def set_x_wrap_start(self, x_wrap_start):
+        if x_wrap_start is None:
+            x_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.plot_args.get('xrange'),
+                                                          self.packed_data_items)
+        return x_wrap_start
+
     def set_plotting_library(self):
         if self.is_map():
             max_found = 180
             x_range_dict = self.plot_args.get('xrange')
             x_max_requested = x_range_dict.get('xmax')
             max_found = max([max_found, x_max_requested])
-            for i in self.unpacked_data_items:
-                max_found = max([i["x"].max(), max_found])
+            data_max = self.get_data_items_max()
+            max_found = max(data_max, max_found)
             self.basemap = Basemap(lon_0=(max_found-180.0))
             return self.basemap
         else:
             return self.matplotlib
+
+    def get_data_items_max(self):
+        data_max = self.unpacked_data_items[0]['x'].max()
+        for i in self.unpacked_data_items:
+            data_max = max([i["x"].max(), data_max])
+        return data_max
 
     def unpack_data_items(self):
         def __get_data(axis):
@@ -92,7 +100,6 @@ class Generic_Plot(object):
         from jasmin_cis.utils import unpack_data_object
         from iris.cube import Cube
         import logging
-        from jasmin_cis.plotting.overlay import Overlay
         if len(self.packed_data_items[0].shape) == 1:
             x_data = __get_data("x")
             y_data = __get_data("y")

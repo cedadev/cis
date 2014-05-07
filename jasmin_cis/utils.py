@@ -308,7 +308,11 @@ def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
 
         x_wrap_start = x_points_min
         if x_min is not None or x_max is not None:
-            if x_min is None and x_max < x_points_min:
+            if x_min is not None and x_max is not None:
+                if abs(x_max - x_min) > 360:
+                    raise InvalidCommandLineOptionError(
+                        'Overall range for longitude axis must be within 0 - 360 degrees.')
+            elif x_min is None and x_max < x_points_min:
                 raise InvalidCommandLineOptionError(
                     'If specifying xmin only it must be within the original coordinate range. Please specify xmax too.')
             elif x_max is None and x_min > x_points_max:
