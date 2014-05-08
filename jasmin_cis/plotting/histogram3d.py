@@ -32,6 +32,9 @@ class Histogram_3D(Generic_Plot):
             y_equals_x_array = [min_val, max_val]
             self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
 
+            # Just in case data has different shapes, reshape here
+            self.unpacked_data_items[0]["data"] = numpy.reshape(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"].shape)
+
             first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
 
             first_data_item = first_data_item.compressed()
@@ -39,6 +42,7 @@ class Histogram_3D(Generic_Plot):
 
             # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
             histogram2ddata = numpy.histogram2d(first_data_item, second_data_item, bins=[xbins, ybins])[0]
+            histogram2ddata = numpy.ma.masked_equal(histogram2ddata, 0)
             self.matplotlib.pcolor(xbins, ybins, histogram2ddata.T, vmin=cmin, vmax=cmax,
                                    *self.mplargs, **self.mplkwargs)
 

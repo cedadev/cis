@@ -67,6 +67,9 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = Fals
 
             i += step
     else:
+        if min_val < 0 or max_val < 0:
+            raise ValueError('Error, log axis specified but data minimum is less than 0. Please either use a linear'
+                             'axis or specify an axis minimum greater than 0.')
         bin_edges = logspace(log10(min_val), log10(stop), num=11)
 
     logging.debug(axis + " axis bin edges: " + str(bin_edges))
@@ -257,6 +260,8 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
 
     if x_axis_name == 'X' and x_wrap_start is not None:
         #x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
+        if isnan(x_wrap_start):
+            raise InvalidCommandLineOptionError('Overall range for longitude axis must be within 0 - 360 degrees.')
         x = fix_longitude_range(x, x_wrap_start)
 
     logging.debug("Shape of x: " + str(x.shape))
@@ -310,8 +315,7 @@ def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
         if x_min is not None or x_max is not None:
             if x_min is not None and x_max is not None:
                 if abs(x_max - x_min) > 360:
-                    raise InvalidCommandLineOptionError(
-                        'Overall range for longitude axis must be within 0 - 360 degrees.')
+                    return float('NaN')
             elif x_min is None and x_max < x_points_min:
                 raise InvalidCommandLineOptionError(
                     'If specifying xmin only it must be within the original coordinate range. Please specify xmax too.')
