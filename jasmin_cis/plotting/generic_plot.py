@@ -4,6 +4,7 @@ from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 import numpy as np
 import matplotlib.pyplot as plt
 from jasmin_cis.utils import find_longitude_wrap_start
+from jasmin_cis.plotting.formatter import LogFormatterMathtextSpecial
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
@@ -204,8 +205,13 @@ class Generic_Plot(object):
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
 
+        if self.plot_args.get("logv", False):
+            formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
+        else:
+            formatter = None
+
         cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks,
-                                        shrink=float(self.plot_args["cbarscale"]))
+                                        shrink=float(self.plot_args["cbarscale"]), format=formatter)
 
         if not self.plot_args["logv"]:
             cbar.formatter.set_scientific(True)
@@ -441,7 +447,10 @@ class Generic_Plot(object):
             nconts = (vmax - vmin) / self.plot_args["valrange"]["vstep"]
 
         if self.plot_args['datagroups'][self.datagroup]['contlevels'] is None:
-            contour_level_list = np.linspace(vmin, vmax, nconts)
+            if self.plot_args.get('logv') is None:
+                contour_level_list = np.linspace(vmin, vmax, nconts)
+            else:
+                contour_level_list = np.logspace(np.log10(vmin), np.log10(vmax), nconts)
         else:
             contour_level_list = self.plot_args['datagroups'][self.datagroup]['contlevels']
 
