@@ -42,7 +42,7 @@ def read_many_files(filenames, usr_variables, dim=None):
         try:
             data[variable] = datafile.variables[variable]
         except:
-            raise InvalidVariableError
+            raise InvalidVariableError('Variable {} not found in file {}.'.format(variable, filenames))
 
     return data
 
