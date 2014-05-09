@@ -56,12 +56,7 @@ class Subset(object):
                       "\nusing limits: " + str(subset_constraint)
             subset.add_history(history)
 
-            if isinstance(subset, cube.Cube):
-                self._output_file = remove_file_prefix('cis-', self._output_file)
-                iris.save(subset, self._output_file)
-            else:
-                write_coordinates(subset, self._output_file)
-                add_data_to_file(subset, self._output_file)
+            subset.save_data(self._output_file, subset, True)
 
     def _set_constraint_limits(self, data, subset_constraint):
         for coord in data.coords():
