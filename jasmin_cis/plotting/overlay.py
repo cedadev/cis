@@ -44,7 +44,7 @@ class Overlay(Generic_Plot):
                 p = Contourf_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                               **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'scatter':
-                p = Scatter_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, *self.mplargs,
+                p = Scatter_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                                  **self.mplkwargs)
             else:
                 raise InvalidPlotTypeError("Invalid or no plot type requested for overlay plot, please choose from "

@@ -10,7 +10,7 @@ class Scatter_Plot(Generic_Plot):
         self.plots = []
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            datafile = self.plot_args["datagroups"][i]
+            datafile = self.plot_args["datagroups"][self.datagroup]
             if datafile["itemstyle"]:
                 self.mplkwargs["marker"] = datafile["itemstyle"]
             else:
