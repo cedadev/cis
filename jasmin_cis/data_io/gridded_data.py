@@ -35,7 +35,8 @@ class GriddedData(iris.cube.Cube, CommonData):
                 iris.std_names.STD_NAMES[standard_name]
             except KeyError:
                 rejected_name = kwargs.pop('standard_name')
-                logging.warning("Attempted to set invalid standard_name '{}'.".format(rejected_name))
+                logging.warning("Standard name '{}' not CF-compliant, this standard name will not be "
+                                "used in the output file.".format(rejected_name))
         except KeyError:
             pass
 
