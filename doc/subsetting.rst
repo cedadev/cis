@@ -72,10 +72,10 @@ Below are examples of subsetting using each of the supported products (together 
   $ cis plot 440675Angstrom:cis-Aeronet-out.nc --xaxis=time --yaxis=440675Angstrom
 
   $ cis subset solar_3:xglnwa.pm.k8dec-k9nov.vprof.tm.nc y=[0,90] -o Xglnwa_vprof-out
-  $ cis plot solar_3:cis-Xglnwa_vprof-out.nc
+  $ cis plot solar_3:Xglnwa_vprof-out.nc
 
   $ cis subset solar_3:xglnwa.pm.k8dec-k9nov.col.tm.nc x=[0,180],y=[0,90] -o Xglnwa-out
-  $ cis plot solar_3:cis-Xglnwa-out.nc
+  $ cis plot solar_3:Xglnwa-out.nc
 
   $ cis subset Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf x=[0,179.9],y=[0,90] -o MODIS_L3-out
   $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MODIS_L3-out.nc

@@ -13,6 +13,7 @@ from jasmin_cis.plotting.comparative_scatter import Comparative_Scatter
 from jasmin_cis.plotting.overlay import Overlay
 from jasmin_cis.plotting.histogram2d import Histogram_2D
 from jasmin_cis.plotting.histogram3d import Histogram_3D
+from jasmin_cis.utils import wrap_longitude_coordinate_values
 import matplotlib.pyplot as mpl
 
 plot_options = { 'title' : mpl.title,
@@ -88,6 +89,15 @@ class Plotter(object):
         self.remove_unassigned_arguments()
 
         if plot_type is None: plot_type = self.set_default_plot_type(packed_data_items)
+
+        # Do wrapping
+        x_range = plot_args.get('xrange', None)
+        if x_range is not None:
+            x_min = x_range.get('xmin', None)
+            x_max = x_range.get('xmax', None)
+            if x_min is not None and x_max is not None:
+                plot_args['xrange']['xmin'], plot_args['xrange']['xmax'] = \
+                    wrap_longitude_coordinate_values(x_min, x_max)
 
         # Do plot
         f = mpl.gcf()

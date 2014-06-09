@@ -10,7 +10,7 @@ import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint
 from jasmin_cis.subsetting.subsetter import Subsetter
-from jasmin_cis.utils import isnan
+from jasmin_cis.utils import isnan, guess_coord_axis
 from jasmin_cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
 
 
@@ -106,15 +106,22 @@ class Aggregator:
                     # Need to work out slightly different limits for the subset, as by default it will return anything
                     # that has bounds inside the limit.
                     cell_start_index = coord.nearest_neighbour_index(grid_start)
+                    # Bounds are always monotonic, but need to work out if they are increasing or decreasing
+                    if coord.cell(0).point < coord.cell(1).point:
+                        increment = 1
+                    elif coord.cell(0).point > coord.cell(1).point:
+                        increment = -1
+                    else:
+                        raise ValueError('Could not determine if coordinate is monotonically increasing or decreasing.')
                     while coord.cell(cell_start_index).point < grid_start:
-                        cell_start_index += 1
+                        cell_start_index += increment
                     actual_start = float(max(coord.cell(cell_start_index).bound))
                     cell_end_index = coord.nearest_neighbour_index(grid_end)
                     while coord.cell(cell_end_index).point > grid_end:
-                        cell_end_index -= 1
+                        cell_end_index -= increment
                     if cell_end_index == cell_start_index:
                         # In case we are now on longitude bounds and have wrapped around.
-                        cell_end_index -= 1
+                        cell_end_index -= increment
                     actual_end = float(min(coord.cell(cell_end_index).bound))
 
                     subset_constraint.set_limit(coord, actual_start, actual_end, False)
@@ -206,7 +213,7 @@ class Aggregator:
     def get_grid(self, coord):
 
         grid = None
-        guessed_axis = Subset._guess_coord_axis(coord)
+        guessed_axis = guess_coord_axis(coord)
         if coord.name() in self._grid:
             grid = self._grid.pop(coord.name())
         elif coord.standard_name in self._grid:

@@ -55,18 +55,18 @@ def plot_cmd(main_arguments):
     import jasmin_cis.exceptions as ex
     from iris.exceptions import IrisError
 
+    # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
     data = []
-    try:
-        # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
-        data = [ read_data(datagroup['filenames'], datagroup['variable'], datagroup['product']) for datagroup in main_arguments.datagroups ]
-    except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError) as e:
-        __error_occurred(e)
-    except IOError as e:
-        __error_occurred("There was an error reading one of the files: \n" + str(e))
-    except MemoryError as e:
-        __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
-                         "of data to be plotted, increase the swap space available on your machine or use a machine "
-                         "with more memory (for example the JASMIN facility).")
+    for datagroup in main_arguments.datagroups:
+        try:
+            data.append(read_data(datagroup['filenames'], datagroup['variable'], datagroup['product']))
+        except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError, IOError) as e:
+            __error_occurred('Error when trying to read variable {} in file(s) {} using requested product {}.\nError '
+                             'was: {}'.format(datagroup['variable'], datagroup['filenames'], datagroup['product'], e))
+        except MemoryError as e:
+         __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
+                          "of data to be plotted, increase the swap space available on your machine or use a machine "
+                          "with more memory (for example the JASMIN facility).")
 
     main_arguments = vars(main_arguments)
     main_arguments.pop('command') # Remove the command argument now it is not needed

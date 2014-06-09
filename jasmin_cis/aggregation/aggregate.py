@@ -48,9 +48,5 @@ class Aggregate():
                   "\n with kernel: " + kernel_name + "."
         data.add_history(history)
 
-        if isinstance(data, iris.cube.Cube):
-            self._output_file = remove_file_prefix('cis-', self._output_file)
-            iris.save(data, self._output_file)
-        else:
-            raise IOError('Expecting an Iris cube to be returned after aggegation, but got something else.')
+        data.save_data(self._output_file)
 

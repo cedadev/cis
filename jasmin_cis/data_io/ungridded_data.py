@@ -12,6 +12,7 @@ from hdf_sd import get_data as hdf_sd_get_data
 
 from jasmin_cis.data_io.common_data import CommonData
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
+from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 
 
 class Metadata(object):
@@ -213,6 +214,12 @@ class LazyData(object):
             self.metadata.history += '\n' + timestamp + new_history
         else:
             self.metadata.history = timestamp + new_history
+
+    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+        logging.info('Saving data to %s' % output_file)
+        if coords_to_be_written:
+            write_coordinates(sample_points, output_file)
+        add_data_to_file(self, output_file)
 
 
 class UngriddedData(LazyData, CommonData):
@@ -452,3 +459,4 @@ class UngriddedCoordinates(CommonData):
         """Returns value indicating whether the data/coordinates are gridded.
         """
         return False
+

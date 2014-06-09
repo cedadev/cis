@@ -9,7 +9,18 @@ import numpy
 
 class Overlay(Generic_Plot):
 
+    def set_x_wrap_start(self, x_wrap_start):
+        x_range = self.plot_args.get('xrange')
+        if x_range is not None:
+            x_min = x_range.get('xmin')
+            x_wrap_start = x_min
+        return x_wrap_start
+
+    def get_data_items_max(self):
+        return self.unpacked_data_items[0]['x'].max()
+
     def plot(self):
+        x_wrap_start = None
         for i in numpy.arange(0, len(self.plot_args['datagroups'])):
 
             if self.plot_args['datagroups'][i]['color'] is None and self.plot_args['datagroups'][i]['cmap'] is None \
@@ -25,15 +36,16 @@ class Overlay(Generic_Plot):
                 self.mplkwargs['alpha'] = 1.0 - self.plot_args['datagroups'][i]['transparency']  # change to an opacity
 
             if self.plot_args['datagroups'][i]['type'] == 'heatmap':
-                Heatmap([self.packed_data_items[i]], self.plot_args, wrap=True, *self.mplargs, **self.mplkwargs)
+                p = Heatmap([self.packed_data_items[i]], self.plot_args, x_wrap_start, *self.mplargs, **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contour':
-                Contour_Plot([self.packed_data_items[i]], self.plot_args, datagroup=i, wrap=True, *self.mplargs,
+                p = Contour_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                              **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contourf':
-                Contourf_Plot([self.packed_data_items[i]], self.plot_args, datagroup=i, wrap=True, *self.mplargs,
+                p = Contourf_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                               **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'scatter':
-                Scatter_Plot([self.packed_data_items[i]], self.plot_args, wrap=True, *self.mplargs, **self.mplkwargs)
+                p = Scatter_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
+                                 **self.mplkwargs)
             else:
                 raise InvalidPlotTypeError("Invalid or no plot type requested for overlay plot, please choose from "
                                            "heatmap, contour, contourf or scatter, for example: "
@@ -43,6 +55,7 @@ class Overlay(Generic_Plot):
             if i == 0:
                 self.format_time_axis()
                 self.format_3d_plot()
+                x_wrap_start = p.x_wrap_start
 
     def format_plot(self):
         pass

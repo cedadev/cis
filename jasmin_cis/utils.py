@@ -1,6 +1,9 @@
 import collections
 import re
-from exceptions import InvalidCommandLineOptionError
+import iris
+from iris.exceptions import CoordinateNotFoundError
+import numpy as np
+from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
 
 def add_element_to_list_in_dict(my_dict,key,value):
@@ -64,6 +67,9 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = Fals
 
             i += step
     else:
+        if min_val < 0 or max_val < 0:
+            raise ValueError('Error, log axis specified but data minimum is less than 0. Please either use a linear'
+                             'axis or specify an axis minimum greater than 0.')
         bin_edges = logspace(log10(min_val), log10(stop), num=11)
 
     logging.debug(axis + " axis bin edges: " + str(bin_edges))
@@ -161,7 +167,7 @@ def array_equal_including_nan(array1, array2):
     return True
 
 
-def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
+def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     '''
     :param data_object    A cube or an UngriddedData object
     :return: A dictionary containing x, y and data as numpy arrays
@@ -170,11 +176,9 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
     import iris.plot as iplt
     import iris
     import logging
-    import numpy as np
     from mpl_toolkits.basemap import addcyclic
 
     def __get_coord(data_object, variable, data):
-        from iris.exceptions import CoordinateNotFoundError
 
         if variable == data_object.name() or variable == "default" or variable == data_object.standard_name or \
            variable == data_object.long_name:
@@ -200,6 +204,12 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
     data = data_object.data #ndarray
 
     x = __get_coord(data_object, x_variable, data)
+    try:
+        coord = data_object.coord(name=x_variable)
+        x_axis_name = guess_coord_axis(coord)
+    except CoordinateNotFoundError:
+        x_axis_name = None
+
     y = __get_coord(data_object, y_variable, data)
 
     # Must use special function to check equality of array here, so NaNs are returned as equal and False is returned if
@@ -248,14 +258,86 @@ def unpack_data_object(data_object, x_variable, y_variable, wrap=False):
                     data, y = addcyclic(data, y)
                     y, x = np.meshgrid(y, x)
 
-    if x_variable == 'longitude' and wrap:
-        x = iris.analysis.cartography.wrap_lons(x, -180, 360)
+    if x_axis_name == 'X' and x_wrap_start is not None:
+        #x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
+        if isnan(x_wrap_start):
+            raise InvalidCommandLineOptionError('Overall range for longitude axis must be within 0 - 360 degrees.')
+        x = fix_longitude_range(x, x_wrap_start)
 
     logging.debug("Shape of x: " + str(x.shape))
     if y is not None: logging.debug("Shape of y: " + str(y.shape))
     logging.debug("Shape of data: " + str(data.shape))
 
     return { "data": data, "x" : x, "y" : y }
+
+
+def fix_longitude_range(lons, range_start):
+    """Shifts longitude values by +/- 360 to fit within a 360 degree range starting at a specified value.
+
+    It is assumed that a no shifts larger than 360 are needed.
+    :param lons: numpy array of longitude values
+    :param range_start: longitude at start of 360 degree range into which values are required to fit
+    """
+
+    range_end = range_start + 360
+    lons[lons < range_start] += 360
+    lons[lons >= range_end] -= 360
+
+    return lons
+
+
+def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
+    if x_range is not None:
+        x_min = x_range.get('xmin')
+        x_max = x_range.get('xmax')
+    else:
+        x_min = None
+        x_max = None
+
+    x_wrap_start = None
+    x_points_mins = []
+    x_points_maxs = []
+    for data_object in packed_data_items:
+        try:
+            coord = data_object.coord(name=x_variable)
+            x_axis_name = guess_coord_axis(coord)
+        except CoordinateNotFoundError:
+            x_axis_name = None
+        if x_axis_name == 'X':
+            x_points_mins.append(np.min(coord.points))
+            x_points_maxs.append(np.max(coord.points))
+
+    if len(x_points_mins) > 0:
+        x_points_min = min(x_points_mins)
+        x_points_max = max(x_points_maxs)
+
+        x_wrap_start = x_points_min
+        if x_min is not None or x_max is not None:
+            if x_min is not None and x_max is not None:
+                if abs(x_max - x_min) > 360:
+                    return float('NaN')
+            elif x_min is None and x_max < x_points_min:
+                raise InvalidCommandLineOptionError(
+                    'If specifying xmin only it must be within the original coordinate range. Please specify xmax too.')
+            elif x_max is None and x_min > x_points_max:
+                raise InvalidCommandLineOptionError(
+                    'If specifying xmax only it must be within the original coordinate range. Please specify xmin too.')
+            if x_min is not None and x_min < x_points_min:
+                x_wrap_start = x_min
+            elif x_max is not None and x_max > x_points_max:
+                x_wrap_start = x_max - 360
+    return x_wrap_start
+
+
+def wrap_longitude_coordinate_values(x_min, x_max):
+    if x_min > x_max:
+        if x_min >= 180:
+            x_min -= 360
+        else:
+            x_max += 360
+
+    return x_min, x_max
+
 
 def copy_attributes(source, dest):
     '''
@@ -525,3 +607,21 @@ def get_class_name(cls):
 
 def isnan(number):
     return number != number
+
+
+def guess_coord_axis(coord):
+    """Returns X, Y, Z or T corresponding to longitude, latitude,
+    altitude or time respectively if the coordinate can be determined
+    to be one of these (based on the standard name only, in this implementation).
+
+    This is intended to be similar to iris.util.guess_coord_axis.
+    """
+    #TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
+    standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
+                      'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
+                      'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
+    if isinstance(coord, iris.coords.Coord):
+        guessed_axis = iris.util.guess_coord_axis(coord)
+    else:
+        guessed_axis = standard_names.get(coord.standard_name.lower())
+    return guessed_axis

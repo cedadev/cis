@@ -9,6 +9,7 @@ from jasmin_cis.data_io.hyperpoint import HyperPoint
 from jasmin_cis.data_io.hyperpoint_view import GriddedHyperPointView
 
 from iris.std_names import STD_NAMES
+from jasmin_cis.utils import remove_file_prefix
 
 
 def load_cube(*args, **kwargs):
@@ -34,7 +35,8 @@ class GriddedData(iris.cube.Cube, CommonData):
                 iris.std_names.STD_NAMES[standard_name]
             except KeyError:
                 rejected_name = kwargs.pop('standard_name')
-                logging.warning("Attempted to set invalid standard_name '{}'.".format(rejected_name))
+                logging.warning("Standard name '{}' not CF-compliant, this standard name will not be "
+                                "used in the output file.".format(rejected_name))
         except KeyError:
             pass
 
@@ -152,3 +154,8 @@ class GriddedData(iris.cube.Cube, CommonData):
             new_data = np.roll(self.data, shift, lon_idx)
             self.data = new_data
             self.dim_coords[lon_idx].points = new_lon_points
+
+    def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
+        output_file = remove_file_prefix('cis-', output_file)
+        logging.info('Saving data to %s' % output_file)
+        iris.save(self, output_file)

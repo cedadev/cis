@@ -124,12 +124,8 @@ class Colocate(object):
 
     def colocate(self, variable, filenames, col_name=None, col_params=None, kern=None, kern_params=None, product=None):
         from jasmin_cis.data_io.read import read_data
-        from jasmin_cis.data_io.write_netcdf import add_data_to_file
-        from jasmin_cis.data_io.write_netcdf import write_coordinates
-        from jasmin_cis.utils import remove_file_prefix
         from jasmin_cis.exceptions import CoordinateNotFoundError
         from time import time
-        import iris
         from jasmin_cis.cis import __version__
 
         logging.info("Reading data for: "+variable)
@@ -157,11 +153,6 @@ class Colocate(object):
 
         logging.info("Completed. Total time taken: " + str(time()-t1))
 
-        logging.info("Appending data to "+self.output_file)
-
-        # Must explicitly write coordinates for ungridded data.
-        self.coords_to_be_written = self.coords_to_be_written and not isinstance(new_data[0], iris.cube.Cube)
-
         for data in new_data:
             history = "Colocated onto sampling from: " + str(self.sample_files) + " "\
                                       "\nusing CIS version " + __version__ + " " +\
@@ -173,12 +164,5 @@ class Colocate(object):
                                       "\nkernel parameters: " + str(kern_params)
             data.add_history(history)
 
-            if self.coords_to_be_written:
-                write_coordinates(self.sample_points, self.output_file)
-                self.coords_to_be_written = False
-
-            if isinstance(data, iris.cube.Cube):
-                self.output_file = remove_file_prefix('cis-', self.output_file)
-                iris.save(data, self.output_file)
-            else:
-                add_data_to_file(data, self.output_file)
+            data.save_data(self.output_file, self.sample_points, self.coords_to_be_written)
+            self.coords_to_be_written = False

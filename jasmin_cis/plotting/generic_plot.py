@@ -3,12 +3,13 @@ import logging
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 import numpy as np
 import matplotlib.pyplot as plt
-
+from jasmin_cis.utils import find_longitude_wrap_start
+from jasmin_cis.plotting.formatter import LogFormatterMathtextSpecial
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0, wrap=False,
+    def __init__(self, packed_data_items, plot_args, x_wrap_start=None, calculate_min_and_max_values=True, datagroup=0,
                  *mplargs, **mplkwargs):
         '''
         Constructor for Generic_Plot.
@@ -23,7 +24,6 @@ class Generic_Plot(object):
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
         self.datagroup = datagroup
-        self.wrap = wrap
 
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
@@ -35,6 +35,7 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
+        self.x_wrap_start = self.set_x_wrap_start(x_wrap_start)
         self.unpacked_data_items = self.unpack_data_items()
         if calculate_min_and_max_values: self.calculate_min_and_max_values()
 
@@ -46,15 +47,30 @@ class Generic_Plot(object):
 
         self.plot()
 
+    def set_x_wrap_start(self, x_wrap_start):
+        if x_wrap_start is None:
+            x_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.plot_args.get('xrange'),
+                                                          self.packed_data_items)
+        return x_wrap_start
+
     def set_plotting_library(self):
         if self.is_map():
             max_found = 180
-            for i in self.unpacked_data_items:
-                max_found = max([i["x"].max(), max_found])
+            x_range_dict = self.plot_args.get('xrange')
+            x_max_requested = x_range_dict.get('xmax')
+            max_found = max([max_found, x_max_requested])
+            data_max = self.get_data_items_max()
+            max_found = max(data_max, max_found)
             self.basemap = Basemap(lon_0=(max_found-180.0))
             return self.basemap
         else:
             return self.matplotlib
+
+    def get_data_items_max(self):
+        data_max = self.unpacked_data_items[0]['x'].max()
+        for i in self.unpacked_data_items:
+            data_max = max([i["x"].max(), data_max])
+        return data_max
 
     def unpack_data_items(self):
         def __get_data(axis):
@@ -85,7 +101,6 @@ class Generic_Plot(object):
         from jasmin_cis.utils import unpack_data_object
         from iris.cube import Cube
         import logging
-        from jasmin_cis.plotting.overlay import Overlay
         if len(self.packed_data_items[0].shape) == 1:
             x_data = __get_data("x")
             y_data = __get_data("y")
@@ -102,11 +117,8 @@ class Generic_Plot(object):
                     if x_data == y_data:
                         __swap_x_and_y_variables()
 
-        if isinstance(self, Overlay):
-            self.wrap = True
-
         return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"],
-                                   wrap=self.wrap) for packed_data_item in self.packed_data_items]
+                                   self.x_wrap_start) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]
@@ -193,8 +205,13 @@ class Generic_Plot(object):
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
 
+        if self.plot_args.get("logv", False):
+            formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
+        else:
+            formatter = None
+
         cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks,
-                                        shrink=float(self.plot_args["cbarscale"]))
+                                        shrink=float(self.plot_args["cbarscale"]), format=formatter)
 
         if not self.plot_args["logv"]:
             cbar.formatter.set_scientific(True)
@@ -430,7 +447,10 @@ class Generic_Plot(object):
             nconts = (vmax - vmin) / self.plot_args["valrange"]["vstep"]
 
         if self.plot_args['datagroups'][self.datagroup]['contlevels'] is None:
-            contour_level_list = np.linspace(vmin, vmax, nconts)
+            if self.plot_args.get('logv') is None:
+                contour_level_list = np.linspace(vmin, vmax, nconts)
+            else:
+                contour_level_list = np.logspace(np.log10(vmin), np.log10(vmax), nconts)
         else:
             contour_level_list = self.plot_args['datagroups'][self.datagroup]['contlevels']
 
@@ -439,7 +459,9 @@ class Generic_Plot(object):
         else:
             contour_type = self.plotting_library.contour
 
-        if self.is_map(): self.mplkwargs["latlon"] = True
+        if self.is_map() and self.unpacked_data_items[0]["data"].ndim == 2:
+            # This fails for an unknown reason on one dimensional data
+            self.mplkwargs["latlon"] = True
 
         # If data (and x, y) is one dimensional, "tri" is set to true to tell Basemap the data is unstructured
         if self.unpacked_data_items[0]["data"].ndim == 1:
