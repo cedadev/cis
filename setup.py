@@ -71,7 +71,7 @@ class gen_doc(Command):
 here = os.path.dirname(__file__)
 README = open(os.path.join(here, 'README')).read()
 
-from jasmin_cis.cis import __version__
+from jasmin_cis import __version__
 
 setup(
     name='jasmin_cis',
