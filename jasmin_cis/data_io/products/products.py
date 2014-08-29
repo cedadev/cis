@@ -381,6 +381,7 @@ class Aerosol_CCI(AProduct):
         from jasmin_cis.data_io.Coord import Coord
         import datetime
 
+        #!FIXME: when reading an existing file variables might be "latitude", "longitude"
         variables = ["lat", "lon", "time"]
         logging.info("Listing coordinates: " + str(variables))
 
