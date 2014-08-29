@@ -21,6 +21,9 @@ def __add_metadata(var, data):
     if data.metadata.missing_value : var.missing_value = data.metadata.missing_value
     if data.metadata.calendar : var.calendar = data.metadata.calendar
     if data.metadata.history : var.history = data.metadata.history
+
+    #!FIXME: I think this will set the NetCDF attribute "shape" BAD IDEA!
+    #    it will clash with the netCDF4-python API.
     var.shape = data.shape
     return var
 
