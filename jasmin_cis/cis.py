@@ -11,6 +11,7 @@ from jasmin_cis import __author__, __version__, __status__, __website__
 
 logger = logging.getLogger(__name__)
 
+
 def __error_occurred(e):
     '''
     Wrapper method used to print error messages and exit the program.
@@ -19,6 +20,7 @@ def __error_occurred(e):
     '''
     sys.stderr.write(str(e) + "\n")
     exit(1)
+
 
 def __check_variable_is_valid(main_arguments, data, axis):
     '''
@@ -38,6 +40,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
             raise InvalidVariableError(user_specified_variable + " is not a valid variable")
 
     return user_specified_variable
+
 
 def plot_cmd(main_arguments):
     '''
@@ -80,6 +83,7 @@ def plot_cmd(main_arguments):
         __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
                          "of data to be plotted, increase the swap space available on your machine or use a machine "
                          "with more memory (for example the JASMIN facility).")
+
 
 def info_cmd(main_arguments):
     '''
