@@ -94,3 +94,28 @@ def should_do_line_plot_of_valid_zonal_time_mean_cmip5_file():
 
     # Remove plotted file, will throw an OSError if file was not created
     os.remove(valid_zonal_time_mean_CMIP5_filename+'.png')
+
+@istest
+def should_do_plot_of_hybrid_height_when_formula_terms_not_marked_as_coordinates():
+    # Actual file name: hybrid-height.nc
+    # Trac issue #417 (fixed in IRIS v.1.7.1)
+    arguments = ['plot', valid_hybrid_height_variable+':'+valid_hybrid_height_filename,
+                 '--output', valid_hybrid_height_filename+'.png']
+    main_arguments = parse_args(arguments)
+    plot_cmd(main_arguments)
+
+    # Remove plotted file, will throw an OSError if file was not created
+    os.remove(valid_hybrid_height_filename+'.png')
+
+
+@istest
+def should_do_plot_of_hybrid_pressure_using_calculated_air_pressure_variable(self):
+    # Actual file name: hybrid-pressure.nc
+    # Trac issue #417 (fixed in IRIS v.1.7.1)
+    arguments = ['plot', valid_hybrid_pressure_variable+':'+valid_hybrid_pressure_filename,
+                 '--xaxis', 'air_pressure', '--output', valid_hybrid_pressure_filename+'.png']
+    main_arguments = parse_args(arguments)
+    plot_cmd(main_arguments)
+
+    # Remove plotted file, will throw an OSError if file was not created
+    os.remove(valid_hybrid_pressure_filename+'.png')

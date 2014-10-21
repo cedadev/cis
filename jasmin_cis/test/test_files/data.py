@@ -59,6 +59,12 @@ valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
 valid_zonal_time_mean_CMIP5_variable = "rsutcs"
 
+valid_hybrid_pressure_filename = make_pathname('hybrid-pressure.nc')
+valid_hybrid_pressure_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+
+valid_hybrid_height_filename = make_pathname('hybrid-height.nc')
+valid_hybrid_height_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+
 test_directory = make_pathname('test_directory_for_parser')
 test_directory_file1 = test_directory + "/test_file_for_parser_1"
 test_directory_file2 = test_directory + "/test_file_for_parser_2"
