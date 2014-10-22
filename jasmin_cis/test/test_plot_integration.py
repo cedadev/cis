@@ -4,6 +4,7 @@ created without errors.
 """
 from unittest import TestCase
 
+from jasmin_cis.data_io.products.AProduct import ProductPluginException
 from jasmin_cis.cis import plot_cmd
 from jasmin_cis.parse import parse_args
 from jasmin_cis.test.test_files.data import *
@@ -107,3 +108,16 @@ class TestPlotIntegration(TestCase):
 
         # Remove plotted file, will throw an OSError if file was not created
         os.remove(valid_hybrid_pressure_filename+'.png')
+
+    def test_exceptions_caused_by_incorrect_product_are_caught_and_ProductPluginException_raised(self):
+        """
+        If the user selects the wrong product plugin (or there is a bug in the plugin) then the user would
+        be shown an unhelpful error message. This checks that such an exception is caught and the more
+        helpful ProductPluginException returned to indicate to the user the likely cause of the problem.
+        See JASCIS-80
+        """
+        product = 'Cloud_CCI'
+        arguments = ['plot', valid_aerosol_cci_variable+':'+valid_aerosol_cci_filename+':product='+product]
+        main_arguments = parse_args(arguments)
+        with self.assertRaises(ProductPluginException):
+            plot_cmd(main_arguments)
