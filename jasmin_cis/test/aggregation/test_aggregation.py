@@ -1,4 +1,5 @@
 import datetime
+from unittest import TestCase
 from nose.tools import istest
 import numpy
 from jasmin_cis.col_implementations import mean, max, min, stddev
@@ -14,8 +15,9 @@ import iris.unit
 import iris.analysis
 
 
-class TestGriddedAggregation():
-    def __init__(self):
+class TestGriddedAggregation(TestCase):
+
+    def setUp(self):
         self.cube = make_mock_cube()
         self.kernel = iris.analysis.MEAN
 
@@ -50,7 +52,7 @@ class TestGriddedAggregation():
         agg = Aggregator(self.cube, grid)
         cube_out = agg.aggregate_gridded(self.kernel)
 
-        result = numpy.array([8])
+        result = numpy.array([8.0])
 
         assert numpy.array_equal(result, cube_out.data)
 

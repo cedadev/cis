@@ -129,6 +129,10 @@ class CloudSat(AProduct):
 
         return UngriddedData(var,metadata,coords)
 
+    def get_variable_names(self, filenames):
+        sd_vars, vd_vars = hdf.get_hdf4_file_variables(filenames, None)
+        return sd_vars, vd_vars
+
 
 class MODIS_L3(AProduct):
 

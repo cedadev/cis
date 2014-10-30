@@ -5,7 +5,7 @@ Each test therefore ignores SystemExit exceptions with code 2 as they are expect
 '''
 from nose.tools import istest, eq_
 from jasmin_cis.parse import parse_args, expand_file_list
-from test_files.data import *
+from jasmin_cis.test.test_files.data import *
 from jasmin_cis.plotting.plot import Plotter
 import argparse
 

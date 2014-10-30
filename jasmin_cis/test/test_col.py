@@ -5,7 +5,7 @@ from nose.tools import istest, eq_, assert_almost_equal, raises
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import UngriddedData
 import jasmin_cis.data_io.gridded_data as gridded_data
-from test_util import mock
+from jasmin_cis.test.test_util import mock
 import numpy as np
 
 
