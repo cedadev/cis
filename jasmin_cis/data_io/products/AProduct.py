@@ -10,6 +10,9 @@ class AProduct(object):
     """
     __metaclass__ = ABCMeta
 
+    # If a filename matches two data products' file signatures, the data product with the higher priority will be used
+    priority = 10
+
     @abstractmethod
     def create_data_object(self, filenames, variable):
         """

@@ -630,6 +630,10 @@ class Caliop_L1(abstract_Caliop):
 
 class cis(AProduct):
 
+    # If a file matches the CIS product signature as well as another signature (e.g. because we aggregated from another
+    # data product) we need to prioritise the CIS data product
+    priority = 100
+
     def get_file_signature(self):
         return [r'cis\-.*\.nc']
 
