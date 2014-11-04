@@ -131,7 +131,7 @@ class CloudSat(AProduct):
 
     def get_variable_names(self, filenames):
         sd_vars, vd_vars = hdf.get_hdf4_file_variables(filenames, None)
-        return dict(sd_vars.items(), vd_vars.items())
+        return dict(sd_vars.items() + vd_vars.items())
 
 
 class MODIS_L3(AProduct):
