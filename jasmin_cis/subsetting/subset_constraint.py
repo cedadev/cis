@@ -104,6 +104,12 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :param data: data to be subsetted
         :return: subsetted data
         """
+        if isinstance(data, list):
+            new_data = []
+            for data in data:
+                new_data.append(self.constrain(data))
+            return new_data
+
         CoordPair = namedtuple('CoordPair', ['input', 'output'])
 
         new_values = []
