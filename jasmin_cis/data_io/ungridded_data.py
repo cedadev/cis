@@ -482,10 +482,12 @@ class UngriddedDataList(list):
         Returns all unique coordinates used in all the UngriddedDataobjects
         :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
         """
-        from jasmin_cis.data_io.Coord import CoordList
-        unique_coords = set()
-        for ungridded_data in self:
-            data_coords = ungridded_data.coords(name=name, standard_name=standard_name, long_name=long_name,
-                                                attributes=attributes, axis=axis, dim_coords=dim_coords)
-            unique_coords = unique_coords.union(data_coords)
-        return CoordList(unique_coords)
+        # TODO we assume here that there is only one common set of coords for all variables
+        return self[0].coords()
+
+    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+        logging.info('Saving data to %s' % output_file)
+        coords_to_be_written = True
+        for data in self:
+            data.save_data(output_file, data, coords_to_be_written)
+            coords_to_be_written = False  # Only write coordinates out for the first variable

@@ -66,7 +66,6 @@ class Subset(object):
             for phenomenon in data:
                 if phenomenon.coords() != coords_to_use:
                     raise ValueError("Subsetting multiple variables on different coordinates is not supported")
-                return coords
         else:
             coords_to_use = data.coords()
 

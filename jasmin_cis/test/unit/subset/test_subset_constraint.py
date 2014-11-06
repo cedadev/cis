@@ -2,7 +2,6 @@
 """
 import datetime
 from unittest import TestCase
-from nose.tools import istest
 import numpy as np
 
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedDataList
@@ -16,8 +15,7 @@ class TestSubsetConstraint(TestCase):
     Tests for subsetting gridded data
     """
 
-    @istest
-    def can_subset_2d_gridded_data_by_longitude(self):
+    def test_can_subset_2d_gridded_data_by_longitude(self):
         data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube()
         long_coord = data.coord('longitude')
         constraint = subset_constraint.GriddedSubsetConstraint()
@@ -25,8 +23,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [[2, 3], [5, 6], [8, 9], [11, 12], [14, 15]])
 
-    @istest
-    def can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
+    def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
         data = jasmin_cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9)
         long_coord = data.coord('longitude')
         long_coord.points = np.array([-180., -135., -90., -45., 0., 45., 90., 135., 180.])
@@ -41,8 +38,7 @@ class TestSubsetConstraint(TestCase):
                                          [28, 29, 30, 35, 36],
                                          [37, 38, 39, 44, 45]])
 
-    @istest
-    def can_subset_2d_gridded_data_by_longitude_with_wrapping_at_360(self):
+    def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_360(self):
         data = jasmin_cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9)
         long_coord = data.coord('longitude')
         long_coord.points = np.array([0., 45., 90., 135., 180., 225., 270., 315., 360.])
@@ -57,8 +53,7 @@ class TestSubsetConstraint(TestCase):
                                          [28, 29, 30, 35, 36],
                                          [37, 38, 39, 44, 45]])
 
-    @istest
-    def can_subset_2d_gridded_data_with_missing_data(self):
+    def test_can_subset_2d_gridded_data_with_missing_data(self):
         """This test just shows that missing values do not interfere with subsetting -
         nothing special happens to the missing values.
         """
@@ -69,8 +64,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist(fill_value=-999) == [[2, 3], [-999, 6], [8, -999], [11, 12], [14, 15]])
 
-    @istest
-    def can_subset_2d_gridded_data_by_longitude_latitude(self):
+    def test_can_subset_2d_gridded_data_by_longitude_latitude(self):
         data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube()
         long_coord = data.coord('longitude')
         lat_coord = data.coord('latitude')
@@ -80,8 +74,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [[5, 6], [8, 9], [11, 12]])
 
-    @istest
-    def empty_subset_of_gridded_data_returns_no_data(self):
+    def test_empty_subset_of_gridded_data_returns_no_data(self):
         """Checks that the convention of returning None if subsetting results in an empty subset.
         """
         data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube()
@@ -92,8 +85,7 @@ class TestSubsetConstraint(TestCase):
         assert (subset is None)
 
     # Tests for subsetting ungridded data
-    @istest
-    def can_subset_2d_ungridded_data_by_longitude(self):
+    def test_can_subset_2d_ungridded_data_by_longitude(self):
         data = jasmin_cis.test.util.mock.make_regular_2d_ungridded_data()
         long_coord = data.coord('longitude')
         constraint = subset_constraint.UngriddedSubsetConstraint()
@@ -101,8 +93,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [2, 3, 5, 6, 8, 9, 11, 12, 14, 15])
 
-    @istest
-    def can_subset_2d_ungridded_data_by_longitude_with_wrapping_at_180(self):
+    def test_can_subset_2d_ungridded_data_by_longitude_with_wrapping_at_180(self):
         data = jasmin_cis.test.util.mock.make_regular_2d_ungridded_data(
             lat_dim_length=5, lon_dim_length=9, lon_min=-180., lon_max=180.)
         long_coord = data.coord('longitude')
@@ -115,8 +106,7 @@ class TestSubsetConstraint(TestCase):
                                          28, 29, 30, 35, 36,
                                          37, 38, 39, 44, 45])
 
-    @istest
-    def can_subset_2d_ungridded_data_by_longitude_with_wrapping_at_360(self):
+    def test_can_subset_2d_ungridded_data_by_longitude_with_wrapping_at_360(self):
         data = jasmin_cis.test.util.mock.make_regular_2d_ungridded_data(
             lat_dim_length=5, lon_dim_length=9, lon_min=0., lon_max=360.)
         long_coord = data.coord('longitude')
@@ -129,8 +119,7 @@ class TestSubsetConstraint(TestCase):
                                          28, 29, 30, 35, 36,
                                          37, 38, 39, 44, 45])
 
-    @istest
-    def can_subset_2d_ungridded_data_by_longitude_latitude(self):
+    def test_can_subset_2d_ungridded_data_by_longitude_latitude(self):
         data = jasmin_cis.test.util.mock.make_regular_2d_ungridded_data()
         long_coord = data.coord('longitude')
         lat_coord = data.coord('latitude')
@@ -140,8 +129,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [5, 6, 8, 9, 11, 12])
 
-    @istest
-    def empty_subset_of_ungridded_data_returns_no_data(self):
+    def test_empty_subset_of_ungridded_data_returns_no_data(self):
         """Checks that the convention of returning None if subsetting results in an empty subset.
         """
         data = jasmin_cis.test.util.mock.make_regular_2d_ungridded_data()
@@ -151,8 +139,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset is None)
 
-    @istest
-    def can_subset_ungridded_data_by_time(self):
+    def test_can_subset_ungridded_data_by_time(self):
         data = jasmin_cis.test.util.mock.make_regular_4d_ungridded_data()
         time_coord = data.coord('time')
         constraint = subset_constraint.UngriddedSubsetConstraint()
@@ -162,8 +149,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [2, 3, 7, 8, 12, 13, 17, 18, 22, 23, 27, 28, 32, 33, 37, 38, 42, 43, 47, 48])
 
-    @istest
-    def can_subset_ungridded_data_by_time_altitude(self):
+    def test_can_subset_ungridded_data_by_time_altitude(self):
         data = jasmin_cis.test.util.mock.make_regular_4d_ungridded_data()
         time_coord = data.coord('time')
         alt_coord = data.coord('altitude')
@@ -175,8 +161,7 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [27, 28, 32, 33, 37, 38])
 
-    @istest
-    def can_subset_2d_ungridded_data_with_missing_values(self):
+    def test_can_subset_2d_ungridded_data_with_missing_values(self):
         data = jasmin_cis.test.util.mock.make_regular_2d_ungridded_data_with_missing_values()
         long_coord = data.coord('longitude')
         constraint = subset_constraint.UngriddedSubsetConstraint()
@@ -184,7 +169,6 @@ class TestSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [2, 3, -999, 6, 8, -999, 11, 12, 14, 15])
 
-    @istest
     def test_GIVEN_UngriddedDataList_WHEN_constrain_THEN_correctly_subsetted_UngriddedDataList_returned(self):
         ug_data = jasmin_cis.test.util.mock.make_regular_2d_ungridded_data()
         ug_data2 = UngriddedData(ug_data.data + 1, Metadata(name='snow', standard_name='snowfall_rate',
