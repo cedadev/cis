@@ -5,7 +5,7 @@ from netCDF4 import Variable
 
 from nose.tools import istest,raises, eq_
 
-from test.integration.test_files.data import *
+from jasmin_cis.test.integration.test_files.data import *
 from jasmin_cis.data_io.netcdf import *
 
 

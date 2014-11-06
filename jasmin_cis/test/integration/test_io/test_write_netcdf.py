@@ -2,7 +2,7 @@ import unittest
 import os
 
 from jasmin_cis.test.util.mock import make_dummy_2d_ungridded_data
-from test.integration.test_files.data import make_pathname
+from jasmin_cis.test.integration.test_files.data import make_pathname
 
 
 tmp_file = "tmp_file"
