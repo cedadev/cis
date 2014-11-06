@@ -32,7 +32,9 @@ __author__ = 'duncan'
 #                                "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
 
 import timeit
-from jasmin_cis.test.test_col import Test_nn_gridded
+
+from jasmin_cis.test.unit.test_col import Test_nn_gridded
+
 
 tc = Test_nn_gridded()
 

@@ -1,5 +1,5 @@
 from plotting.plot import Plotter
-from jasmin_cis.test.test_util.mock import make_dummy_1d_ungridded_data
+from jasmin_cis.test.util.mock import make_dummy_1d_ungridded_data
 data_object1 = make_dummy_1d_ungridded_data()
 data_object2 = make_dummy_1d_ungridded_data()
 Plotter([data_object1, data_object2],
