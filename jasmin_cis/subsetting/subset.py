@@ -5,30 +5,33 @@ from iris import cube, coords
 from iris.exceptions import IrisError
 import iris.unit
 import iris.util
+from data_io.data_reader import DataReader
+from data_io.data_writer import DataWriter
 
 import jasmin_cis.exceptions as ex
 import jasmin_cis.parse_datetime as parse_datetime
-from jasmin_cis.data_io.read import read_data
 from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
-from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from jasmin_cis.cis import __version__
-from jasmin_cis.utils import remove_file_prefix, guess_coord_axis
+from jasmin_cis.utils import guess_coord_axis
 
 
 class Subset(object):
-    def __init__(self, limits, output_file):
+    def __init__(self, limits, output_file, subsetter=Subsetter(), data_reader=DataReader(), data_writer=DataWriter()):
         self._limits = limits
         self._output_file = output_file
+        self._subsetter = subsetter
+        self._data_reader = data_reader
+        self._data_writer = data_writer
 
-    def subset(self, variable, filenames, product):
+    def subset(self, variables, filenames, product):
         # Read the input data - the parser limits the number of data groups to one for this command.
         data = None
         try:
             # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
             # the specified files.
-            logging.info("Reading data for variable: %s", variable)
-            data = read_data(filenames, variable, product)
+            logging.info("Reading data for variables: %s", variables)
+            data = self._data_reader.read_data(filenames, variables, product)
         except (IrisError, ex.InvalidVariableError) as e:
             raise ex.CISError("There was an error reading in data: \n" + str(e))
         except IOError as e:
@@ -43,23 +46,31 @@ class Subset(object):
             subset_constraint = UngriddedSubsetConstraint()
 
         self._set_constraint_limits(data, subset_constraint)
-        subsetter = Subsetter()
-        subset = subsetter.subset(data, subset_constraint)
+        subset = self._subsetter.subset(data, subset_constraint)
 
         if subset is None:
             # Constraints exclude all data.
             raise ex.NoDataInSubsetError("No output created - constraints exclude all data")
         else:
             history = "Subsetted using CIS version " + __version__ + \
-                      "\nvariable: " + str(variable) + \
+                      "\nvariables: " + str(variables) + \
                       "\nfrom files: " + str(filenames) + \
                       "\nusing limits: " + str(subset_constraint)
             subset.add_history(history)
-
-            subset.save_data(self._output_file, subset, True)
+            self._data_writer.write_data(subset, self._output_file, subset, True)
 
     def _set_constraint_limits(self, data, subset_constraint):
-        for coord in data.coords():
+        if isinstance(data, list):
+            # We need to do a check to see if this is a list and if so
+            coords_to_use = data[0].coords()
+            for phenomenon in data:
+                if phenomenon.coords() != coords_to_use:
+                    raise ValueError("Subsetting multiple variables on different coordinates is not supported")
+                return coords
+        else:
+            coords_to_use = data.coords()
+
+        for coord in coords_to_use:
             # Match user-specified limits with dimensions found in data.
             guessed_axis = guess_coord_axis(coord)
             limit = None
