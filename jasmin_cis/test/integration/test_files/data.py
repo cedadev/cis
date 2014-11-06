@@ -4,6 +4,7 @@ Module that contains various strings that are used in tests
 
 import os
 
+
 def make_pathname(filename):
     return os.path.join(os.path.dirname(__file__), filename)
 
@@ -25,6 +26,8 @@ valid_cloudsat_PRECIP_variable = "Precip_rate"
 
 valid_aerosol_cci_filename = make_pathname("20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc")
 valid_aerosol_cci_variable = "AOD550"
+valid_aerosol_cci_variable_2 = "AOD870"
+
 valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc")
 valid_cloud_cci_variable = "stemp"
 
