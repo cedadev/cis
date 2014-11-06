@@ -255,7 +255,7 @@ class UngriddedData(LazyData, CommonData):
         #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
         if metadata.units == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
-    
+
     @property
     def x(self):
         return self.coord(axis='X')
@@ -460,3 +460,32 @@ class UngriddedCoordinates(CommonData):
         """
         return False
 
+
+class UngriddedDataList(list):
+    """
+    Class which represents multiple UngriddedData objects (e.g. from reading multiple variables)
+    """
+    def __str__(self):
+        "<UngriddedDataList: %s>" % super(UngriddedDataList, self).__str__()
+
+    def add_history(self, new_history):
+        """
+        Appends to, or creates, the metadata history attribute using the supplied history string.
+        The new entry is prefixed with a timestamp.
+        :param new_history: history string
+        """
+        for data in self:
+            data.add_history(new_history)
+
+    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+        """
+        Returns all unique coordinates used in all the UngriddedDataobjects
+        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
+        """
+        from jasmin_cis.data_io.Coord import CoordList
+        unique_coords = set()
+        for ungridded_data in self:
+            data_coords = ungridded_data.coords(name=name, standard_name=standard_name, long_name=long_name,
+                                                attributes=attributes, axis=axis, dim_coords=dim_coords)
+            unique_coords = unique_coords.union(data_coords)
+        return CoordList(unique_coords)

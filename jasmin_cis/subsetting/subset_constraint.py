@@ -8,7 +8,7 @@ import iris
 from jasmin_cis.subsetting.subset_framework import SubsetConstraintInterface
 from jasmin_cis.data_io.Coord import Coord, CoordList
 import jasmin_cis.data_io.gridded_data as gridded_data
-from jasmin_cis.data_io.ungridded_data import UngriddedData
+from jasmin_cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 
 
 class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
@@ -105,7 +105,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data
         """
         if isinstance(data, list):
-            new_data = []
+            new_data = UngriddedDataList()
             for data in data:
                 new_data.append(self.constrain(data))
             return new_data

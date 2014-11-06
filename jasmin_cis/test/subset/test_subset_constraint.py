@@ -3,10 +3,9 @@
 import datetime
 from unittest import TestCase
 from nose.tools import istest
-
 import numpy as np
-from data_io.ungridded_data import UngriddedData, Metadata
 
+from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedDataList
 import jasmin_cis.subsetting.subset_constraint as subset_constraint
 import jasmin_cis.test.test_util.mock
 import jasmin_cis.time_util as time_util
@@ -186,7 +185,7 @@ class TestSubsetConstraint(TestCase):
         assert (subset.data.tolist() == [2, 3, -999, 6, 8, -999, 11, 12, 14, 15])
 
     @istest
-    def test_GIVEN_list_of_UngriddedData_WHEN_constrain_THEN_correctly_subsetted_list_of_UngriddedData_returned(self):
+    def test_GIVEN_UngriddedDataList_WHEN_constrain_THEN_correctly_subsetted_UngriddedDataList_returned(self):
         ug_data = jasmin_cis.test.test_util.mock.make_regular_2d_ungridded_data()
         ug_data2 = UngriddedData(ug_data.data + 1, Metadata(name='snow', standard_name='snowfall_rate',
                                                             long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
@@ -196,7 +195,7 @@ class TestSubsetConstraint(TestCase):
         ymin, ymax = -5, 10
         constraint.set_limit(ug_data.coord(standard_name='longitude'), xmin, xmax, False)
         constraint.set_limit(ug_data.coord(standard_name='latitude'), ymin, ymax, False)
-        subset = constraint.constrain([ug_data, ug_data2])
-        assert isinstance(subset, list)
+        subset = constraint.constrain(UngriddedDataList([ug_data, ug_data2]))
+        assert isinstance(subset, UngriddedDataList)
         assert subset[0].data.tolist() == [5, 6, 8, 9, 11, 12, 14, 15]
         assert subset[1].data.tolist() == [6, 7, 9, 10, 12, 13, 15, 16]
