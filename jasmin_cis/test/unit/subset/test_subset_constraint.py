@@ -2,9 +2,8 @@
 """
 import datetime
 from unittest import TestCase
-from iris.cube import CubeList
 import numpy as np
-from data_io.gridded_data import GriddedData
+from jasmin_cis.data_io.gridded_data import GriddedDataList
 
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedDataList
 import jasmin_cis.subsetting.subset_constraint as subset_constraint
@@ -86,17 +85,17 @@ class TestGriddedSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset is None)
 
-    def test_GIVEN_CubeList_WHEN_constrain_THEN_correctly_subsetted_CubeList_returned(self):
+    def test_GIVEN_GriddedDataList_WHEN_constrain_THEN_correctly_subsetted_GriddedDataList_returned(self):
         gridded1 = jasmin_cis.test.util.mock.make_square_5x3_2d_cube()
         gridded2 = jasmin_cis.test.util.mock.make_square_5x3_2d_cube()
-        cubelist = CubeList([gridded1, gridded2])
+        datalist = GriddedDataList([gridded1, gridded2])
         long_coord = gridded1.coord('longitude')
         lat_coord = gridded1.coord('latitude')
         constraint = subset_constraint.GriddedSubsetConstraint()
         constraint.set_limit(long_coord, 0.0, 5.0, False)
         constraint.set_limit(lat_coord, -5.0, 5.0, False)
-        subset = constraint.constrain(cubelist)
-        assert isinstance(subset, CubeList)
+        subset = constraint.constrain(datalist)
+        assert isinstance(subset, GriddedDataList)
         assert (subset[0].data.tolist() == [[5, 6], [8, 9], [11, 12]])
         assert (subset[1].data.tolist() == [[5, 6], [8, 9], [11, 12]])
 

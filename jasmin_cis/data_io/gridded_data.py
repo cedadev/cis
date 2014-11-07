@@ -24,6 +24,7 @@ def make_from_cube(cube):
         gd.__class__ = GriddedData
     elif isinstance(cube, iris.cube.CubeList):
         gd = cube
+        gd.__class__ = GriddedDataList
     return gd
 
 
@@ -160,3 +161,25 @@ class GriddedData(iris.cube.Cube, CommonData):
         output_file = remove_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
+
+
+class GriddedDataList(iris.cube.CubeList):
+    """
+    This class extends iris.cube.CubeList to add functionality needed for CIS to process multiple gridded data.
+
+    It is expected that it will contain jasmin.cis.data_io.gridded_data.GriddedData instances (which extend
+    iris.cube.Cube) rather than IRIS cubes themselves, as there is additional functionality required which is
+    present in the GriddedData wrapper.
+    """
+
+    def __str__(self):
+        "<GriddedDataList: %s>" % super(GriddedDataList, self).__str__()
+
+    def add_history(self, new_history):
+        """
+        Appends to, or creates, the metadata history attribute using the supplied history string.
+        The new entry is prefixed with a timestamp.
+        :param new_history: history string
+        """
+        for data in self:
+            data.add_history(new_history)
