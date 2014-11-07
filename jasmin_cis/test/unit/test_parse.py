@@ -10,7 +10,7 @@ from hamcrest import is_, assert_that, contains_inanyorder
 from nose.tools import eq_
 
 from jasmin_cis.parse import parse_args, expand_file_list
-from test.test_files.data import *
+from jasmin_cis.test.test_files.data import *
 from jasmin_cis.plotting.plot import Plotter
 
 
