@@ -3,7 +3,7 @@ module to test the hdf4 utility function of hdf_sd.py
 '''
 from nose.tools import istest, eq_
 
-from jasmin_cis.test.integration.test_files.data import *
+from jasmin_cis.test.test_files.data import *
 import jasmin_cis.data_io.hdf_sd as hdf_sd
 
 

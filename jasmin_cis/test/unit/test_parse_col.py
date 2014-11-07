@@ -6,7 +6,7 @@ Some tests therefore ignore SystemExit exceptions with code 2 if they are expect
 from nose.tools import istest, eq_
 
 from jasmin_cis.parse import parse_args
-from jasmin_cis.test.integration.test_files.data import *
+from jasmin_cis.test.test_files.data import *
 
 
 @istest

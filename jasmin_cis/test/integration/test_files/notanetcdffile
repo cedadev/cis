@@ -1,2 +1,0 @@
-ssh waldm@jasmin-login1.ceda.ac.uk -L2000:proj.badc.rl.ac.uk:22 -N
-

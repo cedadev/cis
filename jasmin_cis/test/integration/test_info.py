@@ -1,7 +1,7 @@
 from nose.tools import istest, raises
 
 from jasmin_cis.info import info
-from jasmin_cis.test.integration.test_files.data import *
+from jasmin_cis.test.test_files.data import *
 from jasmin_cis.exceptions import CISError
 
 

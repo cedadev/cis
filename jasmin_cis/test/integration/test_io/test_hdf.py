@@ -2,7 +2,7 @@ from nose.tools import eq_, istest, raises
 
 from jasmin_cis.data_io.hdf import __read_hdf4
 from jasmin_cis.exceptions import InvalidVariableError
-from jasmin_cis.test.integration.test_files.data import *
+from jasmin_cis.test.test_files.data import *
 
 
 @istest

@@ -6,7 +6,7 @@ from iris.exceptions import TranslationError
 
 from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
-from test.integration.test_files.data import non_netcdf_file
+from jasmin_cis.test.test_files.data import non_netcdf_file
 
 
 def check_regex_matching(cls_name, filename):
@@ -75,7 +75,7 @@ class ProductTests():
 class TestCloudsatRVODsdata(ProductTests):
 
     def __init__(self):
-        from test.integration.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable
+        from test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_sdata_variable
         self.product = CloudSat
@@ -84,7 +84,7 @@ class TestCloudsatRVODsdata(ProductTests):
 class TestCloudsatRVODvdata(ProductTests):
 
     def __init__(self):
-        from test.integration.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable
+        from test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_vdata_variable
         self.product = CloudSat
@@ -93,7 +93,7 @@ class TestCloudsatRVODvdata(ProductTests):
 class TestCloudsatPRECIP(ProductTests):
 
     def __init__(self):
-        from test.integration.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable
+        from test.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable
         self.filename = valid_cloudsat_PRECIP_file
         self.valid_variable = valid_cloudsat_PRECIP_variable
         self.product = CloudSat
@@ -101,7 +101,7 @@ class TestCloudsatPRECIP(ProductTests):
 
 class TestMODIS_L3(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_modis_l3_filename, valid_modis_l3_variable
+        from test.test_files.data import valid_modis_l3_filename, valid_modis_l3_variable
         self.filename = valid_modis_l3_filename
         self.valid_variable = valid_modis_l3_variable
         self.product = MODIS_L3
@@ -109,7 +109,7 @@ class TestMODIS_L3(ProductTests):
 
 class TestCaliop_L2(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_caliop_l2_filename, valid_caliop_l2_variable
+        from test.test_files.data import valid_caliop_l2_filename, valid_caliop_l2_variable
         self.filename = valid_caliop_l2_filename
         self.valid_variable = valid_caliop_l2_variable
         self.product = Caliop_L2
@@ -117,7 +117,7 @@ class TestCaliop_L2(ProductTests):
 
 class TestCaliop_L1(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_caliop_l1_filename, valid_caliop_l1_variable
+        from test.test_files.data import valid_caliop_l1_filename, valid_caliop_l1_variable
         self.filename = valid_caliop_l1_filename
         self.valid_variable = valid_caliop_l1_variable
         self.product = Caliop_L1
@@ -125,21 +125,21 @@ class TestCaliop_L1(ProductTests):
 
 class TestMODIS_L2(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_modis_l2_filename, valid_modis_l2_variable
+        from test.test_files.data import valid_modis_l2_filename, valid_modis_l2_variable
         self.filename = valid_modis_l2_filename
         self.valid_variable = valid_modis_l2_variable
         self.product = MODIS_L2
 
 class TestCloud_CCI(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
+        from test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
         self.filename = valid_cloud_cci_filename
         self.valid_variable = valid_cloud_cci_variable
         self.product = Cloud_CCI
 
 class TestAerosol_CCI(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_aerosol_cci_filename, valid_aerosol_cci_variable
+        from test.test_files.data import valid_aerosol_cci_filename, valid_aerosol_cci_variable
         self.filename = valid_aerosol_cci_filename
         self.valid_variable = valid_aerosol_cci_variable
         self.product = Aerosol_CCI
@@ -147,7 +147,7 @@ class TestAerosol_CCI(ProductTests):
 class TestCis(ProductTests):
 
     def __init__(self):
-        from test.integration.test_files.data import valid_cis_col_file
+        from test.test_files.data import valid_cis_col_file
         self.filename = valid_cis_col_file
         self.valid_variable = 'AOT_440'
         self.product = cis
@@ -155,7 +155,7 @@ class TestCis(ProductTests):
 class TestNCAR_NetCDF_RAF(ProductTests):
 
     def __init__(self):
-        from test.integration.test_files.data import valid_NCAR_NetCDF_RAF_filename, valid_NCAR_NetCDF_RAF_variable
+        from test.test_files.data import valid_NCAR_NetCDF_RAF_filename, valid_NCAR_NetCDF_RAF_variable
         self.filename = valid_NCAR_NetCDF_RAF_filename
         self.valid_variable = valid_NCAR_NetCDF_RAF_variable
         self.product = NCAR_NetCDF_RAF
@@ -163,7 +163,7 @@ class TestNCAR_NetCDF_RAF(ProductTests):
 
 class TestAeronet(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
+        from test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
         self.filename = valid_aeronet_filename
         self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
         self.valid_variable = valid_aeronet_variable
@@ -175,7 +175,7 @@ class TestAeronet(ProductTests):
 
 class TestASCII(ProductTests):
     def __init__(self):
-        from test.integration.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
+        from test.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
         self.filename = valid_ascii_filename
         self.no_value_filename = ascii_filename_with_no_values
         self.valid_variable = valid_ascii_variable
@@ -211,7 +211,7 @@ class TestASCII(ProductTests):
 class TestNetCDF_Gridded_xenida(ProductTests):
 
     def __init__(self):
-        from test.integration.test_files.data import valid_xenida_filename, valid_xenida_variable
+        from test.test_files.data import valid_xenida_filename, valid_xenida_variable
         self.filename = valid_xenida_filename
         self.valid_variable = valid_xenida_variable
         self.product = default_NetCDF
@@ -231,7 +231,7 @@ class TestNetCDF_Gridded_xenida(ProductTests):
 class TestNetCDF_Gridded_xglnwa(ProductTests):
 
     def __init__(self):
-        from test.integration.test_files.data import valid_1d_filename, valid_1d_variable
+        from test.test_files.data import valid_1d_filename, valid_1d_variable
         self.filename = valid_1d_filename
         self.valid_variable = valid_1d_variable
         self.product = default_NetCDF

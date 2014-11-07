@@ -7,7 +7,7 @@ from unittest import TestCase
 from jasmin_cis.data_io.products.AProduct import ProductPluginException
 from jasmin_cis.cis import plot_cmd
 from jasmin_cis.parse import parse_args
-from jasmin_cis.test.integration.test_files.data import *
+from jasmin_cis.test.test_files.data import *
 
 
 class TestPlotIntegration(TestCase):

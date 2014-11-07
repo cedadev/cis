@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from nose.tools import eq_, raises
 
-from test.integration.test_files.data import *
+from jasmin_cis.test.test_files.data import *
 from jasmin_cis.data_io.products.AProduct import get_data, __get_class as _get_class
 from jasmin_cis.exceptions import ClassNotFoundError
 
