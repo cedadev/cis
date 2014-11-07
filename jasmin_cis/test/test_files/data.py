@@ -45,6 +45,10 @@ valid_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2009-12-31T
 valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010-01-01T00-22-28ZD.hdf")
 valid_caliop_l1_variable = "Tropopause_Temperature"
 
+valid_echamham_filename = make_pathname("ECHAMHAM_AOT550_670.nc")
+valid_echamham_variable_1 = "TAU_2D_550nm"
+valid_echamham_variable_2 = "TAU_2D_670nm"
+
 valid_xenida_filename = make_pathname("xenida.pah9440.nc")
 valid_xenida_variable = "specific_humidity"
 

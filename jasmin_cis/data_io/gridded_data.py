@@ -183,3 +183,8 @@ class GriddedDataList(iris.cube.CubeList):
         """
         for data in self:
             data.add_history(new_history)
+
+    def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
+        output_file = remove_file_prefix('cis-', output_file)
+        logging.info('Saving data to %s' % output_file)
+        iris.save(self, output_file)
