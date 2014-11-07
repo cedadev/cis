@@ -6,9 +6,7 @@ import numpy as np
 import iris
 
 from jasmin_cis.subsetting.subset_framework import SubsetConstraintInterface
-from jasmin_cis.data_io.Coord import Coord, CoordList
 import jasmin_cis.data_io.gridded_data as gridded_data
-from jasmin_cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 
 
 class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
