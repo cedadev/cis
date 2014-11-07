@@ -98,57 +98,52 @@ class GriddedSubsetConstraint(SubsetConstraint):
 class UngriddedSubsetConstraint(SubsetConstraint):
     """Implementation of SubsetConstraint for subsetting ungridded data.
     """
+
     def constrain(self, data):
         """Subsets the supplied data.
 
         :param data: data to be subsetted
         :return: subsetted data
         """
+        import numpy as np
+
+        # Create the combined mask across all limits
+        shape = data.coords()[0].data_flattened.shape  # This assumes they are all the same shape
+        combined_mask = np.zeros(shape, dtype=bool)
+        for limit in self._limits.itervalues():
+            mask = np.zeros(shape, dtype=bool)
+            for idx, val in enumerate(limit.coord.data_flattened):
+                if not limit.constraint_function(val):
+                    mask[idx] = True
+            combined_mask = combined_mask | mask
+
+        # Generate the new coordinates here (before we loop)
+        new_coords = data.coords()
+        for coord in new_coords:
+            coord.data = np.ma.masked_array(coord.data, mask=combined_mask)
+            coord.data = coord.data.compressed()
+
         if isinstance(data, list):
-            new_data = UngriddedDataList()
-            for data in data:
-                new_data.append(self.constrain(data))
-            return new_data
-
-        CoordPair = namedtuple('CoordPair', ['input', 'output'])
-
-        new_values = []
-        coord_pairs = []
-        for coord in data.coords():
-            coord_pairs.append(CoordPair(coord, []))
-
-        # Filter points to include in subset.
-        is_masked = isinstance(data.data, np.ma.masked_array)
-        missing_value = data.metadata.missing_value
-        for idx, value in enumerate(data.data.flat):
-            if is_masked and value is np.ma.masked:
-                value = missing_value
-
-            include = True
-            for limit in self._limits.itervalues():
-                if not limit.constraint_function(limit.coord.data_flattened[idx]):
-                    include = False
-                    break
-            if include:
-                # Append coordinates and value.
-                new_values.append(value)
-                for coord in coord_pairs:
-                    coord.output.append(coord.input.data_flattened[idx])
-
-        if len(new_values) > 0:
-            # Collect output into object.
-            new_data = np.array(new_values, dtype=data.data.dtype, copy=False)
-            subset_metadata = data.metadata
-            subset_metadata.shape = (len(new_values),)
-
-            subset_coords = CoordList()
-            for coord in coord_pairs:
-                new_coord = Coord(np.array(coord.output, dtype=coord.input.data.dtype, copy=False),
-                                  coord.input.metadata)
-                new_coord.metadata.shape = (len(coord.output),)
-                subset_coords.append(new_coord)
-            subset = UngriddedData(new_data, subset_metadata, subset_coords)
+            for variable in data:
+                self._constrain_data(combined_mask, variable, new_coords)
+                if len(variable.data) < 1:
+                    return None
         else:
-            subset = None
+            self._constrain_data(combined_mask, data, new_coords)
+            if len(data.data) < 1:
+                return None
+        return data
 
-        return subset
+    def _constrain_data(self, combined_mask, data, new_coords):
+        # Convert masked values to missing values
+        is_masked = isinstance(data.data, np.ma.masked_array)
+        if is_masked:
+            missing_value = data.metadata.missing_value
+            data.data = data.data.filled(fill_value=missing_value)
+
+        # Apply the combined mask and force out the masked data
+        data.data = np.ma.masked_array(data.data, mask=combined_mask)
+        data.data = data.data.compressed()
+
+        # Add the new compressed coordinates
+        data._coords = new_coords
