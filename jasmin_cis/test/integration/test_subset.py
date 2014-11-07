@@ -3,8 +3,8 @@ from unittest import TestCase
 
 from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to
 
-from cis import subset_cmd
-from parse import parse_args
+from jasmin_cis.cis import subset_cmd
+from jasmin_cis.parse import parse_args
 from jasmin_cis.test.test_files.data import *
 
 

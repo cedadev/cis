@@ -1,4 +1,4 @@
-from data_io.ungridded_data import UngriddedDataList
+from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 
 
 class DataReader(object):

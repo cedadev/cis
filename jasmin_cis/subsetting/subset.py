@@ -5,9 +5,9 @@ from iris import cube, coords
 from iris.exceptions import IrisError
 import iris.unit
 import iris.util
-from data_io.data_reader import DataReader
-from data_io.data_writer import DataWriter
 
+from jasmin_cis.data_io.data_reader import DataReader
+from jasmin_cis.data_io.data_writer import DataWriter
 import jasmin_cis.exceptions as ex
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subsetter import Subsetter
