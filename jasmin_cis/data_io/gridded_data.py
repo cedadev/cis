@@ -18,11 +18,12 @@ def load_cube(*args, **kwargs):
 
 
 def make_from_cube(cube):
-    if cube is None:
-        gd = None
-    else:
+    gd = None
+    if isinstance(cube, iris.cube.Cube):
         gd = cube
         gd.__class__ = GriddedData
+    elif isinstance(cube, iris.cube.CubeList):
+        gd = cube
     return gd
 
 
