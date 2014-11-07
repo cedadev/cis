@@ -1,14 +1,16 @@
 from unittest import TestCase
-from hamcrest import assert_that, is_
+from hamcrest import assert_that, is_, instance_of
 from mock import MagicMock, Mock
 
 from jasmin_cis.data_io.data_reader import DataReader
 from jasmin_cis.data_io.data_writer import DataWriter
 from jasmin_cis.data_io.ungridded_data import UngriddedDataList
+from jasmin_cis.data_io.gridded_data import GriddedDataList
 from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_limits import SubsetLimits
 from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.test.util.mock import make_regular_2d_ungridded_data, make_square_5x3_2d_cube
+from jasmin_cis.subsetting.subset_constraint import UngriddedSubsetConstraint, GriddedSubsetConstraint
 
 
 class TestSubsetOnUngriddedData(TestCase):
@@ -60,6 +62,7 @@ class TestSubsetOnUngriddedData(TestCase):
         called_constraint = mock_subsetter.subset.call_args[0][1]
         assert_that(called_data.data_flattened.tolist(),
                     is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
+        assert_that(called_constraint, instance_of(UngriddedSubsetConstraint))
         assert_that(called_constraint._limits['latitude'][1:3], is_((ymin, ymax)))
         assert_that(called_constraint._limits['longitude'][1:3], is_((xmin, xmax)))
 
@@ -139,6 +142,7 @@ class TestSubsetOnUngriddedData(TestCase):
         called_constraint = mock_subsetter.subset.call_args[0][1]
         assert_that(called_data[0].data_flattened.tolist(), is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
         assert_that(called_data[1].data_flattened.tolist(), is_(called_data[0].data_flattened.tolist()))
+        assert_that(called_constraint, instance_of(UngriddedSubsetConstraint))
         assert_that(called_constraint._limits['latitude'][1:3], is_((ymin, ymax)))
         assert_that(called_constraint._limits['longitude'][1:3], is_((xmin, xmax)))
 
@@ -225,6 +229,7 @@ class TestSubsetOnGriddedData(TestCase):
         called_constraint = mock_subsetter.subset.call_args[0][1]
         assert_that(called_data.data.tolist(),
                     is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
+        assert_that(called_constraint, instance_of(GriddedSubsetConstraint))
         assert_that(called_constraint._limits['latitude'][1:3], is_((ymin, ymax)))
         assert_that(called_constraint._limits['longitude'][1:3], is_((xmin, xmax)))
 
@@ -267,7 +272,7 @@ class TestSubsetOnGriddedData(TestCase):
                   'y': SubsetLimits(ymin, ymax, False)}
 
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=UngriddedDataList(2*[make_square_5x3_2d_cube()]))
+        mock_data_reader.read_data = MagicMock(return_value=GriddedDataList(2*[make_square_5x3_2d_cube()]))
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = Mock()
         mock_subsetter = Subsetter()
@@ -290,7 +295,7 @@ class TestSubsetOnGriddedData(TestCase):
         output_file = 'output.hdf'
 
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=UngriddedDataList(2*[make_square_5x3_2d_cube()]))
+        mock_data_reader.read_data = MagicMock(return_value=GriddedDataList(2*[make_square_5x3_2d_cube()]))
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = Mock()
         mock_subsetter = Subsetter()
@@ -304,6 +309,7 @@ class TestSubsetOnGriddedData(TestCase):
         called_constraint = mock_subsetter.subset.call_args[0][1]
         assert_that(called_data[0].data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
         assert_that(called_data[1].data.tolist(), is_(called_data[0].data.tolist()))
+        assert_that(called_constraint, instance_of(GriddedSubsetConstraint))
         assert_that(called_constraint._limits['latitude'][1:3], is_((ymin, ymax)))
         assert_that(called_constraint._limits['longitude'][1:3], is_((xmin, xmax)))
 
@@ -324,8 +330,8 @@ class TestSubsetOnGriddedData(TestCase):
         mock_subsetter = Subsetter()
         mock_subsetter.subset = _mock_subset
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=UngriddedDataList([make_square_5x3_2d_cube(),
-                                                                               make_square_5x3_2d_cube()]))
+        mock_data_reader.read_data = MagicMock(return_value=GriddedDataList([make_square_5x3_2d_cube(),
+                                                                             make_square_5x3_2d_cube()]))
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = MagicMock()
 

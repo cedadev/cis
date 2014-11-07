@@ -38,7 +38,7 @@ class Subset(object):
             raise ex.CISError("There was an error reading one of the files: \n" + str(e))
 
         # Set subset constraint type according to the type of the data object.
-        if isinstance(data, cube.Cube):
+        if isinstance(data, cube.Cube) or isinstance(data, cube.CubeList):
             # Gridded data on Cube
             subset_constraint = GriddedSubsetConstraint()
         else:
