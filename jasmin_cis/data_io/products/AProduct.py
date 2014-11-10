@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
 import logging
 import traceback
-from data_io.aeronet import get_aeronet_file_variables
-from data_io.hdf import get_hdf4_file_variables
-from data_io.netcdf import get_netcdf_file_variables
+from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
+from jasmin_cis.data_io.hdf import get_hdf4_file_variables
+from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
 
 
 class AProduct(object):
