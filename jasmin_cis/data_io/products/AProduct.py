@@ -1,6 +1,9 @@
 from abc import ABCMeta, abstractmethod
 import logging
 import traceback
+from data_io.aeronet import get_aeronet_file_variables
+from data_io.hdf import get_hdf4_file_variables
+from data_io.netcdf import get_netcdf_file_variables
 
 
 class AProduct(object):
@@ -45,6 +48,26 @@ class AProduct(object):
         return [r'.*CODE*.nc']
         This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
         """
+
+    def get_variable_names(self, filenames, data_type=None):
+        """
+        Get a list of available variable names
+        This can be overridden in specific products to improve on this
+        """
+        variables = []
+        for filename in filenames:
+            file_variables = None
+            if filename.endswith(".nc"):
+                file_variables = get_netcdf_file_variables(filename)
+            elif filename.endswith(".hdf"):
+                if data_type is None:
+                    data_type = "SD"
+                sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
+                file_variables = sd_vars + vd_vars
+            elif filename.endswith(".lev20"):
+                file_variables = get_aeronet_file_variables(filename)
+            variables.extend(file_variables)
+        return set(variables)
 
 
 def __get_class(filename, product=None):
@@ -132,6 +155,20 @@ def get_coordinates(filenames, product=None):
     except Exception as e:
         logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving coordinates using the product %s. Check that this "
+                                     "is the correct product plugin for your chosen data. Exception was %s: %s."
+                                     % (product_cls.__name__, type(e).__name__, e.message), e)
+
+
+def get_variables(filenames, product=None):
+    product_cls = __get_class(filenames[0], product)
+
+    logging.info("Retrieving variables using product " + product_cls.__name__ + "...")
+    try:
+        variables = product_cls().get_variable_names(filenames)
+        return variables
+    except Exception as e:
+        logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
+        raise ProductPluginException("An error occurred retrieving variables using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
 

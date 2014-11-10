@@ -1,8 +1,10 @@
+import fnmatch
+import logging
 import iris
 
 from jasmin_cis.data_io.gridded_data import GriddedDataList
 from jasmin_cis.data_io.ungridded_data import UngriddedDataList
-from jasmin_cis.data_io.products.AProduct import get_data, get_coordinates
+from jasmin_cis.data_io.products.AProduct import get_data, get_coordinates, get_variables
 
 
 class DataReader(object):
@@ -11,7 +13,7 @@ class DataReader(object):
     Principally, manages operations between one or multiple variables, and gridded or un-gridded data.
     """
 
-    def __init__(self, get_data_func=get_data, get_coords_func=get_coordinates):
+    def __init__(self, get_data_func=get_data, get_coords_func=get_coordinates, get_variables_func=get_variables):
         """
         Construct a new DataReader object
         :param get_data_func: Function to read data from a file and return a CubeList
@@ -20,6 +22,7 @@ class DataReader(object):
         """
         self._get_data_func = get_data_func
         self._get_coords_func = get_coords_func
+        self._get_vars_func = get_variables_func
 
     def read_data(self, filenames, variables, product=None):
         """
@@ -36,6 +39,8 @@ class DataReader(object):
             filenames = [filenames]
         if not isinstance(variables, list):
             variables = [variables]
+
+        variables = self._expand_wildcards(variables, filenames)
 
         if len(variables) == 1:
             return self._get_data_func(filenames, variables[0], product)
@@ -56,6 +61,30 @@ class DataReader(object):
                 return GriddedDataList(data_list)
             else:
                 return UngriddedDataList(data_list)
+
+    def _expand_wildcards(self, variables, filenames):
+        """
+        Convert any wildcards into actual variable names by inspecting the file
+        :param variables: List of variables names, some of which may be wilcards
+        :param filenames: Filenames
+        :return: List of variable names to use.
+        """
+        valid_vars = []
+        for variable in variables:
+            is_wildcard = any(wildcard in variable for wildcard in ['*', '?', ']', '}'])
+            file_variables = None
+            if is_wildcard:
+                if file_variables is None:
+                    file_variables = self._get_vars_func(filenames)
+                matches = fnmatch.filter(file_variables, variable)
+                if len(matches) == 0:
+                    logging.warning("No variables matching wildcard '%s' found in file." % variable)
+                valid_vars.extend(matches)
+            else:
+                valid_vars.append(variable)
+        if len(valid_vars) == 0:
+            raise ValueError("No matching variables could be found for the variables supplied")
+        return valid_vars
 
     def read_coordinates(self, filenames, product=None):
         """

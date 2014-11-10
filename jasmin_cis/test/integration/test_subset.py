@@ -75,6 +75,18 @@ class TestSubsetIntegration(TestCase):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable1, variable2])
 
+    def test_GIVEN_variable_specified_by_wilcard_WHEN_subset_THEN_subsetted_correctly(self):
+        variable = '???550'
+        filename = valid_aerosol_cci_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        arguments = ['subset', variable + ':' + filename,
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, ['AOD550'])
+
     def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, gridded):
         if gridded:
             lat_name = 'lat'

@@ -107,3 +107,37 @@ class TestDataReader(TestCase):
         reader = DataReader(get_data_func=get_data_func)
         with self.assertRaises(TypeError):
             data = reader.read_data(filenames, variables, product)
+
+    def test_GIVEN_wildcards_WHEN_read_data_THEN_matching_variables_identified(self):
+        variables = ['*.nc', 'test?.hdf']
+        file_vars = ['aeronet.lev20', 'var2.hdf', 'netcdf1.nc', 'netcdf3.nc', 'test.hdf', 'test1.hdf']
+        should_match = ['netcdf1.nc', 'netcdf3.nc', 'test1.hdf']
+        filenames = 'filename1'
+        get_data_func = MagicMock()
+        get_var_func = MagicMock(return_value=file_vars)
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        reader.read_data(filenames, variables)
+        assert_that(reader._get_data_func.call_count, is_(len(should_match)))
+        for i in range(len(should_match)):
+            assert_that(reader._get_data_func.call_args_list[i][0][1], is_(should_match[i]))
+
+    def test_GIVEN_no_matching_variables_for_wildcards_WHEN_read_data_THEN_no_Error(self):
+        variables = ['aeronet.lev20', '*.nc', 'test?.hdf']
+        file_vars = ['aeronet.lev20', 'var2.hdf']
+        filenames = 'filename1'
+        get_data_func = MagicMock()
+        get_var_func = MagicMock(return_value=file_vars)
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        reader.read_data(filenames, variables)
+        assert_that(reader._get_data_func.call_count, is_(1))
+        assert_that(reader._get_data_func.call_args_list[0][0][1], is_('aeronet.lev20'))
+
+    def test_GIVEN_no_matching_variables_found_overall_WHEN_read_data_THEN_raises_Error(self):
+        variables = ['test?.hdf', '*.nc']
+        file_vars = ['sample_file.hdf', 'aeronet.lev20']
+        filenames = 'filename1'
+        get_data_func = MagicMock()
+        get_var_func = MagicMock(return_value=file_vars)
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        with self.assertRaises(ValueError):
+            reader.read_data(filenames, variables)
