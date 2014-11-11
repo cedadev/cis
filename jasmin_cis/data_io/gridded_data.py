@@ -188,3 +188,17 @@ class GriddedDataList(iris.cube.CubeList):
         output_file = remove_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
+
+    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+        """
+        Returns all unique coordinates used in all the UngriddedDataobjects
+        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
+        """
+        from jasmin_cis.data_io.Coord import CoordList
+
+        unique_coords = {}
+        for var in self:
+            var_coords = var.coords()
+            for coord in var_coords:
+                unique_coords[coord.var_name] = coord
+        return unique_coords.values()

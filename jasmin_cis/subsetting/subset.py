@@ -60,17 +60,7 @@ class Subset(object):
             self._data_writer.write_data(subset, self._output_file, subset, True)
 
     def _set_constraint_limits(self, data, subset_constraint):
-        if isinstance(data, list):
-            # We need to do a check to see if this is a list and if so use the first coordinates; then check
-            # that all variables are on the same grid
-            coords_to_use = data[0].coords()
-            for variable in data:
-                if variable.coords() != coords_to_use:
-                    raise ValueError("Subsetting multiple variables on different coordinates is not supported")
-        else:
-            coords_to_use = data.coords()
-
-        for coord in coords_to_use:
+        for coord in data.coords():
             # Match user-specified limits with dimensions found in data.
             guessed_axis = guess_coord_axis(coord)
             limit = None

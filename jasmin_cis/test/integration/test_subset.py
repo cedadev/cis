@@ -75,17 +75,37 @@ class TestSubsetIntegration(TestCase):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable1, variable2])
 
-    def test_GIVEN_variable_specified_by_wilcard_WHEN_subset_THEN_subsetted_correctly(self):
-        variable = '???550'
+    def test_GIVEN_multiple_gridded_variables_on_different_grids_WHEN_subset_THEN_subset_correctly(self):
+        variable1 = 'v_1'
+        variable2 = 'rh'
+        filename = valid_1d_filename
+        lat_min, lat_max = 40, 60
+        arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
+                     'y=[%s,%s]' % (lat_min, lat_max), '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        lat = ds.variables['latitude'][:]
+        assert_that(min(lat), greater_than_or_equal_to(lat_min))
+        assert_that(max(lat), less_than_or_equal_to(lat_max))
+        lat_1 = ds.variables['latitude_1'][:]
+        assert_that(min(lat_1), greater_than_or_equal_to(lat_min))
+        assert_that(max(lat_1), less_than_or_equal_to(lat_max))
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable1, variable2])
+
+    def test_GIVEN_variables_specified_by_wildcard_WHEN_subset_THEN_subsetted_correctly(self):
+        variable1 = 'surface_albedo???'
+        variable2 = 'AOD*'
         filename = valid_aerosol_cci_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable + ':' + filename,
+        arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, ['AOD550'])
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, ['AOD550', 'AOD870', 'surface_albedo550',
+                                                                              'surface_albedo670', 'surface_albedo870'])
 
     def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, gridded):
         if gridded:

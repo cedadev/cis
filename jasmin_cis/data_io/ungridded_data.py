@@ -5,11 +5,11 @@ import logging
 from time import gmtime, strftime
 
 from netCDF4 import _Variable, Variable
-from netcdf import get_data as netcdf_get_data
-from hdf_vd import get_data as hdf_vd_get_data, VDS
 from pyhdf.SD import SDS
-from hdf_sd import get_data as hdf_sd_get_data
 
+from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
+from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
+from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
 from jasmin_cis.data_io.common_data import CommonData
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
@@ -482,8 +482,14 @@ class UngriddedDataList(list):
         Returns all unique coordinates used in all the UngriddedDataobjects
         :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
         """
-        # TODO we assume here that there is only one common set of coords for all variables
-        return self[0].coords()
+        from jasmin_cis.data_io.Coord import CoordList
+
+        unique_coords = {}
+        for var in self:
+            var_coords = var.coords()
+            for coord in var_coords:
+                unique_coords[coord.var_name] = coord
+        return CoordList(unique_coords.values())
 
     def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
         logging.info('Saving data to %s' % output_file)
