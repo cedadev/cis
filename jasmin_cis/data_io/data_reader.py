@@ -79,6 +79,8 @@ class DataReader(object):
                 matches = fnmatch.filter(file_variables, variable)
                 if len(matches) == 0:
                     logging.warning("No variables matching wildcard '%s' found in file." % variable)
+                else:
+                    logging.info("Wildcard '%s' found matching variables: %s" % (variable, matches))
                 valid_vars.extend(matches)
             else:
                 valid_vars.append(variable)
