@@ -210,3 +210,22 @@ def find_last_day_of_month(year, month):
     next_month = datetime.datetime(year, month, 28) + datetime.timedelta(days=4)
     last_date = next_month - datetime.timedelta(days=next_month.day)
     return last_date.day
+
+
+def parse_partial_datetime(datetime_string, use_upper_limit=False):
+    """
+    Parse and complete a full or partial ISO datetime
+    :param datetime_string: Datetime string (full or partial) which matches ISO date format.
+    Examples:
+    '2010-01-01T00:00:00'
+    '2010-01-01'
+    '2010'
+    :param use_upper_limit: Use the upper limit when completing missing parts of the datetime.
+    If true, the date is completed to be as late as possible, e.g:
+    '2010' -> '2010-12-31T23:59:59'
+    If false (default), the date is completed to be as early as possible, e.g.:
+    '2010' -> '2010-01-01T00:00:00'
+    :return: A Python datetime object corresponding to the parsed string
+    """
+    date_parts = _parse_datetime(datetime_string)
+    return convert_datetime_components_to_datetime(date_parts, use_upper_limit)
