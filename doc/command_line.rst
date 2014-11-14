@@ -29,3 +29,6 @@ There are 6 commands the program can execute the moment:
   * ``aggregate`` which is used to perform aggregation along coordinates in the data
   * ``subset`` which is used to perform subsetting of the data
   * ``version`` which is used to display the version number of CIS
+
+
+If an error occurs while running any of these commands, you may wish to check the log file 'cis.log'; the default location for this is the current user's home directory.

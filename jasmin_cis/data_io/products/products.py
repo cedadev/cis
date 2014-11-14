@@ -129,6 +129,10 @@ class CloudSat(AProduct):
 
         return UngriddedData(var,metadata,coords)
 
+    def get_variable_names(self, filenames):
+        sd_vars, vd_vars = hdf.get_hdf4_file_variables(filenames, None)
+        return dict(sd_vars.items() + vd_vars.items())
+
 
 class MODIS_L3(AProduct):
 
@@ -381,6 +385,7 @@ class Aerosol_CCI(AProduct):
         from jasmin_cis.data_io.Coord import Coord
         import datetime
 
+        #!FIXME: when reading an existing file variables might be "latitude", "longitude"
         variables = ["lat", "lon", "time"]
         logging.info("Listing coordinates: " + str(variables))
 
@@ -624,6 +629,10 @@ class Caliop_L1(abstract_Caliop):
 
 
 class cis(AProduct):
+
+    # If a file matches the CIS product signature as well as another signature (e.g. because we aggregated from another
+    # data product) we need to prioritise the CIS data product
+    priority = 100
 
     def get_file_signature(self):
         return [r'cis\-.*\.nc']

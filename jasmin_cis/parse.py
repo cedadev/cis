@@ -384,7 +384,7 @@ def get_subset_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product)
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
@@ -613,6 +613,11 @@ def check_is_not_empty(item, parser):
     if not item:
         parser.error("Non optional argument not specified in datagroup")
     return item
+
+
+def check_is_not_empty_and_comma_split(item, parser):
+    check_is_not_empty(item, parser)
+    return multi_split(item, [','])
 
 
 def convert_to_list_of_floats(arg, parser):

@@ -5,11 +5,11 @@ import logging
 from time import gmtime, strftime
 
 from netCDF4 import _Variable, Variable
-from netcdf import get_data as netcdf_get_data
-from hdf_vd import get_data as hdf_vd_get_data, VDS
 from pyhdf.SD import SDS
-from hdf_sd import get_data as hdf_sd_get_data
 
+from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
+from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
+from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
 from jasmin_cis.data_io.common_data import CommonData
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
@@ -255,7 +255,7 @@ class UngriddedData(LazyData, CommonData):
         #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
         if metadata.units == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
-    
+
     @property
     def x(self):
         return self.coord(axis='X')
@@ -460,3 +460,40 @@ class UngriddedCoordinates(CommonData):
         """
         return False
 
+
+class UngriddedDataList(list):
+    """
+    Class which represents multiple UngriddedData objects (e.g. from reading multiple variables)
+    """
+    def __str__(self):
+        "<UngriddedDataList: %s>" % super(UngriddedDataList, self).__str__()
+
+    def add_history(self, new_history):
+        """
+        Appends to, or creates, the metadata history attribute using the supplied history string.
+        The new entry is prefixed with a timestamp.
+        :param new_history: history string
+        """
+        for data in self:
+            data.add_history(new_history)
+
+    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+        """
+        Returns all unique coordinates used in all the UngriddedDataobjects
+        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
+        """
+        from jasmin_cis.data_io.Coord import CoordList
+
+        unique_coords = {}
+        for var in self:
+            var_coords = var.coords()
+            for coord in var_coords:
+                unique_coords[coord.var_name] = coord
+        return CoordList(unique_coords.values())
+
+    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+        logging.info('Saving data to %s' % output_file)
+        coords_to_be_written = True
+        for data in self:
+            data.save_data(output_file, data, coords_to_be_written)
+            coords_to_be_written = False  # Only write coordinates out for the first variable

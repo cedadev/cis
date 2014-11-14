@@ -4,6 +4,7 @@ Module that contains various strings that are used in tests
 
 import os
 
+
 def make_pathname(filename):
     return os.path.join(os.path.dirname(__file__), filename)
 
@@ -25,8 +26,13 @@ valid_cloudsat_PRECIP_variable = "Precip_rate"
 
 valid_aerosol_cci_filename = make_pathname("20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc")
 valid_aerosol_cci_variable = "AOD550"
+valid_aerosol_cci_variable_2 = "AOD870"
+
 valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc")
 valid_cloud_cci_variable = "stemp"
+
+valid_hadgem_filename = make_pathname('HadGEM_AOT550.nc')
+valid_hadgem_variable = 'od550aer'
 
 valid_aeronet_filename = make_pathname("920801_091128_Agoufou_small.lev20")
 another_valid_aeronet_filename = make_pathname("920801_091128_Abracos_Hill_small.lev20")
@@ -38,6 +44,10 @@ valid_caliop_l2_variable = "Tropopause_Temperature"
 valid_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2009-12-31T23-36-08ZN.hdf")
 valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010-01-01T00-22-28ZD.hdf")
 valid_caliop_l1_variable = "Tropopause_Temperature"
+
+valid_echamham_filename = make_pathname("ECHAMHAM_AOT550_670.nc")
+valid_echamham_variable_1 = "TAU_2D_550nm"
+valid_echamham_variable_2 = "TAU_2D_670nm"
 
 valid_xenida_filename = make_pathname("xenida.pah9440.nc")
 valid_xenida_variable = "specific_humidity"
@@ -58,6 +68,12 @@ valid_NCAR_NetCDF_RAF_variable = 'ATX'
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
 valid_zonal_time_mean_CMIP5_variable = "rsutcs"
+
+valid_hybrid_pressure_filename = make_pathname('hybrid-pressure.nc')
+valid_hybrid_pressure_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+
+valid_hybrid_height_filename = make_pathname('hybrid-height.nc')
+valid_hybrid_height_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
 
 test_directory = make_pathname('test_directory_for_parser')
 test_directory_file1 = test_directory + "/test_file_for_parser_1"
