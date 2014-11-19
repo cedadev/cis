@@ -89,8 +89,17 @@ class GriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data
         @rtype: jasmin_cis.data_io.gridded_data.GriddedData
         """
-        iris_constraint = self.make_iris_constraint()
-        return gridded_data.make_from_cube(data.extract(iris_constraint))
+        # Create dictionary of coordinate name : (start, end)
+        constraints = {coord: (limit[1], limit[2]) for coord, limit in self._limits.iteritems()}
+        if isinstance(data, list):
+            results = gridded_data.GriddedDataList()
+            for variable in data:
+                subset = variable.intersection(**constraints)
+                results.append(gridded_data.make_from_cube(subset))
+            return results
+        else:
+            subset = data.intersection(**constraints)
+            return gridded_data.make_from_cube(subset)
 
 
 class UngriddedSubsetConstraint(SubsetConstraint):
