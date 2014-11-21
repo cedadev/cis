@@ -15,7 +15,7 @@ where:
 ``datagroup``
   is of the format ``variable:filenames[:product]`` in which product is optional. Each is described in more detail below.
 
-    * ``variable`` is a non-optional argument used to specify the variable to use.
+    * ``variable`` is a non-optional argument used to specify the variable to use. Alternatively, this may be a comma separated list of variables to colocate, in which case output file will contain all of these variables. Currently, for ungridded data all variables must be on the same grid / use the same coordinates.
     * ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma seperated list of the following possibilities:
 
       #. A single filename - this should be the full path to the file

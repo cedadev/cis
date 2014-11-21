@@ -17,7 +17,7 @@ def can_specify_one_valid_samplefile_and_one_complete_datagroup():
     eq_(('col', {}), args.samplegroup['colocator'])
     eq_(('con', {}), args.samplegroup['constraint'])
     eq_(('nn', {}), args.samplegroup['kernel'])
-    eq_([{'variable': 'variable', 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
+    eq_([{'variable': ['variable'], 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
 
 @istest
 def can_specify_one_valid_samplefile_and_one_datafile_without_other_options():
@@ -27,7 +27,7 @@ def can_specify_one_valid_samplefile_and_one_datafile_without_other_options():
     eq_(None, args.samplegroup['colocator'])
     eq_(None, args.samplegroup['constraint'])
     eq_(None, args.samplegroup['kernel'])
-    eq_([{'variable': 'variable', 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
+    eq_([{'variable': ['variable'], 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
 
 @istest
 def can_specify_one_valid_samplefile_and_many_datagroups():
@@ -42,11 +42,11 @@ def can_specify_one_valid_samplefile_and_many_datagroups():
     eq_(None, args.samplegroup['constraint'])
     eq_(('nn', {}), args.samplegroup['kernel'])
     eq_(valid_1d_filename, args.datagroups[0]['filenames'][0])
-    eq_("variable1", args.datagroups[0]['variable'])
+    eq_(["variable1"], args.datagroups[0]['variable'])
     eq_(valid_1d_filename, args.datagroups[1]['filenames'][0])
-    eq_("variable2", args.datagroups[1]['variable'])
+    eq_(["variable2"], args.datagroups[1]['variable'])
     eq_(valid_1d_filename, args.datagroups[2]['filenames'][0])
-    eq_("variable3", args.datagroups[2]['variable'])
+    eq_(["variable3"], args.datagroups[2]['variable'])
 
 
 @istest
@@ -55,7 +55,7 @@ def can_specify_one_valid_samplefile_and_one_datafile_with_internal_options():
             valid_1d_filename+":variable=var2,constraint=SepConstraint[h_sep=1500,v_sep=22000,t_sep=5000],kernel=nn"]
     args = parse_args(args)
     eq_(valid_1d_filename, args.datagroups[0]['filenames'][0])
-    eq_("var1", args.datagroups[0]['variable'])
+    eq_(["var1"], args.datagroups[0]['variable'])
     eq_(valid_1d_filename, args.samplegroup['filenames'][0])
     eq_("var2", args.samplegroup['variable'])
     eq_(('SepConstraint',{'h_sep':'1500','v_sep':'22000','t_sep':'5000'}), args.samplegroup['constraint'])

@@ -108,11 +108,3 @@ class TestSubsetIntegration(BaseIntegrationTest):
         assert_that(max(lon), less_than_or_equal_to(lon_max))
         assert_that(min(lat), greater_than_or_equal_to(lat_min))
         assert_that(max(lat), less_than_or_equal_to(lat_max))
-
-    def check_output_contains_variables(self, output_path, var_names):
-        ds = Dataset(output_path)
-        for var in var_names:
-            try:
-                var = ds.variables[var]
-            except IndexError:
-                raise AssertionError("Variable %s not found in subset output file" % var)
