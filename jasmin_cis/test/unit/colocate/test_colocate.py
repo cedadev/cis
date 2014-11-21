@@ -4,9 +4,9 @@ Tests the jasmin_cis.col.Colocate class
 import unittest
 from hamcrest import assert_that, is_
 from mock import MagicMock
-from data_io import gridded_data
-from data_io.gridded_data import GriddedDataList
-from data_io.ungridded_data import UngriddedDataList
+from jasmin_cis.data_io import gridded_data
+from jasmin_cis.data_io.gridded_data import GriddedDataList
+from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 
 from jasmin_cis.col import Colocate, ColocatorFactory
 from jasmin_cis.test.util import mock
