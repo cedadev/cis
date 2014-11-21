@@ -1,29 +1,14 @@
 from netCDF4 import Dataset
-from unittest import TestCase
 
 from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to
 
 from jasmin_cis.cis import subset_cmd
 from jasmin_cis.parse import parse_args
 from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
 
 
-class TestSubsetIntegration(TestCase):
-
-    OUTPUT_NAME = 'test_subset_out'
-    UNGRIDDED_OUTPUT_FILENAME = 'cis-' + OUTPUT_NAME + ".nc"
-    GRIDDED_OUTPUT_FILENAME = OUTPUT_NAME + ".nc"
-
-    def setUp(self):
-        self.clean_output()
-
-    def tearDown(self):
-        self.clean_output()
-
-    def clean_output(self):
-        for path in self.UNGRIDDED_OUTPUT_FILENAME, self.GRIDDED_OUTPUT_FILENAME:
-            if os.path.exists(path):
-                os.remove(path)
+class TestSubsetIntegration(BaseIntegrationTest):
 
     def test_GIVEN_single_variable_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_aerosol_cci_variable
