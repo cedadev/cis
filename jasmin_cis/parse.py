@@ -800,6 +800,8 @@ def validate_col_args(arguments, parser):
     arguments.samplefiles = arguments.samplegroup["filenames"]
     arguments.samplevariable = arguments.samplegroup["variable"] if arguments.samplegroup["variable"] is not "" else None
     arguments.sampleproduct = arguments.samplegroup["product"]
+    if arguments.samplegroup["colocator"] is None:
+        parser.error("You must specify a colocator")
     arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
 
     return arguments
