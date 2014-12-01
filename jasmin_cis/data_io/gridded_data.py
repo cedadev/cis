@@ -175,6 +175,32 @@ class GriddedDataList(iris.cube.CubeList):
     def __str__(self):
         "<GriddedDataList: %s>" % super(GriddedDataList, self).__str__()
 
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return True
+
+    @property
+    def var_name(self):
+        """
+        Get the variable names in this list
+        """
+        var_names = []
+        for data in self:
+            var_names.append(data.var_name)
+        return var_names
+
+    @property
+    def filenames(self):
+        """
+        Get the filenames in this list
+        """
+        filenames = []
+        for data in self:
+            filenames.extend(data.filenames)
+        return filenames
+
     def add_history(self, new_history):
         """
         Appends to, or creates, the metadata history attribute using the supplied history string.

@@ -5,6 +5,7 @@ from unittest import TestCase
 from nose.tools import istest, raises
 from iris.exceptions import CoordinateNotFoundError
 import numpy
+
 from jasmin_cis.exceptions import ClassNotFoundError
 from jasmin_cis.col_implementations import GriddedColocator, GriddedColocatorUsingIrisRegrid, gridded_gridded_nn, \
     gridded_gridded_li, nn_gridded
@@ -343,6 +344,15 @@ class GriddedGriddedColocatorTests(object):
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert not does_coord_exist_in_cube(out_cube, 'time')
         assert not does_coord_exist_in_cube(out_cube, 'altitude')
+
+    def test_colocate_with_list_of_data_raises_NotImplementedError(self):
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
+        data_1 = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
+        data_2 = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
+        datalist = gridded_data.GriddedDataList([data_1, data_2])
+        col = self.colocator
+        with self.assertRaises(NotImplementedError):
+            out_cube = col.colocate(points=sample_cube, data=datalist, constraint=None, kernel=gridded_gridded_nn())[0]
 
 
 class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests, TestCase):

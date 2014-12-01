@@ -15,7 +15,7 @@ where:
 ``datagroup``
   is of the format ``variable:filenames[:product_option]``. One or more datagroups should be specified. 
 
-    * ``variable`` is the name of the variable the data of which is to be colocated.
+    * ``variable`` is the name of the variable the data of which is to be colocated. Alternatively, this may be a comma separated list of variables to colocate, in which case output file will contain all of these variables. Currently, they must be on the same grid / use the same coordinates.
 
     * ``filenames`` specifies the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
 
