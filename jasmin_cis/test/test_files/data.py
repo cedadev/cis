@@ -30,6 +30,7 @@ valid_aerosol_cci_variable_2 = "AOD870"
 
 valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc")
 valid_cloud_cci_variable = "stemp"
+valid_cloud_cci_8_bit_variable = "illum"
 
 valid_hadgem_filename = make_pathname('HadGEM_AOT550.nc')
 valid_hadgem_variable = 'od550aer'
