@@ -4,7 +4,8 @@ Module for writing data to NetCDF files
 from netCDF4 import Dataset
 import logging
 
-types = {'int16': "i2",
+types = {'int8': 'i1',
+         'int16': "i2",
          'int32': "i4",
          'int64': "i8",
          'float32': "f4",
