@@ -8,6 +8,8 @@ import os.path
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 from plotting.plot import Plotter
 import logging
+from utils import add_file_prefix
+
 
 def initialise_top_parser():
     '''
@@ -754,6 +756,24 @@ def assign_logs(arguments):
 
     return arguments
 
+
+def check_output_filepath_not_input(arguments, parser):
+    try:
+        input_files = arguments.samplefiles
+    except AttributeError:
+        input_files = []  # Only applies to colocation
+
+    for datagroup in arguments.datagroups:
+        input_files.extend(datagroup['filenames'])
+    gridded_output_file = arguments.output + ".nc"
+    ungridded_output_file = add_file_prefix('cis-', gridded_output_file)
+    for output_file in [gridded_output_file, ungridded_output_file]:
+        for input_file in input_files:
+            if os.path.exists(output_file):
+                if os.path.samefile(output_file, input_file):
+                    parser.error("The input file must not be the same as the output file")
+
+
 def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
     check_plot_type(arguments.type, parser)
@@ -803,6 +823,7 @@ def validate_col_args(arguments, parser):
     if arguments.samplegroup["colocator"] is None:
         parser.error("You must specify a colocator")
     arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
+    check_output_filepath_not_input(arguments, parser)
 
     return arguments
 
@@ -810,12 +831,14 @@ def validate_col_args(arguments, parser):
 def validate_aggregate_args(arguments, parser):
     arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
     arguments.grid = get_aggregate_grid(arguments.aggregategrid, parser)
+    check_output_filepath_not_input(arguments, parser)
     return arguments
 
 
 def validate_subset_args(arguments, parser):
     arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
+    check_output_filepath_not_input(arguments, parser)
     return arguments
 
 

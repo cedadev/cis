@@ -182,3 +182,18 @@ class TestParse(TestCase):
         except SystemExit as e:
             if e.code != 2:
                 raise e
+
+    def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
+        args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", '../test_files/out'],
+                     ["col", "var1,var2:" + dummy_cis_out, valid_aerosol_cci_filename + ':colocator=bin',
+                      "-o", '../test_files/out'],
+                     ["col", "var1,var2:" + valid_aerosol_cci_filename, dummy_cis_out + ':colocator=bin',
+                      "-o", '../test_files/out'],
+                     ["aggregate", "var:" + dummy_cis_out, "t", "-o", '../test_files/out']]
+        for args in args_list:
+            try:
+                parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise e
