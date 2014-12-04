@@ -3,7 +3,7 @@ import logging
 import traceback
 from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
 from jasmin_cis.data_io.hdf import get_hdf4_file_variables
-from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
+from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 
 
 class AProduct(object):
@@ -15,6 +15,9 @@ class AProduct(object):
 
     # If a filename matches two data products' file signatures, the data product with the higher priority will be used
     priority = 10
+
+    # Contains a list of valid spatiotemporal variable names
+    valid_dimensions = None
 
     @abstractmethod
     def create_data_object(self, filenames, variable):
@@ -59,6 +62,7 @@ class AProduct(object):
             file_variables = None
             if filename.endswith(".nc"):
                 file_variables = get_netcdf_file_variables(filename)
+                remove_variables_with_non_spatiotemporal_dimensions(file_variables, self.valid_dimensions)
             elif filename.endswith(".hdf"):
                 if data_type is None:
                     data_type = "SD"

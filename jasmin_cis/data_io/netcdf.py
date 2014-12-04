@@ -3,16 +3,42 @@ Module containing NetCDF file reading functions
 """
 
 
-def get_netcdf_file_variables(filename):
-    '''
+def get_netcdf_file_variables(filename, exclude_coords=False):
+    """
     Get all the variables from a NetCDF file
     
     :param filename: The filename of the file to get the variables from
+    :param exclude_coords: Exclude coordinate variables
     :return: An OrderedDict containing the variables from the file
-    '''
+    """
     from netCDF4 import Dataset    
     f = Dataset(filename)
-    return f.variables
+    variables = f.variables
+    if exclude_coords:
+        for var in f.dimensions:
+            try:
+                del variables[var]
+            except KeyError:
+                pass
+    return variables
+
+
+def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotemporal_var_names):
+    """
+    Remove from a list of netCDF variables any which have dimensionality which is not in an approved list
+    of valid spatial or temporal dimensions (e.g. sensor number, pseudo dimensions). CIS currently does not
+    support variables with this dimensionality and will fail if they are used.
+    :param variables: Dictionary of netCDF variable names : Variable objects
+    :param spatiotemporal_var_names: List of valid spatiotemporal dimensions.
+    :return: None
+    """
+    if spatiotemporal_var_names is not None:
+        for var in variables.keys():
+            for dim in variables[var].dimensions:
+                if dim not in spatiotemporal_var_names:
+                    del variables[var]
+                    break
+
 
 def read_many_files(filenames, usr_variables, dim=None):
     """

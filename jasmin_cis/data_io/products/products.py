@@ -2,11 +2,14 @@ import logging
 
 import iris
 import iris.exceptions
+
+from jasmin_cis.data_io.hdf_vd import get_data, VDS
+from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
 from jasmin_cis.exceptions import InvalidVariableError, CoordinateNotFoundError
 from jasmin_cis.data_io.Coord import Coord, CoordList
-import jasmin_cis.data_io.gridded_data as gridded_data
 from jasmin_cis.data_io.products.AProduct import AProduct
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedCoordinates
+import jasmin_cis.data_io.gridded_data as gridded_data
 import jasmin_cis.utils as utils
 import jasmin_cis.data_io.hdf as hdf
 
@@ -15,6 +18,33 @@ class CloudSat(AProduct):
 
     def get_file_signature(self):
         return [r'.*_CS_.*GRANULE.*\.hdf']
+
+    def get_variable_names(self, filenames, data_type=None):
+        from pyhdf.HDF import HDF
+        from pyhdf.SD import SD
+
+        valid_variables = set([])
+        for filename in filenames:
+            # Do VD variables
+            datafile = HDF(filename)
+            vdata = datafile.vstart()
+            variables = vdata.vdatainfo()
+            # Assumes that latitude shape == longitude shape (it should):
+            dim_length = [var[3] for var in variables if var[0] == 'Latitude'][0]
+            for var in variables:
+                if var[3] == dim_length:
+                    valid_variables.add(var[0])
+
+            # Do SD variables:
+            sd = SD(filename)
+            datasets = sd.datasets()
+            if 'Height' in datasets:
+                valid_shape = datasets['Height'][1]
+                for var in datasets:
+                    if datasets[var][1] == valid_shape:
+                        valid_variables.add(var)
+
+        return valid_variables
 
     def _generate_time_array(self, vdata):
         import jasmin_cis.data_io.hdf_vd as hdf_vd
@@ -129,10 +159,6 @@ class CloudSat(AProduct):
 
         return UngriddedData(var,metadata,coords)
 
-    def get_variable_names(self, filenames):
-        sd_vars, vd_vars = hdf.get_hdf4_file_variables(filenames, None)
-        return dict(sd_vars.items() + vd_vars.items())
-
 
 class MODIS_L3(AProduct):
 
@@ -171,6 +197,19 @@ class MODIS_L3(AProduct):
         product_names = ['MYD08_D3','MOD08_D3',"MOD08_E3"]
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
+
+    def get_variable_names(self, filenames, data_type=None):
+        import pyhdf.SD
+
+        variables = set([])
+        for filename in filenames:
+            sd = pyhdf.SD.SD(filename)
+            for var_name, var_info in sd.datasets().iteritems():
+                # Check that the dimensions are correct
+                if var_info[0] == ('YDim:mod08', 'XDim:mod08'):
+                    variables.add(var_name)
+
+        return variables
 
     def _create_coord_list(self, filenames):
         import numpy as np
@@ -249,6 +288,23 @@ class MODIS_L2(AProduct):
         product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MOD04_L2']
         regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
+
+    def get_variable_names(self, filenames, data_type=None):
+        import pyhdf.SD
+
+        # Determine the valid shape for variables
+        sd = pyhdf.SD.SD(filenames[0])
+        datasets = sd.datasets()
+        valid_shape = datasets['Latitude'][1]  # Assumes that latitude shape == longitude shape (it should)
+
+        variables = set([])
+        for filename in filenames:
+            sd = pyhdf.SD.SD(filename)
+            for var_name, var_info in sd.datasets().iteritems():
+                if var_info[1] == valid_shape:
+                    variables.add(var_name)
+
+        return variables
 
     def __get_data_scale(self, filename, variable):
         from jasmin_cis.exceptions import InvalidVariableError
@@ -374,7 +430,10 @@ class Cloud_CCI(AProduct):
 
         return UngriddedData(var[variable], metadata, coords)
 
+
 class Aerosol_CCI(AProduct):
+
+    valid_dimensions = ["pixel_number"]
 
     def get_file_signature(self):
         return [r'.*ESACCI.*AEROSOL.*']
@@ -421,6 +480,27 @@ class abstract_Caliop(AProduct):
         :return:
         '''
         return []
+
+    def get_variable_names(self, filenames, data_type=None):
+        import pyhdf.SD
+        import pyhdf.HDF
+        variables = set([])
+
+        # Determine the valid shape for variables
+        sd = pyhdf.SD.SD(filenames[0])
+        datasets = sd.datasets()
+        len_x = datasets['Latitude'][1][0]  # Assumes that latitude shape == longitude shape (it should)
+        alt_data = get_data(VDS(filenames[0], "Lidar_Data_Altitudes"), True)
+        len_y = alt_data.shape[0]
+        valid_shape = (len_x, len_y)
+
+        for filename in filenames:
+            sd = pyhdf.SD.SD(filename)
+            for var_name, var_info in sd.datasets().iteritems():
+                if var_info[1] == valid_shape:
+                    variables.add(var_name)
+
+        return variables
 
     def _create_coord_list(self, filenames, index_offset=0):
         from jasmin_cis.data_io.hdf_vd import get_data
@@ -578,6 +658,7 @@ class abstract_Caliop(AProduct):
         '''
         return (data/scale_factor) + offset
 
+
 class Caliop_L2(abstract_Caliop):
 
     def get_file_signature(self):
@@ -637,12 +718,12 @@ class cis(AProduct):
     def get_file_signature(self):
         return [r'cis\-.*\.nc']
 
-    def create_coords(self, filenames, usr_variable = None):
+    def create_coords(self, filenames, usr_variable=None):
         from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata
         from jasmin_cis.data_io.Coord import Coord
         from jasmin_cis.exceptions import InvalidVariableError
 
-        variables = [ ("longitude", "x"), ("latitude","y"), ("altitude","z"), ("time","t"), ("air_pressure", "p") ]
+        variables = [("longitude", "x"), ("latitude", "y"), ("altitude", "z"), ("time", "t"), ("air_pressure", "p")]
 
         logging.info("Listing coordinates: " + str(variables))
 
@@ -675,7 +756,7 @@ class abstract_NetCDF_CF(AProduct):
         # We don't know of any 'standard' netCDF CF data yet...
         return []
 
-    def create_coords(self, filenames, variable = None):
+    def create_coords(self, filenames, variable=None):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
         from jasmin_cis.data_io.Coord import Coord
 
@@ -704,14 +785,16 @@ class abstract_NetCDF_CF(AProduct):
 
 class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
 
+    valid_dimensions = ["Time"]
+
     def get_file_signature(self):
         return [r'RF.*\.nc']
 
-    def create_coords(self, filenames, variable = None):
+    def create_coords(self, filenames, variable=None):
         from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
         from jasmin_cis.data_io.Coord import Coord
 
-        variables = [ "LATC", "LONC", "GGALTC", "Time", "PSXC" ]
+        variables = ["LATC", "LONC", "GGALTC", "Time", "PSXC"]
         logging.info("Listing coordinates: " + str(variables))
 
         if variable is not None:
@@ -742,6 +825,13 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF model data yet...
         return []
+
+    def get_variable_names(self, filenames, data_type=None):
+        variables = []
+        for filename in filenames:
+            file_variables = get_netcdf_file_variables(filename, exclude_coords=True)
+            variables.extend(file_variables)
+        return set(variables)
 
     def create_coords(self, filenames, variable=None):
         """Reads the coordinates on which a variable depends.
@@ -901,6 +991,9 @@ class ASCII_Hyperpoints(AProduct):
 
     def get_file_signature(self):
         return [r'.*\.txt']
+
+    def get_variable_names(self, filenames, data_type=None):
+        return ['latitude', 'longitude', 'altitude', 'time', 'value']
 
     def create_coords(self, filenames, variable=None):
         from jasmin_cis.data_io.ungridded_data import Metadata
