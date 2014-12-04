@@ -92,19 +92,130 @@ class TestSubsetIntegration(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, ['AOD550', 'AOD870', 'surface_albedo550',
                                                                               'surface_albedo670', 'surface_albedo870'])
 
-    def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, gridded):
-        if gridded:
-            lat_name = 'lat'
-            lon_name = 'lon'
-            output_path = self.GRIDDED_OUTPUT_FILENAME
-        else:
-            lat_name = 'latitude'
-            lon_name = 'longitude'
-            output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        ds = Dataset(output_path)
-        lat = ds.variables[lat_name][:]
-        lon = ds.variables[lon_name][:]
-        assert_that(min(lon), greater_than_or_equal_to(lon_min))
-        assert_that(max(lon), less_than_or_equal_to(lon_max))
-        assert_that(min(lat), greater_than_or_equal_to(lat_min))
-        assert_that(max(lat), less_than_or_equal_to(lat_max))
+
+class TestSubsetIntegrationAllProductsAllValidVariables(BaseIntegrationTest):
+
+    def do_subset(self, filename, lat_max, lat_min, lon_max, lon_min, variable):
+        arguments = ['subset', variable + ':' + filename,
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+
+    def test_subset_netCDF_gridded_xenida(self):
+        variable = '*'  # valid_xenida_variable
+        filename = valid_xenida_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+
+    def test_subset_netCDF_gridded_xglnwa(self):
+        variable = '*'  # valid_1d_variable
+        filename = valid_1d_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+
+    def test_subset_netCDF_gridded_ECHAMHAM(self):
+        variable = '*'  # valid_echamham_variable
+        filename = valid_echamham_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+
+    def test_subset_NCAR_RAF(self):
+        variable = '*'  # valid_NCAR_NetCDF_RAF_variable
+        filename = valid_NCAR_NetCDF_RAF_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_cis_ungridded(self):
+        variable = '*'  # 'AOT_440'
+        filename = valid_cis_col_file
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_cis_gridded(self):
+        variable = '*'  # 'AOT_440'
+        filename = valid_cis_gridded_output_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+
+    def test_subset_Aerosol_CCI(self):
+        variable = '*'  # valid_aerosol_cci_filename
+        filename = valid_aerosol_cci_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_Cloud_CCI(self):
+        variable = '*'  # valid_aerosol_cci_filename
+        filename = valid_cloud_cci_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_Caliop_L2(self):
+        variable = '*'  # valid_caliop_l2_variable
+        filename = valid_caliop_l1_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_MODIS_L2(self):
+        variable = '*'  # valid_modis_l2_variable
+        filename = valid_modis_l2_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_MODIS_L3(self):
+        variable = '*'  # valid_modis_l3_variable
+        filename = valid_modis_l3_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+
+    def test_subset_Aeronet(self):
+        variable = '*'  # valid_aeronet_variable
+        filename = valid_aeronet_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_ASCII(self):
+        variable = '*'  # valid_ascii_variable
+        filename = valid_ascii_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_CloudSatRVOD(self):
+        variable = '*'  # valid_cloudsat_RVOD_sdata_variable
+        filename = valid_cloudsat_RVOD_file
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_CloudSatPRECIP(self):
+        variable = '*'  # valid_cloudsat_PRECIP_variable
+        filename = valid_cloudsat_PRECIP_file
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
