@@ -49,15 +49,17 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
         if (data.metadata.standard_name is not None) and (len(data.metadata.standard_name) > 0):
             name = data.metadata.standard_name
     logging.info("Creating variable: " + name + "("+index_name+")" + " " + types[str(data.data.dtype)])
-    var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
-    var = __add_metadata(var, data)
-    try:
-        var[:] = data.data.flatten()
-    except IndexError as e:
-        raise InconsistentDimensionsError(str(e)+"\nInconsistent dimensions in output file, unable to write "
-                                                 ""+data.standard_name+" to file (it's shape is "+str(data.shape)+").")
-
-    return var
+    if name not in nc_file.variables:
+        var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
+        var = __add_metadata(var, data)
+        try:
+            var[:] = data.data.flatten()
+        except IndexError as e:
+            raise InconsistentDimensionsError(str(e)+"\nInconsistent dimensions in output file, unable to write "
+                                                     ""+data.standard_name+" to file (it's shape is "+str(data.shape)+").")
+        return var
+    else:
+        return nc_file.variables[name]
 
 
 def __create_index(nc_file, length):
