@@ -63,7 +63,7 @@ class AProduct(object):
                 if data_type is None:
                     data_type = "SD"
                 sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
-                file_variables = sd_vars + vd_vars
+                file_variables = (sd_vars or {}).keys() + (vd_vars or {}).keys()
             elif filename.endswith(".lev20"):
                 file_variables = get_aeronet_file_variables(filename)
             variables.extend(file_variables)
