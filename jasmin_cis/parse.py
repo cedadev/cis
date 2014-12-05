@@ -759,7 +759,7 @@ def assign_logs(arguments):
 
 def check_output_filepath_not_input(arguments, parser):
     try:
-        input_files = arguments.samplefiles
+        input_files = list(arguments.samplefiles)
     except AttributeError:
         input_files = []  # Only applies to colocation
 
