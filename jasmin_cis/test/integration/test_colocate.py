@@ -49,5 +49,17 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['AOD550'])
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['AOD870'])
 
+    def test_Aeronet_onto_NetCDF_Gridded(self):
+        # JASCIS-120
+        variable = valid_aeronet_variable
+        filename = valid_aeronet_filename
+        sample_file = valid_echamham_filename
+        colocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
+        arguments = ['col', variable + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+
 if __name__ == '__main__':
     unittest.main()
