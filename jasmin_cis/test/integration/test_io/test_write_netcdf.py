@@ -47,11 +47,3 @@ class TestWriteNetcdf(unittest.TestCase):
         write(data_object, tmp_file)
 
         data_object2 = prod.create_data_object([tmp_file], 'AOT_440')
-
-    def test_GIVEN_8_bit_integer_variable_datatype_WHEN_subset_THEN_subset_correctly2(self):
-        from data_io.products.products import Cloud_CCI
-        from jasmin_cis.data_io.write_netcdf import write
-
-        prod = Cloud_CCI()
-        data_object = prod.create_data_object([valid_cloud_cci_filename], valid_cloud_cci_8_bit_variable)
-        write(data_object, tmp_file)

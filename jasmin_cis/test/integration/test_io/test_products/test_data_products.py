@@ -269,10 +269,11 @@ class TestAerosol_CCI(ProductTests, unittest.TestCase):
 
 class TestCis(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cis_ungridded_output_filename
+        from jasmin_cis.test.test_files.data import valid_cis_ungridded_output_filename, \
+            valid_cis_ungridded_output_variable
 
         self.filename = valid_cis_ungridded_output_filename
-        self.valid_variable = 'AOT_440'
+        self.valid_variable = valid_cis_ungridded_output_variable
         self.product = cis
         self.vars = ['pixel_number', 'latitude', 'longitude', 'time', 'AOD550', 'AOD870']
 
