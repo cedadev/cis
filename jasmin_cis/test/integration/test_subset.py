@@ -8,7 +8,7 @@ from jasmin_cis.cis import subset_cmd
 from jasmin_cis.parse import parse_args
 from jasmin_cis.test.test_files.data import *
 from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
-from time_util import convert_time_since_to_std_time
+from jasmin_cis.time_util import convert_time_since_to_std_time
 
 
 class TestSubsetIntegration(BaseIntegrationTest):
