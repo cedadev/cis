@@ -105,7 +105,7 @@ def write_coordinate_list(coord_list, filename):
     :param coord_list: list of Coord objects
     :param filename: file to which to write
     """
-    netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
+    netcdf_file = Dataset(filename, 'w', format="NETCDF4")
     index_dim = __create_index(netcdf_file, len(coord_list[0].data.flatten()))
     for data in coord_list:
         __create_variable(netcdf_file, data, prefer_standard_name=True)
@@ -119,6 +119,6 @@ def add_data_to_file(data_object, filename):
     :param filename:
     :return:
     """
-    netcdf_file = Dataset(filename, 'a', format="NETCDF4_CLASSIC")
+    netcdf_file = Dataset(filename, 'a', format="NETCDF4")
     var = __create_variable(netcdf_file, data_object, prefer_standard_name=False)
     netcdf_file.close()
