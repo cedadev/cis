@@ -52,7 +52,7 @@ class TestGriddedAggregation(TestCase):
         agg = Aggregator(self.cube, grid)
         cube_out = agg.aggregate_gridded(self.kernel)
 
-        result = numpy.array([8.0])
+        result = numpy.array(8.0)
 
         assert numpy.array_equal(result, cube_out.data)
 
