@@ -68,6 +68,7 @@ valid_NCAR_NetCDF_RAF_variable = 'ATX'
 
 valid_GASSP_filename = make_pathname("AMS_VOCALS_B414_FAAM_MAN_20081104_V1.nc")
 valid_GASSP_variable = 'NO3'
+valid_GASSP_attribute = 'Time_Coordinate'
 
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')

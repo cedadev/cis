@@ -14,6 +14,24 @@ def get_netcdf_file_variables(filename):
     f = Dataset(filename)
     return f.variables
 
+
+def read_attributes_and_variables_many_files(filenames):
+    """
+    Read attributes and variables from a netcdf file collection
+    :param filenames:  A list of NetCDF filenames to read, or a string with wildcards.
+    :return: a dictionary of attributes and their values and a list of variable names
+    """
+
+    from netCDF4 import MFDataset
+
+    try:
+        datafile = MFDataset(filenames)
+    except RuntimeError as e:
+        raise IOError(e)
+
+    return datafile.__dict__, datafile.variables.keys()
+
+
 def read_many_files(filenames, usr_variables, dim=None):
     """
     Reads a single Variable from many NetCDF files.
