@@ -4,7 +4,7 @@ import iris
 import iris.exceptions
 
 from jasmin_cis.data_io.hdf_vd import get_data, VDS
-from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
+from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 from jasmin_cis.exceptions import InvalidVariableError, CoordinateNotFoundError
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
@@ -830,6 +830,8 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         variables = []
         for filename in filenames:
             file_variables = get_netcdf_file_variables(filename, exclude_coords=True)
+            remove_variables_with_non_spatiotemporal_dimensions(file_variables, ['lat', 'lon', 'time',
+                                                                                 'altitude', 'pressure'])
             variables.extend(file_variables)
         return set(variables)
 

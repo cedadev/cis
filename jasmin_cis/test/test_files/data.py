@@ -57,11 +57,14 @@ valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_1d_variable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
-valid_cis_col_file = make_pathname("cis-col-Agoufou_seasonal_average.nc")
-valid_cis_col_variable = 'AOT440'
+valid_cis_col_file = make_pathname("cis-col-latlon-renamed.nc")
+valid_cis_col_variable = 'AOT_440'
 
 valid_cis_gridded_output_filename = make_pathname("subset-gridded-out.nc")
 valid_cis_gridded_output_variable = 'TAU_2D_550nm'
+
+valid_cis_ungridded_output_filename = make_pathname('cis-subset-ungridded-out.nc')
+valid_cis_ungridded_output_variable = 'AOD550'
 
 valid_ascii_filename = make_pathname("my_dummy_points_with_values.txt")
 ascii_filename_with_no_values = make_pathname("my_dummy_points.txt")
