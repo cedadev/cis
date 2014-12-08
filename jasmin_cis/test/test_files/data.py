@@ -66,6 +66,9 @@ valid_ascii_variable = 0
 valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
 valid_NCAR_NetCDF_RAF_variable = 'ATX'
 
+valid_GASSP_filename = make_pathname("AMS_VOCALS_B414_FAAM_MAN_20081104_V1.nc")
+valid_GASSP_variable = 'NO3'
+
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
 valid_zonal_time_mean_CMIP5_variable = "rsutcs"

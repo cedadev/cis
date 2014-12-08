@@ -1,10 +1,11 @@
-'''
+"""
 module to test the various subclasses of the abstract AProduct class
-'''
+"""
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 
-from jasmin_cis.data_io.products.products import *
+from data_io.products.NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
+from data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file
 
@@ -12,13 +13,18 @@ from jasmin_cis.test.test_files.data import non_netcdf_file
 def check_regex_matching(cls_name, filename):
     from jasmin_cis.data_io.products.AProduct import __get_class
     cls = __get_class(filename)
-    eq_(cls.__name__,cls_name)
+    eq_(cls.__name__, cls_name)
 
 invalid_variable = "im_an_invalid_variable"
 invalid_filename = "im_an_invalid_file"
 invalid_format = non_netcdf_file
 
-class ProductTests():
+
+class ProductTests(object):
+
+    product = None
+    filename = None
+    valid_variable = None
 
     @istest
     def test_file_regex_matching(self):
@@ -130,6 +136,7 @@ class TestMODIS_L2(ProductTests):
         self.valid_variable = valid_modis_l2_variable
         self.product = MODIS_L2
 
+
 class TestCloud_CCI(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
@@ -137,12 +144,14 @@ class TestCloud_CCI(ProductTests):
         self.valid_variable = valid_cloud_cci_variable
         self.product = Cloud_CCI
 
+
 class TestAerosol_CCI(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_aerosol_cci_filename, valid_aerosol_cci_variable
         self.filename = valid_aerosol_cci_filename
         self.valid_variable = valid_aerosol_cci_variable
         self.product = Aerosol_CCI
+
 
 class TestCis(ProductTests):
 
@@ -152,12 +161,22 @@ class TestCis(ProductTests):
         self.valid_variable = 'AOT_440'
         self.product = cis
 
+
 class TestNCAR_NetCDF_RAF(ProductTests):
 
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_NCAR_NetCDF_RAF_filename, valid_NCAR_NetCDF_RAF_variable
         self.filename = valid_NCAR_NetCDF_RAF_filename
         self.valid_variable = valid_NCAR_NetCDF_RAF_variable
+        self.product = NCAR_NetCDF_RAF
+
+
+class TestNCAR_NetCDF_RAF_with_GASSP(ProductTests):
+
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_GASSP_filename, valid_GASSP_variable
+        self.filename = valid_GASSP_filename
+        self.valid_variable = valid_GASSP_variable
         self.product = NCAR_NetCDF_RAF
 
 
@@ -172,6 +191,7 @@ class TestAeronet(ProductTests):
     @istest
     def test_create_data_object_from_multiple_files(self):
         self.product().create_data_object(self.filenames, self.valid_variable)
+
 
 class TestASCII(ProductTests):
     def __init__(self):
@@ -204,8 +224,8 @@ class TestASCII(ProductTests):
         import datetime
         from jasmin_cis.time_util import convert_datetime_to_std_time
         data = self.product().create_data_object([self.filename], True)
-        assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012,8,25,15,32,03)))
-        assert(data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012,8,26)))
+        assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 25, 15, 32, 03)))
+        assert(data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 26)))
 
 
 class TestNetCDF_Gridded_xenida(ProductTests):
