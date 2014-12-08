@@ -275,8 +275,9 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         subset_cmd(main_arguments)
 
     def test_subset_Cloud_CCI(self):
-        # Takes 30 mins
-        variable = '*'
+        # (All variables takes 30 mins)
+        variable = '*'  # Would like to run this but it takes up a lot of memory on Jenkins.
+        variable = 'time,lon,lat,satellite_zenith_view_no1,solar_zenith_view_no1'
         filename = valid_cloud_cci_filename
         lon_min, lon_max = 84, 99
         lat_min, lat_max = -6, 6
@@ -329,8 +330,11 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_MODIS_L3(self):
-        # Takes 23 mins
-        variable = '*'
+        # (All variables takes 23 mins)
+        variable = '*'  # Would like to run this but it takes up a lot of memory on Jenkins.
+        variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
+                   'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
+                   'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
         filename = valid_modis_l3_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
