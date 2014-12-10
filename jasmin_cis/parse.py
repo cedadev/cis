@@ -33,7 +33,8 @@ def add_plot_parser_arguments(parser):
 
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
-    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products', verbose=False)
+
+    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products', verbose=False)
 
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
                         help = "The datagroups to be plotted, in the format 'variable:filenames[:options]', where "

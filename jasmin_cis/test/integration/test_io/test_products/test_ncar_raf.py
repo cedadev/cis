@@ -1,4 +1,4 @@
-from data_io.products.NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
+from jasmin_cis.data_io.products.NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
 from test.integration.test_io.test_products.test_data_products import ProductTests
 
 
@@ -18,6 +18,7 @@ class TestNCAR_NetCDF_RAF_with_GASSP_aeroplan(ProductTests):
         self.filename = valid_GASSP_aeroplane_filename
         self.valid_variable = valid_GASSP_aeroplane_variable
         self.product = NCAR_NetCDF_RAF
+
 
 class TestNCAR_NetCDF_RAF_with_GASSP_ship(ProductTests):
 

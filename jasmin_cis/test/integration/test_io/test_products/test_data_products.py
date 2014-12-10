@@ -4,8 +4,7 @@ module to test the various subclasses of the abstract AProduct class
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 
-from data_io.products.NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
-from data_io.products.products import *
+from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file
 
