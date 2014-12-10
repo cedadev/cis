@@ -162,24 +162,6 @@ class TestCis(ProductTests):
         self.product = cis
 
 
-class TestNCAR_NetCDF_RAF(ProductTests):
-
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_NCAR_NetCDF_RAF_filename, valid_NCAR_NetCDF_RAF_variable
-        self.filename = valid_NCAR_NetCDF_RAF_filename
-        self.valid_variable = valid_NCAR_NetCDF_RAF_variable
-        self.product = NCAR_NetCDF_RAF
-
-
-class TestNCAR_NetCDF_RAF_with_GASSP(ProductTests):
-
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_GASSP_filename, valid_GASSP_variable
-        self.filename = valid_GASSP_filename
-        self.valid_variable = valid_GASSP_variable
-        self.product = NCAR_NetCDF_RAF
-
-
 class TestAeronet(ProductTests):
     def __init__(self):
         from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename

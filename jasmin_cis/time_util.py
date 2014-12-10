@@ -5,7 +5,8 @@ import netcdftime
 import numpy as np
 from iris.unit import Unit
 
-cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00',calendar='gregorian')
+cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00', calendar='gregorian')
+
 
 def parse_datetimestr_to_std_time(s):
     import dateutil.parser as du
@@ -90,7 +91,9 @@ def calculate_mid_time(t1, t2):
 def convert_time_since_to_std_time(time_array, units):
     from netcdftime import _dateparse
     import datetime
-    units, utc_offset, dt = _dateparse(units)
+    units_no_colon_in_since = units.replace("since:", "since")
+
+    units, utc_offset, dt = _dateparse(units_no_colon_in_since)
     dt = datetime.datetime(*dt.timetuple()[0:6])
     if units.lower() == 'days':
         new_array = convert_numpy_array(time_array, 'float64', convert_days_since_to_std_time, dt)

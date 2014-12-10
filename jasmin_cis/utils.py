@@ -625,3 +625,14 @@ def guess_coord_axis(coord):
     else:
         guessed_axis = standard_names.get(coord.standard_name.lower())
     return guessed_axis
+
+
+def add_to_list_if_not_none(item, list):
+    """
+    Add a value to a list if it is not None
+    :param item: the item to add
+    :param list: the list to append it to
+    :return: nothing
+    """
+    if item is not None:
+        list.append(item)

@@ -66,8 +66,11 @@ valid_ascii_variable = 0
 valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
 valid_NCAR_NetCDF_RAF_variable = 'ATX'
 
-valid_GASSP_filename = make_pathname("AMS_VOCALS_B414_FAAM_MAN_20081104_V1.nc")
-valid_GASSP_variable = 'NO3'
+valid_GASSP_aeroplane_filename = make_pathname("SP2_mrg60_NP3_20060927_R1.ict.nc")
+valid_GASSP_aeroplane_variable = 'BC_ng_kg'
+
+valid_GASSP_ship_filename = make_pathname("AMSpmel_RHB_20081020_R0.ict.nc")
+valid_GASSP_ship_variable = 'NRno3'
 valid_GASSP_attribute = 'Time_Coordinate'
 
 valid_zonal_time_mean_CMIP5_filename = \

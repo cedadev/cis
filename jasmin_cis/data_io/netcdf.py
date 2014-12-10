@@ -18,18 +18,26 @@ def get_netcdf_file_variables(filename):
 def read_attributes_and_variables_many_files(filenames):
     """
     Read attributes and variables from a netcdf file collection
+    It uses first file as the master from which it reads the data
     :param filenames:  A list of NetCDF filenames to read, or a string with wildcards.
-    :return: a dictionary of attributes and their values and a list of variable names
+    :return: a dictionary of attributes and their values, a list of variable names, dictionary of variables
     """
+    import glob
+    from netCDF4 import Dataset
 
-    from netCDF4 import MFDataset
+    if len(filenames) == 0:
+        raise IOError("No filenames in filename list to read")
+
+    files = glob.glob(filenames[0])
+    if len(files) == 0:
+        raise IOError("No filenames in filename list to read")
 
     try:
-        datafile = MFDataset(filenames)
+        datafile = Dataset(files[0])
     except RuntimeError as e:
         raise IOError(e)
 
-    return datafile.__dict__, datafile.variables.keys()
+    return datafile.__dict__, datafile.variables.keys(), datafile.variables
 
 
 def read_many_files(filenames, usr_variables, dim=None):
