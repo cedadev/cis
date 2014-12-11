@@ -145,16 +145,31 @@ class TestParse(TestCase):
         assert_that(dg[0]['product'], is_('cis'))
         assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
 
-    def test_GIVEN_command_not_subset_WHEN_multiple_variables_in_datagroup_THEN_variables_not_unpacked(self):
+    def test_GIVEN_colocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
         var1, var2 = 'rain', 'snow'
+        output = 'aggregate-out'
+        samplegroup = valid_1d_filename + ':colocator=bin'
         product = 'cis'
-        args = ["plot", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product]
+        args = ["col", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, samplegroup, '-o', output]
         main_args = parse_args(args)
         dg = main_args.datagroups
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
         assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variable'], is_('rain,snow'))
+        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
+
+    def test_GIVEN_aggregate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
+        var1, var2 = 'rain', 'snow'
+        grid = 'x=[-10,10,2]'
+        output = 'aggregate-out'
+        product = 'cis'
+        args = ["aggregate", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, grid, '-o', output]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
+        assert_that(dg[0]['product'], is_('cis'))
+        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
 
     def test_should_raise_error_when_no_variable_is_specified(self):
         try:
