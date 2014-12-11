@@ -180,29 +180,6 @@ class TestSubsetOnUngriddedData(TestCase):
         assert_that(written_data[0].data_flattened.tolist(), written_data[1].data_flattened.tolist())
         assert_that(written_filename, is_(output_file))
 
-    def test_GIVEN_multiple_coordinate_sets_WHEN_subset_THEN_subsetter_called_with_correct_constraint(self):
-        variables = ['var_name1', 'var_name2']
-        filename = 'filename'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
-
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = MagicMock()
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=make_2d_ungridded_data_list_on_multiple_coordinate_sets())
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = MagicMock()
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variables, filename, product=None)
-
-        limits = mock_subsetter.subset.call_args_list[0][0][1]
-        assert_that(len(limits._limits), is_(4))
-        assert_that(limits._limits.keys(), contains_inanyorder('lat', 'lat_1', 'lon', 'lon_1'))
-
 
 class TestSubsetOnGriddedData(TestCase):
 

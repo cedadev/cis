@@ -1,12 +1,13 @@
 import unittest
 from hamcrest import assert_that, is_
 from mock import MagicMock, Mock
-from aggregation.aggregate import Aggregate
-from aggregation.aggregator import Aggregator
-from data_io.data_reader import DataReader
-from data_io.data_writer import DataWriter
-from data_io.gridded_data import GriddedDataList, make_from_cube
-from test.util.mock import make_square_5x3_2d_cube
+
+from jasmin_cis.aggregation.aggregate import Aggregate
+from jasmin_cis.aggregation.aggregator import Aggregator
+from jasmin_cis.data_io.data_reader import DataReader
+from jasmin_cis.data_io.data_writer import DataWriter
+from jasmin_cis.data_io.gridded_data import GriddedDataList, make_from_cube
+from jasmin_cis.test.util.mock import make_square_5x3_2d_cube
 
 
 class TestAggregate(unittest.TestCase):
