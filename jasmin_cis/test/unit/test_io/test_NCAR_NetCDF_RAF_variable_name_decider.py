@@ -308,3 +308,20 @@ class TestDataReader(TestCase):
         assert_that(selector.altitude, is_(None), "altitude not fixed")
         assert_that(selector.altitude_variable_name, is_(expected_alt_var), "altitude var name")
         assert_that(selector.pressure_variable_name, is_(expected_pres_var), "pressure variable name")
+
+    def test_GIVEN_time_coordinate_variable_lat_lon_alt_with_timestamp_WHEN_construct_THEN_timestamp_set(self):
+        expected_time_var = "time_var"
+        expected_lat_var = "LAT"
+        expected_lon_var = "LON"
+        expected_alt_var = "ALT"
+        expected_timestamp = "timestamp"
+        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_alt_var]
+        attributes = {"Time_Coordinate": expected_time_var,
+                      "Latitude_Coordinate": expected_lat_var,
+                      "Longitude_Coordinate": expected_lon_var,
+                      "Vertical_Coordinate": expected_alt_var,
+                      "Time_Stamp_Info": expected_timestamp}
+
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
+
+        assert_that(selector.time_stamp_info, is_(expected_timestamp), "time stamp info")

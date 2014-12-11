@@ -73,6 +73,11 @@ valid_GASSP_ship_filename = make_pathname("AMSpmel_RHB_20081020_R0.ict.nc")
 valid_GASSP_ship_variable = 'NRno3'
 valid_GASSP_attribute = 'Time_Coordinate'
 
+valid_GASSP_station_filename = make_pathname(
+    "TrinidadHead.US6005G.20110101.20140222.aerosol_number_concentration.aerosol.1y.1h."
+    "US06L_TSI_3760_THD.US06L_cpc_ref.nas.txt.nc")
+valid_GASSP_station_variable = 'aerosol_number_concentration'
+
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
 valid_zonal_time_mean_CMIP5_variable = "rsutcs"

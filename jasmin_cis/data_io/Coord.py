@@ -39,9 +39,24 @@ class Coord(LazyData):
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 
-    def convert_to_std_time(self):
-        from jasmin_cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit
-        self._data = convert_time_since_to_std_time(self.data, self.units)
+    def convert_to_std_time(self, time_stamp_info=None):
+        """
+        Convert this coordinate to standard time. It will use:
+         the units of the coordinate if it is in the standard x since x
+         the first word of the units combined with the time stamp (if the timestamp is not given an error is thrown)
+        :param time_stamp_info: the time stamp info from the file, None if it does not exist
+        :return: nothing
+        """
+        from jasmin_cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit, \
+            convert_time_using_time_stamp_info_to_std_time
+
+        if "since" in self.units:
+            self._data = convert_time_since_to_std_time(self.data, self.units)
+        else:
+            if time_stamp_info is None:
+                raise ValueError("File must have time stamp info if converting without 'since' in units definition")
+            self._data = convert_time_using_time_stamp_info_to_std_time(self.data, self.units, time_stamp_info)
+
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 

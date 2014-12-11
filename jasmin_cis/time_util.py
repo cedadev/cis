@@ -104,6 +104,23 @@ def convert_time_since_to_std_time(time_array, units):
     return new_array
 
 
+def convert_time_using_time_stamp_info_to_std_time(time_array, units, time_stamp_info=None):
+    """
+    Convert the time using time stamp info and the first word of the units
+    :param time_array: the time array to convert
+    :param units: the units of the array (e.g. day or Days from the file time reference 2012-12-12)
+    :param time_stamp_info: the time stamp to use for the convertion
+    :return: converted data
+    """
+    units = units.split()
+    if len(units) is 0:
+        raise ValueError("Units is empty when converting time")
+
+    units_in_since_form = units[0] + " since " + time_stamp_info
+
+    return convert_time_since_to_std_time(time_array, units_in_since_form)
+
+
 def convert_sec_since_to_std_time_array(tai_time_array, ref):
     return convert_numpy_array(tai_time_array, 'float64', convert_sec_since_to_std_time, ref)
 
@@ -167,7 +184,7 @@ def convert_array_type(array, new_type, operation, *args, **kwargs):
 
 
 def convert_numpy_array(array, new_type, operation, *args, **kwargs):
-    if isinstance(array,np.ma.MaskedArray):
+    if isinstance(array, np.ma.MaskedArray):
         new_array = convert_masked_array_type(array, new_type, operation, *args, **kwargs)
     else:
         new_array = convert_array_type(array, new_type, operation, *args, **kwargs)
@@ -218,6 +235,7 @@ def convert_cube_time_coord_to_standard_time(cube):
 
     return cube
 
+
 def convert_cube_time_coord_to_standard_time_assuming_gregorian_calendar(cube):
     """Converts the time coordinate from the one in the cube to one based on a standard time unit.
 
@@ -234,7 +252,7 @@ def convert_cube_time_coord_to_standard_time_assuming_gregorian_calendar(cube):
     cube.remove_coord(t_coord)
 
     # Convert the raw time numbers to our 'standard' time
-    new_datetimes = convert_numpy_array(t_coord.points,'O',t_coord.units.num2date)
+    new_datetimes = convert_numpy_array(t_coord.points, 'O', t_coord.units.num2date)
     new_datetime_nums = convert_obj_to_standard_date_array(new_datetimes)
 
     # Create a new time coordinate by copying the old one, but using our new points and units
