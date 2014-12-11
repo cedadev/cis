@@ -1,11 +1,13 @@
 import logging
+import os
 from data_io.Coord import CoordList
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
 from data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
 from utils import add_to_list_if_not_none
 import numpy as np
-from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, read_attributes_and_variables_many_files
+from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, read_attributes_and_variables_many_files, \
+    get_netcdf_file_attributes
 from jasmin_cis.data_io.Coord import Coord
 
 
@@ -197,6 +199,14 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
     #set the priority to be higher than the other netcdf file types
     priority = 20
 
+    #name of the attribute in GASSP that defines the GASSP version
+    GASSP_VERSION_ATTRIBUTE_NAME = "GASSP_Version"
+
+    #name of the attribute in NCAR_RAF that defines the converntion
+    NCAR_RAF_CONVENTIONS_ATTRIBUTE_NAME = "Conventions"
+    #known NCAR RAF Converntions
+    NCAR_RAF_KNOWN_CONVENTION = "NCAR-RAF/nimbus"
+
     def __init__(self, variable_selector_class=NCAR_NetCDF_RAF_variable_name_selector):
         """
         Setup NCAR RAF data product, allow a different variable selector class if needed
@@ -212,6 +222,34 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         :return: list of regular expressions for ncar raf data
         """
         return [r'.*\.nc$']
+
+    def get_file_type_error(self, filename):
+        """
+        Test that the file is of the correct signature
+        :param filename: the file name for the file
+        :return: list fo errors or None
+        """
+        if not os.path.isfile(filename):
+            return ["File does not exist"]
+        try:
+            attributes = get_netcdf_file_attributes(filename)
+        except RuntimeError as ex:
+            return ["File is unreadable", ex.message]
+
+        attributes_lower = {attr.lower(): val for attr, val in attributes.items()}
+
+        if self.GASSP_VERSION_ATTRIBUTE_NAME.lower() in attributes_lower:
+            return None
+
+        if self.NCAR_RAF_CONVENTIONS_ATTRIBUTE_NAME.lower() not in attributes_lower:
+            return ["File does not appear to be NCAR RAF or GASSP. No attributes for either '{}' or '{}'"
+                    .format(self.GASSP_VERSION_ATTRIBUTE_NAME, self.NCAR_RAF_CONVENTIONS_ATTRIBUTE_NAME)]
+
+        ncarraf_convention = attributes_lower[self.NCAR_RAF_CONVENTIONS_ATTRIBUTE_NAME.lower()]
+        if ncarraf_convention == self.NCAR_RAF_KNOWN_CONVENTION:
+            return None
+        return ["NCAR-RAF convention unknown, expecting '{}' was '{}'"
+                .format(self.NCAR_RAF_KNOWN_CONVENTION, ncarraf_convention)]
 
     def _load_data(self, filenames, variable):
         """

@@ -2,11 +2,12 @@
 Module to test the abstract AProduct class and it's helper methods
 """
 from unittest import TestCase
+from hamcrest import *
 
 from nose.tools import eq_, raises
 
 from jasmin_cis.test.test_files.data import *
-from jasmin_cis.data_io.products.AProduct import get_data, __get_class as _get_class
+from jasmin_cis.data_io.products.AProduct import get_data, __get_class as _get_class, get_coordinates
 from jasmin_cis.exceptions import ClassNotFoundError
 
 
@@ -38,11 +39,58 @@ class TestAProduct(TestCase):
         get_data(valid_cloudsat_RVOD_file, [valid_cloudsat_RVOD_sdata_variable],
                  product='Product_Not_Yet_Implemented')
 
+    @raises(ClassNotFoundError)
+    def test_given_class_which_implements_file_test_as_false_WHEN_call_get_data_for_product_THEN_class_no_found_error(self):
+        from jasmin_cis.data_io.products.AProduct import AProduct
+
+        class MyTestProduct(AProduct):
+            def create_data_object(self, filenames, variable):
+                pass
+
+            def create_coords(self, filenames):
+               pass
+
+            def get_file_signature(self):
+                 return [r'.*\.ending']
+
+            def get_file_type_error(self, filesname):
+                return ["Not correct type"]
+
+        get_coordinates(["file.ending"])
+
+    def test_given_class_which_implements_file_test_as_true_WHEN_call_get_data_for_product_THEN_test_is_checked(self):
+        from jasmin_cis.data_io.products.AProduct import AProduct
+        global check
+        check = False
+
+        class MyTestProductTestFileTypeTrue(AProduct):
+            def create_data_object(self, filenames, variable):
+                pass
+
+            def create_coords(self, filenames):
+               pass
+
+            def get_file_signature(self):
+                 return [r'.*\.endingtrue']
+
+            def get_file_type_error(self, filesname):
+                global check
+                check = True
+                return None
+
+        get_coordinates(["file.endingtrue"])
+        assert_that(check, is_(True), "File type check was called")
+
+
     @raises(TypeError)
     def test_that_get_data_throws_TypeError_for_invalid_product(self):
         from jasmin_cis.data_io.products.AProduct import AProduct
 
         class MyTestProduct(AProduct):
             """A class which subclasses AProduct but doesn't fully implement the interface"""
-            pass
+            def get_file_signature(self):
+                return []
+
         my_product = MyTestProduct()
+
+

@@ -3,13 +3,27 @@ Module containing NetCDF file reading functions
 """
 
 
+def get_netcdf_file_attributes(filename):
+    """
+    Get all the global attributes from a NetCDF file
+
+    :param filename: The filename of the file to get the variables from
+    :return: a dictionary of attributes and their values
+    """
+
+    from netCDF4 import Dataset
+    f = Dataset(filename)
+
+    return f.__dict__
+
+
 def get_netcdf_file_variables(filename):
-    '''
+    """
     Get all the variables from a NetCDF file
     
     :param filename: The filename of the file to get the variables from
     :return: An OrderedDict containing the variables from the file
-    '''
+    """
     from netCDF4 import Dataset    
     f = Dataset(filename)
     return f.variables

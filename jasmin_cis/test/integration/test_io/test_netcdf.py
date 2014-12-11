@@ -54,11 +54,12 @@ def should_raise_ioerror_with_file_that_does_not_have_read_permissions():
 @istest
 def test_WHEN_file_has_attributes_WHEN_read_THEN_attribute_list_returned_with_know_attribute_value_in():
 
-    expected_attribute_variable_name = "TIME_M"
+    expected_attribute_variable_name = "UTC_mid"
 
-    attributes, variables_names = read_attributes_and_variables_many_files(valid_GASSP_filename)
-
+    attributes, variables_names, dummy = read_attributes_and_variables_many_files([valid_GASSP_aeroplane_filename])
 
     assert_that(attributes, has_item(valid_GASSP_attribute), "Attribute %s not read from file" % valid_GASSP_attribute)
-    assert_that(attributes[valid_GASSP_attribute], expected_attribute_variable_name, "Attribute %s value" % valid_GASSP_attribute)
-    assert_that(variables_names, has_item(expected_attribute_variable_name), "Attribute value is not a variable in the file")
+    assert_that(attributes[valid_GASSP_attribute], expected_attribute_variable_name,
+                "Attribute %s value" % valid_GASSP_attribute)
+    assert_that(variables_names, has_item(expected_attribute_variable_name),
+                "Attribute value is not a variable in the file")

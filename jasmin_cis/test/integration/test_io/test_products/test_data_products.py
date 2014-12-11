@@ -31,8 +31,8 @@ class ProductTests(object):
 
     @istest
     def test_file_regex_matching_for_full_path(self):
-        check_regex_matching(self.product.__name__, "/home/duncan/"+self.filename)
-        check_regex_matching(self.product.__name__, "/a/xenida/more/lev20/confusing/hdf/path/nc/"+self.filename)
+        import os
+        check_regex_matching(self.product.__name__,  os.path.join(os.getcwd(), self.filename))
 
     @istest
     def test_create_data_object(self):
