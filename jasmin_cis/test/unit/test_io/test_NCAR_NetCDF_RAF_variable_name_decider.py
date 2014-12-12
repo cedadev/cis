@@ -392,7 +392,7 @@ class TestDataReader(TestCase):
 
         vars = decider.get_variable_names_with_same_dimensions_as_time_coord()
 
-        assert_that(vars, all_of([expected_var, time_var]), "variables should be ones with same dim as time")
+        assert_that(vars, is_(set([expected_var, time_var])), "variables should be ones with same dim as time")
 
 
     def test_GIVEN_valid_file_with_one_variables_same_shape_others_not_and_time_is_multid_WHEN_get_vars_THEN_only_same_shape_is_returned(self):
@@ -408,7 +408,7 @@ class TestDataReader(TestCase):
             "Not time": ["not time", "not Time"],
             "Time and one other": [time_dims[0], time_dims[1], "other"],
             "Time and Time": [time_dims[0], time_dims[0]],
-            "Time and Time": [time_dims[1], time_dims[0]]
+            "Time2 and time": [time_dims[1], time_dims[0]]
         }
         attributes = {"Time_Coordinate": time_var,
                       "Station_Lat": "27.1",
@@ -419,4 +419,4 @@ class TestDataReader(TestCase):
 
         vars = decider.get_variable_names_with_same_dimensions_as_time_coord()
 
-        assert_that(vars, all_of([expected_var, time_var]), "variables should be ones with same dim as time")
+        assert_that(vars, is_(set([expected_var, time_var])), "variables should be ones with same dim as time")
