@@ -995,7 +995,7 @@ class ASCII_Hyperpoints(AProduct):
         return [r'.*\.txt']
 
     def get_variable_names(self, filenames, data_type=None):
-        return ['latitude', 'longitude', 'altitude', 'time', 'value']
+        return ['value']
 
     def create_coords(self, filenames, variable=None):
         from jasmin_cis.data_io.ungridded_data import Metadata
@@ -1022,12 +1022,12 @@ class ASCII_Hyperpoints(AProduct):
         coords.append(Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
 
         time_arr = parse_datetimestr_to_std_time_array(data_array["time"])
-        time = Coord(time_arr, Metadata(standard_name="time", shape=(n_elements,), units="DateTime Object"))
+        time = Coord(time_arr, Metadata(standard_name="time", shape=(n_elements,), units="days since 1600-01-01 00:00:00"))
         coords.append(time)
 
         if variable:
             try:
-                data = UngriddedData(data_array['value'], Metadata(name="Altitude", shape=(n_elements,), units="meters"), coords)
+                data = UngriddedData(data_array['value'], Metadata(name="value", shape=(n_elements,), units="unknown"), coords)
             except:
                 InvalidVariableError("Value column does not exist in file " + filenames)
             return data

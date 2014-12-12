@@ -265,6 +265,14 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_temporal_subsetting(time_min, time_max, True)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_subset_ASCII(self):
+        variable = 'value'
+        filename = valid_ascii_filename
+        time_min, time_max = '2012-08-23T15:32:03', '2012-08-28T00:00:00'
+        self.do_subset(filename, time_min, time_max, variable)
+        self.check_temporal_subsetting(time_min, time_max, False)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+
 
 class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
 
@@ -391,5 +399,13 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         filename = valid_cloudsat_RVOD_file
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_ASCII(self):
+        variable = '*'
+        filename = valid_ascii_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 1, 6
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
