@@ -403,7 +403,8 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_ASCII(self):
-        variable = '*'
+        variable = '*'  # Gets killed by Jenkins
+        variable = "RVOD_liq_water_content,RVOD_ice_water_path"
         filename = valid_ascii_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 1, 6
