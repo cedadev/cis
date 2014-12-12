@@ -165,31 +165,6 @@ class TestUngriddedDataList(TestCase):
         coord_names = [coord.standard_name for coord in unique_coords]
         assert_that(coord_names, contains_inanyorder('latitude', 'longitude'))
 
-    def test_GIVEN_grids_contain_different_coordinates_WHEN_coords_THEN_all_unique_coords_returned(self):
-        x_points = np.arange(-10, 11, 5)
-        y_points = np.arange(-5, 6, 5)
-        y, x = np.meshgrid(y_points, x_points)
-        x1 = Coord(x, Metadata(name='latitude', standard_name='latitude', units='degrees'))
-        y1 = Coord(y, Metadata(name='longitude', standard_name='longitude', units='degrees'))
-        x2 = Coord(x, Metadata(name='latitude_1', standard_name='latitude', units='degrees'))
-        y2 = Coord(y, Metadata(name='longitude_1', standard_name='longitude', units='degrees'))
-        data = np.reshape(np.arange(15) + 1.0, (5, 3))
-        coords1 = CoordList([x1, y1])
-        coords2 = CoordList([x2, y2])
-
-        ug1 = UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                           units="kg m-2 s-1", missing_value=-999), coords1)
-        ug2 = UngriddedData(data * 0.1, Metadata(standard_name='snow', long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
-                                                 units="kg m-2 s-1", missing_value=-999), coords2)
-        ungridded_data_list = UngriddedDataList([ug1, ug2])
-
-        unique_coords = ungridded_data_list.coords()
-        assert_that(len(unique_coords), is_(4))
-        assert_that(unique_coords, instance_of(CoordList))
-        coord_names = [coord.var_name for coord in unique_coords]
-        assert_that(coord_names, contains_inanyorder('latitude', 'longitude', 'latitude_1', 'longitude_1'))
-
-
 if __name__ == '__main__':
     import nose
     nose.runmodule()

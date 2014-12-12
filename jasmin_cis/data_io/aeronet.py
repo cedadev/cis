@@ -9,6 +9,7 @@ def get_aeronet_file_variables(filename):
             vars[i] = vars[i].replace(char, "")
     vars_dict = {}
     for var in vars:
+        var = var.strip()
         vars_dict[var] = var
     return vars_dict
 
