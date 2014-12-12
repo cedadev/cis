@@ -2,14 +2,15 @@ import logging
 
 
 def get_all_subclasses(parent_class, mod):
-    '''
+    """
         This will recursively find subclasses of parent_class in mod.
         The use of importlib allows mod to be of the form package.module
         Take extreme care when changing the function as it has been known to break!
+
     :param parent_class: The class to find subclasses of
     :param mod: The module to find subclasses in
     :return: A list of subclasses
-    '''
+    """
     import importlib
     importlib.import_module(mod)
     subclasses = []

@@ -1,45 +1,59 @@
+import unittest
 from hamcrest import *
 from jasmin_cis.data_io.products.NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
 from test.integration.test_io.test_products.test_data_products import ProductTests
 
 
-class TestNCAR_NetCDF_RAF(ProductTests):
-
-    def __init__(self):
+class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
+    def setUp(self):
         from jasmin_cis.test.test_files.data import valid_NCAR_NetCDF_RAF_filename, valid_NCAR_NetCDF_RAF_variable
+
         self.filename = valid_NCAR_NetCDF_RAF_filename
         self.valid_variable = valid_NCAR_NetCDF_RAF_variable
         self.product = NCAR_NetCDF_RAF
 
+    def check_valid_vars(self, vars):
+        exclude_vars = ["ACDP_LWI", "AUHSAS_RWI", "CCDP_LWI",
+                        "CUHSAS_RWI"]  # , "LATC", "LONC", "GGALTC", "Time", "PSXC"]
+        assert_that(len(vars), is_(117), "Number of valid variables in the file")
+        for key in exclude_vars:
+            assert key not in vars
 
-class TestNCAR_NetCDF_RAF_with_GASSP_aeroplan(ProductTests):
 
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_GASSP_aeroplane_filename, valid_GASSP_aeroplane_variable
+class TestNCAR_NetCDF_RAF_with_GASSP_aeroplan(ProductTests, unittest.TestCase):
+
+    def setUp(self):
+        from jasmin_cis.test.test_files.data import valid_GASSP_aeroplane_filename, valid_GASSP_aeroplane_variable, \
+            valid_GASSP_aeroplane_vars
         self.filename = valid_GASSP_aeroplane_filename
         self.valid_variable = valid_GASSP_aeroplane_variable
+        self.vars = valid_GASSP_aeroplane_vars
         self.product = NCAR_NetCDF_RAF
 
 
-class TestNCAR_NetCDF_RAF_with_GASSP_ship(ProductTests):
+class TestNCAR_NetCDF_RAF_with_GASSP_ship(ProductTests, unittest.TestCase):
 
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_GASSP_ship_filename, valid_GASSP_ship_variable
+    def setUp(self):
+        from jasmin_cis.test.test_files.data import valid_GASSP_ship_filename, valid_GASSP_ship_variable, \
+            valid_GASSP_ship_vars
         self.filename = valid_GASSP_ship_filename
         self.valid_variable = valid_GASSP_ship_variable
+        self.vars = valid_GASSP_ship_vars
         self.product = NCAR_NetCDF_RAF
 
 
-class TestNCAR_NetCDF_RAF_with_GASSP_station(ProductTests):
+class TestNCAR_NetCDF_RAF_with_GASSP_station(ProductTests, unittest.TestCase):
 
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_GASSP_station_filename, valid_GASSP_station_variable
+    def setUp(self):
+        from jasmin_cis.test.test_files.data import valid_GASSP_station_filename, valid_GASSP_station_variable, \
+            valid_GASSP_station_vars
         self.filename = valid_GASSP_station_filename
         self.valid_variable = valid_GASSP_station_variable
+        self.vars = valid_GASSP_station_vars
         self.product = NCAR_NetCDF_RAF
 
 
-class TestNCAR_NetCDF_RAF_File_Test(object):
+class TestNCAR_NetCDF_RAF_get_file_type_error(unittest.TestCase):
 
     def test_WHEN_file_is_GASSP_THEN_no_errors(self):
         from jasmin_cis.test.test_files.data import valid_GASSP_station_filename

@@ -81,6 +81,7 @@ def parse_datetimestr_delta_to_float_days(s):
 def calculate_mid_time(t1, t2):
     '''
         Find the mid time between two times expressed as floats
+
     :param t1: a time represented as a float
     :param t2: a time in the same representation as t1
     :return: a float representing the time between t1 and t2
@@ -126,14 +127,15 @@ def convert_sec_since_to_std_time_array(tai_time_array, ref):
 
 
 def convert_sec_since_to_std_time(seconds, ref):
-    '''
-        Convert a number of seconds since a given reference datetime to a number of days since our standard time.
-        This in principle could avoid the intermediate step converting to a datetime object except we don't know which
-         calander the reference is on, e.g. it could be a 360 day calendar
+    """
+    Convert a number of seconds since a given reference datetime to a number of days since our standard time.
+    This in principle could avoid the intermediate step converting to a datetime object except we don't know which
+    calender the reference is on, e.g. it could be a 360 day calendar
+
     :param seconds:
     :param ref:
     :return:
-    '''
+    """
     from datetime import timedelta
     return cis_standard_time_unit.date2num(timedelta(seconds=float(seconds)) + ref)
 

@@ -4,7 +4,7 @@ from data_io.Coord import CoordList
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
 from data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
-from utils import add_to_list_if_not_none
+from utils import add_to_list_if_not_none, dimensions_equal
 import numpy as np
 from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, read_attributes_and_variables_many_files, \
     get_netcdf_file_attributes
@@ -25,6 +25,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
     altitude_variable_name: variable name of the altitude, None if fixed
     pressure_variable_name: variable name of the pressure, None if not included in data
     time_stamp_info: time stamp info if included, None otherwise
+    aggregation_dimensions: dimension over which variables should be aggregated when reading multiple files
 
     The choice are in order of preference:
     Aeroplane GASSP (Data with time, lat, lon and altitude vars)
@@ -58,12 +59,13 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
     #the default altitude to use if it is not set, for instance ship based GASSP does not contain altitude
     DEFAULT_ALTITUDE = 0
 
-    def __init__(self, attributes, variables):
+    def __init__(self, attributes, variables, variable_dimensions):
         """
         Initialisation
         :param attributes: dictionary of attributes and their values
         :param variables: list of variable names
-        :return: nohing
+        :param variable_dimensions: a dictionary of the dimensions of each variable
+        :return: nothing
         """
         self.station = False
         self.station_latitude = None
@@ -74,9 +76,12 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         self.altitude_variable_name = None
         self.pressure_variable_name = None
         self.time_stamp_info = None
+        self.aggregation_dimensions = None
+        self.time_dimensions = None
 
         self._attributes = {k.lower(): v for k, v in attributes.items()}
         self._variables = variables
+        self._variable_dimensions = variable_dimensions
         self._check_have_variables_and_attribure()
 
         if self.TIME_COORDINATE_NAME.lower() in self._attributes:
@@ -105,6 +110,9 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
 
         if self.TIME_STAMP_INFO_NAME.lower() in self._attributes:
             self.time_stamp_info = self._attributes[self.TIME_STAMP_INFO_NAME.lower()]
+
+        self.time_dimensions = self._variable_dimensions[self.time_variable_name]
+        self.aggregation_dimensions = self.time_dimensions[0]
 
     def _get_coordinate_variable_name(self, attribute_name, coordinate_display_name):
         """
@@ -190,6 +198,13 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             self.time_variable_name \
             = coordinates_vars
 
+    def get_variable_names_with_same_dimensions_as_time_coord(self):
+        variables = []
+        for name, dimensions in self._variable_dimensions.items():
+            if dimensions_equal(dimensions, self.time_dimensions):
+                variables.append(name)
+        return set(variables)
+
 
 class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
     """
@@ -215,6 +230,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         """
         super(NCAR_NetCDF_RAF, self).__init__()
         self.variableSelectorClass = variable_selector_class
+        self.valid_dimensions = ["Time"]
 
     def get_file_signature(self):
         """
@@ -251,6 +267,16 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         return ["NCAR-RAF convention unknown, expecting '{}' was '{}'"
                 .format(self.NCAR_RAF_KNOWN_CONVENTION, ncarraf_convention)]
 
+    def _load_data_definition(self, filenames):
+        """
+        Load the definition of the data
+        :param filenames: filenames from which to load the data
+        :return: variable selector containing the data definitions
+        """
+        attributes, variables_list, variable_dimensions = read_attributes_and_variables_many_files(filenames)
+        variable_selector = self.variableSelectorClass(attributes, variables_list, variable_dimensions)
+        return variable_selector
+
     def _load_data(self, filenames, variable):
         """
         Open the file and find the correct variables to load in
@@ -259,9 +285,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         :return: a list of load data and the variable selector used to load name it
         """
 
-        attributes, variables_list, variables = read_attributes_and_variables_many_files(filenames)
-
-        variable_selector = self.variableSelectorClass(attributes, variables_list)
+        variable_selector = self._load_data_definition(filenames)
 
         variables_list = [variable_selector.time_variable_name]
         add_to_list_if_not_none(variable_selector.latitude_variable_name, variables_list)
@@ -272,8 +296,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         logging.info("Listing coordinates: " + str(variables_list))
         add_to_list_if_not_none(variable, variables_list)
 
-        aggregation_dimension = variables[variable_selector.time_variable_name].dimensions[0]
-        data_variables = read_many_files(filenames, variables_list, dim=aggregation_dimension)
+        data_variables = read_many_files(filenames, variables_list, dim=variable_selector.aggregation_dimensions)
 
         return data_variables, variable_selector
 
@@ -376,3 +399,12 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         metadata = Metadata(name=coord_name, shape=(points_count,), units=coord_units,
                             range=(coordinate_value, coordinate_value))
         return Coord(data_variable, metadata, coord_axis)
+
+    def get_variable_names(self, filenames, data_type=None):
+        """
+        Get a list of available variable names
+        This can be overridden in specific products to improve on this
+        """
+
+        selector = self._load_data_definition(filenames)
+        return selector.get_variable_names_with_same_dimensions_as_time_coord()

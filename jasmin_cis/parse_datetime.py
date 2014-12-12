@@ -165,11 +165,13 @@ def parse_as_number_or_datetime(in_string, name, parser):
 
 
 def convert_datetime_components_to_datetime(dt_components, is_lower_limit):
-    """Converts date and time components: year, month, day, hours, minutes, seconds to a datetime object for use
+    """
+    Converts date and time components: year, month, day, hours, minutes, seconds to a datetime object for use
     as a limit.
 
     Components beyond the year are defaulted if absent, taking minimum or maximum values if the value of
     is_lower_limit is True or False respectively.
+
     :param dt_components: list of date/time components as integers in the order:year, month, day, hours, minutes,
         seconds. At least the year must be specified. If only the year is specified it may be passed as an integer.
     :param is_lower_limit: If True, use minimum value for missing date/time components, otherwise use maximum.

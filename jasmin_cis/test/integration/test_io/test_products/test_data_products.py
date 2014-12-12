@@ -3,6 +3,7 @@ module to test the various subclasses of the abstract AProduct class
 """
 
 import unittest
+from hamcrest import *
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 

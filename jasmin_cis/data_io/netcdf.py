@@ -1,6 +1,7 @@
 """
 Module containing NetCDF file reading functions
 """
+from utils import dimensions_equal
 
 
 def get_netcdf_file_attributes(filename):
@@ -48,11 +49,8 @@ def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotempora
     """
     if spatiotemporal_var_names is not None:
         for var in variables.keys():
-            for dim in variables[var].dimensions:
-                if dim not in spatiotemporal_var_names:
-                    del variables[var]
-                    break
-
+            if not dimensions_equal(variables[var].dimensions, spatiotemporal_var_names):
+                del variables[var]
 
 
 def read_attributes_and_variables_many_files(filenames):
@@ -77,7 +75,8 @@ def read_attributes_and_variables_many_files(filenames):
     except RuntimeError as e:
         raise IOError(e)
 
-    return datafile.__dict__, datafile.variables.keys(), datafile.variables
+    variable_dimensions = {name: variable.dimensions for name, variable in datafile.variables.items()}
+    return datafile.__dict__, datafile.variables.keys(), variable_dimensions
 
 
 def read_many_files(filenames, usr_variables, dim=None):

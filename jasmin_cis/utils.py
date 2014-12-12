@@ -75,14 +75,15 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = Fals
     logging.debug(axis + " axis bin edges: " + str(bin_edges))
     return bin_edges
 
+
 def expand_1d_to_2d_array(array_1d,length,axis=0):
-    '''
+    """
     General utility routine to 'extend a 1D array into a 2D array
     by duplicating the data along a given 'axis' (default is 0)
     of size 'length'.
 
-    Examples
-    --------
+    **Examples**
+
     >>> a = np.array([1,2,3,4])
     >>> expand_1d_to_2d_array(a, 4, axis=0)
     [[1 2 3 4]
@@ -101,7 +102,7 @@ def expand_1d_to_2d_array(array_1d,length,axis=0):
     :param length:
     :param axis:
     :return:
-    '''
+    """
     import numpy as np
 
     if axis==0:
@@ -341,7 +342,8 @@ def wrap_longitude_coordinate_values(x_min, x_max):
 
 def copy_attributes(source, dest):
     '''
-     Copy all attributes from one object to another
+    Copy all attributes from one object to another
+
     :param source: Object to copy attributes from
     :param dest: Object to copy attributes to
     :return: None
@@ -355,7 +357,8 @@ def copy_attributes(source, dest):
 
 def add_file_prefix(prefix, filepath):
     '''
-        Add a prefix to a filename taking into account any path that might be present before that actual filename
+    Add a prefix to a filename taking into account any path that might be present before that actual filename
+
     :param prefix: A string to prefix the filename with
     :param filepath: Filename, optionally including path
     :return: A string with the full path to the prefixed file
@@ -383,24 +386,27 @@ def remove_file_prefix(prefix, filepath):
     return os.path.join(path, filename)
 
 
-def parse_key_val_string(arguments, seperator):
-    '''
-        Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and values
-    :param arguments: A string which is a seperated list of keyword value pairs
-    :param seperator: String which is used to split the string into a list
+def parse_key_val_string(arguments, separator):
+    """
+    Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and
+    values
+
+    :param arguments: A string which is a separated list of keyword value pairs
+    :param separator: String which is used to split the string into a list
     :return: A dictionary of the keywords and values
-    '''
-    input_list = arguments.split(seperator)
+    """
+    input_list = arguments.split(separator)
     return parse_key_val_list(input_list)
 
 
 def parse_key_val_list(input_list):
-    '''
+    """
      Takes list of keyword value strings (seperated by =) and returns a dictionary with those keys and values
-        NOTE - if a key has no value, the key is stored and given the value True
-    :param input_list: A list of strings which are keyword value pairs seperated by =
+     **NOTE** if a key has no value, the key is stored and given the value True
+
+    :param input_list: A list of strings which are keyword value pairs separated by =
     :return: A dictionary of the keywords and values
-    '''
+    """
     key_val_dict = {}
     for element in input_list:
         key_value = element.split('=')
@@ -485,17 +491,19 @@ class OrderedSet(collections.MutableSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
+
 def apply_intersection_mask_to_two_arrays(array1, array2):
-    '''
-        Ensure two (optionally) masked arrays have the same mask.
-        If both arrays are masked the intersection of the masks is used.
-        If one array is masked and the other is not, the mask from the masked array is applied
-          to the unmasked array
-        If neither array is masked then both arrays are returned as masked arrays with an empty mask
+    """
+    Ensure two (optionally) masked arrays have the same mask.
+    If both arrays are masked the intersection of the masks is used.
+    If one array is masked and the other is not, the mask from the masked array is applied to the unmasked array
+    If neither array is masked then both arrays are returned as masked arrays with an empty mask
+
     :param array1: An (optionally masked) array
     :param array2: Another (optionally masked) array
     :return: Two masked arrays with a common mask
-    '''
+    """
+
     import numpy.ma as ma
     if isinstance(array1, ma.MaskedArray):
         if isinstance(array2, ma.MaskedArray):
@@ -508,8 +516,8 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
         else:
             intersection_mask = False
 
-    array1 = ma.array(array1, mask = intersection_mask)
-    array2 = ma.array(array2, mask = intersection_mask)
+    array1 = ma.array(array1, mask=intersection_mask)
+    array2 = ma.array(array2, mask=intersection_mask)
 
     return array1, array2
 
@@ -636,3 +644,18 @@ def add_to_list_if_not_none(item, list):
     """
     if item is not None:
         list.append(item)
+
+
+def dimensions_equal(dimensions, other_dimensions):
+    """
+    Check to see if two dimensions are the same (contain the same variables in the same order)
+    :param dimensions: dimension list
+    :param other_dimensions: other dimension list
+    """
+
+    if len(dimensions) is not len(other_dimensions):
+        return False
+    for dim, other_dim in zip(dimensions, other_dimensions):
+        if not dim == other_dim:
+            return False
+    return True
