@@ -1,7 +1,7 @@
 import logging
-from data_io.Coord import CoordList
+from jasmin_cis.data_io.Coord import CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
-from data_io.ungridded_data import UngriddedCoordinates, UngriddedData
+from jasmin_cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData
 
 
 class abstract_NetCDF_CF(AProduct):
