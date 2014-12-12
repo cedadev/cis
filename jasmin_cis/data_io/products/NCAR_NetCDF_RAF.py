@@ -1,10 +1,10 @@
 import logging
 import os
-from data_io.Coord import CoordList
+from jasmin_cis.data_io.Coord import CoordList
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
-from data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
-from utils import add_to_list_if_not_none, dimensions_equal
+from jasmin_cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
+from jasmin_cis.utils import add_to_list_if_not_none, dimensions_equal
 import numpy as np
 from jasmin_cis.data_io.netcdf import read_many_files, get_metadata, read_attributes_and_variables_many_files, \
     get_netcdf_file_attributes
