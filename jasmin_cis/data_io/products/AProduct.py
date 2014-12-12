@@ -22,10 +22,10 @@ class AProduct(object):
     @abstractmethod
     def create_data_object(self, filenames, variable):
         """
-        Create a an ungridded data object for a given variable from many files
+        Create an ungridded data object for a given variable from many files
 
-        :param filenames:    List of filenames of files to read
-        :param variable:    Variable to read from the files
+        :param filenames: List of filenames of files to read
+        :param variable: Variable to read from the files
         :return: An UngriddedData object for the specified variable
 
         :raise FileIOError: Unable to read a file
