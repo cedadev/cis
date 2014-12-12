@@ -1,7 +1,7 @@
 """
 Module containing NetCDF file reading functions
 """
-from utils import dimensions_equal
+from jasmin_cis.utils import dimensions_equal
 
 
 def get_netcdf_file_attributes(filename):
