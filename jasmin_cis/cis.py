@@ -205,9 +205,30 @@ def version_cmd(_main_arguments):
 commands = {'plot': plot_cmd,
             'info': info_cmd,
             'col': col_cmd,
-            'aggregate' : aggregate_cmd,
+            'aggregate': aggregate_cmd,
             'subset': subset_cmd,
             'version': version_cmd}
+
+
+def parse_and_run_arguments(arguments=None):
+    """
+    Parse and run the arguments
+    :param arguments: an arguments list or None to parse all
+    """
+    from datetime import datetime
+
+    from parse import parse_args
+
+    # parse command line arguments
+    arguments = parse_args(arguments)
+    command = arguments.command
+    logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+    logging.debug("Running command: " + command)
+    logging.debug("With the following arguments: " + str(arguments))
+
+    # execute command
+    cmd = commands[command]
+    cmd(arguments)
 
 
 def main():
@@ -218,9 +239,6 @@ def main():
     import os
     import logging
     from logging import config
-    from datetime import datetime
-
-    from parse import parse_args
 
     # configure logging
     try:
@@ -231,16 +249,7 @@ def main():
         print("WARNING: Unable to write to the log: %s" % e)
     logging.captureWarnings(True)  # to catch warning from 3rd party libraries
 
-    # parse command line arguments
-    arguments = parse_args()
-    command = arguments.command
-
-    logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
-    logging.debug("Running command: " + command)
-    logging.debug("With the following arguments: " + str(arguments))
-
-    # execute command
-    commands[command](arguments)
+    parse_and_run_arguments()
 
 
 if __name__ == '__main__':
