@@ -3,7 +3,7 @@ import logging
 import traceback
 from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
 from jasmin_cis.data_io.hdf import get_hdf4_file_variables
-from jasmin_cis.data_io.netcdf import get_netcdf_file_variables
+from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 
 
 class AProduct(object):
@@ -16,13 +16,16 @@ class AProduct(object):
     # If a filename matches two data products' file signatures, the data product with the higher priority will be used
     priority = 10
 
+    # Contains a list of valid spatiotemporal variable names
+    valid_dimensions = None
+
     @abstractmethod
     def create_data_object(self, filenames, variable):
         """
-        Create a an ungridded data object for a given variable from many files
+        Create an ungridded data object for a given variable from many files
 
-        :param filenames:    List of filenames of files to read
-        :param variable:    Variable to read from the files
+        :param filenames: List of filenames of files to read
+        :param variable: Variable to read from the files
         :return: An UngriddedData object for the specified variable
 
         :raise FileIOError: Unable to read a file
@@ -47,6 +50,13 @@ class AProduct(object):
 
         return [r'.*CODE*.nc']
         This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
+
+        Additional
+        ----------
+
+        If the signature has matched the framework will call get_file_type_error(filename), this gives the product a
+        chance to open the file and check the contents. If this returns None then the match is complete otherwise
+        the error may be printed for the user
         """
 
     def get_variable_names(self, filenames, data_type=None):
@@ -59,11 +69,12 @@ class AProduct(object):
             file_variables = None
             if filename.endswith(".nc"):
                 file_variables = get_netcdf_file_variables(filename)
+                remove_variables_with_non_spatiotemporal_dimensions(file_variables, self.valid_dimensions)
             elif filename.endswith(".hdf"):
                 if data_type is None:
                     data_type = "SD"
                 sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
-                file_variables = sd_vars + vd_vars
+                file_variables = (sd_vars or {}).keys() + (vd_vars or {}).keys()
             elif filename.endswith(".lev20"):
                 file_variables = get_aeronet_file_variables(filename)
             variables.extend(file_variables)
@@ -88,21 +99,29 @@ def __get_class(filename, product=None):
     from jasmin_cis.exceptions import ClassNotFoundError
 
     # Ensure the filename doesn't include the path
-    filename = os.path.basename(filename)
+    basename = os.path.basename(filename)
 
-    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products')
+    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products')
     product_classes = sorted(product_classes, key=lambda cls: cls.priority, reverse=True)
 
     for cls in product_classes:
 
         if product is None:
             # search for a pattern that matches file signature
-            patterns = cls().get_file_signature()
+            class_instance = cls()
+            patterns = class_instance.get_file_signature()
             for pattern in patterns:
                 # Match the pattern - re.I allows for case insensitive matches
-                if re.match(pattern, filename, re.I) is not None:
+                if re.match(pattern, basename, re.I) is not None:
                     logging.debug("Found product class " + cls.__name__ + " matching regex pattern " + pattern)
-                    return cls
+                    try:
+                        errors = class_instance.get_file_type_error(filename)
+                        if errors is None:
+                            return cls
+                        else:
+                            logging.info("Product class {} is not right because {}".format(cls.__name__, errors))
+                    except AttributeError:
+                        return cls
         else:
             # product specified directly
             if product == cls.__name__:

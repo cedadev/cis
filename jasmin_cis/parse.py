@@ -35,7 +35,8 @@ def add_plot_parser_arguments(parser):
 
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
-    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products', verbose=False)
+
+    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products', verbose=False)
 
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
                         help = "The datagroups to be plotted, in the format 'variable:filenames[:options]', where "
@@ -301,7 +302,8 @@ def get_col_samplegroup(samplegroup, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable", "colocator", "constraint", "kernel", "product"])
-    samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args, extract_method_and_args, extract_method_and_args, check_product)
+    samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args,
+                                           extract_method_and_args, extract_method_and_args, check_product)
 
     return parse_colon_and_comma_separated_arguments(samplegroup, parser, samplegroup_options, compulsary_args=1)[0]
 
@@ -314,7 +316,7 @@ def get_aggregate_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product, check_aggregate_kernel)
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product, check_aggregate_kernel)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
@@ -759,7 +761,7 @@ def assign_logs(arguments):
 
 def check_output_filepath_not_input(arguments, parser):
     try:
-        input_files = arguments.samplefiles
+        input_files = list(arguments.samplefiles)
     except AttributeError:
         input_files = []  # Only applies to colocation
 

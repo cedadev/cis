@@ -1,3 +1,4 @@
+from hamcrest import *
 from nose.tools import istest, raises
 import numpy
 from jasmin_cis.data_io.Coord import Coord, CoordList
@@ -50,3 +51,44 @@ def can_find_many_coords_from_a_list_of_coordinates():
     assert(coords[0].name()=='testZ')
     assert(coords[0].axis=='Z')
     assert(coords[1].axis=='')
+
+@istest
+def can_convert_time_without_since_in_units():
+    times = numpy.array([0, 1])
+    units = "Days from the file reference point 1601-01-01"
+    time_stamp_info = "1601-01-01"
+    coord = Coord(times, Metadata(units=units) )
+
+    coord.convert_to_std_time(time_stamp_info)
+
+    assert_that(coord.data_flattened[0], is_(366.0), "time point")
+
+@istest
+def can_convert_time_with_since_in_units():
+    times = numpy.array([0, 1])
+    units = "Days since 1601-01-01"
+    coord = Coord(times, Metadata(units=units) )
+
+    coord.convert_to_std_time()
+
+    assert_that(coord.data_flattened[0], is_(366.0), "time point")
+
+@istest
+@raises(ValueError)
+def can_not_convert_time_without_since_in_units_but_no_timestamp():
+    times = numpy.array([0, 1])
+    units = "Days from the file reference point 1601-01-01"
+    coord = Coord(times, Metadata(units=units) )
+
+    coord.convert_to_std_time()
+
+
+@istest
+@raises(ValueError)
+def can_not_convert_time_without_since_in_units_with_no_units():
+    times = numpy.array([0, 1])
+    units = ""
+    time_stamp_info = "1601-01-01"
+    coord = Coord(times, Metadata(units=units) )
+
+    coord.convert_to_std_time(time_stamp_info)

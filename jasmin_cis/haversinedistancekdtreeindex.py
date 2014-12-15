@@ -11,7 +11,9 @@ class HaversineDistanceKDTreeIndex(object):
         self.index = None
 
     def index_data(self, points, data, coord_map, leafsize=10):
-        """Creates the k-D tree index.
+        """
+        Creates the k-D tree index.
+
         :param points: (not used) sample points
         :param data: list of HyperPoints to index
         :param coord_map: (not used) list of tuples relating index in HyperPoint

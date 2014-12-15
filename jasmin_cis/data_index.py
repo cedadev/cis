@@ -14,7 +14,9 @@ class GridCellBinIndex(object):
         self.index = None
 
     def index_data(self, coords, data, coord_map):
-        """Creates an index of points that fall within grid cells.
+        """
+        Creates an index of points that fall within grid cells.
+
         :param coords: coordinates of grid
         :param data: list of HyperPoints to index
         :param coord_map: list of tuples relating index in HyperPoint to index in coords and in

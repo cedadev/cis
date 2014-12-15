@@ -1,18 +1,83 @@
 """
 Module containing NetCDF file reading functions
 """
+from jasmin_cis.utils import dimensions_equal
 
 
-def get_netcdf_file_variables(filename):
-    '''
+def get_netcdf_file_attributes(filename):
+    """
+    Get all the global attributes from a NetCDF file
+
+    :param filename: The filename of the file to get the variables from
+    :return: a dictionary of attributes and their values
+    """
+
+    from netCDF4 import Dataset
+    f = Dataset(filename)
+
+    return f.__dict__
+
+
+def get_netcdf_file_variables(filename, exclude_coords=False):
+    """
     Get all the variables from a NetCDF file
     
     :param filename: The filename of the file to get the variables from
+    :param exclude_coords: Exclude coordinate variables
     :return: An OrderedDict containing the variables from the file
-    '''
+    """
     from netCDF4 import Dataset    
     f = Dataset(filename)
-    return f.variables
+    variables = f.variables
+    if exclude_coords:
+        for var in f.dimensions:
+            try:
+                del variables[var]
+            except KeyError:
+                pass
+    return variables
+
+
+def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotemporal_var_names):
+    """
+    Remove from a list of netCDF variables any which have dimensionality which is not in an approved list
+    of valid spatial or temporal dimensions (e.g. sensor number, pseudo dimensions). CIS currently does not
+    support variables with this dimensionality and will fail if they are used.
+    :param variables: Dictionary of netCDF variable names : Variable objects
+    :param spatiotemporal_var_names: List of valid spatiotemporal dimensions.
+    :return: None
+    """
+    if spatiotemporal_var_names is not None:
+        for var in variables.keys():
+            if not dimensions_equal(variables[var].dimensions, spatiotemporal_var_names):
+                del variables[var]
+
+
+def read_attributes_and_variables_many_files(filenames):
+    """
+    Read attributes and variables from a netcdf file collection
+    It uses first file as the master from which it reads the data
+    :param filenames:  A list of NetCDF filenames to read, or a string with wildcards.
+    :return: a dictionary of attributes and their values, a list of variable names, dictionary of variables
+    """
+    import glob
+    from netCDF4 import Dataset
+
+    if len(filenames) == 0:
+        raise IOError("No filenames in filename list to read")
+
+    files = glob.glob(filenames[0])
+    if len(files) == 0:
+        raise IOError("No filenames in filename list to read")
+
+    try:
+        datafile = Dataset(files[0])
+    except RuntimeError as e:
+        raise IOError(e)
+
+    variable_dimensions = {name: variable.dimensions for name, variable in datafile.variables.items()}
+    return datafile.__dict__, datafile.variables.keys(), variable_dimensions
+
 
 def read_many_files(filenames, usr_variables, dim=None):
     """
@@ -28,7 +93,7 @@ def read_many_files(filenames, usr_variables, dim=None):
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
 
-    if not isinstance(usr_variables,list):
+    if not isinstance(usr_variables, list):
         usr_variables = [usr_variables]
 
     try:
@@ -59,7 +124,7 @@ def read_many_files_individually(filenames, usr_variables):
     """
     from jasmin_cis.utils import add_element_to_list_in_dict
 
-    if not isinstance(usr_variables,list):
+    if not isinstance(usr_variables, list):
         usr_variables = [usr_variables]
 
     var_data = {}
@@ -86,7 +151,7 @@ def read(filename, usr_variables):
     from netCDF4 import Dataset
     from jasmin_cis.exceptions import InvalidVariableError
 
-    if not isinstance(usr_variables,list):
+    if not isinstance(usr_variables, list):
         usr_variables = [usr_variables]
 
     try:
@@ -104,6 +169,7 @@ def read(filename, usr_variables):
 
     return data
 
+
 def get_metadata(var):
     '''
     Retrieves all metadata
@@ -113,22 +179,30 @@ def get_metadata(var):
     '''
     from jasmin_cis.data_io.ungridded_data import Metadata
 
-    standard_name = getattr(var,'standard_name',"")
+    standard_name = getattr(var, 'standard_name', "")
     missing_value = find_missing_value(var)
-    long_name = getattr(var,'long_name',"")
+    long_name = getattr(var, 'long_name', "")
     units = getattr(var, 'units', "")
 
     history = getattr(var, "history", "")
     shape = getattr(var, "shape", None)
     if shape is None:
         try:
-            shape=(var._recLen[0],)
+            shape = (var._recLen[0],)
         except AttributeError:
             shape = ()
 
-    metadata = Metadata(var._name, standard_name, long_name, units=units, missing_value=missing_value, shape=shape, history=history)
+    metadata = Metadata(
+        var._name,
+        standard_name,
+        long_name,
+        units=units,
+        missing_value=missing_value,
+        shape=shape,
+        history=history)
 
     return metadata
+
 
 def find_missing_value(var):
     try:
@@ -139,6 +213,7 @@ def find_missing_value(var):
         except AttributeError:
             missing_value = None
     return missing_value
+
 
 def get_data(var, calipso_scaling=False):
     """

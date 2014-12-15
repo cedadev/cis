@@ -52,7 +52,7 @@ class TestGriddedAggregation(TestCase):
         agg = Aggregator(self.cube, grid)
         cube_out = agg.aggregate_gridded(self.kernel)
 
-        result = numpy.array([8.0])
+        result = numpy.array(8.0)
 
         assert numpy.array_equal(result, cube_out.data)
 
@@ -131,8 +131,58 @@ class TestGriddedAggregation(TestCase):
         assert numpy.array_equal(result_coord, cube_out.coords('time')[0].points)
 
 
-class TestUngriddedAggregation:
-    def __init__(self):
+class TestGriddedListAggregation(TestCase):
+
+    def setUp(self):
+        self.kernel = iris.analysis.MEAN
+
+    def test_collapse_coordinate(self):
+        from jasmin_cis.data_io.gridded_data import GriddedDataList, make_from_cube
+
+        data1 = make_from_cube(make_mock_cube())
+        data2 = make_from_cube(make_mock_cube(data_offset=1))
+        datalist = GriddedDataList([data1, data2])
+        grid = {'x': AggregationGrid(0, 0, float('NaN'), False)}
+
+        agg = Aggregator(datalist, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result1 = numpy.array([2, 5, 8, 11, 14])
+        result2 = result1 + 1
+
+        assert isinstance(cube_out, GriddedDataList)
+
+        # There is a small deviation to the weighting correction applied by Iris when completely collapsing
+        assert numpy.allclose(result1, cube_out[0].data)
+        assert numpy.allclose(result2, cube_out[1].data)
+        assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+
+    def test_aggregate_mean(self):
+        from jasmin_cis.data_io.gridded_data import GriddedDataList, make_from_cube
+
+        data1 = make_from_cube(make_mock_cube())
+        data2 = make_from_cube(make_mock_cube(data_offset=1))
+        datalist = GriddedDataList([data1, data2])
+        grid = {'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
+
+        agg = Aggregator(datalist, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result1 = numpy.array([[4, 5, 6], [11.5, 12.5, 13.5]])
+        result2 = result1 + 1
+        coord_result = numpy.array([-6.25, 6.25])
+
+        assert isinstance(cube_out, GriddedDataList)
+
+        # There is a small deviation to the weighting correction applied by Iris when completely collapsing
+        assert numpy.allclose(result1, cube_out[0].data)
+        assert numpy.allclose(result2, cube_out[1].data)
+        assert numpy.array_equal(data1.coords('longitude')[0].points, cube_out.coords('longitude')[0].points)
+        assert cube_out[0].coords() == cube_out[1].coords()
+        assert numpy.array_equal(coord_result, cube_out.coords('latitude')[0].points)
+
+class TestUngriddedAggregation(TestCase):
+    def setUp(self):
         self.kernel = mean()
 
     @istest
@@ -149,7 +199,7 @@ class TestUngriddedAggregation:
         assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
-    def test_aggregating_simple_dataset_in_two_dimensions_with_mising_values(self):
+    def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
 
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
 
@@ -175,7 +225,7 @@ class TestUngriddedAggregation:
         assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
-    def test_mean_kernel_with_dataset_in_two_dimensions_with_mising_values(self):
+    def test_mean_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-10, 10, 10, False)}
 
@@ -193,7 +243,7 @@ class TestUngriddedAggregation:
         assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
-    def test_max_kernel_with_dataset_in_two_dimensions_with_mising_values(self):
+    def test_max_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
         self.kernel = max()
 
@@ -213,7 +263,7 @@ class TestUngriddedAggregation:
         assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
-    def test_min_kernel_with_dataset_in_two_dimensions_with_mising_values(self):
+    def test_min_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
         self.kernel = min()
 
@@ -233,7 +283,7 @@ class TestUngriddedAggregation:
         assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
-    def test_stddev_kernel_with_dataset_in_two_dimensions_with_mising_values(self):
+    def test_stddev_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
         self.kernel = stddev()
 
@@ -252,3 +302,37 @@ class TestUngriddedAggregation:
 
         assert array_equal_including_nan(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
+
+class TestUngriddedListAggregation(TestCase):
+
+    def setUp(self):
+        self.kernel = mean()
+
+    @istest
+    def test_aggregating_list_of_datasets(self):
+        from jasmin_cis.data_io.ungridded_data import UngriddedDataList
+
+        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
+
+        datalist = UngriddedDataList([make_regular_2d_ungridded_data_with_missing_values(),
+                                     make_regular_2d_ungridded_data_with_missing_values()])
+
+        agg = Aggregator(datalist, grid)
+        cube_out = agg.aggregate_ungridded(self.kernel)
+
+        result = numpy.ma.array([[1.0, 2.0, 3.0],
+                                 [4.0, 5.0, 6.0],
+                                 [7.0, 8.0, 9.0],
+                                 [10.0, 11.0, 12.0],
+                                 [13.0, 14.0, 15.0]],
+
+                           mask=[[0, 0, 0],
+                                 [0, 1, 0],
+                                 [0, 0, 1],
+                                 [0, 0, 0],
+                                 [1, 0, 0]], fill_value=float('inf'))
+
+        print cube_out[0].data.fill_value
+        assert len(cube_out) == 2
+        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result))
