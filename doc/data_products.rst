@@ -42,13 +42,29 @@ It can also read the following gridded data types:
   ==================== =========================== ================== =================================================================================
 
 
-The file signature is used to automatically recognise which product definition to use. Note the product can overridden easily by being specified at the command line.
+The file signature is used to automatically recognise which product definition to use. Note the product can be overridden easily by being specified at the command line.
 
 This is of course far from being an exhaustive list of what's out there. To cope with this, a "plugin" architecture has been designed so that the user can readily use their own data product reading routines, without even having to change the code - see Design Maintenance Guide for more information.
 
 .. todo:: [CommunityIntercomparisonSuite/Design Maintenance Guide]
 
 the plugins are always read first, so one can also overwrite default behaviour if the built-in products listed above do not achieve a very specific purpose.
+
+Specifying CSV Datapoints
+=========================
+
+CIS can read simple ASCII data consisting of 4D (latitude, longitude, altitude, time) or 5D (latitude, longitude,
+altitude, time, value) using the "ASCII_Hyperpoints" data product. This can be useful for generating your own colocation
+points, for example. The format for specifying these is straightforward:
+
+::
+
+    #lat,lon, alt,  time, values
+    0.0, 0.0, 10.0, 2012-08-22 15:32:03, 1.0
+    1.0, 0.0, 10.0, 2012-08-23, 1.0
+
+here lat, lon, alt should be floats, time should be a datetime in the format ``YYYY-MM-DD hh:mm:ss`` where trailing
+components may be omitted, and value is an optional column of datatype float.
 
 Example plots
 =============
