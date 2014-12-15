@@ -4,9 +4,14 @@ Module for writing data to NetCDF files
 from netCDF4 import Dataset
 import logging
 
-types = {'int16': "i2",
+types = {'int8': 'i1',
+         'int16': "i2",
          'int32': "i4",
          'int64': "i8",
+         'uint8': 'u1',
+         'uint16': "u2",
+         'uint32': "u4",
+         'uint64': "u8",
          'float32': "f4",
          'float64': "f8"}
 
@@ -48,15 +53,17 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
         if (data.metadata.standard_name is not None) and (len(data.metadata.standard_name) > 0):
             name = data.metadata.standard_name
     logging.info("Creating variable: " + name + "("+index_name+")" + " " + types[str(data.data.dtype)])
-    var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
-    var = __add_metadata(var, data)
-    try:
-        var[:] = data.data.flatten()
-    except IndexError as e:
-        raise InconsistentDimensionsError(str(e)+"\nInconsistent dimensions in output file, unable to write "
-                                                 ""+data.standard_name+" to file (it's shape is "+str(data.shape)+").")
-
-    return var
+    if name not in nc_file.variables:
+        var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
+        var = __add_metadata(var, data)
+        try:
+            var[:] = data.data.flatten()
+        except IndexError as e:
+            raise InconsistentDimensionsError(str(e)+"\nInconsistent dimensions in output file, unable to write "
+                                                     ""+data.standard_name+" to file (it's shape is "+str(data.shape)+").")
+        return var
+    else:
+        return nc_file.variables[name]
 
 
 def __create_index(nc_file, length):
@@ -98,7 +105,7 @@ def write_coordinate_list(coord_list, filename):
     :param coord_list: list of Coord objects
     :param filename: file to which to write
     """
-    netcdf_file = Dataset(filename, 'w', format="NETCDF4_CLASSIC")
+    netcdf_file = Dataset(filename, 'w', format="NETCDF4")
     index_dim = __create_index(netcdf_file, len(coord_list[0].data.flatten()))
     for data in coord_list:
         __create_variable(netcdf_file, data, prefer_standard_name=True)
@@ -112,6 +119,6 @@ def add_data_to_file(data_object, filename):
     :param filename:
     :return:
     """
-    netcdf_file = Dataset(filename, 'a', format="NETCDF4_CLASSIC")
+    netcdf_file = Dataset(filename, 'a', format="NETCDF4")
     var = __create_variable(netcdf_file, data_object, prefer_standard_name=False)
     netcdf_file.close()

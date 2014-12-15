@@ -2,7 +2,7 @@ import unittest
 import os
 
 from jasmin_cis.test.util.mock import make_dummy_2d_ungridded_data
-from jasmin_cis.test.test_files.data import make_pathname
+from jasmin_cis.test.test_files.data import make_pathname, valid_cloud_cci_8_bit_variable, valid_cloud_cci_filename
 
 
 tmp_file = "tmp_file"

@@ -7,7 +7,7 @@ import numpy as np
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
 import jasmin_cis.exceptions
-from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube
+from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import LazyData, Metadata
 import jasmin_cis.data_index as data_index
@@ -46,6 +46,10 @@ class GeneralUngriddedColocator(Colocator):
                        a single value
         :return: A single LazyData object
         """
+        if isinstance(data, list):
+            raise NotImplementedError("Colocation of a list of data is not yet supported for the "
+                                      "GeneralUngriddedColocator class")
+
         metadata = data.metadata
 
         # Convert ungridded data to a list of points if kernel needs it.
@@ -121,16 +125,21 @@ class GeneralUngriddedColocator(Colocator):
 class DummyColocator(Colocator):
 
     def colocate(self, points, data, constraint, kernel):
-        '''
+        """
             This colocator does no colocation at all - it just returns the original data values. This might be useful
             if the input data for one variable is already known to be on the same grid as points. This routine could
             check the coordinates are the same but currently does no such check.
+
         :param points: A list of HyperPoints
         :param data: An UngriddedData object or Cube
         :param constraint: Unused
         :param kernel: Unused
         :return: A single LazyData object
-        '''
+        """
+
+        if isinstance(data, list):
+            raise NotImplementedError("Colocation of a list of data is not yet supported for the DummyColocator class")
+
         from jasmin_cis.data_io.ungridded_data import LazyData
 
         logging.info("--> Colocating...")
@@ -530,6 +539,10 @@ class GriddedColocatorUsingIrisRegrid(Colocator):
         :return: An Iris cube with the colocated data.
         """
         import iris
+        if isinstance(data, list):
+            raise NotImplementedError("Colocation of a list of data is not yet supported for "
+                                      "the GriddedColocatorUsingIrisRegrid class")
+
         self.check_for_valid_kernel(kernel)
         new_data = iris.analysis.interpolate.regrid(data, points, mode=kernel.name)#, **kwargs)
 
@@ -548,6 +561,9 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
         :return: An Iris cube with the colocated data.
         """
+        if isinstance(data, list):
+            raise NotImplementedError("Colocation of a list of data is not yet supported for "
+                                      "the GriddedColocator class")
 
         self.check_for_valid_kernel(kernel)
 
@@ -787,12 +803,20 @@ class GeneralGriddedColocator(Colocator):
     def colocate(self, points, data, constraint, kernel):
         """
         :param points: cube defining the sample points
-        :param data: CommonData object providing data to be co-located
+        :param data: CommonData object providing data to be co-located (or list of Data)
         :param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
                            data based on it's internal parameters
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
-        :return: Cube of co-located data
+        :return: GriddedDataList of co-located data
         """
+        if isinstance(data, list):
+            # If data is a list then call this method recursively over each element
+            output_list = []
+            for variable in data:
+                colocated = self.colocate(points, variable, constraint, kernel)
+                output_list.extend(colocated)
+            return GriddedDataList(output_list)
+
         data_points = data.get_non_masked_points()
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
@@ -867,7 +891,7 @@ class GeneralGriddedColocator(Colocator):
         data_with_nan_and_inf_removed.set_fill_value(self.fill_value)
         cube.data = data_with_nan_and_inf_removed
 
-        return [cube]
+        return GriddedDataList([cube])
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.

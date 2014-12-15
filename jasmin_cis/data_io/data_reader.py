@@ -49,6 +49,7 @@ class DataReader(object):
             data_list = []
             for variable in variables:
                 var_data = self._get_data_func(filenames, variable, product)
+                var_data.filenames = filenames
                 var_is_gridded = isinstance(var_data, iris.cube.Cube)
                 if gridded is None:
                     gridded = var_is_gridded

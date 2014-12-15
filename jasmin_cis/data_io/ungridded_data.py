@@ -42,6 +42,22 @@ class Metadata(object):
         else:
             self.misc = misc
 
+    def alter_standard_name(self, new_standard_name):
+        """
+        Alter the standard name and log an info line to say this is happening if the standard name is not empty
+        Also changes internal name for metadata
+        or the same
+        :param new_standard_name:
+        :return: nothing
+        """
+        if self.standard_name is not None \
+                and self.standard_name.strip() is not "" \
+                and self.standard_name is not new_standard_name:
+            logging.info("Changing standard name for dataset from '{}' to '{}'"
+                         .format(self.standard_name, new_standard_name))
+        self.standard_name = new_standard_name
+        self._name = new_standard_name
+
     @staticmethod
     def guess_standard_name(name):
         standard_name = name
@@ -468,6 +484,32 @@ class UngriddedDataList(list):
     def __str__(self):
         "<UngriddedDataList: %s>" % super(UngriddedDataList, self).__str__()
 
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return False
+
+    @property
+    def var_name(self):
+        """
+        Get the variable names in this list
+        """
+        var_names = []
+        for data in self:
+            var_names.append(data.var_name)
+        return var_names
+
+    @property
+    def filenames(self):
+        """
+        Get the filenames in this list
+        """
+        filenames = []
+        for data in self:
+            filenames.extend(data.filenames)
+        return filenames
+
     def add_history(self, new_history):
         """
         Appends to, or creates, the metadata history attribute using the supplied history string.
@@ -477,21 +519,21 @@ class UngriddedDataList(list):
         for data in self:
             data.add_history(new_history)
 
-    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+    def coords(self, *args, **kwargs):
         """
-        Returns all unique coordinates used in all the UngriddedDataobjects
+        Returns all coordinates used in all the UngriddedDataobjects
         :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
         """
-        from jasmin_cis.data_io.Coord import CoordList
-
-        unique_coords = {}
-        for var in self:
-            var_coords = var.coords()
-            for coord in var_coords:
-                unique_coords[coord.var_name] = coord
-        return CoordList(unique_coords.values())
+        return self[0].coords(*args, **kwargs)
 
     def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+        """
+        Save the UngriddedDataList to a file
+        :param output_file: output filename
+        :param sample_points: Should write sample points
+        :param coords_to_be_written: Should write Coordinates
+        :return:
+        """
         logging.info('Saving data to %s' % output_file)
         coords_to_be_written = True
         for data in self:
