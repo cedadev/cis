@@ -591,6 +591,10 @@ class abstract_Caliop(AProduct):
             # some kind of interpolation of the air pressure would be required, as it is on a different (smaller) grid
             # than for the Lidar_Data_Altitudes.
             coords.append(pres_coord)
+        # Fix an issue where IRIS cannot parse units 'deg' (should be degrees).
+        for coord in coords:
+            if coord.units == 'deg':
+                coord.units = 'degrees'
 
         return coords
 
