@@ -15,6 +15,10 @@ class Coord(LazyData):
         """
         super(Coord, self).__init__(data, metadata)
         self.axis = axis.upper()
+        # Fix an issue where IRIS cannot parse units 'deg' (should be degrees).
+        if self.units == 'deg':
+            self.units = 'degrees'
+
 
     @property
     def points(self):

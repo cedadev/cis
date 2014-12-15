@@ -180,6 +180,15 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='LATC', lon_name='LONC')
 
+    def test_aggregate_GASSP(self):
+        variable = '*'
+        filename = valid_GASSP_aeroplane_filename
+        lon_min, lon_max, lon_delta = -94, 95, 0.1
+        lat_min, lat_max, lat_delta = 30, 31, 0.1
+        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
+                                    lat_name='latitude', lon_name='longitude')
+
     def test_aggregate_Aeronet(self):
         # Takes 50s
         variable = '*'
