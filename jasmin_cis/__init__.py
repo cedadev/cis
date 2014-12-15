@@ -1,6 +1,5 @@
 
-__author__ = "David Michel, Daniel Wallis, Duncan Watson-Parris, Richard Wilkinson and Ian Bush"
-__version__ = "0.7"
-__status__ = "Phase 2, end of phase release"
+__author__ = "David Michel, Daniel Wallis, Duncan Watson-Parris, Richard Wilkinson, Ian Bush, Matt Kendall, John Holt"
+__version__ = "0.7.4"
+__status__ = "Phase 3, Sprint 4 release"
 __website__ = "http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite"
-

@@ -5,6 +5,8 @@ Command line interface for the Climate Intercomparison Suite (CIS)
 import sys
 import logging
 
+from jasmin_cis.data_io.data_reader import DataReader
+from jasmin_cis.data_io.data_writer import DataWriter
 from jasmin_cis.exceptions import CISError, NoDataInSubsetError
 from jasmin_cis.utils import add_file_prefix
 from jasmin_cis import __author__, __version__, __status__, __website__
@@ -98,7 +100,7 @@ def info_cmd(main_arguments):
     filename = main_arguments.filename
     data_type = main_arguments.type
 
-    from jasmin_cis.info import  info
+    from jasmin_cis.info import info
 
     try:
         info(filename, variables, data_type)
@@ -117,9 +119,17 @@ def col_cmd(main_arguments):
 
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
+    data_reader = DataReader()
+    missing_data_for_missing_samples = False
+    if main_arguments.samplevariable is not None:
+        sample_data = data_reader.read_data(main_arguments.samplefiles, main_arguments.samplevariable,
+                                            main_arguments.sampleproduct)
+    else:
+        sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
+        missing_data_for_missing_samples = True
 
     try:
-        col = Colocate(main_arguments.samplefiles, main_arguments.samplevariable, main_arguments.sampleproduct, output_file)
+        col = Colocate(sample_data, output_file, missing_data_for_missing_samples)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
 
@@ -133,8 +143,11 @@ def col_cmd(main_arguments):
         filenames = input_group['filenames']
         product = input_group["product"] if input_group["product"] is not None else None
 
+        data = data_reader.read_data(filenames, variable, product)
+        data_writer = DataWriter()
         try:
-            col.colocate(variable, filenames, col_name, col_options, kern_name, kern_options, product)
+            output = col.colocate(data, col_name, col_options, kern_name, kern_options)
+            data_writer.write_data(output, output_file, sample_data, True)
         except ClassNotFoundError as e:
             __error_occurred(str(e) + "\nInvalid co-location option.")
         except (CISError, IOError) as e:
@@ -196,36 +209,52 @@ def version_cmd(_main_arguments):
 commands = {'plot': plot_cmd,
             'info': info_cmd,
             'col': col_cmd,
-            'aggregate' : aggregate_cmd,
+            'aggregate': aggregate_cmd,
             'subset': subset_cmd,
             'version': version_cmd}
 
 
-def main():
-    '''
-    The main method for the program.
-    Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
-    '''
-    import os
-    from parse import parse_args
-    import logging, logging.config
+def parse_and_run_arguments(arguments=None):
+    """
+    Parse and run the arguments
+    :param arguments: an arguments list or None to parse all
+    """
     from datetime import datetime
 
-    # configure logging
-    logging.config.fileConfig( os.path.join(os.path.dirname(__file__), "logging.conf"))
-    logging.captureWarnings(True) # to catch warning from 3rd party libraries
+    from parse import parse_args
 
     # parse command line arguments
-    arguments = parse_args()
+    arguments = parse_args(arguments)
     command = arguments.command
-
     logging.debug("CIS started at: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
     logging.debug("Running command: " + command)
     logging.debug("With the following arguments: " + str(arguments))
 
     # execute command
-    commands[command](arguments)
+    cmd = commands[command]
+    cmd(arguments)
 
 
-if __name__ ==  '__main__':
+def main():
+    """
+    The main method for the program.
+    Sets up logging, parses the command line arguments and then calls the appropriate command with its arguments
+    """
+    import os
+    import logging
+    from logging import config
+
+    # configure logging
+    try:
+        logging.config.fileConfig(os.path.join(os.path.dirname(__file__), "logging.conf"))
+    except IOError as e:
+        # If we don't have permission to write to the log file, all we can do is inform the user
+        # All future calls to the logging module will be ignored (?)
+        print("WARNING: Unable to write to the log: %s" % e)
+    logging.captureWarnings(True)  # to catch warning from 3rd party libraries
+
+    parse_and_run_arguments()
+
+
+if __name__ == '__main__':
     main()

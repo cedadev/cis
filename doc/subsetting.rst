@@ -15,7 +15,7 @@ where:
 ``datagroup``
   is of the format ``variable:filenames[:product]`` in which product is optional. Each is described in more detail below.
 
-    * ``variable`` is a non-optional argument used to specify the variable to use.
+    * ``variable`` is a non-optional argument used to specify the variable to use. Alternatively, this may be a comma separated list of variables to colocate, in which case output file will contain all of these variables. Currently, for ungridded data all variables must be on the same grid / use the same coordinates.
     * ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma seperated list of the following possibilities:
 
       #. A single filename - this should be the full path to the file
@@ -40,7 +40,7 @@ where:
     * Other coordinates ranges are interpreted so that the subset includes values for which the coordinate value is greater than the smaller of start and end, and less than the larger of start and end (so the order in which start and end are specified is not significant).
 
 ``outputfile``
-  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
 
 A full example would be::
 

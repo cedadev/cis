@@ -35,9 +35,12 @@ class Aggregator:
             if grid is not None:
                 if isnan(grid.delta):
                     if isinstance(kernel, iris.analysis.WeightedAggregator):
+                        # If this is a list we can calculate weights using the first item (all variables should be on
+                        # same grid)
+                        data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
                         # Weights to correctly calculate areas. We need to remove the aux_coords first though, to
                         # prevent Iris getting confused between new and old coordinates.
-                        area_weights = iris.analysis.cartography.area_weights(self.data)
+                        area_weights = iris.analysis.cartography.area_weights(data_for_weights)
                         self.data = self.data.collapsed(coord.name(), kernel, weights=area_weights)
                     elif isinstance(kernel, iris.analysis.Aggregator):
                         self.data = self.data.collapsed(coord.name(), kernel)
@@ -208,7 +211,10 @@ class Aggregator:
         constraint = BinningCubeCellConstraint()
         aggregated_cube = colocator.colocate(aggregation_cube, self.data, constraint, kernel)
 
-        return aggregated_cube[0]
+        if len(aggregated_cube) == 1:
+            return aggregated_cube[0]
+        else:
+            return aggregated_cube
 
     def get_grid(self, coord):
 

@@ -6,36 +6,39 @@ from iris.exceptions import IrisError
 import iris.unit
 import iris.util
 
+from jasmin_cis.data_io.data_reader import DataReader
+from jasmin_cis.data_io.data_writer import DataWriter
 import jasmin_cis.exceptions as ex
 import jasmin_cis.parse_datetime as parse_datetime
-from jasmin_cis.data_io.read import read_data
 from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
-from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from jasmin_cis.cis import __version__
-from jasmin_cis.utils import remove_file_prefix, guess_coord_axis
+from jasmin_cis.utils import guess_coord_axis
 
 
 class Subset(object):
-    def __init__(self, limits, output_file):
+    def __init__(self, limits, output_file, subsetter=Subsetter(), data_reader=DataReader(), data_writer=DataWriter()):
         self._limits = limits
         self._output_file = output_file
+        self._subsetter = subsetter
+        self._data_reader = data_reader
+        self._data_writer = data_writer
 
-    def subset(self, variable, filenames, product):
+    def subset(self, variables, filenames, product):
         # Read the input data - the parser limits the number of data groups to one for this command.
         data = None
         try:
             # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
             # the specified files.
-            logging.info("Reading data for variable: %s", variable)
-            data = read_data(filenames, variable, product)
+            logging.info("Reading data for variables: %s", variables)
+            data = self._data_reader.read_data(filenames, variables, product)
         except (IrisError, ex.InvalidVariableError) as e:
             raise ex.CISError("There was an error reading in data: \n" + str(e))
         except IOError as e:
             raise ex.CISError("There was an error reading one of the files: \n" + str(e))
 
         # Set subset constraint type according to the type of the data object.
-        if isinstance(data, cube.Cube):
+        if isinstance(data, cube.Cube) or isinstance(data, cube.CubeList):
             # Gridded data on Cube
             subset_constraint = GriddedSubsetConstraint()
         else:
@@ -43,20 +46,18 @@ class Subset(object):
             subset_constraint = UngriddedSubsetConstraint()
 
         self._set_constraint_limits(data, subset_constraint)
-        subsetter = Subsetter()
-        subset = subsetter.subset(data, subset_constraint)
+        subset = self._subsetter.subset(data, subset_constraint)
 
         if subset is None:
             # Constraints exclude all data.
             raise ex.NoDataInSubsetError("No output created - constraints exclude all data")
         else:
             history = "Subsetted using CIS version " + __version__ + \
-                      "\nvariable: " + str(variable) + \
+                      "\nvariables: " + str(variables) + \
                       "\nfrom files: " + str(filenames) + \
                       "\nusing limits: " + str(subset_constraint)
             subset.add_history(history)
-
-            subset.save_data(self._output_file, subset, True)
+            self._data_writer.write_data(subset, self._output_file, subset, True)
 
     def _set_constraint_limits(self, data, subset_constraint):
         for coord in data.coords():

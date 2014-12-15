@@ -18,11 +18,13 @@ def load_cube(*args, **kwargs):
 
 
 def make_from_cube(cube):
-    if cube is None:
-        gd = None
-    else:
+    gd = None
+    if isinstance(cube, iris.cube.Cube):
         gd = cube
         gd.__class__ = GriddedData
+    elif isinstance(cube, iris.cube.CubeList):
+        gd = cube
+        gd.__class__ = GriddedDataList
     return gd
 
 
@@ -159,3 +161,141 @@ class GriddedData(iris.cube.Cube, CommonData):
         output_file = remove_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
+
+
+class GriddedDataList(iris.cube.CubeList):
+    """
+    This class extends iris.cube.CubeList to add functionality needed for CIS to process multiple gridded data.
+
+    It is expected that it will contain jasmin.cis.data_io.gridded_data.GriddedData instances (which extend
+    iris.cube.Cube) rather than IRIS cubes themselves, as there is additional functionality required which is
+    present in the GriddedData wrapper.
+    """
+
+    def __str__(self):
+        "<GriddedDataList: %s>" % super(GriddedDataList, self).__str__()
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return True
+
+    @property
+    def var_name(self):
+        """
+        Get the variable names in this list
+        """
+        var_names = []
+        for data in self:
+            var_names.append(data.var_name)
+        return var_names
+
+    @property
+    def filenames(self):
+        """
+        Get the filenames in this list
+        """
+        filenames = []
+        for data in self:
+            filenames.extend(data.filenames)
+        return filenames
+
+    def add_history(self, new_history):
+        """
+        Appends to, or creates, the metadata history attribute using the supplied history string.
+        The new entry is prefixed with a timestamp.
+        :param new_history: history string
+        """
+        for data in self:
+            data.add_history(new_history)
+
+    def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
+        output_file = remove_file_prefix('cis-', output_file)
+        logging.info('Saving data to %s' % output_file)
+        iris.save(self, output_file)
+
+    def coords(self, *args, **kwargs):
+        """
+        Returns all unique coordinates used in all the UngriddedDataobjects
+        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
+        """
+        # Assumes all coordinates on same grid
+        return self[0].coords(*args, **kwargs)
+
+    def coord(self, *args, **kwargs):
+        """
+        Call iris.cube.Cube.coord(*args, **kwargs) for the first item of data (assumes all data in list has
+        same coordinates)
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return self[0].coord(*args, **kwargs)
+
+    def add_aux_coord(self, *args, **kwargs):
+        """
+        Call iris.cube.Cube.add_aux_coord(*args, **kwargs) for the all items in the data list
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        for var in self:
+            var.add_aux_coord(*args, **kwargs)
+
+    def coord_dims(self, *args, **kwargs):
+        """
+        Call iris.cube.Cube.coord_dims(*args, **kwargs) for the first item of data (assumes all data in list has
+        same coordinates)
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return self[0].coord_dims(*args, **kwargs)
+
+    def remove_coord(self, *args, **kwargs):
+        """
+        Call iris.cube.Cube.remove_coord(*args, **kwargs) for the all items in the data list
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        for var in self:
+            var.remove_coord(*args, **kwargs)
+
+    def add_dim_coord(self, *args, **kwargs):
+        """
+        Call iris.cube.Cube.add_dim_coord(*args, **kwargs) for the all items in the data list
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        for var in self:
+            var.add_dim_coord(*args, **kwargs)
+
+    def aggregated_by(self, *args, **kwargs):
+        """
+        Build an aggregated GriddedDataList by calling iris.cube.Cube.aggregated_by(*args, **kwargs)
+        for the all items in the data list
+        :param args:
+        :param kwargs:
+        :return: GriddedDataList
+        """
+        data_list = GriddedDataList()
+        for data in self:
+            data_list.append(data.aggregated_by(*args, **kwargs))
+        return data_list
+
+    def collapsed(self, *args, **kwargs):
+        """
+        Build a collapsed GriddedDataList by calling iris.cube.Cube.collapsed(*args, **kwargs)
+        for the all items in the data list
+        :param args:
+        :param kwargs:
+        :return: GriddedDataList
+        """
+        data_list = GriddedDataList()
+        for data in self:
+            collapsed_data = make_from_cube(data.collapsed(*args, **kwargs))
+            data_list.append(collapsed_data)
+        return data_list

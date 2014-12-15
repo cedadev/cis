@@ -5,11 +5,11 @@ import logging
 from time import gmtime, strftime
 
 from netCDF4 import _Variable, Variable
-from netcdf import get_data as netcdf_get_data
-from hdf_vd import get_data as hdf_vd_get_data, VDS
 from pyhdf.SD import SDS
-from hdf_sd import get_data as hdf_sd_get_data
 
+from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
+from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
+from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
 from jasmin_cis.data_io.common_data import CommonData
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
@@ -41,6 +41,22 @@ class Metadata(object):
             self.misc = {}
         else:
             self.misc = misc
+
+    def alter_standard_name(self, new_standard_name):
+        """
+        Alter the standard name and log an info line to say this is happening if the standard name is not empty
+        Also changes internal name for metadata
+        or the same
+        :param new_standard_name:
+        :return: nothing
+        """
+        if self.standard_name is not None \
+                and self.standard_name.strip() is not "" \
+                and self.standard_name is not new_standard_name:
+            logging.info("Changing standard name for dataset from '{}' to '{}'"
+                         .format(self.standard_name, new_standard_name))
+        self.standard_name = new_standard_name
+        self._name = new_standard_name
 
     @staticmethod
     def guess_standard_name(name):
@@ -255,7 +271,7 @@ class UngriddedData(LazyData, CommonData):
         #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
         if metadata.units == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
-    
+
     @property
     def x(self):
         return self.coord(axis='X')
@@ -460,3 +476,66 @@ class UngriddedCoordinates(CommonData):
         """
         return False
 
+
+class UngriddedDataList(list):
+    """
+    Class which represents multiple UngriddedData objects (e.g. from reading multiple variables)
+    """
+    def __str__(self):
+        "<UngriddedDataList: %s>" % super(UngriddedDataList, self).__str__()
+
+    @property
+    def is_gridded(self):
+        """Returns value indicating whether the data/coordinates are gridded.
+        """
+        return False
+
+    @property
+    def var_name(self):
+        """
+        Get the variable names in this list
+        """
+        var_names = []
+        for data in self:
+            var_names.append(data.var_name)
+        return var_names
+
+    @property
+    def filenames(self):
+        """
+        Get the filenames in this list
+        """
+        filenames = []
+        for data in self:
+            filenames.extend(data.filenames)
+        return filenames
+
+    def add_history(self, new_history):
+        """
+        Appends to, or creates, the metadata history attribute using the supplied history string.
+        The new entry is prefixed with a timestamp.
+        :param new_history: history string
+        """
+        for data in self:
+            data.add_history(new_history)
+
+    def coords(self, *args, **kwargs):
+        """
+        Returns all coordinates used in all the UngriddedDataobjects
+        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
+        """
+        return self[0].coords(*args, **kwargs)
+
+    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+        """
+        Save the UngriddedDataList to a file
+        :param output_file: output filename
+        :param sample_points: Should write sample points
+        :param coords_to_be_written: Should write Coordinates
+        :return:
+        """
+        logging.info('Saving data to %s' % output_file)
+        coords_to_be_written = True
+        for data in self:
+            data.save_data(output_file, data, coords_to_be_written)
+            coords_to_be_written = False  # Only write coordinates out for the first variable

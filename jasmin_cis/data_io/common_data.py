@@ -7,6 +7,8 @@ class CommonData(object):
     """
     __metaclass__ = ABCMeta
 
+    filenames = []
+
     @abstractmethod
     def get_coordinates_points(self):
         """Returns a list-like object allowing access to the coordinates of all points as HyperPoints.

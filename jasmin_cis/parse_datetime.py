@@ -165,11 +165,13 @@ def parse_as_number_or_datetime(in_string, name, parser):
 
 
 def convert_datetime_components_to_datetime(dt_components, is_lower_limit):
-    """Converts date and time components: year, month, day, hours, minutes, seconds to a datetime object for use
+    """
+    Converts date and time components: year, month, day, hours, minutes, seconds to a datetime object for use
     as a limit.
 
     Components beyond the year are defaulted if absent, taking minimum or maximum values if the value of
     is_lower_limit is True or False respectively.
+
     :param dt_components: list of date/time components as integers in the order:year, month, day, hours, minutes,
         seconds. At least the year must be specified. If only the year is specified it may be passed as an integer.
     :param is_lower_limit: If True, use minimum value for missing date/time components, otherwise use maximum.
@@ -210,3 +212,22 @@ def find_last_day_of_month(year, month):
     next_month = datetime.datetime(year, month, 28) + datetime.timedelta(days=4)
     last_date = next_month - datetime.timedelta(days=next_month.day)
     return last_date.day
+
+
+def parse_partial_datetime(datetime_string, use_upper_limit=False):
+    """
+    Parse and complete a full or partial ISO datetime
+    :param datetime_string: Datetime string (full or partial) which matches ISO date format.
+    Examples:
+    '2010-01-01T00:00:00'
+    '2010-01-01'
+    '2010'
+    :param use_upper_limit: Use the upper limit when completing missing parts of the datetime.
+    If true, the date is completed to be as late as possible, e.g:
+    '2010' -> '2010-12-31T23:59:59'
+    If false (default), the date is completed to be as early as possible, e.g.:
+    '2010' -> '2010-01-01T00:00:00'
+    :return: A Python datetime object corresponding to the parsed string
+    """
+    date_parts = _parse_datetime(datetime_string)
+    return convert_datetime_components_to_datetime(date_parts, use_upper_limit)

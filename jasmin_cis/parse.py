@@ -8,6 +8,8 @@ import os.path
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 from plotting.plot import Plotter
 import logging
+from utils import add_file_prefix
+
 
 def initialise_top_parser():
     '''
@@ -33,7 +35,8 @@ def add_plot_parser_arguments(parser):
 
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
-    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products', verbose=False)
+
+    product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products', verbose=False)
 
     parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
                         help = "The datagroups to be plotted, in the format 'variable:filenames[:options]', where "
@@ -286,7 +289,7 @@ def get_col_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "product"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product)
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
@@ -299,7 +302,8 @@ def get_col_samplegroup(samplegroup, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable", "colocator", "constraint", "kernel", "product"])
-    samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args, extract_method_and_args, extract_method_and_args, check_product)
+    samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args,
+                                           extract_method_and_args, extract_method_and_args, check_product)
 
     return parse_colon_and_comma_separated_arguments(samplegroup, parser, samplegroup_options, compulsary_args=1)[0]
 
@@ -312,7 +316,7 @@ def get_aggregate_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product, check_aggregate_kernel)
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product, check_aggregate_kernel)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
@@ -384,7 +388,7 @@ def get_subset_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
     DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
-    datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_product)
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
@@ -615,6 +619,11 @@ def check_is_not_empty(item, parser):
     return item
 
 
+def check_is_not_empty_and_comma_split(item, parser):
+    check_is_not_empty(item, parser)
+    return multi_split(item, [','])
+
+
 def convert_to_list_of_floats(arg, parser):
     # Given a string such as '[10.0,11.1,12.2]' retruns a list containing, 10.0, 11.1, 12.2
     return [float(x) for x in arg[1:-1].split(',')]
@@ -749,6 +758,24 @@ def assign_logs(arguments):
 
     return arguments
 
+
+def check_output_filepath_not_input(arguments, parser):
+    try:
+        input_files = list(arguments.samplefiles)
+    except AttributeError:
+        input_files = []  # Only applies to colocation
+
+    for datagroup in arguments.datagroups:
+        input_files.extend(datagroup['filenames'])
+    gridded_output_file = arguments.output + ".nc"
+    ungridded_output_file = add_file_prefix('cis-', gridded_output_file)
+    for output_file in [gridded_output_file, ungridded_output_file]:
+        for input_file in input_files:
+            if os.path.exists(output_file):
+                if os.path.samefile(output_file, input_file):
+                    parser.error("The input file must not be the same as the output file")
+
+
 def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
     check_plot_type(arguments.type, parser)
@@ -795,7 +822,10 @@ def validate_col_args(arguments, parser):
     arguments.samplefiles = arguments.samplegroup["filenames"]
     arguments.samplevariable = arguments.samplegroup["variable"] if arguments.samplegroup["variable"] is not "" else None
     arguments.sampleproduct = arguments.samplegroup["product"]
+    if arguments.samplegroup["colocator"] is None:
+        parser.error("You must specify a colocator")
     arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
+    check_output_filepath_not_input(arguments, parser)
 
     return arguments
 
@@ -803,12 +833,14 @@ def validate_col_args(arguments, parser):
 def validate_aggregate_args(arguments, parser):
     arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
     arguments.grid = get_aggregate_grid(arguments.aggregategrid, parser)
+    check_output_filepath_not_input(arguments, parser)
     return arguments
 
 
 def validate_subset_args(arguments, parser):
     arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
+    check_output_filepath_not_input(arguments, parser)
     return arguments
 
 

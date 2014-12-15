@@ -32,9 +32,11 @@ __author__ = 'duncan'
 #                                "\nTo see a list of variables run: cis info " + filenames[0] + " -h")
 
 import timeit
-from jasmin_cis.test.test_col import Test_nn_gridded
 
-tc = Test_nn_gridded()
+from jasmin_cis.test.unit.colocate.test_kernel import TestNNGridded
+
+
+tc = TestNNGridded()
 
 t = timeit.Timer(tc.test_basic_col_gridded_to_ungridded_in_2d_with_time)
 

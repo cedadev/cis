@@ -56,12 +56,43 @@ Data Products
 
 Users can write their own plugins for reading in different types of data. CIS uses the notion of a 'data product' to encapsulate the information about different types of data. They are concerned with 'understanding' the data and it's coordinates and producing a single self describing data object. 
 
-In order to create a data product one has to write their own subclass of AProduct that implements the abstract methods ``create_data_object(self, filenames, variable)``, ``get_file_signature(self)`` and ``create_coords(self, filenames)``. The ``get_file_signature(self)`` method should just return a list of regular expressions which are used to decided when this data product should be used and the others are self explanatory. Here is an example of what such implementation could look like::
+A data product is a subclass of AProduct and as such must implement the abstract methods:
+
+``get_file_signature(self)``
+  Returns a list of regex's to match the product's file naming convention. CIS will use this to decide which data product to
+  use for a given file. The first product with a signature that matches the filename will be used. The order in which
+  the products are searched is determined by the priority property, highest value first; internal products generally have
+  a priority of 10. The product can open the file to determine whether it can read it see ``get_file_type_error``.
+
+``create_coords(self, filenames)``
+  Create a Coordinate object from the data files in the ``filenames`` parameter.
+
+``create_data_object(self, filenames, variable)``
+  Create and returns an ungridded data object for a given variable from many files. The ``filenames`` parameters is a list of
+  filenames for the data. The parameter ``variable`` is the name of the variable to read from the dataset.
+
+and may choose to implement:
+
+``get_variable_names(self, filenames, data_type=None)``
+  This return a list of valid variables names from the ``filenames`` list passed in. If not implemented the base function will be used.
+  The ``data_type`` parameter can be used to specify extra information.
+
+``get_file_type_error(self, filenames)``
+  Check the ``filename`` to see if it is of the correct type and if not return a list of errors. If the return is
+  None then there are no error and this is the correct data product to use for this file. This gives a mechanism for a data
+  product to identify itself as the correct product to use even if a specific file signature can not be specified. For
+  example GASSP is a type of NetCDF file and so filenames end with .nc but so do other NetCDF files, so the data product opens
+  the file and looks for the GASSP version attribute, and if it doesn't find it returns a error.
+
+Here is a sketch of a data product implementation::
 
   class MyProd(AProduct):
-  
+
+      #set the priority to be higher than the other netcdf file types
+      priority = 20
+
       def get_file_signature(self):
-          return [r'.*something*']
+          return [r'.*something*', r'.*somethingelse*']
   
       def create_coords(self, filenames):
   
@@ -94,6 +125,20 @@ In order to create a data product one has to write their own subclass of AProduc
           coords = self.create_coords(filenames)
           return UngriddedData(data,metadata,coords)
 
+      def get_file_type_error(self, filename):
+
+          if not os.path.isfile(filename):
+              return ["File does not exist"]
+
+          if not file_has_attribute("file_type", filename):
+             return ["File has wrong file type"]
+
+          return None
+
+      def get_variable_names(self, filenames, data_type=None):
+          vars = variable_names_from_file
+          del vars['Not useful']
+          return vars
 
 
 Colocation

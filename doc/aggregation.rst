@@ -13,7 +13,11 @@ To perform aggregation, run a command of the format::
 where:
 
 ``variable``
-  A non-optional argument used to specify the name of the variable to aggregate
+  A non-optional argument used to specify the name of the variable to aggregate. This may be a comma separated list of
+  variables to aggregate, in which case the output file will contain all of these variables. Like files, you may use
+  glob style wildcards, so \*, ? and [] can all be used. Multiple variables must all be on the same grid and use the
+  same coordinates.
+
 
 ``filenames`` 
   A non-optional argument used to specify the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
@@ -49,7 +53,7 @@ where:
 
 
 ``outputfile``
-  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` extension and prepended with ``cis-``, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
 
 A full example would be::
 
