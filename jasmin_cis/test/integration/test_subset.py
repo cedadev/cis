@@ -274,6 +274,14 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_temporal_subsetting(time_min, time_max, True)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_subset_ASCII(self):
+        variable = 'value'
+        filename = valid_ascii_filename
+        time_min, time_max = '2012-08-23T15:32:03', '2012-08-28T00:00:00'
+        self.do_subset(filename, time_min, time_max, variable)
+        self.check_temporal_subsetting(time_min, time_max, False)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+
 
 class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
 
@@ -396,7 +404,8 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
 
     def test_subset_CloudSatRVOD(self):
         #257s exit code 137
-        variable = '*'
+        variable = '*'  # Gets killed by Jenkins
+        variable = "RVOD_liq_water_content,RVOD_ice_water_path"
         filename = valid_cloudsat_RVOD_file
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
@@ -409,5 +418,13 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         filename = valid_GASSP_aeroplane_filename
         lon_min, lon_max = -94, 95
         lat_min, lat_max = 30, 31
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_ASCII(self):
+        variable = '*'
+        filename = valid_ascii_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 1, 6
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)

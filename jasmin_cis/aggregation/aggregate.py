@@ -47,7 +47,7 @@ class Aggregate(object):
             data = aggregator.aggregate_ungridded(kernel)
 
         #TODO Tidy up output of grid in the history
-        history = "Subsetted using CIS version " + __version__ + \
+        history = "Aggregated using CIS version " + __version__ + \
                   "\n variables: " + str(variables) + \
                   "\n from files: " + str(filenames) + \
                   "\n using new grid: " + str(self._grid) + \

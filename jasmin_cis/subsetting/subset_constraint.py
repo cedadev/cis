@@ -120,6 +120,8 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         for coord in new_coords:
             coord.data = np.ma.masked_array(coord.data, mask=combined_mask)
             coord.data = coord.data.compressed()
+            coord.metadata.shape = coord.data.shape
+            coord._data_flattened = None  # Otherwise Coord won't recalculate this.
 
         if isinstance(data, list):
             for variable in data:
