@@ -410,7 +410,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -94, 95
         lat_min, lat_max = 30, 31
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_ASCII(self):
         variable = '*'
