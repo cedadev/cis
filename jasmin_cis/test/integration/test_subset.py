@@ -403,6 +403,15 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
+    def test_subset_GASP(self):
+        #257s exit code 137
+        variable = '*'
+        filename = valid_GASSP_aeroplane_filename
+        lon_min, lon_max = -94, 95
+        lat_min, lat_max = 30, 31
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
     def test_subset_ASCII(self):
         variable = '*'
         filename = valid_ascii_filename

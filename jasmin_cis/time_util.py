@@ -5,7 +5,8 @@ import netcdftime
 import numpy as np
 from iris.unit import Unit
 
-cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00',calendar='gregorian')
+cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00', calendar='gregorian')
+
 
 def parse_datetimestr_to_std_time(s):
     import dateutil.parser as du
@@ -80,6 +81,7 @@ def parse_datetimestr_delta_to_float_days(s):
 def calculate_mid_time(t1, t2):
     '''
         Find the mid time between two times expressed as floats
+
     :param t1: a time represented as a float
     :param t2: a time in the same representation as t1
     :return: a float representing the time between t1 and t2
@@ -90,7 +92,9 @@ def calculate_mid_time(t1, t2):
 def convert_time_since_to_std_time(time_array, units):
     from netcdftime import _dateparse
     import datetime
-    units, utc_offset, dt = _dateparse(units)
+    units_no_colon_in_since = units.replace("since:", "since")
+
+    units, utc_offset, dt = _dateparse(units_no_colon_in_since)
     dt = datetime.datetime(*dt.timetuple()[0:6])
     if units.lower() == 'days':
         new_array = convert_numpy_array(time_array, 'float64', convert_days_since_to_std_time, dt)
@@ -101,19 +105,37 @@ def convert_time_since_to_std_time(time_array, units):
     return new_array
 
 
+def convert_time_using_time_stamp_info_to_std_time(time_array, units, time_stamp_info=None):
+    """
+    Convert the time using time stamp info and the first word of the units
+    :param time_array: the time array to convert
+    :param units: the units of the array (e.g. day or Days from the file time reference 2012-12-12)
+    :param time_stamp_info: the time stamp to use for the convertion
+    :return: converted data
+    """
+    units = units.split()
+    if len(units) is 0:
+        raise ValueError("Units is empty when converting time")
+
+    units_in_since_form = units[0] + " since " + time_stamp_info
+
+    return convert_time_since_to_std_time(time_array, units_in_since_form)
+
+
 def convert_sec_since_to_std_time_array(tai_time_array, ref):
     return convert_numpy_array(tai_time_array, 'float64', convert_sec_since_to_std_time, ref)
 
 
 def convert_sec_since_to_std_time(seconds, ref):
-    '''
-        Convert a number of seconds since a given reference datetime to a number of days since our standard time.
-        This in principle could avoid the intermediate step converting to a datetime object except we don't know which
-         calander the reference is on, e.g. it could be a 360 day calendar
+    """
+    Convert a number of seconds since a given reference datetime to a number of days since our standard time.
+    This in principle could avoid the intermediate step converting to a datetime object except we don't know which
+    calender the reference is on, e.g. it could be a 360 day calendar
+
     :param seconds:
     :param ref:
     :return:
-    '''
+    """
     from datetime import timedelta
     return cis_standard_time_unit.date2num(timedelta(seconds=float(seconds)) + ref)
 
@@ -164,7 +186,7 @@ def convert_array_type(array, new_type, operation, *args, **kwargs):
 
 
 def convert_numpy_array(array, new_type, operation, *args, **kwargs):
-    if isinstance(array,np.ma.MaskedArray):
+    if isinstance(array, np.ma.MaskedArray):
         new_array = convert_masked_array_type(array, new_type, operation, *args, **kwargs)
     else:
         new_array = convert_array_type(array, new_type, operation, *args, **kwargs)
@@ -215,6 +237,7 @@ def convert_cube_time_coord_to_standard_time(cube):
 
     return cube
 
+
 def convert_cube_time_coord_to_standard_time_assuming_gregorian_calendar(cube):
     """Converts the time coordinate from the one in the cube to one based on a standard time unit.
 
@@ -231,7 +254,7 @@ def convert_cube_time_coord_to_standard_time_assuming_gregorian_calendar(cube):
     cube.remove_coord(t_coord)
 
     # Convert the raw time numbers to our 'standard' time
-    new_datetimes = convert_numpy_array(t_coord.points,'O',t_coord.units.num2date)
+    new_datetimes = convert_numpy_array(t_coord.points, 'O', t_coord.units.num2date)
     new_datetime_nums = convert_obj_to_standard_date_array(new_datetimes)
 
     # Create a new time coordinate by copying the old one, but using our new points and units

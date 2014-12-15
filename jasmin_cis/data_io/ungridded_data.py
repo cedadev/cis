@@ -42,6 +42,22 @@ class Metadata(object):
         else:
             self.misc = misc
 
+    def alter_standard_name(self, new_standard_name):
+        """
+        Alter the standard name and log an info line to say this is happening if the standard name is not empty
+        Also changes internal name for metadata
+        or the same
+        :param new_standard_name:
+        :return: nothing
+        """
+        if self.standard_name is not None \
+                and self.standard_name.strip() is not "" \
+                and self.standard_name is not new_standard_name:
+            logging.info("Changing standard name for dataset from '{}' to '{}'"
+                         .format(self.standard_name, new_standard_name))
+        self.standard_name = new_standard_name
+        self._name = new_standard_name
+
     @staticmethod
     def guess_standard_name(name):
         standard_name = name

@@ -1,7 +1,9 @@
-'''
+"""
 module to test the various subclasses of the abstract AProduct class
-'''
+"""
+
 import unittest
+from hamcrest import *
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 
@@ -32,8 +34,8 @@ class ProductTests(object):
 
     @istest
     def test_file_regex_matching_for_full_path(self):
-        check_regex_matching(self.product.__name__, "/home/duncan/" + self.filename)
-        check_regex_matching(self.product.__name__, "/a/xenida/more/lev20/confusing/hdf/path/nc/" + self.filename)
+        import os
+        check_regex_matching(self.product.__name__,  os.path.join(os.getcwd(), self.filename))
 
     @istest
     def test_variable_wildcarding(self):
@@ -65,7 +67,6 @@ class ProductTests(object):
     def test_write_coords(self):
         from jasmin_cis.data_io.write_netcdf import write_coordinates
         from os import remove
-
         test_file = '/tmp/test_out.nc'
         coords = self.product().create_coords([self.filename], self.valid_variable)
         write_coordinates(coords, test_file)
@@ -277,53 +278,25 @@ class TestCis(ProductTests, unittest.TestCase):
         self.product = cis
         self.vars = ['pixel_number', 'latitude', 'longitude', 'time', 'AOD550', 'AOD870']
 
-
-class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
-    def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_NCAR_NetCDF_RAF_filename, valid_NCAR_NetCDF_RAF_variable
-
-        self.filename = valid_NCAR_NetCDF_RAF_filename
-        self.valid_variable = valid_NCAR_NetCDF_RAF_variable
-        self.product = NCAR_NetCDF_RAF
-
-    def check_valid_vars(self, vars):
-        exclude_vars = ["ACDP_LWI", "AUHSAS_RWI", "CCDP_LWI",
-                        "CUHSAS_RWI"]  # , "LATC", "LONC", "GGALTC", "Time", "PSXC"]
-        assert len(vars) == 117
-        for key in exclude_vars:
-            assert key not in vars
-
-
-class TestAeronet(ProductTests, unittest.TestCase):
-    def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, \
-            another_valid_aeronet_filename
-
+class TestAeronet(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
         self.filename = valid_aeronet_filename
         self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
         self.valid_variable = valid_aeronet_variable
         self.product = Aeronet
 
-    def check_valid_vars(self, vars):
-        assert len(vars) == 45
-        for var in vars:
-            assert '\n' not in var
-
     @istest
     def test_create_data_object_from_multiple_files(self):
         self.product().create_data_object(self.filenames, self.valid_variable)
 
-
-class TestASCII(ProductTests, unittest.TestCase):
-    def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_ascii_filename, valid_ascii_variable, \
-            ascii_filename_with_no_values
-
+class TestASCII(ProductTests):
+    def __init__(self):
+        from jasmin_cis.test.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
         self.filename = valid_ascii_filename
         self.no_value_filename = ascii_filename_with_no_values
         self.valid_variable = valid_ascii_variable
         self.product = ASCII_Hyperpoints
-        self.vars = ['latitude', 'longitude', 'altitude', 'time', 'value']
 
     @istest
     @raises(IOError)
@@ -349,8 +322,8 @@ class TestASCII(ProductTests, unittest.TestCase):
         from jasmin_cis.time_util import convert_datetime_to_std_time
 
         data = self.product().create_data_object([self.filename], True)
-        assert (data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 25, 15, 32, 03)))
-        assert (data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 26)))
+        assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 25, 15, 32, 03)))
+        assert(data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 26)))
 
 
 class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):

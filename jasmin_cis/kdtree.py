@@ -1,5 +1,8 @@
+"""
 # Copyright Anne M. Archibald 2008
 # Released under the scipy license
+"""
+
 from __future__ import division, print_function, absolute_import
 
 import sys
@@ -27,17 +30,16 @@ def minkowski_distance_p(x, y, p=2):
     not extract the pth root. If `p` is 1 or infinity, this is equal to
     the actual L**p distance.
 
-    Parameters
-    ----------
-    x : (M, K) array_like
+
+    :param x: (M, K) array_like
         Input array.
-    y : (N, K) array_like
+    :param y: (N, K) array_like
         Input array.
-    p : float, 1 <= p <= infinity
+    :param p: float, 1 <= p <= infinity
         Which Minkowski p-norm to use.
 
     Examples
-    --------
+
     >>> minkowski_distance_p([[0,0],[0,0]], [[1,1],[0,1]])
     array([2, 1])
 
@@ -55,17 +57,16 @@ def minkowski_distance(x, y, p=2):
     """
     Compute the L**p distance between two arrays.
 
-    Parameters
-    ----------
-    x : (M, K) array_like
+    :param x: (M, K) array_like
         Input array.
-    y : (N, K) array_like
+    :param y: (N, K) array_like
         Input array.
-    p : float, 1 <= p <= infinity
+    :param p: float, 1 <= p <= infinity
         Which Minkowski p-norm to use.
+    :return:
 
     Examples
-    --------
+
     >>> minkowski_distance([[0,0],[0,0]], [[1,1],[0,1]])
     array([ 1.41421356,  1.        ])
 
@@ -200,11 +201,9 @@ class RectangleBase(object):
         distances to the children, it can be done more efficiently
         by updating the maximum and minimum distances to the parent.
 
-        Parameters
-        ----------
-        d : int
+        :param d: int
             Axis to split hyperrectangle along.
-        split :
+        :param split:
             Input.
 
         """
@@ -224,11 +223,9 @@ class Rectangle(RectangleBase):
         """
         Return the minimum distance between input and points in the hyperrectangle.
 
-        Parameters
-        ----------
-        x : array_like
+        :param x: array_like
             Input.
-        p : float, optional
+        :param p: float, optional
             Input.
 
         """
@@ -242,11 +239,9 @@ class Rectangle(RectangleBase):
         """
         Return the maximum distance between input and points in the hyperrectangle.
 
-        Parameters
-        ----------
-        x : array_like
+        :param x: array_like
             Input array.
-        p : float, optional
+        :param p: float, optional
             Input.
 
         """
@@ -256,11 +251,9 @@ class Rectangle(RectangleBase):
         """
         Compute the minimum distance between points in the two hyperrectangles.
 
-        Parameters
-        ----------
-        other : hyperrectangle
+        :param other: hyperrectangle
             Input.
-        p : float
+        :param p: float
             Input.
 
         """
@@ -270,11 +263,9 @@ class Rectangle(RectangleBase):
         """
         Compute the maximum distance between points in the two hyperrectangles.
 
-        Parameters
-        ----------
-        other : hyperrectangle
+        :param other: hyperrectangle
             Input.
-        p : float, optional
+        :param p: float, optional
             Input.
 
         """
@@ -374,11 +365,9 @@ class RectangleHaversine(RectangleBase):
         Approximate implementation determining the point to which to measure as if
         in Euclidean space.
 
-        Parameters
-        ----------
-        x : array_like
+        :param x: array_like
             Input.
-        p : float, optional
+        :param p: float, optional
             Input.
 
         """
@@ -394,9 +383,9 @@ class RectangleHaversine(RectangleBase):
 
         Parameters
         ----------
-        x : array_like
+        :param x: array_like
             Input.
-        p : float, optional
+        :param p: float, optional
             Input.
 
         """
@@ -411,18 +400,15 @@ class KDTree(object):
     This class provides an index into a set of k-dimensional points which
     can be used to rapidly look up the nearest neighbors of any point.
 
-    Parameters
-    ----------
-    data : (N,K) array_like
+    :param data: (N,K) array_like
         The data points to be indexed. This array is not copied, and
         so modifying this data will result in bogus results.
-    leafsize : int, optional
+    :param leafsize: int, optional
         The number of points at which the algorithm switches over to
         brute-force.  Has to be positive.
 
-    Raises
-    ------
-    RuntimeError
+    :raises:
+     RuntimeError
         The maximum recursion limit can be exceeded for large data
         sets.  If this happens, either increase the value for the `leafsize`
         parameter or increase the recursion limit by::
@@ -431,7 +417,7 @@ class KDTree(object):
             >>> sys.setrecursionlimit(10000)
 
     Notes
-    -----
+
     The algorithm used is described in Maneewongvatana and Mount 1999.
     The general idea is that the kd-tree is a binary tree, each of whose
     nodes represents an axis-aligned hyperrectangle. Each node specifies
@@ -619,43 +605,40 @@ class KDTree(object):
         """
         Query the kd-tree for nearest neighbors
 
-        Parameters
-        ----------
-        x : array_like, last dimension self.m
+        :param x: array_like, last dimension self.m
             An array of points to query.
-        k : integer
+        :param k: integer
             The number of nearest neighbors to return.
-        eps : nonnegative float
+        :param eps: nonnegative float
             Return approximate nearest neighbors; the kth returned value
             is guaranteed to be no further than (1+eps) times the
             distance to the real kth nearest neighbor.
-        p : float, 1<=p<=infinity
+        :param p: float, 1<=p<=infinity
             Which Minkowski p-norm to use.
             1 is the sum-of-absolute-values "Manhattan" distance
             2 is the usual Euclidean distance
             infinity is the maximum-coordinate-difference distance
-        distance_upper_bound : nonnegative float
+        :param distance_upper_bound: nonnegative float
             Return only neighbors within this distance. This is used to prune
             tree searches, so if you are doing a series of nearest-neighbor
             queries, it may help to supply the distance to the nearest neighbor
             of the most recent point.
 
-        Returns
-        -------
-        d : array of floats
-            The distances to the nearest neighbors.
-            If x has shape tuple+(self.m,), then d has shape tuple if
-            k is one, or tuple+(k,) if k is larger than one.  Missing
-            neighbors are indicated with infinite distances.  If k is None,
-            then d is an object array of shape tuple, containing lists
-            of distances. In either case the hits are sorted by distance
-            (nearest first).
-        i : array of integers
-            The locations of the neighbors in self.data. i is the same
-            shape as d.
+        :returns :
+            d : array of floats
+                The distances to the nearest neighbors.
+                If x has shape tuple+(self.m,), then d has shape tuple if
+                k is one, or tuple+(k,) if k is larger than one.  Missing
+                neighbors are indicated with infinite distances.  If k is None,
+                then d is an object array of shape tuple, containing lists
+                of distances. In either case the hits are sorted by distance
+                (nearest first).
+            i : array of integers
+                The locations of the neighbors in self.data. i is the same
+                shape as d.
 
         Examples
-        --------
+
         >>> from scipy import spatial
         >>> x, y = np.mgrid[0:5, 2:8]
         >>> tree = spatial.KDTree(zip(x.ravel(), y.ravel()))
@@ -781,35 +764,31 @@ class KDTree(object):
     def query_ball_point(self, x, r, p=2., eps=0):
         """Find all points within distance r of point(s) x.
 
-        Parameters
-        ----------
-        x : array_like, shape tuple + (self.m,)
+        :param x: array_like, shape tuple + (self.m,)
             The point or points to search for neighbors of.
-        r : positive float
+        :param r: positive float
             The radius of points to return.
-        p : float, optional
+        :param p: float, optional
             Which Minkowski p-norm to use.  Should be in the range [1, inf].
-        eps : nonnegative float, optional
+        :param eps: nonnegative float, optional
             Approximate search. Branches of the tree are not explored if their
             nearest points are further than ``r / (1 + eps)``, and branches are
             added in bulk if their furthest points are nearer than
             ``r * (1 + eps)``.
 
-        Returns
-        -------
-        results : list or array of lists
+        :returns: list or array of lists
             If `x` is a single point, returns a list of the indices of the
             neighbors of `x`. If `x` is an array of points, returns an object
             array of shape tuple containing lists of neighbors.
 
-        Notes
-        -----
+        **Notes**
+
         If you have many points whose neighbors you want to find, you may save
         substantial amounts of time by putting them in a KDTree and using
         query_ball_tree.
 
-        Examples
-        --------
+        **Examples**
+
         >>> from scipy import spatial
         >>> x, y = np.mgrid[0:4, 0:4]
         >>> points = zip(x.ravel(), y.ravel())
@@ -834,24 +813,20 @@ class KDTree(object):
     def query_ball_tree(self, other, r, p=2., eps=0):
         """Find all pairs of points whose distance is at most r
 
-        Parameters
-        ----------
-        other : KDTree instance
+        :param other: KDTree instance
             The tree containing points to search against.
-        r : float
+        :param r: float
             The maximum distance, has to be positive.
-        p : float, optional
+        :param p: float, optional
             Which Minkowski norm to use.  `p` has to meet the condition
             ``1 <= p <= infinity``.
-        eps : float, optional
+        :param eps: float, optional
             Approximate search.  Branches of the tree are not explored
             if their nearest points are further than ``r/(1+eps)``, and
             branches are added in bulk if their furthest points are nearer
             than ``r * (1+eps)``.  `eps` has to be non-negative.
 
-        Returns
-        -------
-        results : list of lists
+        :returns:  list of lists
             For each element ``self.data[i]`` of this tree, ``results[i]`` is a
             list of the indices of its neighbors in ``other.data``.
 
@@ -903,22 +878,18 @@ class KDTree(object):
         """
         Find all pairs of points within a distance.
 
-        Parameters
-        ----------
-        r : positive float
+        :param r: positive float
             The maximum distance.
-        p : float, optional
+        :param p: float, optional
             Which Minkowski norm to use.  `p` has to meet the condition
             ``1 <= p <= infinity``.
-        eps : float, optional
+        :param eps: float, optional
             Approximate search.  Branches of the tree are not explored
             if their nearest points are further than ``r/(1+eps)``, and
             branches are added in bulk if their furthest points are nearer
             than ``r * (1+eps)``.  `eps` has to be non-negative.
 
-        Returns
-        -------
-        results : set
+        :returns: set
             Set of pairs ``(i,j)``, with ``i < j``, for which the corresponding
             positions are close.
 
@@ -1017,19 +988,15 @@ class KDTree(object):
         "N-body problems in statistical learning", and the code here is based
         on their algorithm.
 
-        Parameters
-        ----------
-        other : KDTree instance
+        :param other: KDTree instance
             The other tree to draw points from.
-        r : float or one-dimensional array of floats
+        :param r: float or one-dimensional array of floats
             The radius to produce a count for. Multiple radii are searched with
             a single tree traversal.
-        p : float, 1<=p<=infinity
+        :param p: float, 1<=p<=infinity
             Which Minkowski p-norm to use
 
-        Returns
-        -------
-        result : int or 1-D array of ints
+        :returns: int or 1-D array of ints
             The number of pairs. Note that this is internally stored in a numpy
             int, and so may overflow if very large (2e9).
 
@@ -1090,17 +1057,13 @@ class KDTree(object):
         Computes a distance matrix between two KDTrees, leaving as zero
         any distance greater than max_distance.
 
-        Parameters
-        ----------
-        other : KDTree
+        :param other:  KDTree
 
-        max_distance : positive float
+        :param max_distance: positive float
 
-        p : float, optional
+        :param p: float, optional
 
-        Returns
-        -------
-        result : dok_matrix
+        :returns: dok_matrix
             Sparse matrix representing the results in "dictionary of keys" format.
 
         """
@@ -1274,25 +1237,20 @@ def distance_matrix(x,y,p=2,threshold=1000000):
 
     Returns the matrix of all pair-wise distances.
 
-    Parameters
-    ----------
-    x : (M, K) array_like
+    :param x: (M, K) array_like
         TODO: description needed
-    y : (N, K) array_like
+    :param y: (N, K) array_like
         TODO: description needed
-    p : float, 1 <= p <= infinity
+    :param p: float, 1 <= p <= infinity
         Which Minkowski p-norm to use.
-    threshold : positive int
+    :param threshold: positive int
         If ``M * N * K`` > `threshold`, algorithm uses a Python loop instead
         of large temporary arrays.
-
-    Returns
-    -------
-    result : (M, N) ndarray
+    :returns: (M, N) ndarray
         Distance matrix.
 
     Examples
-    --------
+
     >>> distance_matrix([[0,0],[0,1]], [[1,0],[1,1]])
     array([[ 1.        ,  1.41421356],
            [ 1.41421356,  1.        ]])

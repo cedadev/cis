@@ -16,20 +16,24 @@ CIS has built-in support for NetCDF and HDF4 file formats. That said, most data 
 
 So far, CIS can read the following ungridded data files:
 
-  ================ ====================== ================= ======================================================================================================== 
-  Dataset          Product name           Type              File Signature                                                                                          
-  ================ ====================== ================= ======================================================================================================== 
-  AERONET          Aeronet                Ground-stations   \*.lev20                                                                                                
-  Aerosol CCI      Aerosol_CCI            Satellite         \*ESACCI*AEROSOL*          
-  CALIOP L1        Caliop_L1              Satellite         CAL_LID_L1-ValStage1-V3*.hdf                                                                                                                                                
-  CALIOP L2        Caliop_L2              Satellite         CAL_LID_L2_05kmAPro-Prov-V3*.hdf                                                                     
-  CloudSat         CloudSat               Satellite         \*_CS_*GRANULE*.hdf                                                                                     
-  Flight campaigns NCAR_NetCDF_RAF        Aircraft          RF*.nc                                                                                                
-  MODIS L2         MODIS_L2               Satellite         \*MYD06_L2*.hdf, \*MOD06_L2*.hdf, \*MYD04_L2*.hdf, \*MOD04_L2*.hdf, \*MYDATML2.*.hdf, \*MODATML2*.hdf
-  Cloud CCI        Cloud_CCI              Satellite         \*ESACCI*CLOUD*                                                                                       
-  CSV datapoints   ASCII_Hyperpoints      N/A               \*.txt                                                                                                  
-  CIS ungridded    cis                    CIS output        cis-\*.nc       
-  ================ ====================== ================= ======================================================================================================== 
+  ================ ====================== =================  ========================================================================================================
+  Dataset          Product name           Type               File Signature
+  ================ ====================== =================  ========================================================================================================
+  AERONET          Aeronet                Ground-stations    \*.lev20
+  Aerosol CCI      Aerosol_CCI            Satellite          \*ESACCI*AEROSOL*
+  CALIOP L1        Caliop_L1              Satellite          CAL_LID_L1-ValStage1-V3*.hdf
+  CALIOP L2        Caliop_L2              Satellite          CAL_LID_L2_05kmAPro-Prov-V3*.hdf
+  CloudSat         CloudSat               Satellite          \*_CS_*GRANULE*.hdf
+  Flight campaigns NCAR_NetCDF_RAF        Aircraft           RF*.nc
+  MODIS L2         MODIS_L2               Satellite          \*MYD06_L2*.hdf, \*MOD06_L2*.hdf, \*MYD04_L2*.hdf, \*MOD04_L2*.hdf, \*MYDATML2.*.hdf, \*MODATML2*.hdf
+  Cloud CCI        Cloud_CCI              Satellite          \*ESACCI*CLOUD*
+  CSV datapoints   ASCII_Hyperpoints      N/A                \*.txt
+  CIS ungridded    cis                    CIS output         cis-\*.nc
+  NCAR-RAF         NCAR_NetCDF_RAF        Aircraft           \*.nc containing the attribute Conventions with the value NCAR-RAF/nimbus
+  GASSP            NCAR_NetCDF_RAF        Aircraft           \*.nc containing the attribute GASSP_Version
+  GASSP            NCAR_NetCDF_RAF        Ship               \*.nc containing the attribute GASSP_Version, with no altitude
+  GASSP            NCAR_NetCDF_RAF        Ground-station     \*.nc containing the attribute GASSP_Version, with attributes Station_Lat, Station_Lon and Station_Altitude
+  ================ ====================== =================  ========================================================================================================
 
 
 It can also read the following gridded data types:

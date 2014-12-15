@@ -3,6 +3,10 @@ import logging
 import iris
 import iris.exceptions
 
+# add includes for plugin finder
+from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
+
+
 from jasmin_cis.data_io.hdf_vd import get_data, VDS
 from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 from jasmin_cis.exceptions import InvalidVariableError, CoordinateNotFoundError
@@ -745,76 +749,6 @@ class cis(AProduct):
             res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
 
         return res
-
-    def create_data_object(self, filenames, variable):
-        return self.create_coords(filenames, variable)
-
-
-class abstract_NetCDF_CF(AProduct):
-
-    def get_file_signature(self):
-        # We don't know of any 'standard' netCDF CF data yet...
-        return []
-
-    def create_coords(self, filenames, variable=None):
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-
-        variables = [ "latitude", "longitude", "altitude", "time" ]
-        logging.info("Listing coordinates: " + str(variables))
-
-        if variable is not None:
-            variables.append(variable)
-
-        data_variables = read_many_files(filenames, variables)
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["longitude"], get_metadata(data_variables["longitude"]), "X"))
-        coords.append(Coord(data_variables["latitude"], get_metadata(data_variables["latitude"]), "Y"))
-        coords.append(Coord(data_variables["altitude"], get_metadata(data_variables["altitude"]), "Z"))
-        coords.append(Coord(data_variables["time"], get_metadata(data_variables["time"]), "T"))
-
-        if variable is None:
-            return UngriddedCoordinates(coords)
-        else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
-
-    def create_data_object(self, filenames, variable):
-        return self.create_coords(filenames, variable)
-
-
-class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
-
-    valid_dimensions = ["Time"]
-
-    def get_file_signature(self):
-        return [r'RF.*\.nc']
-
-    def create_coords(self, filenames, variable=None):
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-
-        variables = ["LATC", "LONC", "GGALTC", "Time", "PSXC"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        if variable is not None:
-            variables.append(variable)
-
-        data_variables = read_many_files(filenames, variables, dim='Time')
-
-        coords = CoordList()
-        coords.append(Coord(data_variables["LATC"], get_metadata(data_variables["LATC"]), "Y"))
-        coords.append(Coord(data_variables["LONC"], get_metadata(data_variables["LONC"]), "X"))
-        coords.append(Coord(data_variables["GGALTC"], get_metadata(data_variables["GGALTC"]), "Z"))
-        time_coord = Coord(data_variables["Time"], get_metadata(data_variables["Time"]), "T")
-        time_coord.convert_to_std_time()
-        coords.append(time_coord)
-        coords.append(Coord(data_variables["PSXC"], get_metadata(data_variables["PSXC"]), "P"))
-
-        if variable is None:
-            return UngriddedCoordinates(coords)
-        else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable]), coords)
 
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)

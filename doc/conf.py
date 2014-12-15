@@ -46,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'JASMIN Community Inter-comparrison Suite'
+project = u'JASMIN Community Inter-comparison Suite'
 copyright = u'2014, Centre of Environmental Data Archival'
 
 # The version info for the project you're documenting, acts as replacement for
