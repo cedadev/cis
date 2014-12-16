@@ -1,9 +1,26 @@
 '''
 Module that contains various strings that are used in tests
 '''
+from collections import namedtuple
+from datetime import datetime
 
 import os
 
+# A dictionary of test file tuples indexed by characteristic name
+cis_test_files = {}
+
+# values are None for not applicable
+TestFile = namedtuple('TestFile',
+                      ["master_filename",
+                       "start_datetime",
+                       "end_datetime",
+                       "lat_min",
+                       "lat_max",
+                       "lon_min",
+                       "lon_max",
+                       "valid_vars_count",
+                       "data_variable_name",
+                       "data_variable_properties"])
 
 def make_pathname(filename):
     return os.path.join(os.path.dirname(__file__), filename)
@@ -82,6 +99,24 @@ valid_NCAR_NetCDF_RAF_filename_expected_vars = [
 valid_GASSP_aeroplane_filename = make_pathname("SP2_mrg60_NP3_20060927_R1.ict.nc")
 valid_GASSP_aeroplane_vars = ['BC_ng_kg', "BC_ng_m3", "UTC_mid", "GpsAlt", "GpsLat", "GpsLon"]
 valid_GASSP_aeroplane_variable = valid_GASSP_aeroplane_vars[0]
+
+
+cis_test_files["GASSP_aeroplane"] = TestFile(
+    master_filename=valid_GASSP_aeroplane_filename,
+    start_datetime=datetime(2006, 9, 27, 18, 43, 30),
+    end_datetime=datetime(2006, 9, 27, 23, 53, 30),
+    lat_min=29.4966,
+    lat_max=31.0048,
+    lon_min=-96.0271,
+    lon_max=-93.4528,
+#    alt_min=20.5,
+#    alt_max=3678.5,
+    valid_vars_count=len(valid_GASSP_aeroplane_vars),
+    data_variable_name=valid_GASSP_aeroplane_variable,
+    data_variable_properties={
+        "units": "ng/kg",
+        "missing_value": -9999}
+    )
 
 valid_GASSP_ship_filename = make_pathname("AMSpmel_RHB_20081020_R0.ict.nc")
 valid_GASSP_ship_vars = ['NRno3', "Start_UTC", "LAT_Deg", "LONGT_Deg", "NRso4", "NRpom", "NRnh4"]
