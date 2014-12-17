@@ -1,7 +1,7 @@
 import logging
 import os
 from jasmin_cis.data_io.Coord import CoordList
-from jasmin_cis.exceptions import InvalidVariableError, FileTypeError
+from jasmin_cis.exceptions import InvalidVariableError, FileFormatError
 from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
 from jasmin_cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
 from jasmin_cis.utils import add_to_list_if_not_none, dimensions_equal
@@ -245,14 +245,14 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         Get the file type and any errors
         :param filename: the filename to read the type of
         :return: filetype
-        :raises: FileType error if there is an error
+        :raises: FileFormatError if there is an error
         """
         if not os.path.isfile(filename):
-            raise FileTypeError(["File does not exist"])
+            raise FileFormatError(["File does not exist"])
         try:
             attributes = get_netcdf_file_attributes(filename)
         except RuntimeError as ex:
-            raise FileTypeError(["File is unreadable", ex.message])
+            raise FileFormatError(["File is unreadable", ex.message])
 
         attributes_lower = {attr.lower(): val for attr, val in attributes.items()}
         if self.GASSP_VERSION_ATTRIBUTE_NAME.lower() in attributes_lower:
@@ -264,12 +264,12 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
             if self.NCAR_RAF_CONVENTION_VERSION_ATTRIBUTE_NAME.lower() in attributes_lower:
                 version = "/{}".format(attributes_lower[self.NCAR_RAF_CONVENTION_VERSION_ATTRIBUTE_NAME.lower()])
             if not ncarraf_convention == self.NCAR_RAF_KNOWN_CONVENTION:
-                raise FileTypeError(["NCAR-RAF convention unknown, expecting '{}' was '{}'"
+                raise FileFormatError(["NCAR-RAF convention unknown, expecting '{}' was '{}'"
                     .format(self.NCAR_RAF_KNOWN_CONVENTION, ncarraf_convention)])
             file_type = "NetCDF/{}{}".format(ncarraf_convention, version)
 
         else:
-            raise FileTypeError(["File does not appear to be NCAR RAF or GASSP. No attributes for either '{}' or '{}'"
+            raise FileFormatError(["File does not appear to be NCAR RAF or GASSP. No attributes for either '{}' or '{}'"
                             .format(self.GASSP_VERSION_ATTRIBUTE_NAME, self.NCAR_RAF_CONVENTIONS_ATTRIBUTE_NAME)])
 
         return file_type
@@ -283,7 +283,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         try:
             self._get_file_format(filename)
             return None
-        except FileTypeError as ex:
+        except FileFormatError as ex:
             return ex.error_list
 
     def _load_data_definition(self, filenames):
@@ -435,6 +435,6 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         :param filenames: filenames of files that make up the dataset
         :returns: file format, of the form parent format/specific instance/version, if there is not a specific fileformat
         for the data product returns the data product name
-        :raises: FileTypeError if files type is not determinable
+        :raises: FileFormatError if files type is not determinable
         """
         return self._get_file_format(filenames)

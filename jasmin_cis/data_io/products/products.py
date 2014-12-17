@@ -815,7 +815,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
             raise InvalidVariableError("Variable not found: " + str(variable) +
                                        "\nTo see a list of variables run: cis info " + filenames[0])
         except ValueError as e:
-            raise IOError(e)
+            raise IOError(str(e))
 
         # Fix to create a hybrid pressure factory in Iris. More attempts may be required for different file types. This
         # should be removed once the relevant Iris issue is resolved https://github.com/SciTools/iris/issues/933.

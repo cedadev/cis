@@ -60,12 +60,12 @@ class NoDataInSubsetError(CISError):
     pass
 
 
-class FileTypeError(CISError):
+class FileFormatError(CISError):
     """
     Throw when there is an error determining the type of a file
     """
     error_list = ['Unknown error']
 
     def __init__(self, error_list, *args, **kwargs):
-        super(FileTypeError, self).__init__(args, kwargs)
+        super(FileFormatError, self).__init__(args, kwargs)
         self.error_list = error_list

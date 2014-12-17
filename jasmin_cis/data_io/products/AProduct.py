@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import logging
 import traceback
+from jasmin_cis.exceptions import FileFormatError
 from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
 from jasmin_cis.data_io.hdf import get_hdf4_file_variables
 from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
@@ -205,16 +206,30 @@ def get_variables(filenames, product=None):
 
 
 def get_file_format(filenames, product=None):
+    """
+    Returns the files format of throws FileFormatError if there is an error in the format
+
+    :param filenames: the filenames to read
+    :param product: the product to use, if not specified search
+    :return: file format
+    :raises ClassNotFoundError: if there is no reader for this class
+    """
     product_cls = __get_class(filenames[0], product)
 
     logging.info("Retrieving file format using product " + product_cls.__name__ + "...")
     try:
-        return product_cls().get_file_format(filenames[0])
+        file_format = product_cls().get_file_format(filenames[0])
     except Exception as e:
         logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving the file format using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
+
+    try:
+        product_cls().create_coords(filenames)
+    except Exception as ex:
+        raise FileFormatError(error_list=['Could not read coordinates from the file', ex.message])
+    return file_format
 
 
 def get_product_full_name(filenames, product=None):
