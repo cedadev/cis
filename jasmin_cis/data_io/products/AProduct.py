@@ -80,6 +80,18 @@ class AProduct(object):
             variables.extend(file_variables)
         return set(variables)
 
+    def get_file_format(self, filenames):
+        """
+        Return the file format, in general this string is parent format/specific instance/version
+        e.g. NetCDF/GASSP/1.0
+        :param filenames: filenames of files that make up the dataset
+        :returns: file format, of the form parent format/specific instance/version, if there is not a specific fileformat
+        for the data product returns the data product name
+        """
+
+        return self.__class__.__name__
+
+
 
 def __get_class(filename, product=None):
     """
@@ -191,6 +203,18 @@ def get_variables(filenames, product=None):
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
 
+
+def get_file_format(filenames, product=None):
+    product_cls = __get_class(filenames[0], product)
+
+    logging.info("Retrieving file format using product " + product_cls.__name__ + "...")
+    try:
+        return product_cls().get_file_format(filenames[0])
+    except Exception as e:
+        logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
+        raise ProductPluginException("An error occurred retrieving the file format using the product %s. Check that this "
+                                     "is the correct product plugin for your chosen data. Exception was %s: %s."
+                                     % (product_cls.__name__, type(e).__name__, e.message), e)
 
 class ProductPluginException(Exception):
     """

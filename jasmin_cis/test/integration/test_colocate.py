@@ -9,8 +9,8 @@ from jasmin_cis.test.test_files.data import *
 class TestUngriddedGriddedColocate(BaseIntegrationTest):
 
     def test_GIVEN_single_variable_WHEN_colocate_THEN_successful_colocation(self):
-        variable = valid_NCAR_NetCDF_RAF_variable
-        filename = valid_NCAR_NetCDF_RAF_filename
+        variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
+        filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
         sample_file = valid_hadgem_filename
         colocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', variable + ':' + filename,

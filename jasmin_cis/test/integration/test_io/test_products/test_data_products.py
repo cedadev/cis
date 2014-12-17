@@ -27,6 +27,18 @@ class ProductTests(object):
     filename = None
     vars = None
     valid_variable = None
+    file_format = None
+    test_file_metadata = None
+
+    def setup(self, test_file_metadata, product):
+        from jasmin_cis.test.test_files.data import TestFileTestData
+        assert isinstance(test_file_metadata, TestFileTestData)
+        self.filename = test_file_metadata.master_filename
+        self.valid_variable = test_file_metadata.data_variable_name
+        self.vars = test_file_metadata.all_variable_names
+        self.file_format = test_file_metadata.file_format
+        self.test_file_metadata = test_file_metadata
+        self.product = product
 
     @istest
     def test_file_regex_matching(self):
@@ -43,7 +55,7 @@ class ProductTests(object):
         self.check_valid_vars(vars)
 
     def check_valid_vars(self, vars):
-        assert set(vars) == set(self.vars)
+        assert_that(set(vars), is_(set(self.vars)), "Variables")
 
     @istest
     def test_create_data_object(self):
@@ -87,14 +99,23 @@ class ProductTests(object):
     def should_raise_error_when_variable_does_not_exist_in_file(self):
         self.product().create_data_object([self.filename], invalid_variable)
 
+    @istest
+    def test_file_format(self):
+        expected_file_format = self.file_format
+        if expected_file_format is None:
+            expected_file_format = self.product.__name__
+        file_format = self.product().get_file_format(self.filename)
+        assert_that(file_format, is_(expected_file_format), "File format")
 
 class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable, \
+            valid_cloudsat_RVOD_file_format
 
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_sdata_variable
         self.product = CloudSat
+        self.file_format = valid_cloudsat_RVOD_file_format
 
     def check_valid_vars(self, vars):
         assert len(vars) == 47 + 22  # Expect 47 valid SD vars and 22 valid VD vars
@@ -102,11 +123,13 @@ class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
 
 class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable, \
+            valid_cloudsat_RVOD_file_format
 
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_vdata_variable
         self.product = CloudSat
+        self.file_format = valid_cloudsat_RVOD_file_format
 
     def check_valid_vars(self, vars):
         assert len(vars) == 47 + 22  # Expect 47 valid SD vars and 22 valid VD vars
@@ -114,11 +137,13 @@ class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
 
 class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable, \
+            valid_cloudsat_PRECIP_file_format
 
         self.filename = valid_cloudsat_PRECIP_file
         self.valid_variable = valid_cloudsat_PRECIP_variable
         self.product = CloudSat
+        self.file_format = valid_cloudsat_PRECIP_file_format
         self.vars = ['Profile_time',
                      'Latitude',
                      'Longitude',

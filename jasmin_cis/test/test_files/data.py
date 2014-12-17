@@ -10,8 +10,10 @@ import os
 cis_test_files = {}
 
 # values are None for not applicable
-TestFile = namedtuple('TestFile',
+TestFileTestData = namedtuple('TestFile',
                       ["master_filename",
+                       "file_format",
+                       "product_name",
                        "start_datetime",
                        "end_datetime",
                        "lat_min",
@@ -19,6 +21,7 @@ TestFile = namedtuple('TestFile',
                        "lon_min",
                        "lon_max",
                        "valid_vars_count",
+                       "all_variable_names",
                        "data_variable_name",
                        "data_variable_properties"])
 
@@ -34,12 +37,15 @@ valid_modis_l2_variable = 'Asymmetry_Factor_Average_Ocean'
 valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
 valid_modis_l3_variable = "Pressure_Level"
 
+cloudsat_file_format = "HDF4/CloudSat"
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_RVOD_sdata_variable = "RVOD_liq_water_content"
 valid_cloudsat_RVOD_vdata_variable = "RVOD_ice_water_path"
+valid_cloudsat_RVOD_file_format = cloudsat_file_format
 
 valid_cloudsat_PRECIP_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_PRECIP_variable = "Precip_rate"
+valid_cloudsat_PRECIP_file_format = cloudsat_file_format
 
 valid_aerosol_cci_filename = make_pathname("20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc")
 valid_aerosol_cci_variable = "AOD550"
@@ -91,18 +97,36 @@ dummy_cis_out = make_pathname('out.nc')
 
 valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
 valid_NCAR_NetCDF_RAF_variable = 'ATX'
-valid_NCAR_NetCDF_RAF_filename_expected_vars = [
-    "Time",
-    ""
-]
+
+cis_test_files["NCAR_NetCDF_RAF"] = TestFileTestData(
+    master_filename=make_pathname("RF04.20090114.192600_035100.PNI.nc"),
+    file_format="NetCDF/NCAR-RAF/nimbus/1.3",
+    product_name="NCAR_NetCDF_RAF",
+    start_datetime=datetime(2009, 1, 14, 19, 26, 00),
+    end_datetime=datetime(2009, 1, 15, 3, 51, 30),
+    lat_min=29.4966,
+    lat_max=31.0048,
+    lon_min=20,
+    lon_max=62,
+#    alt_min=20.5,
+#    alt_max=3678.5,
+    valid_vars_count=117,
+    all_variable_names=None,
+    data_variable_name='ATX',
+    data_variable_properties={
+        "units": "ng/kg",
+        "missing_value": -9999}
+    )
+
 
 valid_GASSP_aeroplane_filename = make_pathname("SP2_mrg60_NP3_20060927_R1.ict.nc")
 valid_GASSP_aeroplane_vars = ['BC_ng_kg', "BC_ng_m3", "UTC_mid", "GpsAlt", "GpsLat", "GpsLon"]
 valid_GASSP_aeroplane_variable = valid_GASSP_aeroplane_vars[0]
 
-
-cis_test_files["GASSP_aeroplane"] = TestFile(
+cis_test_files["GASSP_aeroplane"] = TestFileTestData(
     master_filename=valid_GASSP_aeroplane_filename,
+    file_format="NetCDF/GASSP/1.0",
+    product_name="NCAR_NetCDF_RAF",
     start_datetime=datetime(2006, 9, 27, 18, 43, 30),
     end_datetime=datetime(2006, 9, 27, 23, 53, 30),
     lat_min=29.4966,
@@ -111,6 +135,7 @@ cis_test_files["GASSP_aeroplane"] = TestFile(
     lon_max=-93.4528,
 #    alt_min=20.5,
 #    alt_max=3678.5,
+    all_variable_names=valid_GASSP_aeroplane_vars,
     valid_vars_count=len(valid_GASSP_aeroplane_vars),
     data_variable_name=valid_GASSP_aeroplane_variable,
     data_variable_properties={
@@ -118,22 +143,55 @@ cis_test_files["GASSP_aeroplane"] = TestFile(
         "missing_value": -9999}
     )
 
-valid_GASSP_ship_filename = make_pathname("AMSpmel_RHB_20081020_R0.ict.nc")
-valid_GASSP_ship_vars = ['NRno3', "Start_UTC", "LAT_Deg", "LONGT_Deg", "NRso4", "NRpom", "NRnh4"]
-valid_GASSP_ship_variable = valid_GASSP_ship_vars[0]
+
+cis_test_files["GASSP_ship"] = TestFileTestData(
+    master_filename=make_pathname("AMSpmel_RHB_20081020_R0.ict.nc"),
+    file_format="NetCDF/GASSP/1.0",
+    product_name="NCAR_NetCDF_RAF",
+    start_datetime=datetime(2008, 10, 23, 00, 00, 00),
+    end_datetime=datetime(2008, 10, 27, 00, 00, 00),
+    lat_min=29.4966,
+    lat_max=31.0048,
+    lon_min=-96.0271,
+    lon_max=-93.4528,
+#    alt_min=20.5,
+#    alt_max=3678.5,
+    all_variable_names=['NRno3', "Start_UTC", "LAT_Deg", "LONGT_Deg", "NRso4", "NRpom", "NRnh4"],
+    valid_vars_count=7,
+    data_variable_name='NRno3',
+    data_variable_properties=None
+)
+
 valid_GASSP_attribute = 'Time_Coordinate'
 
-valid_GASSP_station_filename = make_pathname(
-    "TrinidadHead.US6005G.20110101.20140222.aerosol_number_concentration.aerosol.1y.1h."
-    "US06L_TSI_3760_THD.US06L_cpc_ref.nas.txt.nc")
-valid_GASSP_station_vars =\
-    ['aerosol_number_concentration',
+
+
+cis_test_files["GASSP_station"] = TestFileTestData(
+    master_filename=make_pathname("TrinidadHead.US6005G.20110101.20140222.aerosol_number_concentration.aerosol.1y.1h."
+    "US06L_TSI_3760_THD.US06L_cpc_ref.nas.txt.nc"),
+    file_format="NetCDF/GASSP/1.0",
+    product_name="NCAR_NetCDF_RAF",
+    start_datetime=datetime(2008, 10, 23, 00, 00, 00),
+    end_datetime=datetime(2008, 10, 27, 00, 00, 00),
+    lat_min=29.4966,
+    lat_max=31.0048,
+    lon_min=-96.0271,
+    lon_max=-93.4528,
+#    alt_min=20.5,
+#    alt_max=3678.5,
+    all_variable_names=['aerosol_number_concentration',
      "start_time",
      "end_time",
      "aerosol_number_concentration_statistics_percentile_84.13",
      "aerosol_number_concentration_statistics_percentile_15.87",
-     "numflag"]
-valid_GASSP_station_variable = valid_GASSP_station_vars[0]
+     "numflag"],
+    valid_vars_count=6,
+    data_variable_name='aerosol_number_concentration',
+    data_variable_properties=None
+    )
+
+valid_GASSP_station_filename = cis_test_files["GASSP_ship"].master_filename
+valid_GASSP_station_vars =cis_test_files["GASSP_ship"].all_variable_names
 
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
