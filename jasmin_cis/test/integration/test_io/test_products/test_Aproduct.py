@@ -94,3 +94,14 @@ class TestAProduct(TestCase):
         my_product = MyTestProduct()
 
 
+    def test_that_get_product_full_name_returns_version_product_and_cis(self):
+        from jasmin_cis import __version__
+        from jasmin_cis.data_io.products.AProduct import get_product_full_name
+        from jasmin_cis.data_io.products.products import CloudSat
+
+        product_name = get_product_full_name([valid_cloudsat_RVOD_file])
+
+        assert_that(product_name, contains_string('CIS'))
+        assert_that(product_name, contains_string(__version__))
+        assert_that(product_name, contains_string(CloudSat.__name__))
+

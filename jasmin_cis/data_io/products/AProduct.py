@@ -4,7 +4,7 @@ import traceback
 from jasmin_cis.data_io.aeronet import get_aeronet_file_variables
 from jasmin_cis.data_io.hdf import get_hdf4_file_variables
 from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
-
+from jasmin_cis import __version__
 
 class AProduct(object):
     """
@@ -215,6 +215,19 @@ def get_file_format(filenames, product=None):
         raise ProductPluginException("An error occurred retrieving the file format using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
+
+
+def get_product_full_name(filenames, product=None):
+    """
+    Get the full name of the product which would read this file
+    :param filenames: list of filenames to read
+    :param product: specified product to use
+    """
+
+    product_cls = __get_class(filenames[0], product)
+    logging.info("Retrieving product fill name using product " + product_cls.__name__ + "...")
+
+    return "CIS/{product}/{version}".format(product=product_cls.__name__, version=__version__)
 
 class ProductPluginException(Exception):
     """
