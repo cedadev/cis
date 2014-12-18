@@ -80,6 +80,22 @@ valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_1d_variable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
+cis_test_files["2D_GRIDDED"] = TestFileTestData(
+    master_filename=valid_2d_filename,
+    file_format="NetCDF",
+    product_name="defaultNetCDF",
+    start_datetime=None,
+    end_datetime=None,
+    lat_min=None,
+    lat_max=None,
+    lon_min=None,
+    lon_max=None,
+    valid_vars_count=None,
+    all_variable_names=None,
+    data_variable_name=None,
+    data_variable_properties=None
+    )
+
 valid_cis_col_file = make_pathname("cis-col-latlon-renamed.nc")
 valid_cis_col_variable = 'AOT_440'
 
