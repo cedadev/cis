@@ -49,8 +49,10 @@ def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotempora
     """
     if spatiotemporal_var_names is not None:
         for var in variables.keys():
-            if not dimensions_equal(variables[var].dimensions, spatiotemporal_var_names):
-                del variables[var]
+            for dim in variables[var].dimensions:
+                if dim not in spatiotemporal_var_names:
+                    del variables[var]
+                    break
 
 
 def read_attributes_and_variables_many_files(filenames):

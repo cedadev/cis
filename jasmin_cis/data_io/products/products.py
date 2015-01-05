@@ -542,8 +542,9 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         variables = []
         for filename in filenames:
             file_variables = get_netcdf_file_variables(filename, exclude_coords=True)
-            remove_variables_with_non_spatiotemporal_dimensions(file_variables, ['lat', 'lon', 'time',
-                                                                                 'altitude', 'pressure'])
+            remove_variables_with_non_spatiotemporal_dimensions(
+                file_variables,
+                ['lat', 'lon', 'time', 'altitude', 'pressure'])
             variables.extend(file_variables)
         return set(variables)
 
@@ -558,8 +559,8 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
 
         if variable is None:
             variable_names = self.get_variable_names(filenames)
-            if len(variable_names) > 0:
-                variable_name = variable_names.pop()
+            if len(variable_names) > 1:
+                variable_name = str(variable_names.pop())
             else:
                 variable_name = None
         else:
@@ -587,8 +588,14 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         for filename in filenames:
             with open(filename) as f: pass
 
+        variable_constraint = variable
+        if type(variable) is str:
+            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
+                                                                         c.standard_name == variable or
+                                                                         c.long_name == variable), display=variable)
+
         try:
-            cube = gridded_data.load_cube(filenames, variable)
+            cube = gridded_data.load_cube(filenames, variable_constraint)
         except iris.exceptions.ConstraintMismatchError:
             if variable is None:
                 message = "File contains more than one cube variable name must be specified"
@@ -640,16 +647,25 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
         # Generic product class so no signature.
         return []
 
-    # def create_coords(self, filenames, variable=None):
-    #     """Reads the coordinates on which a variable depends.
-    #     Note: This calls create_data_object because the coordinates are returned as a Cube.
-    #     :param filenames: list of names of files from which to read coordinates
-    #     :param variable: name of variable for which the coordinates are required
-    #                      (optional if file contains only one cube)
-    #     :return: iris.cube.Cube
-    #     """
-    #
-    #     return self.create_data_object(filenames, variable)
+    def create_coords(self, filenames, variable=None):
+        """Reads the coordinates on which a variable depends.
+        Note: This calls create_data_object because the coordinates are returned as a Cube.
+        :param filenames: list of names of files from which to read coordinates
+        :param variable: name of variable for which the coordinates are required
+                         (optional if file contains only one cube)
+        :return: iris.cube.Cube
+        """
+
+        if variable is None:
+            variable_names = self.get_variable_names(filenames)
+            if len(variable_names) > 1:
+                variable_name = str(variable_names.pop())
+            else:
+                variable_name = None
+        else:
+            variable_name = variable
+
+        return self.create_data_object(filenames, variable_name)
 
     def create_data_object(self, filenames, variable):
         """Reads the data for a variable.
@@ -659,12 +675,7 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
         """
         from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
 
-        variable_constraint = None
-        if variable is not None:
-            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
-                                                                         c.standard_name == variable or
-                                                                         c.long_name == variable), display=variable)
-        cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable_constraint)
+        cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable)
 
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)

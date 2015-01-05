@@ -384,6 +384,7 @@ class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
         self.valid_variable = valid_hadgem_variable
         self.product = default_NetCDF
         self.vars = ['od550aer']
+        self.file_format = "NetCDF/Gridded"
 
 class TestNetCDF_Gridded_valid_2d(ProductTests, unittest.TestCase):
 
