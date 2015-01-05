@@ -13,6 +13,13 @@ from jasmin_cis.data_io.Coord import Coord
 
 class NCAR_NetCDF_RAF_variable_name_selector(object):
     """
+    NCAR-RAF file definition: for the purposes of this data product
+        It is a NetCDF file
+        It contains attributes and variables
+        The attributes must contain the following:
+            an attribute GASSP_Version
+            or an attribute Conventions with the value "NCAR-RAF/nimbus"
+
     This should successful differentiate the names of the variables for the various dimensions in NCAR-RAF and GASSP.
     The variables set are:
     station: True if this is for a fixed station data, False otherwise
