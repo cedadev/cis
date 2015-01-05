@@ -539,3 +539,24 @@ class UngriddedDataList(list):
         for data in self:
             data.save_data(output_file, data, coords_to_be_written)
             coords_to_be_written = False  # Only write coordinates out for the first variable
+
+    def get_non_masked_points(self):
+        """
+        Returns a list containing a HyperPointViews for which the default iterator omits masked points, for each item in
+        this UngriddedDataList.
+        :return: List of HyperPointViews of the data points
+        """
+        points_list = []
+        for data in self:
+            points_list.append(data.get_non_masked_points())
+        return points_list
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        for data in self:
+            data.set_longitude_range(range_start)

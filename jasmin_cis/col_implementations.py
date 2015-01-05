@@ -39,7 +39,8 @@ class GeneralUngriddedColocator(Colocator):
 
         :param points: UngriddedData or UngriddedCoordinates defining the sample points
         :param data: An UngriddedData object or Cube, or any other object containing metadata that
-                     the constraint object can read
+                     the constraint object can read. May also be a list of objects, in which case a list will
+                     be returned
         :param constraint: An instance of a Constraint subclass which takes a data object and
                            returns a subset of that data based on it's internal parameters
         :param kernel: An instance of a Kernel subclass which takes a number of points and returns
@@ -47,8 +48,12 @@ class GeneralUngriddedColocator(Colocator):
         :return: A single LazyData object
         """
         if isinstance(data, list):
-            raise NotImplementedError("Colocation of a list of data is not yet supported for the "
-                                      "GeneralUngriddedColocator class")
+            # Indexing and constraints (for SepConstraintKdTree) will only take place on the first iteration,
+            # so we really can just call this method recursively if we've got a list of data.
+            output = []
+            for var in data:
+                output.extend(self.colocate(points, var, constraint, kernel))
+            return output
 
         metadata = data.metadata
 
@@ -216,6 +221,7 @@ class SepConstraintKdtree(PointConstraint):
 
         super(SepConstraintKdtree, self).__init__()
 
+        self._index_cache = {}
         self.checks = []
         if h_sep is not None:
             self.h_sep = jasmin_cis.utils.parse_distance_with_units_to_float_km(h_sep)
@@ -253,7 +259,10 @@ class SepConstraintKdtree(PointConstraint):
     def constrain_points(self, ref_point, data):
         con_points = HyperPointList()
         if self.haversine_distance_kd_tree_index:
-            point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
+            point_indices = self._get_cached_indices(ref_point)
+            if point_indices is None:
+                point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
+                self._add_cached_indices(ref_point, point_indices)
             for idx in point_indices:
                 point = data[idx]
                 if all(check(point, ref_point) for check in self.checks):
@@ -263,6 +272,17 @@ class SepConstraintKdtree(PointConstraint):
                 if all(check(point, ref_point) for check in self.checks):
                     con_points.append(point)
         return con_points
+
+    def _get_cached_indices(self, ref_point):
+        key = ref_point[0:5]  # Don't use the value as a key (it's both irrelevant and un-hashable)
+        try:
+            return self._index_cache[key]
+        except KeyError:
+            return None
+
+    def _add_cached_indices(self, ref_point, indices):
+        key = ref_point[0:5]  # Don't use the value as a key (it's both irrelevant and un-hashable)
+        self._index_cache[key] = indices
 
 
 class mean(Kernel):
@@ -539,14 +559,15 @@ class GriddedColocatorUsingIrisRegrid(Colocator):
         :return: An Iris cube with the colocated data.
         """
         import iris
-        if isinstance(data, list):
-            raise NotImplementedError("Colocation of a list of data is not yet supported for "
-                                      "the GriddedColocatorUsingIrisRegrid class")
 
         self.check_for_valid_kernel(kernel)
-        new_data = iris.analysis.interpolate.regrid(data, points, mode=kernel.name)#, **kwargs)
+        if not isinstance(data, list):
+            data = GriddedDataList([data])
+        new_data = GriddedDataList()
+        for var in data:
+            new_data.append(iris.analysis.interpolate.regrid(var, points, mode=kernel.name))
 
-        return [new_data]
+        return new_data
 
 
 class GriddedColocator(GriddedColocatorUsingIrisRegrid):
@@ -561,10 +582,6 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
         :return: An Iris cube with the colocated data.
         """
-        if isinstance(data, list):
-            raise NotImplementedError("Colocation of a list of data is not yet supported for "
-                                      "the GriddedColocator class")
-
         self.check_for_valid_kernel(kernel)
 
         # Force the data longitude range to be the same as that of the sample grid.
@@ -704,16 +721,25 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
         # in coord_names_and_sizes_for_output_grid.
         output_cube = make_from_cube(kernel.interpolater(data, coordinate_point_pairs))
-        output_cube.data = jasmin_cis.utils.apply_mask_to_numpy_array(output_cube.data, output_mask)
+        if isinstance(output_cube, list):
+            for idx, data in enumerate(output_cube):
+                output_cube[idx].data = jasmin_cis.utils.apply_mask_to_numpy_array(data.data, output_mask)
+        else:
+            output_cube.data = jasmin_cis.utils.apply_mask_to_numpy_array(output_cube.data, output_mask)
         return output_cube
 
     @staticmethod
     def _colocate_nearest(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid,
                           data, kernel, new_data, output_mask, points):
-        """ Colocate using iris.analysis.interpolate.extract_nearest_neighbour.
+        """
+        Colocate using iris.analysis.interpolate.extract_nearest_neighbour.
         """
         # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid.
         # Now for each point in the sample grid we do the interpolation.
+        if not isinstance(data, list):
+            # Convert GriddedData to GriddedDataList to simplify multi-variable operations.
+            data = GriddedDataList([data])
+        new_data_list = [np.zeros(new_data.shape) for d in data]
         for i in jasmin_cis.utils.index_iterator([i[1] for i in coord_names_and_sizes_for_sample_grid]):
             coordinate_point_pairs = []
             for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
@@ -722,10 +748,11 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
                 coordinate_point_pairs.append((coord_names_and_sizes_for_sample_grid[j][0],
                                                points.dim_coords[j].points[i[j]]))
 
-            # The result here will either be a single data value, if the sample grid and data have matching
-            # coordinates, or an array if the data grid as more coordinate dimensions than the sample grid. The Iris
-            # interpolation functions actually return a Cube.
-            new_data[i] = kernel.interpolater(data, coordinate_point_pairs).data
+            for idx, var in enumerate(data):
+                # The result here will either be a single data value, if the sample grid and data have matching
+                # coordinates, or an array if the data grid as more coordinate dimensions than the sample grid. The Iris
+                # interpolation functions actually return a Cube.
+                new_data_list[idx][i] = kernel.interpolater(var, coordinate_point_pairs).data
 
             # Log a progress update, as this can take a long time.
             if all(x == 0 for x in i[1:]):
@@ -754,10 +781,17 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
 
         # Finally return the new cube with the colocated data. jasmin_cis.col requires this be returned as a list of
         # Cube objects.
-        output_cube = GriddedData(new_data, dim_coords_and_dims=new_dim_coord_list, var_name=data.var_name,
-                                  long_name=data.long_name, units=data.units, attributes=data.attributes)
-        output_cube.data = jasmin_cis.utils.apply_mask_to_numpy_array(output_cube.data, output_mask)
-        return output_cube
+        output_list = GriddedDataList()
+        for idx, var in enumerate(data):
+            output_cube = GriddedData(new_data_list[idx], dim_coords_and_dims=new_dim_coord_list, var_name=var.var_name,
+                                      long_name=var.long_name, units=var.units, attributes=var.attributes)
+            output_cube.data = jasmin_cis.utils.apply_mask_to_numpy_array(output_cube.data, output_mask)
+            output_list.append(output_cube)
+        # Return a single GriddedData object if there is only one item
+        if len(output_list) > 1:
+            return output_list
+        else:
+            return output_list[0]
 
 
 class gridded_gridded_nn(Kernel):

@@ -2,6 +2,7 @@ from time import gmtime, strftime
 import logging
 
 import iris
+from iris.cube import CubeList
 import numpy as np
 
 from jasmin_cis.data_io.common_data import CommonData
@@ -299,3 +300,45 @@ class GriddedDataList(iris.cube.CubeList):
             collapsed_data = make_from_cube(data.collapsed(*args, **kwargs))
             data_list.append(collapsed_data)
         return data_list
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        for data in self:
+            data.set_longitude_range(range_start)
+
+    def interpolate(self, *args, **kwargs):
+        """
+        Perform an interpolation over the GriddedDataList using the iris.cube.Cube.interpolate() method
+        :param args: Arguments for the Iris interpolate method
+        :param kwargs: Keyword arguments for the Iris interpolate method
+        :return: Interpolated GriddedDataList
+        """
+        output = GriddedDataList()
+        for data in self:
+            output.append(data.interpolate(*args, **kwargs))
+        return output
+
+    def regrid(self, *args, **kwargs):
+        """
+        Perform a regrid over the GriddedDataList using the iris.cube.Cube.regrid() method
+        :param args: Arguments for the Iris regrid method
+        :param kwargs: Keyword arguments for the Iris regrid method
+        :return: Regridded GriddedDataList
+        """
+        output = CubeList()
+        for data in self:
+            output.append(data.regrid(*args, **kwargs))
+        return output
+
+    @property
+    def ndim(self):
+        """
+        The number of dimensions in the data of this list.
+        """
+        # Use the dimensions of the first item since all items should be the same shape
+        return self[0].ndim
