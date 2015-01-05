@@ -3,13 +3,15 @@ module to test the various subclasses of the abstract AProduct class
 """
 
 import unittest
+
 from hamcrest import *
+from jasmin_cis.data_io.products.MODIS import MODIS_L2, MODIS_L3
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 
 from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
-from jasmin_cis.test.test_files.data import non_netcdf_file
+from jasmin_cis.test.test_files.data import non_netcdf_file, cis_test_files
 
 
 def check_regex_matching(cls_name, filename):
@@ -64,7 +66,7 @@ class ProductTests(object):
     @istest
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
-        coords = self.product().create_coords([self.filename], self.valid_variable)
+        coords = self.product().create_coords([self.filename])
         coord_list = coords.coords()
 
         for coord in coord_list:
@@ -236,35 +238,8 @@ class TestCaliop_L1(ProductTests, unittest.TestCase):
 
 class TestMODIS_L2(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_modis_l2_filename, valid_modis_l2_variable
 
-        self.filename = valid_modis_l2_filename
-        self.valid_variable = valid_modis_l2_variable
-        self.product = MODIS_L2
-        self.vars = ['Deep_Blue_Angstrom_Exponent_Land',
-                     'Cloud_Fraction_Ocean',
-                     'Corrected_Optical_Depth_Land_wav2p1',
-                     'Mass_Concentration_Land',
-                     'Solar_Zenith',
-                     'Latitude',
-                     'Sensor_Azimuth',
-                     'Optical_Depth_Ratio_Small_Land_And_Ocean',
-                     'Sensor_Zenith',
-                     'Scan_Start_Time',
-                     'Image_Optical_Depth_Land_And_Ocean',
-                     'Cloud_Fraction_Land',
-                     'Number_Pixels_Used_Ocean',
-                     'Longitude',
-                     'Aerosol_Type_Land',
-                     'Cloud_Mask_QA',
-                     'Optical_Depth_Ratio_Small_Land',
-                     'Scattering_Angle',
-                     'Solar_Azimuth',
-                     'Angstrom_Exponent_Land',
-                     'Deep_Blue_Aerosol_Optical_Depth_550_Land',
-                     'Fitting_Error_Land',
-                     'Optical_Depth_Land_And_Ocean']
-
+        self.setup(cis_test_files["modis_L2"], MODIS_L2)
 
 class TestCloud_CCI(ProductTests, unittest.TestCase):
     def setUp(self):
@@ -409,3 +384,8 @@ class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
         self.valid_variable = valid_hadgem_variable
         self.product = default_NetCDF
         self.vars = ['od550aer']
+
+class TestNetCDF_Gridded_valid_2d(ProductTests, unittest.TestCase):
+
+    def setUp(self):
+        self.setup(cis_test_files["2D_GRIDDED"], default_NetCDF)

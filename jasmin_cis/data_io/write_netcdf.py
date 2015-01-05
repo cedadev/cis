@@ -106,9 +106,13 @@ def write_coordinate_list(coord_list, filename):
     :param filename: file to which to write
     """
     netcdf_file = Dataset(filename, 'w', format="NETCDF4")
-    index_dim = __create_index(netcdf_file, len(coord_list[0].data.flatten()))
-    for data in coord_list:
-        __create_variable(netcdf_file, data, prefer_standard_name=True)
+    try:
+        length = len(coord_list[0].data.flatten())
+    except AttributeError:
+        length = len(coord_list[0].points.flatten())
+    index_dim = __create_index(netcdf_file, length)
+    for coord in coord_list:
+        __create_variable(netcdf_file, coord, prefer_standard_name=True)
     netcdf_file.close()
 
 

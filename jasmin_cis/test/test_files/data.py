@@ -32,7 +32,47 @@ valid_hdf_vd_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANU
 valid_hdf_sd_file = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
 
 valid_modis_l2_filename = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
-valid_modis_l2_variable = 'Asymmetry_Factor_Average_Ocean'
+valid_modis_l2_variable = 'Cloud_Fraction_Ocean'
+
+valid_modis_l2_variables = \
+    ['Deep_Blue_Angstrom_Exponent_Land',
+     'Cloud_Fraction_Ocean',
+     'Corrected_Optical_Depth_Land_wav2p1',
+     'Mass_Concentration_Land',
+     'Solar_Zenith',
+     'Latitude',
+     'Sensor_Azimuth',
+     'Optical_Depth_Ratio_Small_Land_And_Ocean',
+     'Sensor_Zenith',
+     'Scan_Start_Time',
+     'Image_Optical_Depth_Land_And_Ocean',
+     'Cloud_Fraction_Land',
+     'Number_Pixels_Used_Ocean',
+     'Longitude',
+     'Aerosol_Type_Land',
+     'Cloud_Mask_QA',
+     'Optical_Depth_Ratio_Small_Land',
+     'Scattering_Angle',
+     'Solar_Azimuth',
+     'Angstrom_Exponent_Land',
+     'Deep_Blue_Aerosol_Optical_Depth_550_Land',
+     'Fitting_Error_Land',
+     'Optical_Depth_Land_And_Ocean']
+cis_test_files["modis_L2"] = TestFileTestData(
+    master_filename=valid_modis_l2_filename,
+    file_format="HDF4/ModisL2",
+    product_name="MODIS_L2",
+    start_datetime=datetime(2010, 1, 1, 22, 55, 8),
+    end_datetime=datetime(2010, 1, 1, 23, 00, 6),
+    lat_min=-80.405128,
+    lat_max=-56.644821,
+    lon_min=-179.99913,
+    lon_max=179.99573,
+    valid_vars_count=len(valid_modis_l2_variables),
+    all_variable_names=valid_modis_l2_variables,
+    data_variable_name=valid_modis_l2_variable,
+    data_variable_properties={}
+    )
 
 valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
 valid_modis_l3_variable = "Pressure_Level"
@@ -61,6 +101,69 @@ valid_hadgem_variable = 'od550aer'
 valid_aeronet_filename = make_pathname("920801_091128_Agoufou_small.lev20")
 another_valid_aeronet_filename = make_pathname("920801_091128_Abracos_Hill_small.lev20")
 valid_aeronet_variable = "AOT_440"
+all_aeronet_variables = [
+    "AOT_551",
+    "TripletVar_532",
+    "AOT_532",
+    "AOT_667",
+    "AOT_531",
+    "TripletVar_412",
+    "440675AngstromPolar",
+    "AOT_1640",
+    "WaterError",
+    "AOT_380",
+    "500870Angstrom",
+    "Dateddmmyy",
+    "AOT_412",
+    "AOT_555",
+    "AOT_490",
+    "TripletVar_1640",
+    "Solar_Zenith_Angle",
+    "340440Angstrom",
+    "TripletVar_340",
+    "AOT_675",
+    "TripletVar_531",
+    "TripletVar_380",
+    "TripletVar_440",
+    "TripletVar_500",
+    "380500Angstrom",
+    "AOT_443",
+    "AOT_440",
+    "TripletVar_667",
+    "440675Angstrom",
+    "Timehhmmss",
+    "TripletVar_675",
+    "Julian_Day",
+    "TripletVar_1020",
+    "TripletVar_870",
+    "TripletVar_443",
+    "Watercm",
+    "AOT_500",
+    "AOT_1020",
+    "440870Angstrom",
+    "AOT_870",
+    "TripletVar_490",
+    "Last_Processing_Date",
+    "TripletVar_551",
+    "AOT_340",
+    "TripletVar_555"
+]
+
+cis_test_files["aeronet"] = TestFileTestData(
+    master_filename=valid_aeronet_filename,
+    file_format="Aeronet",
+    product_name="Aeronet",
+    start_datetime=datetime(2003, 9, 25, 6, 47, 9),
+    end_datetime=datetime(2003, 12, 31, 9, 24, 4),
+    lat_min=15.345,
+    lat_max=15.345,
+    lon_min=-1.479,
+    lon_max=-1.479,
+    valid_vars_count=len(all_aeronet_variables),
+    all_variable_names=all_aeronet_variables,
+    data_variable_name="AOT_440",
+    data_variable_properties={}
+    )
 
 valid_caliop_l2_filename = make_pathname("CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08ZN.hdf")
 valid_caliop_l2_variable = "Tropopause_Temperature"
@@ -82,7 +185,7 @@ valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
 cis_test_files["2D_GRIDDED"] = TestFileTestData(
     master_filename=valid_2d_filename,
-    file_format="NetCDF",
+    file_format="NetCDF/Gridded",
     product_name="defaultNetCDF",
     start_datetime=None,
     end_datetime=None,
@@ -91,8 +194,8 @@ cis_test_files["2D_GRIDDED"] = TestFileTestData(
     lon_min=None,
     lon_max=None,
     valid_vars_count=None,
-    all_variable_names=None,
-    data_variable_name=None,
+    all_variable_names=[],
+    data_variable_name="SST_1",
     data_variable_properties=None
     )
 
