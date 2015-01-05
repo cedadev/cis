@@ -141,16 +141,12 @@ class DummyColocator(Colocator):
         :param kernel: Unused
         :return: A single LazyData object
         """
-
-        if isinstance(data, list):
-            raise NotImplementedError("Colocation of a list of data is not yet supported for the DummyColocator class")
-
         from jasmin_cis.data_io.ungridded_data import LazyData
 
         logging.info("--> Colocating...")
-
-        new_data = LazyData(data.data, data.metadata)
-        return [new_data]
+        if not isinstance(data, list):
+            data = [data]
+        return [LazyData(var.data, var.metadata) for var in data]
 
 
 class DummyConstraint(Constraint):
