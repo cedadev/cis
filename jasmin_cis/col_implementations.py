@@ -650,7 +650,14 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
             output_cube = self._colocate_nearest(coord_names_and_sizes_for_output_grid,
                                                  coord_names_and_sizes_for_sample_grid, data, kernel, new_data,
                                                  output_mask, points)
-        return [output_cube]
+        # if isinstance(output_cube, list) and len(output_cube) == 1:
+        #     return output_cube[0]
+        # else:
+        #     return output_cube
+        if not isinstance(output_cube, list):
+            return GriddedDataList([output_cube])
+        else:
+            return output_cube
 
     @staticmethod
     def _make_output_mask(coord_names_and_sizes_for_sample_grid, kernel, other_coord_transpose_map,

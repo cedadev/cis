@@ -1133,7 +1133,7 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         col = self.colocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
 
         result1 = numpy.array([[[-124.26, -123.26, -122.26, -121.26, -120.26, -119.26, -118.26],
                                [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
@@ -1181,7 +1181,7 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         col = self.colocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
 
         result = numpy.array([[[1., 1., 1., 2., 3., 4., 5.],
                                [1., 1., 1., 2., 3., 4., 5.],
