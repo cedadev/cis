@@ -32,6 +32,9 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         eq_(means.name(), 'rain_mean')
         eq_(std_dev.name(), 'my_std_dev')
         eq_(no_points.name(), 'my_no_points')
+        assert means.coords()
+        assert std_dev.coords()
+        assert no_points.coords()
 
     def test_gridded_ungridded_nn(self):
         data = make_from_cube(mock.make_mock_cube())
@@ -50,6 +53,7 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
 
         expected_result = np.array([8, 12, 8])
         assert len(output) == 1
+        assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
 
     def test_gridded_ungridded_lin(self):
@@ -69,6 +73,7 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
 
         expected_result = np.array([8.8, 10.4, 7.2])
         assert len(output) == 1
+        assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
 
     def test_gridded_ungridded_box_mean(self):
@@ -88,6 +93,7 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
 
         expected_result = np.array([28.0/3, 10.0, 20.0/3])
         assert len(output) == 1
+        assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
 
     def test_gridded_ungridded_box_moments(self):
@@ -109,6 +115,7 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
         expected_n = np.array([3, 4, 3])
         assert len(output) == 3
+        assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)
@@ -129,6 +136,7 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
         expected_n = np.array([3, 4, 3])
         assert len(output) == 3
+        assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)
@@ -136,6 +144,9 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
     def test_list_ungridded_ungridded_box_mean(self):
         ug_data_1 = mock.make_regular_2d_ungridded_data()
         ug_data_2 = mock.make_regular_2d_ungridded_data(data_offset=3)
+        ug_data_2.long_name = 'TOTAL SNOWFALL RATE: LS+CONV KG/M2/S'
+        ug_data_2.standard_name = 'snowfall_rate'
+        ug_data_2.metadata._name = 'snow'
 
         data_list = UngriddedDataList([ug_data_1, ug_data_2])
         sample_points = mock.make_regular_2d_ungridded_data()
@@ -148,6 +159,10 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         expected_stddev = np.array(15 * [float('inf')])
         expected_n = np.array(15 * [1])
         assert len(output) == 6
+        assert isinstance(output, UngriddedDataList)
+        assert output[3].var_name == 'snow_mean'
+        assert output[4].var_name == 'snow_std_dev'
+        assert output[5].var_name == 'snow_no_points'
         assert np.allclose(output[0].data, expected_result)
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)
@@ -179,6 +194,7 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
         expected_n = np.array([3, 4, 3])
         assert len(output) == 6
+        assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)

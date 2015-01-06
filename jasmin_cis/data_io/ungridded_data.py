@@ -269,7 +269,7 @@ class UngriddedData(LazyData, CommonData):
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
 
         #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
-        if metadata.units == 'per kilometer per steradian':
+        if str(metadata.units) == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
 
     @property

@@ -9,7 +9,7 @@ from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, Ce
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from jasmin_cis.data_io.ungridded_data import LazyData, Metadata
+from jasmin_cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
 import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
 
@@ -50,7 +50,7 @@ class GeneralUngriddedColocator(Colocator):
         if isinstance(data, list):
             # Indexing and constraints (for SepConstraintKdTree) will only take place on the first iteration,
             # so we really can just call this method recursively if we've got a list of data.
-            output = []
+            output = UngriddedDataList()
             for var in data:
                 output.extend(self.colocate(points, var, constraint, kernel))
             return output
@@ -80,12 +80,9 @@ class GeneralUngriddedColocator(Colocator):
         sample_points = points.get_all_points()
 
         # Create output arrays.
-        if self.var_name == '':
-            self.var_name = data.name()
-        if self.var_long_name == '':
-            self.var_long_name = metadata.long_name
-        if self.var_units == '':
-            self.var_units = data.units
+        self.var_name = data.name()
+        self.var_long_name = metadata.long_name
+        self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name, self.var_units)
         if var_set_details is None:
             var_set_details = ((self.var_name, self.var_long_name, self.var_units),)
@@ -109,10 +106,10 @@ class GeneralUngriddedColocator(Colocator):
             except ValueError:
                 pass
 
-        return_data = []
+        return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
             if idx == 0:
-                new_data = LazyData(values[0, :], metadata)
+                new_data = UngriddedData(values[0, :], metadata, points.coords())
                 new_data.metadata._name = var_details[0]
                 new_data.metadata.long_name = var_details[1]
                 new_data.metadata.shape = (len(sample_points),)
@@ -121,7 +118,7 @@ class GeneralUngriddedColocator(Colocator):
             else:
                 var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
                                         missing_value=self.fill_value, units=var_details[2])
-                new_data = LazyData(values[idx, :], var_metadata)
+                new_data = UngriddedData(values[idx, :], var_metadata, points.coords())
             return_data.append(new_data)
 
         return return_data
@@ -346,14 +343,11 @@ class moments(Kernel):
         :param var_units: base variable units
         :return: tuple of tuples each containing (variable name, variable long name, variable units)
         """
-        if self.mean_name == '':
-            self.mean_name = var_name + '_mean'
-        if self.stddev_name == '':
-            self.stddev_name = var_name + '_std_dev'
+        self.mean_name = var_name + '_mean'
+        self.stddev_name = var_name + '_std_dev'
         stdev_long_name = 'Standard deviation from the mean in ' + var_name
         stddev_units = var_units
-        if self.nopoints_name == '':
-            self.nopoints_name = var_name + '_no_points'
+        self.nopoints_name = var_name + '_no_points'
         npoints_long_name = 'Number of points used to calculate the mean of ' + var_name
         npoints_units = '1'
         return ((self.mean_name, var_long_name, var_units),
