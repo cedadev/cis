@@ -170,87 +170,6 @@ class CloudSat(AProduct):
         return "HDF4/CloudSat"
 
 
-class Cloud_CCI(AProduct):
-
-    def get_file_signature(self):
-        return [r'..*ESACCI.*CLOUD.*']
-
-    def _create_coord_list(self, filenames):
-
-        from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-
-        variables = ["lat", "lon", "time"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        var_data = read_many_files_individually(filenames, variables)
-
-        coords = CoordList()
-        coords.append(Coord(var_data['lat'], get_metadata(var_data['lat'][0]), 'Y'))
-        coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0]),'X'))
-        time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]))
-
-        # TODO: Is this really julian?
-        time_coord.convert_julian_to_std_time()
-        coords.append(time_coord)
-
-        return coords
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
-
-    def create_data_object(self, filenames, variable):
-
-        from jasmin_cis.data_io.netcdf import get_metadata, read_many_files_individually
-
-        coords = self._create_coord_list(filenames)
-        var = read_many_files_individually(filenames, [variable])
-        metadata = get_metadata(var[variable][0])
-
-        return UngriddedData(var[variable], metadata, coords)
-
-
-class Aerosol_CCI(AProduct):
-
-    valid_dimensions = ["pixel_number"]
-
-    def get_file_signature(self):
-        return [r'.*ESACCI.*AEROSOL.*']
-
-    def _create_coord_list(self, filenames):
-
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-        import datetime
-
-        #!FIXME: when reading an existing file variables might be "latitude", "longitude"
-        variables = ["lat", "lon", "time"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        data = read_many_files(filenames, variables, dim="pixel_number")
-
-        coords = CoordList()
-        coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
-        coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
-        time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
-        time_coord.convert_TAI_time_to_std_time(datetime.datetime(1970,1,1))
-        coords.append(time_coord)
-
-        return coords
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
-
-    def create_data_object(self, filenames, variable):
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
-
-        coords = self._create_coord_list(filenames)
-        data = read_many_files(filenames, variable, dim="pixel_number")
-        metadata = get_metadata(data[variable])
-
-        return UngriddedData(data[variable], metadata, coords)
-
-
 class cis(AProduct):
 
     # If a file matches the CIS product signature as well as another signature (e.g. because we aggregated from another
@@ -291,6 +210,15 @@ class cis(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
+    def get_file_format(self, filenames):
+        """
+        Get the file format
+        :param filenames:
+        :return:
+        """
+
+        return "NetCDF/CIS"
+
 
 class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
 
@@ -305,7 +233,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         cubes = iris.load(filenames)
 
         for cube in cubes:
-            is_subsetable = True
+            is_time_lat_lon_pressure_altitude_or_has_only_1_point = True
             for dim in cube.dim_coords:
                 units = dim.units
                 if dim.points.size > 1 and \
@@ -313,9 +241,9 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
                     not units.is_time_reference() and \
                     not units.is_vertical() and \
                     not units.is_convertible(unit.Unit('degrees')):
-                    is_subsetable = False
+                    is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
                     break
-            if is_subsetable:
+            if is_time_lat_lon_pressure_altitude_or_has_only_1_point:
                 variables.append(cube.var_name)
 
         return set(variables)
@@ -553,6 +481,11 @@ class ASCII_Hyperpoints(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, True)
 
+    def get_file_format(self, filenames):
+        """
+        Returns the file format
+        """
+        return "ASCII/ASCIIHyperpoints"
 
 class default_NetCDF(NetCDF_Gridded):
     """

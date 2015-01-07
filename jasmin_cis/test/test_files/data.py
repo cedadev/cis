@@ -23,6 +23,7 @@ TestFileTestData = namedtuple('TestFile',
                        "valid_vars_count",
                        "all_variable_names",
                        "data_variable_name",
+                       "data_variable_standard_name",
                        "data_variable_properties"])
 
 def make_pathname(filename):
@@ -71,6 +72,7 @@ cis_test_files["modis_L2"] = TestFileTestData(
     valid_vars_count=len(valid_modis_l2_variables),
     all_variable_names=valid_modis_l2_variables,
     data_variable_name=valid_modis_l2_variable,
+    data_variable_standard_name=valid_modis_l2_variables,
     data_variable_properties={}
     )
 
@@ -89,6 +91,7 @@ cis_test_files["modis_L3"] = TestFileTestData(
     valid_vars_count=700,
     all_variable_names=None,
     data_variable_name="Solar_Zenith_Mean_Mean",
+    data_variable_standard_name="Solar_Zenith_Mean_Mean",
     data_variable_properties={}
     )
 
@@ -111,6 +114,7 @@ cis_test_files["CloudsatRVODsdata"] = TestFileTestData(
     valid_vars_count=69,
     all_variable_names=None,
     data_variable_name=valid_cloudsat_RVOD_sdata_variable,
+    data_variable_standard_name=valid_cloudsat_RVOD_sdata_variable,
     data_variable_properties={}
     )
 
@@ -122,9 +126,44 @@ valid_aerosol_cci_filename = make_pathname("20080612093821-ESACCI-L2P_AEROSOL-AL
 valid_aerosol_cci_variable = "AOD550"
 valid_aerosol_cci_variable_2 = "AOD870"
 
+cis_test_files["Aerosol_CCI"] = TestFileTestData(
+    master_filename=valid_aerosol_cci_filename,
+    file_format="NetCDF/Aerosol_CCI",
+    product_name="Aerosol_CCI",
+    start_datetime=datetime(2008, 6, 12, 10, 1, 23),
+    end_datetime=datetime(2008, 6, 12, 10, 43, 37),
+    lat_min=-44.91,
+    lat_max=83.80,
+    lon_min=-22.25,
+    lon_max=160.48,
+    valid_vars_count=32,
+    all_variable_names=None,
+    data_variable_name=valid_aerosol_cci_variable,
+    data_variable_standard_name='atmosphere_optical_thickness_due_to_aerosol',
+    data_variable_properties={}
+    )
+
+
 valid_cloud_cci_filename = make_pathname("20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc")
 valid_cloud_cci_variable = "stemp"
 valid_cloud_cci_8_bit_variable = "illum"
+
+cis_test_files["Cloud_CCI"] = TestFileTestData(
+    master_filename=valid_cloud_cci_filename,
+    file_format="NetCDF/Cloud_CCI",
+    product_name="Cloud_CCI",
+    start_datetime=datetime(2007, 6, 29, 12, 55, 3),
+    end_datetime=datetime(2007, 6, 29, 14, 33, 56),
+    lat_min=-81.84876,
+    lat_max=81.849,
+    lon_min=-180,
+    lon_max=180,
+    valid_vars_count=30,
+    all_variable_names=None,
+    data_variable_name=valid_cloud_cci_variable,
+    data_variable_standard_name=valid_cloud_cci_variable,
+    data_variable_properties={}
+    )
 
 valid_hadgem_filename = make_pathname('HadGEM_AOT550.nc')
 valid_hadgem_variable = 'od550aer'
@@ -193,6 +232,7 @@ cis_test_files["aeronet"] = TestFileTestData(
     valid_vars_count=len(all_aeronet_variables),
     all_variable_names=all_aeronet_variables,
     data_variable_name="AOT_440",
+    data_variable_standard_name="AOT_440",
     data_variable_properties={}
     )
 
@@ -232,6 +272,7 @@ cis_test_files["caliop_L2"] = TestFileTestData(
     valid_vars_count=len(valid_caliop_l2_variables),
     all_variable_names=valid_caliop_l2_variables,
     data_variable_name="Cloud_Layer_Fraction",
+    data_variable_standard_name="Cloud_Layer_Fraction",
     data_variable_properties={}
     )
 
@@ -254,6 +295,7 @@ cis_test_files["caliop_L1"] = TestFileTestData(
     valid_vars_count=len(valid_caliop_l1_variables),
     all_variable_names=valid_caliop_l1_variables,
     data_variable_name='Perpendicular_Attenuated_Backscatter_532',
+    data_variable_standard_name='Perpendicular_Attenuated_Backscatter_532',
     data_variable_properties={}
     )
 
@@ -281,6 +323,7 @@ cis_test_files["2D_GRIDDED"] = TestFileTestData(
     valid_vars_count=None,
     all_variable_names=[],
     data_variable_name="SST_1",
+    data_variable_standard_name="SST_1",
     data_variable_properties=None
     )
 
@@ -292,10 +335,45 @@ valid_cis_gridded_output_variable = 'TAU_2D_550nm'
 
 valid_cis_ungridded_output_filename = make_pathname('cis-subset-ungridded-out.nc')
 valid_cis_ungridded_output_variable = 'AOD550'
+valid_cis_ungridded_output_variables = ['pixel_number', 'latitude', 'longitude', 'time', 'AOD550', 'AOD870']
+
+cis_test_files["CIS_Ungridded"] = TestFileTestData(
+    master_filename=valid_cis_ungridded_output_filename,
+    file_format="NetCDF/CIS",
+    product_name="cis",
+    start_datetime=datetime(2008, 6, 12, 10, 18, 17),
+    end_datetime=datetime(2008, 6, 12, 10, 20, 10),
+    lat_min=39.07,
+    lat_max=45.0,
+    lon_min=0,
+    lon_max=6.0,
+    valid_vars_count=len(valid_cis_ungridded_output_variables),
+    all_variable_names=valid_cis_ungridded_output_variables,
+    data_variable_name=valid_cis_ungridded_output_variable,
+    data_variable_standard_name='atmosphere_optical_thickness_due_to_aerosol',
+    data_variable_properties={}
+    )
 
 valid_ascii_filename = make_pathname("my_dummy_points_with_values.txt")
 ascii_filename_with_no_values = make_pathname("my_dummy_points.txt")
 valid_ascii_variable = 0
+cis_test_files["ascii"] = TestFileTestData(
+    master_filename=valid_ascii_filename,
+    file_format="ASCII/ASCIIHyperpoints",
+    product_name="ASCII_Hyperpoints",
+    start_datetime=datetime(2012, 8, 22, 15, 32, 3),
+    end_datetime=datetime(2012, 8, 29, 15, 32, 3),
+    lat_min=0,
+    lat_max=7,
+    lon_min=-10,
+    lon_max=0,
+    valid_vars_count=1,
+    all_variable_names=['value'],
+    data_variable_name=valid_ascii_variable,
+    data_variable_standard_name='',
+    data_variable_properties={}
+    )
+
 
 dummy_cis_out = make_pathname('out.nc')
 
@@ -317,6 +395,7 @@ cis_test_files["NCAR_NetCDF_RAF"] = TestFileTestData(
     valid_vars_count=117,
     all_variable_names=None,
     data_variable_name='ATX',
+    data_variable_standard_name="ATX",
     data_variable_properties={
         "units": "ng/kg",
         "missing_value": -9999}
@@ -342,6 +421,7 @@ cis_test_files["GASSP_aeroplane"] = TestFileTestData(
     all_variable_names=valid_GASSP_aeroplane_vars,
     valid_vars_count=len(valid_GASSP_aeroplane_vars),
     data_variable_name=valid_GASSP_aeroplane_variable,
+    data_variable_standard_name=valid_GASSP_aeroplane_variable,
     data_variable_properties={
         "units": "ng/kg",
         "missing_value": -9999}
@@ -363,6 +443,7 @@ cis_test_files["GASSP_ship"] = TestFileTestData(
     all_variable_names=['NRno3', "Start_UTC", "LAT_Deg", "LONGT_Deg", "NRso4", "NRpom", "NRnh4"],
     valid_vars_count=7,
     data_variable_name='NRno3',
+    data_variable_standard_name='NRno3',
     data_variable_properties=None
 )
 
@@ -391,6 +472,7 @@ cis_test_files["GASSP_station"] = TestFileTestData(
      "numflag"],
     valid_vars_count=6,
     data_variable_name='aerosol_number_concentration',
+    data_variable_standard_name='aerosol_number_concentration',
     data_variable_properties=None
     )
 

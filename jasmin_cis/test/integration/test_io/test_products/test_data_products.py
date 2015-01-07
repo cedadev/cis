@@ -8,9 +8,8 @@ from hamcrest import *
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 
-from jasmin_cis.data_io.products.MODIS import MODIS_L2, MODIS_L3
-from jasmin_cis.data_io.products.caliop import Caliop_L1, Caliop_L2
 from jasmin_cis.data_io.products.products import *
+from jasmin_cis.data_io.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file, cis_test_files
 
@@ -32,13 +31,16 @@ class ProductTests(object):
     valid_variable = None
     file_format = None
     test_file_metadata = None
+    valid_vars_count = None
 
+    @nottest
     def setup(self, test_file_metadata, product):
         from jasmin_cis.test.test_files.data import TestFileTestData
         assert isinstance(test_file_metadata, TestFileTestData)
         self.filename = test_file_metadata.master_filename
         self.valid_variable = test_file_metadata.data_variable_name
         self.vars = test_file_metadata.all_variable_names
+        self.valid_vars_count = test_file_metadata.valid_vars_count
         self.file_format = test_file_metadata.file_format
         self.test_file_metadata = test_file_metadata
         self.product = product
@@ -58,7 +60,10 @@ class ProductTests(object):
         self.check_valid_vars(vars)
 
     def check_valid_vars(self, vars):
-        assert_that(set(vars), is_(set(self.vars)), "Variables")
+        if self.vars is not None:
+            assert_that(set(vars), is_(set(self.vars)), "Variables")
+        else:
+            assert_that(len(vars), is_(self.valid_vars_count ), "Number of valid variables in the file")
 
     @istest
     def test_create_data_object(self):
@@ -183,14 +188,6 @@ class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
                      'Aux_dist_AMSR']
 
 
-class TestMODIS_L3(ProductTests, unittest.TestCase):
-    def setUp(self):
-        self.setup(cis_test_files["modis_L3"], MODIS_L3)
-
-    def check_valid_vars(self, vars):
-        assert len(vars) == 700
-
-
 class TestCaliop_L2(ProductTests, unittest.TestCase):
     def setUp(self):
         self.setup(cis_test_files["caliop_L2"], Caliop_L2)
@@ -201,30 +198,27 @@ class TestCaliop_L1(ProductTests, unittest.TestCase):
         self.setup(cis_test_files["caliop_L1"], Caliop_L1)
 
 
+class TestMODIS_L3(ProductTests, unittest.TestCase):
+    def setUp(self):
+        self.setup(cis_test_files["modis_L3"], MODIS_L3)
+
+    def check_valid_vars(self, vars):
+        assert len(vars) == 700
+
 class TestMODIS_L2(ProductTests, unittest.TestCase):
     def setUp(self):
 
         self.setup(cis_test_files["modis_L2"], MODIS_L2)
 
+
 class TestCloud_CCI(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
-
-        self.filename = valid_cloud_cci_filename
-        self.valid_variable = valid_cloud_cci_variable
-        self.product = Cloud_CCI
-
-    def check_valid_vars(self, vars):
-        assert len(vars) == 30
+        self.setup(cis_test_files["Cloud_CCI"], Cloud_CCI)
 
 
 class TestAerosol_CCI(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_aerosol_cci_filename, valid_aerosol_cci_variable
-
-        self.filename = valid_aerosol_cci_filename
-        self.valid_variable = valid_aerosol_cci_variable
-        self.product = Aerosol_CCI
+        self.setup(cis_test_files["Aerosol_CCI"], Aerosol_CCI)
 
     def check_valid_vars(self, vars):
         exclude_vars = ["sun_zenith", "satellite_zenith", "relative_azimuth", "instrument_view"]
@@ -235,33 +229,24 @@ class TestAerosol_CCI(ProductTests, unittest.TestCase):
 
 class TestCis(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cis_ungridded_output_filename, \
-            valid_cis_ungridded_output_variable
+        self.setup(cis_test_files["CIS_Ungridded"], cis)
 
-        self.filename = valid_cis_ungridded_output_filename
-        self.valid_variable = valid_cis_ungridded_output_variable
-        self.product = cis
-        self.vars = ['pixel_number', 'latitude', 'longitude', 'time', 'AOD550', 'AOD870']
-
-class TestAeronet(ProductTests):
-    def __init__(self):
+class TestAeronet(ProductTests, unittest.TestCase):
+    def setUp(self):
         from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
-        self.filename = valid_aeronet_filename
+        self.setup(cis_test_files["aeronet"], Aeronet)
         self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
-        self.valid_variable = valid_aeronet_variable
-        self.product = Aeronet
 
     @istest
     def test_create_data_object_from_multiple_files(self):
         self.product().create_data_object(self.filenames, self.valid_variable)
 
-class TestASCII(ProductTests):
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
-        self.filename = valid_ascii_filename
+
+class TestASCII(ProductTests, unittest.TestCase):
+    def setUp(self):
+        from jasmin_cis.test.test_files.data import ascii_filename_with_no_values
+        self.setup(cis_test_files["ascii"], ASCII_Hyperpoints)
         self.no_value_filename = ascii_filename_with_no_values
-        self.valid_variable = valid_ascii_variable
-        self.product = ASCII_Hyperpoints
 
     @istest
     @raises(IOError)
@@ -298,6 +283,7 @@ class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
         self.filename = valid_xenida_filename
         self.valid_variable = valid_xenida_variable
         self.product = default_NetCDF
+        self.file_format = "NetCDF/Gridded"
 
     @nottest
     def test_variable_wildcarding(self):
@@ -323,6 +309,7 @@ class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
         self.filename = valid_1d_filename
         self.valid_variable = valid_1d_variable
         self.product = default_NetCDF
+        self.file_format = "NetCDF/Gridded"
 
     @nottest
     def test_variable_wildcarding(self):

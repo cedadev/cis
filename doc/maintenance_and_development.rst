@@ -84,6 +84,11 @@ and may choose to implement:
   example GASSP is a type of NetCDF file and so filenames end with .nc but so do other NetCDF files, so the data product opens
   the file and looks for the GASSP version attribute, and if it doesn't find it returns a error.
 
+``get_file_format(self, filenames)``
+  Returns a file format hierarchy separated by slashes, of the form TopLevelFormat/SubFormat/SubFormat/Version,
+  e.g. NetCDF/GASSP/1.0, ASCII/ASCIIHyperpoint, HDF4/CloudSat
+  This is used within the ceda di indexing tool. If not set it will default to the products name.
+
 Here is a sketch of a data product implementation::
 
   class MyProd(AProduct):

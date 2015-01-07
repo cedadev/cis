@@ -3,9 +3,25 @@ Module with standard cis Data Products in it
 """
 
 #list of all data products
-__all__ = ["NCAR_NetCDF_RAF", "MODIS", "caliop" "products"]
+__all__ = [
+    "NCAR_NetCDF_RAF",
+    "MODIS_L2",
+    "MODIS_L3",
+    "Caliop_L1",
+    "Caliop_L2",
+    "CCI",
+    "Cloud_CCI",
+    "Aerosol_CCI",
+    "abstract_NetCDF_CF",
+    "abstract_NetCDF_CF_Gridded",
+    "NetCDF_Gridded",
+    "Aeronet",
+    "ASCII_Hyperpoints",
+    "cis",
+    "CloudSat"]
 
-from products import *
+from products import abstract_NetCDF_CF, abstract_NetCDF_CF_Gridded, NetCDF_Gridded, Aeronet, ASCII_Hyperpoints, cis, CloudSat
 from NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
 from MODIS import MODIS_L2, MODIS_L3
 from caliop import abstract_Caliop, Caliop_L1, Caliop_L2
+from CCI import Aerosol_CCI, Cloud_CCI
