@@ -356,7 +356,6 @@ cis_test_files["CIS_Ungridded"] = TestFileTestData(
 
 valid_ascii_filename = make_pathname("my_dummy_points_with_values.txt")
 ascii_filename_with_no_values = make_pathname("my_dummy_points.txt")
-valid_ascii_variable = 0
 cis_test_files["ascii"] = TestFileTestData(
     master_filename=valid_ascii_filename,
     file_format="ASCII/ASCIIHyperpoints",
@@ -369,8 +368,8 @@ cis_test_files["ascii"] = TestFileTestData(
     lon_max=0,
     valid_vars_count=1,
     all_variable_names=['value'],
-    data_variable_name=valid_ascii_variable,
-    data_variable_standard_name='',
+    data_variable_name='value',
+    data_variable_standard_name='value',
     data_variable_properties={}
     )
 
