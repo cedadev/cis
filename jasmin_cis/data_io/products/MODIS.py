@@ -98,7 +98,7 @@ class MODIS_L3(AProduct):
             time_data.fill(mid_datetime)
             time_data_array.append(time_data)
         time_data = utils.concatenate(time_data_array)
-        time_metadata = Metadata(name='Date Time', standard_name='time', shape=time_data.shape,
+        time_metadata = Metadata(name='DateTime', standard_name='time', shape=time_data.shape,
                                  units=str(cis_standard_time_unit),calendar=cis_standard_time_unit.calendar)
 
         coords = CoordList()
