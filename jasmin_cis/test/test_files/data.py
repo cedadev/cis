@@ -76,12 +76,43 @@ cis_test_files["modis_L2"] = TestFileTestData(
 
 valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
 valid_modis_l3_variable = "Pressure_Level"
+cis_test_files["modis_L3"] = TestFileTestData(
+    master_filename=valid_modis_l3_filename,
+    file_format="HDF4/ModisL3",
+    product_name="MODIS_L3",
+    start_datetime=datetime(2010, 1, 13, 0, 0, 0),
+    end_datetime=datetime(2010, 1, 13, 0, 0, 0),
+    lat_min=-89.5,
+    lat_max=89.5,
+    lon_min=-179.5,
+    lon_max=179.5,
+    valid_vars_count=700,
+    all_variable_names=None,
+    data_variable_name="Solar_Zenith_Mean_Mean",
+    data_variable_properties={}
+    )
 
 cloudsat_file_format = "HDF4/CloudSat"
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_RVOD_sdata_variable = "RVOD_liq_water_content"
 valid_cloudsat_RVOD_vdata_variable = "RVOD_ice_water_path"
 valid_cloudsat_RVOD_file_format = cloudsat_file_format
+
+cis_test_files["CloudsatRVODsdata"] = TestFileTestData(
+    master_filename=valid_cloudsat_RVOD_file,
+    file_format=cloudsat_file_format,
+    product_name="CloudSat",
+    start_datetime=datetime(2007, 6, 29, 12, 55, 3),
+    end_datetime=datetime(2007, 6, 29, 14, 33, 56),
+    lat_min=-81.84876,
+    lat_max=81.849,
+    lon_min=-180,
+    lon_max=180,
+    valid_vars_count=69,
+    all_variable_names=None,
+    data_variable_name=valid_cloudsat_RVOD_sdata_variable,
+    data_variable_properties={}
+    )
 
 valid_cloudsat_PRECIP_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_PRECIP_variable = "Precip_rate"
@@ -167,10 +198,64 @@ cis_test_files["aeronet"] = TestFileTestData(
 
 valid_caliop_l2_filename = make_pathname("CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08ZN.hdf")
 valid_caliop_l2_variable = "Tropopause_Temperature"
+valid_caliop_l2_variables = ['Aerosol_Layer_Fraction',
+                     'Aerosol_Multiple_Scattering_Profile_1064',
+                     'Aerosol_Multiple_Scattering_Profile_532',
+                     'Backscatter_Coefficient_1064',
+                     'Backscatter_Coefficient_Uncertainty_1064',
+                     'Cloud_Layer_Fraction',
+                     'Extinction_Coefficient_1064',
+                     'Extinction_Coefficient_532',
+                     'Extinction_Coefficient_Uncertainty_1064',
+                     'Extinction_Coefficient_Uncertainty_532',
+                     'Molecular_Number_Density',
+                     'Particulate_Depolarization_Ratio_Profile_532',
+                     'Particulate_Depolarization_Ratio_Uncertainty_532',
+                     'Perpendicular_Backscatter_Coefficient_532',
+                     'Perpendicular_Backscatter_Coefficient_Uncertainty_532',
+                     'Pressure',
+                     'Relative_Humidity',
+                     'Samples_Averaged',
+                     'Temperature',
+                     'Total_Backscatter_Coefficient_Uncertainty_532',
+                     'Total_Backscatter_Coefficient_532']
+cis_test_files["caliop_L2"] = TestFileTestData(
+    master_filename=valid_caliop_l2_filename,
+    file_format="HDF4/CaliopL2",
+    product_name="Caliop_L2",
+    start_datetime=datetime(2009, 12, 31, 23, 36, 12),
+    end_datetime=datetime(2010, 1, 1, 0, 22, 25),
+    lat_min=-61.37,
+    lat_max=81.84,
+    lon_min=-179.97,
+    lon_max=179.93,
+    valid_vars_count=len(valid_caliop_l2_variables),
+    all_variable_names=valid_caliop_l2_variables,
+    data_variable_name="Cloud_Layer_Fraction",
+    data_variable_properties={}
+    )
 
 valid_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2009-12-31T23-36-08ZN.hdf")
 valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010-01-01T00-22-28ZD.hdf")
 valid_caliop_l1_variable = "Tropopause_Temperature"
+valid_caliop_l1_variables = ['Perpendicular_Attenuated_Backscatter_532',
+                     'Attenuated_Backscatter_1064',
+                     'Total_Attenuated_Backscatter_532']
+cis_test_files["caliop_L1"] = TestFileTestData(
+    master_filename=valid_caliop_l1_filename,
+    file_format="HDF4/CaliopL1",
+    product_name="Caliop_L1",
+    start_datetime=datetime(2009, 12, 31, 23, 36, 12),
+    end_datetime=datetime(2010, 1, 1, 0, 22, 25),
+    lat_min=-61.37,
+    lat_max=81.84,
+    lon_min=-179.97,
+    lon_max=179.93,
+    valid_vars_count=len(valid_caliop_l1_variables),
+    all_variable_names=valid_caliop_l1_variables,
+    data_variable_name='Perpendicular_Attenuated_Backscatter_532',
+    data_variable_properties={}
+    )
 
 valid_echamham_filename = make_pathname("ECHAMHAM_AOT550_670.nc")
 valid_echamham_variable_1 = "TAU_2D_550nm"

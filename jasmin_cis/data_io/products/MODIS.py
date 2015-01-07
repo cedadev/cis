@@ -7,6 +7,9 @@ import jasmin_cis.utils as utils
 
 
 class MODIS_L3(AProduct):
+    """
+    Data product for MODIS Level 3 data
+    """
 
     def _parse_datetime(self,metadata_dict,keyword):
         import re
@@ -26,22 +29,22 @@ class MODIS_L3(AProduct):
     def _get_start_date(self, filename):
         from jasmin_cis.time_util import parse_datetimestr_to_std_time
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
-        date = self._parse_datetime(metadata_dict,'RANGEBEGINNINGDATE')
-        time = self._parse_datetime(metadata_dict,'RANGEBEGINNINGTIME')
+        date = self._parse_datetime(metadata_dict, 'RANGEBEGINNINGDATE')
+        time = self._parse_datetime(metadata_dict, 'RANGEBEGINNINGTIME')
         datetime_str = date + " " + time
         return parse_datetimestr_to_std_time(datetime_str)
 
     def _get_end_date(self, filename):
         from jasmin_cis.time_util import parse_datetimestr_to_std_time
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
-        date = self._parse_datetime(metadata_dict,'RANGEENDINGDATE')
-        time = self._parse_datetime(metadata_dict,'RANGEENDINGTIME')
+        date = self._parse_datetime(metadata_dict, 'RANGEENDINGDATE')
+        time = self._parse_datetime(metadata_dict, 'RANGEENDINGTIME')
         datetime_str = date + " " + time
         return parse_datetimestr_to_std_time(datetime_str)
 
     def get_file_signature(self):
-        product_names = ['MYD08_D3','MOD08_D3',"MOD08_E3"]
-        regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
+        product_names = ['MYD08_D3', 'MOD08_D3', "MOD08_E3"]
+        regex_list = [r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 
     def get_variable_names(self, filenames, data_type=None):
@@ -90,8 +93,8 @@ class MODIS_L3(AProduct):
         for filename in filenames:
             mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
             logging.debug("Using "+str(mid_datetime)+" as datetime for file "+str(filename))
-            # Only use part of the full lat shape as it has already been concattenated
-            time_data = np.empty((lat_metadata.shape[0]/len(filenames),lat_metadata.shape[1]),dtype='float64')
+            # Only use part of the full lat shape as it has already been concatenated
+            time_data = np.empty((lat_metadata.shape[0]/len(filenames), lat_metadata.shape[1]), dtype='float64')
             time_data.fill(mid_datetime)
             time_data_array.append(time_data)
         time_data = utils.concatenate(time_data_array)
@@ -99,9 +102,9 @@ class MODIS_L3(AProduct):
                                  units=str(cis_standard_time_unit),calendar=cis_standard_time_unit.calendar)
 
         coords = CoordList()
-        coords.append(Coord(lon_data, lon_metadata,'X'))
-        coords.append(Coord(lat_data, lat_metadata,'Y'))
-        coords.append(Coord(time_data, time_metadata,'T'))
+        coords.append(Coord(lon_data, lon_metadata, 'X'))
+        coords.append(Coord(lat_data, lat_metadata, 'Y'))
+        coords.append(Coord(time_data, time_metadata, 'T'))
 
         return coords
 
@@ -126,14 +129,23 @@ class MODIS_L3(AProduct):
         data = UngriddedData(var, metadata, coords)
         return data
 
+    def get_file_format(self, filenames):
+        """
+        Get the file format
+        :param filenames: the filesnames of the file
+        :return: file format
+        """
+
+        return "HDF4/ModisL3"
+
 
 class MODIS_L2(AProduct):
 
-    modis_scaling = ["1km","5km","10km"]
+    modis_scaling = ["1km", "5km", "10km"]
 
     def get_file_signature(self):
-        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MOD04_L2']
-        regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
+        product_names = ['MYD06_L2', 'MOD06_L2', 'MYD04_L2', 'MOD04_L2']
+        regex_list = [r'.*' + product + '.*\.hdf' for product in product_names]
         return regex_list
 
     def get_variable_names(self, filenames, data_type=None):
@@ -190,10 +202,10 @@ class MODIS_L2(AProduct):
     def _create_coord_list(self, filenames, variable=None):
         import datetime as dt
 
-        variables = [ 'Latitude','Longitude','Scan_Start_Time']
+        variables = ['Latitude', 'Longitude', 'Scan_Start_Time']
         logging.info("Listing coordinates: " + str(variables))
 
-        sdata, vdata = hdf.read(filenames,variables)
+        sdata, vdata = hdf.read(filenames, variables)
 
         apply_interpolation = False
         if variable is not None:
@@ -201,7 +213,8 @@ class MODIS_L2(AProduct):
             apply_interpolation = True if scale is "1km" else False
 
         lat = sdata['Latitude']
-        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
+        sd_lat = hdf.read_data(lat, "SD")
+        lat_data = self.__field_interpolate(sd_lat) if apply_interpolation else sd_lat
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata,'Y')
 
@@ -241,7 +254,7 @@ class MODIS_L2(AProduct):
     def get_file_format(self, filenames):
         """
         Get the file format
-        :param filenames: the filesnames of the file
+        :param filenames: the filenames of the file
         :return: file format
         """
 

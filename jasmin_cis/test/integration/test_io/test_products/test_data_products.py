@@ -5,10 +5,11 @@ module to test the various subclasses of the abstract AProduct class
 import unittest
 
 from hamcrest import *
-from jasmin_cis.data_io.products.MODIS import MODIS_L2, MODIS_L3
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 
+from jasmin_cis.data_io.products.MODIS import MODIS_L2, MODIS_L3
+from jasmin_cis.data_io.products.caliop import Caliop_L1, Caliop_L2
 from jasmin_cis.data_io.products.products import *
 from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.test.test_files.data import non_netcdf_file, cis_test_files
@@ -184,11 +185,7 @@ class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
 
 class TestMODIS_L3(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_modis_l3_filename, valid_modis_l3_variable
-
-        self.filename = valid_modis_l3_filename
-        self.valid_variable = valid_modis_l3_variable
-        self.product = MODIS_L3
+        self.setup(cis_test_files["modis_L3"], MODIS_L3)
 
     def check_valid_vars(self, vars):
         assert len(vars) == 700
@@ -196,44 +193,12 @@ class TestMODIS_L3(ProductTests, unittest.TestCase):
 
 class TestCaliop_L2(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_caliop_l2_filename, valid_caliop_l2_variable
-
-        self.filename = valid_caliop_l2_filename
-        self.valid_variable = valid_caliop_l2_variable
-        self.product = Caliop_L2
-        self.vars = ['Aerosol_Layer_Fraction',
-                     'Aerosol_Multiple_Scattering_Profile_1064',
-                     'Aerosol_Multiple_Scattering_Profile_532',
-                     'Backscatter_Coefficient_1064',
-                     'Backscatter_Coefficient_Uncertainty_1064',
-                     'Cloud_Layer_Fraction',
-                     'Extinction_Coefficient_1064',
-                     'Extinction_Coefficient_532',
-                     'Extinction_Coefficient_Uncertainty_1064',
-                     'Extinction_Coefficient_Uncertainty_532',
-                     'Molecular_Number_Density',
-                     'Particulate_Depolarization_Ratio_Profile_532',
-                     'Particulate_Depolarization_Ratio_Uncertainty_532',
-                     'Perpendicular_Backscatter_Coefficient_532',
-                     'Perpendicular_Backscatter_Coefficient_Uncertainty_532',
-                     'Pressure',
-                     'Relative_Humidity',
-                     'Samples_Averaged',
-                     'Temperature',
-                     'Total_Backscatter_Coefficient_Uncertainty_532',
-                     'Total_Backscatter_Coefficient_532']
+        self.setup(cis_test_files["caliop_L2"], Caliop_L2)
 
 
 class TestCaliop_L1(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_caliop_l1_filename, valid_caliop_l1_variable
-
-        self.filename = valid_caliop_l1_filename
-        self.valid_variable = valid_caliop_l1_variable
-        self.product = Caliop_L1
-        self.vars = ['Perpendicular_Attenuated_Backscatter_532',
-                     'Attenuated_Backscatter_1064',
-                     'Total_Attenuated_Backscatter_532']
+        self.setup(cis_test_files["caliop_L1"], Caliop_L1)
 
 
 class TestMODIS_L2(ProductTests, unittest.TestCase):
