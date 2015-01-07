@@ -406,7 +406,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_MODIS_L3(self):
-        # Takes 27s
+        # Takes 8s
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
                    'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
                    'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
@@ -415,7 +415,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
             dt.timedelta(seconds=20)
         str_delta = 'PT20S'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Scan_Start_Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_CloudSatPRECIP(self):

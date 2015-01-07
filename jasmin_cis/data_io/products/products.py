@@ -3,7 +3,6 @@ import logging
 import iris
 import iris.exceptions
 
-# add includes for plugin finder
 from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
 
 from jasmin_cis.exceptions import InvalidVariableError, CoordinateNotFoundError
