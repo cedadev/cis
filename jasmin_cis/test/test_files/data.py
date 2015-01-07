@@ -15,7 +15,7 @@ valid_modis_l2_filename = make_pathname("MOD04_L2.A2010001.2255.005.201000521581
 valid_modis_l2_variable = 'Asymmetry_Factor_Average_Ocean'
 
 valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
-valid_modis_l3_variable = "Pressure_Level"
+valid_modis_l3_variable = "Solar_Zenith_Std_Deviation_Mean"
 
 valid_cloudsat_RVOD_file = make_pathname("2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf")
 valid_cloudsat_RVOD_sdata_variable = "RVOD_liq_water_content"
@@ -40,11 +40,11 @@ another_valid_aeronet_filename = make_pathname("920801_091128_Abracos_Hill_small
 valid_aeronet_variable = "AOT_440"
 
 valid_caliop_l2_filename = make_pathname("CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08ZN.hdf")
-valid_caliop_l2_variable = "Tropopause_Temperature"
+valid_caliop_l2_variable = "Pressure"
 
 valid_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2009-12-31T23-36-08ZN.hdf")
 valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010-01-01T00-22-28ZD.hdf")
-valid_caliop_l1_variable = "Tropopause_Temperature"
+valid_caliop_l1_variable = "Attenuated_Backscatter_1064"
 
 valid_echamham_filename = make_pathname("ECHAMHAM_AOT550_670.nc")
 valid_echamham_variable_1 = "TAU_2D_550nm"
