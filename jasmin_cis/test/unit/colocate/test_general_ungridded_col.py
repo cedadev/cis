@@ -23,15 +23,14 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
             [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
 
         col = GeneralUngriddedColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(),
-                                moments(stddev_name='my_std_dev', nopoints_name='my_no_points'))
+        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), moments())
         means = new_data[0]
         std_dev = new_data[1]
         no_points = new_data[2]
 
-        eq_(means.name(), 'rain_mean')
-        eq_(std_dev.name(), 'my_std_dev')
-        eq_(no_points.name(), 'my_no_points')
+        eq_(means.name(), 'rain')
+        eq_(std_dev.name(), 'rain_std_dev')
+        eq_(no_points.name(), 'rain_num_points')
         assert means.coords()
         assert std_dev.coords()
         assert no_points.coords()
@@ -160,9 +159,9 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         expected_n = np.array(15 * [1])
         assert len(output) == 6
         assert isinstance(output, UngriddedDataList)
-        assert output[3].var_name == 'snow_mean'
+        assert output[3].var_name == 'snow'
         assert output[4].var_name == 'snow_std_dev'
-        assert output[5].var_name == 'snow_no_points'
+        assert output[5].var_name == 'snow_num_points'
         assert np.allclose(output[0].data, expected_result)
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)

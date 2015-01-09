@@ -2,6 +2,9 @@ import __builtin__
 import logging
 
 import iris
+import iris.analysis
+import iris.analysis.interpolate
+import iris.coords
 import numpy as np
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
@@ -82,10 +85,12 @@ class GeneralUngriddedColocator(Colocator):
         # Create output arrays.
         self.var_name = data.name()
         self.var_long_name = metadata.long_name
+        self.var_standard_name = metadata.standard_name
         self.var_units = data.units
-        var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name, self.var_units)
+        var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
+                                                      self.var_standard_name, self.var_units)
         if var_set_details is None:
-            var_set_details = ((self.var_name, self.var_long_name, self.var_units),)
+            var_set_details = ((self.var_name, self.var_long_name, self.var_standard_name, self.var_units),)
         values = np.zeros((len(var_set_details), len(sample_points))) + self.fill_value
 
         # Apply constraint and/or kernel to each sample point.
@@ -112,6 +117,12 @@ class GeneralUngriddedColocator(Colocator):
                 new_data = UngriddedData(values[0, :], metadata, points.coords())
                 new_data.metadata._name = var_details[0]
                 new_data.metadata.long_name = var_details[1]
+                new_data.metadata.standard_name = var_details[3]
+                try:
+                    new_data.metadata.standard_name = var_details[3]
+                except ValueError:
+                    # If the standard name is invalid
+                    new_data.metadata.standard_name = None
                 new_data.metadata.shape = (len(sample_points),)
                 new_data.metadata.missing_value = self.fill_value
                 new_data.units = var_details[2]
@@ -286,7 +297,8 @@ class mean(Kernel):
         '''
         from numpy import mean
         values = data.vals
-        if len(values) == 0: raise ValueError
+        if len(values) == 0:
+            raise ValueError
         return mean(values)
 
 
@@ -330,29 +342,32 @@ class max(Kernel):
 
 
 class moments(Kernel):
+    return_size = 3
+
     def __init__(self, mean_name='', stddev_name='', nopoints_name=''):
         self.mean_name = mean_name
         self.stddev_name = stddev_name
         self.nopoints_name = nopoints_name
 
-    def get_variable_details(self, var_name, var_long_name, var_units):
+    def get_variable_details(self, var_name, var_long_name, var_standard_name, var_units):
         """Sets name and units for mean, standard deviation and number of points variables, based
         on those of the base variable or overridden by those specified as kernel parameters.
         :param var_name: base variable name
         :param var_long_name: base variable long name
+        :param var_standard_name: base variable standard name
         :param var_units: base variable units
         :return: tuple of tuples each containing (variable name, variable long name, variable units)
         """
-        self.mean_name = var_name + '_mean'
+        self.mean_name = var_name
         self.stddev_name = var_name + '_std_dev'
-        stdev_long_name = 'Standard deviation from the mean in ' + var_name
+        stdev_long_name = 'Unbiased standard deviation of %s' % var_long_name
         stddev_units = var_units
-        self.nopoints_name = var_name + '_no_points'
-        npoints_long_name = 'Number of points used to calculate the mean of ' + var_name
-        npoints_units = '1'
-        return ((self.mean_name, var_long_name, var_units),
-                (self.stddev_name, stdev_long_name, stddev_units),
-                (self.nopoints_name, npoints_long_name, npoints_units))
+        self.nopoints_name = var_name + '_num_points'
+        npoints_long_name = 'Number of points used to calculate the mean of %s' % var_long_name
+        npoints_units = None
+        return ((self.mean_name, var_long_name, var_standard_name, var_units),
+                (self.stddev_name, stdev_long_name, None, stddev_units),
+                (self.nopoints_name, npoints_long_name, None, npoints_units))
 
     def get_value(self, point, data):
         """
@@ -384,7 +399,8 @@ class nn_horizontal(Kernel):
             # No points to check
             raise ValueError
         for data_point in iterator:
-            if point.compdist(nearest_point, data_point): nearest_point = data_point
+            if point.compdist(nearest_point, data_point):
+                nearest_point = data_point
         return nearest_point.val[0]
 
 
@@ -419,7 +435,8 @@ class nn_altitude(Kernel):
             # No points to check
             raise ValueError
         for data_point in iterator:
-            if point.compalt(nearest_point, data_point): nearest_point = data_point
+            if point.compalt(nearest_point, data_point):
+                nearest_point = data_point
         return nearest_point.val[0]
 
 
@@ -437,7 +454,8 @@ class nn_pressure(Kernel):
             # No points to check
             raise ValueError
         for data_point in iterator:
-            if point.comppres(nearest_point, data_point): nearest_point = data_point
+            if point.comppres(nearest_point, data_point):
+                nearest_point = data_point
         return nearest_point.val[0]
 
 
@@ -455,7 +473,8 @@ class nn_time(Kernel):
             # No points to check
             raise ValueError
         for data_point in iterator:
-            if point.comptime(nearest_point, data_point): nearest_point = data_point
+            if point.comptime(nearest_point, data_point):
+                nearest_point = data_point
         return nearest_point.val[0]
 
 
@@ -535,7 +554,7 @@ class GriddedColocatorUsingIrisRegrid(Colocator):
             raise ClassNotFoundError("Expected kernel of one of classes {}; found one of class {}".format(
                 str([jasmin_cis.utils.get_class_name(gridded_gridded_nn),
                     jasmin_cis.utils.get_class_name(gridded_gridded_li)]),
-                    jasmin_cis.utils.get_class_name(type(kernel))))
+                jasmin_cis.utils.get_class_name(type(kernel))))
 
     def colocate(self, points, data, constraint, kernel):
         """
@@ -611,7 +630,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         # returned from the Iris interpolater method will have dimensions of these missing coordinates, which needs
         # to be the final dimensions in the numpy array, as the iterator will give the position of the other dimensions.
         coord_names_and_sizes_for_output_grid = coord_names_and_sizes_for_sample_grid + \
-                                                coord_names_and_sizes_for_output_grid
+            coord_names_and_sizes_for_output_grid
 
         # An array for the colocated data, with the correct shape
         output_shape = tuple(i[1] for i in coord_names_and_sizes_for_output_grid)
@@ -876,9 +895,12 @@ class GeneralGriddedColocator(Colocator):
         data_index.create_indexes(kernel, points, data_points, coord_map)
 
         # Initialise output array as initially all masked, and set the appropriate fill value.
-        values = np.ma.zeros(shape)
-        values.mask = True
-        values.fill_value = self.fill_value
+        values = []
+        for i in range(kernel.return_size):
+            val = np.ma.zeros(shape)
+            val.mask = True
+            val.fill_value = self.fill_value
+            values.append(val)
 
         logging.info("--> Co-locating...")
 
@@ -905,24 +927,47 @@ class GeneralGriddedColocator(Colocator):
                     arg = hp
                 con_points = constraint.constrain_points(arg, data_points)
                 try:
-                    values[indices] = kernel.get_value(hp, con_points)
+                    kernel_val = kernel.get_value(hp, con_points)
+                    if kernel.return_size > 1:
+                        # This kernel returns multiple values:
+                        for idx, val in enumerate(kernel_val):
+                            values[idx][indices] = val
+                    else:
+                        values[0][indices] = kernel_val
                 except ValueError:
+                    # ValueErrors are raised by Kernel when there are no points to operate on.
+                    # We don't need to do anything.
                     pass
 
             # Log progress periodically.
             cell_count += 1
             cell_total += 1
             if cell_count == 10000:
-                logging.info("    Processed %d points of %d (%d%%)", cell_total, num_cells, int(cell_total * 100 / num_cells))
+                logging.info("    Processed %d points of %d (%d%%)", cell_total, num_cells,
+                             int(cell_total * 100 / num_cells))
                 cell_count = 0
 
         # Construct an output cube containing the colocated data.
-        cube = self._create_colocated_cube(points, data, values, output_coords, self.fill_value)
-        data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
-        data_with_nan_and_inf_removed.set_fill_value(self.fill_value)
-        cube.data = data_with_nan_and_inf_removed
+        kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
+        if kernel_var_details is None:
+            kernel_var_details = ((data.var_name, data.long_name, data.standard_name, data.units),)
+        output = GriddedDataList([])
+        for idx, val in enumerate(values):
+            cube = self._create_colocated_cube(points, data, val, output_coords, self.fill_value)
+            data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
+            data_with_nan_and_inf_removed.set_fill_value(self.fill_value)
+            cube.data = data_with_nan_and_inf_removed
+            cube.var_name = kernel_var_details[idx][0]
+            cube.long_name = kernel_var_details[idx][1]
+            try:
+                cube.standard_name = kernel_var_details[idx][2]
+            except ValueError:
+                # If name is not CF compliant standard name
+                cube.standard_name = None
+            cube.units = kernel_var_details[idx][3]
+            output.append(cube)
 
-        return GriddedDataList([cube])
+        return output
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.

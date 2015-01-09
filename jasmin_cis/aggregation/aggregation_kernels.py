@@ -32,10 +32,9 @@ class CountKernel(iris.analysis.Aggregator):
         """
         Count the number of (non-masked) points used in the aggregation for this cell.
         """
-        if ma.isMaskedArray(data):
-            return data.count(axis)
-        counter = ma.masked_array(data, zeros(data.shape))
-        return counter.count(axis)
+        if not ma.isMaskedArray(data):
+            data = ma.masked_array(data, zeros(data.shape))
+        return data.count(axis)
 
     def update_metadata(self, cube, coords, **kwargs):
         """
