@@ -89,8 +89,6 @@ class GeneralUngriddedColocator(Colocator):
         self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
                                                       self.var_standard_name, self.var_units)
-        if var_set_details is None:
-            var_set_details = ((self.var_name, self.var_long_name, self.var_standard_name, self.var_units),)
         values = np.zeros((len(var_set_details), len(sample_points))) + self.fill_value
 
         # Apply constraint and/or kernel to each sample point.
@@ -117,12 +115,7 @@ class GeneralUngriddedColocator(Colocator):
                 new_data = UngriddedData(values[0, :], metadata, points.coords())
                 new_data.metadata._name = var_details[0]
                 new_data.metadata.long_name = var_details[1]
-                new_data.metadata.standard_name = var_details[3]
-                try:
-                    new_data.metadata.standard_name = var_details[3]
-                except ValueError:
-                    # If the standard name is invalid
-                    new_data.metadata.standard_name = None
+                jasmin_cis.utils.set_cube_standard_name_if_valid(new_data, var_details[3])
                 new_data.metadata.shape = (len(sample_points),)
                 new_data.metadata.missing_value = self.fill_value
                 new_data.units = var_details[2]
@@ -949,8 +942,6 @@ class GeneralGriddedColocator(Colocator):
 
         # Construct an output cube containing the colocated data.
         kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
-        if kernel_var_details is None:
-            kernel_var_details = ((data.var_name, data.long_name, data.standard_name, data.units),)
         output = GriddedDataList([])
         for idx, val in enumerate(values):
             cube = self._create_colocated_cube(points, data, val, output_coords, self.fill_value)
@@ -959,11 +950,7 @@ class GeneralGriddedColocator(Colocator):
             cube.data = data_with_nan_and_inf_removed
             cube.var_name = kernel_var_details[idx][0]
             cube.long_name = kernel_var_details[idx][1]
-            try:
-                cube.standard_name = kernel_var_details[idx][2]
-            except ValueError:
-                # If name is not CF compliant standard name
-                cube.standard_name = None
+            jasmin_cis.utils.set_cube_standard_name_if_valid(cube, kernel_var_details[idx][2])
             cube.units = kernel_var_details[idx][3]
             output.append(cube)
 
