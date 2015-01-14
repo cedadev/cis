@@ -212,3 +212,28 @@ class TestParse(TestCase):
             except SystemExit as e:
                 if e.code != 2:
                     raise e
+
+    def test_parse_calculate_single_datagroup(self):
+        args = ['calc', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.command, is_('calc'))
+        assert_that(parsed.expr, is_('var1 + var2 + var3'))
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(len(parsed.datagroups), is_(1))
+        assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
+        assert_that(parsed.datagroups[0]['variable'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[0]['product'], is_('cis'))
+
+    def test_parse_calculate_multiple_datagroups(self):
+        args = ['calc', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.command, is_('calc'))
+        assert_that(parsed.expr, is_('var1^var2 / var3'))
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(len(parsed.datagroups), is_(2))
+        assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
+        assert_that(parsed.datagroups[0]['variable'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[1]['filenames'], is_([dummy_cis_out]))
+        assert_that(parsed.datagroups[1]['variable'], is_(['var3']))
