@@ -3,7 +3,7 @@ from hamcrest import assert_that, is_, instance_of
 from mock import MagicMock
 
 from jasmin_cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
-from jasmin_cis.data_io.gridded_data import GriddedData, GriddedDataList
+from jasmin_cis.data_io.gridded_data import GriddedData, GriddedDataList, make_from_cube
 from jasmin_cis.data_io.data_reader import DataReader
 from jasmin_cis.test.util.mock import make_square_5x3_2d_cube, make_regular_2d_ungridded_data
 
@@ -113,7 +113,7 @@ class TestDataReader(TestCase):
         file_vars = ['aeronet.lev20', 'var2.hdf', 'netcdf1.nc', 'netcdf3.nc', 'test.hdf', 'test1.hdf']
         should_match = ['netcdf1.nc', 'netcdf3.nc', 'test1.hdf']
         filenames = 'filename1'
-        get_data_func = MagicMock()
+        get_data_func = MagicMock(return_value=make_regular_2d_ungridded_data())
         get_var_func = MagicMock(return_value=file_vars)
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         reader.read_data(filenames, variables)
@@ -125,7 +125,7 @@ class TestDataReader(TestCase):
         variables = ['aeronet.lev20', '*.nc', 'test?.hdf']
         file_vars = ['aeronet.lev20', 'var2.hdf']
         filenames = 'filename1'
-        get_data_func = MagicMock()
+        get_data_func = MagicMock(return_value=make_regular_2d_ungridded_data())
         get_var_func = MagicMock(return_value=file_vars)
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         reader.read_data(filenames, variables)
@@ -141,3 +141,79 @@ class TestDataReader(TestCase):
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         with self.assertRaises(ValueError):
             reader.read_data(filenames, variables)
+
+    def test_GIVEN_multiple_datagroups_WHEN_read_datagroups_THEN_get_data_called_correctly(self):
+        datagroup_1 = {'variables': ['var1', 'var2'],
+                       'filenames': ['filename1.nc'],
+                       'product': None}
+        datagroup_2 = {'variables': ['var3', 'var4'],
+                       'filenames': ['filename2.nc'],
+                       'product': 'cis'}
+        get_data_func = MagicMock(return_value=make_regular_2d_ungridded_data())
+        get_var_func = MagicMock(side_effect=lambda f: {'filename1.nc': ['var1', 'var2'],
+                                                        'filename2.nc': ['var3', 'var4']}[f])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        data = reader.read_datagroups([datagroup_1, datagroup_2])
+        assert_that(get_data_func.call_count, is_(4))
+        assert_that(get_data_func.call_args_list[0][0], is_((['filename1.nc'], 'var1', None)))
+        assert_that(get_data_func.call_args_list[1][0], is_((['filename1.nc'], 'var2', None)))
+        assert_that(get_data_func.call_args_list[2][0], is_((['filename2.nc'], 'var3', 'cis')))
+        assert_that(get_data_func.call_args_list[3][0], is_((['filename2.nc'], 'var4', 'cis')))
+
+    def test_GIVEN_ungridded_datagroups_with_different_num_vars_WHEN_read_datagroups_THEN_data_returned_in_list(self):
+        datagroup_1 = {'variables': ['var1', 'var2'],
+                       'filenames': ['filename1.nc'],
+                       'product': None}
+        datagroup_2 = {'variables': ['var3'],
+                       'filenames': ['filename2.nc'],
+                       'product': 'cis'}
+        var1 = make_regular_2d_ungridded_data()
+        var2 = make_regular_2d_ungridded_data()
+        var3 = make_regular_2d_ungridded_data()
+        get_data_func = MagicMock(side_effect=[var1, var2, var3])
+        get_var_func = MagicMock(side_effect=lambda f: {'filename1.nc': ['var1', 'var2'],
+                                                        'filename2.nc': ['var3']}[f])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        data = reader.read_datagroups([datagroup_1, datagroup_2])
+        assert_that(isinstance(data, UngriddedDataList))
+        assert_that(len(data), is_(3))
+        assert_that(data[0], is_(var1))
+        assert_that(data[1], is_(var2))
+        assert_that(data[2], is_(var3))
+
+    def test_GIVEN_gridded_datagroups_WHEN_read_datagroups_THEN_data_returned_in_list(self):
+        datagroup_1 = {'variables': ['var1', 'var2'],
+                       'filenames': ['filename1.nc'],
+                       'product': None}
+        datagroup_2 = {'variables': ['var3'],
+                       'filenames': ['filename2.nc'],
+                       'product': 'cis'}
+        var1 = make_from_cube(make_square_5x3_2d_cube())
+        var2 = make_from_cube(make_square_5x3_2d_cube())
+        var3 = make_from_cube(make_square_5x3_2d_cube())
+        get_data_func = MagicMock(side_effect=[var1, var2, var3])
+        get_var_func = MagicMock(side_effect=lambda f: {'filename1.nc': ['var1', 'var2'],
+                                                        'filename2.nc': ['var3']}[f])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        data = reader.read_datagroups([datagroup_1, datagroup_2])
+        assert_that(isinstance(data, GriddedDataList))
+        assert_that(len(data), is_(3))
+        assert_that(data[0], is_(var1))
+        assert_that(data[1], is_(var2))
+        assert_that(data[2], is_(var3))
+
+    def test_GIVEN_gridded_and_ungridded_datagroups_WHEN_read_datagroups_THEN_raises_TypeError(self):
+        datagroup_1 = {'variables': ['var1'],
+                       'filenames': ['filename1.nc'],
+                       'product': None}
+        datagroup_2 = {'variables': ['var3'],
+                       'filenames': ['filename2.nc'],
+                       'product': 'cis'}
+        var1 = make_from_cube(make_square_5x3_2d_cube())
+        var2 = make_regular_2d_ungridded_data()
+        get_data_func = MagicMock(side_effect=[var1, var2])
+        get_var_func = MagicMock(side_effect=lambda f: {'filename1.nc': ['var1'],
+                                                        'filename2.nc': ['var3']}[f])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        with self.assertRaises(TypeError):
+            reader.read_datagroups([datagroup_1, datagroup_2])

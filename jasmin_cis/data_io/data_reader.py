@@ -1,10 +1,10 @@
 import fnmatch
 import logging
-import iris
 
 from jasmin_cis.data_io.gridded_data import GriddedDataList
 from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 from jasmin_cis.data_io.products.AProduct import get_data, get_coordinates, get_variables
+from jasmin_cis.utils import deprecated
 
 
 class DataReader(object):
@@ -24,6 +24,7 @@ class DataReader(object):
         self._get_coords_func = get_coords_func
         self._get_vars_func = get_variables_func
 
+    @deprecated
     def read_data(self, filenames, variables, product=None):
         """
         Read a specific variable from a list of files
@@ -33,7 +34,20 @@ class DataReader(object):
         :param variables:    The variables to read from the files
         :return:  The specified data with unnecessary dimensions removed (or a list if multiple variables)
         """
+        data_list = self.read_data_list(filenames, variables, product)
+        if len(data_list) == 1:
+            return data_list[0]
+        return data_list
 
+    def read_data_list(self, filenames, variables, product=None):
+        """
+        Read multiple data objects
+        Files can be either gridded or ungridded but not a mix of both.
+        :param filenames: The filenames of the files to read
+        :param variables: The variables to read from the files
+        :return:  A list of the data read out (either a GriddedDataList or UngriddedDataList depending on the
+        type of data contained in the files
+        """
         # if filenames or variables are not lists, make them lists of 1 element
         if not isinstance(filenames, list):
             filenames = [filenames]
@@ -42,26 +56,15 @@ class DataReader(object):
 
         variables = self._expand_wildcards(variables, filenames)
 
-        if len(variables) == 1:
-            return self._get_data_func(filenames, variables[0], product)
-        else:
-            gridded = None
-            data_list = []
-            for variable in variables:
-                var_data = self._get_data_func(filenames, variable, product)
-                var_data.filenames = filenames
-                var_is_gridded = isinstance(var_data, iris.cube.Cube)
-                if gridded is None:
-                    gridded = var_is_gridded
-                elif not gridded == var_is_gridded:
-                        # Data should always be the same type (ungridded vs gridded) but check anyway.
-                        raise TypeError("Error reading variables from file: "
-                                        "cannot read multiple datasets where some are gridded and some are ungridded")
-                data_list.append(var_data)
-            if gridded:
-                return GriddedDataList(data_list)
-            else:
-                return UngriddedDataList(data_list)
+        data_list = None
+        for variable in variables:
+            var_data = self._get_data_func(filenames, variable, product)
+            var_data.filenames = filenames
+            if data_list is None:
+                data_list = GriddedDataList() if var_data.is_gridded else UngriddedDataList()
+            data_list.append(var_data)
+        assert data_list is not None
+        return data_list
 
     def _expand_wildcards(self, variables, filenames):
         """
@@ -88,6 +91,35 @@ class DataReader(object):
         if len(valid_vars) == 0:
             raise ValueError("No matching variables could be found for the variables supplied")
         return valid_vars
+
+    def read_datagroups(self, datagroups):
+        """
+        Read data from a set of datagroups
+        :param datagroups: A list of datagroups. Each datagroup represents a grouping of files and variables, where the
+        set of files may be logically considered to represent the same data (an example would be 2D model data split
+        into monthly output files where the grid is the same).
+        The following should be true of a datagroup:
+        1) All variables in a datagroup are present in all the files in that datagroup
+        2) The shape of the data returned from each variable must be the same in each file, so that they may be
+        concatenated
+        3) They should all be openable by the same CIS data product
+        4) They should be dictionaries of the following format:
+         { 'filenames': ['filename1.nc', 'filename2.nc'],
+            'variables': ['variable1', 'variable2'],
+            'product' : 'Aerosol_CCI'
+         }
+
+        :return: A list of data (either a GriddedDataList or an UngriddedDataList, depending on the data format)
+        """
+        data_list = None
+        for datagroup in datagroups:
+            data = self.read_data_list(datagroup['filenames'], datagroup['variables'], datagroup['product'])
+            if data_list is None:
+                # This ensures the list is the right type (i.e. GriddedDataList or UngriddedDataList)
+                data_list = data
+            else:
+                data_list.extend(data)
+        return data_list
 
     def read_coordinates(self, filenames, product=None):
         """
