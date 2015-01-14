@@ -5,7 +5,7 @@ import iris
 from iris.cube import CubeList
 import numpy as np
 
-from jasmin_cis.data_io.common_data import CommonData
+from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint import HyperPoint
 from jasmin_cis.data_io.hyperpoint_view import GriddedHyperPointView
 
@@ -164,7 +164,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         iris.save(self, output_file)
 
 
-class GriddedDataList(iris.cube.CubeList):
+class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
     This class extends iris.cube.CubeList to add functionality needed for CIS to process multiple gridded data.
 
@@ -182,47 +182,20 @@ class GriddedDataList(iris.cube.CubeList):
         """
         return True
 
-    @property
-    def var_name(self):
-        """
-        Get the variable names in this list
-        """
-        var_names = []
-        for data in self:
-            var_names.append(data.var_name)
-        return var_names
+    def append(self, p_object):
+        if isinstance(p_object, iris.cube.Cube):
+            p_object = make_from_cube(p_object)
+        super(GriddedDataList, self).append(p_object)
 
-    @property
-    def filenames(self):
-        """
-        Get the filenames in this list
-        """
-        filenames = []
-        for data in self:
-            filenames.extend(data.filenames)
-        return filenames
-
-    def add_history(self, new_history):
-        """
-        Appends to, or creates, the metadata history attribute using the supplied history string.
-        The new entry is prefixed with a timestamp.
-        :param new_history: history string
-        """
-        for data in self:
-            data.add_history(new_history)
+    def extend(self, iterable):
+        if isinstance(iterable, iris.cube.CubeList):
+            iterable = make_from_cube(iterable)
+        super(GriddedDataList, self).extend(iterable)
 
     def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
         output_file = remove_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
-
-    def coords(self, *args, **kwargs):
-        """
-        Returns all unique coordinates used in all the UngriddedDataobjects
-        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
-        """
-        # Assumes all coordinates on same grid
-        return self[0].coords(*args, **kwargs)
 
     def coord(self, *args, **kwargs):
         """
@@ -300,16 +273,6 @@ class GriddedDataList(iris.cube.CubeList):
             collapsed_data = make_from_cube(data.collapsed(*args, **kwargs))
             data_list.append(collapsed_data)
         return data_list
-
-    def set_longitude_range(self, range_start):
-        """
-        Rotates the longitude coordinate array and changes its values by
-        360 as necessary to force the values to be within a 360 range starting
-        at the specified value.
-        :param range_start: starting value of required longitude range
-        """
-        for data in self:
-            data.set_longitude_range(range_start)
 
     def interpolate(self, *args, **kwargs):
         """

@@ -38,3 +38,88 @@ class CommonData(object):
         """Returns value indicating whether the data/coordinates are gridded.
         """
         pass
+
+
+class CommonDataList(list):
+    """
+    Interface for common list methods implemented for both gridded and ungridded data
+    """
+    __metaclass__ = ABCMeta
+
+    filenames = []
+
+    def __init__(self, iterable=()):
+        super(CommonDataList, self).__init__()
+        self.extend(iterable)
+
+    @property
+    @abstractmethod
+    def is_gridded(self):
+        """
+        Returns value indicating whether the data/coordinates are gridded.
+        """
+        raise NotImplementedError
+
+    def append(self, p_object):
+        # This will raise a TypeError if the objects being added are of the wrong type (i.e. Gridded versus Ungridded).
+        this_class = self.__class__.__name__
+        that_class = p_object.__class__.__name__
+        try:
+            if p_object.is_gridded == self.is_gridded:
+                super(CommonDataList, self).append(p_object)
+                return
+        except AttributeError:
+            pass
+        raise TypeError("Appending {that_class} to {this_class} is not allowed".format(
+            that_class=that_class, this_class=this_class))
+
+    def extend(self, iterable):
+        # This will raise a TypeError if the objects being added are of the wrong type (i.e. Gridded versus Ungridded).
+        for x in iterable:
+            self.append(x)
+
+    @property
+    def var_name(self):
+        """
+        Get the variable names in this list
+        """
+        var_names = []
+        for data in self:
+            var_names.append(data.var_name)
+        return var_names
+
+    @property
+    def filenames(self):
+        """
+        Get the filenames in this data list
+        """
+        filenames = []
+        for data in self:
+            filenames.extend(data.filenames)
+        return filenames
+
+    def add_history(self, new_history):
+        """
+        Appends to, or creates, the metadata history attribute using the supplied history string.
+        The new entry is prefixed with a timestamp.
+        :param new_history: history string
+        """
+        for data in self:
+            data.add_history(new_history)
+
+    def coords(self, *args, **kwargs):
+        """
+        Returns all coordinates used in all the data object
+        :return: A list of coordinates in this data list object fitting the given criteria
+        """
+        return self[0].coords(*args, **kwargs)
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        for data in self:
+            data.set_longitude_range(range_start)

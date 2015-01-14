@@ -10,7 +10,7 @@ from pyhdf.SD import SDS
 from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
 from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
 from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
-from jasmin_cis.data_io.common_data import CommonData
+from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 
@@ -477,7 +477,7 @@ class UngriddedCoordinates(CommonData):
         return False
 
 
-class UngriddedDataList(list):
+class UngriddedDataList(CommonDataList):
     """
     Class which represents multiple UngriddedData objects (e.g. from reading multiple variables)
     """
@@ -489,42 +489,6 @@ class UngriddedDataList(list):
         """Returns value indicating whether the data/coordinates are gridded.
         """
         return False
-
-    @property
-    def var_name(self):
-        """
-        Get the variable names in this list
-        """
-        var_names = []
-        for data in self:
-            var_names.append(data.var_name)
-        return var_names
-
-    @property
-    def filenames(self):
-        """
-        Get the filenames in this list
-        """
-        filenames = []
-        for data in self:
-            filenames.extend(data.filenames)
-        return filenames
-
-    def add_history(self, new_history):
-        """
-        Appends to, or creates, the metadata history attribute using the supplied history string.
-        The new entry is prefixed with a timestamp.
-        :param new_history: history string
-        """
-        for data in self:
-            data.add_history(new_history)
-
-    def coords(self, *args, **kwargs):
-        """
-        Returns all coordinates used in all the UngriddedDataobjects
-        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
-        """
-        return self[0].coords(*args, **kwargs)
 
     def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
         """
@@ -550,13 +514,3 @@ class UngriddedDataList(list):
         for data in self:
             points_list.append(data.get_non_masked_points())
         return points_list
-
-    def set_longitude_range(self, range_start):
-        """
-        Rotates the longitude coordinate array and changes its values by
-        360 as necessary to force the values to be within a 360 range starting
-        at the specified value.
-        :param range_start: starting value of required longitude range
-        """
-        for data in self:
-            data.set_longitude_range(range_start)
