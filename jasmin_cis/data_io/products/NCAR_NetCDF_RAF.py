@@ -341,7 +341,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         coords.append(time_coord)
 
         #Lat and Lon
-        points_count = len(data_variables[variable_selector.time_variable_name])
+        points_count = np.size(data_variables[variable_selector.time_variable_name])
         if variable_selector.station:
             lat_coord = self._create_fixed_value_coord("Y", variable_selector.station_latitude, "degrees_north",
                                                        points_count, "latitude")

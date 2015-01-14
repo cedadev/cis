@@ -166,6 +166,15 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_temporal_subsetting(time_min, time_max, False)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_subset_GASSP_not_entirely_valid(self):
+        # see issue JASCIS-145
+        filename = valid_GASSP_not_entirely_correct_filename
+        variable = valid_GASSP_not_entirely_correct_variable
+        time_min, time_max = '1993-10-27T00:00:00', '1993-11-27T00:00:00'
+        self.do_subset(filename, time_min, time_max, variable)
+        self.check_temporal_subsetting(time_min, time_max, False)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+
     def test_subset_Caliop_L1(self):
         # Takes 1470s
         variable = 'Perpendicular_Attenuated_Backscatter_532,Attenuated_Backscatter_1064,' \

@@ -189,6 +189,16 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='latitude', lon_name='longitude')
 
+    def test_aggregate_GASSP2(self):
+        # see issue JASCIS-144
+        variable = valid_GASSP_not_entirely_correct_variable
+        filename = valid_GASSP_not_entirely_correct_filename
+        lon_min, lon_max, lon_delta = -180, 180, 10
+        lat_min, lat_max, lat_delta = -90, 90, 10
+        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
+                                    lat_name='latitude', lon_name='longitude')
+
     def test_aggregate_Aeronet(self):
         # Takes 50s
         variable = '*'

@@ -400,6 +400,9 @@ cis_test_files["NCAR_NetCDF_RAF"] = TestFileTestData(
         "missing_value": -9999}
     )
 
+# this data is not entirely correct because there is an extra 1 length dimension in it
+valid_GASSP_not_entirely_correct_filename = make_pathname("ACE1_aero_an.nc")
+valid_GASSP_not_entirely_correct_variable = 'TIM_627'
 
 valid_GASSP_aeroplane_filename = make_pathname("SP2_mrg60_NP3_20060927_R1.ict.nc")
 valid_GASSP_aeroplane_vars = ['BC_ng_kg', "BC_ng_m3", "UTC_mid", "GpsAlt", "GpsLat", "GpsLon"]
