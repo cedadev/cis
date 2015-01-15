@@ -60,7 +60,7 @@ def plot_cmd(main_arguments):
             data.append(read_data(datagroup['filenames'], datagroup['variable'], datagroup['product']))
         except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError, IOError) as e:
             __error_occurred('Error when trying to read variable {} in file(s) {} using requested product {}.\nError '
-                             'was: {}'.format(datagroup['variable'], datagroup['filenames'], datagroup['product'], e))
+                             'was: {}'.format(datagroup['variables'], datagroup['filenames'], datagroup['product'], e))
         except MemoryError as e:
          __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
                           "of data to be plotted, increase the swap space available on your machine or use a machine "
@@ -82,6 +82,7 @@ def plot_cmd(main_arguments):
         __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
                          "of data to be plotted, increase the swap space available on your machine or use a machine "
                          "with more memory (for example the JASMIN facility).")
+
 
 def info_cmd(main_arguments):
     '''
@@ -135,11 +136,11 @@ def col_cmd(main_arguments):
     kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
 
     for input_group in main_arguments.datagroups:
-        variable = input_group['variable']
+        variables = input_group['variables']
         filenames = input_group['filenames']
         product = input_group["product"] if input_group["product"] is not None else None
 
-        data = data_reader.read_data(filenames, variable, product)
+        data = data_reader.read_data(filenames, variables, product)
         data_writer = DataWriter()
         try:
             output = col.colocate(data, col_name, col_options, kern_name, kern_options)
@@ -162,7 +163,7 @@ def subset_cmd(main_arguments):
         __error_occurred("Subsetting can only be performed on one data group")
     input_group = main_arguments.datagroups[0]
 
-    variable = input_group['variable']
+    variables = input_group['variables']
     filenames = input_group['filenames']
     product = input_group["product"] if input_group["product"] is not None else None
 
@@ -170,7 +171,7 @@ def subset_cmd(main_arguments):
     output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
     subset = Subset(main_arguments.limits, output_file)
     try:
-        subset.subset(variable, filenames, product)
+        subset.subset(variables, filenames, product)
     except (NoDataInSubsetError, CISError) as exc:
          __error_occurred(exc)
 
@@ -187,7 +188,7 @@ def aggregate_cmd(main_arguments):
         __error_occurred("Aggregation can only be performed on one data group")
     input_group = main_arguments.datagroups[0]
 
-    variable = input_group['variable']
+    variables = input_group['variables']
     filenames = input_group['filenames']
     product = input_group["product"] if input_group["product"] is not None else None
     kernel = input_group["kernel"] if input_group["kernel"] is not None else 'mean'
@@ -195,7 +196,7 @@ def aggregate_cmd(main_arguments):
     # Add a prefix to the output file so that we have a signature to use when we read it in again
     output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
     aggregate = Aggregate(main_arguments.grid, output_file)
-    aggregate.aggregate(variable, filenames, product, kernel)
+    aggregate.aggregate(variables, filenames, product, kernel)
 
 
 def version_cmd(_main_arguments):

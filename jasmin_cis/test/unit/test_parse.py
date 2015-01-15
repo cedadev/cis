@@ -143,7 +143,7 @@ class TestParse(TestCase):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
         assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
 
     def test_GIVEN_colocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
         var1, var2 = 'rain', 'snow'
@@ -156,7 +156,7 @@ class TestParse(TestCase):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
         assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
 
     def test_GIVEN_aggregate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
         var1, var2 = 'rain', 'snow'
@@ -169,7 +169,7 @@ class TestParse(TestCase):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
         assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
 
     def test_should_raise_error_when_no_variable_is_specified(self):
         try:
@@ -222,7 +222,7 @@ class TestParse(TestCase):
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(1))
         assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
-        assert_that(parsed.datagroups[0]['variable'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[0]['product'], is_('cis'))
 
     def test_parse_calculate_multiple_datagroups(self):
@@ -234,18 +234,18 @@ class TestParse(TestCase):
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(2))
         assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
-        assert_that(parsed.datagroups[0]['variable'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[1]['filenames'], is_([dummy_cis_out]))
-        assert_that(parsed.datagroups[1]['variable'], is_(['var3']))
+        assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
 
     def test_parse_calculate_valid_aliases(self):
         # Should use the given alias or the variable name if not provided
         args = ['calc', 'var1=alias1,var2:%s' % ascii_filename_with_no_values,
                 'var3=alias3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
         parsed = parse_args(args)
-        assert_that(parsed.datagroups[0]['variable'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[0]['aliases'], is_(['alias1', 'var2']))
-        assert_that(parsed.datagroups[1]['variable'], is_(['var3']))
+        assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
         assert_that(parsed.datagroups[1]['aliases'], is_(['alias3']))
 
     def test_parse_calculate_duplicate_aliases(self):

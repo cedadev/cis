@@ -127,13 +127,12 @@ def add_info_parser_arguments(parser):
 
 def add_col_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroups", nargs="+", help="Variables and files to colocate, "
-                        "which needs to be entered in the format variable:filename[:product=], with multiple files to "
-
-                                                                            "colocate separated by spaces.")
+                        "which needs to be entered in the format variables:filename[:product=], with multiple files to "
+                        "colocate separated by spaces.")
     parser.add_argument("samplegroup", metavar="SampleGroup", help="A filename with the points to colocate onto. "
                         "Additional parameters are variable, colocator, kernel and product, entered as "
                         "keyword=value. Colocator must always be specified. For example "
-                                                                   "filename:variable=var1,colocator=box[h_sep=10km].")
+                       "filename:variable=var1,colocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file containing the colocated data. The name specified will"
                              " be suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and "
@@ -143,7 +142,7 @@ def add_col_parser_arguments(parser):
 
 def add_aggregate_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
-                        help="Variable to aggregate with filenames, and optional arguments seperated by colon(s). "
+                        help="Variables to aggregate with filenames, and optional arguments seperated by colon(s). "
                              "Optional arguments are product and kernel, which are entered as keyword=value in a "
                              "comma separated list. Example: var:filename:product=MODIS_L3,kernel=mean")
     parser.add_argument("aggregategrid", metavar="AggregateGrid",
@@ -157,7 +156,7 @@ def add_aggregate_parser_arguments(parser):
 
 def add_subset_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
-                        help="Variable to subset with filenames and optional product separated by colon(s)")
+                        help="Variables to subset with filenames and optional product separated by colon(s)")
     parser.add_argument("subsetranges", metavar="SubsetRanges",
                         help="Dimension ranges to use for subsetting")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
@@ -167,8 +166,8 @@ def add_subset_parser_arguments(parser):
 
 def add_calc_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs='+',
-                        help="Variable to subset with filenames and optional product separated by colon(s)")
-    parser.add_argument("expr", metavar="Calculation expression")
+                        help="Variables to calculate usingwith filenames and optional product separated by colon(s)")
+    parser.add_argument("expr", metavar="Calculation expression to evaluate")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file")
 
@@ -303,7 +302,7 @@ def get_plot_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
 
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "color", "edgecolor", "itemstyle",
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "color", "edgecolor", "itemstyle",
                                                        "label", "product", "type", "transparency", "cmap", "cmin",
                                                        "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "contfontsize"])
@@ -322,7 +321,7 @@ def get_col_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
 
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
@@ -352,7 +351,7 @@ def get_aggregate_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
 
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product", "kernel"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product,
                                          check_aggregate_kernel)
 
@@ -362,7 +361,7 @@ def get_aggregate_datagroups(datagroups, parser):
 def get_calc_datagroups(datagroups, parser):
     from collections import namedtuple
 
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product", "kernel"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product,
                                          check_aggregate_kernel)
 
@@ -440,7 +439,7 @@ def get_subset_datagroups(datagroups, parser):
     '''
     from collections import namedtuple
 
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
@@ -693,7 +692,7 @@ def _set_aliases_for_datagroups(datagroups, parser):
     for datagroup in datagroups:
         variables = []
         aliases = []
-        for variable in datagroup['variable']:
+        for variable in datagroup['variables']:
             parts = variable.split('=')
             if len(parts) == 1:
                 if not parts[0]:
@@ -709,7 +708,7 @@ def _set_aliases_for_datagroups(datagroups, parser):
                 _alias_error(variable)
         datagroup['aliases'] = aliases
         all_aliases.extend(aliases)
-        datagroup['variable'] = variables
+        datagroup['variables'] = variables
     # Check that the set of aliases is all unique
     if not len(set(all_aliases)) == len(all_aliases):
         parser.error("Variable names or aliases must be all unique: list was %s" % all_aliases)
