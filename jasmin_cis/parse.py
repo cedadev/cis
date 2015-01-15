@@ -366,7 +366,11 @@ def get_calc_datagroups(datagroups, parser):
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product,
                                          check_aggregate_kernel)
 
-    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+    datagroups = parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+
+    # Calculate allows aliases in variable names so we need to process them here.
+    _set_aliases_for_datagroups(datagroups, parser)
+    return datagroups
 
 
 def get_aggregate_grid(aggregategrid, parser):
@@ -672,6 +676,43 @@ def check_is_not_empty(item, parser):
 def check_is_not_empty_and_comma_split(item, parser):
     check_is_not_empty(item, parser)
     return multi_split(item, [','])
+
+
+def _set_aliases_for_datagroups(datagroups, parser):
+    """
+    Split out aliases from variables in a datagroup. They will be of the form:
+    'var1=alias1' where the part after the '=' is the alias.
+    :param datagroup: Arguments.datagroup
+    :return:
+    """
+
+    def _alias_error(var_and_alias):
+        parser.error("Invalid variable name or aliasing: expected string of form '<variablename>=<alias>', "
+                     "but got: '%s'" % var_and_alias)
+    all_aliases = []
+    for datagroup in datagroups:
+        variables = []
+        aliases = []
+        for variable in datagroup['variable']:
+            parts = variable.split('=')
+            if len(parts) == 1:
+                if not parts[0]:
+                    _alias_error(variable)
+                variables.append(variable)
+                aliases.append(variable)
+            elif len(parts) == 2:
+                if not (parts[0] and parts[1]):
+                    _alias_error(variable)
+                variables.append(parts[0])
+                aliases.append(parts[1])
+            elif len(parts) > 2:
+                _alias_error(variable)
+        datagroup['aliases'] = aliases
+        all_aliases.extend(aliases)
+        datagroup['variable'] = variables
+    # Check that the set of aliases is all unique
+    if not len(set(all_aliases)) == len(all_aliases):
+        parser.error("Variable names or aliases must be all unique: list was %s" % all_aliases)
 
 
 def convert_to_list_of_floats(arg, parser):
