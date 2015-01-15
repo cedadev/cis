@@ -39,12 +39,15 @@ class DataReader(object):
             return data_list[0]
         return data_list
 
-    def read_data_list(self, filenames, variables, product=None):
+    def read_data_list(self, filenames, variables, product=None, aliases=None):
         """
         Read multiple data objects
         Files can be either gridded or ungridded but not a mix of both.
         :param filenames: The filenames of the files to read
         :param variables: The variables to read from the files
+        :param product: Name of data product to use
+        :param aliases: List of variable aliases to put on each variables
+        data object as an alternative means of identifying them.
         :return:  A list of the data read out (either a GriddedDataList or UngriddedDataList depending on the
         type of data contained in the files
         """
@@ -57,9 +60,14 @@ class DataReader(object):
         variables = self._expand_wildcards(variables, filenames)
 
         data_list = None
-        for variable in variables:
+        for idx, variable in enumerate(variables):
             var_data = self._get_data_func(filenames, variable, product)
             var_data.filenames = filenames
+            if aliases:
+                try:
+                    var_data.alias = aliases[idx]
+                except IndexError:
+                    raise ValueError("Number of aliases does not match number of variables")
             if data_list is None:
                 data_list = GriddedDataList() if var_data.is_gridded else UngriddedDataList()
             data_list.append(var_data)
@@ -113,7 +121,9 @@ class DataReader(object):
         """
         data_list = None
         for datagroup in datagroups:
-            data = self.read_data_list(datagroup['filenames'], datagroup['variables'], datagroup['product'])
+            aliases = datagroup.get('aliases', None)
+            data = self.read_data_list(datagroup['filenames'], datagroup['variables'],
+                                       datagroup['product'], aliases)
             if data_list is None:
                 # This ensures the list is the right type (i.e. GriddedDataList or UngriddedDataList)
                 data_list = data

@@ -9,6 +9,39 @@ class CommonData(object):
 
     filenames = []
 
+    _alias = None
+
+    @property
+    def alias(self):
+        """
+        Return an alias for the variable name. This is an alternative name by which this data object may be identified
+        if, for example, the actual variable name is not valid for some use (such as performing a python evaluation).
+        :return:
+        """
+        if self._alias is not None:
+            return self._alias
+        else:
+            return self.var_name
+
+    @alias.setter
+    def alias(self, alias):
+        """
+        Set this data objects alias - this is an alternative name by which this data object may be identified
+        if, for example, the actual variable name is not valid for some use (such as performing a python evaluation).
+        :param alias:
+        :return:
+        """
+        self._alias = alias
+
+    @property
+    @abstractmethod
+    def var_name(self):
+        """
+        Return the variable name associated with this data object
+        :return: variable name
+        """
+        return None
+
     @abstractmethod
     def get_coordinates_points(self):
         """Returns a list-like object allowing access to the coordinates of all points as HyperPoints.

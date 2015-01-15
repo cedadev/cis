@@ -217,3 +217,50 @@ class TestDataReader(TestCase):
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         with self.assertRaises(TypeError):
             reader.read_datagroups([datagroup_1, datagroup_2])
+
+    def test_GIVEN_aliases_None_WHEN_read_datagroups_THEN_read_OK_aliases_default_to_var_names(self):
+        datagroup = {'variables': ['var1'],
+                     'filenames': ['filename1.nc'],
+                     'product': None,
+                     'aliases': None}
+        var1 = make_from_cube(make_square_5x3_2d_cube())
+        get_data_func = MagicMock(side_effect=[var1])
+        get_var_func = MagicMock(side_effect=['var1'])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        data = reader.read_datagroups([datagroup])
+        assert_that(data[0].var_name, is_('dummy'))
+
+    def test_GIVEN_aliases_missing_WHEN_read_datagroups_THEN_read_OK_aliases_default_to_var_names(self):
+        datagroup = {'variables': ['var1'],
+                     'filenames': ['filename1.nc'],
+                     'product': None}
+        var1 = make_from_cube(make_square_5x3_2d_cube())
+        get_data_func = MagicMock(side_effect=[var1])
+        get_var_func = MagicMock(side_effect=['var1'])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        data = reader.read_datagroups([datagroup])
+        assert_that(data[0].var_name, is_('dummy'))
+
+    def test_GIVEN_not_enough_aliases_WHEN_read_datagroups_THEN_raises_ValueError(self):
+        datagroup = {'variables': ['var1', 'var2'],
+                     'filenames': ['filename1.nc'],
+                     'product': None,
+                     'aliases': ['alias1']}
+        var1 = make_from_cube(make_square_5x3_2d_cube())
+        var2 = make_from_cube(make_square_5x3_2d_cube())
+        get_data_func = MagicMock(side_effect=[var1, var2])
+        get_var_func = MagicMock(side_effect=['var1', 'var2'])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        with self.assertRaises(ValueError):
+            data = reader.read_datagroups([datagroup])
+
+    def test_GIVEN_aliases_WHEN_read_datagroups_THEN_output_data_has_aliases(self):
+        datagroup = {'variables': ['var1'],
+                     'filenames': ['filename1.nc'],
+                     'product': None,
+                     'aliases': ['alias1']}
+        get_data_func = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
+        get_var_func = MagicMock(return_value=['var1'])
+        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
+        data = reader.read_datagroups([datagroup])
+        assert_that(data[0].alias, is_('alias1'))
