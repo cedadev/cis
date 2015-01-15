@@ -13,8 +13,8 @@ class Calculator(object):
     def evaluate(self, data_list, expr):
         """
         Evaluate a given expression over a list of data to produce an output data
-        :param data_list: List of data used in the evaluation (these will be identified by var_name). Should all be of
-        the same data type and shape.
+        :param data_list: List of data used in the evaluation (these will be identified by alias or var_name).
+        Should all be of the same data type and shape.
         :param expr: String python expression to evaluate.
         :return: Data object matching the type of the input data (i.e. GriddedData or UngriddedData).
         """
@@ -26,9 +26,9 @@ class Calculator(object):
         safe_globals['__builtins__'] = {var: globals()['__builtins__'][var] for var in self.SAFE_BUILTINS}
         safe_locals = {}
         for var in data_list:
-            assert isinstance(var.var_name, str)
+            assert isinstance(var.alias, str)
             assert isinstance(var.data, numpy.ndarray)
-            safe_locals[var.var_name] = var.data
+            safe_locals[var.alias] = var.data
         result = eval(expr, safe_globals, safe_locals)
         return self._post_process(data_list, result, expr)
 
