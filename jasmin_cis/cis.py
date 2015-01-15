@@ -22,6 +22,7 @@ def __error_occurred(e):
     sys.stderr.write(str(e) + "\n")
     exit(1)
 
+
 def __check_variable_is_valid(main_arguments, data, axis):
     '''
     Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to assign
@@ -37,7 +38,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
 
     for data_item in data:
         if len(data_item.coords(name=user_specified_variable)) == 0 and len(data_item.coords(standard_name=user_specified_variable)) == 0 and data_item.name() != user_specified_variable and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
-            raise InvalidVariableError(user_specified_variable + " is not a valid variable")
+            raise InvalidVariableError("{} is not a valid variable".format(user_specified_variable))
 
     return user_specified_variable
 

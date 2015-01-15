@@ -278,13 +278,15 @@ def fix_longitude_range(lons, range_start):
     It is assumed that a no shifts larger than 360 are needed.
     :param lons: numpy array of longitude values
     :param range_start: longitude at start of 360 degree range into which values are required to fit
+    :return: array of fixed longitudes
     """
-
     range_end = range_start + 360
-    lons[lons < range_start] += 360
-    lons[lons >= range_end] -= 360
+    fixed_lons = np.array(lons)
 
-    return lons
+    fixed_lons[fixed_lons < range_start] += 360
+    fixed_lons[fixed_lons >= range_end] -= 360
+
+    return fixed_lons
 
 
 def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
