@@ -27,8 +27,8 @@ def initialise_top_parser():
     add_aggregate_parser_arguments(aggregate_parser)
     subset_parser = subparsers.add_parser("subset", help="Perform subsetting")
     add_subset_parser_arguments(subset_parser)
-    calc_parser = subparsers.add_parser("calc", help="Evaluate a numeric expression")
-    add_calc_parser_arguments(calc_parser)
+    eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression")
+    add_eval_parser_arguments(eval_parser)
     subparsers.add_parser("version", help="Display the CIS version number")
     return parser
 
@@ -164,9 +164,9 @@ def add_subset_parser_arguments(parser):
     return parser
 
 
-def add_calc_parser_arguments(parser):
+def add_eval_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs='+',
-                        help="Variables to calculate usingwith filenames and optional product separated by colon(s)")
+                        help="Variables to evalute using with filenames and optional product separated by colon(s)")
     parser.add_argument("expr", metavar="Calculation expression to evaluate")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file")
@@ -358,7 +358,7 @@ def get_aggregate_datagroups(datagroups, parser):
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
-def get_calc_datagroups(datagroups, parser):
+def get_eval_datagroups(datagroups, parser):
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product", "kernel"])
@@ -367,7 +367,7 @@ def get_calc_datagroups(datagroups, parser):
 
     datagroups = parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
-    # Calculate allows aliases in variable names so we need to process them here.
+    # Evaluate allows aliases in variable names so we need to process them here.
     _set_aliases_for_datagroups(datagroups, parser)
     return datagroups
 
@@ -944,8 +944,8 @@ def validate_subset_args(arguments, parser):
     return arguments
 
 
-def validate_calc_args(arguments, parser):
-    arguments.datagroups = get_calc_datagroups(arguments.datagroups, parser)
+def validate_eval_args(arguments, parser):
+    arguments.datagroups = get_eval_datagroups(arguments.datagroups, parser)
     check_output_filepath_not_input(arguments, parser)
     return arguments
 
@@ -960,7 +960,7 @@ validators = {'plot': validate_plot_args,
               'col': validate_col_args,
               'aggregate': validate_aggregate_args,
               'subset': validate_subset_args,
-              'calc': validate_calc_args,
+              'eval': validate_eval_args,
               'version': validate_version_args}
 
 

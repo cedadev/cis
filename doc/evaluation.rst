@@ -1,15 +1,15 @@
-.. _calculation:
+.. evaluation:
 .. |nbsp| unicode:: 0xA0
 
-***********
-Calculation
-***********
+**********
+Evaluation
+**********
 
 The Community Intercomparison Suite allows you to perform general arithmetic operations between different variables
-using the 'calc' command. For example, you might want to interpolate a value between two variables.
+using the 'eval' command. For example, you might want to interpolate a value between two variables.
 
 .. note::
-    All variables used in a calculation **must** be of the same shape in order to be compatible, i.e. the same number of
+    All variables used in a evaluation **must** be of the same shape in order to be compatible, i.e. the same number of
     points in each dimension, and of the same type (Ungridded or Gridded). This means that, for example, operations
     between different data products are unlikely to work correctly - performing an aggregation onto a common grid would
     be a good pre-processing step.
@@ -26,9 +26,9 @@ using the 'calc' command. For example, you might want to interpolate a value bet
                 * Any expression containing two consecutive underscores (``__``) is assumed to be harmful and will not
                   be evaluated.
 
-The calculate syntax looks like this::
+The evaluate syntax looks like this::
 
-    $ cis calc <datagroup> [<datagroup>...] <expr> [-o <outputfile>]
+    $ cis eval <datagroup> [<datagroup>...] <expr> [-o <outputfile>]
 
 where:
 
@@ -87,7 +87,8 @@ where:
     \2. |nbsp| If your expression contains whitespace, you'll need to enclose the whole expression in single or double
     quotes.
 
-    \3. |nbsp| Construct your expression using plus ``+``, minus ``-``, times ``*``, divide ``/`` and parentheses ``()``.
+    \3. |nbsp| Construct your expression using plus ``+``, minus ``-``, times ``*``, divide ``/`` , power ``**``
+    (not ``^``) and parentheses ``()``.
 
   If you need more functionality, you're encountering errors or not getting the answer you expect then you should
   consider the following.
