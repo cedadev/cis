@@ -858,7 +858,21 @@ def assign_logs(arguments):
     return arguments
 
 
-def check_output_filepath_not_input(arguments, parser):
+def _validate_output_file(arguments, parser):
+    _check_output_filepath_not_input(arguments, parser)
+    _append_file_extension_to_output_if_missing(arguments, parser, '.nc')
+
+
+def _append_file_extension_to_output_if_missing(arguments, parser, extension):
+    if not extension:
+        parser.error("Invalid file extension: '%s'" % extension)
+    if not extension.startswith('.'):
+        extension = '.' + extension
+    if not arguments.output.endswith(extension):
+        arguments.output = arguments.output + extension
+
+
+def _check_output_filepath_not_input(arguments, parser):
     try:
         input_files = list(arguments.samplefiles)
     except AttributeError:
@@ -925,7 +939,7 @@ def validate_col_args(arguments, parser):
     if arguments.samplegroup["colocator"] is None:
         parser.error("You must specify a colocator")
     arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
-    check_output_filepath_not_input(arguments, parser)
+    _validate_output_file(arguments, parser)
 
     return arguments
 
@@ -933,20 +947,20 @@ def validate_col_args(arguments, parser):
 def validate_aggregate_args(arguments, parser):
     arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
     arguments.grid = get_aggregate_grid(arguments.aggregategrid, parser)
-    check_output_filepath_not_input(arguments, parser)
+    _validate_output_file(arguments, parser)
     return arguments
 
 
 def validate_subset_args(arguments, parser):
     arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
-    check_output_filepath_not_input(arguments, parser)
+    _validate_output_file(arguments, parser)
     return arguments
 
 
 def validate_eval_args(arguments, parser):
     arguments.datagroups = get_eval_datagroups(arguments.datagroups, parser)
-    check_output_filepath_not_input(arguments, parser)
+    _validate_output_file(arguments, parser)
     return arguments
 
 

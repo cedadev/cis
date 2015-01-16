@@ -213,6 +213,18 @@ class TestParse(TestCase):
                 if e.code != 2:
                     raise e
 
+    def test_GIVEN_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output_name']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output_name.nc'))
+
+    def test_GIVEN_output_has_file_extension_WHEN_parse_THEN_extension_not_added(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output_name.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output_name.nc'))
+
     def test_parse_evaluate_single_datagroup(self):
         args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
                 'var1 + var2 + var3', '-o', 'output.nc']
