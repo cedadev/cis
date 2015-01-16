@@ -1,4 +1,5 @@
 import numpy
+import copy
 
 
 class Calculator(object):
@@ -49,8 +50,8 @@ class Calculator(object):
         # Use the first item from the data list as we assume that:
         # - The coordinates are all the same
         # - The shape is all the same
-
-        sample_data = data_list[0]  # TODO create copy (this changes original)
+        # Copy to avoid changing value of input list if used elsewhere
+        sample_data = copy.deepcopy(data_list[0])
         if not sample_data.data.shape == result_array.shape:
             raise ValueError("The resulting array is not the same shape as the original data. Check your expression")
         sample_data.data = result_array

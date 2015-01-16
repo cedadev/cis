@@ -107,6 +107,19 @@ class TestCalculator(unittest.TestCase):
                                             [20, 21, 22], [float('Nan'), 24, 25]])
         self._compare_masked_arrays(res.data, expected)
 
+    def test_GIVEN_two_variables_WHEN_calculate_THEN_variable_values_not_changed(self):
+        # This is to fix an issue where the calculator was taking a reference to the input list and therefore changing
+        # its value when output.
+        data1 = mock.make_regular_2d_ungridded_data()
+        data2 = mock.make_regular_2d_ungridded_data()
+        data1.metadata._name = 'var1'
+        data2.metadata._name = 'var2'
+        self.data = [data1, data2]
+        expr = 'var1 + var2'
+
+        res = self.calc.evaluate(self.data, expr)
+        assert_that(numpy.array_equal(data1.data, data2.data))
+
     def _compare_masked_arrays(self, a1, a2):
         """
         Compare two masked arrays:
