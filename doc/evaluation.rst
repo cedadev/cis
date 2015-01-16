@@ -82,7 +82,8 @@ where:
   is the arithmetic expression to evaluate; for example: ``variable1+variable2``. Use the following basic
   rules to get started:
 
-    \1. |nbsp| Use the variable names (or aliases) as given in the datagroups (they're case-sensitive).
+    \1. |nbsp| Use the variable names (or aliases) as given in the datagroups (they're case-sensitive) - don't enclose
+    them in quotes.
 
     \2. |nbsp| If your expression contains whitespace, you'll need to enclose the whole expression in single or double
     quotes.
