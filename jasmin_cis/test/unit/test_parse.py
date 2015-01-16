@@ -213,11 +213,11 @@ class TestParse(TestCase):
                 if e.code != 2:
                     raise e
 
-    def test_parse_calculate_single_datagroup(self):
-        args = ['calc', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+    def test_parse_evaluate_single_datagroup(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
                 'var1 + var2 + var3', '-o', 'output.nc']
         parsed = parse_args(args)
-        assert_that(parsed.command, is_('calc'))
+        assert_that(parsed.command, is_('eval'))
         assert_that(parsed.expr, is_('var1 + var2 + var3'))
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(1))
@@ -225,11 +225,11 @@ class TestParse(TestCase):
         assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[0]['product'], is_('cis'))
 
-    def test_parse_calculate_multiple_datagroups(self):
-        args = ['calc', 'var1,var2:%s' % ascii_filename_with_no_values,
+    def test_parse_evaluate_multiple_datagroups(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
                 'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
         parsed = parse_args(args)
-        assert_that(parsed.command, is_('calc'))
+        assert_that(parsed.command, is_('eval'))
         assert_that(parsed.expr, is_('var1^var2 / var3'))
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(2))
@@ -238,9 +238,9 @@ class TestParse(TestCase):
         assert_that(parsed.datagroups[1]['filenames'], is_([dummy_cis_out]))
         assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
 
-    def test_parse_calculate_valid_aliases(self):
+    def test_parse_evaluate_valid_aliases(self):
         # Should use the given alias or the variable name if not provided
-        args = ['calc', 'var1=alias1,var2:%s' % ascii_filename_with_no_values,
+        args = ['eval', 'var1=alias1,var2:%s' % ascii_filename_with_no_values,
                 'var3=alias3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
@@ -248,8 +248,8 @@ class TestParse(TestCase):
         assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
         assert_that(parsed.datagroups[1]['aliases'], is_(['alias3']))
 
-    def test_parse_calculate_duplicate_aliases(self):
-        args = ['calc', 'var1=alias1,var2=alias1:%s' % ascii_filename_with_no_values,
+    def test_parse_evaluate_duplicate_aliases(self):
+        args = ['eval', 'var1=alias1,var2=alias1:%s' % ascii_filename_with_no_values,
                 'var1^var2 / var3', '-o', 'output.nc']
         try:
             parse_args(args)
@@ -258,10 +258,10 @@ class TestParse(TestCase):
             if e.code != 2:
                 raise e
 
-    def test_parse_calculate_invalid_aliases(self):
+    def test_parse_evaluate_invalid_aliases(self):
         invalid_var_aliases = ['var1=', '=alias', '=', 'var=a=a']
         for var in invalid_var_aliases:
-            args = ['calc', '%s:%s' % (var, ascii_filename_with_no_values),
+            args = ['eval', '%s:%s' % (var, ascii_filename_with_no_values),
                     'var1^var2 / var3', '-o', 'output.nc']
             try:
                 parse_args(args)
