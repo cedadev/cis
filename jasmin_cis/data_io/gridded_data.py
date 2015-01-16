@@ -50,6 +50,27 @@ class GriddedData(iris.cube.Cube, CommonData):
             logging.warning("Attempted to set invalid unit '{}'.".format(rejected_unit))
             super(GriddedData, self).__init__(*args, **kwargs)
 
+    def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
+                                       long_name=None, history=None, units=None):
+        """
+        Create a new, empty GriddedData object with the same coordinates as this one
+        :param data: Data to use (if None then defaults to all zeros)
+        :param var_name: Variable name
+        :param standard_name: Variable CF standard name
+        :param long_name: Variable long name
+        :param history: Data history string
+        :param units: Variable units
+        :return: GriddedData instance
+        """
+        if data is None:
+            data = np.zeros(self.shape)
+        data = GriddedData(data=data, standard_name=standard_name, long_name=long_name, var_name=var_name,
+                           units=units, dim_coords_and_dims=self._dim_coords_and_dims,
+                           aux_coords_and_dims=self._aux_coords_and_dims, aux_factories=self._aux_factories)
+        # Add history separately as it is not a constructor argument
+        data.add_history(history)
+        return data
+
     @staticmethod
     def _wrap_cube_iterator(itr):
         """Makes a generator that returns a GriddedData object from each Cube returned by an iterator.
@@ -101,6 +122,14 @@ class GriddedData(iris.cube.Cube, CommonData):
             ret_list.append(coord_and_dim)
 
         return ret_list
+
+    @property
+    def history(self):
+        """
+        Return the history attribute
+        :return:
+        """
+        return self.attributes['history']
 
     def add_history(self, new_history):
         """Appends to, or creates, the history attribute using the supplied history string.

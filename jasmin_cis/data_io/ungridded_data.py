@@ -6,6 +6,7 @@ from time import gmtime, strftime
 
 from netCDF4 import _Variable, Variable
 from pyhdf.SD import SDS
+import numpy
 
 from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
 from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
@@ -272,6 +273,31 @@ class UngriddedData(LazyData, CommonData):
         if str(metadata.units) == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
 
+    def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
+                                       long_name=None, history=None, units=None):
+        """
+        Create a new, empty GriddedData object with the same coordinates as this one
+        :param data: Data to use (if None then defaults to all zeros)
+        :param var_name: Variable name
+        :param standard_name: Variable CF standard name
+        :param long_name: Variable long name
+        :param history: Data history string
+        :param units: Variable units
+        :return: GriddedData instance
+        """
+        if data is None:
+            data = numpy.zeros(self.shape)
+        metadata = Metadata(name=var_name, standard_name=standard_name,
+                            long_name=long_name, history='', units=units)
+        data = UngriddedData(data=data, metadata=metadata, coords=self._coords)
+        # Copy the history in separately so it gets the timestamp added.
+        data.add_history(history)
+        return data
+
+    @property
+    def history(self):
+        return self.metadata.history
+
     @property
     def x(self):
         return self.coord(axis='X')
@@ -408,6 +434,14 @@ class UngriddedCoordinates(CommonData):
             raise ValueError("Invalid Coords type")
         all_coords = self._coords.find_standard_coords()
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
+
+    @property
+    def history(self):
+        """
+        Return the associated
+        :return:
+        """
+        return "UngriddedCoordinates have no history"
 
     @property
     def x(self):

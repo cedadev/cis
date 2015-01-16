@@ -1,5 +1,6 @@
 import numpy
-import copy
+
+from jasmin_cis.cis import __version__
 
 
 class Calculator(object):
@@ -44,24 +45,46 @@ class Calculator(object):
         var_name = 'calculated_variable'
         standard_name = None
         long_name = 'Calculated value for expression "%s"' % expr
-        history = ''  # TODO add history (need filenames)
+        history = self._make_history(data_list, expr)
         units = 'unknown'
 
         # Use the first item from the data list as we assume that:
         # - The coordinates are all the same
         # - The shape is all the same
-        # Copy to avoid changing value of input list if used elsewhere
-        sample_data = copy.deepcopy(data_list[0])
+        sample_data = data_list[0]
         if not sample_data.data.shape == result_array.shape:
             raise ValueError("The resulting array is not the same shape as the original data. Check your expression")
-        sample_data.data = result_array
-        try:
-            sample_data.var_name = var_name
-        except AttributeError:
-            sample_data.metadata._name = var_name
-        sample_data.standard_name = standard_name
-        sample_data.long_name = long_name
-        sample_data.history = history
-        sample_data.units = units
+        return sample_data.make_new_with_same_coordinates(data=result_array, var_name=var_name,
+                                                          standard_name=standard_name, long_name=long_name,
+                                                          history=history, units=units)
 
-        return sample_data
+    def _make_history(self, data_list, expr):
+        """
+        Generate the history string
+        :param data_list: List of data used in calculation
+        :param expr: Expression using in calculation
+        :return: History string
+        """
+        var_info = self._make_var_info(data_list)
+        history_template = "Evaluated using CIS version {version}\n" + \
+                           "Expression evaluated: '{expr}'\n" + \
+                           "with variables: {var_info}."
+        return history_template.format(version=__version__, expr=expr, var_info=var_info)
+
+    def _make_var_info(self, data_list):
+        """
+        Get the variable info part of the history string, containing info
+        about the variable names, aliases used and filenames.
+        :param data_list: List of data used in calculation.
+        :return: Var info string
+        """
+        var_infos = []
+        var_info_tmpl = "'{var_name}'{alias} from files {files}"
+        for var in data_list:
+            alias = ''
+            # If the alias is defaulting to the var_name then it probably hasn't been set
+            if var.alias != var.var_name:
+                alias = " (as '%s')" % var.alias
+            var_info = var_info_tmpl.format(var_name=var.var_name, alias=alias, files=var.filenames)
+            var_infos.append(var_info)
+        return ",\n".join(var_infos)

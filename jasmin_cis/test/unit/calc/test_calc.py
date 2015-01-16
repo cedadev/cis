@@ -1,31 +1,37 @@
 import unittest
-from hamcrest import assert_that, is_
+from hamcrest import assert_that, is_, ends_with
 import numpy
-import iris
 
+from jasmin_cis.data_io.gridded_data import make_from_cube, GriddedDataList, GriddedData
 from jasmin_cis.calc.calculator import Calculator
 from jasmin_cis.test.util import mock
+from jasmin_cis.cis import __version__
 
 
 class TestCalculator(unittest.TestCase):
 
     def setUp(self):
         self.calc = Calculator()
-        self.data = [mock.make_mock_cube()]
+        self.data = GriddedDataList([make_from_cube(mock.make_mock_cube())])
         self.data[0].var_name = 'var_name'
 
-    def _make_two_cubes(self):
-        cube_1 = mock.make_mock_cube()
-        cube_2 = mock.make_mock_cube(data_offset=10)
-        cube_1.var_name = 'var1'
-        cube_2._var_name = 'var2'
-        self.data = [cube_1, cube_2]
+    def _make_two_gridded(self):
+        data1 = make_from_cube(mock.make_mock_cube())
+        data2 = make_from_cube(mock.make_mock_cube(data_offset=10))
+        data1.var_name = 'var1'
+        data2._var_name = 'var2'
+        data1.filenames = ['filename1']
+        data2.filenames = ['filename2']
+        self.data = [data1, data2]
+        self.data = GriddedDataList([data1, data2])
 
     def _make_two_ungridded_data(self):
         data1 = mock.make_regular_2d_ungridded_data_with_missing_values()
         data2 = mock.make_regular_2d_ungridded_data_with_missing_values()
         data1.metadata._name = 'var1'
         data2.metadata._name = 'var2'
+        data1.filenames = ['filename1']
+        data2.filenames = ['filename2']
         self.data = [data1, data2]
 
     def test_GIVEN_expr_with_double_underscores_WHEN_calculate_THEN_raises_ValueError(self):
@@ -48,7 +54,7 @@ class TestCalculator(unittest.TestCase):
         self.calc.evaluate(self.data, expr)
 
     def test_GIVEN_two_cubes_and_basic_addition_WHEN_calculate_THEN_addition_successful(self):
-        self._make_two_cubes()
+        self._make_two_gridded()
         expr = 'var1 + var2'
 
         res = self.calc.evaluate(self.data, expr)
@@ -56,24 +62,8 @@ class TestCalculator(unittest.TestCase):
 
         assert_that(numpy.array_equal(res.data, expected))
 
-    def test_GIVEN_two_cubes_basic_addition_WHEN_calculate_THEN_metadata_correct(self):
-        self._make_two_cubes()
-        expr = 'var1 + var2'
-
-        res = self.calc.evaluate(self.data, expr)
-        expected_var_name = 'calculated_variable'
-        expected_standard_name = None
-        expected_long_name = 'Calculated value for expression "%s"' % expr
-        expected_history = ''
-
-        assert_that(isinstance(res, iris.cube.Cube))
-        assert_that(res.var_name, is_(expected_var_name))
-        assert_that(res.standard_name, is_(expected_standard_name))
-        assert_that(res.long_name, is_(expected_long_name))
-        assert_that(res.history, is_(expected_history))
-
     def test_GIVEN_two_cubes_interpolated_WHEN_calculate_THEN_interpolation_successful(self):
-        self._make_two_cubes()
+        self._make_two_gridded()
         # Simulate the use case of interpolating between two wavelengths
         #550 -> [600] -> 670
         expr = 'var1 + (var2 - var1) * (600 - 550) / (670 - 550)'
@@ -119,6 +109,46 @@ class TestCalculator(unittest.TestCase):
 
         res = self.calc.evaluate(self.data, expr)
         assert_that(numpy.array_equal(data1.data, data2.data))
+
+    def test_GIVEN_two_cubes_basic_addition_WHEN_calculate_THEN_metadata_correct(self):
+        self._make_two_gridded()
+        expr = 'var1 + alias2'
+        self.data[1].alias = 'alias2'
+
+        res = self.calc.evaluate(self.data, expr)
+        expected_var_name = 'calculated_variable'
+        expected_standard_name = None
+        expected_long_name = 'Calculated value for expression "%s"' % expr
+
+        assert_that(isinstance(res, GriddedData))
+        assert_that(res.var_name, is_(expected_var_name))
+        assert_that(res.standard_name, is_(expected_standard_name))
+        assert_that(res.long_name, is_(expected_long_name))
+        assert_that(res.alias, is_(res.var_name))
+
+    def test_GIVEN_variables_from_same_file_WHEN_calculate_THEN_history_added(self):
+        self._make_two_ungridded_data()
+        self.data[1].alias = 'alias2'
+        self.data[1].filenames = self.data[0].filenames
+        expr = 'var1 + alias2'
+        res = self.calc.evaluate(self.data, expr)
+        expected_history = "Evaluated using CIS version " + __version__ + \
+                           "\nExpression evaluated: 'var1 + alias2'" + \
+                           "\nwith variables: 'var1' from files ['filename1']," + \
+                           "\n'var2' (as 'alias2') from files ['filename1']."
+        # Do an ends_with comparison because history starts with timestamp
+        assert_that(res.history, ends_with(expected_history))
+
+    def test_GIVEN_variables_from_different_files_WHEN_calculate_THEN_history_added(self):
+        self._make_two_gridded()
+        expr = 'var1 + var2'
+        res = self.calc.evaluate(self.data, expr)
+        expected_history = "Evaluated using CIS version " + __version__ + \
+                           "\nExpression evaluated: 'var1 + var2'" + \
+                           "\nwith variables: 'var1' from files ['filename1']," + \
+                           "\n'var2' from files ['filename2']."
+       # Do an ends_with comparison because history starts with timestamp
+        assert_that(res.history, ends_with(expected_history))
 
     def _compare_masked_arrays(self, a1, a2):
         """

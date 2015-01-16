@@ -12,6 +12,15 @@ class CommonData(object):
     _alias = None
 
     @property
+    @abstractmethod
+    def history(self):
+        """
+        Return the associated history
+        :return:
+        """
+        return None
+
+    @property
     def alias(self):
         """
         Return an alias for the variable name. This is an alternative name by which this data object may be identified
