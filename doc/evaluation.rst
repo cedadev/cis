@@ -11,8 +11,8 @@ using the 'eval' command. For example, you might want to interpolate a value bet
 .. note::
     All variables used in a evaluation **must** be of the same shape in order to be compatible, i.e. the same number of
     points in each dimension, and of the same type (Ungridded or Gridded). This means that, for example, operations
-    between different data products are unlikely to work correctly - performing an aggregation onto a common grid would
-    be a good pre-processing step.
+    between different data products are unlikely to work correctly - performing a colocation or aggregation onto a
+    common grid would be a good pre-processing step.
 
 .. warning::
             This CIS command performs a Python `eval() <https://docs.python.org/2/library/functions.html#eval>`_ on
