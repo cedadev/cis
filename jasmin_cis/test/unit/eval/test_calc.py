@@ -96,7 +96,7 @@ class TestCalculator(unittest.TestCase):
         res = self.calc.evaluate(self.data, expr)
         expected = numpy.ma.masked_invalid([[11, 12, 13], [14, float('Nan'), 16], [17, 18, float('Nan')],
                                             [20, 21, 22], [float('Nan'), 24, 25]])
-        self._compare_masked_arrays(res.data, expected)
+        compare_masked_arrays(res.data, expected)
 
     def test_GIVEN_two_variables_WHEN_calculate_THEN_variable_values_not_changed(self):
         # This is to fix an issue where the calculator was taking a reference to the input list and therefore changing
@@ -151,16 +151,17 @@ class TestCalculator(unittest.TestCase):
        # Do an ends_with comparison because history starts with timestamp
         assert_that(res.history, ends_with(expected_history))
 
-    def _compare_masked_arrays(self, a1, a2):
-        """
-        Compare two masked arrays:
-        - Masks should be the same
-        - Unmasked data should be same
-        - Shape should be same
-        - Numeric values that are 'masked out' don't matter
-        """
-        flat_1 = a1.filled(numpy.inf)
-        flat_2 = a2.filled(numpy.inf)
-        assert_that(numpy.array_equal(flat_1, flat_2), 'Masked arrays have different values')
-        assert_that(numpy.array_equal(a1.mask, a2.mask), 'Masked arrays have different masks')
-        assert_that(a1.shape, is_(a2.shape), 'Masked arrays have different shapes')
+
+def compare_masked_arrays(a1, a2):
+    """
+    Compare two masked arrays:
+    - Masks should be the same
+    - Unmasked data should be same
+    - Shape should be same
+    - Numeric values that are 'masked out' don't matter
+    """
+    flat_1 = a1.filled(numpy.inf)
+    flat_2 = a2.filled(numpy.inf)
+    assert_that(numpy.allclose(flat_1, flat_2), 'Masked arrays have different values')
+    assert_that(numpy.array_equal(a1.mask, a2.mask), 'Masked arrays have different masks')
+    assert_that(a1.shape, is_(a2.shape), 'Masked arrays have different shapes')

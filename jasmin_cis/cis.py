@@ -194,6 +194,20 @@ def aggregate_cmd(main_arguments):
     aggregate.aggregate(variables, filenames, product, kernel)
 
 
+def evaluate_cmd(main_arguments):
+    """
+    Main routine for handling calls to the evaluation command
+
+    :param main_arguments: The command line arguments (minus the eval command)
+    """
+    from evaluate import Calculator
+    data_reader = DataReader()
+    data_list = data_reader.read_datagroups(main_arguments.datagroups)
+    calculator = Calculator()
+    result = calculator.evaluate(data_list, main_arguments.expr)
+    result.save_data(main_arguments.output)
+
+
 def version_cmd(_main_arguments):
     print "Using CIS version:", __version__, "("+__status__+")"
 
@@ -203,6 +217,7 @@ commands = {'plot': plot_cmd,
             'col': col_cmd,
             'aggregate': aggregate_cmd,
             'subset': subset_cmd,
+            'eval': evaluate_cmd,
             'version': version_cmd}
 
 
