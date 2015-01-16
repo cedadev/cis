@@ -1,9 +1,10 @@
 import unittest
+
 from hamcrest import assert_that, is_, ends_with
 import numpy
 
 from jasmin_cis.data_io.gridded_data import make_from_cube, GriddedDataList, GriddedData
-from jasmin_cis.calc.calculator import Calculator
+from jasmin_cis.evaluate import Calculator
 from jasmin_cis.test.util import mock
 from jasmin_cis.cis import __version__
 
