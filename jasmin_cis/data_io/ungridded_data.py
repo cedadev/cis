@@ -8,6 +8,7 @@ from netCDF4 import _Variable, Variable
 from pyhdf.SD import SDS
 import numpy
 
+from jasmin_cis import utils
 from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
 from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
 from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
@@ -232,10 +233,10 @@ class LazyData(object):
         else:
             self.metadata.history = timestamp + new_history
 
-    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+    def save_data(self, output_file):
+        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
-        if coords_to_be_written:
-            write_coordinates(sample_points, output_file)
+        write_coordinates(self, output_file)
         add_data_to_file(self, output_file)
 
 
@@ -524,19 +525,18 @@ class UngriddedDataList(CommonDataList):
         """
         return False
 
-    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+    def save_data(self, output_file):
         """
         Save the UngriddedDataList to a file
         :param output_file: output filename
-        :param sample_points: Should write sample points
-        :param coords_to_be_written: Should write Coordinates
         :return:
         """
+        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
-        coords_to_be_written = True
+        # Should only write coordinates out once
+        write_coordinates(self[0], output_file)
         for data in self:
-            data.save_data(output_file, data, coords_to_be_written)
-            coords_to_be_written = False  # Only write coordinates out for the first variable
+            add_data_to_file(data, output_file)
 
     def get_non_masked_points(self):
         """

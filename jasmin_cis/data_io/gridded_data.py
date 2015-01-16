@@ -187,8 +187,11 @@ class GriddedData(iris.cube.Cube, CommonData):
             self.data = new_data
             self.dim_coords[lon_idx].points = new_lon_points
 
-    def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
-        output_file = remove_file_prefix('cis-', output_file)
+    def save_data(self, output_file):
+        """
+        Save this data object to a given output file
+        :param output_file: Output file to save to.
+        """
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
 
@@ -221,8 +224,11 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
             iterable = make_from_cube(iterable)
         super(GriddedDataList, self).extend(iterable)
 
-    def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
-        output_file = remove_file_prefix('cis-', output_file)
+    def save_data(self, output_file):
+        """
+        Save data to a given output file
+        :param output_file: File to save to
+        """
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
 

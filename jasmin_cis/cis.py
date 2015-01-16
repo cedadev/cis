@@ -8,8 +8,8 @@ import logging
 from jasmin_cis.data_io.data_reader import DataReader
 from jasmin_cis.data_io.data_writer import DataWriter
 from jasmin_cis.exceptions import CISError, NoDataInSubsetError
-from jasmin_cis.utils import add_file_prefix
-from jasmin_cis import __author__, __version__, __status__, __website__
+from jasmin_cis import __version__, __status__
+
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +114,7 @@ def col_cmd(main_arguments):
     from jasmin_cis.exceptions import ClassNotFoundError, CISError
     from jasmin_cis.col import Colocate
 
-    # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
+    output_file = main_arguments.output
     data_reader = DataReader()
     missing_data_for_missing_samples = False
     if main_arguments.samplevariable is not None:
@@ -144,7 +143,7 @@ def col_cmd(main_arguments):
         data_writer = DataWriter()
         try:
             output = col.colocate(data, col_name, col_options, kern_name, kern_options)
-            data_writer.write_data(output, output_file, sample_data, True)
+            data_writer.write_data(output, output_file)
         except ClassNotFoundError as e:
             __error_occurred(str(e) + "\nInvalid co-location option.")
         except (CISError, IOError) as e:
@@ -167,9 +166,7 @@ def subset_cmd(main_arguments):
     filenames = input_group['filenames']
     product = input_group["product"] if input_group["product"] is not None else None
 
-    # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
-    subset = Subset(main_arguments.limits, output_file)
+    subset = Subset(main_arguments.limits, main_arguments.output)
     try:
         subset.subset(variables, filenames, product)
     except (NoDataInSubsetError, CISError) as exc:
@@ -193,9 +190,7 @@ def aggregate_cmd(main_arguments):
     product = input_group["product"] if input_group["product"] is not None else None
     kernel = input_group["kernel"] if input_group["kernel"] is not None else 'mean'
 
-    # Add a prefix to the output file so that we have a signature to use when we read it in again
-    output_file = add_file_prefix("cis-", main_arguments.output + ".nc")
-    aggregate = Aggregate(main_arguments.grid, output_file)
+    aggregate = Aggregate(main_arguments.grid, main_arguments.output)
     aggregate.aggregate(variables, filenames, product, kernel)
 
 
