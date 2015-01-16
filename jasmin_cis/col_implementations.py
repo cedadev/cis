@@ -115,7 +115,7 @@ class GeneralUngriddedColocator(Colocator):
                 new_data = UngriddedData(values[0, :], metadata, points.coords())
                 new_data.metadata._name = var_details[0]
                 new_data.metadata.long_name = var_details[1]
-                jasmin_cis.utils.set_cube_standard_name_if_valid(new_data, var_details[3])
+                jasmin_cis.utils.set_cube_standard_name_if_valid(new_data, var_details[2])
                 new_data.metadata.shape = (len(sample_points),)
                 new_data.metadata.missing_value = self.fill_value
                 new_data.units = var_details[2]
