@@ -146,6 +146,8 @@ Here is a sketch of a data product implementation::
           return vars
 
 
+.. _colocation_design:
+
 Colocation
 ----------
 
