@@ -57,7 +57,7 @@ def plot_cmd(main_arguments):
     data = []
     for datagroup in main_arguments.datagroups:
         try:
-            data.append(read_data(datagroup['filenames'], datagroup['variable'], datagroup['product']))
+            data.append(read_data(datagroup['filenames'], datagroup['variables'], datagroup['product']))
         except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError, IOError) as e:
             __error_occurred('Error when trying to read variable {} in file(s) {} using requested product {}.\nError '
                              'was: {}'.format(datagroup['variables'], datagroup['filenames'], datagroup['product'], e))
