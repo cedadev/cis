@@ -858,7 +858,18 @@ def assign_logs(arguments):
     return arguments
 
 
+def _split_output_if_includes_variable_name(arguments, parser):
+    arguments.output_var = None
+    if ':' in arguments.output:
+        try:
+            arguments.output_var, arguments.output = arguments.output.split(':')
+        except ValueError:
+            # Too many values to unpack
+            parser.error("Invalid output path: should be a filename with one optional variable prefix.")
+
+
 def _validate_output_file(arguments, parser):
+    _split_output_if_includes_variable_name(arguments, parser)
     _check_output_filepath_not_input(arguments, parser)
     _append_file_extension_to_output_if_missing(arguments, parser, '.nc')
 

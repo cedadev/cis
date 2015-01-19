@@ -151,6 +151,12 @@ class TestCalculator(unittest.TestCase):
        # Do an ends_with comparison because history starts with timestamp
         assert_that(res.history, ends_with(expected_history))
 
+    def test_GIVEN_output_var_name_WHEN_calculate_THEN_output_uses_var_name(self):
+        self._make_two_gridded()
+        expr = 'var1 + var2'
+        res = self.calc.evaluate(self.data, expr, output_var='var_out_name')
+        assert_that(res.var_name, is_('var_out_name'))
+
 
 def compare_masked_arrays(a1, a2):
     """

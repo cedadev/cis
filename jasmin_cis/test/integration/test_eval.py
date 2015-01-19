@@ -78,3 +78,22 @@ class TestEval(BaseIntegrationTest):
 
         assert calculated_result.shape == (311,)
         compare_masked_arrays(expected_result, calculated_result[:][0:5])
+
+    def test_CloudSat(self):
+        args = ['eval', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,
+                                      valid_cloudsat_RVOD_file),
+                '%s/%s' % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable), '-o',
+                'cloudsat_var:' + self.OUTPUT_NAME]
+        arguments = parse_args(args)
+        evaluate_cmd(arguments)
+        ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
+        assert ds.variables['cloudsat_var']
+
+    def test_can_specify_output_variable(self):
+        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
+                '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), '-o', 'var_out:' + self.OUTPUT_NAME]
+        arguments = parse_args(args)
+        evaluate_cmd(arguments)
+
+        ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        assert 'var_out' in ds.variables

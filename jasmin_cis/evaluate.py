@@ -12,12 +12,13 @@ class Calculator(object):
                      'min', 'pow', 'range', 'reduce', 'reversed', 'round', 'sorted', 'sum', 'xrange', 'zip']
     SAFE_MODULES = ['numpy']
 
-    def evaluate(self, data_list, expr):
+    def evaluate(self, data_list, expr, output_var='calculated_variable'):
         """
         Evaluate a given expression over a list of data to produce an output data
         :param data_list: List of data used in the evaluation (these will be identified by alias or var_name).
         Should all be of the same data type and shape.
         :param expr: String python expression to evaluate.
+        :param output_var: Name to use for the output variable.
         :return: Data object matching the type of the input data (i.e. GriddedData or UngriddedData).
         """
         if '__' in expr:
@@ -32,17 +33,18 @@ class Calculator(object):
             assert isinstance(var.data, numpy.ndarray)
             safe_locals[var.alias] = var.data
         result = eval(expr, safe_globals, safe_locals)
-        return self._post_process(data_list, result, expr)
+        return self._post_process(data_list, result, expr, output_var)
 
-    def _post_process(self, data_list, result_array, expr):
+    def _post_process(self, data_list, result_array, expr, output_var):
         """
         Take sample data and the resultant output array, combine them and add appropriate metadata.
         :param data_list: The original sample data
         :param result_array: The calculated output array
         :param expr: The expression used to calculate the output
+        :param output_var: Name to use for the output variable.
         :return: Post processed data object (GriddedData, UngriddedData or Cube)
         """
-        var_name = 'calculated_variable'
+        var_name = output_var
         standard_name = None
         long_name = 'Calculated value for expression "%s"' % expr
         history = self._make_history(data_list, expr)

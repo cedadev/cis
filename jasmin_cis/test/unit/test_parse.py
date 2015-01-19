@@ -250,6 +250,37 @@ class TestParse(TestCase):
         assert_that(parsed.datagroups[1]['filenames'], is_([dummy_cis_out]))
         assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
 
+    def test_parse_evaluate_output_variable(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'out_var:output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(parsed.output_var, is_('out_var'))
+
+    def test_parse_evaluate_no_output_variable(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(parsed.output_var, is_(None))
+
+    def test_parse_evaluate_no_output(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('out.nc'))
+        assert_that(parsed.output_var, is_(None))
+
+    def test_parse_evaluate_invalid_output(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'var:var:out']
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
     def test_parse_evaluate_valid_aliases(self):
         # Should use the given alias or the variable name if not provided
         args = ['eval', 'var1=alias1,var2:%s' % ascii_filename_with_no_values,
