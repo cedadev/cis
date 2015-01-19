@@ -77,7 +77,7 @@ cis_test_files["modis_L2"] = TestFileTestData(
     )
 
 valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
-valid_modis_l3_variable = "Pressure_Level"
+valid_modis_l3_variable = "Solar_Zenith_Std_Deviation_Mean"
 cis_test_files["modis_L3"] = TestFileTestData(
     master_filename=valid_modis_l3_filename,
     file_format="HDF4/ModisL3",
@@ -237,7 +237,7 @@ cis_test_files["aeronet"] = TestFileTestData(
     )
 
 valid_caliop_l2_filename = make_pathname("CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08ZN.hdf")
-valid_caliop_l2_variable = "Tropopause_Temperature"
+valid_caliop_l2_variable = "Pressure"
 valid_caliop_l2_variables = ['Aerosol_Layer_Fraction',
                      'Aerosol_Multiple_Scattering_Profile_1064',
                      'Aerosol_Multiple_Scattering_Profile_532',
@@ -278,7 +278,7 @@ cis_test_files["caliop_L2"] = TestFileTestData(
 
 valid_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2009-12-31T23-36-08ZN.hdf")
 valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010-01-01T00-22-28ZD.hdf")
-valid_caliop_l1_variable = "Tropopause_Temperature"
+valid_caliop_l1_variable = "Attenuated_Backscatter_1064"
 valid_caliop_l1_variables = ['Perpendicular_Attenuated_Backscatter_532',
                      'Attenuated_Backscatter_1064',
                      'Total_Attenuated_Backscatter_532']
