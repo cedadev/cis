@@ -54,4 +54,4 @@ class Aggregate(object):
                   "\n with kernel: " + kernel_name + "."
         data.add_history(history)
 
-        self._data_writer.write_data(data, self._output_file, data, True)
+        self._data_writer.write_data(data, self._output_file)

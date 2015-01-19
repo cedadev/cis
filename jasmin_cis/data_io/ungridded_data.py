@@ -6,11 +6,13 @@ from time import gmtime, strftime
 
 from netCDF4 import _Variable, Variable
 from pyhdf.SD import SDS
+import numpy
 
+from jasmin_cis import utils
 from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
 from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
 from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
-from jasmin_cis.data_io.common_data import CommonData
+from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 
@@ -231,10 +233,10 @@ class LazyData(object):
         else:
             self.metadata.history = timestamp + new_history
 
-    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+    def save_data(self, output_file):
+        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
-        if coords_to_be_written:
-            write_coordinates(sample_points, output_file)
+        write_coordinates(self, output_file)
         add_data_to_file(self, output_file)
 
 
@@ -269,8 +271,33 @@ class UngriddedData(LazyData, CommonData):
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
 
         #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
-        if metadata.units == 'per kilometer per steradian':
+        if str(metadata.units) == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
+
+    def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
+                                       long_name=None, history=None, units=None):
+        """
+        Create a new, empty GriddedData object with the same coordinates as this one
+        :param data: Data to use (if None then defaults to all zeros)
+        :param var_name: Variable name
+        :param standard_name: Variable CF standard name
+        :param long_name: Variable long name
+        :param history: Data history string
+        :param units: Variable units
+        :return: GriddedData instance
+        """
+        if data is None:
+            data = numpy.zeros(self.shape)
+        metadata = Metadata(name=var_name, standard_name=standard_name,
+                            long_name=long_name, history='', units=units)
+        data = UngriddedData(data=data, metadata=metadata, coords=self._coords)
+        # Copy the history in separately so it gets the timestamp added.
+        data.add_history(history)
+        return data
+
+    @property
+    def history(self):
+        return self.metadata.history
 
     @property
     def x(self):
@@ -410,6 +437,14 @@ class UngriddedCoordinates(CommonData):
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
 
     @property
+    def history(self):
+        """
+        Return the associated
+        :return:
+        """
+        return "UngriddedCoordinates have no history"
+
+    @property
     def x(self):
         return self.coord(axis='X')
 
@@ -477,7 +512,7 @@ class UngriddedCoordinates(CommonData):
         return False
 
 
-class UngriddedDataList(list):
+class UngriddedDataList(CommonDataList):
     """
     Class which represents multiple UngriddedData objects (e.g. from reading multiple variables)
     """
@@ -490,52 +525,26 @@ class UngriddedDataList(list):
         """
         return False
 
-    @property
-    def var_name(self):
-        """
-        Get the variable names in this list
-        """
-        var_names = []
-        for data in self:
-            var_names.append(data.var_name)
-        return var_names
-
-    @property
-    def filenames(self):
-        """
-        Get the filenames in this list
-        """
-        filenames = []
-        for data in self:
-            filenames.extend(data.filenames)
-        return filenames
-
-    def add_history(self, new_history):
-        """
-        Appends to, or creates, the metadata history attribute using the supplied history string.
-        The new entry is prefixed with a timestamp.
-        :param new_history: history string
-        """
-        for data in self:
-            data.add_history(new_history)
-
-    def coords(self, *args, **kwargs):
-        """
-        Returns all coordinates used in all the UngriddedDataobjects
-        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
-        """
-        return self[0].coords(*args, **kwargs)
-
-    def save_data(self, output_file, sample_points=None, coords_to_be_written=True):
+    def save_data(self, output_file):
         """
         Save the UngriddedDataList to a file
         :param output_file: output filename
-        :param sample_points: Should write sample points
-        :param coords_to_be_written: Should write Coordinates
         :return:
         """
+        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
-        coords_to_be_written = True
+        # Should only write coordinates out once
+        write_coordinates(self[0], output_file)
         for data in self:
-            data.save_data(output_file, data, coords_to_be_written)
-            coords_to_be_written = False  # Only write coordinates out for the first variable
+            add_data_to_file(data, output_file)
+
+    def get_non_masked_points(self):
+        """
+        Returns a list containing a HyperPointViews for which the default iterator omits masked points, for each item in
+        this UngriddedDataList.
+        :return: List of HyperPointViews of the data points
+        """
+        points_list = []
+        for data in self:
+            points_list.append(data.get_non_masked_points())
+        return points_list
