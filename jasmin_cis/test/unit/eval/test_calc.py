@@ -4,7 +4,7 @@ from hamcrest import assert_that, is_, ends_with
 import numpy
 
 from jasmin_cis.data_io.gridded_data import make_from_cube, GriddedDataList, GriddedData
-from jasmin_cis.evaluate import Calculator
+from jasmin_cis.evaluate import Calculator, EvaluationError
 from jasmin_cis.test.util import mock
 from jasmin_cis.cis import __version__
 
@@ -35,15 +35,15 @@ class TestCalculator(unittest.TestCase):
         data2.filenames = ['filename2']
         self.data = [data1, data2]
 
-    def test_GIVEN_expr_with_double_underscores_WHEN_calculate_THEN_raises_ValueError(self):
+    def test_GIVEN_expr_with_double_underscores_WHEN_calculate_THEN_raises_EvaluationError(self):
         expr = "[c for c in ().__class__.__base__.__subclasses__() if c.__name__ " \
                "== 'catch_warnings'][0]()._module.__builtins__['__import__']('os')"
-        with self.assertRaises(ValueError):
+        with self.assertRaises(EvaluationError):
             self.calc.evaluate(self.data, expr)
 
-    def test_GIVEN_expr_using_disallowed_builtins_WHEN_calculate_THEN_raises_NameError(self):
+    def test_GIVEN_expr_using_disallowed_builtins_WHEN_calculate_THEN_raises_EvaluationError(self):
         expr = 'open("path")'
-        with self.assertRaises(NameError):
+        with self.assertRaises(EvaluationError):
             self.calc.evaluate(self.data, expr)
 
     def test_GIVEN_expr_using_numpy_WHEN_calculate_THEN_allowed(self):
@@ -156,6 +156,24 @@ class TestCalculator(unittest.TestCase):
         expr = 'var1 + var2'
         res = self.calc.evaluate(self.data, expr, output_var='var_out_name')
         assert_that(res.var_name, is_('var_out_name'))
+
+    def test_GIVEN_operation_results_in_wrong_shape_THEN_raises_EvaluationError(self):
+        data1 = mock.make_regular_2d_ungridded_data()
+        data1.metadata._name = 'var1'
+        self.data = [data1]
+        expr = 'numpy.mean(var1)'
+        with self.assertRaises(EvaluationError):
+            res = self.calc.evaluate(self.data, expr)
+
+    def test_GIVEN_variables_not_compatible_shape_THEN_raises_EvaluationError(self):
+        data1 = mock.make_regular_2d_ungridded_data()
+        data2 = mock.make_regular_2d_ungridded_data(lat_dim_length=6)
+        data1.metadata._name = 'var1'
+        data2.metadata._name = 'var2'
+        self.data = [data1, data2]
+        expr = 'var1 + var2'
+        with self.assertRaises(EvaluationError):
+            res = self.calc.evaluate(self.data, expr)
 
 
 def compare_masked_arrays(a1, a2):

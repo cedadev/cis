@@ -3,6 +3,12 @@ import numpy
 from jasmin_cis.cis import __version__
 
 
+class EvaluationError(Exception):
+    """
+    Represents an exception which occurred in a CIS evaluation, possibly resulting from incorrect user input.
+    """
+
+
 class Calculator(object):
     """
     Class to perform arithmetic calculations on sets of data.
@@ -22,7 +28,7 @@ class Calculator(object):
         :return: Data object matching the type of the input data (i.e. GriddedData or UngriddedData).
         """
         if '__' in expr:
-            raise ValueError("Use of functions or variables with double underscores (__) is not allowed")
+            raise EvaluationError("Use of functions or variables with double underscores (__) is not allowed")
         # Create list of allowed globals
         safe_globals = {module: globals()[module] for module in self.SAFE_MODULES}
         # Add allowed modules (should already be imported into current namespace)
@@ -32,7 +38,14 @@ class Calculator(object):
             assert isinstance(var.alias, str)
             assert isinstance(var.data, numpy.ndarray)
             safe_locals[var.alias] = var.data
-        result = eval(expr, safe_globals, safe_locals)
+        try:
+            result = eval(expr, safe_globals, safe_locals)
+        except NameError as ex:
+            raise EvaluationError("A variable or function referenced in your expression could not be found - "
+                                  "check your expression. Error is: %s" % ex.message)
+        except ValueError as ex:
+            raise EvaluationError("An error occurred evaluating your expression - check that it's correct and that "
+                                  "the variables are compatible shapes. Error is: %s" % ex.message)
         return self._post_process(data_list, result, expr, output_var)
 
     def _post_process(self, data_list, result_array, expr, output_var):
@@ -55,7 +68,8 @@ class Calculator(object):
         # - The shape is all the same
         sample_data = data_list[0]
         if not sample_data.data.shape == result_array.shape:
-            raise ValueError("The resulting array is not the same shape as the original data. Check your expression")
+            raise EvaluationError("The resulting array is not the same shape as the original data. "
+                                  "Check your expression")
         return sample_data.make_new_with_same_coordinates(data=result_array, var_name=var_name,
                                                           standard_name=standard_name, long_name=long_name,
                                                           history=history, units=units)
