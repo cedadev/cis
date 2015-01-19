@@ -2,9 +2,10 @@ from time import gmtime, strftime
 import logging
 
 import iris
+from iris.cube import CubeList
 import numpy as np
 
-from jasmin_cis.data_io.common_data import CommonData
+from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint import HyperPoint
 from jasmin_cis.data_io.hyperpoint_view import GriddedHyperPointView
 
@@ -48,6 +49,27 @@ class GriddedData(iris.cube.Cube, CommonData):
             rejected_unit = kwargs.pop('units')
             logging.warning("Attempted to set invalid unit '{}'.".format(rejected_unit))
             super(GriddedData, self).__init__(*args, **kwargs)
+
+    def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
+                                       long_name=None, history=None, units=None):
+        """
+        Create a new, empty GriddedData object with the same coordinates as this one
+        :param data: Data to use (if None then defaults to all zeros)
+        :param var_name: Variable name
+        :param standard_name: Variable CF standard name
+        :param long_name: Variable long name
+        :param history: Data history string
+        :param units: Variable units
+        :return: GriddedData instance
+        """
+        if data is None:
+            data = np.zeros(self.shape)
+        data = GriddedData(data=data, standard_name=standard_name, long_name=long_name, var_name=var_name,
+                           units=units, dim_coords_and_dims=self._dim_coords_and_dims,
+                           aux_coords_and_dims=self._aux_coords_and_dims, aux_factories=self._aux_factories)
+        # Add history separately as it is not a constructor argument
+        data.add_history(history)
+        return data
 
     @staticmethod
     def _wrap_cube_iterator(itr):
@@ -100,6 +122,14 @@ class GriddedData(iris.cube.Cube, CommonData):
             ret_list.append(coord_and_dim)
 
         return ret_list
+
+    @property
+    def history(self):
+        """
+        Return the history attribute
+        :return:
+        """
+        return self.attributes['history']
 
     def add_history(self, new_history):
         """Appends to, or creates, the history attribute using the supplied history string.
@@ -157,13 +187,16 @@ class GriddedData(iris.cube.Cube, CommonData):
             self.data = new_data
             self.dim_coords[lon_idx].points = new_lon_points
 
-    def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
-        output_file = remove_file_prefix('cis-', output_file)
+    def save_data(self, output_file):
+        """
+        Save this data object to a given output file
+        :param output_file: Output file to save to.
+        """
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
 
 
-class GriddedDataList(iris.cube.CubeList):
+class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
     This class extends iris.cube.CubeList to add functionality needed for CIS to process multiple gridded data.
 
@@ -181,47 +214,23 @@ class GriddedDataList(iris.cube.CubeList):
         """
         return True
 
-    @property
-    def var_name(self):
-        """
-        Get the variable names in this list
-        """
-        var_names = []
-        for data in self:
-            var_names.append(data.var_name)
-        return var_names
+    def append(self, p_object):
+        if isinstance(p_object, iris.cube.Cube):
+            p_object = make_from_cube(p_object)
+        super(GriddedDataList, self).append(p_object)
 
-    @property
-    def filenames(self):
-        """
-        Get the filenames in this list
-        """
-        filenames = []
-        for data in self:
-            filenames.extend(data.filenames)
-        return filenames
+    def extend(self, iterable):
+        if isinstance(iterable, iris.cube.CubeList):
+            iterable = make_from_cube(iterable)
+        super(GriddedDataList, self).extend(iterable)
 
-    def add_history(self, new_history):
+    def save_data(self, output_file):
         """
-        Appends to, or creates, the metadata history attribute using the supplied history string.
-        The new entry is prefixed with a timestamp.
-        :param new_history: history string
+        Save data to a given output file
+        :param output_file: File to save to
         """
-        for data in self:
-            data.add_history(new_history)
-
-    def save_data(self, output_file, _sample_points=None, _coords_to_be_written=False):
-        output_file = remove_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file)
-
-    def coords(self, *args, **kwargs):
-        """
-        Returns all unique coordinates used in all the UngriddedDataobjects
-        :return: A list of coordinates in this UngriddedDataList object fitting the given criteria
-        """
-        # Assumes all coordinates on same grid
-        return self[0].coords(*args, **kwargs)
 
     def coord(self, *args, **kwargs):
         """
@@ -299,3 +308,35 @@ class GriddedDataList(iris.cube.CubeList):
             collapsed_data = make_from_cube(data.collapsed(*args, **kwargs))
             data_list.append(collapsed_data)
         return data_list
+
+    def interpolate(self, *args, **kwargs):
+        """
+        Perform an interpolation over the GriddedDataList using the iris.cube.Cube.interpolate() method
+        :param args: Arguments for the Iris interpolate method
+        :param kwargs: Keyword arguments for the Iris interpolate method
+        :return: Interpolated GriddedDataList
+        """
+        output = GriddedDataList()
+        for data in self:
+            output.append(data.interpolate(*args, **kwargs))
+        return output
+
+    def regrid(self, *args, **kwargs):
+        """
+        Perform a regrid over the GriddedDataList using the iris.cube.Cube.regrid() method
+        :param args: Arguments for the Iris regrid method
+        :param kwargs: Keyword arguments for the Iris regrid method
+        :return: Regridded GriddedDataList
+        """
+        output = CubeList()
+        for data in self:
+            output.append(data.regrid(*args, **kwargs))
+        return output
+
+    @property
+    def ndim(self):
+        """
+        The number of dimensions in the data of this list.
+        """
+        # Use the dimensions of the first item since all items should be the same shape
+        return self[0].ndim

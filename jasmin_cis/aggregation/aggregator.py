@@ -13,11 +13,27 @@ from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.utils import isnan, guess_coord_axis
 from jasmin_cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
 
+from jasmin_cis.aggregation.aggregation_kernels import MultiKernel
+from jasmin_cis.data_io.gridded_data import GriddedDataList
 
-class Aggregator:
+
+class Aggregator(object):
     def __init__(self, data, grid):
         self.data = data
         self._grid = grid
+
+    def _gridded_full_collapse(self, coord, kernel):
+        if isinstance(kernel, iris.analysis.WeightedAggregator):
+            # If this is a list we can calculate weights using the first item (all variables should be on
+            # same grid)
+            data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
+            # Weights to correctly calculate areas.
+            area_weights = iris.analysis.cartography.area_weights(data_for_weights)
+            return self.data.collapsed(coord.name(), kernel, weights=area_weights)
+        elif isinstance(kernel, iris.analysis.Aggregator):
+            return self.data.collapsed(coord.name(), kernel)
+        else:
+            raise ClassNotFoundError('Error - unexpected aggregator type.')
 
     def aggregate_gridded(self, kernel):
         # Make sure all coordinate have bounds - important for weighting and aggregating
@@ -34,20 +50,15 @@ class Aggregator:
 
             if grid is not None:
                 if isnan(grid.delta):
-                    if isinstance(kernel, iris.analysis.WeightedAggregator):
-                        # If this is a list we can calculate weights using the first item (all variables should be on
-                        # same grid)
-                        data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
-                        # Weights to correctly calculate areas. We need to remove the aux_coords first though, to
-                        # prevent Iris getting confused between new and old coordinates.
-                        area_weights = iris.analysis.cartography.area_weights(data_for_weights)
-                        self.data = self.data.collapsed(coord.name(), kernel, weights=area_weights)
-                    elif isinstance(kernel, iris.analysis.Aggregator):
-                        self.data = self.data.collapsed(coord.name(), kernel)
-                    else:
-                        raise ClassNotFoundError('Error - unexpected aggregator type.')
                     logging.info('Aggregating on ' + coord.name() + ', collapsing completely and using ' +
                                  kernel.cell_method + ' kernel.')
+                    if isinstance(kernel, MultiKernel):
+                        output = GriddedDataList([])
+                        for sub_kernel in kernel.sub_kernels:
+                            output.append(self._gridded_full_collapse(coord, sub_kernel))
+                        self.data = output
+                    else:
+                        self.data = self._gridded_full_collapse(coord, kernel)
                 else:
                     if coord.points[0] < coord.points[-1]:
                         start = min(coord.bounds[0])
@@ -140,7 +151,14 @@ class Aggregator:
                     logging.info('Aggregating on ' + coord.name() + ' over range ' + str(start_requested) + ' to ' +
                                  str(end_requested) + ' using steps of ' + str(grid_delta) + ' and ' +
                                  kernel.cell_method + ' kernel.')
-                    self.data = self.data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
+                    if isinstance(kernel, MultiKernel):
+                        output = GriddedDataList([])
+                        for sub_kernel in kernel.sub_kernels:
+                            out = self.data.aggregated_by(['aggregation_coord_for_'+coord.name()], sub_kernel)
+                            output.append(out)
+                        self.data = output
+                    else:
+                        self.data = self.data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
 
                     # Now make a new_coord, as the exiting coord will have the wrong coordinate points
                     new_coord = self.data.coord(coord.name())

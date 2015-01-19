@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to JASMIN Community Inter-comparrison Suite's documentation!
+Welcome to JASMIN Community Inter-comparison Suite's documentation!
 ====================================================================
 
 Contents:
@@ -21,6 +21,7 @@ Contents:
    colocation
    colocation_examples
    plotting
+   evaluation
    overlay_examples
    maintenance_and_development
    Python API Reference <api/jasmin_cis>

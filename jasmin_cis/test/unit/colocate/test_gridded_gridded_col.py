@@ -345,19 +345,76 @@ class GriddedGriddedColocatorTests(object):
         assert not does_coord_exist_in_cube(out_cube, 'time')
         assert not does_coord_exist_in_cube(out_cube, 'altitude')
 
-    def test_colocate_with_list_of_data_raises_NotImplementedError(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
-        data_1 = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
-        data_2 = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
-        datalist = gridded_data.GriddedDataList([data_1, data_2])
-        col = self.colocator
-        with self.assertRaises(NotImplementedError):
-            out_cube = col.colocate(points=sample_cube, data=datalist, constraint=None, kernel=gridded_gridded_nn())[0]
-
 
 class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests, TestCase):
     def setUp(self):
         self.colocator = GriddedColocatorUsingIrisRegrid()
+
+    def test_gridded_gridded_li_for_GriddedDataList(self):
+        from jasmin_cis.data_io.gridded_data import GriddedDataList
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
+        data_cube1 = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10,
+                                                                lon_dim_length=6, horizontal_offset=0.0))
+        data_cube2 = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10, data_offset=3,
+                                                                lon_dim_length=6, horizontal_offset=0.0))
+        data_list = GriddedDataList([data_cube1, data_cube2])
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
+
+        result = numpy.array([[1., 3.5,   6.],
+                              [14.5,  17., 19.5],
+                              [28., 30.5,  33.],
+                              [41.5, 44.,   46.5],
+                              [55., 57.5,  60.]])
+
+        assert isinstance(out_cube, GriddedDataList)
+        assert numpy.allclose(out_cube[0].data, result)
+        assert numpy.allclose(out_cube[1].data, result + 3)
+
+    @istest
+    def test_gridded_gridded_nn_for_GriddedDataList(self):
+        from jasmin_cis.data_io.gridded_data import GriddedDataList
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube())
+        data_cube1 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=2.6))
+        data_cube2 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=2.6,
+                                                                data_offset=3))
+        data_list = GriddedDataList([data_cube1, data_cube2])
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
+
+        expected_result = numpy.array([[[1., 2., 3., 4., 5., 6., 7.],
+                                        [1., 2., 3., 4., 5., 6., 7.],
+                                        [8., 9., 10., 11., 12., 13., 14.]],
+
+                                       [[1., 2., 3., 4., 5., 6., 7.],
+                                        [1., 2., 3., 4., 5., 6., 7.],
+                                        [8., 9., 10., 11., 12., 13., 14.]],
+
+                                       [[22., 23., 24., 25., 26., 27., 28.],
+                                        [22., 23., 24., 25., 26., 27., 28.],
+                                        [29., 30., 31., 32., 33., 34., 35.]],
+
+                                       [[43., 44., 45., 46., 47., 48., 49.],
+                                        [43., 44., 45., 46., 47., 48., 49.],
+                                        [50., 51., 52., 53., 54., 55., 56.]],
+
+                                       [[64., 65., 66., 67., 68., 69., 70.],
+                                        [64., 65., 66., 67., 68., 69., 70.],
+                                        [71., 72., 73., 74., 75., 76., 77.]]])
+
+        assert isinstance(out_cube, GriddedDataList)
+        assert numpy.array_equal(out_cube[0].data, expected_result)
+        assert numpy.array_equal(out_cube[1].data, expected_result + 3)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[0].coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[0].coord('longitude').points)
+        assert numpy.array_equal(data_list.coord('time').points, out_cube[0].coord('time').points)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[1].coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[1].coord('longitude').points)
+        assert numpy.array_equal(data_list.coord('time').points, out_cube[1].coord('time').points)
 
 
 class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
@@ -1061,3 +1118,96 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             if m:
                 c += 1
         assert c == 8
+
+    def test_gridded_gridded_li_for_GriddedDataList(self):
+        from jasmin_cis.data_io.gridded_data import GriddedDataList
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
+        data_cube1 = gridded_data.make_from_cube(make_mock_cube(
+            lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
+            time_offset=1.5))
+        data_cube2 = gridded_data.make_from_cube(make_mock_cube(
+            lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
+            time_offset=1.5, data_offset=3))
+        data_list = GriddedDataList([data_cube1, data_cube2])
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
+
+        result1 = numpy.array([[[-124.26, -123.26, -122.26, -121.26, -120.26, -119.26, -118.26],
+                               [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
+                               [1.74, 2.74, 3.74, 4.74, 5.74, 6.74, 7.74]],
+
+                              [[50.74, 51.74, 52.74, 53.74, 54.74, 55.74, 56.74],
+                               [113.74, 114.74, 115.74, 116.74, 117.74, 118.74, 119.74],
+                               [176.74, 177.74,  178.74,  179.74,  180.74,  181.74, 182.74]],
+
+                              [[225.74, 226.74, 227.74, 228.74, 229.74, 230.74, 231.74],
+                               [288.74, 289.74, 290.74, 291.74, 292.74, 293.74, 294.74],
+                               [351.74, 352.74, 353.74, 354.74, 355.74, 356.74, 357.74]],
+
+                              [[400.74, 401.74, 402.74, 403.74, 404.74, 405.74, 406.74],
+                               [463.74, 464.74, 465.74, 466.74, 467.74, 468.74, 469.74],
+                               [526.74, 527.74, 528.74, 529.74, 530.74, 531.74, 532.74]],
+
+                              [[575.74, 576.74, 577.74, 578.74, 579.74, 580.74, 581.74],
+                               [638.74,  639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
+                               [701.74,  702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
+
+        result2 = result1 + 3
+
+        assert numpy.allclose(out_cube[0].data, result1)
+        assert numpy.allclose(out_cube[1].data, result2)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[0].coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[0].coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube[0].coord('time').points)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[1].coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[1].coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube[1].coord('time').points)
+
+    @istest
+    def test_gridded_gridded_nn_for_GriddedDataList(self):
+    # def test_gridded_gridded_nn_with_both_grids_containing_time_and_moderate_offset(self):
+        from jasmin_cis.data_io.gridded_data import GriddedDataList
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
+
+        data_cube1 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
+                                                                horizontal_offset=2.6, time_offset=1.5))
+        data_cube2 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=3,
+                                                                horizontal_offset=2.6, time_offset=1.5))
+        data_list = GriddedDataList([data_cube1, data_cube2])
+
+        col = self.colocator
+
+        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
+
+        result = numpy.array([[[1., 1., 1., 2., 3., 4., 5.],
+                               [1., 1., 1., 2., 3., 4., 5.],
+                               [8., 8., 8., 9., 10., 11., 12.]],
+
+                              [[1., 1., 1., 2., 3., 4., 5.],
+                               [1., 1., 1., 2., 3., 4., 5.],
+                               [8., 8., 8., 9., 10., 11., 12.]],
+
+                              [[22., 22., 22., 23., 24., 25., 26.],
+                               [22., 22., 22., 23., 24., 25., 26.],
+                               [29., 29., 29., 30., 31., 32., 33.]],
+
+                              [[43., 43., 43., 44., 45., 46., 47.],
+                               [43., 43., 43., 44., 45., 46., 47.],
+                               [50., 50., 50., 51., 52., 53., 54.]],
+
+                              [[64., 64., 64., 65., 66., 67., 68.],
+                               [64., 64., 64., 65., 66., 67., 68.],
+                               [71., 71., 71., 72,  73., 74., 75.]]])
+
+        assert numpy.allclose(out_cube[0].data, result)
+        assert numpy.allclose(out_cube[1].data, result + 3)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[0].coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[0].coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube[0].coord('time').points)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[1].coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[1].coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube[1].coord('time').points)

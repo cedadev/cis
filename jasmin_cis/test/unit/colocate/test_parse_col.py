@@ -19,7 +19,7 @@ class TestParseCol(unittest.TestCase):
         eq_(('col', {}), args.samplegroup['colocator'])
         eq_(('con', {}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
-        eq_([{'variable': ['variable'], 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
+        eq_([{'variables': ['variable'], 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_without_other_options(self):
         args = ["col", "variable:" + valid_1d_filename, valid_1d_filename + ':colocator=bin']
@@ -28,7 +28,7 @@ class TestParseCol(unittest.TestCase):
         eq_(('bin', {}), args.samplegroup['colocator'])
         eq_(None, args.samplegroup['constraint'])
         eq_(None, args.samplegroup['kernel'])
-        eq_([{'variable': ['variable'], 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
+        eq_([{'variables': ['variable'], 'product': None, 'filenames': [valid_1d_filename]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_many_datagroups(self):
         args = ["col", "variable1:" + valid_1d_filename,
@@ -42,18 +42,18 @@ class TestParseCol(unittest.TestCase):
         eq_(None, args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_([valid_1d_filename], args.datagroups[0]['filenames'])
-        eq_(["variable1"], args.datagroups[0]['variable'])
+        eq_(["variable1"], args.datagroups[0]['variables'])
         eq_([valid_1d_filename], args.datagroups[1]['filenames'])
-        eq_(["variable2"], args.datagroups[1]['variable'])
+        eq_(["variable2"], args.datagroups[1]['variables'])
         eq_([valid_1d_filename], args.datagroups[2]['filenames'])
-        eq_(["variable3"], args.datagroups[2]['variable'])
+        eq_(["variable3"], args.datagroups[2]['variables'])
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_with_internal_options(self):
         args = ["col", "var1:" + valid_1d_filename, valid_1d_filename
                 + ":variable=var2,constraint=SepConstraint[h_sep=1500,v_sep=22000,t_sep=5000],kernel=nn,colocator=bin"]
         args = parse_args(args)
         eq_([valid_1d_filename], args.datagroups[0]['filenames'])
-        eq_(["var1"], args.datagroups[0]['variable'])
+        eq_(["var1"], args.datagroups[0]['variables'])
         eq_([valid_1d_filename], args.samplegroup['filenames'])
         eq_("var2", args.samplegroup['variable'])
         eq_(('SepConstraint', {'h_sep': '1500', 'v_sep': '22000', 't_sep': '5000'}), args.samplegroup['constraint'])

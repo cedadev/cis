@@ -57,7 +57,7 @@ class Subset(object):
                       "\nfrom files: " + str(filenames) + \
                       "\nusing limits: " + str(subset_constraint)
             subset.add_history(history)
-            self._data_writer.write_data(subset, self._output_file, subset, True)
+            self._data_writer.write_data(subset, self._output_file)
 
     def _set_constraint_limits(self, data, subset_constraint):
         for coord in data.coords():
