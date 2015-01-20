@@ -77,10 +77,9 @@ class BaseIntegrationTest(unittest.TestCase):
                         sample_shape = (info[3],)
         elif sample_file.endswith('.lev20') or sample_file.endswith('.txt'):
             f = open(sample_file)
-            line_count = 0
+            line_count = - 5  # Aeronet headers are five lines.
             for line in f:
-                line = line.strip()
-                if line and not line[0] == '#':
+                if line.strip():
                     line_count += 1
             sample_shape = (line_count,)
         output = Dataset(output_file)
