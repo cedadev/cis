@@ -79,9 +79,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
     def test_GASSP_ship_onto_NetCDF_Gridded(self):
-        # Takes 30s
-        vars = cis_test_files["GASSP_ship"].data_variable_name
-        filename = cis_test_files["GASSP_ship"].master_filename
+        # Takes 10mins
+        vars = valid_GASSP_ship_vars
+        filename = valid_GASSP_ship_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
         colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
@@ -168,6 +168,23 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    def test_cloudsat_PRECIP_onto_NetCDF_Gridded_using_moments_kernel(self):
+        # Takes 15s
+        vars = [valid_cloudsat_PRECIP_variable]
+        filename = valid_cloudsat_PRECIP_file
+        sample_file = valid_hadgem_filename
+        sample_var = valid_hadgem_variable
+        colocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        out_vars = [valid_cloudsat_PRECIP_variable, valid_cloudsat_PRECIP_variable+'_std_dev',
+                    valid_cloudsat_PRECIP_variable+'_num_points']
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+
     def test_cloudsat_RVOD_onto_NetCDF_Gridded(self):
         # Takes 290s
         vars = [valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable]
@@ -226,6 +243,24 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_MODIS_L2_onto_NetCDF_Gridded_with_moments_kernel(self):
+        # Takes 20s
+        vars = ['Solar_Zenith', 'Optical_Depth_Ratio_Small_Land_And_Ocean']
+        filename = valid_modis_l2_filename
+        sample_file = valid_hadgem_filename
+        sample_var = valid_hadgem_variable
+        colocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        out_vars = []
+        for var in vars:
+            out_vars.extend([var, var + '_std_dev', var + '_num_points'])
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars)
 
     def test_MODIS_L3_onto_NetCDF_Gridded(self):
         # Takes 27s
@@ -290,6 +325,24 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    def test_ECHAMHAM_onto_HadGem_using_moments_kernel(self):
+        # Takes 2s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_hadgem_filename
+        sample_var = valid_hadgem_variable
+        colocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        out_vars = []
+        for var in vars:
+            out_vars.extend([var, var + '_std_dev', var + '_num_points'])
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars)
+
 
 class TestUngriddedUngriddedColocate(BaseIntegrationTest):
 
@@ -342,6 +395,21 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(","))
+
+    def test_GASSP_onto_Aeronet_using_moments_kernel(self):
+        # Takes 73s
+        variable = valid_GASSP_aeroplane_variable
+        filename = valid_GASSP_aeroplane_filename
+        sample_file = valid_aeronet_filename
+        colocator_and_opts = 'box[h_sep=10km],kernel=moments'
+        arguments = ['col', variable + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        out_vars = [variable, variable + '_std_dev', variable + '_num_points']
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, out_vars)
+        self.check_output_col_grid(sample_file, valid_aeronet_variable, self.UNGRIDDED_OUTPUT_FILENAME, out_vars)
 
     def test_GASSP_onto_GASSP(self):
         # Takes 6.5mins
@@ -400,6 +468,24 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_NetCDF_Gridded_onto_GASSP_using_moments_kernel(self):
+        # Takes 850s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        colocator_and_opts = 'box[h_sep=100km],kernel=moments,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        out_vars = []
+        for var in vars:
+            out_vars.extend([var, var + '_std_dev', var + '_num_points'])
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, out_vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, out_vars)
 
     def test_NetCDF_Gridded_onto_MODIS_L2(self):
         # Takes 16s

@@ -72,10 +72,19 @@ where:
       * nn_a (or nn_altitude) - nearest neighbour in altitude
       * nn_p (or nn_pressure) - nearest neighbour in pressure (as in a vertical coordinate). Note that similarly to the p_sep constraint that this works on the ratio of pressure, so the nearest neighbour to a point with a value of 10 hPa, out of a choice of 5 hPa and 19 hPa, would be 19 hPa, as 19/10 < 10/5.
       * mean - an averaging kernel that returns the mean values of any points found by the colocation method
-      * moments - an averaging kernel that returns the mean, standard deviation and the number of points remaining after the specified constraint has been applied. This can only be used for ungridded sample points. This kernel has some optional parameters, specified in square brackets, for example, ``kernel=moments[stddev_name=tas_stddev]``:
+      * moments - an averaging kernel that returns the mean, standard deviation and the number of points remaining after
+        the specified constraint has been applied. This can be used for gridded or ungridded sample points where the
+        colocator is one of 'bin' or 'box'. The names of the variables in the output file are the name of the input
+        variable with a suffix to identify which quantity they represent:
 
-        * stddev_name - Specify the name of the standard deviation variable in the resulting NetCDF file. The default is the variable name suffixed with ``_std_dev``.
-        * nopoints_name - Specify the name of the variable containing the number of points in the resulting NetCDF file. The default is the variable name suffixed with ``_no_points``
+        * *Mean* - no suffix - the mean value of all data points which were mapped to that sample grid point
+          (data points with missing values are excluded)
+
+        * *Standard Deviation* - suffix: ``_std_dev`` - The unbiased (1 degree of freedom) standard deviation of all the
+          data points mapped to that sample grid point (data points with missing values are excluded)
+
+        * *Number of points* - suffix: ``_num_points`` - The number of data points mapped to that sample grid point
+          (data points with missing values are excluded)
 
 
     ``product`` is an optional argument used to specify the type of files being read. If omitted, the program will attempt to determine which product to use based on the filename, as listed at :ref:`data-products-reading`.
@@ -146,6 +155,8 @@ On their own each of these statements seem sensible, but together may lead to un
 Writing your own plugins
 ========================
 
-The colocation framework was designed to make it easy to write your own plugins. Plugins can be written to create new kernels, new constraint methods and even whole colocation methods. See Design#Colocation for more details
+The colocation framework was designed to make it easy to write your own plugins. Plugins can be written to create
+new kernels, new constraint methods and even whole colocation methods. See :ref:`Colocation Design <colocation_design>`
+for more details
 
 .. todo:: link to Design wiki
