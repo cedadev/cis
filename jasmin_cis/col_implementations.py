@@ -89,18 +89,15 @@ class GeneralUngriddedColocator(Colocator):
         self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
                                                       self.var_standard_name, self.var_units)
-        values = np.zeros((len(var_set_details), len(sample_points))) + self.fill_value
+        sample_points_count = len(sample_points)
+        values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
 
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
-        cell_total = 0
         for i, point in sample_points.enumerate_non_masked_points():
             # Log progress periodically.
             cell_count += 1
-            cell_total += 1
-            if cell_count == 10000:
-                logging.info("    Processed %d points", cell_total)
-                cell_count = 0
+            logging.info("    Processed {} points of {}".format(cell_count, sample_points_count))
 
             if constraint is None:
                 con_points = data_points

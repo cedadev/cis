@@ -80,8 +80,8 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
 
     def test_GASSP_ship_onto_NetCDF_Gridded(self):
         # Takes 30s
-        vars = valid_GASSP_ship_vars
-        filename = valid_GASSP_ship_filename
+        vars = cis_test_files["GASSP_ship"].data_variable_name
+        filename = cis_test_files["GASSP_ship"].master_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
         colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
