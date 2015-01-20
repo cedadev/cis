@@ -951,7 +951,10 @@ class GeneralGriddedColocator(Colocator):
             cube.var_name = kernel_var_details[idx][0]
             cube.long_name = kernel_var_details[idx][1]
             jasmin_cis.utils.set_cube_standard_name_if_valid(cube, kernel_var_details[idx][2])
-            cube.units = kernel_var_details[idx][3]
+            try:
+                cube.units = kernel_var_details[idx][3]
+            except ValueError:
+                pass
             output.append(cube)
 
         return output
