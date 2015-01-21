@@ -1,5 +1,6 @@
 import abc
 
+import numpy
 from iris.cube import Cube
 from iris.coords import AuxCoord
 
@@ -46,54 +47,51 @@ class PointsCount(StatisticsResult):
         return cube
 
 
-class DatasetMeans(StatisticsResult):
+class DatasetMean(StatisticsResult):
     """
-    Means of each dataset individually
+    Mean of an individual dataset
     """
 
-    def __init__(self, mean1, mean2, dsname1, dsname2):
-        self.means = (mean1, mean2)
-        self.dsnames = (dsname1, dsname2)
+    def __init__(self, mean, ds_name, ds_no):
+        self.mean = mean
+        self.ds_name = ds_name
+        self.ds_no = ds_no
 
     def pprint(self):
         """
         Nicely formatted string representation of this statistical result, suitable for printing to screen.
         """
-        return "Dataset means: %s, %s" % self.means
+        return "Mean value of dataset %s: %s" % (self.ds_no, self.mean)
 
     def as_cube(self):
         """
         Get this statistical result as an iris.cube.Cube instance
         """
-        dim = AuxCoord(self.dsnames, long_name='Input datasets', var_name='datasets')
-        cube = Cube(self.means, long_name='Mean value of each dataset', var_name='dataset_means',
-                    aux_coords_and_dims=[(dim, 0)])
-        return cube
+        return Cube(self.mean, long_name='Mean value of %s' % self.ds_name, var_name='dataset_mean_%s' % self.ds_no)
 
 
-class DatasetStddevs(StatisticsResult):
+class DatasetStddev(StatisticsResult):
     """
-    Standard deviations of each object individually
+    Standard deviations of an individual dataset
     """
 
-    def __init__(self, stddev1, stddev2, dsname1, dsname2):
-        self.stddevs = (stddev1, stddev2)
-        self.dsnames = (dsname1, dsname2)
+    def __init__(self, stddev, ds_name, ds_no):
+        self.stddev = stddev
+        self.ds_name = ds_name
+        self.ds_no = ds_no
 
     def pprint(self):
         """
         Nicely formatted string representation of this statistical result, suitable for printing to screen.
         """
-        return "Dataset standard deviations: %s, %s" % self.stddevs
+        return "Standard deviation for dataset %s: %s" % (self.ds_no, self.stddev)
 
     def as_cube(self):
         """
         Get this statistical result as an iris.cube.Cube instance
         """
-        dim = AuxCoord(self.dsnames, long_name='Input datasets', var_name='datasets')
-        cube = Cube(self.stddevs, long_name='Unbiased standard deviation of each dataset', var_name='dataset_stddevs',
-                    aux_coords_and_dims=[(dim, 0)])
-        return cube
+        return Cube(self.stddev, long_name='Unbiased standard deviation of %s' % self.ds_name,
+                    var_name='dataset_stddev_%s' % self.ds_no)
 
 
 class AbsoluteMean(StatisticsResult):
@@ -187,28 +185,6 @@ class RelativeStddev(StatisticsResult):
         return cube
 
 
-class PearsonCorrelation(StatisticsResult):
-    """
-    The Pearson product-moment correlation coefficient
-    """
-
-    def __init__(self, pearson):
-        self.pearson = pearson
-
-    def pprint(self):
-        """
-        Nicely formatted string representation of this statistical result, suitable for printing to screen.
-        """
-        return "Pearson coefficient: %s" % self.pearson
-
-    def as_cube(self):
-        """
-        Get this statistical result as an iris.cube.Cube instance
-        """
-        cube = Cube([self.pearson], var_name='pearson', long_name="Pearson product-moment correlation coefficient")
-        return cube
-
-
 class SpearmansRank(StatisticsResult):
     """
     Spearman's rank correlation coefficient
@@ -227,32 +203,113 @@ class SpearmansRank(StatisticsResult):
         """
         Get this statistical result as an iris.cube.Cube instance
         """
-        cube = Cube([self.spearman], var_name='spearmans', long_name="Spearman's rank correlation coefficient")
+        cube = Cube([self.spearman], var_name='spearman', long_name="Spearman's rank correlation coefficient")
         return cube
 
 
-class LinearRegression(StatisticsResult):
+class LinearRegressionGradient(StatisticsResult):
     """
-    Linear regression results
+    Linear regression gradient
     """
 
-    def __init__(self, a, b, r, pval, stderr):
-        self.regression = (a, b, r, pval, stderr)
+    def __init__(self, grad):
+        self.grad = grad
 
     def pprint(self):
         """
         Nicely formatted string representation of this statistical result, suitable for printing to screen.
         """
-        return "Linear regression results: data2 = %s x data1 + %s;" \
-               " r-value: %s; p-value: %s; stderr: %s" % self.regression
+        return "Linear regression gradient: %s" % self.grad
 
     def as_cube(self):
         """
         Get this statistical result as an iris.cube.Cube instance
         """
-        from iris.coords import AuxCoord
-        dim = AuxCoord(['gradient', 'intercept', 'r-value', 'p-value', 'stderr'],
-                       long_name='Linear regression results components', var_name='regression_components')
-        cube = Cube(self.regression, long_name='Linear regression results', var_name='regression',
-                    aux_coords_and_dims=[(dim, 0)])
-        return cube
+        return Cube(self.grad, long_name='Linear regression gradient', var_name='regression_gradient')
+
+
+class LinearRegressionIntercept(StatisticsResult):
+    """
+    Linear regression intercept
+    """
+
+    def __init__(self, intercept):
+        self.intercept = intercept
+
+    def pprint(self):
+        """
+        Nicely formatted string representation of this statistical result, suitable for printing to screen.
+        """
+        return "Linear regression intercept: %s" % self.intercept
+
+    def as_cube(self):
+        """
+        Get this statistical result as an iris.cube.Cube instance
+        """
+        return Cube(self.intercept, long_name='Linear regression intercept', var_name='regression_intercept')
+
+
+class LinearRegressionRValue(StatisticsResult):
+    """
+    Linear regression r-value (PMCC)
+    """
+
+    def __init__(self, r):
+        self.r = r
+
+    def pprint(self):
+        """
+        Nicely formatted string representation of this statistical result, suitable for printing to screen.
+        """
+        return "Linear regression r-value: %s" % self.r
+
+    def as_cube(self):
+        """
+        Get this statistical result as an iris.cube.Cube instance
+        """
+        return Cube(self.r, long_name='Linear regression r-value (Pearson product-moment correlation coefficient)',
+                    var_name='regression_r')
+
+
+class LinearRegressionPValue(StatisticsResult):
+    """
+    Linear regression p-value (null hypothesis)
+    """
+
+    def __init__(self, p):
+        self.p = p
+
+    def pprint(self):
+        """
+        Nicely formatted string representation of this statistical result, suitable for printing to screen.
+        """
+        return "Linear regression p-value: %s" % self.p
+
+    def as_cube(self):
+        """
+        Get this statistical result as an iris.cube.Cube instance
+        """
+        return Cube(self.p, long_name='Linear regression p-value (two-sided p-value for a hypothesis '
+                                      'test whose null hypothesis is that the slope is zero)', var_name='regression_p')
+
+
+class LinearRegressionStderr(StatisticsResult):
+    """
+    Linear regression standard error of the estimate
+    """
+
+    def __init__(self, stderr):
+        self.stderr = stderr
+
+    def pprint(self):
+        """
+        Nicely formatted string representation of this statistical result, suitable for printing to screen.
+        """
+        return "Linear regression standard error: %s" % self.stderr
+
+    def as_cube(self):
+        """
+        Get this statistical result as an iris.cube.Cube instance
+        """
+        return Cube(self.stderr, long_name='Linear regression standard error of the estimate',
+                    var_name='regression_stderr')
