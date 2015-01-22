@@ -294,11 +294,10 @@ class mean(Kernel):
         '''
             Colocation using the mean of any points left after a constraint.
         '''
-        from numpy import mean
         values = data.vals
         if len(values) == 0:
             raise ValueError
-        return mean(values)
+        return np.mean(values)
 
 
 class stddev(Kernel):
