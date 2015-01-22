@@ -59,7 +59,7 @@ class TestDatasetStddev(unittest.TestCase):
 
     def test_GIVEN_dataset_stddev_WHEN_as_cube_THEN_cube_metadata_is_correct(self):
         assert_that(self.output_cube.var_name, is_("dataset_stddev_1"))
-        assert_that(self.output_cube.long_name, is_("Unbiased standard deviation of dataset1.nc"))
+        assert_that(self.output_cube.long_name, is_("Corrected sample standard deviation of dataset1.nc"))
 
 
 class TestAbsoluteMean(unittest.TestCase):
@@ -98,7 +98,7 @@ class TestAbsoluteStddev(unittest.TestCase):
     def test_GIVEN_abs_stddev_WHEN_as_cube_THEN_cube_metadata_is_correct(self):
         assert_that(self.output_cube.var_name, is_("abs_stddev"))
         assert_that(self.output_cube.long_name,
-                    is_("Unbiased standard deviation of the absolute difference (data2 - data1)"))
+                    is_("Corrected sample standard deviation of the absolute difference (data2 - data1)"))
 
               
 class TestRelativeMean(unittest.TestCase):
@@ -137,7 +137,7 @@ class TestRelativeStddev(unittest.TestCase):
     def test_GIVEN_rel_stddev_WHEN_as_cube_THEN_cube_metadata_is_correct(self):
         assert_that(self.output_cube.var_name, is_("rel_stddev"))
         assert_that(self.output_cube.long_name,
-                    is_("Unbiased standard deviation of the relative difference (data2 - data1)/data1"))
+                    is_("Corrected sample standard deviation of the relative difference (data2 - data1)/data1"))
 
 
 class TestSpearmansRank(unittest.TestCase):
