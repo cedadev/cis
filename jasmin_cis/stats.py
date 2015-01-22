@@ -1,8 +1,8 @@
 import abc
 
 import numpy
+import scipy.stats.mstats
 from iris.cube import Cube
-from iris.coords import AuxCoord
 
 
 class StatisticsResult(object):
@@ -90,7 +90,7 @@ class DatasetStddev(StatisticsResult):
         """
         Get this statistical result as an iris.cube.Cube instance
         """
-        return Cube(self.stddev, long_name='Unbiased standard deviation of %s' % self.ds_name,
+        return Cube(self.stddev, long_name='Corrected sample standard deviation of %s' % self.ds_name,
                     var_name='dataset_stddev_%s' % self.ds_no)
 
 
@@ -135,7 +135,7 @@ class AbsoluteStddev(StatisticsResult):
         Get this statistical result as an iris.cube.Cube instance
         """
         cube = Cube([self.abs_stddev], var_name='abs_stddev',
-                    long_name='Unbiased standard deviation of the absolute difference (data2 - data1)')
+                    long_name='Corrected sample standard deviation of the absolute difference (data2 - data1)')
         return cube
 
 
@@ -181,7 +181,7 @@ class RelativeStddev(StatisticsResult):
         Get this statistical result as an iris.cube.Cube instance
         """
         cube = Cube([self.rel_stddev], var_name='rel_stddev',
-                    long_name='Unbiased standard deviation of the relative difference (data2 - data1)/data1')
+                    long_name='Corrected sample standard deviation of the relative difference (data2 - data1)/data1')
         return cube
 
 
@@ -313,3 +313,115 @@ class LinearRegressionStderr(StatisticsResult):
         """
         return Cube(self.stderr, long_name='Linear regression standard error of the estimate',
                     var_name='regression_stderr')
+
+
+class StatsAnalyzer(object):
+    """
+    Analyse datasets to produce statistics.
+    """
+
+    def analyze(self, data1, data2,):
+        """
+        Perform a statistical analysis on two data sets.
+        :param data1: First data object
+        :param data2: Second data object
+        :return: List of StatisticsResult instances.
+        """
+        d1, d2 = data1.data, data2.data
+        grad, intercept, r, p, stderr = self.linear_regression(d1, d2)
+        out = [PointsCount(self.points_count(d1, d2)),
+               DatasetMean(self.mean(d1), data1.var_name, 1),
+               DatasetMean(self.mean(d2), data2.var_name, 2),
+               DatasetStddev(self.stddev(d1), data1.var_name, 1),
+               DatasetStddev(self.stddev(d2), data2.var_name, 2),
+               AbsoluteMean(self.abs_mean(d1, d2)),
+               AbsoluteStddev(self.abs_stddev(d1, d2)),
+               RelativeMean(self.rel_mean(d1, d2)),
+               RelativeStddev(self.rel_stddev(d1, d2)),
+               SpearmansRank(self.spearmans_rank(d1, d2)),
+               LinearRegressionGradient(grad),
+               LinearRegressionIntercept(intercept),
+               LinearRegressionRValue(r),
+               LinearRegressionPValue(p),
+               LinearRegressionStderr(stderr)]
+        return out
+
+    def points_count(self, data1, data2):
+        """
+        Count all points which will be used for statistical comparison operations
+        (i.e. are non-missing in both datasets).
+        :param data1:
+        :param data2:
+        :return:
+        """
+        return numpy.ma.count(data1 + data2)
+
+    def mean(self, data):
+        """
+        Mean of a dataset
+        :param data:
+        :return:
+        """
+        return numpy.mean(data)
+
+    def stddev(self, data):
+        """
+        Corrected sample standard deviation of dataset
+        :param data:
+        :return:
+        """
+        return numpy.std(data, ddof=1)
+
+    def abs_mean(self, data1, data2):
+        """
+        Mean of absolute difference d2-d1
+        :param data1:
+        :param data2:
+        :return:
+        """
+        return numpy.mean(data2 - data1)
+
+    def abs_stddev(self, data1, data2):
+        """
+        Standard deviation of absolute difference d2-d1
+        :param data1:
+        :param data2:
+        :return:
+        """
+        return numpy.std(data2 - data1, ddof=1)
+
+    def rel_mean(self, data1, data2):
+        """
+        Mean of relative difference (d2-d1)/d1
+        :param data1:
+        :param data2:
+        :return:
+        """
+        return numpy.mean((data2 - data1)/data1)
+
+    def rel_stddev(self, data1, data2):
+        """
+        Mean of relative difference (d2-d1)/d1
+        :param data1:
+        :param data2:
+        :return:
+        """
+        return numpy.std((data2 - data1)/data1, ddof=1)
+
+    def spearmans_rank(self, data1, data2):
+        """
+        Perform a spearmans rank on the data
+        :param data1:
+        :param data2:
+        :return:
+        """
+        return scipy.stats.mstats.spearmanr(data1, data2, None)[0]
+
+    def linear_regression(self, data1, data2):
+        """
+        Perform a linear regression on the data
+        :param data1:
+        :param data2:
+        :return:
+        """
+        return scipy.stats.mstats.linregress(data1, data2)
