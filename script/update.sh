@@ -1,8 +1,8 @@
 #!/bin/bash
 # Run this script to update the local repositories for CIS and the CEDA DI tool
-tag=origin/devel
+tag="origin/devel"
 
-if [ -n "$1"]
+if [ -n "$1" ]
 then
   tag=$1
 fi
@@ -16,7 +16,7 @@ source venv/bin/activate
 cd jasmin_cis
 echo "Updating CIS: Fetching latest source from $tag"
 git fetch --all
-git reset --hard $tag
+git reset --hard "$tag"
 echo "Installing CIS"
 python setup.py install
 

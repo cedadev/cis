@@ -832,7 +832,7 @@ class gridded_gridded_li(Kernel):
 
 
 class GeneralGriddedColocator(Colocator):
-    """Performs co-location of data on to the points of a cube.
+    """Performs co-location of data on to the points of a cube (ie onto a gridded dataset).
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
@@ -901,6 +901,11 @@ class GeneralGriddedColocator(Colocator):
             val.fill_value = self.fill_value
             values.append(val)
 
+        if kernel.return_size == 1:
+            set_value_kernel = self._set_single_value_kernel
+        else:
+            set_value_kernel = self._set_multi_value_kernel
+
         logging.info("--> Co-locating...")
 
         # Iterate over cells in cube.
@@ -927,12 +932,7 @@ class GeneralGriddedColocator(Colocator):
                 con_points = constraint.constrain_points(arg, data_points)
                 try:
                     kernel_val = kernel.get_value(hp, con_points)
-                    if kernel.return_size > 1:
-                        # This kernel returns multiple values:
-                        for idx, val in enumerate(kernel_val):
-                            values[idx][indices] = val
-                    else:
-                        values[0][indices] = kernel_val
+                    set_value_kernel(kernel_val, values, indices)
                 except ValueError:
                     # ValueErrors are raised by Kernel when there are no points to operate on.
                     # We don't need to do anything.
@@ -960,10 +960,21 @@ class GeneralGriddedColocator(Colocator):
             try:
                 cube.units = kernel_var_details[idx][3]
             except ValueError:
-                logging.warn("Units are not cf complient but saving anyway. Units {}".format(kernel_var_details[idx][3]))
+                logging.warn(
+                    "Units are not cf compliant, not setting then. Units {}".format(kernel_var_details[idx][3]))
             output.append(cube)
 
         return output
+
+
+    def _set_multi_value_kernel(self, kernel_val, values, indices):
+        # This kernel returns multiple values:
+        for idx, val in enumerate(kernel_val):
+            values[idx][indices] = val
+
+    def _set_single_value_kernel(self, kernel_val, values, indices):
+        values[0][indices] = kernel_val
+
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.
@@ -1059,23 +1070,23 @@ def _find_standard_coords(cube, coordinate_mask):
     :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
     """
     coord_map = []
-    coord_lookup = {}
-    # for idx, coord in enumerate(cube.coords()):
-    coords = cube.coords()
-    for idx, coord in enumerate(coords):
-        coord_lookup[coord] = idx
+    cube_coord_lookup = {}
+
+    cube_coords = cube.coords()
+    for idx, coord in enumerate(cube_coords):
+        cube_coord_lookup[coord] = idx
 
     shape_idx = 0
     for hpi, name in enumerate(HyperPoint.standard_names):
         if coordinate_mask[hpi]:
             # Get the dimension coordinates only - these correspond to dimensions of data array.
-            coords = cube.coords(standard_name=name, dim_coords=True)
-            if len(coords) > 1:
+            cube_coords = cube.coords(standard_name=name, dim_coords=True)
+            if len(cube_coords) > 1:
                 msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
-                       % (len(coords), ', '.join(coord.name() for coord in coords)))
+                       % (len(cube_coords), ', '.join(coord.name() for coord in cube_coords)))
                 raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
-            elif len(coords) == 1:
-                coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
+            elif len(cube_coords) == 1:
+                coord_map.append((hpi, cube_coord_lookup[cube_coords[0]], shape_idx))
                 shape_idx += 1
     return coord_map
 
