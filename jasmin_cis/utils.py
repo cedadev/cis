@@ -538,6 +538,9 @@ def index_iterator(shape):
     num_iterations = 1
     for j in range(0, dim):
         num_iterations *= shape[j]
+    num_cells = np.product(shape)
+    cell_count = 0
+    cell_total = 0
 
     for iterations in range(num_iterations):
         yield tuple(idx)
@@ -546,6 +549,52 @@ def index_iterator(shape):
             if idx[j] < shape[j]:
                 break
             idx[j] = 0
+
+        # Log progress periodically.
+        cell_count += 1
+        if cell_count == 10000:
+            cell_total += 1
+            number_cells_processed = cell_total * 10000
+            logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
+                         int(number_cells_processed * 100 / num_cells))
+            cell_count = 0
+
+def index_iterator_for_non_masked_data(shape, points):
+    """Iterates over the indexes of a multi-dimensional array of a specified shape.
+
+    The last index changes most rapidly.
+    :param shape: sequence of array dimensions
+    :return: yields tuples of array indexes
+    """
+    dim = len(shape)
+    idx = [0] * dim
+    num_iterations = 1
+    for j in range(0, dim):
+        num_iterations *= shape[j]
+    num_cells = np.product(shape)
+    cell_count = 0
+    cell_total = 0
+
+    for iterations in range(num_iterations):
+        indices = tuple(idx)
+        if points.data[indices] is not np.ma.masked:
+            yield indices
+        for j in range(dim - 1, -1, -1):
+            idx[j] += 1
+            if idx[j] < shape[j]:
+                break
+            idx[j] = 0
+
+        # Log progress periodically.
+        cell_count += 1
+        if cell_count == 10000:
+            cell_total += 1
+            number_cells_processed = cell_total * 10000
+            logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
+                         int(number_cells_processed * 100 / num_cells))
+            cell_count = 0
+
+
 
 
 def parse_distance_with_units_to_float_km(distance):

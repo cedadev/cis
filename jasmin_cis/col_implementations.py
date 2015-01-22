@@ -908,34 +908,30 @@ class GeneralGriddedColocator(Colocator):
 
         logging.info("--> Co-locating...")
 
-        # Iterate over cells in cube.
-        num_cells = np.product(shape)
-        cell_count = 0
-        cell_total = 0
+
         if isinstance(constraint, IndexedConstraint):
             _get_constrained_points = self._get_constrained_points_for_indexed_constraint
         elif isinstance(constraint, CellConstraint):
             _get_constrained_points = self._get_constrained_points_for_cell_constraint
         else:
             _get_constrained_points = self._get_constrained_points_for_hyperpoint_constraint
-        for indices in jasmin_cis.utils.index_iterator(shape):
-            if not self.missing_data_for_missing_sample or points.data[indices] is not np.ma.masked:
-                hp, con_points = _get_constrained_points(coord_map, coords, indices, constraint, data_points)
-                try:
-                    kernel_val = kernel.get_value(hp, con_points)
-                    set_value_kernel(kernel_val, values, indices)
-                except ValueError:
-                    # ValueErrors are raised by Kernel when there are no points to operate on.
-                    # We don't need to do anything.
-                    pass
 
-            # Log progress periodically.
-            cell_count += 1
-            cell_total += 1
-            if cell_count == 10000:
-                logging.info("    Processed %d points of %d (%d%%)", cell_total, num_cells,
-                             int(cell_total * 100 / num_cells))
-                cell_count = 0
+        if self.missing_data_for_missing_sample:
+            iterator = jasmin_cis.utils.index_iterator_for_non_masked_data(shape, points)
+        else:
+            iterator = jasmin_cis.utils.index_iterator(shape)
+
+        # Iterate over cells in cube.
+        for indices in iterator:
+            hp, con_points = _get_constrained_points(coord_map, coords, indices, constraint, data_points)
+            try:
+                kernel_val = kernel.get_value(hp, con_points)
+                set_value_kernel(kernel_val, values, indices)
+            except ValueError:
+                # ValueErrors are raised by Kernel when there are no points to operate on.
+                # We don't need to do anything.
+                pass
+
 
         # Construct an output cube containing the colocated data.
         kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
