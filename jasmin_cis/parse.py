@@ -977,6 +977,7 @@ def validate_stats_args(arguments, parser):
         num_vars += len(datagroup['variables'])
     if num_vars != 2:
         parser.error("Stats command requires exactly two variables (%s were given)" % num_vars)
+    _validate_output_file(arguments, parser)
     return arguments
 
 

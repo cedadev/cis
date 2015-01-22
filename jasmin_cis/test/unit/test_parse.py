@@ -346,6 +346,6 @@ class TestParse(TestCase):
         assert_that(arguments.datagroups[1]['variables'], is_(['var2']))
 
     def test_GIVEN_output_file_WHEN_parse_stats_THEN_output_file_in_arguments(self):
-        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values, '-o', 'output.nc']
+        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values, '-o', 'output']
         arguments = parse_args(args)
         assert_that(arguments.output, is_('output.nc'))
