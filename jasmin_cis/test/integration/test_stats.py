@@ -33,6 +33,12 @@ class TestStats(BaseIntegrationTest):
         stats_cmd(arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, self.output_vars)
 
+    def test_no_output_file(self):
+        # Takes 3s
+        args = ['stats', '%s,%s:%s' % ('AOT_500', 'AOT_440', another_valid_aeronet_filename)]
+        arguments = parse_args(args)
+        stats_cmd(arguments)
+
     def test_ECHAMHAM_wavelength_stats(self):
         # Takes 0.7s
         args = ['stats', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
