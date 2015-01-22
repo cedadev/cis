@@ -6,7 +6,6 @@ import iris.analysis
 import iris.analysis.interpolate
 import iris.coords
 import numpy as np
-from numpy import mean as np_mean
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel)
@@ -295,10 +294,11 @@ class mean(Kernel):
         '''
             Colocation using the mean of any points left after a constraint.
         '''
+        from numpy import mean
         values = data.vals
         if len(values) == 0:
             raise ValueError
-        return np_mean(values)
+        return mean(values)
 
 
 class stddev(Kernel):
