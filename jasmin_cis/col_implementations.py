@@ -912,24 +912,15 @@ class GeneralGriddedColocator(Colocator):
         num_cells = np.product(shape)
         cell_count = 0
         cell_total = 0
-        is_indexed_constraint = isinstance(constraint, IndexedConstraint)
-        is_cell_constraint = isinstance(constraint, CellConstraint)
+        if isinstance(constraint, IndexedConstraint):
+            _get_constrained_points = self._get_constrained_points_for_indexed_constraint
+        elif isinstance(constraint, CellConstraint):
+            _get_constrained_points = self._get_constrained_points_for_cell_constraint
+        else:
+            _get_constrained_points = self._get_constrained_points_for_hyperpoint_constraint
         for indices in jasmin_cis.utils.index_iterator(shape):
             if not self.missing_data_for_missing_sample or points.data[indices] is not np.ma.masked:
-                hp_values = [None] * HyperPoint.number_standard_names
-                hp_cell_values = [None] * HyperPoint.number_standard_names
-                for (hpi, ci, shi) in coord_map:
-                    hp_values[hpi] = coords[ci].points[indices[shi]]
-                    hp_cell_values[hpi] = coords[ci].cell(indices[shi])
-
-                hp = HyperPoint(*hp_values)
-                if is_indexed_constraint:
-                    arg = indices
-                elif is_cell_constraint:
-                    arg = HyperPoint(*hp_cell_values)
-                else:
-                    arg = hp
-                con_points = constraint.constrain_points(arg, data_points)
+                hp, con_points = _get_constrained_points(coord_map, coords, indices, constraint, data_points)
                 try:
                     kernel_val = kernel.get_value(hp, con_points)
                     set_value_kernel(kernel_val, values, indices)
@@ -974,6 +965,35 @@ class GeneralGriddedColocator(Colocator):
 
     def _set_single_value_kernel(self, kernel_val, values, indices):
         values[0][indices] = kernel_val
+
+
+    def _get_constrained_points_for_indexed_constraint(self, coord_map, coords, indices, constraint, data_points):
+        hp_values = [None] * HyperPoint.number_standard_names
+        for (hpi, ci, shi) in coord_map:
+            hp_values[hpi] = coords[ci].points[indices[shi]]
+
+        hp = HyperPoint(*hp_values)
+        return hp, constraint.constrain_points(indices, data_points)
+
+    def _get_constrained_points_for_cell_constraint(self, coord_map, coords, indices, constraint, data_points):
+        hp_values = [None] * HyperPoint.number_standard_names
+        hp_cell_values = [None] * HyperPoint.number_standard_names
+        for (hpi, ci, shi) in coord_map:
+            hp_values[hpi] = coords[ci].points[indices[shi]]
+            hp_cell_values[hpi] = coords[ci].cell(indices[shi])
+
+        hp = HyperPoint(*hp_values)
+        return hp, constraint.constrain_points(HyperPoint(*hp_cell_values), data_points)
+
+    def _get_constrained_points_for_hyperpoint_constraint(self, coord_map, coords, indices, constraint, data_points):
+        hp_values = [None] * HyperPoint.number_standard_names
+        for (hpi, ci, shi) in coord_map:
+            hp_values[hpi] = coords[ci].points[indices[shi]]
+
+        hp = HyperPoint(*hp_values)
+        return hp, constraint.constrain_points(hp, data_points)
+
+
 
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
