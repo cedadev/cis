@@ -2,8 +2,10 @@ import unittest
 import datetime
 import numpy
 
+from jasmin_cis.data_io.gridded_data import GriddedDataList
+from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 from jasmin_cis.col_implementations import GeneralGriddedColocator, mean, CubeCellConstraint, \
-    BinningCubeCellConstraint
+    BinningCubeCellConstraint, moments
 from jasmin_cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
@@ -495,15 +497,78 @@ class TestGeneralGriddedColocator(unittest.TestCase):
 
         constraint = BinningCubeCellConstraint()
         kernel = mean()
-        output = col.colocate(sample, [data2, data1], constraint, kernel)
+        output = col.colocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
 
         assert len(output) == 2
 
-        expected_data1 = numpy.array([[14.5, 16.5, 18.5],
+        expected_data2 = numpy.array([[14.5, 16.5, 18.5],
                                       [26.5, 28.5, 30.5],
                                       [38.5, 40.5, 42.5],
                                       [50.5, 52.5, 54.5],
                                       [62.5, 64.5, 66.5]])
-        expected_data2 = expected_data1 - 10
+        expected_data1 = expected_data2 - 10
         assert numpy.array_equal(output[0].data, expected_data1)
         assert numpy.array_equal(output[1].data, expected_data2)
+
+    def test_single_moments(self):
+        col = GeneralGriddedColocator()
+        sample = make_square_5x3_2d_cube()
+        data = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5, 10)
+        constraint = BinningCubeCellConstraint()
+        kernel = moments()
+        output = col.colocate(sample, data, constraint, kernel)
+
+        expected_data = numpy.array([[14.5, 16.5, 18.5],
+                                     [26.5, 28.5, 30.5],
+                                     [38.5, 40.5, 42.5],
+                                     [50.5, 52.5, 54.5],
+                                     [62.5, 64.5, 66.5]])
+
+        expected_stddev = numpy.ones((5, 3)) * 3.5118845842842465
+        expected_num = numpy.ones((5, 3)) * 4
+
+        assert len(output) == 3
+        assert isinstance(output, GriddedDataList)
+        assert output[0].var_name == 'rain'
+        assert output[1].var_name == 'rain_std_dev'
+        assert output[2].var_name == 'rain_num_points'
+        assert numpy.array_equal(output[0].data, expected_data)
+        assert numpy.allclose(output[1].data, expected_stddev)
+        assert numpy.array_equal(output[2].data, expected_num)
+
+    def test_list_moments(self):
+        col = GeneralGriddedColocator()
+        sample = make_square_5x3_2d_cube()
+        data1 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
+        data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
+        data2.metadata._name = 'snow'
+        data2.data *= 2
+
+        constraint = BinningCubeCellConstraint()
+        kernel = moments()
+        output = col.colocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
+
+        assert len(output) == 6
+        assert output[0].var_name == 'rain'
+        assert output[1].var_name == 'rain_std_dev'
+        assert output[2].var_name == 'rain_num_points'
+        assert output[3].var_name == 'snow'
+        assert output[4].var_name == 'snow_std_dev'
+        assert output[5].var_name == 'snow_num_points'
+
+        expected_data1 = numpy.array([[4.5, 6.5, 8.5],
+                                      [16.5, 18.5, 20.5],
+                                      [28.5, 30.5, 32.5],
+                                      [40.5, 42.5, 44.5],
+                                      [52.5, 54.5, 56.5]])
+        expected_data2 = 2 * expected_data1
+        expected_stddev1 = numpy.ones((5, 3)) * 3.5118845842842465
+        expected_stddev2 = expected_stddev1 * 2
+        expected_num = numpy.ones((5, 3)) * 4
+
+        assert numpy.array_equal(output[0].data, expected_data1)
+        assert numpy.allclose(output[1].data, expected_stddev1)
+        assert numpy.array_equal(output[2].data, expected_num)
+        assert numpy.array_equal(output[3].data, expected_data2)
+        assert numpy.allclose(output[4].data, expected_stddev2)
+        assert numpy.array_equal(output[5].data, expected_num)

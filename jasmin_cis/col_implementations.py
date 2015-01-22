@@ -961,7 +961,6 @@ class GeneralGriddedColocator(Colocator):
                 cube.units = kernel_var_details[idx][3]
             except ValueError:
                 logging.warn("Units are not cf complient but saving anyway. Units {}".format(kernel_var_details[idx][3]))
-                cube._units = kernel_var_details[idx][3]
             output.append(cube)
 
         return output

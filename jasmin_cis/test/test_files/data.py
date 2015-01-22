@@ -448,6 +448,8 @@ cis_test_files["GASSP_ship"] = TestFileTestData(
     data_variable_standard_name='NRno3',
     data_variable_properties=None
 )
+valid_GASSP_ship_vars = cis_test_files["GASSP_ship"].all_variable_names
+valid_GASSP_ship_filename = cis_test_files["GASSP_ship"].master_filename
 
 valid_GASSP_attribute = 'Time_Coordinate'
 
@@ -478,8 +480,8 @@ cis_test_files["GASSP_station"] = TestFileTestData(
     data_variable_properties=None
     )
 
-valid_GASSP_station_filename = cis_test_files["GASSP_ship"].master_filename
-valid_GASSP_station_vars =cis_test_files["GASSP_ship"].all_variable_names
+valid_GASSP_station_filename = cis_test_files["GASSP_station"].master_filename
+valid_GASSP_station_vars =cis_test_files["GASSP_station"].all_variable_names
 
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
