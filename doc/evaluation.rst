@@ -1,4 +1,4 @@
-.. evaluation:
+.. _evaluation:
 .. |nbsp| unicode:: 0xA0
 
 **********
@@ -31,24 +31,24 @@ using the 'eval' command. For example, you might want to interpolate a value bet
 
 The evaluate syntax looks like this::
 
-    $ cis eval <datagroup> [<datagroup>...] <expr> [-o <[output_var:]outputfile>]
+    $ cis eval <datagroup>... <expr> [-o [<output_var>:]<outputfile>]
 
-where:
+where square brackets denote optional commands and:
 
-``datagroup``
-  is of the format ``<variable>[=<alias>][,<variable2>[=<alias2>]...]:<filename>[:product=<productname>]``. One or more
+``<datagroup>``
+  is of the format ``<variable>[=<alias>]...:<filename>[:product=<productname>]``. One or more
   datagroups should be given.
 
-  * ``variable`` is a mandatory argument used to specify the name of the variable in the file to use. You may
+  * ``<variable>`` is a mandatory argument used to specify the name of the variable in the file to use. You may
     specify more than one variable to load, in which case you should separate them with commas.
 
-  * ``alias`` is an optional alternative variable name to use in place of the name given in the file. As you will see
-    when we come to the ``expr`` section, the variable names given will need to be valid python variable names,
+  * ``<alias>`` is an optional alternative variable name to use in place of the name given in the file. As you will see
+    in the :ref:`expression <expr>` section, the variable names given will need to be valid python variable names,
     which means:
 
       \1. |nbsp| They may use only the characters [A-Z], [a-z] and numbers [0-9] provided they do not start with a number
 
-      \2. |nbsp| The only special character which may be used is the underscore (_) - but don't use more than two at a time
+      \2. |nbsp| The only special character which may be used is the underscore (_) - but don't use two consecutively
       (see :ref:`security note <warning>`)
 
       \3. |nbsp| Don't use any of the `reserved python keywords
@@ -62,7 +62,7 @@ where:
 
       ``550-870Angstrom=a550to870``
 
-  * ``filename`` is a mandatory argument specifying the file to read the variable or variables from. You may specify
+  * ``<filename>`` is a mandatory argument specifying the file to read the variable or variables from. You may specify
     multiple filenames separated using commas; each filename should be one of:
 
       \1. |nbsp| a single filename - this should be the full path to the file
@@ -77,13 +77,13 @@ where:
     dimension). So selecting multiple monthly files for a model run would be OK, but selecting files from two different
     datatypes would not be OK.
 
-  * ``productname`` is an optional argument used to specify the type of files being read. If omitted, the program will
+  * ``<productname>`` is an optional argument used to specify the type of files being read. If omitted, the program will
     attempt to figure out which product to use based on the filename. See :ref:`data-products-reading` to see a list of
     available products and their file signatures.
 
 .. _expr:
 
-``expr``
+``<expr>``
   is the arithmetic expression to evaluate; for example: ``variable1+variable2``. Use the following basic
   rules to get started:
 
@@ -94,7 +94,9 @@ where:
     quotes.
 
     \3. |nbsp| Construct your expression using plus ``+``, minus ``-``, times ``*``, divide ``/`` , power ``**``
-    (not ``^``) and parentheses ``()``.
+    (note that you **can't** use ``^`` for exponents, like you typically can in spreadsheets and some other computer
+    languages). Parentheses ``()`` can be used to group elements so that your expression is evaluated in the order
+    you intend.
 
   If you need more functionality, you're encountering errors or not getting the answer you expect then you should
   consider the following.
@@ -121,12 +123,12 @@ where:
     would be invalid (consider the previous rule). However, you could add the mean (over the whole array) of one
     variable to every point on a second variable by doing ``var1 + numpy.mean(var2)``.
 
-``outputfile``
+``<outputfile>``
   is an optional argument specifying the file to output to. This will be automatically given a ``.nc`` extension if not
   present and if the output is ungridded, will be prepended with ``cis-`` to identify it as a CIS output file. This must
   not be the same file path as any of the input files. If not provided, the default output filename is *out.nc*
 
-  * ``output_var`` is an optional prefix to the output file argument to specify the name of the output variable within
+  * ``<output_var>`` is an optional prefix to the output file argument to specify the name of the output variable within
     the output file, e.g. ``-o my_new_var:output_filename.nc``. If not provided, the default output variable name is
     *calculated_variable*
 
@@ -147,9 +149,16 @@ shown in the following CIS plot commands and can be found at ``/group_workspaces
 .. image:: img/eval_675.png
    :width: 450px
 
+.. note::
+
+    In this example the files have been given the same name as the variable that is contained inside that file - e.g.
+    variable ``od550aer`` is inside file ``od550aer.nc``. This doesn't always have to be the case; ``od550aer`` and
+    ``od550aer.nc`` are two different things.
+
+
 The following command is used to perform the evaluation::
 
-    $ cis eval od550aer:HadGEM/2007_2D_3hr/od550aer.nc od675aer:HadGEM/2007_2D_3hr/od550aer.nc "od550aer/od675aer" -o aerosol_ratio:eval_out.nc
+    $ cis eval od550aer:HadGEM/2007_2D_3hr/od550aer.nc od675aer:HadGEM/2007_2D_3hr/od675aer.nc "od550aer/od675aer" -o aerosol_ratio:eval_out.nc
 
 Which, when plotted gives the following result::
 
