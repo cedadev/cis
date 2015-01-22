@@ -29,6 +29,8 @@ def initialise_top_parser():
     add_subset_parser_arguments(subset_parser)
     eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression")
     add_eval_parser_arguments(eval_parser)
+    stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets")
+    add_stats_parser_arguments(stats_parser)
     subparsers.add_parser("version", help="Display the CIS version number")
     return parser
 
@@ -172,6 +174,13 @@ def add_eval_parser_arguments(parser):
                         help="The filename of the output file")
 
 
+def add_stats_parser_arguments(parser):
+    parser.add_argument("datagroups", metavar="DataGroup", nargs='+',
+                        help="Variables to perform statistical comparison on and optional product separated by colon(s)")
+    parser.add_argument("-o", "--output", metavar="Output filename", nargs="?",
+                        help="The filename of the output file (if outputting to file")
+
+
 def expand_file_list(filenames, parser):
     '''
 
@@ -313,20 +322,6 @@ def get_plot_datagroups(datagroups, parser):
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
-def get_col_datagroups(datagroups, parser):
-    '''
-    :param datagroups:    A list of datagroups (possibly containing colons)
-    :param parser:       The parser used to report errors
-    :return: The parsed datagroups as a list of dictionaries
-    '''
-    from collections import namedtuple
-
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
-    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
-
-    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
-
-
 def get_col_samplegroup(samplegroup, parser):
     '''
     :param samplegroups:    A list of datagroups (possibly containing colons)
@@ -361,9 +356,8 @@ def get_aggregate_datagroups(datagroups, parser):
 def get_eval_datagroups(datagroups, parser):
     from collections import namedtuple
 
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product", "kernel"])
-    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product,
-                                         check_aggregate_kernel)
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
     datagroups = parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
@@ -431,8 +425,9 @@ def get_aggregate_grid(aggregategrid, parser):
     return grid_dict
 
 
-def get_subset_datagroups(datagroups, parser):
+def get_basic_datagroups(datagroups, parser):
     '''
+    Get datagroups containing only variables:filenames:product
     :param datagroups:    A list of datagroups (possibly containing colons)
     :param parser:       The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
@@ -949,7 +944,7 @@ def validate_col_args(arguments, parser):
     arguments.sampleproduct = arguments.samplegroup["product"]
     if arguments.samplegroup["colocator"] is None:
         parser.error("You must specify a colocator")
-    arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
+    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     _validate_output_file(arguments, parser)
 
     return arguments
@@ -963,7 +958,7 @@ def validate_aggregate_args(arguments, parser):
 
 
 def validate_subset_args(arguments, parser):
-    arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
+    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
     _validate_output_file(arguments, parser)
     return arguments
@@ -972,6 +967,16 @@ def validate_subset_args(arguments, parser):
 def validate_eval_args(arguments, parser):
     arguments.datagroups = get_eval_datagroups(arguments.datagroups, parser)
     _validate_output_file(arguments, parser)
+    return arguments
+
+
+def validate_stats_args(arguments, parser):
+    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
+    num_vars = 0
+    for datagroup in arguments.datagroups:
+        num_vars += len(datagroup['variables'])
+    if num_vars != 2:
+        parser.error("Stats command requires exactly two variables (%s were given)" % num_vars)
     return arguments
 
 
@@ -986,6 +991,7 @@ validators = {'plot': validate_plot_args,
               'aggregate': validate_aggregate_args,
               'subset': validate_subset_args,
               'eval': validate_eval_args,
+              'stats': validate_stats_args,
               'version': validate_version_args}
 
 

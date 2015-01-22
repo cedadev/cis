@@ -312,3 +312,40 @@ class TestParse(TestCase):
             except SystemExit as e:
                 if e.code != 2:
                     raise e
+
+    def test_GIVEN_no_output_WHEN_parse_stats_THEN_output_is_None(self):
+        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values]
+        arguments = parse_args(args)
+        assert_that(arguments.output, is_(None))
+
+    def test_GIVEN_one_variable_WHEN_parse_stats_THEN_parser_error(self):
+        args = ['stats', 'var1:%s' % ascii_filename_with_no_values]
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
+    def test_GIVEN_more_than_two_variables_WHEN_parse_stats_THEN_parser_error(self):
+        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % ascii_filename_with_no_values]
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
+    def test_GIVEN_two_variables_WHEN_parse_stats_THEN_variables_are_in_datagroups(self):
+        args = ['stats', 'var1:%s' % ascii_filename_with_no_values, 'var2:%s' % dummy_cis_out]
+        arguments = parse_args(args)
+        assert_that(arguments.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
+        assert_that(arguments.datagroups[0]['variables'], is_(['var1']))
+        assert_that(arguments.datagroups[1]['filenames'], is_([dummy_cis_out]))
+        assert_that(arguments.datagroups[1]['variables'], is_(['var2']))
+
+    def test_GIVEN_output_file_WHEN_parse_stats_THEN_output_file_in_arguments(self):
+        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values, '-o', 'output.nc']
+        arguments = parse_args(args)
+        assert_that(arguments.output, is_('output.nc'))
