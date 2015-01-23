@@ -526,38 +526,32 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     return array1, array2
 
 
-def index_iterator(shape):
+def index_iterator(shape, points):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
 
     The last index changes most rapidly.
     :param shape: sequence of array dimensions
     :return: yields tuples of array indexes
     """
-    dim = len(shape)
-    idx = [0] * dim
-    num_iterations = 1
-    for j in range(0, dim):
-        num_iterations *= shape[j]
+
     num_cells = np.product(shape)
     cell_count = 0
     cell_total = 0
 
-    for iterations in range(num_iterations):
-        yield tuple(idx)
-        for j in range(dim - 1, -1, -1):
-            idx[j] += 1
-            if idx[j] < shape[j]:
-                break
-            idx[j] = 0
+    it = np.nditer(points, flags=['multi_index'])
+    while not it.finished:
+        yield it.multi_index
+
+        it.iternext()
 
         # Log progress periodically.
-        cell_count += 1
         if cell_count == 10000:
             cell_total += 1
             number_cells_processed = cell_total * 10000
             logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
-                         int(number_cells_processed * 100 / num_cells))
+                             int(number_cells_processed * 100 / num_cells))
             cell_count = 0
+        cell_count += 1
 
 def index_iterator_for_non_masked_data(shape, points):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
@@ -566,34 +560,32 @@ def index_iterator_for_non_masked_data(shape, points):
     :param shape: sequence of array dimensions
     :return: yields tuples of array indexes
     """
-    dim = len(shape)
-    idx = [0] * dim
-    num_iterations = 1
-    for j in range(0, dim):
-        num_iterations *= shape[j]
+
+
+    # dim = len(shape)
+    # idx = [0] * dim
+    # num_iterations = 1
+    # for j in range(0, dim):
+    #     num_iterations *= shape[j]
     num_cells = np.product(shape)
     cell_count = 0
     cell_total = 0
 
-    for iterations in range(num_iterations):
-        indices = tuple(idx)
-        if points.data[indices] is not np.ma.masked:
-            yield indices
-        for j in range(dim - 1, -1, -1):
-            idx[j] += 1
-            if idx[j] < shape[j]:
-                break
-            idx[j] = 0
+    it = np.nditer(points.data, flags=['multi_index'])
+    while not it.finished:
+        if it[0] is not np.ma.masked:
+            yield it.multi_index
+
+        it.iternext()
 
         # Log progress periodically.
-        cell_count += 1
         if cell_count == 10000:
             cell_total += 1
             number_cells_processed = cell_total * 10000
             logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
-                         int(number_cells_processed * 100 / num_cells))
+                             int(number_cells_processed * 100 / num_cells))
             cell_count = 0
-
+        cell_count += 1
 
 
 

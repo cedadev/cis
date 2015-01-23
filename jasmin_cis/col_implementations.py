@@ -294,11 +294,10 @@ class mean(Kernel):
         '''
             Colocation using the mean of any points left after a constraint.
         '''
-        from numpy import mean
         values = data.vals
         if len(values) == 0:
             raise ValueError
-        return mean(values)
+        return np.mean(values)
 
 
 class stddev(Kernel):
@@ -919,7 +918,7 @@ class GeneralGriddedColocator(Colocator):
         if self.missing_data_for_missing_sample:
             iterator = jasmin_cis.utils.index_iterator_for_non_masked_data(shape, points)
         else:
-            iterator = jasmin_cis.utils.index_iterator(shape)
+            iterator = jasmin_cis.utils.index_iterator(shape, values[0])
 
         # Iterate over cells in cube.
         for indices in iterator:
