@@ -162,7 +162,7 @@ The following command is used to perform the evaluation::
 
 Which, when plotted gives the following result::
 
-    $ cis plot aerosol_ratio:eval_out.nc --title "Aerosol optical dept ratio 550nm / 675nm" --cbarscale 0.5
+    $ cis plot aerosol_ratio:eval_out.nc --title "Aerosol optical depth ratio 550nm / 675nm" --cbarscale 0.5
 
 .. image:: img/eval_ratio.png
    :width: 450px
