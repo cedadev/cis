@@ -120,6 +120,16 @@ class CommonDataList(list):
         for x in iterable:
             self.append(x)
 
+    def append_or_extend(self, item_to_add):
+        """
+        Append or extend an item to an existing list, depending on whether the item to add is itself a list or not.
+        :param item_to_add: Item to add (may be list or not).
+        """
+        if isinstance(item_to_add, list):
+            self.extend(item_to_add)
+        else:
+            self.append(item_to_add)
+
     @property
     def var_name(self):
         """

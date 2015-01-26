@@ -4,15 +4,12 @@ import iris.coord_categorisation
 import iris.analysis.cartography
 from iris.coords import DimCoord
 import numpy
+
 from jasmin_cis.col_implementations import GeneralGriddedColocator, BinningCubeCellConstraint
-from jasmin_cis.data_io.gridded_data import make_from_cube
 import jasmin_cis.parse_datetime as parse_datetime
 from jasmin_cis.subsetting.subset import Subset
-from jasmin_cis.subsetting.subset_constraint import GriddedSubsetConstraint
-from jasmin_cis.subsetting.subsetter import Subsetter
 from jasmin_cis.utils import isnan, guess_coord_axis
 from jasmin_cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
-
 from jasmin_cis.aggregation.aggregation_kernels import MultiKernel
 from jasmin_cis.data_io.gridded_data import GriddedDataList
 
@@ -22,16 +19,16 @@ class Aggregator(object):
         self.data = data
         self._grid = grid
 
-    def _gridded_full_collapse(self, coord, kernel):
+    def _gridded_full_collapse(self, coords, kernel):
         if isinstance(kernel, iris.analysis.WeightedAggregator):
             # If this is a list we can calculate weights using the first item (all variables should be on
             # same grid)
             data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
             # Weights to correctly calculate areas.
             area_weights = iris.analysis.cartography.area_weights(data_for_weights)
-            return self.data.collapsed(coord.name(), kernel, weights=area_weights)
+            return self.data.collapsed(coords, kernel, weights=area_weights)
         elif isinstance(kernel, iris.analysis.Aggregator):
-            return self.data.collapsed(coord.name(), kernel)
+            return self.data.collapsed(coords, kernel)
         else:
             raise ClassNotFoundError('Error - unexpected aggregator type.')
 
@@ -44,7 +41,7 @@ class Aggregator(object):
                 new_coord_number = self.data.coord_dims(coord)
                 self.data.remove_coord(coord.name())
                 self.data.add_dim_coord(coord, new_coord_number)
-
+        coords = []
         for coord in self.data.coords():
             grid, guessed_axis = self.get_grid(coord)
 
@@ -52,133 +49,19 @@ class Aggregator(object):
                 if isnan(grid.delta):
                     logging.info('Aggregating on ' + coord.name() + ', collapsing completely and using ' +
                                  kernel.cell_method + ' kernel.')
-                    if isinstance(kernel, MultiKernel):
-                        output = GriddedDataList([])
-                        for sub_kernel in kernel.sub_kernels:
-                            output.append(self._gridded_full_collapse(coord, sub_kernel))
-                        self.data = output
-                    else:
-                        self.data = self._gridded_full_collapse(coord, kernel)
+                    coords.append(coord)
                 else:
-                    if coord.points[0] < coord.points[-1]:
-                        start = min(coord.bounds[0])
-                        end = max(coord.bounds[-1])
-                    else:
-                        start = min(coord.bounds[-1])
-                        end = max(coord.bounds[0])
+                    raise NotImplementedError("Aggregation using partial collapse of "
+                                              "coordinates is not supported for GriddedData")
 
-                    if grid.is_time or guessed_axis == 'T':
-                        # Ensure that the limits are date/times.
-                        dt = parse_datetime.convert_datetime_components_to_datetime(grid.start, True)
-                        grid_start = Subset._convert_datetime_to_coord_unit(coord, dt)
-                        dt = parse_datetime.convert_datetime_components_to_datetime(grid.end, False)
-                        grid_end = Subset._convert_datetime_to_coord_unit(coord, dt)
-                        grid_delta = grid.delta
-
-                        # The following are used to generate helpful error messages, with the time in a user friendly
-                        # format
-                        start_of_grid = Subset._convert_coord_unit_to_datetime(coord, start)
-                        end_of_grid = Subset._convert_coord_unit_to_datetime(coord, end)
-                        start_requested = Subset._convert_coord_unit_to_datetime(coord, grid_start)
-                        end_requested = Subset._convert_coord_unit_to_datetime(coord, grid_end)
-                    else:
-                        # Assume to be a non-time axis
-                        (grid_start, grid_end) = Subset._fix_non_circular_limits(float(grid.start), float(grid.end))
-                        grid_delta = float(grid.delta)
-
-                        # The following are used to generate helpful error messages
-                        start_of_grid = start
-                        end_of_grid = end
-                        start_requested = grid.start
-                        end_requested = grid.end
-                    if grid_start < start:
-                        logging.warning('Specified a start such that the aggregation grid starts before the '
-                                        'data grid. The requested starting point would be ' + str(start_requested) +
-                                        ' this will now be changed to the start of the grid at ' + str(start_of_grid) +
-                                        '.')
-                        grid_start = start
-                        if grid.is_time or guessed_axis == 'T':
-                            start_requested = Subset._convert_coord_unit_to_datetime(coord, start)
-                        else:
-                            start_requested = start
-                    if grid_end > end:
-                        logging.warning('Specified an end such that the aggregation grid ends after the '
-                                        'data grid. The requested ending point would be ' + str(end_requested) +
-                                        ' this will now be changed to the end of the grid at ' + str(end_of_grid) + '.')
-                        grid_end = end
-                        if grid.is_time or guessed_axis == 'T':
-                            end_requested = Subset._convert_coord_unit_to_datetime(coord, end)
-                        else:
-                            end_requested = end
-
-                    # Subset the data. This ensures the Iris cube only has the data in that we actually want to
-                    # aggregate, making it easier to make use of Iris's aggregation function while ignoring data outside
-                    # the aggregation range.
-                    subsetter = Subsetter()
-                    subset_constraint = GriddedSubsetConstraint()
-
-                    # Need to work out slightly different limits for the subset, as by default it will return anything
-                    # that has bounds inside the limit.
-                    cell_start_index = coord.nearest_neighbour_index(grid_start)
-                    # Bounds are always monotonic, but need to work out if they are increasing or decreasing
-                    if coord.cell(0).point < coord.cell(1).point:
-                        increment = 1
-                    elif coord.cell(0).point > coord.cell(1).point:
-                        increment = -1
-                    else:
-                        raise ValueError('Could not determine if coordinate is monotonically increasing or decreasing.')
-                    while coord.cell(cell_start_index).point < grid_start:
-                        cell_start_index += increment
-                    actual_start = float(max(coord.cell(cell_start_index).bound))
-                    cell_end_index = coord.nearest_neighbour_index(grid_end)
-                    while coord.cell(cell_end_index).point > grid_end:
-                        cell_end_index -= increment
-                    if cell_end_index == cell_start_index:
-                        # In case we are now on longitude bounds and have wrapped around.
-                        cell_end_index -= increment
-                    actual_end = float(min(coord.cell(cell_end_index).bound))
-
-                    subset_constraint.set_limit(coord, actual_start, actual_end, False)
-                    self.data = subsetter.subset(self.data, subset_constraint)
-
-                    iris.coord_categorisation.add_categorised_coord(self.data, 'aggregation_coord_for_'+coord.name(),
-                                                                    coord.name(),
-                                                                    categorise_coord_function(grid_start, grid_end,
-                                                                                              grid_delta, grid.is_time),
-                                                                    units=coord.units)
-
-                    # Get Iris to do the aggregation
-                    logging.info('Aggregating on ' + coord.name() + ' over range ' + str(start_requested) + ' to ' +
-                                 str(end_requested) + ' using steps of ' + str(grid_delta) + ' and ' +
-                                 kernel.cell_method + ' kernel.')
-                    if isinstance(kernel, MultiKernel):
-                        output = GriddedDataList([])
-                        for sub_kernel in kernel.sub_kernels:
-                            out = self.data.aggregated_by(['aggregation_coord_for_'+coord.name()], sub_kernel)
-                            output.append(out)
-                        self.data = output
-                    else:
-                        self.data = self.data.aggregated_by(['aggregation_coord_for_'+coord.name()], kernel)
-
-                    # Now make a new_coord, as the exiting coord will have the wrong coordinate points
-                    new_coord = self.data.coord(coord.name())
-                    new_coord.points = self.data.coord('aggregation_coord_for_'+coord.name()).points
-                    try:
-                        new_coord.bounds = None
-                        new_coord.guess_bounds()
-                    except ValueError:
-                        logging.warn('Only one ' + coord.name() + ' coordinate left after aggregation. Bounds '
-                                     'information will be missing for this coordinate.')
-                    new_coord_number = self.data.coord_dims(coord)
-
-                    # Remove the old coord, and the aux categroisation coord, and add the new one
-                    self.data.remove_coord(coord.name())
-                    self.data.remove_coord('aggregation_coord_for_'+coord.name())
-                    self.data.add_dim_coord(new_coord, new_coord_number)
-                # 'data' will have ended up as a cube again, now change it back to a GriddedData object
-                self.data = make_from_cube(self.data)
-
-        return self.data
+        output = GriddedDataList([])
+        if isinstance(kernel, MultiKernel):
+            for sub_kernel in kernel.sub_kernels:
+                sub_kernel_out = self._gridded_full_collapse(coords, sub_kernel)
+                output.append_or_extend(sub_kernel_out)
+        else:
+            output.append_or_extend(self._gridded_full_collapse(coords, kernel))
+        return output
 
     def aggregate_ungridded(self, kernel):
         """
