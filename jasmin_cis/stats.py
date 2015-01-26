@@ -271,28 +271,6 @@ class LinearRegressionRValue(StatisticsResult):
                     var_name='regression_r')
 
 
-class LinearRegressionPValue(StatisticsResult):
-    """
-    Linear regression p-value (null hypothesis)
-    """
-
-    def __init__(self, p):
-        self.p = p
-
-    def pprint(self):
-        """
-        Nicely formatted string representation of this statistical result, suitable for printing to screen.
-        """
-        return "Linear regression p-value: %s" % self.p
-
-    def as_cube(self):
-        """
-        Get this statistical result as an iris.cube.Cube instance
-        """
-        return Cube(self.p, long_name='Linear regression p-value (two-sided p-value for a hypothesis '
-                                      'test whose null hypothesis is that the slope is zero)', var_name='regression_p')
-
-
 class LinearRegressionStderr(StatisticsResult):
     """
     Linear regression standard error of the estimate
@@ -320,108 +298,107 @@ class StatsAnalyzer(object):
     Analyse datasets to produce statistics.
     """
 
-    def analyze(self, data1, data2,):
+    def __init__(self, data1, data2):
         """
-        Perform a statistical analysis on two data sets.
+        Create a statistics analyser for two data sets
         :param data1: First data object
         :param data2: Second data object
         :return: List of StatisticsResult instances.
         """
-        d1, d2 = data1.data, data2.data
-        grad, intercept, r, p, stderr = self.linear_regression(d1, d2)
-        out = [PointsCount(self.points_count(d1, d2)),
-               DatasetMean(self.mean(d1), data1.var_name, 1),
-               DatasetMean(self.mean(d2), data2.var_name, 2),
-               DatasetStddev(self.stddev(d1), data1.var_name, 1),
-               DatasetStddev(self.stddev(d2), data2.var_name, 2),
-               AbsoluteMean(self.abs_mean(d1, d2)),
-               AbsoluteStddev(self.abs_stddev(d1, d2)),
-               RelativeMean(self.rel_mean(d1, d2)),
-               RelativeStddev(self.rel_stddev(d1, d2)),
-               SpearmansRank(self.spearmans_rank(d1, d2)),
-               LinearRegressionGradient(grad),
-               LinearRegressionIntercept(intercept),
-               LinearRegressionRValue(r),
-               LinearRegressionPValue(p),
-               LinearRegressionStderr(stderr)]
+
+        self.data1 = data1
+        self.data2 = data2
+
+    def analyze(self):
+        """
+        Perform a statistical analysis on two data sets.
+        :return: List of StatisticsResult instances.
+        """
+        out = []
+        out.extend(self.points_count())
+        out.extend(self.means())
+        out.extend(self.stddevs())
+        out.extend(self.abs_mean())
+        out.extend(self.abs_stddev())
+        out.extend(self.rel_mean())
+        out.extend(self.rel_stddev())
+        out.extend(self.spearmans_rank())
+        out.extend(self.linear_regression())
         return out
 
-    def points_count(self, data1, data2):
+    def points_count(self):
         """
         Count all points which will be used for statistical comparison operations
         (i.e. are non-missing in both datasets).
-        :param data1:
-        :param data2:
-        :return:
+        :return: List of StatisticsResults
         """
-        return numpy.ma.count(data1 + data2)
+        count = numpy.ma.count(self.data1.data + self.data2.data)
+        return [PointsCount(count)]
 
-    def mean(self, data):
+    def means(self):
         """
-        Mean of a dataset
-        :param data:
-        :return:
+        Means of two datasets
+        :return: List of StatisticsResults
         """
-        return numpy.mean(data)
 
-    def stddev(self, data):
-        """
-        Corrected sample standard deviation of dataset
-        :param data:
-        :return:
-        """
-        return numpy.std(data, ddof=1)
+        return [DatasetMean(numpy.mean(self.data1.data), self.data1.var_name, 1),
+                DatasetMean(numpy.mean(self.data2.data), self.data2.var_name, 2)]
 
-    def abs_mean(self, data1, data2):
+    def stddevs(self):
+        """
+        Corrected sample standard deviation of datasets
+        :return: List of StatisticsResults
+        """
+        return [DatasetStddev(numpy.std(self.data1.data, ddof=1), self.data1.var_name, 1),
+                DatasetStddev(numpy.std(self.data2.data, ddof=1), self.data2.var_name, 2)]
+
+    def abs_mean(self):
         """
         Mean of absolute difference d2-d1
-        :param data1:
-        :param data2:
-        :return:
+        :return: List of StatisticsResults
         """
-        return numpy.mean(data2 - data1)
+        mean = numpy.mean(self.data2.data - self.data1.data)
+        return [AbsoluteMean(mean)]
 
-    def abs_stddev(self, data1, data2):
+    def abs_stddev(self):
         """
         Standard deviation of absolute difference d2-d1
-        :param data1:
-        :param data2:
-        :return:
+        :return: List of StatisticsResults
         """
-        return numpy.std(data2 - data1, ddof=1)
+        stddev = numpy.std(self.data2.data - self.data1.data, ddof=1)
+        return [AbsoluteStddev(stddev)]
 
-    def rel_mean(self, data1, data2):
+    def rel_mean(self):
         """
         Mean of relative difference (d2-d1)/d1
-        :param data1:
-        :param data2:
-        :return:
+        :return: List of StatisticsResults
         """
-        return numpy.mean((data2 - data1)/data1)
+        mean = numpy.mean((self.data2.data - self.data1.data)/self.data1.data)
+        return [RelativeMean(mean)]
 
-    def rel_stddev(self, data1, data2):
+    def rel_stddev(self):
         """
         Mean of relative difference (d2-d1)/d1
-        :param data1:
-        :param data2:
-        :return:
+        :return: List of StatisticsResults
         """
-        return numpy.std((data2 - data1)/data1, ddof=1)
+        stddev = numpy.std((self.data2.data - self.data1.data)/self.data1.data, ddof=1)
+        return [RelativeStddev(stddev)]
 
-    def spearmans_rank(self, data1, data2):
+    def spearmans_rank(self):
         """
-        Perform a spearmans rank on the data
-        :param data1:
-        :param data2:
-        :return:
+        Perform a spearman's rank on the data
+        :return: List of StatisticsResults
         """
-        return scipy.stats.mstats.spearmanr(data1, data2, None)[0]
+        spearman = scipy.stats.mstats.spearmanr(self.data1.data, self.data2.data, None)[0]
+        return [SpearmansRank(spearman)]
 
-    def linear_regression(self, data1, data2):
+    def linear_regression(self):
         """
         Perform a linear regression on the data
-        :param data1:
-        :param data2:
-        :return:
+        :return: List of StatisticsResults
         """
-        return scipy.stats.mstats.linregress(data1, data2)
+        grad, intercept, r, p, stderr = scipy.stats.mstats.linregress(self.data1.data, self.data2.data)
+        return [LinearRegressionGradient(grad),
+                LinearRegressionIntercept(intercept),
+                LinearRegressionRValue(r),
+                LinearRegressionStderr(stderr)]

@@ -222,8 +222,8 @@ def stats_cmd(main_arguments):
     from jasmin_cis.data_io.gridded_data import GriddedDataList
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
-    analyzer = StatsAnalyzer()
-    results = analyzer.analyze(*data_list)
+    analyzer = StatsAnalyzer(*data_list)
+    results = analyzer.analyze()
     header = "RESULTS OF STATISTICAL COMPARISON:"
     print(len(header) * '=')
     print(header)

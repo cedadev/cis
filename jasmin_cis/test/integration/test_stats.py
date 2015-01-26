@@ -22,7 +22,6 @@ class TestStats(BaseIntegrationTest):
         "regression_gradient",
         "regression_intercept",
         "regression_r",
-        "regression_p",
         "regression_stderr"]
 
     def test_Aeronet_wavelength_stats(self):

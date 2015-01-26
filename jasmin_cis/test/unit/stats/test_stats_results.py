@@ -217,26 +217,6 @@ class TestLinearRegressionRValue(unittest.TestCase):
                                                     "(Pearson product-moment correlation coefficient)"))
 
 
-class TestLinearRegressionPValue(unittest.TestCase):
-
-    def setUp(self):
-        regression = LinearRegressionPValue(0.1)
-        self.output_string = regression.pprint()
-        self.output_cube = regression.as_cube()
-
-    def test_GIVEN_regression_WHEN_pretty_print_THEN_pprint_is_correct(self):
-        expected_output_string = "Linear regression p-value: 0.1"
-        assert_that(self.output_string, is_(expected_output_string))
-
-    def test_GIVEN_regression_WHEN_as_cube_THEN_cube_data_is_correct(self):
-        assert_that(self.output_cube.data, is_(0.1))
-
-    def test_GIVEN_regression_WHEN_as_cube_THEN_cube_metadata_is_correct(self):
-        assert_that(self.output_cube.var_name, is_("regression_p"))
-        assert_that(self.output_cube.long_name, is_("Linear regression p-value (two-sided p-value for a hypothesis test"
-                                                    " whose null hypothesis is that the slope is zero)"))
-
-
 class TestLinearRegressionStderr(unittest.TestCase):
 
     def setUp(self):

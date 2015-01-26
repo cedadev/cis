@@ -15,7 +15,7 @@ The 'stats' command will calculate:
 #. The mean and standard deviation of the relative difference ((var2 - var1) / var1).
 #. The Linear Pearson correlation coefficient.
 #. The Spearman Rank correlation coefficient.
-#. The coefficients of linear regression (i.e. var2 = a var1 + b ), r-value, p-value and standard error.
+#. The coefficients of linear regression (i.e. var2 = a var1 + b ), r-value, and standard error of the estimate.
 
 These values will be displayed on screen and can optionally be save as NetCDF output.
 
@@ -66,7 +66,7 @@ where:
 Statistics Example
 ==================
 
-In this example, we perform a statistical comparison of Aeronet aerosol optical thickness at two wavele ngths.
+In this example, we perform a statistical comparison of Aeronet aerosol optical thickness at two wavelengths.
 The data we are using is shown in the following CIS plot commands
 and can be found at ``/group_workspaces/jasmin/cis/data``::
 
@@ -102,5 +102,4 @@ Which gives the following output::
     Linear regression gradient: 1.12233533743
     Linear regression intercept: 0.0212355272705
     Linear regression r-value: 0.997245296339
-    Linear regression p-value: 0.0
     Linear regression standard error: 0.0256834603945
