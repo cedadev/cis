@@ -189,7 +189,7 @@ def aggregate_cmd(main_arguments):
     variables = input_group['variables']
     filenames = input_group['filenames']
     product = input_group["product"] if input_group["product"] is not None else None
-    kernel = input_group["kernel"] if input_group["kernel"] is not None else 'mean'
+    kernel = input_group["kernel"] if input_group["kernel"] is not None else 'moments'
 
     aggregate = Aggregate(main_arguments.grid, main_arguments.output)
     aggregate.aggregate(variables, filenames, product, kernel)
