@@ -289,7 +289,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
             with open(filename) as f: pass
 
         variable_constraint = variable
-        if type(variable) is str:
+        if isinstance(variable, basestring):
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
                                                                          c.standard_name == variable or
                                                                          c.long_name == variable), display=variable)
