@@ -212,6 +212,29 @@ def evaluate_cmd(main_arguments):
     result.save_data(main_arguments.output)
 
 
+def stats_cmd(main_arguments):
+    """
+    Main routine for handling calls to the statistics command.
+
+    :param main_arguments: The command line arguments (minus the stats command)
+    """
+    from stats import StatsAnalyzer
+    from jasmin_cis.data_io.gridded_data import GriddedDataList
+    data_reader = DataReader()
+    data_list = data_reader.read_datagroups(main_arguments.datagroups)
+    analyzer = StatsAnalyzer(*data_list)
+    results = analyzer.analyze()
+    header = "RESULTS OF STATISTICAL COMPARISON:"
+    print(len(header) * '=')
+    print(header)
+    print(len(header) * '=')
+    for result in results:
+        print(result.pprint())
+    if main_arguments.output:
+        cubes = GriddedDataList([result.as_cube() for result in results])
+        cubes.save_data(main_arguments.output)
+
+
 def version_cmd(_main_arguments):
     print "Using CIS version:", __version__, "("+__status__+")"
 
@@ -222,6 +245,7 @@ commands = {'plot': plot_cmd,
             'aggregate': aggregate_cmd,
             'subset': subset_cmd,
             'eval': evaluate_cmd,
+            'stats': stats_cmd,
             'version': version_cmd}
 
 
