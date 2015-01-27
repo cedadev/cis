@@ -396,7 +396,7 @@ class Aeronet(AProduct):
     def get_file_signature(self):
         return [r'.*\.lev20']
 
-    def _create_coord_list(self, filenames, data = None):
+    def _create_coord_list(self, filenames, data=None):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from jasmin_cis.data_io.aeronet import load_multiple_aeronet
 
@@ -404,10 +404,13 @@ class Aeronet(AProduct):
             data = load_multiple_aeronet(filenames)
 
         coords = CoordList()
-        coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),), units="degrees_east", range=(-180,180))))
-        coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),), units="degrees_north", range=(-90,90))))
-        coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters", range=(-90,90))))
-        time_coord = Coord(data["datetime"], Metadata(name="DateTime",standard_name='time', shape=(len(data),), units="DateTime Object"), "X")
+        coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),),
+                                                        units="degrees_east", range=(-180, 180))))
+        coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),),
+                                                       units="degrees_north", range=(-90, 90))))
+        coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters")))
+        time_coord = Coord(data["datetime"], Metadata(name="DateTime", standard_name='time', shape=(len(data),),
+                                                      units="DateTime Object"), "X")
         time_coord.convert_datetime_to_standard_time()
         coords.append(time_coord)
 
