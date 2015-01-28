@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
+from utils import index_iterator_for_non_masked_data, index_iterator_nditer
 
 
 class Colocator(object):
@@ -28,20 +29,21 @@ class Colocator(object):
 
 class Kernel(object):
     '''
-    Class which provides a method for taking a number of points and returning one value. This could be a nearest
-    neighbour algorithm or some sort of algorithm. This just defines the interface which the subclasses must implement.
+    Class which provides a method for taking a number of points and returning one value. For example a nearest
+    neighbour algorithm or sort algorithm or mean. This just defines the interface which the subclasses must implement.
     '''
     __metaclass__ = ABCMeta
     return_size = 1
 
     @abstractmethod
     def get_value(self, point, data):
-        '''
+        """
         :param point: A single HyperPoint
         :param data: A set of data points to reduce to a single value
-        :return: A single value (number) which represents some operation on the points provided
+        :return: For return_size=1 a single value (number) otherwise a list of reutrns values, which represents some
+            operation on the points provided
 
-        '''
+        """
 
     def get_variable_details(self, var_name, var_long_name, var_standard_name, var_units):
         """Returns details of extra variables to be created for outputs of kernel.
@@ -72,6 +74,36 @@ class Constraint(object):
 
         '''
 
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+        """
+        Iterator to iterate through the points needed to be calculated
+        The default iterator, iterates through all the sample points calling constrain_points for each one
+        :param missing_data_for_missing_sample: if true anywhere there is missing data on the sample then final point is
+            missing; otherwise just use the sample
+        :param coord_map: cordinate map
+        :param coords: the cordinates to map to
+        :param data_points: the data points
+        :param shape: shape of the final values
+        :param points: points
+        :param values: values to set
+        :return: iterator which iterates through sample indices, hyper and constrained points
+        """
+        from jasmin_cis.col_implementations import HyperPoint
+        if missing_data_for_missing_sample:
+            iterator = index_iterator_for_non_masked_data(shape, points)
+        else:
+            iterator = index_iterator_nditer(shape, values[0])
+
+        for indices in iterator:
+            hp_values = [None] * HyperPoint.number_standard_names
+            for (hpi, ci, shi) in coord_map:
+                hp_values[hpi] = coords[ci].points[indices[shi]]
+
+            hp = HyperPoint(*hp_values)
+            constrained_points = self.constrain_points(hp, data_points)
+            yield indices.multi_index, hp, constrained_points
+
+
 
 class PointConstraint(Constraint):
     """Superclass of constraints acting on sample points.
@@ -89,14 +121,46 @@ class CellConstraint(Constraint):
     coordinate values are of type iris.coords.Cell.
     """
     __metaclass__ = ABCMeta
-    pass
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+        from jasmin_cis.col_implementations import HyperPoint
+        if missing_data_for_missing_sample:
+            iterator = index_iterator_for_non_masked_data(shape, points)
+        else:
+            iterator = index_iterator_nditer(shape, values[0])
+
+        for indices in iterator:
+            hp_values = [None] * HyperPoint.number_standard_names
+            hp_cell_values = [None] * HyperPoint.number_standard_names
+            for (hpi, ci, shi) in coord_map:
+                hp_values[hpi] = coords[ci].points[indices[shi]]
+                hp_cell_values[hpi] = coords[ci].cell(indices[shi])
+
+            hp = HyperPoint(*hp_values)
+            constrained_points = self.constrain_points(HyperPoint(*hp_cell_values), data_points)
+            yield indices, hp, constrained_points
+
 
 
 class IndexedConstraint(Constraint):
     """Superclass of constraints that expect points to be referenced by index.
     """
     __metaclass__ = ABCMeta
-    pass
+
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+        from jasmin_cis.col_implementations import HyperPoint
+        if missing_data_for_missing_sample:
+            iterator = index_iterator_for_non_masked_data(shape, points)
+        else:
+            iterator = index_iterator_nditer(shape, values[0])
+
+        for indices in iterator:
+            hp_values = [None] * HyperPoint.number_standard_names
+            for (hpi, ci, shi) in coord_map:
+                hp_values[hpi] = coords[ci].points[indices[shi]]
+
+            hp = HyperPoint(*hp_values)
+            constrained_points = self.constrain_points(indices, data_points)
+            yield indices, hp, constrained_points
 
 
 def __get_class(parent_class, name=None):

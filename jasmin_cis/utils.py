@@ -526,7 +526,7 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     return array1, array2
 
 
-def index_iterator(shape, points):
+def index_iterator_nditer(shape, points):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
 
     The last index changes most rapidly.
@@ -542,8 +542,6 @@ def index_iterator(shape, points):
     while not it.finished:
         yield it.multi_index
 
-        it.iternext()
-
         # Log progress periodically.
         if cell_count == 10000:
             cell_total += 1
@@ -552,6 +550,30 @@ def index_iterator(shape, points):
                              int(number_cells_processed * 100 / num_cells))
             cell_count = 0
         cell_count += 1
+
+        it.iternext()
+
+def index_iterator(shape):
+    """Iterates over the indexes of a multi-dimensional array of a specified shape.
+
+    The last index changes most rapidly.
+    :param shape: sequence of array dimensions
+    :return: yields tuples of array indexes
+    """
+    dim = len(shape)
+    idx = [0] * dim
+    num_iterations = 1
+    for j in range(0, dim):
+        num_iterations *= shape[j]
+
+    for iterations in range(num_iterations):
+        yield tuple(idx)
+        for j in range(dim - 1, -1, -1):
+            idx[j] += 1
+            if idx[j] < shape[j]:
+                break
+            idx[j] = 0
+
 
 def index_iterator_for_non_masked_data(shape, points):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.

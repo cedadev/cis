@@ -366,6 +366,56 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
 
     return cube
 
+def make_square_NxM_2d_cube_with_time(offset=0, time_offset=0, n=5, m=3):
+    '''
+        Makes a well defined cube of shape 5x3 with data as follows
+        arr([[[   1.    2.    3.    4.    5.    6.    7.]
+              [   8.    9.   10.   11.   12.   13.   14.]
+              [  15.   16.   17.   18.   19.   20.   21.]]
+
+             [[  22.   23.   24.   25.   26.   27.   28.]
+              [  29.   30.   31.   32.   33.   34.   35.]
+              [  36.   37.   38.   39.   40.   41.   42.]]
+
+             [[  43.   44.   45.   46.   47.   48.   49.]
+              [  50.   51.   52.   53.   54.   55.   56.]
+              [  57.   58.   59.   60.   61.   62.   63.]]
+
+             [[  64.   65.   66.   67.   68.   69.   70.]
+              [  71.   72.   73.   74.   75.   76.   77.]
+              [  78.   79.   80.   81.   82.   83.   84.]]
+
+             [[  85.   86.   87.   88.   89.   90.   91.]
+              [  92.   93.   94.   95.   96.   97.   98.]
+              [  99.  100.  101.  102.  103.  104.  105.]]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+        time:
+            array([1984-08-27, 1984-08-28, 1984-08-29, 1984-08-30, 1984-08-31, 1984-09-01, 1984-09-02])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+    import datetime
+    from jasmin_cis.time_util import convert_obj_to_standard_date_array
+
+    t0 = datetime.datetime(1984,8,27)
+    times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(7)])
+
+    time_nums = convert_obj_to_standard_date_array(times)
+
+    time = DimCoord(time_nums, standard_name='time')
+    latitude = DimCoord(np.linspace(-10+offset, 11+offset, n), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.linspace(-5+offset, 6+offset, m), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(n*m*7)+1.0,(n,m,7))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
+
+    return cube
 
 def make_square_5x3_2d_cube_with_altitude(offset=0, altitude_offset=0):
     """

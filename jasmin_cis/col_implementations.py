@@ -907,25 +907,12 @@ class GeneralGriddedColocator(Colocator):
 
         logging.info("--> Co-locating...")
 
-
-        if isinstance(constraint, IndexedConstraint):
-            _get_constrained_points = self._get_constrained_points_for_indexed_constraint
-        elif isinstance(constraint, CellConstraint):
-            _get_constrained_points = self._get_constrained_points_for_cell_constraint
-        else:
-            _get_constrained_points = self._get_constrained_points_for_hyperpoint_constraint
-
-        if self.missing_data_for_missing_sample:
-            iterator = jasmin_cis.utils.index_iterator_for_non_masked_data(shape, points)
-        else:
-            iterator = jasmin_cis.utils.index_iterator(shape, values[0])
-
-        # Iterate over cells in cube.
-        for indices in iterator:
-            hp, con_points = _get_constrained_points(coord_map, coords, indices, constraint, data_points)
+        # Iterate over constrained cells
+        iterator = constraint.get_iterator(self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
+        for outindicies, hp, con_points in iterator:
             try:
                 kernel_val = kernel.get_value(hp, con_points)
-                set_value_kernel(kernel_val, values, indices)
+                set_value_kernel(kernel_val, values, outindicies)
             except ValueError:
                 # ValueErrors are raised by Kernel when there are no points to operate on.
                 # We don't need to do anything.
@@ -960,36 +947,6 @@ class GeneralGriddedColocator(Colocator):
 
     def _set_single_value_kernel(self, kernel_val, values, indices):
         values[0][indices] = kernel_val
-
-
-    def _get_constrained_points_for_indexed_constraint(self, coord_map, coords, indices, constraint, data_points):
-        hp_values = [None] * HyperPoint.number_standard_names
-        for (hpi, ci, shi) in coord_map:
-            hp_values[hpi] = coords[ci].points[indices[shi]]
-
-        hp = HyperPoint(*hp_values)
-        return hp, constraint.constrain_points(indices, data_points)
-
-    def _get_constrained_points_for_cell_constraint(self, coord_map, coords, indices, constraint, data_points):
-        hp_values = [None] * HyperPoint.number_standard_names
-        hp_cell_values = [None] * HyperPoint.number_standard_names
-        for (hpi, ci, shi) in coord_map:
-            hp_values[hpi] = coords[ci].points[indices[shi]]
-            hp_cell_values[hpi] = coords[ci].cell(indices[shi])
-
-        hp = HyperPoint(*hp_values)
-        return hp, constraint.constrain_points(HyperPoint(*hp_cell_values), data_points)
-
-    def _get_constrained_points_for_hyperpoint_constraint(self, coord_map, coords, indices, constraint, data_points):
-        hp_values = [None] * HyperPoint.number_standard_names
-        for (hpi, ci, shi) in coord_map:
-            hp_values[hpi] = coords[ci].points[indices[shi]]
-
-        hp = HyperPoint(*hp_values)
-        return hp, constraint.constrain_points(hp, data_points)
-
-
-
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.
@@ -1065,6 +1022,47 @@ class BinningCubeCellConstraint(IndexedConstraint):
                 con_points.append(data[point])
         return con_points
 
+
+class BinnedCubeCellOnlyConstraint(IndexedConstraint):
+    """Constraint for constraining HyperPoints to be within an iris.coords.Cell. With an iterator which only
+    travels over those cells with a value in
+
+    Uses the index_data method to bin all the points
+    """
+    def __init__(self):
+        super(BinnedCubeCellOnlyConstraint, self).__init__()
+        self.grid_cell_bin_index_slices = None
+
+    def constrain_points(self, sample_point, data):
+        pass
+
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+
+        for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+            #iterate through the points which are within the same cell
+
+            con_points = HyperPointList()
+            slice_indicies = slice(*slice_start_end)
+
+            for x in self.grid_cell_bin_index_slices.sort_order[slice_indicies]:
+                con_points.append(data_points[x])
+
+            hp_values = [None] * HyperPoint.number_standard_names
+            for (hpi, ci, shi) in coord_map:
+                hp_values[hpi] = coords[ci].points[out_indices[shi]]
+            hp = HyperPoint(*hp_values)
+
+            yield out_indices, hp, con_points
+
+    def get_fast_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+        data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
+        for slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+            #iterate through the points which are within the same cell
+
+            data_slice = data_points_sorted[slice(*slice_start_end)]
+            out_indices = tuple(self.grid_cell_bin_index_slices.indices[:, slice_start_end[0]])
+
+            yield out_indices, data_slice
 
 def make_coord_map(points, data):
     # If there are coordinates in the sample grid that are not present for the data,
