@@ -128,27 +128,49 @@ class Subset(object):
 
     @staticmethod
     def _fix_longitude_limits(limit_start, limit_end, coord_min, coord_max):
+        """
+        Move the requested longitude subset limits to match the range of the coordinates in the data. E.g. if the
+        requested limits are 'x=[-90, 90]' and the data coordinates actually go from 0 -> 360 rather than -180 -> 180
+        then those limits should be moved to '90, 270 (and wrapped)'
+        :param limit_start: Start limit requested
+        :param limit_end: End limit requested
+        :param coord_min: Coordinate min
+        :param coord_max: Coordinate max
+        :return: tuple of new_limit_start, new_limit_end, wrapped (boolean indicating if the coordinates 'wrap around')
+        """
         new_limit_start = limit_start
         new_limit_end = limit_end
-        limit_min = 0.0
-        do_fix = False
-        # Only attempt to modify limits if outside of range of coordinate values.
-        if not ((coord_min <= limit_start <= coord_max) and (coord_min <= limit_end <= coord_max)):
-            # Determine if -180,180 or 0,360 range is compatible - if neither: do not attempt to fix.
-            if (-180.0 <= coord_min < 0.0) and (coord_max <= 180.0):
-                do_fix = True
-                limit_min = -180.0
-            elif (0.0 <= coord_min) and (coord_max <= 360.0):
-                do_fix = True
-                limit_min = 0.0
-        if do_fix:
-            new_limit_start = Subset._fix_angular_limit(limit_start, limit_min)
-            new_limit_end = Subset._fix_angular_limit(limit_end, limit_min)
-            logging.info("Angular limits: original: %s  after fix: %s",
-                         (limit_start, limit_end), (new_limit_start, new_limit_end))
+        data_below_zero = coord_min < 0
+        data_above_180 = coord_max > 180
+        limits_below_zero = limit_start < 0 or limit_end < 0
+        limits_above_180 = limit_start > 180 or limit_end > 180
 
-        wrapped = new_limit_start > new_limit_end
+        if data_below_zero and not data_above_180:
+            # i.e. data is in the range -180 -> 180
+            # Only convert the limits if they are above 180:
+            if limits_above_180 and not limits_below_zero:
+                # Convert limits from 0-360 to -180 to 180
+                range_start = -180
+                new_limit_start = Subset._fix_angular_limit(limit_start, range_start)
+                new_limit_end = Subset._fix_angular_limit(limit_end, range_start)
+        elif data_above_180 and not data_below_zero:
+            # i.e. data is in the range 0 -> 360
+            if limits_below_zero and not limits_above_180:
+                # Convert limits from -180 to 180 to 0-360
+                range_start = 0
+                new_limit_start = Subset._fix_angular_limit(limit_start, range_start)
+                new_limit_end = Subset._fix_angular_limit(limit_end, range_start)
+        # Either data is all within the bounds 0-180 OR it's both below zero AND above 360
+        # Never need to convert the limits in this case
+        wrapped = new_limit_start > new_limit_end or (new_limit_start == new_limit_end and not limit_start == limit_end)
 
+        # Output to the log if the limits were changed:
+        if (new_limit_start, new_limit_end) == (limit_start, limit_end):
+            log_text = "Angular limits: original: %s  after fix: %s" % ((limit_start, limit_end),
+                                                                        (new_limit_start, new_limit_end))
+            if wrapped:
+                log_text += ' (limits wrapped)'
+            logging.info(log_text)
         return new_limit_start, new_limit_end, wrapped
 
     @staticmethod
