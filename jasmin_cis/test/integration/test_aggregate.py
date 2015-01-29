@@ -1,8 +1,9 @@
 from netCDF4 import Dataset
 import datetime as dt
-
 from hamcrest import assert_that
 import numpy as np
+
+import unittest
 
 from jasmin_cis.cis import aggregate_cmd
 from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
@@ -263,6 +264,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='Latitude', lon_name='Longitude')
 
+    @unittest.skip("Very resource intensive")
     def test_aggregate_Caliop_L1(self):
         variable = '*'  # This takes over 4 hrs (but does work)
         variable = 'Perpendicular_Attenuated_Backscatter_532'
@@ -448,6 +450,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @unittest.skip("Very resource intensive")
     def test_aggregate_Caliop_L1(self):
         # This takes a long time to run (we've never seen it complete, even on sci-1).
         variable = 'Perpendicular_Attenuated_Backscatter_532'
