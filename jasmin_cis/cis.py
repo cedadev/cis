@@ -232,6 +232,15 @@ def stats_cmd(main_arguments):
         print(result.pprint())
     if main_arguments.output:
         cubes = GriddedDataList([result.as_cube() for result in results])
+        variables = []
+        filenames = []
+        for datagroup in main_arguments.datagroups:
+            variables.extend(datagroup['variables'])
+            filenames.extend(datagroup['filenames'])
+        history = "Statistical comparison performed using CIS version " + __version__ + \
+                  "\n variables: " + str(variables) + \
+                  "\n from files: " + str(set(filenames))
+        cubes.add_history(history)
         cubes.save_data(main_arguments.output)
 
 
