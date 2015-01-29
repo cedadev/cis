@@ -1,63 +1,118 @@
 .. _aggregation:
+.. |nbsp| unicode:: 0xA0
 
 ***********
 Aggregation
 ***********
 
-The Community Intercomparison Suite (CIS) has the ability to aggregate along one or more coordinates, for both gridded and ungridded data. This page describes how to perform aggregation and the options available.
+The Community Intercomparison Suite (CIS) has the ability to aggregate both gridded and ungridded data along one or
+more coordinates. For example, you might aggregate a dataset over the longitude coordinate to produce an averaged
+measurement of variation over latitude.
 
-To perform aggregation, run a command of the format::
+CIS supports 'complete collapse' of a coordinate - where all values in that dimension are aggregated so that the
+coordinate no longer exists - and 'partial collapse' - where a coordinate is aggregated into bins of fixed size,
+so that the coordinate still exists but is on a coarser grid. Partial collapse is currently only supported for ungridded
+data. The output of an aggregation is always a CF compliant gridded NetCDF file.
 
-  $ cis aggregate variable:filenames[:options] grid -o outputfile
+The aggregation command has the following syntax::
+
+  $ cis aggregate <datagroup>[:options] <grid> [-o <outputfile>]
 
 where:
 
-``variable``
-  A non-optional argument used to specify the name of the variable to aggregate. This may be a comma separated list of
-  variables to aggregate, in which case the output file will contain all of these variables. Like files, you may use
-  glob style wildcards, so \*, ? and [] can all be used. Multiple variables must all be on the same grid and use the
-  same coordinates.
+``<datagroup>``
+  is of the format ``<variable>[,<variable2>]...:<filename>``. One or more
+  datagroups should be given.
 
+  * ``<variable>`` is a mandatory argument used to specify the name of the variable in the file to use. You may
+    specify more than one variable to load, in which case you should separate them with commas.
 
-``filenames`` 
-  A non-optional argument used to specify the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
+  * ``<filename>`` is a mandatory argument specifying the file to read the variable or variables from. You may specify
+    multiple filenames separated using commas; each filename should be one of:
 
-    #. A single filename - this should be the full path to the file
-    #. A single directory - all files in this directory will be read
-    #. A wildcarded filename - A filename with any wildcards compatible with the python module glob, so that \*, ? and [] can all be used. E.g. /path/to/my/test*file_![0-9]. 
+      * A single filename - this should be the full path to the file
 
-  Note that when using option 2, the filenames in the directory will be automatically sorted into alphabetical order. When using option 3, the filenames matching the wildcard will also be sorted into alphabetical order. The order of the comma separated list will however remain as the user specified, e.g. ``filename1,filename2,wildc*rd,/my/dir/,filename3``, would read ``filename1``, then ``filename2``, then all the files that match ``"wildc*rd"`` (in alphabetical order), then all the files in the directory ``"/my/dir/"`` (in alphabetical order) and then finally ``filename3``.
+      * A single directory - all files in this directory will be read
 
-``options``
-  Optional arguments given as keyword=value in a comma separated list. Options are:
+      * A wildcarded filename - A filename with any wildcards compatible with the python module glob, so that
+        \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
 
-  * ``kernel`` - either ``mean``, ``max``, ``min`` or ``stddev`` depending on the type of aggregation required. If not specified the default is ``mean``.
-  * ``product`` - the data product to use for the plot (see :ref:`data-products-reading`).
+    Note that when multiple files are specified (whether through use of commas, pointing at a directory, or wildcarding),
+    then all those files must contain all of the variables in that datagroup and the files should be 'compatible' - it
+    should be possible to combine them together using a shared dimension (in a NetCDF file this is usually the unlimited
+    dimension). So selecting multiple monthly files for a model run would be OK, but selecting files from two different
+    datatypes would not be OK.
 
-``grid``
-  The coordinates to aggregate are specified, along with a start, end and step size if not completely collapsing a dimension, in a comma separated list. The start, end and step size take the form ``coordinate=[start,end,step]``. For example, to completely collapse time and to aggregate latitude on a grid from -45 degrees to 45 degrees, using a step size of 10 degrees:
+``<options>``
+  Optional arguments given as ``keyword=value`` in a comma separated list. Options are:
+
+  * ``kernel=<kernel>`` - the method by which the value in each aggregation cell is determined. ``<kernel>`` should be
+    one of:
+
+    * ``mean`` - use the mean value of all the data points in that aggregation cell. This mean is weighted to take into
+      account differing cell areas due to the projection of lat/lon lines on the Earth.
+    * ``min`` - use the lowest valid value of all the data points in that aggregate cell.
+    * ``max`` - use the highest valid value of all the data points in that aggregate cell.
+    * ``moments`` - In addition to returning the weighted mean value of each cell, this kernel also outputs the number
+      of points used to calculate that mean and the standard deviation of those values, each as a separate variable
+      in the output file.
+
+    If not specified the default is ``moments``.
+
+  * ``product=<productname>`` is an optional argument used to specify the type of files being read. If omitted, CIS
+    will attempt to figure out which product to use based on the filename. See :ref:`data-products-reading` to see a
+    list of available product names and their file signatures.
+
+``<grid>``
+  This mandatory argument specifies the coordinates to aggregate over and whether they should be completely collapsed
+  or aggregated into bins. Multiple coordinates can be aggregated over, in which case they should be separated by commas.
+  Coordinates may be identified using their variable names (e.g. ``latitude``) or by choosing from ``x``, ``y``, ``t``,
+  ``z``, ``p`` which refer to longitude, latitude, time, altitude and pressure respectively.
+
+  * *Complete collapse* - To perform a complete collapse of a coordinate, simply provide the name of the coordinate(s)
+    as a comma separated list - e.g. ``x,y`` will aggregate data completely over both latitude and longitude.
+  * *Partial collapse* - To aggregate a coordinate into bins, specify the start, end and step size of those bins in the
+    form ``coordinate=[start,end,step]``. The step may be missed out, in which case the bin will span the whole range
+    given. Partial collapse is currently only supported for ungridded data.
+
+  Complete and partial collapses may be mixed where applicable - for example, to completely collapse time and to
+  aggregate latitude on a grid from -45 degrees to 45 degrees, using a step size of 10 degrees:
 
   * ``t,y=[-45,45,10]``
 
-  .. note:: For ungridded data, if a coordinate is left unspecified it is collapsed completely. This is in contrast to gridded data where a coordinate left unspecified is not used in the aggregation at all. Ungridded data will also be collapsed if only the coordinate is specified (and no range), just as is the case for gridded data.
+  .. note::
+      For ungridded data, if a coordinate is left unspecified it is collapsed completely. This is in contrast to
+      gridded data where a coordinate left unspecified is not used in the aggregation at all.
 
-  Date/times are specified in the format: ``YYYY-MM-DDThh:mm:ss`` in which ``YYYY-MM-DD`` is a date and ``hh:mm:ss`` is a time. A colon or space can be used instead of the 'T' separator (but if a space is used, the argument must be quoted). Any trailing components of the date/time may be omitted. When a date/time is used as a range start, the earliest date/time compatible with the supplied components is used (e.g., ``2010-04`` is treated as ``2010-04-01T00:00:00``) and when used as a range end, the latest compatible date/time is used. Including optional and alternative components, the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``.
+  .. note:: The range specified is the very start and end of the grid, the actual midpoints of the aggregation cells will start at ``start + delta/2``.
 
-  Date/time steps are specified in the ISO 8061 format ``PnYnMnDTnHnMnS``, where any particular time period is optional, for example ``P1MT30M`` would specify a time interval of 1 month and 30 minutes. Years and months are treated as calendar years and months, meaning they are not necessarily fixed in length. For example a date interval of 1 year and 1 month would mean going from 12:00 15th April 2013 to 12:00 15th May 2013. The are two exceptions to this, in rare cases such as starting at 30th January and going forward 1 month, the month is instead treated as a period of 28 days. Also, for the purposes of finding midpoints for the start in a month the month is always treated as 30 days. For example, to start on the 3rd November 2011 at 12:00 and aggregate over each month up to 3rd January 2013 at 12:00:
+  **Date/times:**
+
+  Date/times are specified in the format: ``YYYY-MM-DDThh:mm:ss`` in which ``YYYY-MM-DD`` is a date and ``hh:mm:ss`` is
+  a time. A colon or space can be used instead of the 'T' separator (but if a space is used, the argument must be quoted).
+  Any trailing components of the date/time may be omitted. When a date/time is used as a range start, the earliest
+  date/time compatible with the supplied components is used (e.g., ``2010-04`` is treated as ``2010-04-01T00:00:00``)
+  and when used as a range end, the latest compatible date/time is used. Including optional and alternative components,
+  the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``.
+
+  Date/time steps are specified in the ISO 8061 format ``PnYnMnDTnHnMnS``, where any particular time period is optional,
+  for example ``P1MT30M`` would specify a time interval of 1 month and 30 minutes. Years and months are treated as
+  calendar years and months, meaning they are not necessarily fixed in length. For example a date interval of 1 year and
+  1 month would mean going from 12:00 15th April 2013 to 12:00 15th May 2013. The are two exceptions to this, in rare
+  cases such as starting at 30th January and going forward 1 month, the month is instead treated as a period of 28 days.
+  Also, for the purposes of finding midpoints for the start in a month the month is always treated as 30 days. For
+  example, to start on the 3rd November 2011 at 12:00 and aggregate over each month up to 3rd January 2013 at 12:00:
 
   * ``t=[2011-11-03T12:00,2013-01,P1M]``
 
-  .. note:: The range specified is the very start and end of the grid, the actual midpoints of the aggregation cells will start at ``start + delta/2``.  CIS will throw a warning and automatically reduce the range if the grid requested goes outside the range of the gridded data. The start and end of the gridded data are considered to be from the start of the bounding box of the first cell to the end of the bounding box for the last cell.
 
-  .. warning:: When aggregating gridded data weighting for cell areas is only applied when using the ``mean`` kernel and collapsing a coordinate completely. In all other situations no weighting is applied.
-
-
-``outputfile``
-  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` extension and prepended with ``cis-``, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
+``<outputfile>``
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` if not
+  present. This must not be the same file path as any of the input files. If not supplied, the default filename is``out.nc``.
 
 A full example would be::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:product=NetCDF_Gridded,kernel=mean t,y=[-90,90,20],x -o rsutcs-mean
+  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_*.nc:product=NetCDF_Gridded,kernel=mean t,y=[-90,90,20],x -o rsutcs-mean
 
 Aggregation Examples
 ====================
@@ -163,67 +218,16 @@ Aggregating with the minimum kernel::
 Gridded aggregation
 -------------------
 
-Aggregating onto a coarser grid::
+Aggregating 3D model data over time and longitude to produce an averaged measure of variation with latitude::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,y=[-90,90,20],x=[-0.9375,359.0625,20]
-  $ cis plot rsutcs:out.nc:itemstyle=s --type scatter --itemwidth 400 --ymin -90 --ymax 90
+  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,x
+  $ cis plot rsutcs:/home/users/matken/agg-out.nc --xaxis latitude --yaxis rsutcs
 
-.. figure:: img/aggregation/lat-lon-coarser.png
+.. figure:: img/aggregation/gridded_collapse.png
    :width: 400px
    :align: center
 
-Aggregating a subset of latitude, ignoring longitude::
-
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,y=[-45,45,15]
-  $ cis plot rsutcs:out.nc:itemstyle=s --ymin -45 --ymax 45 --type scatter --itemwidth 300
-
-.. figure:: img/aggregation/lat-subset.png
-   :width: 400px
-   :align: center
-
-Aggregating in time - years::
-
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t=[1859-11-27,1869-11-27,1y],y=[-90,90,20],x
-  $ cis plot rsutcs:out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 400 --ymin -90 --ymax 90
-
-.. figure:: img/aggregation/years.png
-   :width: 400px
-   :align: center
-
-Aggregating in time - months, days and hours::
-
-  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=mean t=[2003,2015,1m1d1H],x
-  $ cis plot tas:out.nc:itemstyle=s --xaxis time --yaxis latitude --type scatter --itemwidth 10 
-
-.. figure:: img/aggregation/months-days.png
-   :width: 400px
-   :align: center
-
-Maximum kernel::
-
-  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=max t
-  $ cis plot tas:out.nc:itemstyle=s
-
-.. figure:: img/aggregation/max.png
-   :width: 400px
-   :align: center
-
-Standard deviation kernel::
-
-  $ cis aggregate tas:tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc:kernel=stddev t
-  $ cis plot tas:out.nc:itemstyle=s
-
-.. figure:: img/aggregation/stddev.png
-   :width: 400px
-   :align: center
-
-File Locations
---------------
-
-The files used above can be found at::
+This file can be found in::
 
   /group_workspaces/jasmin/cis/gridded-test-data/cmip5.output1.MOHC.HadGEM2-ES.rcp45.day.atmos.day.r1i1p1.v20111128
-    tas_day_HadGEM2-ES_rcp45_r1i1p1_20051201-20151130.nc
-  /group_workspaces/jasmin/cis/data/CMIP5
-    rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc
 

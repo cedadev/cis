@@ -1,4 +1,5 @@
 from nose.tools import istest, eq_
+from jasmin_cis.data_io.products.caliop import Caliop_L2
 
 from jasmin_cis.data_io.products.AProduct import __get_class
 from jasmin_cis.test.test_files.data import *
@@ -7,7 +8,7 @@ from jasmin_cis.parse import parse_args
 
 @istest
 def can_overide_default_product():
-    from jasmin_cis.data_io.products.products import Caliop_L2, NetCDF_Gridded
+    from jasmin_cis.data_io.products.products import NetCDF_Gridded
     filename = valid_caliop_l2_filename
     eq_(__get_class(filename), Caliop_L2)
     eq_(__get_class(filename, "NetCDF_Gridded"), NetCDF_Gridded)

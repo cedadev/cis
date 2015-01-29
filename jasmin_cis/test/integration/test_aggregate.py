@@ -1,8 +1,9 @@
 from netCDF4 import Dataset
 import datetime as dt
-
 from hamcrest import assert_that
 import numpy as np
+
+import unittest
 
 from jasmin_cis.cis import aggregate_cmd
 from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
@@ -50,13 +51,13 @@ class BaseAggregationTest(BaseIntegrationTest):
 
     def do_spatial_aggregate(self, variable, filename, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta):
         grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_start, lon_end, lon_delta, lat_start, lat_end, lat_delta)
-        arguments = ['aggregate', variable + ':' + filename, grid, '-o', self.OUTPUT_NAME]
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
     def do_temporal_aggregate(self, variable, filename, t_start, t_end, str_delta):
         grid = 't=[%s,%s,%s]' % (t_start.isoformat(), t_end.isoformat(), str_delta)
-        arguments = ['aggregate', variable + ':' + filename, grid, '-o', self.OUTPUT_NAME]
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
@@ -178,13 +179,23 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lat_min, lat_max, lat_delta = 30, 50, 5
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='LATC', lon_name='LONC')
+                                    lat_name='latitude', lon_name='longitude')
 
     def test_aggregate_GASSP(self):
         variable = '*'
         filename = valid_GASSP_aeroplane_filename
         lon_min, lon_max, lon_delta = -94, 95, 0.1
         lat_min, lat_max, lat_delta = 30, 31, 0.1
+        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
+                                    lat_name='latitude', lon_name='longitude')
+
+    def test_aggregate_GASSP2(self):
+        # see issue JASCIS-144
+        variable = valid_GASSP_not_entirely_correct_variable
+        filename = valid_GASSP_not_entirely_correct_filename
+        lon_min, lon_max, lon_delta = -180, 180, 10
+        lat_min, lat_max, lat_delta = -90, 90, 10
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='latitude', lon_name='longitude')
@@ -200,13 +211,13 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
                                     lat_name='Latitude', lon_name='Longitude')
 
     def test_aggregate_netCDF_gridded_HadGem(self):
-        #Takes 1s
+        # Takes 1s
         variable = '*'
         filename = valid_hadgem_filename
-        lon_min, lon_max, lon_delta = 0, 120, 5
-        lat_min, lat_max, lat_delta = 40, 60, 2
-        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 'x,y', '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['od550aer'])
 
     def test_aggregate_cis_ungridded(self):
         # Takes 1s
@@ -253,6 +264,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='Latitude', lon_name='Longitude')
 
+    @unittest.skip("Very resource intensive")
     def test_aggregate_Caliop_L1(self):
         variable = '*'  # This takes over 4 hrs (but does work)
         variable = 'Perpendicular_Attenuated_Backscatter_532'
@@ -299,11 +311,10 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         # Takes 1s
         variable = '*'
         filename = valid_cis_gridded_output_filename
-        lon_min, lon_max, lon_delta = 1, 10, 1
-        lat_min, lat_max, lat_delta = 1, 40, 2
-        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 'x,y', '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['TAU_2D_550nm'])
 
 
 class TestTemporalAggregationByDataProduct(BaseAggregationTest):
@@ -339,7 +350,17 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
             dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+    def test_aggregate_GASSP(self):
+        variable = ",".join(valid_GASSP_aeroplane_vars)
+        filename = valid_GASSP_aeroplane_filename
+        time_min, time_max, time_delta = dt.datetime(2006, 9, 27, 20, 15), dt.datetime(2006, 9, 27, 22, 45),\
+            dt.timedelta(minutes=30)
+        str_delta = 'PT30M'
+        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Aeronet(self):
@@ -361,16 +382,14 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_netCDF_gridded_HadGem(self):
-        #Takes 1s
+        # Takes 1s
         # JASCIS-134
         # IndexError: index 1 is out of bounds for axis 0 with size 1
         variable = 'od550aer'
         filename = valid_hadgem_filename
-        time_min, time_max, time_delta = dt.datetime(2007, 6, 11, 0, 0, 0), dt.datetime(2007, 6, 27, 0, 0, 0),\
-            dt.timedelta(days=1)
-        str_delta = 'P1D'
-        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 't', '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_cis_ungridded(self):
@@ -396,7 +415,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_MODIS_L3(self):
-        # Takes 27s
+        # Takes 8s
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
                    'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
                    'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
@@ -405,11 +424,11 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
             dt.timedelta(seconds=20)
         str_delta = 'PT20S'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Scan_Start_Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_CloudSatPRECIP(self):
-        #Takes 28s
+        # Takes 28s
         # RuntimeError: NetCDF: String match to name in use
         variable = 'Profile_time,Latitude,Longitude,DEM_elevation,Data_quality'
         filename = valid_cloudsat_PRECIP_file
@@ -431,7 +450,9 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @unittest.skip("Very resource intensive")
     def test_aggregate_Caliop_L1(self):
+        # This takes a long time to run (we've never seen it complete, even on sci-1).
         variable = 'Perpendicular_Attenuated_Backscatter_532'
         filename = valid_caliop_l1_filename
         time_min, time_max, time_delta = dt.datetime(2009, 12, 31, 23, 40, 0), dt.datetime(2010, 1, 1, 0, 17, 17),\
@@ -463,3 +484,48 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+
+class TestMomentsKernel(BaseAggregationTest):
+
+    def test_GIVEN_no_kernel_specified_WHEN_aggregate_THEN_moments_used_as_default(self):
+        # Takes 1s
+        variable = 'AOD550'
+        filename = valid_cis_ungridded_output_filename
+        lon_min, lon_max, lon_delta = 1, 3, 0.3
+        lat_min, lat_max, lat_delta = 41, 42, 0.1
+        grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_min, lon_max, lon_delta, lat_min, lat_max, lat_delta)
+        arguments = ['aggregate', variable + ':' + filename, grid, '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
+                                    lat_name='latitude', lon_name='longitude')
+        expected_vars = ['AOD550', 'AOD550_std_dev', 'AOD550_num_points']
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, expected_vars)
+
+    def test_aggregate_netCDF_gridded_HadGem(self):
+        # Takes 1s
+        variable = 'od550aer'
+        filename = valid_hadgem_filename
+        grid = 'x,y'
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=moments', grid, '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+        expected_vars = ['od550aer', 'od550aer_std_dev', 'od550aer_num_points']
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, expected_vars)
+
+    def test_moments_kernel_aggregate_cis_ungridded(self):
+        # Takes 1s
+        variable = '*'
+        filename = valid_cis_ungridded_output_filename
+        lon_min, lon_max, lon_delta = 1, 3, 0.3
+        lat_min, lat_max, lat_delta = 41, 42, 0.1
+        grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_min, lon_max, lon_delta, lat_min, lat_max, lat_delta)
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=moments', grid, '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
+                                    lat_name='latitude', lon_name='longitude')
+        expected_vars = ['AOD870', 'AOD870_std_dev', 'AOD870_num_points',
+                         'AOD550', 'AOD550_std_dev', 'AOD550_num_points']
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, expected_vars)

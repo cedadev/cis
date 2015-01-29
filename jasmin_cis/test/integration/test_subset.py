@@ -166,6 +166,15 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_temporal_subsetting(time_min, time_max, False)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_subset_GASSP_not_entirely_valid(self):
+        # see issue JASCIS-145
+        filename = valid_GASSP_not_entirely_correct_filename
+        variable = valid_GASSP_not_entirely_correct_variable
+        time_min, time_max = '1993-10-27T00:00:00', '1993-11-27T00:00:00'
+        self.do_subset(filename, time_min, time_max, variable)
+        self.check_temporal_subsetting(time_min, time_max, False)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+
     def test_subset_Caliop_L1(self):
         # Takes 1470s
         variable = 'Perpendicular_Attenuated_Backscatter_532,Attenuated_Backscatter_1064,' \
@@ -178,12 +187,12 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
 
     def test_subset_Aeronet(self):
         # Takes 30s
-        variable = 'Dateddmmyy,Timehhmmss,Julian_Day,AOT_1640,AOT_1020,AOT_870,AOT_675,AOT_667,AOT_555,AOT_551,' \
-                   'AOT_532,AOT_531,AOT_500,AOT_490,AOT_443,AOT_440,AOT_412,AOT_380,AOT_340,Watercm,TripletVar_1640,' \
+        variable = 'Date(dd-mm-yy),Julian_Day,AOT_1640,AOT_1020,AOT_870,AOT_675,AOT_667,AOT_555,AOT_551,' \
+                   'AOT_532,AOT_531,AOT_500,AOT_490,AOT_443,AOT_440,AOT_412,AOT_380,AOT_340,Water(cm),TripletVar_1640,' \
                    'TripletVar_1020,TripletVar_870,TripletVar_675,TripletVar_667,TripletVar_555,TripletVar_551,' \
                    'TripletVar_532,TripletVar_531,TripletVar_500,TripletVar_490,TripletVar_443,TripletVar_440,' \
-                   'TripletVar_412,TripletVar_380,TripletVar_340,WaterError,440870Angstrom,380500Angstrom,' \
-                   '440675Angstrom,500870Angstrom,340440Angstrom,440675AngstromPolar,Last_Processing_Date,' \
+                   'TripletVar_412,TripletVar_380,TripletVar_340,WaterError,440-870Angstrom,380-500Angstrom,' \
+                   '440-675Angstrom,500-870Angstrom,340-440Angstrom,440-675Angstrom(Polar),Last_Processing_Date,' \
                    'Solar_Zenith_Angle'
         filename = valid_aeronet_filename
         time_min, time_max = '2003-09-24T07:00:00', '2003-11-04T07:00:00'
@@ -329,7 +338,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_Aeronet(self):
-        # Takes 30s
+        # Takes 60s
         variable = '*'
         filename = valid_aeronet_filename
         lon_min, lon_max = -1.5, 1.4

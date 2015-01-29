@@ -17,130 +17,168 @@ def initialise_top_parser():
     '''
     parser = argparse.ArgumentParser("cis")
     subparsers = parser.add_subparsers(dest='command')
-    plot_parser = subparsers.add_parser("plot", help = "Create plots")
+    plot_parser = subparsers.add_parser("plot", help="Create plots")
     add_plot_parser_arguments(plot_parser)
-    info_parser = subparsers.add_parser("info", help = "Get information about a file")
+    info_parser = subparsers.add_parser("info", help="Get information about a file")
     add_info_parser_arguments(info_parser)
-    col_parser = subparsers.add_parser("col", help = "Perform colocation")
+    col_parser = subparsers.add_parser("col", help="Perform colocation")
     add_col_parser_arguments(col_parser)
-    aggregate_parser = subparsers.add_parser("aggregate", help = "Perform aggregation")
+    aggregate_parser = subparsers.add_parser("aggregate", help="Perform aggregation")
     add_aggregate_parser_arguments(aggregate_parser)
-    subset_parser = subparsers.add_parser("subset", help = "Perform subsetting")
+    subset_parser = subparsers.add_parser("subset", help="Perform subsetting")
     add_subset_parser_arguments(subset_parser)
-    subparsers.add_parser("version", help = "Display the CIS version number")
+    eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression")
+    add_eval_parser_arguments(eval_parser)
+    stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets")
+    add_stats_parser_arguments(stats_parser)
+    subparsers.add_parser("version", help="Display the CIS version number")
     return parser
 
 
 def add_plot_parser_arguments(parser):
-
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
 
     product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products', verbose=False)
 
-    parser.add_argument("datagroups", metavar = "Input datagroups", nargs = "+",
-                        help = "The datagroups to be plotted, in the format 'variable:filenames[:options]', where "
-                               "options are entered in a comma separated list of the form \'keyword=value\'. Available "
-                               "options are color, edgecolor, itemstylem, label and product. Colour is any valid html "
-                               "colour and product is one of the options listed below. For example 'cis plot "
-                               "var1:file:product=NetCDF_CF_Gridded,colour=red'. Products: " +
-                               str([cls().__class__.__name__ for cls in product_classes]))
-    parser.add_argument("-o", "--output", metavar = "Output filename", nargs = "?", help = "The filename of the output file for the plot image")
-    parser.add_argument("--type", metavar = "Chart type", nargs = "?", help = "The chart type, one of: " + str(Plotter.plot_types.keys()))
+    parser.add_argument("datagroups", metavar="Input datagroups", nargs="+",
+                        help="The datagroups to be plotted, in the format 'variable:filenames[:options]', where "
+                             "options are entered in a comma separated list of the form \'keyword=value\'. Available "
+                             "options are color, edgecolor, itemstylem, label and product. Colour is any valid html "
+                             "colour and product is one of the options listed below. For example 'cis plot "
+                             "var1:file:product=NetCDF_CF_Gridded,colour=red'. Products: " +
+                             str([cls().__class__.__name__ for cls in product_classes]))
+    parser.add_argument("-o", "--output", metavar="Output filename", nargs="?",
+                        help="The filename of the output file for the plot image")
+    parser.add_argument("--type", metavar="Chart type", nargs="?",
+                        help="The chart type, one of: " + str(Plotter.plot_types.keys()))
 
-    parser.add_argument("--xlabel", metavar = "X axis label", nargs = "?", help = "The label for the x axis")
-    parser.add_argument("--ylabel", metavar = "Y axis label", nargs = "?", help = "The label for the y axis")
-    parser.add_argument("--cbarlabel", metavar = "Colour bar label", nargs = "?", help = "The label for the colour bar")
+    parser.add_argument("--xlabel", metavar="X axis label", nargs="?", help="The label for the x axis")
+    parser.add_argument("--ylabel", metavar="Y axis label", nargs="?", help="The label for the y axis")
+    parser.add_argument("--cbarlabel", metavar="Colour bar label", nargs="?", help="The label for the colour bar")
 
-    parser.add_argument("--xtickangle", metavar = "X tick angle", nargs = "?", help = "The angle (in degrees) of the ticks on the x axis")
-    parser.add_argument("--ytickangle", metavar = "Y tick angle", nargs = "?", help = "The angle (in degrees) of the ticks on the y axis")
+    parser.add_argument("--xtickangle", metavar="X tick angle", nargs="?",
+                        help="The angle (in degrees) of the ticks on the x axis")
+    parser.add_argument("--ytickangle", metavar="Y tick angle", nargs="?",
+                        help="The angle (in degrees) of the ticks on the y axis")
 
-    parser.add_argument("--title", metavar = "Chart title", nargs = "?", help = "The title for the chart")
-    parser.add_argument("--itemwidth", metavar = "Item width", nargs = "?", help = "The width of an item. Unit are points in the case of a line, and point^2 in the case of a scatter point.")
-    parser.add_argument("--fontsize", metavar = "Font size", nargs = "?", help = "The size of the font in points")
-    parser.add_argument("--cmap", metavar = "Colour map", nargs = "?", help = "The colour map used, e.g. RdBu")
-    parser.add_argument("--height", metavar = "Plot height", nargs = "?", help = "The height of the plot in inches")
-    parser.add_argument("--width", metavar = "Plot width", nargs = "?", help = "The width of the plot in inches")
+    parser.add_argument("--title", metavar="Chart title", nargs="?", help="The title for the chart")
+    parser.add_argument("--itemwidth", metavar="Item width", nargs="?", help="The width of an item. Unit are points in "
+                        "the case of a line, and point^2 in the case of a scatter point.")
+    parser.add_argument("--fontsize", metavar="Font size", nargs="?", help="The size of the font in points")
+    parser.add_argument("--cmap", metavar="Colour map", nargs="?", help="The colour map used, e.g. RdBu")
+    parser.add_argument("--height", metavar="Plot height", nargs="?", help="The height of the plot in inches")
+    parser.add_argument("--width", metavar="Plot width", nargs="?", help="The width of the plot in inches")
 
-    parser.add_argument("--xmin", metavar = "Minimum x", nargs = "?", help = "The minimum x value to plot")
-    parser.add_argument("--xmax", metavar = "Maximum x", nargs = "?", help = "The maximum x value to plot")
-    parser.add_argument("--xstep", metavar = "X step", nargs = "?", help = "The step of the x axis")
+    parser.add_argument("--xmin", metavar="Minimum x", nargs="?", help="The minimum x value to plot")
+    parser.add_argument("--xmax", metavar="Maximum x", nargs="?", help="The maximum x value to plot")
+    parser.add_argument("--xstep", metavar="X step", nargs="?", help="The step of the x axis")
 
-    parser.add_argument("--ymin", metavar = "Minimum y", nargs = "?", help = "The minimum y value to plot")
-    parser.add_argument("--ymax", metavar = "Maximum y", nargs = "?", help = "The maximum y value to plot")
-    parser.add_argument("--ystep", metavar = "Y step", nargs = "?", help = "The step of the y axis")
+    parser.add_argument("--ymin", metavar="Minimum y", nargs="?", help="The minimum y value to plot")
+    parser.add_argument("--ymax", metavar="Maximum y", nargs="?", help="The maximum y value to plot")
+    parser.add_argument("--ystep", metavar="Y step", nargs="?", help="The step of the y axis")
 
-    parser.add_argument("--vmin", metavar = "Minimum value", nargs = "?", help = "The minimum value to plot")
-    parser.add_argument("--vmax", metavar = "Maximum value", nargs = "?", help = "The maximum value to plot")
-    parser.add_argument("--vstep", metavar = "X value", nargs = "?", help = "The step of the colour bar")
+    parser.add_argument("--vmin", metavar="Minimum value", nargs="?", help="The minimum value to plot")
+    parser.add_argument("--vmax", metavar="Maximum value", nargs="?", help="The maximum value to plot")
+    parser.add_argument("--vstep", metavar="X value", nargs="?", help="The step of the colour bar")
 
-    parser.add_argument("--xbinwidth", metavar = "Histogram x axis bin width", nargs = "?", help = "The width of the bins on the x axis of a histogram")
-    parser.add_argument("--ybinwidth", metavar = "Histogram y axis bin width", nargs = "?", help = "The width of the bins on the y axis of a histogram")
+    parser.add_argument("--xbinwidth", metavar="Histogram x axis bin width", nargs="?",
+                        help="The width of the bins on the x axis of a histogram")
+    parser.add_argument("--ybinwidth", metavar="Histogram y axis bin width", nargs="?",
+                        help="The width of the bins on the y axis of a histogram")
 
-    parser.add_argument("--cbarorient", metavar = "Colour bar orientation", default = "vertical", nargs = "?", help = "The orientation of the colour bar, either horizontal or vertical")
-    parser.add_argument("--nocolourbar", metavar = "Hides the colour bar", default = "False", nargs = "?", help = "Does not show the colour bar")
+    parser.add_argument("--cbarorient", metavar="Colour bar orientation", default="vertical", nargs="?",
+                        help="The orientation of the colour bar, either horizontal or vertical")
+    parser.add_argument("--nocolourbar", metavar="Hides the colour bar", default="False", nargs="?",
+                        help="Does not show the colour bar")
 
-    parser.add_argument("--logx", metavar = "Log (base 10) scale on X axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the x axis")
-    parser.add_argument("--logy", metavar = "Log (base 10) scale on Y axis", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the y axis")
-    parser.add_argument("--logv", metavar = "Log (base 10) scale for values", default = "False", nargs = "?", help = "Uses a log scale (base 10) on the colour bar")
+    parser.add_argument("--logx", metavar="Log (base 10) scale on X axis", default="False", nargs="?",
+                        help="Uses a log scale (base 10) on the x axis")
+    parser.add_argument("--logy", metavar="Log (base 10) scale on Y axis", default="False", nargs="?",
+                        help="Uses a log scale (base 10) on the y axis")
+    parser.add_argument("--logv", metavar="Log (base 10) scale for values", default="False", nargs="?",
+                        help="Uses a log scale (base 10) on the colour bar")
 
-    parser.add_argument("--grid", metavar = "Show grid", default = "False", nargs = "?", help = "Shows grid lines on the plot")
-    parser.add_argument("--xaxis", metavar = "Variable on x axis", nargs="?", help="Name of variable to use on the x axis")
-    parser.add_argument("--yaxis", metavar = "Variable on y axis", nargs="?", help="Name of variable to use on the y axis")
+    parser.add_argument("--grid", metavar="Show grid", default="False", nargs="?", help="Shows grid lines on the plot")
+    parser.add_argument("--xaxis", metavar="Variable on x axis", nargs="?",
+                        help="Name of variable to use on the x axis")
+    parser.add_argument("--yaxis", metavar="Variable on y axis", nargs="?",
+                        help="Name of variable to use on the y axis")
 
-    parser.add_argument("--coastlinescolour", metavar = "Coastlines Colour", nargs = "?", help = "The colour of the coastlines on a map. Any valid html colour (e.g. red)")
-    parser.add_argument("--nasabluemarble", metavar = "NASA Blue Marble background", default=False, nargs = "?", help = "Add the NASA 'Blue Marble' image as the background to a map, instead of coastlines")
+    parser.add_argument("--coastlinescolour", metavar="Coastlines Colour", nargs="?",
+                        help="The colour of the coastlines on a map. Any valid html colour (e.g. red)")
+    parser.add_argument("--nasabluemarble", metavar="NASA Blue Marble background", default=False, nargs="?",
+                        help="Add the NASA 'Blue Marble' image as the background to a map, instead of coastlines")
 
-    parser.add_argument("--plotwidth", metavar = "Width of the plot in inches", default = 8, nargs="?", help="Set the width of the plot when outputting to file")
-    parser.add_argument("--plotheight", metavar = "Height of the plot in inches", default = 6, nargs="?", help="Set the height of the plot when outputting to file")
-    parser.add_argument("--cbarscale", metavar = "A scaling for the color bar", default = 1, nargs="?", help="Scale the color bar, use when color bar does not match plot size")
+    parser.add_argument("--plotwidth", metavar="Width of the plot in inches", default=8, nargs="?",
+                        help="Set the width of the plot when outputting to file")
+    parser.add_argument("--plotheight", metavar="Height of the plot in inches", default=6, nargs="?",
+                        help="Set the height of the plot when outputting to file")
+    parser.add_argument("--cbarscale", metavar="A scaling for the color bar", default=1, nargs="?",
+                        help="Scale the color bar, use when color bar does not match plot size")
     return parser
 
 
 def add_info_parser_arguments(parser):
-    parser.add_argument("filename", metavar = "Filename", help = "The filename of the file to inspect")
-    parser.add_argument("-v", "--variables", metavar = "Variable(s)", nargs = "+", help = "The variable(s) to inspect")
-    parser.add_argument("--type", metavar = "type of HDF data", nargs="?", help="Can be 'VD' or 'SD'. Use 'All' for both.")
+    parser.add_argument("filename", metavar="Filename", help="The filename of the file to inspect")
+    parser.add_argument("-v", "--variables", metavar="Variable(s)", nargs="+", help="The variable(s) to inspect")
+    parser.add_argument("--type", metavar="type of HDF data", nargs="?",
+                        help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
 
 
 def add_col_parser_arguments(parser):
-    parser.add_argument("datagroups", metavar = "DataGroups", nargs = "+", help = "Variables and files to colocate, "
-                        "which needs to be entered in the format variable:filename[:product=], with multiple files to "
+    parser.add_argument("datagroups", metavar="DataGroups", nargs="+", help="Variables and files to colocate, "
+                        "which needs to be entered in the format variables:filename[:product=], with multiple files to "
                         "colocate separated by spaces.")
-    parser.add_argument("samplegroup", metavar = "SampleGroup", help = "A filename with the points to colocate onto. "
+    parser.add_argument("samplegroup", metavar="SampleGroup", help="A filename with the points to colocate onto. "
                         "Additional parameters are variable, colocator, kernel and product, entered as "
                         "keyword=value. Colocator must always be specified. For example "
-                        "filename:variable=var1,colocator=box[h_sep=10km].")
-    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?", help="The "
-                        "filename of the output file containing the colocated data. The name specified will be "
-                        "suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and so that "
-                        "cis can recognise it when using the file for further operations.")
+                       "filename:variable=var1,colocator=box[h_sep=10km].")
+    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
+                        help="The filename of the output file containing the colocated data. The name specified will"
+                             " be suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and "
+                             "so that cis can recognise it when using the file for further operations.")
     return parser
 
 
 def add_aggregate_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
-                        help = "Variable to aggregate with filenames, and optional arguments seperated by colon(s). "
-                               "Optional arguments are product and kernel, which are entered as keyword=value in a "
-                               "comma separated list. Example: var:filename:product=MODIS_L3,kernel=mean")
+                        help="Variables to aggregate with filenames, and optional arguments seperated by colon(s). "
+                             "Optional arguments are product and kernel, which are entered as keyword=value in a "
+                             "comma separated list. Example: var:filename:product=MODIS_L3,kernel=mean")
     parser.add_argument("aggregategrid", metavar="AggregateGrid",
-                        help = "Grid for new aggregation, e.g. t,x=[-180,90,5] would collapse time completely and "
-                               "aggregate longitude onto a new grid, which would start at -180 and then proceed in 5 "
-                               "degree increments up to 90")
+                        help="Grid for new aggregation, e.g. t,x=[-180,90,5] would collapse time completely and "
+                             "aggregate longitude onto a new grid, which would start at -180 and then proceed in 5 "
+                             "degree increments up to 90")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
-                        help = "The filename of the output file")
+                        help="The filename of the output file")
     return parser
 
 
 def add_subset_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
-                        help = "Variable to subset with filenames and optional product separated by colon(s)")
+                        help="Variables to subset with filenames and optional product separated by colon(s)")
     parser.add_argument("subsetranges", metavar="SubsetRanges",
-                        help = "Dimension ranges to use for subsetting")
+                        help="Dimension ranges to use for subsetting")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
-                        help = "The filename of the output file")
+                        help="The filename of the output file")
     return parser
+
+
+def add_eval_parser_arguments(parser):
+    parser.add_argument("datagroups", metavar="DataGroup", nargs='+',
+                        help="Variables to evalute using with filenames and optional product separated by colon(s)")
+    parser.add_argument("expr", metavar="Calculation expression to evaluate")
+    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
+                        help="The filename of the output file")
+
+
+def add_stats_parser_arguments(parser):
+    parser.add_argument("datagroups", metavar="DataGroup", nargs='+',
+                        help="Variables to perform statistical comparison on and optional product separated by colon(s)")
+    parser.add_argument("-o", "--output", metavar="Output filename", nargs="?",
+                        help="The filename of the output file (if outputting to file")
 
 
 def expand_file_list(filenames, parser):
@@ -152,6 +190,7 @@ def expand_file_list(filenames, parser):
     '''
     from glob import glob
     from jasmin_cis.utils import OrderedSet
+
     if not filenames:
         parser.error("Please specify at least one filename")
     input_list = filenames.split(',')
@@ -159,7 +198,7 @@ def expand_file_list(filenames, parser):
     # Ensure we don't get duplicates by making file_set a set
     file_set = OrderedSet()
     for element in input_list:
-        if any(wildcard in element for wildcard in ['*', '?',']','}']):
+        if any(wildcard in element for wildcard in ['*', '?', ']', '}']):
             filenames = glob(element)
             filenames.sort()
             for filename in filenames:
@@ -240,6 +279,7 @@ def check_int(arg, parser):
 def check_product(product, parser):
     from jasmin_cis.data_io.products.AProduct import AProduct
     import jasmin_cis.plugin as plugin
+
     if product:
         product_classes = plugin.find_plugin_classes(AProduct, 'jasmin_cis.data_io.products.products')
         product_names = [cls().__class__.__name__ for cls in product_classes]
@@ -270,7 +310,8 @@ def get_plot_datagroups(datagroups, parser):
     :return: The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "color", "edgecolor", "itemstyle",
+
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "color", "edgecolor", "itemstyle",
                                                        "label", "product", "type", "transparency", "cmap", "cmin",
                                                        "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "contfontsize"])
@@ -281,19 +322,6 @@ def get_plot_datagroups(datagroups, parser):
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
 
 
-def get_col_datagroups(datagroups, parser):
-    '''
-    :param datagroups:    A list of datagroups (possibly containing colons)
-    :param parser:       The parser used to report errors
-    :return: The parsed datagroups as a list of dictionaries
-    '''
-    from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions',["variable", "filenames", "product"])
-    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
-
-    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
-
-
 def get_col_samplegroup(samplegroup, parser):
     '''
     :param samplegroups:    A list of datagroups (possibly containing colons)
@@ -301,7 +329,9 @@ def get_col_samplegroup(samplegroup, parser):
     :return: The parsed samplegroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('SamplegroupOptions',[ "filenames", "variable", "colocator", "constraint", "kernel", "product"])
+
+    DatagroupOptions = namedtuple('SamplegroupOptions',
+                                  ["filenames", "variable", "colocator", "constraint", "kernel", "product"])
     samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args,
                                            extract_method_and_args, extract_method_and_args, check_product)
 
@@ -315,10 +345,25 @@ def get_aggregate_datagroups(datagroups, parser):
     :return: The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product", "kernel"])
-    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product, check_aggregate_kernel)
+
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product", "kernel"])
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product,
+                                         check_aggregate_kernel)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+
+
+def get_eval_datagroups(datagroups, parser):
+    from collections import namedtuple
+
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
+    datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
+
+    datagroups = parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+
+    # Evaluate allows aliases in variable names so we need to process them here.
+    _set_aliases_for_datagroups(datagroups, parser)
+    return datagroups
 
 
 def get_aggregate_grid(aggregategrid, parser):
@@ -380,14 +425,16 @@ def get_aggregate_grid(aggregategrid, parser):
     return grid_dict
 
 
-def get_subset_datagroups(datagroups, parser):
+def get_basic_datagroups(datagroups, parser):
     '''
+    Get datagroups containing only variables:filenames:product
     :param datagroups:    A list of datagroups (possibly containing colons)
     :param parser:       The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     '''
     from collections import namedtuple
-    DatagroupOptions = namedtuple('DatagroupOptions', ["variable", "filenames", "product"])
+
+    DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
@@ -484,7 +531,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
         split_input = input_string.split(":")
         if len(split_input) < compulsary_args:
             parser.error("A mandatory option is missing")
-        elif len(split_input) > compulsary_args+1:
+        elif len(split_input) > compulsary_args + 1:
             parser.error("Too many mandatory options")
 
         input_dict = {}
@@ -502,7 +549,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
 
         # Now deal with optional arugments, if they exist. For each option loop through the list of arguments to see if
         # it exists, if so check and add to the dictionary.
-        if len(split_input) == compulsary_args+1:
+        if len(split_input) == compulsary_args + 1:
             split_input_comma = split_outside_brackets(split_input[-1])
         else:
             split_input_comma = []  # need to loop over options to set optional arguments to None
@@ -529,11 +576,11 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
             # Make sure an entry for each option is created, even if it is None
             input_dict[option] = None
             for j in split_input_comma:
-                    # Split the input, [0] will be the key and [1] the value in the list
-                    split_input_variable = split_outside_brackets(j, '=')
-                    if split_input_variable[0] == option:
-                        input_dict[option] = options[i+compulsary_args](split_input_variable[1], parser)
-                        split_input_comma.remove(j)
+                # Split the input, [0] will be the key and [1] the value in the list
+                split_input_variable = split_outside_brackets(j, '=')
+                if split_input_variable[0] == option:
+                    input_dict[option] = options[i + compulsary_args](split_input_variable[1], parser)
+                    split_input_comma.remove(j)
 
         if len(split_input_comma) != 0:
             raise InvalidCommandLineOptionError('The following optional arguments could not be parsed: ' +
@@ -579,6 +626,7 @@ def split_outside_brackets(input, seps=[','], brackets={'[': ']'}):
 
 def extract_method_and_args(arguments, parser):
     from jasmin_cis.utils import parse_key_val_list
+
     if not arguments:
         method_and_args = None
     else:
@@ -624,6 +672,43 @@ def check_is_not_empty_and_comma_split(item, parser):
     return multi_split(item, [','])
 
 
+def _set_aliases_for_datagroups(datagroups, parser):
+    """
+    Split out aliases from variables in a datagroup. They will be of the form:
+    'var1=alias1' where the part after the '=' is the alias.
+    :param datagroup: Arguments.datagroup
+    :return:
+    """
+
+    def _alias_error(var_and_alias):
+        parser.error("Invalid variable name or aliasing: expected string of form '<variablename>=<alias>', "
+                     "but got: '%s'" % var_and_alias)
+    all_aliases = []
+    for datagroup in datagroups:
+        variables = []
+        aliases = []
+        for variable in datagroup['variables']:
+            parts = variable.split('=')
+            if len(parts) == 1:
+                if not parts[0]:
+                    _alias_error(variable)
+                variables.append(variable)
+                aliases.append(variable)
+            elif len(parts) == 2:
+                if not (parts[0] and parts[1]):
+                    _alias_error(variable)
+                variables.append(parts[0])
+                aliases.append(parts[1])
+            elif len(parts) > 2:
+                _alias_error(variable)
+        datagroup['aliases'] = aliases
+        all_aliases.extend(aliases)
+        datagroup['variables'] = variables
+    # Check that the set of aliases is all unique
+    if not len(set(all_aliases)) == len(all_aliases):
+        parser.error("Variable names or aliases must be all unique: list was %s" % all_aliases)
+
+
 def convert_to_list_of_floats(arg, parser):
     # Given a string such as '[10.0,11.1,12.2]' retruns a list containing, 10.0, 11.1, 12.2
     return [float(x) for x in arg[1:-1].split(',')]
@@ -636,13 +721,16 @@ def check_plot_type(plot_type, parser):
 
     if plot_type is not None:
         if plot_type not in Plotter.plot_types.keys():
-            parser.error("'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
+            parser.error(
+                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
 
     return plot_type
+
 
 def check_color(color, parser):
     if color:
         from matplotlib.colors import cnames
+
         color = color.lower()
         if (color not in cnames) and color != "grey":
             parser.error("'" + color + "' is not a valid colour")
@@ -657,8 +745,10 @@ def check_colour_bar_orientation(orientation, parser):
         parser.error("The colour bar orientation must either be horizontal or vertical")
     return orientation
 
+
 def parse_as_float_or_date(arg, name, parser):
     from time_util import parse_datetimestr_to_std_time
+
     if arg:
         try:
             # First try and parse as a float
@@ -674,8 +764,10 @@ def parse_as_float_or_date(arg, name, parser):
     else:
         return None
 
+
 def parse_as_float_or_time_delta(arg, name, parser):
     from time_util import parse_datetimestr_delta_to_float_days
+
     if arg:
         try:
             # First try and parse as a float
@@ -691,6 +783,7 @@ def parse_as_float_or_time_delta(arg, name, parser):
     else:
         return None
 
+
 def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
@@ -698,6 +791,7 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
     from jasmin_cis.parse_datetime import parse_as_number_or_datetime
     from jasmin_cis.time_util import parse_datetimestr_to_std_time
     import datetime
+
     ax_range = {}
 
     if min_val is not None:
@@ -759,7 +853,32 @@ def assign_logs(arguments):
     return arguments
 
 
-def check_output_filepath_not_input(arguments, parser):
+def _split_output_if_includes_variable_name(arguments, parser):
+    arguments.output_var = None
+    if ':' in arguments.output:
+        try:
+            arguments.output_var, arguments.output = arguments.output.split(':')
+        except ValueError:
+            # Too many values to unpack
+            parser.error("Invalid output path: should be a filename with one optional variable prefix.")
+
+
+def _validate_output_file(arguments, parser):
+    _split_output_if_includes_variable_name(arguments, parser)
+    _check_output_filepath_not_input(arguments, parser)
+    _append_file_extension_to_output_if_missing(arguments, parser, '.nc')
+
+
+def _append_file_extension_to_output_if_missing(arguments, parser, extension):
+    if not extension:
+        parser.error("Invalid file extension: '%s'" % extension)
+    if not extension.startswith('.'):
+        extension = '.' + extension
+    if not arguments.output.endswith(extension):
+        arguments.output = arguments.output + extension
+
+
+def _check_output_filepath_not_input(arguments, parser):
     try:
         input_files = list(arguments.samplefiles)
     except AttributeError:
@@ -820,12 +939,13 @@ def validate_col_args(arguments, parser):
 
     # Take the three parts out of the 0th samplegroup. Note: Due to the reason stated above, there will only ever be one samplegroup
     arguments.samplefiles = arguments.samplegroup["filenames"]
-    arguments.samplevariable = arguments.samplegroup["variable"] if arguments.samplegroup["variable"] is not "" else None
+    arguments.samplevariable = arguments.samplegroup["variable"] if arguments.samplegroup[
+                                                                        "variable"] is not "" else None
     arguments.sampleproduct = arguments.samplegroup["product"]
     if arguments.samplegroup["colocator"] is None:
         parser.error("You must specify a colocator")
-    arguments.datagroups = get_col_datagroups(arguments.datagroups, parser)
-    check_output_filepath_not_input(arguments, parser)
+    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
+    _validate_output_file(arguments, parser)
 
     return arguments
 
@@ -833,14 +953,32 @@ def validate_col_args(arguments, parser):
 def validate_aggregate_args(arguments, parser):
     arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
     arguments.grid = get_aggregate_grid(arguments.aggregategrid, parser)
-    check_output_filepath_not_input(arguments, parser)
+    _validate_output_file(arguments, parser)
     return arguments
 
 
 def validate_subset_args(arguments, parser):
-    arguments.datagroups = get_subset_datagroups(arguments.datagroups, parser)
+    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
-    check_output_filepath_not_input(arguments, parser)
+    _validate_output_file(arguments, parser)
+    return arguments
+
+
+def validate_eval_args(arguments, parser):
+    arguments.datagroups = get_eval_datagroups(arguments.datagroups, parser)
+    _validate_output_file(arguments, parser)
+    return arguments
+
+
+def validate_stats_args(arguments, parser):
+    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
+    num_vars = 0
+    for datagroup in arguments.datagroups:
+        num_vars += len(datagroup['variables'])
+    if num_vars != 2:
+        parser.error("Stats command requires exactly two variables (%s were given)" % num_vars)
+    if arguments.output:
+        _validate_output_file(arguments, parser)
     return arguments
 
 
@@ -852,19 +990,21 @@ def validate_version_args(arguments, parser):
 validators = {'plot': validate_plot_args,
               'info': validate_info_args,
               'col': validate_col_args,
-              'aggregate' : validate_aggregate_args,
+              'aggregate': validate_aggregate_args,
               'subset': validate_subset_args,
+              'eval': validate_eval_args,
+              'stats': validate_stats_args,
               'version': validate_version_args}
 
 
-def parse_args(arguments = None):
+def parse_args(arguments=None):
     '''
     Parse the arguments given. If no arguments are given, then used the command line arguments.
     Returns a dictionary contains the parsed arguments
     '''
     parser = initialise_top_parser()
     if arguments is None:
-        #sys.argv[0] is the name of the script itself
+        # sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)
     main_args = validators[main_args.command](main_args, parser)

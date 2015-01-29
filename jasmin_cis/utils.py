@@ -1,5 +1,7 @@
 import collections
 import re
+import logging
+import warnings
 import iris
 from iris.exceptions import CoordinateNotFoundError
 import numpy as np
@@ -278,13 +280,15 @@ def fix_longitude_range(lons, range_start):
     It is assumed that a no shifts larger than 360 are needed.
     :param lons: numpy array of longitude values
     :param range_start: longitude at start of 360 degree range into which values are required to fit
+    :return: array of fixed longitudes
     """
-
     range_end = range_start + 360
-    lons[lons < range_start] += 360
-    lons[lons >= range_end] -= 360
+    fixed_lons = np.array(lons)
 
-    return lons
+    fixed_lons[fixed_lons < range_start] += 360
+    fixed_lons[fixed_lons >= range_end] -= 360
+
+    return fixed_lons
 
 
 def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
@@ -659,3 +663,40 @@ def dimensions_equal(dimensions, other_dimensions):
         if not dim == other_dim:
             return False
     return True
+
+
+def set_cube_standard_name_if_valid(cube, standard_name):
+    """
+    Set a cube's standard name if it is a valid CF compliant name, otherwise set it to None
+    :param cube: Cube to set standard name on
+    :param standard_name: Standard name to set
+    :return:
+    """
+    try:
+        cube.standard_name = standard_name
+    except ValueError:
+        # If the standard name is not valid CF compliant standard name
+        cube.standard_name = None
+
+
+def deprecated(func):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+
+    Taken from http://code.activestate.com/recipes/391367-deprecated/
+    """
+    def newFunc(*args, **kwargs):
+
+        def log_warning(message, category, filename, lineno, file=None):
+            logging.warning('%s:%s %s:%s' % (category.__name__, message, filename, lineno))
+        warnings.showwarning = log_warning
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn("Call to deprecated function %s." % func.__name__,
+                      category=DeprecationWarning, stacklevel=2)
+        return func(*args, **kwargs)
+    newFunc.__name__ = func.__name__
+    newFunc.__doc__ = func.__doc__
+    newFunc.__dict__.update(func.__dict__)
+    return newFunc

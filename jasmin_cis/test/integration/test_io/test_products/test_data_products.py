@@ -3,13 +3,15 @@ module to test the various subclasses of the abstract AProduct class
 """
 
 import unittest
+import logging
+
 from hamcrest import *
 from nose.tools import istest, eq_, raises, nottest
 from iris.exceptions import TranslationError
 
-from jasmin_cis.data_io.products.products import *
+from jasmin_cis.data_io.products import *
 from jasmin_cis.exceptions import InvalidVariableError
-from jasmin_cis.test.test_files.data import non_netcdf_file
+from jasmin_cis.test.test_files.data import non_netcdf_file, cis_test_files
 
 
 def check_regex_matching(cls_name, filename):
@@ -27,6 +29,21 @@ class ProductTests(object):
     filename = None
     vars = None
     valid_variable = None
+    file_format = None
+    test_file_metadata = None
+    valid_vars_count = None
+
+    @nottest
+    def setup(self, test_file_metadata, product):
+        from jasmin_cis.test.test_files.data import TestFileTestData
+        assert isinstance(test_file_metadata, TestFileTestData)
+        self.filename = test_file_metadata.master_filename
+        self.valid_variable = test_file_metadata.data_variable_name
+        self.vars = test_file_metadata.all_variable_names
+        self.valid_vars_count = test_file_metadata.valid_vars_count
+        self.file_format = test_file_metadata.file_format
+        self.test_file_metadata = test_file_metadata
+        self.product = product
 
     @istest
     def test_file_regex_matching(self):
@@ -43,7 +60,10 @@ class ProductTests(object):
         self.check_valid_vars(vars)
 
     def check_valid_vars(self, vars):
-        assert set(vars) == set(self.vars)
+        if self.vars is not None:
+            assert_that(set(vars), is_(set(self.vars)), "Variables")
+        else:
+            assert_that(len(vars), is_(self.valid_vars_count ), "Number of valid variables in the file")
 
     @istest
     def test_create_data_object(self):
@@ -52,7 +72,7 @@ class ProductTests(object):
     @istest
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
-        coords = self.product().create_coords([self.filename], self.valid_variable)
+        coords = self.product().create_coords([self.filename])
         coord_list = coords.coords()
 
         for coord in coord_list:
@@ -87,14 +107,23 @@ class ProductTests(object):
     def should_raise_error_when_variable_does_not_exist_in_file(self):
         self.product().create_data_object([self.filename], invalid_variable)
 
+    @istest
+    def test_file_format(self):
+        expected_file_format = self.file_format
+        if expected_file_format is None:
+            expected_file_format = self.product.__name__
+        file_format = self.product().get_file_format(self.filename)
+        assert_that(file_format, is_(expected_file_format), "File format")
 
 class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable, \
+            valid_cloudsat_RVOD_file_format
 
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_sdata_variable
         self.product = CloudSat
+        self.file_format = valid_cloudsat_RVOD_file_format
 
     def check_valid_vars(self, vars):
         assert len(vars) == 47 + 22  # Expect 47 valid SD vars and 22 valid VD vars
@@ -102,11 +131,13 @@ class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
 
 class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable, \
+            valid_cloudsat_RVOD_file_format
 
         self.filename = valid_cloudsat_RVOD_file
         self.valid_variable = valid_cloudsat_RVOD_vdata_variable
         self.product = CloudSat
+        self.file_format = valid_cloudsat_RVOD_file_format
 
     def check_valid_vars(self, vars):
         assert len(vars) == 47 + 22  # Expect 47 valid SD vars and 22 valid VD vars
@@ -114,11 +145,13 @@ class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
 
 class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable
+        from jasmin_cis.test.test_files.data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable, \
+            valid_cloudsat_PRECIP_file_format
 
         self.filename = valid_cloudsat_PRECIP_file
         self.valid_variable = valid_cloudsat_PRECIP_variable
         self.product = CloudSat
+        self.file_format = valid_cloudsat_PRECIP_file_format
         self.vars = ['Profile_time',
                      'Latitude',
                      'Longitude',
@@ -155,111 +188,37 @@ class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
                      'Aux_dist_AMSR']
 
 
-class TestMODIS_L3(ProductTests, unittest.TestCase):
-    def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_modis_l3_filename, valid_modis_l3_variable
-
-        self.filename = valid_modis_l3_filename
-        self.valid_variable = valid_modis_l3_variable
-        self.product = MODIS_L3
-
-    def check_valid_vars(self, vars):
-        assert len(vars) == 700
-
-
 class TestCaliop_L2(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_caliop_l2_filename, valid_caliop_l2_variable
-
-        self.filename = valid_caliop_l2_filename
-        self.valid_variable = valid_caliop_l2_variable
-        self.product = Caliop_L2
-        self.vars = ['Aerosol_Layer_Fraction',
-                     'Aerosol_Multiple_Scattering_Profile_1064',
-                     'Aerosol_Multiple_Scattering_Profile_532',
-                     'Backscatter_Coefficient_1064',
-                     'Backscatter_Coefficient_Uncertainty_1064',
-                     'Cloud_Layer_Fraction',
-                     'Extinction_Coefficient_1064',
-                     'Extinction_Coefficient_532',
-                     'Extinction_Coefficient_Uncertainty_1064',
-                     'Extinction_Coefficient_Uncertainty_532',
-                     'Molecular_Number_Density',
-                     'Particulate_Depolarization_Ratio_Profile_532',
-                     'Particulate_Depolarization_Ratio_Uncertainty_532',
-                     'Perpendicular_Backscatter_Coefficient_532',
-                     'Perpendicular_Backscatter_Coefficient_Uncertainty_532',
-                     'Pressure',
-                     'Relative_Humidity',
-                     'Samples_Averaged',
-                     'Temperature',
-                     'Total_Backscatter_Coefficient_Uncertainty_532',
-                     'Total_Backscatter_Coefficient_532']
+        self.setup(cis_test_files["caliop_L2"], Caliop_L2)
 
 
 class TestCaliop_L1(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_caliop_l1_filename, valid_caliop_l1_variable
+        self.setup(cis_test_files["caliop_L1"], Caliop_L1)
 
-        self.filename = valid_caliop_l1_filename
-        self.valid_variable = valid_caliop_l1_variable
-        self.product = Caliop_L1
-        self.vars = ['Perpendicular_Attenuated_Backscatter_532',
-                     'Attenuated_Backscatter_1064',
-                     'Total_Attenuated_Backscatter_532']
 
+class TestMODIS_L3(ProductTests, unittest.TestCase):
+    def setUp(self):
+        self.setup(cis_test_files["modis_L3"], MODIS_L3)
+
+    def check_valid_vars(self, vars):
+        assert len(vars) == 700
 
 class TestMODIS_L2(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_modis_l2_filename, valid_modis_l2_variable
 
-        self.filename = valid_modis_l2_filename
-        self.valid_variable = valid_modis_l2_variable
-        self.product = MODIS_L2
-        self.vars = ['Deep_Blue_Angstrom_Exponent_Land',
-                     'Cloud_Fraction_Ocean',
-                     'Corrected_Optical_Depth_Land_wav2p1',
-                     'Mass_Concentration_Land',
-                     'Solar_Zenith',
-                     'Latitude',
-                     'Sensor_Azimuth',
-                     'Optical_Depth_Ratio_Small_Land_And_Ocean',
-                     'Sensor_Zenith',
-                     'Scan_Start_Time',
-                     'Image_Optical_Depth_Land_And_Ocean',
-                     'Cloud_Fraction_Land',
-                     'Number_Pixels_Used_Ocean',
-                     'Longitude',
-                     'Aerosol_Type_Land',
-                     'Cloud_Mask_QA',
-                     'Optical_Depth_Ratio_Small_Land',
-                     'Scattering_Angle',
-                     'Solar_Azimuth',
-                     'Angstrom_Exponent_Land',
-                     'Deep_Blue_Aerosol_Optical_Depth_550_Land',
-                     'Fitting_Error_Land',
-                     'Optical_Depth_Land_And_Ocean']
+        self.setup(cis_test_files["modis_L2"], MODIS_L2)
 
 
 class TestCloud_CCI(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cloud_cci_filename, valid_cloud_cci_variable
-
-        self.filename = valid_cloud_cci_filename
-        self.valid_variable = valid_cloud_cci_variable
-        self.product = Cloud_CCI
-
-    def check_valid_vars(self, vars):
-        assert len(vars) == 30
+        self.setup(cis_test_files["Cloud_CCI"], Cloud_CCI)
 
 
 class TestAerosol_CCI(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_aerosol_cci_filename, valid_aerosol_cci_variable
-
-        self.filename = valid_aerosol_cci_filename
-        self.valid_variable = valid_aerosol_cci_variable
-        self.product = Aerosol_CCI
+        self.setup(cis_test_files["Aerosol_CCI"], Aerosol_CCI)
 
     def check_valid_vars(self, vars):
         exclude_vars = ["sun_zenith", "satellite_zenith", "relative_azimuth", "instrument_view"]
@@ -270,33 +229,24 @@ class TestAerosol_CCI(ProductTests, unittest.TestCase):
 
 class TestCis(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_cis_ungridded_output_filename, \
-            valid_cis_ungridded_output_variable
+        self.setup(cis_test_files["CIS_Ungridded"], cis)
 
-        self.filename = valid_cis_ungridded_output_filename
-        self.valid_variable = valid_cis_ungridded_output_variable
-        self.product = cis
-        self.vars = ['pixel_number', 'latitude', 'longitude', 'time', 'AOD550', 'AOD870']
-
-class TestAeronet(ProductTests):
-    def __init__(self):
+class TestAeronet(ProductTests, unittest.TestCase):
+    def setUp(self):
         from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
-        self.filename = valid_aeronet_filename
+        self.setup(cis_test_files["aeronet"], Aeronet)
         self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
-        self.valid_variable = valid_aeronet_variable
-        self.product = Aeronet
 
     @istest
     def test_create_data_object_from_multiple_files(self):
         self.product().create_data_object(self.filenames, self.valid_variable)
 
-class TestASCII(ProductTests):
-    def __init__(self):
-        from jasmin_cis.test.test_files.data import valid_ascii_filename, valid_ascii_variable, ascii_filename_with_no_values
-        self.filename = valid_ascii_filename
+
+class TestASCII(ProductTests, unittest.TestCase):
+    def setUp(self):
+        from jasmin_cis.test.test_files.data import ascii_filename_with_no_values
+        self.setup(cis_test_files["ascii"], ASCII_Hyperpoints)
         self.no_value_filename = ascii_filename_with_no_values
-        self.valid_variable = valid_ascii_variable
-        self.product = ASCII_Hyperpoints
 
     @istest
     @raises(IOError)
@@ -333,6 +283,7 @@ class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
         self.filename = valid_xenida_filename
         self.valid_variable = valid_xenida_variable
         self.product = default_NetCDF
+        self.file_format = "NetCDF/Gridded"
 
     @nottest
     def test_variable_wildcarding(self):
@@ -358,6 +309,7 @@ class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
         self.filename = valid_1d_filename
         self.valid_variable = valid_1d_variable
         self.product = default_NetCDF
+        self.file_format = "NetCDF/Gridded"
 
     @nottest
     def test_variable_wildcarding(self):
@@ -384,3 +336,4 @@ class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
         self.valid_variable = valid_hadgem_variable
         self.product = default_NetCDF
         self.vars = ['od550aer']
+        self.file_format = "NetCDF/Gridded"

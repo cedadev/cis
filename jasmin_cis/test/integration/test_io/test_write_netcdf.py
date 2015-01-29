@@ -22,7 +22,7 @@ class TestWriteNetcdf(unittest.TestCase):
         # Copy a colocated file and try to reload it.  This exposes a bug where
         # var.shape is set in the NetCDF metadata
         from jasmin_cis.data_io.write_netcdf import write
-        from jasmin_cis.data_io.products.products import Aerosol_CCI
+        from jasmin_cis.data_io.products import Aerosol_CCI
         import netCDF4 as nc
 
         prod = Aerosol_CCI()
@@ -40,7 +40,7 @@ class TestWriteNetcdf(unittest.TestCase):
         # Copy a colocated file and try to reload it.  This exposes a bug where
         # latitude and longitude aren't recognised on reload
         from jasmin_cis.data_io.write_netcdf import write
-        from jasmin_cis.data_io.products.products import Aerosol_CCI
+        from jasmin_cis.data_io.products import Aerosol_CCI
 
         prod = Aerosol_CCI()
         data_object = prod.create_data_object([make_pathname('cis-col-latlon-renamed.nc')], 'AOT_440')

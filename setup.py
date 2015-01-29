@@ -1,11 +1,14 @@
+import os
+import os.path
+from distutils.spawn import find_executable
+
 from setuptools import setup, find_packages, Command
 from pkg_resources import require, DistributionNotFound, VersionConflict
-from distutils.spawn import spawn, find_executable
-import sys, os, os.path
 
+dependencies = ["matplotlib>=1.2.0", "pyke", "cartopy", "Shapely", "netcdf4>=1.0",
+                "numpy", "scipy", "iris>=1.7.3"]
 
-# Extension classes and functions to add custom command
-#======================================================
+test_dependencies = ["pyhamcrest", "mock", "nose"]
 
 
 class check_dep(Command):
@@ -23,14 +26,13 @@ class check_dep(Command):
 
     def run(self):
 
-        deps = ["matplotlib>=1.2.0","pyke","cartopy","Shapely","netcdf4",
-                "numpy","scipy","nose","iris"]
-        for dep in deps:
+        for dep in dependencies:
             try:
                 require(dep)
                 print dep + " ...[ok]"
             except (DistributionNotFound, VersionConflict):
                 print dep + "... MISSING!" 
+
 
 class gen_doc(Command):
     """
@@ -46,8 +48,6 @@ class gen_doc(Command):
         pass
 
     def run(self):
-        #raise NotImplementedError, "not implemented yet"  
-
         if not find_executable('epydoc'):
             print "Could not find epydoc on system"
             return  
@@ -61,11 +61,8 @@ class gen_doc(Command):
         call(["epydoc", "--html", "--no-sourcecode", "-o", output_dir, "*"])
 
         import webbrowser
-        webbrowser.open(os.path.join(output_dir,"index.html"))
+        webbrowser.open(os.path.join(output_dir, "index.html"))
 
-
-# Metadata description
-#=====================
 
 # Extract long-description from README
 here = os.path.dirname(__file__)
@@ -78,22 +75,20 @@ setup(
     version=__version__,
     description='JASMIN Community Inter-comparison Suite',
     long_description=README,
-    maintainer='Stephen Pascoe',
-    maintainer_email='Stephen.Pascoe@stfc.ac.uk',
+    maintainer='Philip Kershaw',
+    maintainer_email='Philip.Kershaw@stfc.ac.uk',
     url='http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite',
-    classifiers = [
+    classifiers=[
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Topic :: Scientific/Engineering :: Atmospheric Science',
         'Topic :: Scientific/Engineering :: Visualization',
         'Environment :: Console',
         ],
-
     packages=find_packages(),
-    package_data={'':['logging.conf']},
-
-    scripts = ['bin/cis'],
-    
-    cmdclass={"gendoc": gen_doc, "checkdep":check_dep}
+    package_data={'': ['logging.conf']},
+    scripts=['bin/cis'],
+    cmdclass={"gendoc": gen_doc,
+              "checkdep": check_dep},
+    install_requires=dependencies,
+    test_requires=test_dependencies
 )
-
-

@@ -143,7 +143,7 @@ class TestParse(TestCase):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
         assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
 
     def test_GIVEN_colocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
         var1, var2 = 'rain', 'snow'
@@ -156,7 +156,7 @@ class TestParse(TestCase):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
         assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
 
     def test_GIVEN_aggregate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
         var1, var2 = 'rain', 'snow'
@@ -169,7 +169,7 @@ class TestParse(TestCase):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
         assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variable'], contains_inanyorder('rain', 'snow'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
 
     def test_should_raise_error_when_no_variable_is_specified(self):
         try:
@@ -212,3 +212,140 @@ class TestParse(TestCase):
             except SystemExit as e:
                 if e.code != 2:
                     raise e
+
+    def test_GIVEN_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output_name']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output_name.nc'))
+
+    def test_GIVEN_output_has_file_extension_WHEN_parse_THEN_extension_not_added(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output_name.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output_name.nc'))
+
+    def test_parse_evaluate_single_datagroup(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.command, is_('eval'))
+        assert_that(parsed.expr, is_('var1 + var2 + var3'))
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(len(parsed.datagroups), is_(1))
+        assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
+        assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[0]['product'], is_('cis'))
+
+    def test_parse_evaluate_multiple_datagroups(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.command, is_('eval'))
+        assert_that(parsed.expr, is_('var1^var2 / var3'))
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(len(parsed.datagroups), is_(2))
+        assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
+        assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[1]['filenames'], is_([dummy_cis_out]))
+        assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
+
+    def test_parse_evaluate_output_variable(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'out_var:output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(parsed.output_var, is_('out_var'))
+
+    def test_parse_evaluate_no_output_variable(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output.nc'))
+        assert_that(parsed.output_var, is_(None))
+
+    def test_parse_evaluate_no_output(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('out.nc'))
+        assert_that(parsed.output_var, is_(None))
+
+    def test_parse_evaluate_invalid_output(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'var:var:out']
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
+    def test_parse_evaluate_valid_aliases(self):
+        # Should use the given alias or the variable name if not provided
+        args = ['eval', 'var1=alias1,var2:%s' % ascii_filename_with_no_values,
+                'var3=alias3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
+        assert_that(parsed.datagroups[0]['aliases'], is_(['alias1', 'var2']))
+        assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
+        assert_that(parsed.datagroups[1]['aliases'], is_(['alias3']))
+
+    def test_parse_evaluate_duplicate_aliases(self):
+        args = ['eval', 'var1=alias1,var2=alias1:%s' % ascii_filename_with_no_values,
+                'var1^var2 / var3', '-o', 'output.nc']
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
+    def test_parse_evaluate_invalid_aliases(self):
+        invalid_var_aliases = ['var1=', '=alias', '=', 'var=a=a']
+        for var in invalid_var_aliases:
+            args = ['eval', '%s:%s' % (var, ascii_filename_with_no_values),
+                    'var1^var2 / var3', '-o', 'output.nc']
+            try:
+                parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise e
+
+    def test_GIVEN_no_output_WHEN_parse_stats_THEN_output_is_None(self):
+        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values]
+        arguments = parse_args(args)
+        assert_that(arguments.output, is_(None))
+
+    def test_GIVEN_one_variable_WHEN_parse_stats_THEN_parser_error(self):
+        args = ['stats', 'var1:%s' % ascii_filename_with_no_values]
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
+    def test_GIVEN_more_than_two_variables_WHEN_parse_stats_THEN_parser_error(self):
+        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var3:%s' % ascii_filename_with_no_values]
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
+    def test_GIVEN_two_variables_WHEN_parse_stats_THEN_variables_are_in_datagroups(self):
+        args = ['stats', 'var1:%s' % ascii_filename_with_no_values, 'var2:%s' % dummy_cis_out]
+        arguments = parse_args(args)
+        assert_that(arguments.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
+        assert_that(arguments.datagroups[0]['variables'], is_(['var1']))
+        assert_that(arguments.datagroups[1]['filenames'], is_([dummy_cis_out]))
+        assert_that(arguments.datagroups[1]['variables'], is_(['var2']))
+
+    def test_GIVEN_output_file_WHEN_parse_stats_THEN_output_file_in_arguments(self):
+        args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values, '-o', 'output']
+        arguments = parse_args(args)
+        assert_that(arguments.output, is_('output.nc'))

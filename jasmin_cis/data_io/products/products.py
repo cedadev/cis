@@ -3,12 +3,8 @@ import logging
 import iris
 import iris.exceptions
 
-# add includes for plugin finder
 from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
 
-
-from jasmin_cis.data_io.hdf_vd import get_data, VDS
-from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 from jasmin_cis.exceptions import InvalidVariableError, CoordinateNotFoundError
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.products.AProduct import AProduct
@@ -163,554 +159,14 @@ class CloudSat(AProduct):
 
         return UngriddedData(var,metadata,coords)
 
-
-class MODIS_L3(AProduct):
-
-    def _parse_datetime(self,metadata_dict,keyword):
-        import re
-        res = ""
-        for s in metadata_dict.itervalues():
-            i_start = s.find(keyword)
-            ssub = s[i_start:len(s)]
-            i_end = ssub.find("END_OBJECT")
-            ssubsub = s[i_start:i_start+i_end]
-            matches = re.findall('".*"',ssubsub)
-            if len(matches) > 0:
-                res = matches[0].replace('\"','')
-                if res is not "":
-                    break
-        return res
-
-    def _get_start_date(self, filename):
-        from jasmin_cis.time_util import parse_datetimestr_to_std_time
-        metadata_dict = hdf.get_hdf4_file_metadata(filename)
-        date = self._parse_datetime(metadata_dict,'RANGEBEGINNINGDATE')
-        time = self._parse_datetime(metadata_dict,'RANGEBEGINNINGTIME')
-        datetime_str = date + " " + time
-        return parse_datetimestr_to_std_time(datetime_str)
-
-    def _get_end_date(self, filename):
-        from jasmin_cis.time_util import parse_datetimestr_to_std_time
-        metadata_dict = hdf.get_hdf4_file_metadata(filename)
-        date = self._parse_datetime(metadata_dict,'RANGEENDINGDATE')
-        time = self._parse_datetime(metadata_dict,'RANGEENDINGTIME')
-        datetime_str = date + " " + time
-        return parse_datetimestr_to_std_time(datetime_str)
-
-    def get_file_signature(self):
-        product_names = ['MYD08_D3','MOD08_D3',"MOD08_E3"]
-        regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
-        return regex_list
-
-    def get_variable_names(self, filenames, data_type=None):
-        import pyhdf.SD
-
-        variables = set([])
-        for filename in filenames:
-            sd = pyhdf.SD.SD(filename)
-            for var_name, var_info in sd.datasets().iteritems():
-                # Check that the dimensions are correct
-                if var_info[0] == ('YDim:mod08', 'XDim:mod08'):
-                    variables.add(var_name)
-
-        return variables
-
-    def _create_coord_list(self, filenames):
-        import numpy as np
-        from jasmin_cis.time_util import calculate_mid_time, cis_standard_time_unit
-
-        variables = ['XDim','YDim']
-        logging.info("Listing coordinates: " + str(variables))
-
-        sdata, vdata = hdf.read(filenames,variables)
-
-        lat = sdata['YDim']
-        lat_metadata = hdf.read_metadata(lat, "SD")
-
-        lon = sdata['XDim']
-        lon_metadata = hdf.read_metadata(lon, "SD")
-
-        # expand lat and lon data array so that they have the same shape
-        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat,"SD"),lon_metadata.shape,axis=1) # expand latitude column wise
-        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon,"SD"),lat_metadata.shape,axis=0) # expand longitude row wise
-
-        lat_metadata.shape = lat_data.shape
-        lon_metadata.shape = lon_data.shape
-
-        # to make sure "Latitude" and "Longitude", i.e. the standard_name is displayed instead of "YDim"and "XDim"
-        lat_metadata.standard_name = "latitude"
-        lat_metadata._name = ""
-        lon_metadata.standard_name = "longitude"
-        lon_metadata._name = ""
-
-        # create arrays for time coordinate using the midpoint of the time delta between the start date and the end date
-        time_data_array = []
-        for filename in filenames:
-            mid_datetime = calculate_mid_time(self._get_start_date(filename),self._get_end_date(filename))
-            logging.debug("Using "+str(mid_datetime)+" as datetime for file "+str(filename))
-            # Only use part of the full lat shape as it has already been concattenated
-            time_data = np.empty((lat_metadata.shape[0]/len(filenames),lat_metadata.shape[1]),dtype='float64')
-            time_data.fill(mid_datetime)
-            time_data_array.append(time_data)
-        time_data = utils.concatenate(time_data_array)
-        time_metadata = Metadata(name='Date Time', standard_name='time', shape=time_data.shape,
-                                 units=str(cis_standard_time_unit),calendar=cis_standard_time_unit.calendar)
-
-        coords = CoordList()
-        coords.append(Coord(lon_data, lon_metadata,'X'))
-        coords.append(Coord(lat_data, lat_metadata,'Y'))
-        coords.append(Coord(time_data, time_metadata,'T'))
-
-        return coords
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
-
-    def create_data_object(self, filenames, variable):
-
-        logging.debug("Creating data object for variable " + variable)
-
-        # reading coordinates
-        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self._create_coord_list(filenames)
-
-        # reading of variables
-        sdata, vdata = hdf.read(filenames, variable)
-
-        # retrieve data + its metadata
-        var = sdata[variable]
-        metadata = hdf.read_metadata(var, "SD")
-
-        data = UngriddedData(var, metadata, coords)
-        return data
-
-class MODIS_L2(AProduct):
-
-    modis_scaling = ["1km","5km","10km"]
-
-    def get_file_signature(self):
-        product_names = ['MYD06_L2','MOD06_L2','MYD04_L2','MOD04_L2']
-        regex_list = [ r'.*' + product + '.*\.hdf' for product in product_names]
-        return regex_list
-
-    def get_variable_names(self, filenames, data_type=None):
-        import pyhdf.SD
-
-        # Determine the valid shape for variables
-        sd = pyhdf.SD.SD(filenames[0])
-        datasets = sd.datasets()
-        valid_shape = datasets['Latitude'][1]  # Assumes that latitude shape == longitude shape (it should)
-
-        variables = set([])
-        for filename in filenames:
-            sd = pyhdf.SD.SD(filename)
-            for var_name, var_info in sd.datasets().iteritems():
-                if var_info[1] == valid_shape:
-                    variables.add(var_name)
-
-        return variables
-
-    def __get_data_scale(self, filename, variable):
-        from jasmin_cis.exceptions import InvalidVariableError
-        from pyhdf import SD
-
-        try:
-            meta = SD.SD(filename).datasets()[variable][0][0]
-        except KeyError:
-            raise InvalidVariableError("Variable "+variable+" not found")
-
-        for scaling in self.modis_scaling:
-            if scaling in meta:
-                return scaling
-        return None
-
-    def __field_interpolate(self,data,factor=5):
-        '''
-        Interpolates the given 2D field by the factor,
-        edge pixels are defined by the ones in the centre,
-        odd factords only!
-        '''
-        import numpy as np
-
-        logging.debug("Performing interpolation...")
-
-        output = np.zeros((factor*data.shape[0],factor*data.shape[1]))*np.nan
-        output[int(factor/2)::factor,int(factor/2)::factor] = data
-        for i in range(1,factor+1):
-            output[(int(factor/2)+i):(-1*factor/2+1):factor,:] = i*((output[int(factor/2)+factor::factor,:]-output[int(factor/2):(-1*factor):factor,:])
-                                                                    /float(factor))+output[int(factor/2):(-1*factor):factor,:]
-        for i in range(1,factor+1):
-            output[:,(int(factor/2)+i):(-1*factor/2+1):factor] = i*((output[:,int(factor/2)+factor::factor]-output[:,int(factor/2):(-1*factor):factor])
-                                                                    /float(factor))+output[:,int(factor/2):(-1*factor):factor]
-        return output
-
-    def _create_coord_list(self, filenames, variable=None):
-        import datetime as dt
-
-        variables = [ 'Latitude','Longitude','Scan_Start_Time']
-        logging.info("Listing coordinates: " + str(variables))
-
-        sdata, vdata = hdf.read(filenames,variables)
-
-        apply_interpolation = False
-        if variable is not None:
-            scale = self.__get_data_scale(filenames[0], variable)
-            apply_interpolation = True if scale is "1km" else False
-
-        lat = sdata['Latitude']
-        lat_data = self.__field_interpolate(hdf.read_data(lat,"SD")) if apply_interpolation else hdf.read_data(lat,"SD")
-        lat_metadata = hdf.read_metadata(lat, "SD")
-        lat_coord = Coord(lat_data, lat_metadata,'Y')
-
-        lon = sdata['Longitude']
-        lon_data = self.__field_interpolate(hdf.read_data(lon,"SD")) if apply_interpolation else hdf.read_data(lon,"SD")
-        lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_coord = Coord(lon_data, lon_metadata,'X')
-
-        time = sdata['Scan_Start_Time']
-        time_metadata = hdf.read_metadata(time,"SD")
-        # Ensure the standard name is set
-        time_metadata.standard_name = 'time'
-        time_coord = Coord(time,time_metadata,"T")
-        time_coord.convert_TAI_time_to_std_time(dt.datetime(1993,1,1,0,0,0))
-
-        return CoordList([lat_coord,lon_coord,time_coord])
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
-
-    def create_data_object(self, filenames, variable):
-        logging.debug("Creating data object for variable " + variable)
-
-        # reading coordinates
-        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self._create_coord_list(filenames, variable)
-
-        # reading of variables
-        sdata, vdata = hdf.read(filenames, variable)
-
-        # retrieve data + its metadata
-        var = sdata[variable]
-        metadata = hdf.read_metadata(var, "SD")
-
-        return UngriddedData(var, metadata, coords)
-
-class Cloud_CCI(AProduct):
-
-    def get_file_signature(self):
-        return [r'..*ESACCI.*CLOUD.*']
-
-    def _create_coord_list(self, filenames):
-
-        from jasmin_cis.data_io.netcdf import read_many_files_individually, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-
-        variables = ["lat", "lon", "time"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        var_data = read_many_files_individually(filenames, variables)
-
-        coords = CoordList()
-        coords.append(Coord(var_data['lat'], get_metadata(var_data['lat'][0]), 'Y'))
-        coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0]),'X'))
-        time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]))
-
-        # TODO: Is this really julian?
-        time_coord.convert_julian_to_std_time()
-        coords.append(time_coord)
-
-        return coords
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
-
-    def create_data_object(self, filenames, variable):
-
-        from jasmin_cis.data_io.netcdf import get_metadata, read_many_files_individually
-
-        coords = self._create_coord_list(filenames)
-        var = read_many_files_individually(filenames, [variable])
-        metadata = get_metadata(var[variable][0])
-
-        return UngriddedData(var[variable], metadata, coords)
-
-
-class Aerosol_CCI(AProduct):
-
-    valid_dimensions = ["pixel_number"]
-
-    def get_file_signature(self):
-        return [r'.*ESACCI.*AEROSOL.*']
-
-    def _create_coord_list(self, filenames):
-
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
-        from jasmin_cis.data_io.Coord import Coord
-        import datetime
-
-        #!FIXME: when reading an existing file variables might be "latitude", "longitude"
-        variables = ["lat", "lon", "time"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        data = read_many_files(filenames, variables, dim="pixel_number")
-
-        coords = CoordList()
-        coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
-        coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
-        time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
-        time_coord.convert_TAI_time_to_std_time(datetime.datetime(1970,1,1))
-        coords.append(time_coord)
-
-        return coords
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
-
-    def create_data_object(self, filenames, variable):
-        from jasmin_cis.data_io.netcdf import read_many_files, get_metadata
-
-        coords = self._create_coord_list(filenames)
-        data = read_many_files(filenames, variable, dim="pixel_number")
-        metadata = get_metadata(data[variable])
-
-        return UngriddedData(data[variable], metadata, coords)
-
-
-class abstract_Caliop(AProduct):
-
-    def get_file_signature(self):
-        '''
-        To be implemented by subclcass
-        :return:
-        '''
-        return []
-
-    def get_variable_names(self, filenames, data_type=None):
-        import pyhdf.SD
-        import pyhdf.HDF
-        variables = set([])
-
-        # Determine the valid shape for variables
-        sd = pyhdf.SD.SD(filenames[0])
-        datasets = sd.datasets()
-        len_x = datasets['Latitude'][1][0]  # Assumes that latitude shape == longitude shape (it should)
-        alt_data = get_data(VDS(filenames[0], "Lidar_Data_Altitudes"), True)
-        len_y = alt_data.shape[0]
-        valid_shape = (len_x, len_y)
-
-        for filename in filenames:
-            sd = pyhdf.SD.SD(filename)
-            for var_name, var_info in sd.datasets().iteritems():
-                if var_info[1] == valid_shape:
-                    variables.add(var_name)
-
-        return variables
-
-    def _create_coord_list(self, filenames, index_offset=0):
-        from jasmin_cis.data_io.hdf_vd import get_data
-        from jasmin_cis.data_io.hdf_vd import VDS
-        from pyhdf.error import HDF4Error
-        from jasmin_cis.data_io import hdf_sd
-        import datetime as dt
-        from jasmin_cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
-
-        variables = ['Latitude','Longitude', "Profile_Time", "Pressure"]
-        logging.info("Listing coordinates: " + str(variables))
-
-        # reading data from files
-        sdata = {}
-        for filename in filenames:
-            try:
-                sds_dict = hdf_sd.read(filename, variables)
-            except HDF4Error as e:
-                raise IOError(str(e))
-
-            for var in sds_dict.keys():
-                utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
-
-        alt_name = "altitude"
-        logging.info("Additional coordinates: '" + alt_name + "'")
-
-        # work out size of data arrays
-        # the coordinate variables will be reshaped to match that.
-        # NOTE: This assumes that all Caliop_L1 files have the same altitudes.
-        #       If this is not the case, then the following line will need to be changed
-        #       to concatenate the data from all the files and not just arbitrarily pick
-        #       the altitudes from the first file.
-        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
-        alt_data *= 1000.0  # Convert to m
-        len_x = alt_data.shape[0]
-
-        lat_data = hdf.read_data(sdata['Latitude'],"SD")
-        len_y = lat_data.shape[0]
-
-        new_shape = (len_x, len_y)
-
-        # altitude
-        alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
-        alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
-        alt_coord = Coord(alt_data,alt_metadata)
-
-        # pressure
-        pres_data = hdf.read_data(sdata['Pressure'],"SD")
-        pres_metadata = hdf.read_metadata(sdata['Pressure'], "SD")
-        pres_metadata.shape = new_shape
-        pres_coord = Coord(pres_data, pres_metadata, 'P')
-
-        # latitude
-        lat_data = utils.expand_1d_to_2d_array(lat_data[:,index_offset],len_x,axis=1)
-        lat_metadata = hdf.read_metadata(sdata['Latitude'], "SD")
-        lat_metadata.shape = new_shape
-        lat_coord = Coord(lat_data, lat_metadata, 'Y')
-
-        # longitude
-        lon = sdata['Longitude']
-        lon_data = hdf.read_data(lon,"SD")
-        lon_data = utils.expand_1d_to_2d_array(lon_data[:,index_offset],len_x,axis=1)
-        lon_metadata = hdf.read_metadata(lon,"SD")
-        lon_metadata.shape = new_shape
-        lon_coord = Coord(lon_data, lon_metadata,'X')
-
-        #profile time, x
-        time = sdata['Profile_Time']
-        time_data = hdf.read_data(time,"SD")
-        time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993,1,1,0,0,0))
-        time_data = utils.expand_1d_to_2d_array(time_data[:,index_offset],len_x,axis=1)
-        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
-                                              units=str(cis_standard_time_unit),
-                                              calendar=cis_standard_time_unit.calendar),"T")
-
-        # create the object containing all coordinates
-        coords = CoordList()
-        coords.append(lat_coord)
-        coords.append(lon_coord)
-        coords.append(time_coord)
-        coords.append(alt_coord)
-        if pres_data.shape == alt_data.shape:
-            # For MODIS L1 this may is not be true, so skips the air pressure reading. If required for MODIS L1 then
-            # some kind of interpolation of the air pressure would be required, as it is on a different (smaller) grid
-            # than for the Lidar_Data_Altitudes.
-            coords.append(pres_coord)
-
-        return coords
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
-
-    def create_data_object(self, filenames, variable):
-        '''
-        To be implemented by subclass
+    def get_file_format(self, filenames):
+        """
+        Get the file format
         :param filenames:
-        :param variable:
         :return:
-        '''
-        return None
-
-    def get_calipso_data(self, sds):
         """
-        Reads raw data from an SD instance. Automatically applies the
-        scaling factors and offsets to the data arrays found in Calipso data.
 
-        Returns:
-            A numpy array containing the raw data with missing data is replaced by NaN.
-
-        Arguments:
-            sds        -- The specific sds instance to read
-
-        """
-        from jasmin_cis.utils import create_masked_array_for_missing_data
-
-        calipso_fill_values = {'Float_32' : -9999.0,
-                               #'Int_8' : 'See SDS description',
-                               'Int_16' : -9999,
-                               'Int_32' : -9999,
-                               'UInt_8' : -127,
-                               #'UInt_16' : 'See SDS description',
-                               #'UInt_32' : 'See SDS description',
-                               'ExtinctionQC Fill Value' : 32768,
-                               'FeatureFinderQC No Features Found' : 32767,
-                               'FeatureFinderQC Fill Value' : 65535}
-
-        data = sds.get()
-        attributes = sds.attributes()
-
-        # Missing data.
-        missing_val = attributes.get('fillvalue', None)
-        if missing_val is None:
-            try:
-                missing_val = calipso_fill_values[attributes.get('format', None)]
-            except KeyError:
-                # Last guess
-                missing_val = attributes.get('_FillValue', None)
-
-        data = create_masked_array_for_missing_data(data, missing_val)
-
-        # Offsets and scaling.
-        offset  = attributes.get('add_offset', 0)
-        scale_factor = attributes.get('scale_factor', 1)
-        data = self.apply_scaling_factor_CALIPSO(data, scale_factor, offset)
-
-        return data
-
-    def apply_scaling_factor_CALIPSO(self,data, scale_factor, offset):
-        '''
-        Apply scaling factor Calipso data
-        :param data:
-        :param scale_factor:
-        :param offset:
-        :return:
-        '''
-        return (data/scale_factor) + offset
-
-
-class Caliop_L2(abstract_Caliop):
-
-    def get_file_signature(self):
-        return [r'CAL_LID_L2_05kmAPro-Prov-V3.*hdf']
-
-    def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(super(Caliop_L2, self)._create_coord_list(filenames, index_offset=1))
-
-    def create_data_object(self, filenames, variable):
-        logging.debug("Creating data object for variable " + variable)
-
-        # reading coordinates
-        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self._create_coord_list(filenames)
-
-        # reading of variables
-        sdata, vdata = hdf.read(filenames, variable)
-
-        # retrieve data + its metadata
-        var = sdata[variable]
-        metadata = hdf.read_metadata(var, "SD")
-
-        return UngriddedData(var, metadata, coords, self.get_calipso_data)
-
-
-class Caliop_L1(abstract_Caliop):
-
-    def get_file_signature(self):
-        return [r'CAL_LID_L1-ValStage1-V3.*hdf']
-
-    def offset(self):
-        return 0
-
-    def create_data_object(self, filenames, variable):
-        logging.debug("Creating data object for variable " + variable)
-
-        # reading coordinates
-        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self._create_coord_list(filenames)
-
-        # reading of variables
-        sdata, vdata = hdf.read(filenames, variable)
-
-        # retrieve data + its metadata
-        var = sdata[variable]
-        metadata = hdf.read_metadata(var, "SD")
-
-        return UngriddedData(var, metadata, coords, self.get_calipso_data)
+        return "HDF4/CloudSat"
 
 
 class cis(AProduct):
@@ -753,6 +209,15 @@ class cis(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
+    def get_file_format(self, filenames):
+        """
+        Get the file format
+        :param filenames:
+        :return:
+        """
+
+        return "NetCDF/CIS"
+
 
 class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
 
@@ -761,23 +226,46 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         return []
 
     def get_variable_names(self, filenames, data_type=None):
+        import iris
+        import iris.unit as unit
         variables = []
-        for filename in filenames:
-            file_variables = get_netcdf_file_variables(filename, exclude_coords=True)
-            remove_variables_with_non_spatiotemporal_dimensions(file_variables, ['lat', 'lon', 'time',
-                                                                                 'altitude', 'pressure'])
-            variables.extend(file_variables)
+        cubes = iris.load(filenames)
+
+        for cube in cubes:
+            is_time_lat_lon_pressure_altitude_or_has_only_1_point = True
+            for dim in cube.dim_coords:
+                units = dim.units
+                if dim.points.size > 1 and \
+                    not units.is_time() and \
+                    not units.is_time_reference() and \
+                    not units.is_vertical() and \
+                    not units.is_convertible(unit.Unit('degrees')):
+                    is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
+                    break
+            if is_time_lat_lon_pressure_altitude_or_has_only_1_point:
+                variables.append(cube.var_name)
+
         return set(variables)
 
     def create_coords(self, filenames, variable=None):
         """Reads the coordinates on which a variable depends.
         Note: This calls create_data_object because the coordinates are returned as a Cube.
         :param filenames: list of names of files from which to read coordinates
-        :param variable: name of variable for which the coordinates are required
-                         (optional if file contains only one cube)
+        :param variable: name of variable for which the coordinates are required (if file contains more than one use
+        the first varible)
         :return: iris.cube.Cube
         """
-        return self._create_cube(filenames, variable, False)
+
+        if variable is None:
+
+            variable_names = self.get_variable_names(filenames)
+            if len(variable_names) > 1:
+                variable_name = str(variable_names.pop())
+            else:
+                variable_name = None
+        else:
+            variable_name = variable
+        return self._create_cube(filenames, variable_name, False)
 
     def create_data_object(self, filenames, variable):
         """
@@ -800,13 +288,23 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         for filename in filenames:
             with open(filename) as f: pass
 
+        variable_constraint = variable
+        if isinstance(variable, basestring):
+            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
+                                                                         c.standard_name == variable or
+                                                                         c.long_name == variable), display=variable)
+
         try:
-            cube = gridded_data.load_cube(filenames, variable)
+            cube = gridded_data.load_cube(filenames, variable_constraint)
         except iris.exceptions.ConstraintMismatchError:
-            raise InvalidVariableError("Variable not found: " + str(variable) +
-                                       "\nTo see a list of variables run: cis info " + filenames[0])
+            if variable is None:
+                message = "File contains more than one cube variable name must be specified"
+            else:
+                message = "Variable not found: {} \nTo see a list of variables run: cis info {}"\
+                    .format(str(variable), filenames[0])
+            raise InvalidVariableError(message)
         except ValueError as e:
-            raise IOError(e)
+            raise IOError(str(e))
 
         # Fix to create a hybrid pressure factory in Iris. More attempts may be required for different file types. This
         # should be removed once the relevant Iris issue is resolved https://github.com/SciTools/iris/issues/933.
@@ -858,7 +356,17 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
         :return: iris.cube.Cube
         """
 
-        return self.create_data_object(filenames, variable)
+        if variable is None:
+            variable_names = self.get_variable_names(filenames)
+            if len(variable_names) > 1:
+                variable_name = str(variable_names.pop())
+                logging.debug("Reading an IRIS Cube for the coordinates based on the variable %s" % variable_names)
+            else:
+                variable_name = None
+        else:
+            variable_name = variable
+
+        return self.create_data_object(filenames, variable_name)
 
     def create_data_object(self, filenames, variable):
         """Reads the data for a variable.
@@ -868,12 +376,7 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
         """
         from jasmin_cis.time_util import convert_cube_time_coord_to_standard_time
 
-        variable_constraint = None
-        if variable is not None:
-            variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
-                                                                         c.standard_name == variable or
-                                                                         c.long_name == variable), display=variable)
-        cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable_constraint)
+        cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable)
 
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)
@@ -881,13 +384,19 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
             pass
         return cube
 
+    def get_file_format(self, filenames):
+        """
+        Returns the file format
+        """
+        return "NetCDF/Gridded"
+
 
 class Aeronet(AProduct):
 
     def get_file_signature(self):
         return [r'.*\.lev20']
 
-    def _create_coord_list(self, filenames, data = None):
+    def _create_coord_list(self, filenames, data=None):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from jasmin_cis.data_io.aeronet import load_multiple_aeronet
 
@@ -895,10 +404,13 @@ class Aeronet(AProduct):
             data = load_multiple_aeronet(filenames)
 
         coords = CoordList()
-        coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),), units="degrees_east", range=(-180,180))))
-        coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),), units="degrees_north", range=(-90,90))))
-        coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters", range=(-90,90))))
-        time_coord = Coord(data["datetime"], Metadata(name="DateTime",standard_name='time', shape=(len(data),), units="DateTime Object"), "X")
+        coords.append(Coord(data['longitude'], Metadata(name="Longitude", shape=(len(data),),
+                                                        units="degrees_east", range=(-180, 180))))
+        coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),),
+                                                       units="degrees_north", range=(-90, 90))))
+        coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters")))
+        time_coord = Coord(data["datetime"], Metadata(name="DateTime", standard_name='time', shape=(len(data),),
+                                                      units="DateTime Object"), "X")
         time_coord.convert_datetime_to_standard_time()
         coords.append(time_coord)
 
@@ -971,6 +483,11 @@ class ASCII_Hyperpoints(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, True)
 
+    def get_file_format(self, filenames):
+        """
+        Returns the file format
+        """
+        return "ASCII/ASCIIHyperpoints"
 
 class default_NetCDF(NetCDF_Gridded):
     """
