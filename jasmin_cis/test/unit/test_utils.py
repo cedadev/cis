@@ -1,9 +1,11 @@
 import numpy
+from nose.tools import istest, eq_, raises
+
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 from jasmin_cis.utils import apply_intersection_mask_to_two_arrays, calculate_histogram_bin_edges, \
     split_into_float_and_units, parse_distance_with_units_to_float_km, parse_distance_with_units_to_float_m, \
     array_equal_including_nan, apply_mask_to_numpy_array
-from nose.tools import istest, eq_, raises
+
 
 @istest
 def can_apply_intersection_mask_to_two_masked_arrays():

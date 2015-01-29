@@ -1039,20 +1039,21 @@ class BinnedCubeCellOnlyConstraint(IndexedConstraint):
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
 
         for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
-            #iterate through the points which are within the same cell
+            if not missing_data_for_missing_sample or points.data[out_indices] is not np.ma.masked:
+                #iterate through the points which are within the same cell
 
-            con_points = HyperPointList()
-            slice_indicies = slice(*slice_start_end)
+                con_points = HyperPointList()
+                slice_indicies = slice(*slice_start_end)
 
-            for x in self.grid_cell_bin_index_slices.sort_order[slice_indicies]:
-                con_points.append(data_points[x])
+                for x in self.grid_cell_bin_index_slices.sort_order[slice_indicies]:
+                    con_points.append(data_points[x])
 
-            hp_values = [None] * HyperPoint.number_standard_names
-            for (hpi, ci, shi) in coord_map:
-                hp_values[hpi] = coords[ci].points[out_indices[shi]]
-            hp = HyperPoint(*hp_values)
+                hp_values = [None] * HyperPoint.number_standard_names
+                for (hpi, ci, shi) in coord_map:
+                    hp_values[hpi] = coords[ci].points[out_indices[shi]]
+                hp = HyperPoint(*hp_values)
 
-            yield out_indices, hp, con_points
+                yield out_indices, hp, con_points
 
     def get_fast_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
         data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]

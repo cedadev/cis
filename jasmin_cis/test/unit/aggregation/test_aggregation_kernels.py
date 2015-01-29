@@ -7,6 +7,7 @@ from jasmin_cis.aggregation.aggregation_grid import AggregationGrid
 from jasmin_cis.aggregation.aggregator import Aggregator
 from jasmin_cis.test.util import mock
 from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels, CountKernel
+from test.utils_for_testing import *
 
 
 class TestMomentsKernel(unittest.TestCase):
@@ -101,7 +102,7 @@ class TestMomentsKernel(unittest.TestCase):
         assert_that(numpy.isnan(result[1].data).all())
 
     def test_GIVEN_ungridded_data_WHEN_collapse_THEN_calculations_correct(self):
-        grid = {'y': AggregationGrid(-10, 10, 10, False)}
+        grid = {'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
         data = mock.make_regular_2d_ungridded_data()
         kernel_class = get_kernel('moments')
         kernel = kernel_class()
@@ -112,8 +113,8 @@ class TestMomentsKernel(unittest.TestCase):
         expected_std_dev = numpy.array([numpy.sqrt(3.5), numpy.sqrt(7.5)])
         expected_no = numpy.array([6, 9])
         assert_that(len(result), is_(3))
-        assert_that(numpy.allclose(result[0].data, expected_means))
-        assert_that(numpy.allclose(result[1].data, expected_std_dev))
+        assert_arrays_almost_equal(result[0].data, expected_means)
+        assert_arrays_almost_equal(result[1].data, expected_std_dev)
         assert_that(numpy.array_equal(result[2].data, expected_no))
 
     def test_GIVEN_ungridded_data_WHEN_collapse_THEN_metadata_correct(self):

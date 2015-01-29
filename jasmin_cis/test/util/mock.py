@@ -3,6 +3,7 @@ Module for creating mock, dummies and fakes
 '''
 from nose.tools import raises
 import numpy as np
+import numpy.ma as ma
 from iris.cube import Cube
 from iris.coords import DimCoord
 import datetime
@@ -584,7 +585,7 @@ def make_dummy_2d_points_list(num):
     return [ get_random_2d_point() for i in xrange(0,num) ]
 
 
-def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None):
+def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None, mask=None):
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
@@ -608,6 +609,8 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=Non
         coords = CoordList([x, y, p])
 
     data = numpy.array(value)
+    if mask:
+        data = ma.masked_array(data, mask=mask)
     return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 

@@ -1,10 +1,10 @@
-import timeit
 import unittest
 import datetime
+
 import numpy
-from hamcrest import *
 
 from jasmin_cis.data_io.gridded_data import GriddedDataList
+
 from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 from jasmin_cis.col_implementations import GeneralGriddedColocator, mean, CubeCellConstraint, \
     BinningCubeCellConstraint, moments, BinnedCubeCellOnlyConstraint
@@ -13,23 +13,65 @@ from jasmin_cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
     make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
     make_square_5x3_2d_cube_with_decreasing_latitude, make_square_5x3_2d_cube, make_regular_2d_ungridded_data, \
-    make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim
-
-def assert_arrays_equal(result, expected):
-        assert_that(numpy.array_equal(result, expected), is_(True),
-                "arrays not the same. Expected\n {}\n was\n {}".format(expected, result))
-
-
-def assert_arrays_almost_equal(result, expected):
-        assert_that(numpy.allclose(result, expected, atol=1.0e-15)
-                    , is_(True),
-                    "arrays not almost the same. Expected\n {}\n was\n {}".format(expected, result))
+    make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim, \
+    make_regular_2d_ungridded_data_with_missing_values
+from test.utils_for_testing import assert_arrays_equal, assert_arrays_almost_equal
 
 
 def single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
     col = GeneralGriddedColocator(fill_value=-999.9)
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, 1.2, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+    assert_arrays_equal(out_cube.data.filled(), expected_result)
+
+
+def single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel):
+    sample_cube = make_mock_cube()
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, mask=True)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+    assert_arrays_equal(out_cube.data.filled(), expected_result)
+
+
+def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(con, kernel):
+
+    mask = [[False, False, False],
+           [False, False, False],
+           [False, True, False],
+           [False, False, False],
+           [False, False, False]]
+    sample_cube = make_mock_cube(mask=mask)
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
+    col = GeneralGriddedColocator(fill_value=-999.9, missing_data_for_missing_sample=True)
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+    assert_arrays_equal(out_cube.data.filled(), expected_result)
+
+def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_false(con, kernel):
+
+    mask = [[False, False, False],
+           [False, False, False],
+           [False, True, False],
+           [False, False, False],
+           [False, False, False]]
+    sample_cube = make_mock_cube(mask=mask)
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
+    col = GeneralGriddedColocator(fill_value=-999.9, missing_data_for_missing_sample=False)
     out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -451,6 +493,30 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         kernel = mean()
 
         single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+
+    def test_single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(self):
+        con = BinningCubeCellConstraint()
+        kernel = mean()
+        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+
+    def test_single_masked_point_results_in_single_value_in_cell_using_kernel_and_con_binned(self):
+        from jasmin_cis.col_implementations import max
+        con = BinnedCubeCellOnlyConstraint()
+        kernel = max()
+
+        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+
+    def test_single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(self):
+        con = BinningCubeCellConstraint()
+        kernel = mean()
+        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+
+    def test_single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true_binned_only(self):
+        from jasmin_cis.col_implementations import max
+        con = BinnedCubeCellOnlyConstraint()
+        kernel = max()
+
+        single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(con, kernel)
 
 
     def test_two_points_in_a_cell_results_in_mean_value_in_cell(self):

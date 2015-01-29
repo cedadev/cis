@@ -6,6 +6,7 @@ import math
 import datetime
 
 import numpy as np
+import numpy.ma as ma
 
 from jasmin_cis.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 from time_util import convert_obj_to_standard_date_array
@@ -73,7 +74,7 @@ class GridCellBinIndexInSlices(object):
         # The choice of 'left' or 'right' and '<' and '<=' determines which
         #  cell is chosen when the coordinate is equal to the boundary.
         # -1 or M_i indicates the point is outside the grid.
-        # Output is a list of cordinates which lists the indexes where the hyper points
+        # Output is a list of coordinates which lists the indexes where the hyper points
         #    should be located in the grid
         indices = np.vstack(
             np.where(
@@ -88,11 +89,13 @@ class GridCellBinIndexInSlices(object):
         # shape (N,) telling which points actually fall within the grid, i.e. have indexes within the grid
         grid_mask = np.all(
             (indices >= 0) &
-            (indices < np.array(grid_shape)[:, np.newaxis]), axis=0)
+            (indices < np.array(grid_shape)[:, np.newaxis]) &
+            (ma.getmaskarray(hyper_points.data) == False),
+            axis=0)
 
         # if the coordinate was decreasing then correct the indices for this cell
-        for indices_slice, descreasing, coord_length in zip(xrange(indices.shape[0]), coord_descreasing, coord_lengths):
-            if descreasing:
+        for indices_slice, decreasing, coord_length in zip(xrange(indices.shape[0]), coord_descreasing, coord_lengths):
+            if decreasing:
                 #indices[indices_slice] += (coord_length - 1) - indices[indices_slice]
                 indices[indices_slice] *= -1
                 indices[indices_slice] += (coord_length - 1)
