@@ -395,7 +395,9 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
 
     return cube
 
-def make_square_NxM_2d_cube_with_time(offset=0, time_offset=0, n=5, m=3):
+def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count=5,
+                                      start_lon=-5, end_lon=5, lon_point_count=3,
+                                      time_offset=0):
     '''
         Makes a well defined cube of shape 5x3 with data as follows
         arr([[[   1.    2.    3.    4.    5.    6.    7.]
@@ -433,15 +435,15 @@ def make_square_NxM_2d_cube_with_time(offset=0, time_offset=0, n=5, m=3):
     import datetime
     from jasmin_cis.time_util import convert_obj_to_standard_date_array
 
-    t0 = datetime.datetime(1984,8,27)
+    t0 = datetime.datetime(1984, 8, 27)
     times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(7)])
 
     time_nums = convert_obj_to_standard_date_array(times)
 
     time = DimCoord(time_nums, standard_name='time')
-    latitude = DimCoord(np.linspace(-10+offset, 11+offset, n), standard_name='latitude', units='degrees')
-    longitude = DimCoord(np.linspace(-5+offset, 6+offset, m), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(n*m*7)+1.0,(n,m,7))
+    latitude = DimCoord(np.linspace(start_lat, end_lat, lat_point_count), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.linspace(start_lon, end_lon, lon_point_count), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(lat_point_count * lon_point_count * 7)+1.0, (lat_point_count, lon_point_count, 7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
 
     return cube

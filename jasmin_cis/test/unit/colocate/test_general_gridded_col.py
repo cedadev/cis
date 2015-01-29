@@ -92,6 +92,33 @@ def point_on_a_lat_boundary_appears_in_higher_cell(con, kernel):
                                    [-999.9, -999.9, -999.9]])
     assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
 
+
+def point_on_highest_lat_boundary_is_excluded(con, kernel):
+    sample_cube = make_mock_cube()
+    data_point = make_dummy_ungridded_data_single_point(12.5, 0.0, 1.2)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9]])
+    assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
+
+
+def point_on_180_is_included_in_lower_bound(con, kernel):
+    sample_cube = make_square_NxM_2d_cube_with_time(start_lon=-135, end_lon=135, lon_point_count=4)
+    data_point = make_dummy_ungridded_data_single_point(0, 180.0, 1.2)
+    col = GeneralGriddedColocator(fill_value=-999.9)
+    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    expected_result = numpy.array([[-999.9, -999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9, -999.9],
+                                   [1.2, -999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9, -999.9],
+                                   [-999.9, -999.9, -999.9, -999.9]])
+    assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
+
+
 def point_on_a_lon_boundary_appears_in_higher_cell(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
@@ -447,7 +474,7 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         kernel = mean()
 
         point_on_a_lat_boundary_appears_in_higher_cell(con, kernel)
-    
+
     def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binning(self):
         con = BinningCubeCellConstraint()
         kernel = mean()
@@ -459,6 +486,30 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         kernel = mean()
 
         point_on_a_lat_boundary_appears_in_higher_cell(con, kernel)
+
+    def test_point_on_a_lat_boundary_appears_in_higher_cell(self):
+        con = CubeCellConstraint()
+        kernel = mean()
+
+        point_on_highest_lat_boundary_is_excluded(con, kernel)
+
+    def test_point_on_a_lat_boundary_appears_in_higher_cell(self):
+        con = BinningCubeCellConstraint()
+        kernel = mean()
+
+        point_on_highest_lat_boundary_is_excluded(con, kernel)
+
+    def test_point_on_a_lat_boundary_appears_in_higher_cell(self):
+        con = BinnedCubeCellOnlyConstraint()
+        kernel = mean()
+
+        point_on_highest_lat_boundary_is_excluded(con, kernel)
+
+    def test_point_on_a_lat_boundary_appears_in_higher_cell(self):
+        con = BinnedCubeCellOnlyConstraint()
+        kernel = mean()
+
+        point_on_180_is_included_in_lower_bound(con, kernel)
 
     def test_point_on_a_lon_boundary_appears_in_higher_cell(self):
         con = CubeCellConstraint()
