@@ -221,6 +221,35 @@ def make_square_5x3_2d_cube():
     
     return cube
 
+def make_square_5x3_2d_cube_with_extra_dim():
+    '''
+        Makes a well defined cube of shape 5x3 with data as follows
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+        level non coord:
+            array([-10,0,10])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(np.linspace(-10, 10, 5), var_name='lat', standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.linspace(-5, 5, 3), var_name='lon', standard_name='longitude', units='degrees')
+    level = DimCoord(np.linspace(-10, 10, 7), var_name='lev', standard_name='air_pressure', units='Pa')
+    data = np.reshape(np.arange(3 * 5 * 7) + 1.0, (5, 7, 3))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 2), (level, 1)], var_name='dummy')
+
+    return cube
 
 def make_square_5x3_2d_cube_with_missing_data():
     '''

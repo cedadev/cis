@@ -50,14 +50,14 @@ class GridCellBinIndexInSlices(object):
             # Coordinates must be monotonic; determine whether increasing or decreasing.
             if len(coord.points) > 1:
                 if coord.points[1] < coord.points[0]:
-                    coord_descreasing[ci] = True
-            coord_lengths[ci] = len(coord.points)
-            if coord_descreasing[ci]:
-                lower_bounds[ci] = coord.bounds[::-1, 1]
-                max_bounds[ci] = coord.bounds[0, 1]
+                    coord_descreasing[shi] = True
+            coord_lengths[shi] = len(coord.points)
+            if coord_descreasing[shi]:
+                lower_bounds[shi] = coord.bounds[::-1, 1]
+                max_bounds[shi] = coord.bounds[0, 1]
             else:
-                lower_bounds[ci] = coord.bounds[::, 0]
-                max_bounds[ci] = coord.bounds[-1, 1]
+                lower_bounds[shi] = coord.bounds[::, 0]
+                max_bounds[shi] = coord.bounds[-1, 1]
 
             hp_coord = hyper_points.coords[hpi]
             if isinstance(hp_coord[0], datetime.datetime):
@@ -65,7 +65,7 @@ class GridCellBinIndexInSlices(object):
 
             hp_coords.append(hp_coord)
 
-        bounds_and_coords = zip(lower_bounds, hp_coords, max_bounds)
+        bounds_coords_max = zip(lower_bounds, hp_coords, max_bounds)
 
         # stack for each coordinate
         #    where the coordinate is larger than the maximum set to -1
@@ -80,10 +80,10 @@ class GridCellBinIndexInSlices(object):
                 ci < max_coordinate_value,
                 np.searchsorted(bi, ci, side='right') - 1,
                 -1)
-            for bi, ci, max_coordinate_value in bounds_and_coords)
+            for bi, ci, max_coordinate_value in bounds_coords_max)
 
         # D-tuple giving the shape of the output grid
-        grid_shape = tuple(len(bi_ci[0]) for bi_ci in bounds_and_coords)
+        grid_shape = tuple(len(bi_ci[0]) for bi_ci in bounds_coords_max)
 
         # shape (N,) telling which points actually fall within the grid, i.e. have indexes within the grid
         grid_mask = np.all(

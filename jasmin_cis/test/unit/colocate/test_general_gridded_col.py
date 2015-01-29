@@ -13,7 +13,7 @@ from jasmin_cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
     make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
     make_square_5x3_2d_cube_with_decreasing_latitude, make_square_5x3_2d_cube, make_regular_2d_ungridded_data, \
-    make_square_NxM_2d_cube_with_time
+    make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim
 
 def assert_arrays_equal(result, expected):
         assert_that(numpy.array_equal(result, expected), is_(True),
@@ -180,6 +180,19 @@ def single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
     assert_arrays_equal(out_cube.data.filled(), expected_result)
+
+def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel):
+        sample_cube = make_square_5x3_2d_cube_with_extra_dim()
+        data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=18)
+        print sample_cube.data
+        col = GeneralGriddedColocator(fill_value=-999.9)
+        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+        expected_result = numpy.array([[-999.9, -999.9, -999.9],
+                                       [-999.9, -999.9, -999.9],
+                                       [-999.9, 1.2, -999.9],
+                                       [-999.9, -999.9, -999.9],
+                                       [-999.9, -999.9, -999.9]])
+        assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
 def single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(con, kernel):
@@ -572,6 +585,16 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         kernel = mean()
 
         single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel)
+
+    def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(self):
+        con = BinningCubeCellConstraint()
+        kernel = mean()
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel)
+
+    def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude_binned_only(self):
+        con = BinnedCubeCellOnlyConstraint()
+        kernel = mean()
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(self):
         con = BinningCubeCellConstraint()
