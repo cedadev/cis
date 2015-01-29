@@ -338,7 +338,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_Aeronet(self):
-        # Takes 30s
+        # Takes 60s
         variable = '*'
         filename = valid_aeronet_filename
         lon_min, lon_max = -1.5, 1.4
