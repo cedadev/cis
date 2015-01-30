@@ -1,4 +1,3 @@
-import __builtin__
 import logging
 
 import iris
@@ -318,8 +317,6 @@ class stddev(DataOnlyKernel):
         """
         Return the standard deviation points
         """
-        if len(values) < 2:
-            raise ValueError
         return np_std(values, ddof=1)
 
 
@@ -378,7 +375,6 @@ class moments(DataOnlyKernel):
         return ((self.mean_name, var_long_name, var_standard_name, var_units),
                 (self.stddev_name, stdev_long_name, None, stddev_units),
                 (self.nopoints_name, npoints_long_name, None, npoints_units))
-
 
     def get_value_for_data_only(self, values):
         """
@@ -918,29 +914,30 @@ class GeneralGriddedColocator(Colocator):
 
         logging.info("--> Co-locating...")
 
-        if hasattr(kernel, "get_value_for_data_only") and  hasattr(constraint, "get_interator_for_data_only"):
+        if hasattr(kernel, "get_value_for_data_only") and hasattr(constraint, "get_interator_for_data_only"):
             # Iterate over constrained cells
-            iterator = constraint.get_interator_for_data_only(self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
-            for outindicies, data_values in iterator:
+            iterator = constraint.get_interator_for_data_only(
+                self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
+            for out_indices, data_values in iterator:
                 try:
                     kernel_val = kernel.get_value_for_data_only(data_values)
-                    set_value_kernel(kernel_val, values, outindicies)
+                    set_value_kernel(kernel_val, values, out_indices)
                 except ValueError:
                     # ValueErrors are raised by Kernel when there are no points to operate on.
                     # We don't need to do anything.
                     pass
         else:
             # Iterate over constrained cells
-            iterator = constraint.get_iterator(self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
-            for outindicies, hp, con_points in iterator:
+            iterator = constraint.get_iterator(
+                self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
+            for out_indices, hp, con_points in iterator:
                 try:
                     kernel_val = kernel.get_value(hp, con_points)
-                    set_value_kernel(kernel_val, values, outindicies)
+                    set_value_kernel(kernel_val, values, out_indices)
                 except ValueError:
                     # ValueErrors are raised by Kernel when there are no points to operate on.
                     # We don't need to do anything.
                     pass
-
 
         # Construct an output cube containing the colocated data.
         kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
@@ -961,7 +958,6 @@ class GeneralGriddedColocator(Colocator):
             output.append(cube)
 
         return output
-
 
     def _set_multi_value_kernel(self, kernel_val, values, indices):
         # This kernel returns multiple values:
@@ -1046,7 +1042,7 @@ class BinningCubeCellConstraint(IndexedConstraint):
         return con_points
 
 
-class BinnedCubeCellOnlyConstraint(IndexedConstraint):
+class BinnedCubeCellOnlyConstraint(Constraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell. With an iterator which only
     travels over those cells with a value in
 
@@ -1059,11 +1055,11 @@ class BinnedCubeCellOnlyConstraint(IndexedConstraint):
     def constrain_points(self, sample_point, data):
         pass
 
-    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
 
         for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
             if not missing_data_for_missing_sample or points.data[out_indices] is not np.ma.masked:
-                #iterate through the points which are within the same cell
+                # iterate through the points which are within the same cell
 
                 con_points = HyperPointList()
                 slice_indicies = slice(*slice_start_end)
