@@ -223,7 +223,7 @@ class GridCellBinIndex(object):
             # Find the interval that the point resides in for each relevant coordinate.
             for (hpi, ci, shi) in coord_map:
                 search_index = np.searchsorted(lower_bounds[ci], point[hpi], side='right') - 1
-                if (search_index >= 0) and (point[hpi] <= upper_bounds[ci][search_index]):
+                if (search_index >= 0) and (point[hpi] < upper_bounds[ci][search_index]):
                     if coord_descreasing[ci]:
                         point_cell_indices[shi] = coord_lengths[ci] - search_index - 1
                     else:

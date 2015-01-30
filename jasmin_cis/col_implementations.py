@@ -6,9 +6,10 @@ import iris.analysis
 import iris.analysis.interpolate
 import iris.coords
 import numpy as np
+from numpy import mean as np_mean, std as np_std, nan as np_nan, min as np_min, max as np_max
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
-                                      IndexedConstraint, Kernel)
+                                      IndexedConstraint, Kernel, DataOnlyKernel)
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
@@ -288,58 +289,69 @@ class SepConstraintKdtree(PointConstraint):
         self._index_cache[key] = indices
 
 
-class mean(Kernel):
+# noinspection PyPep8Naming
+class mean(DataOnlyKernel):
+    """
+    Calculate mean of data points
+    """
 
-    def get_value(self, point, data):
-        '''
-            Colocation using the mean of any points left after a constraint.
-        '''
-        values = data.vals
-        if len(values) == 0:
-            raise ValueError
-        return np.mean(values)
+    def get_value_for_data_only(self, values):
+        """
+        return the mean
+        """
+        return np_mean(values)
 
 
-class stddev(Kernel):
+# noinspection PyPep8Naming
+class stddev(DataOnlyKernel):
+    """
+    Calculate the standard deviation
+    """
 
     def get_value(self, point, data):
         """
-        Colocation using the standard deviation of any points left after a constraint.
+        Return the standard deviation points
         """
-        from numpy import std
-        values = data.vals
+        self.get_value_for_data_only(data.vals)
+
+    def get_value_for_data_only(self, values):
+        """
+        Return the standard deviation points
+        """
         if len(values) < 2:
             raise ValueError
-        return std(values, ddof=1)
+        return np_std(values, ddof=1)
 
 
-class min(Kernel):
+# noinspection PyPep8Naming,PyShadowingBuiltins
+class min(DataOnlyKernel):
+    """
+    Calculate the minimum value
+    """
 
-    def get_value(self, point, data):
+    def get_value_for_data_only(self, values):
         """
-        Colocation using the standard deviation of any points left after a constraint.
+        Return the minimum value
         """
-        values = data.vals
-        if len(values) == 0:
-            raise ValueError
-        # Using builtin is required so that the class can be called min
-        return __builtin__.min(values)
+        return np_min(values)
 
 
-class max(Kernel):
+# noinspection PyPep8Naming,PyShadowingBuiltins
+class max(DataOnlyKernel):
 
-    def get_value(self, point, data):
+    """
+    Calculate the maximum value
+    """
+
+    def get_value_for_data_only(self, values):
         """
-        Colocation using the standard deviation of any points left after a constraint.
+        Return the maximum value
         """
-        values = data.vals
-        if len(values) == 0:
-            raise ValueError
-        # Using builtin is required so that the class can be called max
-        return __builtin__.max(values)
+        return np_max(values)
 
 
-class moments(Kernel):
+# noinspection PyPep8Naming
+class moments(DataOnlyKernel):
     return_size = 3
 
     def __init__(self, mean_name='', stddev_name='', nopoints_name=''):
@@ -367,20 +379,13 @@ class moments(Kernel):
                 (self.stddev_name, stdev_long_name, None, stddev_units),
                 (self.nopoints_name, npoints_long_name, None, npoints_units))
 
-    def get_value(self, point, data):
+
+    def get_value_for_data_only(self, values):
         """
         Returns the mean, standard deviation and number of values
         """
-        from numpy import mean, std
-        values = data.vals
-        num_values = len(values)
-        if num_values == 0:
-            raise ValueError
-        elif num_values == 1:
-            std_dev = np.nan
-        else:
-            std_dev = std(values, ddof=1)
-        return mean(values), std_dev, num_values
+
+        return np_mean(values), np_std(values, ddof=1), np.size(values)
 
 
 class nn_horizontal(Kernel):
@@ -913,16 +918,28 @@ class GeneralGriddedColocator(Colocator):
 
         logging.info("--> Co-locating...")
 
-        # Iterate over constrained cells
-        iterator = constraint.get_iterator(self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
-        for outindicies, hp, con_points in iterator:
-            try:
-                kernel_val = kernel.get_value(hp, con_points)
-                set_value_kernel(kernel_val, values, outindicies)
-            except ValueError:
-                # ValueErrors are raised by Kernel when there are no points to operate on.
-                # We don't need to do anything.
-                pass
+        if hasattr(kernel, "get_value_for_data_only") and  hasattr(constraint, "get_interator_for_data_only"):
+            # Iterate over constrained cells
+            iterator = constraint.get_interator_for_data_only(self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
+            for outindicies, data_values in iterator:
+                try:
+                    kernel_val = kernel.get_value_for_data_only(data_values)
+                    set_value_kernel(kernel_val, values, outindicies)
+                except ValueError:
+                    # ValueErrors are raised by Kernel when there are no points to operate on.
+                    # We don't need to do anything.
+                    pass
+        else:
+            # Iterate over constrained cells
+            iterator = constraint.get_iterator(self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
+            for outindicies, hp, con_points in iterator:
+                try:
+                    kernel_val = kernel.get_value(hp, con_points)
+                    set_value_kernel(kernel_val, values, outindicies)
+                except ValueError:
+                    # ValueErrors are raised by Kernel when there are no points to operate on.
+                    # We don't need to do anything.
+                    pass
 
 
         # Construct an output cube containing the colocated data.
@@ -1061,15 +1078,18 @@ class BinnedCubeCellOnlyConstraint(IndexedConstraint):
 
                 yield out_indices, hp, con_points
 
-    def get_fast_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+    def get_interator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+
         data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
-        for slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
-            #iterate through the points which are within the same cell
-
-            data_slice = data_points_sorted[slice(*slice_start_end)]
-            out_indices = tuple(self.grid_cell_bin_index_slices.indices[:, slice_start_end[0]])
-
-            yield out_indices, data_slice
+        if missing_data_for_missing_sample:
+            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+                if points.data[out_indices] is not np.ma.masked:
+                    data_slice = data_points_sorted[slice(*slice_start_end)]
+                    yield out_indices, data_slice
+        else:
+            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+                data_slice = data_points_sorted[slice(*slice_start_end)]
+                yield out_indices, data_slice
 
 
 def make_coord_map(points, data):

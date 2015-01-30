@@ -56,6 +56,36 @@ class Kernel(object):
         return ((var_name, var_long_name, var_standard_name, var_units),)
 
 
+class DataOnlyKernel(Kernel):
+    """
+    A Kernel that can work on data only, e.g. mean nly requires the data value to calculate the mean
+    """
+
+    __metaclass__ = ABCMeta
+
+    def get_value(self, point, data):
+        """
+        :param point: A single HyperPoint
+        :param data: A set of data points to reduce to a single value
+        :return: For return_size=1 a single value (number) otherwise a list of reutrns values, which represents some
+            operation on the points provided
+
+        """
+        values = data.vals
+        if len(values) == 0:
+            raise ValueError
+        return self.get_value_for_data_only(values)
+
+    @abstractmethod
+    def get_value_for_data_only(self, values):
+        """
+        Return a value or values base on the data
+        :param values: a numpy array of values (can not be none or empty)
+        :return: single data item if return_size is 1 or a list of items containing return size items
+        :throws ValueError: if there are any problems creating a value
+        """
+
+
 class Constraint(object):
     '''
     Class which provides a method for constraining a set of points. A single HyperPoint is given as a reference
