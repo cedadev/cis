@@ -367,7 +367,7 @@ class moments(DataOnlyKernel):
         """
         self.mean_name = var_name
         self.stddev_name = var_name + '_std_dev'
-        stdev_long_name = 'Unbiased standard deviation of %s' % var_long_name
+        stdev_long_name = 'Corrected sample standard deviation of %s' % var_long_name
         stddev_units = var_units
         self.nopoints_name = var_name + '_num_points'
         npoints_long_name = 'Number of points used to calculate the mean of %s' % var_long_name

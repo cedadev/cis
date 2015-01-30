@@ -55,7 +55,10 @@ def load_aeronet(fname, variables=None):
     std_day = datetime(1900, 1, 1, 0, 0, 0)
 
     def date2daynum(datestr):
-        the_day = datetime.strptime(datestr, '%d:%m:%Y')
+        try:
+            the_day = datetime.strptime(datestr, '%d:%m:%Y')
+        except ValueError:
+            the_day = datetime.strptime(datestr, '%d/%m/%Y')
         return float((the_day - std_day).days)
 
     def time2seconds(timestr):
@@ -65,10 +68,24 @@ def load_aeronet(fname, variables=None):
     def daynum_seconds2datetime(daynum, seconds):
         return std_day + timedelta(days=int(daynum), seconds=int(seconds))
 
+    def convert_datatypes_to_floats(column):
+        """
+        Numpy.genfromtext() converts missing values 'N/A' to floats when using dtype=None.
+        Also converts dates to objects.
+        Convert them into float64 as they should be.
+        :param column: Column to convert if a boolean.
+        :return:
+        """
+        if column.dtype == np.bool:
+            return column.astype(np.float64)
+        if column.dtype == np.object:
+            return np.array([column], dtype=np.float64)
+        return column
+
     try:
         rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, deletechars=defaultdeletechars,
-                             dtype=None, converters={0: date2daynum, 1: time2seconds}, missing_values='N/A',
-                             usemask=True)
+                             converters={0: date2daynum, 1: time2seconds, 'Last_Processing_Date': date2daynum},
+                             dtype=None, missing_values='N/A', usemask=True)
     except (StopIteration, IndexError) as e:
         raise IOError(e)
 
@@ -85,7 +102,7 @@ def load_aeronet(fname, variables=None):
     data_dict = {}
     if variables is not None:
         for key in variables:
-            data_dict[key] = rawd[key]
+            data_dict[key] = convert_datatypes_to_floats(rawd[key])
 
     data_dict["datetime"] = ma.array(dates)
     data_dict["longitude"] = ma.array(lon)

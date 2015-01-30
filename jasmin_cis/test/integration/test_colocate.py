@@ -200,6 +200,7 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    @unittest.skip("Very resource intensive")
     def test_CALIOP_L1_onto_NetCDF_Gridded(self):
         vars = [valid_caliop_l1_variable]
         filename = valid_caliop_l1_filename
@@ -214,6 +215,7 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    @unittest.skip("Very resource intensive")
     def test_CALIOP_L2_onto_NetCDF_Gridded(self):
         vars = [valid_caliop_l2_variable]
         filename = valid_caliop_l2_filename
@@ -346,6 +348,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
 
 class TestUngriddedUngriddedColocate(BaseIntegrationTest):
 
+    @unittest.skip("Very resource intensive")
     def test_GASSP_onto_CALIOP_L1(self):
         # Ran for 14hr, not finished. (with no h_sep)
         variable = valid_GASSP_aeroplane_variable
@@ -358,6 +361,7 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
 
+    @unittest.skip("Very resource intensive")
     def test_GASSP_onto_CALIOP_L2(self):
         variable = valid_GASSP_aeroplane_variable
         filename = valid_GASSP_aeroplane_filename
@@ -517,6 +521,7 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    @unittest.skip("Very resource intensive")
     def test_NetCDF_Gridded_onto_CALIOP_L1(self):
         vars = valid_hadgem_variable,
         filename = valid_hadgem_filename
@@ -531,6 +536,7 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    @unittest.skip("Very resource intensive")
     def test_NetCDF_Gridded_onto_CALIOP_L2(self):
         vars = valid_echamham_variable_1, valid_echamham_variable_2
         filename = valid_echamham_filename

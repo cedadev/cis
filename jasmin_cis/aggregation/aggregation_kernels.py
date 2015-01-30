@@ -15,7 +15,7 @@ class StddevKernel(iris.analysis.Aggregator):
         """
         super(StddevKernel, self).update_metadata(cube, coords, **kwargs)
         cube.standard_name = None
-        cube.long_name = 'Unbiased standard deviation of {long_name}'.format(long_name=cube.long_name)
+        cube.long_name = 'Corrected sample standard deviation of {long_name}'.format(long_name=cube.long_name)
         cube.var_name = '{var_name}_std_dev'.format(var_name=cube.var_name)
 
 
@@ -65,5 +65,4 @@ class MultiKernel(object):
 aggregation_kernels = {'mean': iris.analysis.MEAN,
                        'min': iris.analysis.MIN,
                        'max': iris.analysis.MAX,
-                       'stddev': iris.analysis.STD_DEV,
                        'moments': MultiKernel('moments', [iris.analysis.MEAN, StddevKernel(), CountKernel()])}
