@@ -1,10 +1,10 @@
 import unittest
 import datetime
-
+from hamcrest import *
 import numpy
 
+from jasmin_cis.exceptions import UserPrintableException
 from jasmin_cis.data_io.gridded_data import GriddedDataList
-
 from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 from jasmin_cis.col_implementations import GeneralGriddedColocator, mean, CubeCellConstraint, \
     BinningCubeCellConstraint, moments, BinnedCubeCellOnlyConstraint
@@ -223,6 +223,13 @@ def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_tim
                                    [-999.9, -999.9, -999.9]])
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
+
+def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_and_mising_samples_THEN_error(con, kernel):
+    sample_cube = make_square_5x3_2d_cube_with_time()
+    data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
+    col = GeneralGriddedColocator(fill_value=-999.9, missing_data_for_missing_sample=True)
+    assert_that(calling(col.colocate).with_args(points=sample_cube, data=data_point, constraint=con, kernel=kernel),
+                 raises(UserPrintableException, pattern=".*sample variable.*"))
 
 def single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
@@ -677,7 +684,11 @@ class TestGeneralGriddedColocator(unittest.TestCase):
 
         single_point_on_grid_corner_is_counted_once(con, kernel)
 
+    def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_and_mising_samples_THEN_error(self):
+        con = BinningCubeCellConstraint()
+        kernel = mean()
 
+        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_and_mising_samples_THEN_error(con, kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(self):
         con = BinningCubeCellConstraint()

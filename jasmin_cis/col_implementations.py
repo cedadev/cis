@@ -869,6 +869,12 @@ class GeneralGriddedColocator(Colocator):
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = make_coord_map(points, data)
+        if self.missing_data_for_missing_sample and len(coord_map) is not len(points.coords()):
+            raise jasmin_cis.exceptions.UserPrintableException(
+                "A sample variable has been specified but not all coordinates in the data appear in the sample so "
+                "there are multiple points in the sample data so whether the data is missing or not can not be "
+                "determined")
+
         coords = points.coords()
         shape = []
         output_coords = []
@@ -1065,7 +1071,16 @@ class BinnedCubeCellOnlyConstraint(IndexedConstraint):
 
             yield out_indices, data_slice
 
+
 def make_coord_map(points, data):
+    """
+    Create a map for how coordinates from the sample points map to the standard hyperpoint coordinates. Ignoring
+    coordinates which are not present in the data
+    :param points: sample points
+    :param data: data to map
+    :return: list of tuples, each tuple is index of coordinate to use
+        tuple is (hyper point coord index, sample point coord index, output coord index)
+    """
     # If there are coordinates in the sample grid that are not present for the data,
     # omit the from the set of coordinates in the output grid. Find a mask of coordinates
     # that are present to use when determining the output grid shape.
