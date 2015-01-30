@@ -86,10 +86,10 @@ class GridCellBinIndexInSlices(object):
         # D-tuple giving the shape of the output grid
         grid_shape = tuple(len(bi_ci[0]) for bi_ci in bounds_coords_max)
 
-        # shape (N,) telling which points actually fall within the grid, i.e. have indexes within the grid
+        # shape (N,) telling which points actually fall within the grid,
+        # i.e. have indexes that are not -1 and are not masked data points
         grid_mask = np.all(
             (indices >= 0) &
-            (indices < np.array(grid_shape)[:, np.newaxis]) &
             (ma.getmaskarray(hyper_points.data) == False),
             axis=0)
 
