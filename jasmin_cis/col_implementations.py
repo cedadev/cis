@@ -94,10 +94,14 @@ class GeneralUngriddedColocator(Colocator):
 
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
+        total_count = 0
         for i, point in sample_points.enumerate_non_masked_points():
             # Log progress periodically.
             cell_count += 1
-            logging.info("    Processed {} points of {}".format(cell_count, sample_points_count))
+            if cell_count == 1000:
+                total_count += cell_count
+                cell_count = 0
+                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
 
             if constraint is None:
                 con_points = data_points
