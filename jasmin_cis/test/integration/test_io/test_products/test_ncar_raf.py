@@ -1,7 +1,7 @@
 import unittest
 from hamcrest import *
 from jasmin_cis.data_io.products.NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
-from test.integration.test_io.test_products.test_data_products import ProductTests
+from jasmin_cis.test.integration.test_io.test_products.test_data_products import ProductTests
 from jasmin_cis.test.test_files.data import cis_test_files
 
 
