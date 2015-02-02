@@ -159,9 +159,9 @@ Kernel
 
 A kernel is used to convert the constrained points into values in the output. There are two sorts of kernel one
 which act on the final point location and a set of data points (these derive from Kernel) and the more specific kernels
-which act upon just an array of data (these derive from DataOnlyKernel, which in turn derives from Kernel).
+which act upon just an array of data (these derive from AbstractDataOnlyKernel, which in turn derives from Kernel).
 The data only kernels are less flexible but should execute faster. To create a new kernel inherit from ``Kernel`` and
-implement the abstract method ``get_value(self, point, data)``. To make a data only kernel inherit from DataOnlyKernel
+implement the abstract method ``get_value(self, point, data)``. To make a data only kernel inherit from AbstractDataOnlyKernel
 and implement ``get_value_for_data_only(self, values)`` and optionally overload ``get_value(self, point, data)``.
 
 ``get_value(self, point, data)``
@@ -191,7 +191,7 @@ The constraint limits the data points for a given sample point.
 The user can also add a new constraint method by subclassing Constraint and providing an implementation for
 ``constrain_points``. If more control is needed over the iteration sequence then the method
 ``get_iterator`` can be
-overloaded in additional to constrain_points. To enable a constraint to use a DataOnlyKernel the method
+overloaded in additional to constrain_points. To enable a constraint to use a AbstractDataOnlyKernel the method
 ``get_interator_for_data_only`` should be implemented.
 
 ``constrain_points(self, ref_point, data)``

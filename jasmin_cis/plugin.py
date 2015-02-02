@@ -47,6 +47,7 @@ def find_plugins(plugin_dir, parent_class_name, verbose):
 
     sys.path.insert(0, plugin_dir)
 
+    product_classes = []
     for plugin in plugin_files:
         module = __import__(plugin)
         classes = [getattr(module, x) for x in dir(module) if isinstance(getattr(module, x), type)]
@@ -67,7 +68,7 @@ def find_plugin_classes(parent_class, built_in_module, verbose=True):
     all_classes = plugin_classes + subclasses
 
     for subclass in all_classes:
-        if subclass.__name__.startswith('abstract'):
+        if subclass.__name__.startswith('abstract') or subclass.__name__.startswith('Abstract'):
             all_classes.remove(subclass)
 
     all_classes = sorted(all_classes, key=lambda subclass: subclass.__name__)
