@@ -2,9 +2,8 @@ import timeit
 import unittest
 import datetime
 import numpy
-from data_index import GridCellBinIndex
+from jasmin_cis import data_index
 from hamcrest import *
-import data_index
 from data_io.hyperpoint import HyperPoint
 
 from jasmin_cis.data_io.gridded_data import GriddedDataList

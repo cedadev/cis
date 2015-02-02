@@ -15,7 +15,7 @@ from jasmin_cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_
     make_square_5x3_2d_cube_with_decreasing_latitude, make_square_5x3_2d_cube, make_regular_2d_ungridded_data, \
     make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim, \
     make_regular_2d_ungridded_data_with_missing_values
-from test.utils_for_testing import assert_arrays_equal, assert_arrays_almost_equal
+from jasmin_cis.test.utils_for_testing import assert_arrays_equal, assert_arrays_almost_equal
 
 
 class FastMean(object):
