@@ -307,12 +307,6 @@ class stddev(DataOnlyKernel):
     Calculate the standard deviation
     """
 
-    def get_value(self, point, data):
-        """
-        Return the standard deviation points
-        """
-        self.get_value_for_data_only(data.vals)
-
     def get_value_for_data_only(self, values):
         """
         Return the standard deviation points
