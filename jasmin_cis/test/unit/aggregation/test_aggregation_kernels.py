@@ -7,7 +7,7 @@ from jasmin_cis.aggregation.aggregation_grid import AggregationGrid
 from jasmin_cis.aggregation.aggregator import Aggregator
 from jasmin_cis.test.util import mock
 from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels, CountKernel
-from test.utils_for_testing import *
+from jasmin_cis.test.utils_for_testing import *
 
 
 class TestMomentsKernel(unittest.TestCase):

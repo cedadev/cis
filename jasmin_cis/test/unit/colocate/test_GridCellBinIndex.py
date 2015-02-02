@@ -1,24 +1,13 @@
-import timeit
 import unittest
-import datetime
-import numpy
-from data_index import GridCellBinIndex
+
+from jasmin_cis import data_index
 from hamcrest import *
-import data_index
-from data_io.hyperpoint import HyperPoint
+from jasmin_cis.data_io.hyperpoint import HyperPoint
 
-from jasmin_cis.data_io.gridded_data import GriddedDataList
-from jasmin_cis.data_io.ungridded_data import UngriddedDataList
-from jasmin_cis.col_implementations import GeneralGriddedColocator, mean, CubeCellConstraint, \
-    BinningCubeCellConstraint, moments, make_coord_map, BinnedCubeCellOnlyConstraint
-from jasmin_cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
-    make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
-    make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
-    make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
-    make_square_5x3_2d_cube_with_decreasing_latitude, make_square_5x3_2d_cube, make_regular_2d_ungridded_data, \
-    make_square_NxM_2d_cube_with_time
-
+from jasmin_cis.col_implementations import make_coord_map, BinnedCubeCellOnlyConstraint
+from jasmin_cis.test.util.mock import *
 from jasmin_cis.time_util import convert_datetime_to_std_time
+
 
 class TestGridCellBinIndex(unittest.TestCase):
 

@@ -56,7 +56,7 @@ class Kernel(object):
         return ((var_name, var_long_name, var_standard_name, var_units),)
 
 
-class DataOnlyKernel(Kernel):
+class AbstractDataOnlyKernel(Kernel):
     """
     A Kernel that can work on data only, e.g. mean nly requires the data value to calculate the mean
     """

@@ -5,10 +5,10 @@ import iris.analysis
 import iris.analysis.interpolate
 import iris.coords
 import numpy as np
-from numpy import mean as np_mean, std as np_std, nan as np_nan, min as np_min, max as np_max
+from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
-                                      IndexedConstraint, Kernel, DataOnlyKernel)
+                                      IndexedConstraint, Kernel, AbstractDataOnlyKernel)
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
@@ -289,7 +289,7 @@ class SepConstraintKdtree(PointConstraint):
 
 
 # noinspection PyPep8Naming
-class mean(DataOnlyKernel):
+class mean(AbstractDataOnlyKernel):
     """
     Calculate mean of data points
     """
@@ -302,16 +302,10 @@ class mean(DataOnlyKernel):
 
 
 # noinspection PyPep8Naming
-class stddev(DataOnlyKernel):
+class stddev(AbstractDataOnlyKernel):
     """
     Calculate the standard deviation
     """
-
-    def get_value(self, point, data):
-        """
-        Return the standard deviation points
-        """
-        self.get_value_for_data_only(data.vals)
 
     def get_value_for_data_only(self, values):
         """
@@ -321,7 +315,7 @@ class stddev(DataOnlyKernel):
 
 
 # noinspection PyPep8Naming,PyShadowingBuiltins
-class min(DataOnlyKernel):
+class min(AbstractDataOnlyKernel):
     """
     Calculate the minimum value
     """
@@ -334,7 +328,7 @@ class min(DataOnlyKernel):
 
 
 # noinspection PyPep8Naming,PyShadowingBuiltins
-class max(DataOnlyKernel):
+class max(AbstractDataOnlyKernel):
 
     """
     Calculate the maximum value
@@ -348,7 +342,7 @@ class max(DataOnlyKernel):
 
 
 # noinspection PyPep8Naming
-class moments(DataOnlyKernel):
+class moments(AbstractDataOnlyKernel):
     return_size = 3
 
     def __init__(self, mean_name='', stddev_name='', nopoints_name=''):
