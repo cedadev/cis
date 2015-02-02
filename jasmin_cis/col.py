@@ -74,7 +74,7 @@ class ColocatorFactory(object):
             'bin_False_False': None,
             'bin_True_False': [ci.GeneralGriddedColocator, ci.BinnedCubeCellOnlyConstraint, _GenericKernel],
             'bin_False_True': None,
-            'bin_True_True': [ci.GeneralGriddedColocator, ci.BinnedCubeCellOnlyConstraint, _GenericKernel],
+            'bin_True_True': [ci.GeneralGriddedColocator, ci.BinningCubeCellConstraint, _GenericKernel],
             'box_False_False': [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree, _GenericKernel],
             'box_True_False': [ci.GeneralGriddedColocator, ci.SepConstraintKdtree, _GenericKernel],
             'box_False_True': [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree, _GenericKernel],

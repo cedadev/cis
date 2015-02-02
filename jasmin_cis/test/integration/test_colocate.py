@@ -345,6 +345,20 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars)
 
+    def test_HadGem_onto_ECHAMHAM_nn(self):
+        # Takes
+        vars = [valid_hadgem_variable]
+        filename = valid_hadgem_filename
+        sample_file = valid_echamham_filename
+        sample_var = valid_echamham_variable_1
+        colocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
 class TestUngriddedUngriddedColocate(BaseIntegrationTest):
 
