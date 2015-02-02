@@ -4,6 +4,7 @@ import iris
 import iris.analysis
 import iris.analysis.interpolate
 import iris.coords
+from memory_profiler import profile
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
 
@@ -17,6 +18,7 @@ import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
 
 
+@profile
 class GeneralUngriddedColocator(Colocator):
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',

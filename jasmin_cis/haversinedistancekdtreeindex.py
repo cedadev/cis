@@ -1,3 +1,4 @@
+from memory_profiler import profile
 import numpy as np
 
 from jasmin_cis.kdtree import HaversineDistanceKDTree
@@ -10,6 +11,7 @@ class HaversineDistanceKDTreeIndex(object):
     def __init__(self):
         self.index = None
 
+    @profile
     def index_data(self, points, data, coord_map, leafsize=10):
         """
         Creates the k-D tree index.
