@@ -11,13 +11,10 @@ from jasmin_cis.test.unit.eval.test_calc import compare_masked_arrays
 class TestEval(BaseIntegrationTest):
 
     def test_Aeronet_wavelength_calculation(self):
-        """
-        Example from the CIS Phase 3 Software spec:
-        "... a user should be able to write a plugin to calculate the Aeronet AOD at 550nm from the AOD at 500 nm as
-        AOD550 = AOD500 * (550/500)^(-1*Angstrom500-870)"
-        Takes 3s
-        :return:
-        """
+        # Example from the CIS Phase 3 Software spec:
+        # ... a user should be able to write a plugin to calculate the Aeronet AOD at 550nm from the AOD at 500 nm as
+        # AOD550 = AOD500 * (550/500)^(-1*Angstrom500-870)"
+        # Takes 3s
         args = ['eval', 'AOT_500,500-870Angstrom=a550to870:' + another_valid_aeronet_filename,
                 'AOT_500 * (550.0/500)**(-1*a550to870)', '-o', self.OUTPUT_NAME]
         arguments = parse_args(args)
