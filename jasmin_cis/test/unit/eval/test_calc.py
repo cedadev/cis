@@ -6,6 +6,7 @@ import numpy
 from jasmin_cis.data_io.gridded_data import make_from_cube, GriddedDataList, GriddedData
 from jasmin_cis.evaluate import Calculator, EvaluationError
 from jasmin_cis.test.util import mock
+from jasmin_cis.test.utils_for_testing import compare_masked_arrays
 from jasmin_cis.cis import __version__
 
 
@@ -174,18 +175,3 @@ class TestCalculator(unittest.TestCase):
         expr = 'var1 + var2'
         with self.assertRaises(EvaluationError):
             res = self.calc.evaluate(self.data, expr)
-
-
-def compare_masked_arrays(a1, a2):
-    """
-    Compare two masked arrays:
-    - Masks should be the same
-    - Unmasked data should be same
-    - Shape should be same
-    - Numeric values that are 'masked out' don't matter
-    """
-    flat_1 = a1.filled(numpy.inf)
-    flat_2 = a2.filled(numpy.inf)
-    assert_that(numpy.allclose(flat_1, flat_2), 'Masked arrays have different values')
-    assert_that(numpy.array_equal(a1.mask, a2.mask), 'Masked arrays have different masks')
-    assert_that(a1.shape, is_(a2.shape), 'Masked arrays have different shapes')
