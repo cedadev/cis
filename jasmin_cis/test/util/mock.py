@@ -3,6 +3,7 @@ Module for creating mock, dummies and fakes
 '''
 from nose.tools import raises
 import numpy as np
+import numpy.ma as ma
 from iris.cube import Cube
 from iris.coords import DimCoord
 import datetime
@@ -221,6 +222,35 @@ def make_square_5x3_2d_cube():
     
     return cube
 
+def make_square_5x3_2d_cube_with_extra_dim():
+    '''
+        Makes a well defined cube of shape 5x3 with data as follows
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+        level non coord:
+            array([-10,0,10])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(np.linspace(-10, 10, 5), var_name='lat', standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.linspace(-5, 5, 3), var_name='lon', standard_name='longitude', units='degrees')
+    level = DimCoord(np.linspace(-10, 10, 7), var_name='lev', standard_name='air_pressure', units='Pa')
+    data = np.reshape(np.arange(3 * 5 * 7) + 1.0, (5, 7, 3))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 2), (level, 1)], var_name='dummy')
+
+    return cube
 
 def make_square_5x3_2d_cube_with_missing_data():
     '''
@@ -366,6 +396,58 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
 
     return cube
 
+def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count=5,
+                                      start_lon=-5, end_lon=5, lon_point_count=3,
+                                      time_offset=0):
+    '''
+        Makes a well defined cube of shape 5x3 with data as follows
+        arr([[[   1.    2.    3.    4.    5.    6.    7.]
+              [   8.    9.   10.   11.   12.   13.   14.]
+              [  15.   16.   17.   18.   19.   20.   21.]]
+
+             [[  22.   23.   24.   25.   26.   27.   28.]
+              [  29.   30.   31.   32.   33.   34.   35.]
+              [  36.   37.   38.   39.   40.   41.   42.]]
+
+             [[  43.   44.   45.   46.   47.   48.   49.]
+              [  50.   51.   52.   53.   54.   55.   56.]
+              [  57.   58.   59.   60.   61.   62.   63.]]
+
+             [[  64.   65.   66.   67.   68.   69.   70.]
+              [  71.   72.   73.   74.   75.   76.   77.]
+              [  78.   79.   80.   81.   82.   83.   84.]]
+
+             [[  85.   86.   87.   88.   89.   90.   91.]
+              [  92.   93.   94.   95.   96.   97.   98.]
+              [  99.  100.  101.  102.  103.  104.  105.]]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+        time:
+            array([1984-08-27, 1984-08-28, 1984-08-29, 1984-08-30, 1984-08-31, 1984-09-01, 1984-09-02])
+
+        They are different lengths to make it easier to distinguish. Note the latitude increases
+        as you step through the array in order - so downwards as it's written above
+    '''
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+    import datetime
+    from jasmin_cis.time_util import convert_obj_to_standard_date_array
+
+    t0 = datetime.datetime(1984, 8, 27)
+    times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(7)])
+
+    time_nums = convert_obj_to_standard_date_array(times)
+
+    time = DimCoord(time_nums, standard_name='time')
+    latitude = DimCoord(np.linspace(start_lat, end_lat, lat_point_count), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.linspace(start_lon, end_lon, lon_point_count), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(lat_point_count * lon_point_count * 7)+1.0, (lat_point_count, lon_point_count, 7))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
+
+    return cube
 
 def make_square_5x3_2d_cube_with_altitude(offset=0, altitude_offset=0):
     """
@@ -503,7 +585,7 @@ def make_dummy_2d_points_list(num):
     return [ get_random_2d_point() for i in xrange(0,num) ]
 
 
-def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None):
+def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None, mask=None):
     from jasmin_cis.data_io.Coord import CoordList, Coord
     from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
@@ -527,6 +609,8 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=Non
         coords = CoordList([x, y, p])
 
     data = numpy.array(value)
+    if mask:
+        data = ma.masked_array(data, mask=mask)
     return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 

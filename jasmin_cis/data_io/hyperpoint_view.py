@@ -151,18 +151,10 @@ class UngriddedHyperPointView(HyperPointView):
             return
 
         range_end = range_start + 360.0
-        new_lon = None
-        for idx, point in enumerate(self):
-            modified = False
-            if point.longitude < range_start:
-                new_lon = point.longitude + 360.0
-                modified = True
-            elif point.longitude >= range_end:
-                new_lon = point.longitude - 360.0
-                modified = True
-            if modified:
-                new_point = point.modified(lon=new_lon)
-                self[idx] = new_point
+
+        longitudes = self.coords[HyperPoint.LONGITUDE]
+        longitudes = np.where(longitudes < range_start, longitudes + 360, longitudes)
+        self.coords[HyperPoint.LONGITUDE] = np.where(longitudes >= range_end, longitudes - 360, longitudes)
 
     @property
     def vals(self):

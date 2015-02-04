@@ -151,15 +151,90 @@ Here is a sketch of a data product implementation::
 Colocation
 ----------
 
-Users can write their own plugins for performing the colocation of two data sets. There are three different types of plugin available for colocation and each will be described briefly below. 
+Users can write their own plugins for performing the colocation of two data sets.
+There are three different types of plugin available for colocation and each will be described briefly below.
 
-The user can add a new kernel by writing their own subclass of Kernel that implements the abstract method ``get_value(self, point, data)``. This method should return a single value based on some calculation on the data given a single point. The data is deliberately left unspecified in the interface as it may be any type of data, however it is expected that each implementation will only work with a specific type of data (gridded, ungridded etc.) Note that this method will be called for every sample point and so could become a bottleneck for calculations, it is advisable to make it as quick as is practical. If this method is unable to provide a value (for example if no data points were given) a ValueError should be thrown.
+Kernel
+""""""
 
-The user can also add a new constraint method by subclassing Constraint and providing an implementation for ``constrain_points(self, ref_point, data)``. This method should return a subset of the data given a single reference point. It is expected that the data returned should be of the same type as that given - but this isn't mandatory. It is possible that this function will return zero points, or no data. The colocation class is responsible for providing a fill_value.
+A kernel is used to convert the constrained points into values in the output. There are two sorts of kernel one
+which act on the final point location and a set of data points (these derive from Kernel) and the more specific kernels
+which act upon just an array of data (these derive from AbstractDataOnlyKernel, which in turn derives from Kernel).
+The data only kernels are less flexible but should execute faster. To create a new kernel inherit from ``Kernel`` and
+implement the abstract method ``get_value(self, point, data)``. To make a data only kernel inherit from AbstractDataOnlyKernel
+and implement ``get_value_for_data_only(self, values)`` and optionally overload ``get_value(self, point, data)``.
 
-Another plugin which is available is the colocation method itself. A new one can be created by subclassing Colocator and providing an implementation for ``colocate(self, points, data, constraint, kernel)``. This method takes a number of points and applies the given constraint and kernel methods on the data for each of those points. It is responsible for returning the new data object to be written to the output file. As such, the user could create a colocation routine capable of handling multiple return values from the kernel, and hence creating multiple data objects, by creating a new colocation method.
+``get_value(self, point, data)``
 
-For all of these plugins any new variables, such as limits, constraint values or averaging parameters, are automatically set as attributes in the relevant object. For example, if the user wanted to write a new constraint method (``AreaConstraint``, say) which needed a variable called ``area``, this can be accessed with ``self.area`` within the constraint object. This will be set to whatever the user specifies at the command line for that variable, e.g.::
+  This method should return a single value (with ``return_size`` = 1) or a list of n values (with ``return_size`` = n)
+  based on some calculation on the data given a single point.
+  The data is deliberately left unspecified in the interface as it may be any type of data, however it is expected that
+  each implementation will only work with a specific type of data (gridded, ungridded etc.) Note that this method will
+  be called for every sample point and so could become a bottleneck for calculations, it is advisable to make it as
+  quick as is practical. If this method is unable to provide a value (for example if no data points were given)
+  a ValueError should be thrown.
+
+``get_value_for_data_only(self, values)``
+
+  This method should return a single value (with ``return_size`` = 1) or a list of n values (with ``return_size`` = n)
+  based on some calculation on the values (a numpy array).
+  Note that this method will
+  be called for every sample point in which data can be placed and so could become a bottleneck for calculations,
+  it is advisable to make it as quick as is practical. If this method is unable to provide a value
+  (for example if no data points were given) a ValueError should be thrown. This method will not be called if there is no
+  values to be used for calculations.
+
+Constraint
+""""""""""
+
+The constraint limits the data points for a given sample point.
+The user can also add a new constraint method by subclassing Constraint and providing an implementation for
+``constrain_points``. If more control is needed over the iteration sequence then the method
+``get_iterator`` can be
+overloaded in additional to constrain_points. To enable a constraint to use a AbstractDataOnlyKernel the method
+``get_interator_for_data_only`` should be implemented.
+
+``constrain_points(self, ref_point, data)``
+
+ This method should return a subset of the data given a single reference point.
+ It is expected that the data returned should be of the same type as that given - but this isn't mandatory. It is
+ possible that this function will return zero points, or no data. The colocation class is responsible for providing a
+ fill_value.
+
+``get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data)``
+
+ The method should return an iterator over the output indices, hyper point for the output and data points for that output
+ hyper point. If parameters are:
+ * ``missing_data_for_missing_sample`` if True the iterator should not iterate over any points in the sample points which are missing.
+ * ``coord_map`` is a list of tuples of indexes of sample points coords, data coords and output coords
+ * ``coords`` are the coords that the data should be mapped on
+ * ``data_points`` are the non-masked data points
+ * ``shape`` is the final shape of the data
+ * ``points`` is the original sample points object
+ * ``output_data`` is the output data
+
+``get_interator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)``
+
+ The method should return an iterator over the output indices and a numpy array of the data values. The parameters are
+ the same as ``get_iterator``.
+
+Co-locator
+""""""""""
+
+Another plugin which is available is the colocation method itself. A new one can be created by subclassing Colocator and
+providing an implementation for ``colocate(self, points, data, constraint, kernel)``. This method takes a number of
+points and applies the given constraint and kernel methods on the data for each of those points. It is responsible for
+returning the new data object to be written to the output file. As such, the user could create a colocation routine
+capable of handling multiple return values from the kernel, and hence creating multiple data objects, by creating a
+new colocation method.
+
+Plugins
+"""""""
+
+For all of these plugins any new variables, such as limits, constraint values or averaging parameters,
+are automatically set as attributes in the relevant object. For example, if the user wanted to write a new
+constraint method (``AreaConstraint``, say) which needed a variable called ``area``, this can be accessed with ``self.area``
+within the constraint object. This will be set to whatever the user specifies at the command line for that variable, e.g.::
 
   $ ./cis.py col my_sample_file rain:"model_data_?.nc"::AreaConstraint,area=6000,fill_value=0.0:nn_gridded
 

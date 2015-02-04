@@ -166,3 +166,47 @@ Which, when plotted gives the following result::
 
 .. image:: img/eval_ratio.png
    :width: 450px
+
+
+.. _evaluation-conditional:
+
+Using Evaluation for Conditional Aggregation
+============================================
+
+The eval command can be combined with other CIS commands to allow you to perform more complex tasks than would
+otherwise be possible.
+
+For example, you might want to aggregate a satellite measurement of one variable only when the corresponding cloud cover
+fraction (stored in separate variable) is less than a certain value. The aggregate command doesn't allow this kind
+of conditional aggregation on its own, but you can use an evaluation to achieve this in two stages.
+
+In this example we use the MODIS file ``MOD04_L2.A2010001.2255.005.2010005215814.hdf`` in directory
+``/group_workspaces/jasmin/cis/data/MODIS/MOD04_L2/``. The optical depth and cloud cover variables can be seen in the
+following two plots::
+
+    $ cis plot Optical_Depth_Land_And_Ocean:MOD04_L2.A2010001.2255.005.2010005215814.hdf --xmin 132 --xmax 162 --ymin -70 --title "Aerosol optical depth" --cbarscale 0.5 --itemwidth 10 -o cloud_fraction.png
+    $ cis plot Cloud_Fraction_Ocean:MOD04_L2.A2010001.2255.005.2010005215814.hdf --xmin 132 --xmax 162 --ymin -70 --title "Cloud cover fraction" --cbarscale 0.5 --itemwidth 10 -o cloud_fraction.png
+
+.. image:: img/eval_optical_depth.png
+   :width: 450px
+
+.. image:: img/eval_cloud_fraction.png
+   :width: 450px
+
+First we perform an evaluation using the `numpy.masked_where <http://docs.scipy.org/doc/numpy/reference/generated/numpy.ma.masked_where.html#numpy.ma.masked_where>`_
+method to produce an optical depth variable that is masked at all points where the cloud cover is more than 20%::
+
+    $ cis eval Cloud_Fraction_Ocean=cloud,Optical_Depth_Land_And_Ocean=od:MOD04_L2.A2010001.2255.005.2010005215814.hdf "numpy.ma.masked_where(cloud > 0.2, od)" -o od:masked_optical_depth.nc
+    $ cis plot od:cis-masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title Aerosol optical depth --cbarscale 0.5 --itemwidth 10 -o masked_optical_depth.png'
+
+.. image:: img/eval_masked_optical_depth.png
+   :width: 450px
+
+Then we perform an aggregation on this masked output file to give the end result - aerosol optical depth aggregated only
+using points where the cloud cover is less than 20%::
+
+    $ cis aggregate od:cis-masked_optical_depth.nc x=[132,162,0.5],y=[-70,-57,0.5] -o aggregated_masked_optical_depth
+    $ cis plot od:aggregated_masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title "Aerosol optical depth (cloud fraction > 0.2)" --cbarscale 0.5 -o aggregated_aod.png
+
+.. image:: img/eval_aggregated_aod.png
+   :width: 450px

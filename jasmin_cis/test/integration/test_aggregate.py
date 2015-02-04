@@ -8,6 +8,7 @@ import unittest
 from jasmin_cis.cis import aggregate_cmd
 from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
 from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.utils_for_testing import *
 from jasmin_cis.parse import parse_args
 
 
@@ -142,9 +143,9 @@ class TestAggregation(BaseAggregationTest):
                             0.0623867045505904, 0.0538315528589818])
         ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         data_550 = ds.variables['AOD550']
-        assert_that(np.allclose(data_550[:], arr_550))
+        assert_arrays_almost_equal(data_550[:], arr_550)
         data_870 = ds.variables['AOD870']
-        assert_that(np.allclose(data_870[:], arr_870))
+        assert_arrays_almost_equal(data_870[:], arr_870)
 
 
 class TestSpatialAggregationByDataProduct(BaseAggregationTest):
@@ -383,8 +384,6 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
 
     def test_aggregate_netCDF_gridded_HadGem(self):
         # Takes 1s
-        # JASCIS-134
-        # IndexError: index 1 is out of bounds for axis 0 with size 1
         variable = 'od550aer'
         filename = valid_hadgem_filename
         arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 't', '-o', self.OUTPUT_NAME]

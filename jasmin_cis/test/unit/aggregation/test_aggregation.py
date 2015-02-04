@@ -7,9 +7,9 @@ from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 from jasmin_cis.col_implementations import mean, max, min, stddev, moments
 from jasmin_cis.aggregation.aggregation_grid import AggregationGrid
 from jasmin_cis.aggregation.aggregator import Aggregator
+from jasmin_cis.test.utils_for_testing import *
 from jasmin_cis.aggregation.aggregation_kernels import aggregation_kernels
 from jasmin_cis.test.util.mock import *
-from jasmin_cis.utils import array_equal_including_nan
 
 import iris.unit
 import iris.analysis
@@ -302,7 +302,7 @@ class TestUngriddedAggregation(TestCase):
     @istest
     def test_mean_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-10, 10, 10, False)}
+        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -315,14 +315,14 @@ class TestUngriddedAggregation(TestCase):
                            mask=[[0, 0, 0],
                                  [0, 0, 0]], fill_value=float('inf'))
 
-        assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
+        assert_arrays_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
     def test_max_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
         self.kernel = max()
 
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-10, 10, 10, False)}
+        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -335,14 +335,14 @@ class TestUngriddedAggregation(TestCase):
                            mask=[[0, 0, 0],
                                  [0, 0, 0]], fill_value=float('inf'))
 
-        assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
+        assert_arrays_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
     def test_min_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
         self.kernel = min()
 
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-10, 10, 10, False)}
+        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -355,14 +355,14 @@ class TestUngriddedAggregation(TestCase):
                            mask=[[0, 0, 0],
                                  [0, 0, 0]], fill_value=float('inf'))
 
-        assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
+        assert_arrays_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
     def test_stddev_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
 
         self.kernel = stddev()
 
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-10, 10, 10, False)}
+        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -375,7 +375,7 @@ class TestUngriddedAggregation(TestCase):
                            mask=[[0, 1, 0],
                                  [0, 0, 0]], fill_value=float('inf'))
 
-        assert array_equal_including_nan(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
+        assert_arrays_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     def test_aggregation_one_dim_using_moments_kernel(self):
         self.kernel = moments()

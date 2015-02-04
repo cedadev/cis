@@ -1,4 +1,3 @@
-import __builtin__
 import logging
 
 import iris
@@ -6,9 +5,10 @@ import iris.analysis
 import iris.analysis.interpolate
 import iris.coords
 import numpy as np
+from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
-                                      IndexedConstraint, Kernel)
+                                      IndexedConstraint, Kernel, AbstractDataOnlyKernel)
 import jasmin_cis.exceptions
 from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
@@ -94,10 +94,14 @@ class GeneralUngriddedColocator(Colocator):
 
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
+        total_count = 0
         for i, point in sample_points.enumerate_non_masked_points():
             # Log progress periodically.
             cell_count += 1
-            logging.info("    Processed {} points of {}".format(cell_count, sample_points_count))
+            if cell_count == 1000:
+                total_count += cell_count
+                cell_count = 0
+                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
 
             if constraint is None:
                 con_points = data_points
@@ -288,59 +292,61 @@ class SepConstraintKdtree(PointConstraint):
         self._index_cache[key] = indices
 
 
-class mean(Kernel):
+# noinspection PyPep8Naming
+class mean(AbstractDataOnlyKernel):
+    """
+    Calculate mean of data points
+    """
 
-    def get_value(self, point, data):
-        '''
-            Colocation using the mean of any points left after a constraint.
-        '''
-        from numpy import mean
-        values = data.vals
-        if len(values) == 0:
-            raise ValueError
-        return mean(values)
-
-
-class stddev(Kernel):
-
-    def get_value(self, point, data):
+    def get_value_for_data_only(self, values):
         """
-        Colocation using the standard deviation of any points left after a constraint.
+        return the mean
         """
-        from numpy import std
-        values = data.vals
-        if len(values) < 2:
-            raise ValueError
-        return std(values, ddof=1)
+        return np_mean(values)
 
 
-class min(Kernel):
+# noinspection PyPep8Naming
+class stddev(AbstractDataOnlyKernel):
+    """
+    Calculate the standard deviation
+    """
 
-    def get_value(self, point, data):
+    def get_value_for_data_only(self, values):
         """
-        Colocation using the standard deviation of any points left after a constraint.
+        Return the standard deviation points
         """
-        values = data.vals
-        if len(values) == 0:
-            raise ValueError
-        # Using builtin is required so that the class can be called min
-        return __builtin__.min(values)
+        return np_std(values, ddof=1)
 
 
-class max(Kernel):
+# noinspection PyPep8Naming,PyShadowingBuiltins
+class min(AbstractDataOnlyKernel):
+    """
+    Calculate the minimum value
+    """
 
-    def get_value(self, point, data):
+    def get_value_for_data_only(self, values):
         """
-        Colocation using the standard deviation of any points left after a constraint.
+        Return the minimum value
         """
-        values = data.vals
-        if len(values) == 0:
-            raise ValueError
-        # Using builtin is required so that the class can be called max
-        return __builtin__.max(values)
+        return np_min(values)
 
 
-class moments(Kernel):
+# noinspection PyPep8Naming,PyShadowingBuiltins
+class max(AbstractDataOnlyKernel):
+
+    """
+    Calculate the maximum value
+    """
+
+    def get_value_for_data_only(self, values):
+        """
+        Return the maximum value
+        """
+        return np_max(values)
+
+
+# noinspection PyPep8Naming
+class moments(AbstractDataOnlyKernel):
     return_size = 3
 
     def __init__(self, mean_name='', stddev_name='', nopoints_name=''):
@@ -368,20 +374,12 @@ class moments(Kernel):
                 (self.stddev_name, stdev_long_name, None, stddev_units),
                 (self.nopoints_name, npoints_long_name, None, npoints_units))
 
-    def get_value(self, point, data):
+    def get_value_for_data_only(self, values):
         """
         Returns the mean, standard deviation and number of values
         """
-        from numpy import mean, std
-        values = data.vals
-        num_values = len(values)
-        if num_values == 0:
-            raise ValueError
-        elif num_values == 1:
-            std_dev = np.nan
-        else:
-            std_dev = std(values, ddof=1)
-        return mean(values), std_dev, num_values
+
+        return np_mean(values), np_std(values, ddof=1), np.size(values)
 
 
 class nn_horizontal(Kernel):
@@ -832,7 +830,7 @@ class gridded_gridded_li(Kernel):
 
 
 class GeneralGriddedColocator(Colocator):
-    """Performs co-location of data on to the points of a cube.
+    """Performs co-location of data on to the points of a cube (ie onto a gridded dataset).
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
@@ -870,6 +868,12 @@ class GeneralGriddedColocator(Colocator):
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = make_coord_map(points, data)
+        if self.missing_data_for_missing_sample and len(coord_map) is not len(points.coords()):
+            raise jasmin_cis.exceptions.UserPrintableException(
+                "A sample variable has been specified but not all coordinates in the data appear in the sample so "
+                "there are multiple points in the sample data so whether the data is missing or not can not be "
+                "determined")
+
         coords = points.coords()
         shape = []
         output_coords = []
@@ -901,50 +905,37 @@ class GeneralGriddedColocator(Colocator):
             val.fill_value = self.fill_value
             values.append(val)
 
+        if kernel.return_size == 1:
+            set_value_kernel = self._set_single_value_kernel
+        else:
+            set_value_kernel = self._set_multi_value_kernel
+
         logging.info("--> Co-locating...")
 
-        # Iterate over cells in cube.
-        num_cells = np.product(shape)
-        cell_count = 0
-        cell_total = 0
-        is_indexed_constraint = isinstance(constraint, IndexedConstraint)
-        is_cell_constraint = isinstance(constraint, CellConstraint)
-        for indices in jasmin_cis.utils.index_iterator(shape):
-            if not self.missing_data_for_missing_sample or points.data[indices] is not np.ma.masked:
-                hp_values = [None] * HyperPoint.number_standard_names
-                hp_cell_values = [None] * HyperPoint.number_standard_names
-                for (hpi, ci, shi) in coord_map:
-                    hp_values[hpi] = coords[ci].points[indices[shi]]
-                    hp_cell_values[hpi] = coords[ci].cell(indices[shi])
-
-                hp = HyperPoint(*hp_values)
-                if is_indexed_constraint:
-                    arg = indices
-                elif is_cell_constraint:
-                    arg = HyperPoint(*hp_cell_values)
-                else:
-                    arg = hp
-                con_points = constraint.constrain_points(arg, data_points)
+        if hasattr(kernel, "get_value_for_data_only") and hasattr(constraint, "get_interator_for_data_only"):
+            # Iterate over constrained cells
+            iterator = constraint.get_interator_for_data_only(
+                self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
+            for out_indices, data_values in iterator:
                 try:
-                    kernel_val = kernel.get_value(hp, con_points)
-                    if kernel.return_size > 1:
-                        # This kernel returns multiple values:
-                        for idx, val in enumerate(kernel_val):
-                            values[idx][indices] = val
-                    else:
-                        values[0][indices] = kernel_val
+                    kernel_val = kernel.get_value_for_data_only(data_values)
+                    set_value_kernel(kernel_val, values, out_indices)
                 except ValueError:
                     # ValueErrors are raised by Kernel when there are no points to operate on.
                     # We don't need to do anything.
                     pass
-
-            # Log progress periodically.
-            cell_count += 1
-            cell_total += 1
-            if cell_count == 10000:
-                logging.info("    Processed %d points of %d (%d%%)", cell_total, num_cells,
-                             int(cell_total * 100 / num_cells))
-                cell_count = 0
+        else:
+            # Iterate over constrained cells
+            iterator = constraint.get_iterator(
+                self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
+            for out_indices, hp, con_points in iterator:
+                try:
+                    kernel_val = kernel.get_value(hp, con_points)
+                    set_value_kernel(kernel_val, values, out_indices)
+                except ValueError:
+                    # ValueErrors are raised by Kernel when there are no points to operate on.
+                    # We don't need to do anything.
+                    pass
 
         # Construct an output cube containing the colocated data.
         kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
@@ -960,10 +951,19 @@ class GeneralGriddedColocator(Colocator):
             try:
                 cube.units = kernel_var_details[idx][3]
             except ValueError:
-                logging.warn("Units are not cf complient but saving anyway. Units {}".format(kernel_var_details[idx][3]))
+                logging.warn(
+                    "Units are not cf compliant, not setting then. Units {}".format(kernel_var_details[idx][3]))
             output.append(cube)
 
         return output
+
+    def _set_multi_value_kernel(self, kernel_val, values, indices):
+        # This kernel returns multiple values:
+        for idx, val in enumerate(kernel_val):
+            values[idx][indices] = val
+
+    def _set_single_value_kernel(self, kernel_val, values, indices):
+        values[0][indices] = kernel_val
 
     def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.
@@ -1040,7 +1040,61 @@ class BinningCubeCellConstraint(IndexedConstraint):
         return con_points
 
 
+class BinnedCubeCellOnlyConstraint(Constraint):
+    """Constraint for constraining HyperPoints to be within an iris.coords.Cell. With an iterator which only
+    travels over those cells with a value in
+
+    Uses the index_data method to bin all the points
+    """
+    def __init__(self):
+        super(BinnedCubeCellOnlyConstraint, self).__init__()
+        self.grid_cell_bin_index_slices = None
+
+    def constrain_points(self, sample_point, data):
+        pass
+
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
+
+        for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+            if not missing_data_for_missing_sample or points.data[out_indices] is not np.ma.masked:
+                # iterate through the points which are within the same cell
+
+                con_points = HyperPointList()
+                slice_indicies = slice(*slice_start_end)
+
+                for x in self.grid_cell_bin_index_slices.sort_order[slice_indicies]:
+                    con_points.append(data_points[x])
+
+                hp_values = [None] * HyperPoint.number_standard_names
+                for (hpi, ci, shi) in coord_map:
+                    hp_values[hpi] = coords[ci].points[out_indices[shi]]
+                hp = HyperPoint(*hp_values)
+
+                yield out_indices, hp, con_points
+
+    def get_interator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+
+        data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
+        if missing_data_for_missing_sample:
+            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+                if points.data[out_indices] is not np.ma.masked:
+                    data_slice = data_points_sorted[slice(*slice_start_end)]
+                    yield out_indices, data_slice
+        else:
+            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+                data_slice = data_points_sorted[slice(*slice_start_end)]
+                yield out_indices, data_slice
+
+
 def make_coord_map(points, data):
+    """
+    Create a map for how coordinates from the sample points map to the standard hyperpoint coordinates. Ignoring
+    coordinates which are not present in the data
+    :param points: sample points
+    :param data: data to map
+    :return: list of tuples, each tuple is index of coordinate to use
+        tuple is (hyper point coord index, sample point coord index, output coord index)
+    """
     # If there are coordinates in the sample grid that are not present for the data,
     # omit the from the set of coordinates in the output grid. Find a mask of coordinates
     # that are present to use when determining the output grid shape.
@@ -1059,23 +1113,23 @@ def _find_standard_coords(cube, coordinate_mask):
     :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
     """
     coord_map = []
-    coord_lookup = {}
-    # for idx, coord in enumerate(cube.coords()):
-    coords = cube.coords()
-    for idx, coord in enumerate(coords):
-        coord_lookup[coord] = idx
+    cube_coord_lookup = {}
+
+    cube_coords = cube.coords()
+    for idx, coord in enumerate(cube_coords):
+        cube_coord_lookup[coord] = idx
 
     shape_idx = 0
     for hpi, name in enumerate(HyperPoint.standard_names):
         if coordinate_mask[hpi]:
             # Get the dimension coordinates only - these correspond to dimensions of data array.
-            coords = cube.coords(standard_name=name, dim_coords=True)
-            if len(coords) > 1:
+            cube_coords = cube.coords(standard_name=name, dim_coords=True)
+            if len(cube_coords) > 1:
                 msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
-                       % (len(coords), ', '.join(coord.name() for coord in coords)))
+                       % (len(cube_coords), ', '.join(coord.name() for coord in cube_coords)))
                 raise jasmin_cis.exceptions.CoordinateNotFoundError(msg)
-            elif len(coords) == 1:
-                coord_map.append((hpi, coord_lookup[coords[0]], shape_idx))
+            elif len(cube_coords) == 1:
+                coord_map.append((hpi, cube_coord_lookup[cube_coords[0]], shape_idx))
                 shape_idx += 1
     return coord_map
 

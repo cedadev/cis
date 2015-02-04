@@ -283,7 +283,7 @@ def fix_longitude_range(lons, range_start):
     :return: array of fixed longitudes
     """
     range_end = range_start + 360
-    fixed_lons = np.array(lons)
+    fixed_lons = np.ma.array(lons)
 
     fixed_lons[fixed_lons < range_start] += 360
     fixed_lons[fixed_lons >= range_end] -= 360
@@ -526,6 +526,33 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     return array1, array2
 
 
+def index_iterator_nditer(shape, points):
+    """Iterates over the indexes of a multi-dimensional array of a specified shape.
+
+    The last index changes most rapidly.
+    :param shape: sequence of array dimensions
+    :return: yields tuples of array indexes
+    """
+
+    num_cells = np.product(shape)
+    cell_count = 0
+    cell_total = 0
+
+    it = np.nditer(points, flags=['multi_index'])
+    while not it.finished:
+        yield it.multi_index
+
+        # Log progress periodically.
+        if cell_count == 10000:
+            cell_total += 1
+            number_cells_processed = cell_total * 10000
+            logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
+                             int(number_cells_processed * 100 / num_cells))
+            cell_count = 0
+        cell_count += 1
+
+        it.iternext()
+
 def index_iterator(shape):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
 
@@ -546,6 +573,42 @@ def index_iterator(shape):
             if idx[j] < shape[j]:
                 break
             idx[j] = 0
+
+
+def index_iterator_for_non_masked_data(shape, points):
+    """Iterates over the indexes of a multi-dimensional array of a specified shape.
+
+    The last index changes most rapidly.
+    :param shape: sequence of array dimensions
+    :return: yields tuples of array indexes
+    """
+
+
+    # dim = len(shape)
+    # idx = [0] * dim
+    # num_iterations = 1
+    # for j in range(0, dim):
+    #     num_iterations *= shape[j]
+    num_cells = np.product(shape)
+    cell_count = 0
+    cell_total = 0
+
+    it = np.nditer(points.data, flags=['multi_index'])
+    while not it.finished:
+        if it[0] is not np.ma.masked:
+            yield it.multi_index
+
+        it.iternext()
+
+        # Log progress periodically.
+        if cell_count == 10000:
+            cell_total += 1
+            number_cells_processed = cell_total * 10000
+            logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
+                             int(number_cells_processed * 100 / num_cells))
+            cell_count = 0
+        cell_count += 1
+
 
 
 def parse_distance_with_units_to_float_km(distance):

@@ -20,6 +20,18 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
 
+    def test_GIVEN_single_variable_WHEN_colocate_box_THEN_successful_colocation(self):
+        variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
+        filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
+        sample_file = valid_hadgem_filename
+        colocator_and_opts = 'box[h_sep=10],kernel=mean'
+        arguments = ['col', variable + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
+
     def test_GIVEN_multiple_variables_on_same_coords_WHEN_colocate_THEN_successful_colocation(self):
         variable1 = valid_aerosol_cci_variable
         variable2 = valid_aerosol_cci_variable_2
@@ -345,6 +357,20 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars)
 
+    def test_HadGem_onto_ECHAMHAM_nn(self):
+        # Takes
+        vars = [valid_hadgem_variable]
+        filename = valid_hadgem_filename
+        sample_file = valid_echamham_filename
+        sample_var = valid_echamham_variable_1
+        colocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
 class TestUngriddedUngriddedColocate(BaseIntegrationTest):
 
@@ -429,7 +455,7 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_Aeronet_onto_CloudSat(self):
-        # Takes
+        # Takes 5hrs
         variable = "AOT_440,AOT_870"
         filename = valid_aeronet_filename
         sample_file = valid_cloudsat_PRECIP_file
