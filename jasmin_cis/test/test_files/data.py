@@ -165,7 +165,7 @@ cis_test_files["Cloud_CCI"] = TestFileTestData(
     data_variable_properties={}
     )
 
-valid_hadgem_filename = make_pathname('HadGEM_AOT550.nc')
+valid_hadgem_filename = make_pathname('od550aer.nc')
 valid_hadgem_variable = 'od550aer'
 
 valid_aeronet_filename = make_pathname("920801_091128_Agoufou_small.lev20")
