@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ "$1" = "-h" -o "$1" = "--help" ]
+then
+  echo "cis.lsf:  use to submit a cis job directly to lotus"
+  echo "          output is written to ~/cis.log"
+  echo "          e.g. 'cis.lsf version' runs cis on lotus with the argument 'version',"
+  exit
+fi
+
+echo "Submitting job to LSF. Use bjobs to check if it has finished output is in ~/cis.log"
+
+# Send the following lines to bsub
+cat <<EOF | bsub
+
+# log that we started a job inthe cis log
+echo "\$LSB_JOBID: Job Starting on Lotus" >> ~/cis.log
+
+# run the cis command redirecting standard error to stanard out
+#   prefix each line with the job id so they are easy to find
+#   output to log
+cis $*  2>&1 |  sed -e "s/^/\$LSB_JOBID: /" >> ~/cis.log
+
+# record finish of the job
+echo "\$LSB_JOBID: Job Finished" >> ~/cis.log
+EOF

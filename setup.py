@@ -86,7 +86,7 @@ setup(
         ],
     packages=find_packages(),
     package_data={'': ['logging.conf']},
-    scripts=['bin/cis'],
+    scripts=['bin/cis', 'bin/cis.lsf'],
     cmdclass={"gendoc": gen_doc,
               "checkdep": check_dep},
     install_requires=dependencies,
