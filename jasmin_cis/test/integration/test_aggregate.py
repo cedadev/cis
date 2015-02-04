@@ -384,8 +384,6 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
 
     def test_aggregate_netCDF_gridded_HadGem(self):
         # Takes 1s
-        # JASCIS-134
-        # IndexError: index 1 is out of bounds for axis 0 with size 1
         variable = 'od550aer'
         filename = valid_hadgem_filename
         arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 't', '-o', self.OUTPUT_NAME]

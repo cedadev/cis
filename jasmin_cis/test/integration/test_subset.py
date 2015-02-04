@@ -275,7 +275,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_netCDF_gridded_HadGem(self):
-        #Takes 1s
+        # Takes 1s
         variable = 'od550aer'
         filename = valid_hadgem_filename
         time_min, time_max = '2007-06-02T10:18:37', '2007-06-12T10:19:47'
@@ -367,7 +367,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
 
     def test_subset_netCDF_gridded_HadGem(self):
-        #Takes 1s
+        # Takes 1s
         variable = '*'
         filename = valid_hadgem_filename
         lon_min, lon_max = 0, 120
