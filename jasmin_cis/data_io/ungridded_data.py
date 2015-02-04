@@ -54,7 +54,7 @@ class Metadata(object):
         """
         if self.standard_name is not None \
                 and self.standard_name.strip() is not "" \
-                and self.standard_name is not new_standard_name:
+                and self.standard_name != new_standard_name:
             logging.info("Changing standard name for dataset from '{}' to '{}'"
                          .format(self.standard_name, new_standard_name))
         self.standard_name = new_standard_name

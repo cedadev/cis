@@ -132,7 +132,7 @@ class Constraint(object):
 
             hp = HyperPoint(*hp_values)
             constrained_points = self.constrain_points(hp, data_points)
-            yield indices.multi_index, hp, constrained_points
+            yield indices, hp, constrained_points
 
 
 class PointConstraint(Constraint):
@@ -151,6 +151,7 @@ class CellConstraint(Constraint):
     coordinate values are of type iris.coords.Cell.
     """
     __metaclass__ = ABCMeta
+
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
         from jasmin_cis.col_implementations import HyperPoint
         if missing_data_for_missing_sample:
