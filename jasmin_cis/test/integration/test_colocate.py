@@ -20,6 +20,18 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
 
+    def test_GIVEN_single_variable_WHEN_colocate_box_THEN_successful_colocation(self):
+        variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
+        filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
+        sample_file = valid_hadgem_filename
+        colocator_and_opts = 'box[h_sep=10],kernel=mean'
+        arguments = ['col', variable + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
+
     def test_GIVEN_multiple_variables_on_same_coords_WHEN_colocate_THEN_successful_colocation(self):
         variable1 = valid_aerosol_cci_variable
         variable2 = valid_aerosol_cci_variable_2
