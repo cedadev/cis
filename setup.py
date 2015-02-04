@@ -6,7 +6,7 @@ from setuptools import setup, find_packages, Command
 from pkg_resources import require, DistributionNotFound, VersionConflict
 
 dependencies = ["matplotlib>=1.2.0", "pyke", "cartopy", "Shapely", "netcdf4>=1.0",
-                "numpy", "scipy", "iris>=1.7.3"]
+                "numpy", "scipy", "iris>=1.7.3", 'pyhdf']
 
 test_dependencies = ["pyhamcrest", "mock", "nose"]
 
@@ -90,5 +90,5 @@ setup(
     cmdclass={"gendoc": gen_doc,
               "checkdep": check_dep},
     install_requires=dependencies,
-    test_requires=test_dependencies
+    tests_require=test_dependencies
 )
