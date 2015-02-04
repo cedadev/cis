@@ -48,20 +48,25 @@ def read(filename, variables=None, datadict=None):
 
     if not isinstance(variables,list): variables = [ variables ]
 
-    datafile = HDF(filename)
-    vs = datafile.vstart()
+    vs = None
+    datafile = None
+    try:
+        datafile = HDF(filename)
+        vs = datafile.vstart()
 
-    for variable in variables:
-        try:
-            vd = vs.attach(variable)
-            vd.detach()
-            datadict[variable] = VDS(filename, variable)
-        except:
-            # ignore variable that failed
-            pass
-
-    vs.end()
-    datafile.close()
+        for variable in variables:
+            try:
+                vd = vs.attach(variable)
+                vd.detach()
+                datadict[variable] = VDS(filename, variable)
+            except:
+                # ignore variable that failed
+                pass
+    finally:
+        if vs is not None:
+            vs.end()
+        if datafile is not None:
+            datafile.close()
 
     return datadict
 

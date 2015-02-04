@@ -32,6 +32,75 @@ def get_hdf_SD_file_variables(filename):
     return variables
 
 
+class HDF_SDS(object):
+    """
+    This class is used in place of the pyhdf.SD.SDS class to allow the file contents to be loaded at a later time
+    rather than in this module read method (so that we can close the SD instances and free up file handles)
+    """
+
+    _sd = None
+    _sds = None
+    _filename = None
+    _variable = None
+
+    def __init__(self, filename, variable):
+        self._filename = filename
+        self._variable = variable
+
+    def _open_sds(self):
+        """
+        Open the SDS file for reading
+        """
+        from pyhdf.SD import SD
+        sd = None
+        sds = None
+        try:
+            sd = SD(self._filename)
+            sds = sd.select(self._variable)
+            self._sd = sd
+            self._sds = sds
+        except Exception as e:
+            if sds is not None:
+                sds.endaccess()
+            if sd is not None:
+                sd.end()
+            raise e
+
+    def _close_sds(self):
+        """
+        Close the SDS file for reading
+        """
+        self._sds.endaccess()
+        self._sd.end()
+
+    def get(self):
+        """
+        Call pyhdf.SD.SDS.get(), opening and closing the file
+        """
+        self._open_sds()
+        data = self._sds.get()
+        self._close_sds()
+        return data
+
+    def attributes(self):
+        """
+        Call pyhdf.SD.SDS.attributes(), opening and closing the file
+        """
+        self._open_sds()
+        attributes = self._sds.attributes()
+        self._close_sds()
+        return attributes
+
+    def info(self):
+        """
+        Call pyhdf.SD.SDS.info(), opening and closing the file
+        """
+        self._open_sds()
+        info = self._sds.info()
+        self._close_sds()
+        return info
+
+
 def read(filename, variables=None, datadict=None):
     """
     Reads SD from a HDF4 file into a dictionary. 
@@ -51,14 +120,19 @@ def read(filename, variables=None, datadict=None):
     """
     from pyhdf import SD
 
-    # Open the file.
-    datafile = SD.SD(filename)
-
-
     # List of required variable names.
     if variables is None:
-        variables = datafile.datasets().keys()
-    if not isinstance(variables,list): variables = [ variables ]
+        # Open the file.
+        datafile = None
+        try:
+            datafile = SD.SD(filename)
+            variables = datafile.datasets().keys()
+        finally:
+            if datafile is not None:
+                datafile.end()
+
+    if not isinstance(variables, list):
+        variables = [variables]
 
     # Create dictionary to hold data arrays for returning.
     if datadict is None:
@@ -66,13 +140,8 @@ def read(filename, variables=None, datadict=None):
 
     # Get data.
     for variable in variables:
-        try:
-            sds = datafile.select(variable) # SDS object.
-            datadict[variable] = sds
-        except:
-            # ignore variable that failed
-            pass
-    
+        datadict[variable] = HDF_SDS(filename, variable)
+
     return datadict
 
 

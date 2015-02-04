@@ -11,7 +11,7 @@ import numpy
 from jasmin_cis import utils
 from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
 from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
-from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
+from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data, HDF_SDS
 from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
@@ -75,10 +75,12 @@ class Metadata(object):
 
 
 # This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
-static_mappings = { SDS : hdf_sd_get_data,
-                    VDS : hdf_vd_get_data,
-                    Variable : netcdf_get_data,
-                    _Variable : netcdf_get_data }
+static_mappings = {SDS: hdf_sd_get_data,
+                   HDF_SDS: hdf_sd_get_data,
+                   VDS: hdf_vd_get_data,
+                   Variable: netcdf_get_data,
+                   _Variable: netcdf_get_data}
+
 
 class LazyData(object):
     '''
