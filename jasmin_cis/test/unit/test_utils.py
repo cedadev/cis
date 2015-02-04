@@ -249,3 +249,11 @@ class TestUtils(unittest.TestCase):
         lons = numpy.array([0, 90, 180, 270, 360])
         new_lons = fix_longitude_range(lons, -180)
         assert numpy.array_equal(new_lons, [0, 90, -180, -90, 0])
+
+    def test_GIVEN_lons_write_only_WHEN_fix_longitude_THEN_longitudes_fixed(self):
+        # Previously there was an issue where if the longitudes array being read in
+        # was read only then this method failed.
+        lons = numpy.array([0, 90, 180, 270, 360])
+        lons.setflags(write=False)
+        new_lons = fix_longitude_range(lons, -180)
+        assert numpy.array_equal(new_lons, [0, 90, -180, -90, 0])
