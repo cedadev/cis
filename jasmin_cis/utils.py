@@ -283,7 +283,7 @@ def fix_longitude_range(lons, range_start):
     :return: array of fixed longitudes
     """
     range_end = range_start + 360
-    fixed_lons = np.ma.array(lons)
+    fixed_lons = np.ma.array(lons, copy=True)
 
     fixed_lons[fixed_lons < range_start] += 360
     fixed_lons[fixed_lons >= range_end] -= 360

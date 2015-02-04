@@ -3,6 +3,7 @@
 Command line interface for the Climate Intercomparison Suite (CIS)
 '''
 import sys
+import traceback
 import logging
 
 from jasmin_cis.data_io.data_reader import DataReader
@@ -21,6 +22,8 @@ def __error_occurred(e):
     :param e: An error object or any string
     '''
     sys.stderr.write(str(e) + "\n")
+    logging.debug(str(e) + "\n")
+    logging.debug(traceback.format_exc())
     exit(1)
 
 
@@ -79,7 +82,7 @@ def plot_cmd(main_arguments):
 
     try:
         Plotter(data, plot_type, output, **main_arguments)
-    except (ex.CISError, ValueError) as e:
+    except (ex.CISError) as e:
         __error_occurred(e)
     except MemoryError:
         __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
