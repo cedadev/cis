@@ -1,6 +1,6 @@
-'''
-    Top level colocation object
-'''
+"""
+    Top level colocation objects
+"""
 import logging
 
 import jasmin_cis.col_implementations as ci
@@ -20,37 +20,33 @@ class ColocatorFactory(object):
     Class for creating Colocator, Constraint and Kernel instances
     """
 
-    def get_colocator_instances_for_method(self, method_name, kernel_name, col_params, kernel_params,
+    def get_colocator_instances_for_method(self, method_name, kernel_name, colocator_params, kernel_params,
                                            sample_gridded, data_gridded):
         """
         Get instances of the correct classes for colocation
         :param method_name: Colocation method name (e.g. 'lin', 'nn')
         :param kernel_name: Kernel class name
-        :param col_params: Colocation parameters
+        :param colocator_params: Colocation parameters
         :param kernel_params: Kernel parameters
         :param sample_gridded: Is the sample data gridded?
         :param data_gridded: Is the colocation data gridded?
         :return: Colocator, Constrain and Kernel instances
         """
         col_cls, constraint_cls, kernel_cls = self._get_colocator_classes_for_method(method_name, kernel_name,
-                                                                                     col_params, kernel_params,
                                                                                      sample_gridded, data_gridded)
-        col_params, con_params = self._get_colocator_params(col_params)
-        col = self._instantiate_with_params(col_cls, col_params)
-        del con_params['missing_data_for_missing_sample']
-        con = self._instantiate_with_params(constraint_cls, col_params)
+        colocator_params, constraint_params = self._get_colocator_params(colocator_params)
+        col = self._instantiate_with_params(col_cls, colocator_params)
+        del constraint_params['missing_data_for_missing_sample']
+        con = self._instantiate_with_params(constraint_cls, constraint_params)
         kernel = self._instantiate_with_params(kernel_cls, kernel_params)
         return col, con, kernel
 
-    def _get_colocator_classes_for_method(self, method_name, kernel_name, col_params, kernel_params,
-                                          sample_gridded, data_gridded):
+    def _get_colocator_classes_for_method(self, method_name, kernel_name, sample_gridded, data_gridded):
         """
         Gets the colocator, constraint and kernel classes corresponding to a specified colocation method and kernel
         name.
         :param method_name: colocation method name
         :param kernel_name: kernel name
-        :param col_params: Colocator parameters
-        :param kernel_params: Kernel parameters
         :param sample_gridded: True if sample points are gridded, otherwise False
         :param data_gridded: True if data points are gridded, otherwise False
         :return: ColocationOptions containing relevant classes
@@ -130,6 +126,10 @@ class ColocatorFactory(object):
 
 
 class Colocate(object):
+    """
+    Perform a general colocation
+    """
+
     def __init__(self, sample_points, output_filename, missing_data_for_missing_sample=False,
                  colocator_factory=ColocatorFactory()):
         """
@@ -146,6 +146,15 @@ class Colocate(object):
         self.colocator_factory = colocator_factory
 
     def colocate(self, data, col_name=None, col_params=None, kern=None, kern_params=None):
+        """
+        Perform the colocation
+        :param data: data to colocate
+        :param col_name: name of the colocator
+        :param col_params: parameters dictionary for the colocation and constraint
+        :param kern: the kernel to use
+        :param kern_params: the kernel parameters to use
+        :return: colocated data
+        """
         from jasmin_cis.exceptions import CoordinateNotFoundError
         from time import time
         from jasmin_cis.cis import __version__

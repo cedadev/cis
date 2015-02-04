@@ -114,6 +114,15 @@ A full example would be::
 
   $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_*.nc:product=NetCDF_Gridded,kernel=mean t,y=[-90,90,20],x -o rsutcs-mean
 
+
+Conditional Aggregation
+=======================
+
+Sometimes you may want to perform an aggregation over all the points that meet a certain criteria - for example,
+aggregating satellite data only where the cloud cover fraction is below a certain threshold. This is possible by
+performing a CIS evaluation on your data first - see :ref:`evaluation-conditional`
+
+
 Aggregation Examples
 ====================
 

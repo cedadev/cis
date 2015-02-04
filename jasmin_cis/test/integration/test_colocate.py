@@ -443,7 +443,7 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_Aeronet_onto_CloudSat(self):
-        # Takes
+        # Takes 5hrs
         variable = "AOT_440,AOT_870"
         filename = valid_aeronet_filename
         sample_file = valid_cloudsat_PRECIP_file
