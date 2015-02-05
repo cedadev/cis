@@ -142,7 +142,7 @@ class TestPlotIntegration(BaseIntegrationTest):
         var = 'cwp'
         file = valid_cloud_cci_filename
         out_name = 'cloud_cci.png'
-        args = ['plot', var + ':' + file, '--type', 'scatter', '-o', out_name]
+        args = ['plot', var + ':' + file, '--type', 'contourf', '-o', out_name]
         main_arguments = parse_args(args)
         plot_cmd(main_arguments)
 
