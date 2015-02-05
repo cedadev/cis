@@ -773,3 +773,4 @@ def listify(item):
     """
     if not isinstance(item, list):
         return [item]
+    return item
