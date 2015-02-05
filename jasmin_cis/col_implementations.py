@@ -155,8 +155,7 @@ class DummyColocator(Colocator):
         from jasmin_cis.data_io.ungridded_data import LazyData
 
         logging.info("--> Colocating...")
-        if not isinstance(data, list):
-            data = [data]
+        data = jasmin_cis.utils.listify(data)
         return [LazyData(var.data, var.metadata) for var in data]
 
 

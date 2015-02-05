@@ -763,3 +763,13 @@ def deprecated(func):
     newFunc.__doc__ = func.__doc__
     newFunc.__dict__.update(func.__dict__)
     return newFunc
+
+
+def listify(item):
+    """
+    If item is not a list, return it as a list
+    :param item: Item which may or may not be a list
+    :return: List
+    """
+    if not isinstance(item, list):
+        return [item]

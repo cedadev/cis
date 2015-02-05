@@ -1,6 +1,8 @@
 '''
 Module for reading data. This is just an abstract layer for making the choice between gridded and ungridded - the actual reading is done elsewhere
 '''
+from jasmin_cis.utils import listify
+
 
 def read_data(filenames, variable, product=None):
     '''
@@ -16,7 +18,7 @@ def read_data(filenames, variable, product=None):
     from jasmin_cis.data_io.products.AProduct import get_data
 
     # if filenames is not a list, make it a list of 1 element
-    if not isinstance(filenames, list): filenames = [ filenames ]
+    filenames = listify(filenames)
 
     return get_data(filenames, variable, product)
 
@@ -32,7 +34,6 @@ def read_coordinates(filenames, product=None):
     from jasmin_cis.data_io.products.AProduct import get_coordinates
 
     # if filenames is not a list, make it a list of 1 element
-    if not isinstance(filenames, list): filenames = [ filenames ]
+    filenames = listify(filenames)
 
     return get_coordinates(filenames, product)
-

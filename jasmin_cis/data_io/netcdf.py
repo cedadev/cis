@@ -1,7 +1,7 @@
 """
 Module containing NetCDF file reading functions
 """
-from jasmin_cis.utils import dimensions_equal
+from jasmin_cis.utils import listify
 
 
 def get_netcdf_file_attributes(filename):
@@ -95,8 +95,7 @@ def read_many_files(filenames, usr_variables, dim=None):
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
 
-    if not isinstance(usr_variables, list):
-        usr_variables = [usr_variables]
+    usr_variables = listify(usr_variables)
 
     try:
         datafile = MFDataset(filenames, aggdim=dim)
@@ -126,8 +125,7 @@ def read_many_files_individually(filenames, usr_variables):
     """
     from jasmin_cis.utils import add_element_to_list_in_dict
 
-    if not isinstance(usr_variables, list):
-        usr_variables = [usr_variables]
+    usr_variables = listify(usr_variables)
 
     var_data = {}
 
@@ -153,8 +151,7 @@ def read(filename, usr_variables):
     from netCDF4 import Dataset
     from jasmin_cis.exceptions import InvalidVariableError
 
-    if not isinstance(usr_variables, list):
-        usr_variables = [usr_variables]
+    usr_variables = listify(usr_variables)
 
     try:
         datafile = Dataset(filename)

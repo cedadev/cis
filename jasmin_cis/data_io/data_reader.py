@@ -4,7 +4,7 @@ import logging
 from jasmin_cis.data_io.gridded_data import GriddedDataList
 from jasmin_cis.data_io.ungridded_data import UngriddedDataList
 from jasmin_cis.data_io.products.AProduct import get_data, get_coordinates, get_variables
-from jasmin_cis.utils import deprecated
+from jasmin_cis.utils import deprecated, listify
 
 
 class DataReader(object):
@@ -52,10 +52,8 @@ class DataReader(object):
         type of data contained in the files
         """
         # if filenames or variables are not lists, make them lists of 1 element
-        if not isinstance(filenames, list):
-            filenames = [filenames]
-        if not isinstance(variables, list):
-            variables = [variables]
+        filenames = listify(filenames)
+        variables = listify(variables)
 
         variables = self._expand_wildcards(variables, filenames)
 
@@ -139,7 +137,6 @@ class DataReader(object):
         """
 
         # if filenames is not a list, make it a list of 1 element
-        if not isinstance(filenames, list):
-            filenames = [filenames]
+        filenames = listify(filenames)
 
         return self._get_coords_func(filenames, product)
