@@ -1,10 +1,14 @@
-from mpl_toolkits.basemap import Basemap
 import logging
-from matplotlib.ticker import MaxNLocator, AutoMinorLocator
+
 import numpy as np
+from mpl_toolkits.basemap import Basemap
+from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 import matplotlib.pyplot as plt
+
+from jasmin_cis.exceptions import CISError
 from jasmin_cis.utils import find_longitude_wrap_start
 from jasmin_cis.plotting.formatter import LogFormatterMathtextSpecial
+
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
@@ -37,7 +41,9 @@ class Generic_Plot(object):
         logging.debug("Unpacking the data items")
         self.x_wrap_start = self.set_x_wrap_start(x_wrap_start)
         self.unpacked_data_items = self.unpack_data_items()
-        if calculate_min_and_max_values: self.calculate_min_and_max_values()
+
+        if calculate_min_and_max_values:
+            self.calculate_min_and_max_values()
 
         self.matplotlib = plt
 
@@ -45,9 +51,15 @@ class Generic_Plot(object):
 
         self.set_width_and_height()
 
-        self.sort_by_lons_and_lats()
+        if self.is_map():
+            self.check_data_is_2d()
+            self.sort_by_lons_and_lats()
 
         self.plot()
+
+    def check_data_is_2d(self):
+        if len(self.packed_data_items[0].shape) > 2:
+            raise CISError("Data is not 1D or 2D - can't plot it on a map.")
 
     def sort_by_lons_and_lats(self):
         """
