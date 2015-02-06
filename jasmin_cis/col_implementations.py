@@ -518,21 +518,25 @@ class nn_gridded(Kernel):
         return nearest_neighbour_data_value(data, point.coord_tuple)
 
 
+# noinspection PyPep8Naming
 class li(Kernel):
+    """
+    Linear Interpolation Kernel
+    """
+
     def get_value(self, point, data):
         """
         Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
         """
-        from iris.analysis.interpolate import linear
+        from iris.analysis.trajectory import interpolate
 
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         new_coord_tuple_list = []
-        for i in point.coord_tuple:
-            if len(data.coords(i[0], dim_coords=True)) > 0:
-                new_coord_tuple_list.append(i)
-        point.coord_tuple = new_coord_tuple_list
+        for coord_name, val in point.coord_tuple:
+            if len(data.coords(coord_name, dim_coords=True)) > 0:
+                new_coord_tuple_list.append([coord_name, [val]])
 
-        return linear(data, point.coord_tuple).data
+        return interpolate(data, new_coord_tuple_list, method="linear").data
 
 
 class GriddedColocatorUsingIrisRegrid(Colocator):
