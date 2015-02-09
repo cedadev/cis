@@ -81,7 +81,7 @@ where:
           (data points with missing values are excluded)
 
         * *Standard Deviation* - suffix: ``_std_dev`` - The corrected sample standard deviation (i.e. 1 degree of
-        freedom) of all the data points mapped to that sample grid point (data points with missing values are excluded)
+          freedom) of all the data points mapped to that sample grid point (data points with missing values are excluded)
 
         * *Number of points* - suffix: ``_num_points`` - The number of data points mapped to that sample grid point
           (data points with missing values are excluded)
