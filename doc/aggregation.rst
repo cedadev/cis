@@ -21,27 +21,14 @@ The aggregation command has the following syntax::
 where:
 
 ``<datagroup>``
-  is of the format ``<variable>[,<variable2>]...:<filename>``. One or more
-  datagroups should be given.
+  is a :ref:`CIS datagroup <datagroups>` specifying the variables and files to read and is of the format
+  ``<variable>...:<filename>[:product=<productname>]`` where:
 
-  * ``<variable>`` is a mandatory argument used to specify the name of the variable in the file to use. You may
-    specify more than one variable to load, in which case you should separate them with commas.
+    * ``variable`` is a mandatory variable or list of variables to use.
+    * ``filenames`` is a mandatory file or list of files to read from.
+    * ``product`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-  * ``<filename>`` is a mandatory argument specifying the file to read the variable or variables from. You may specify
-    multiple filenames separated using commas; each filename should be one of:
-
-      * A single filename - this should be the full path to the file
-
-      * A single directory - all files in this directory will be read
-
-      * A wildcarded filename - A filename with any wildcards compatible with the python module glob, so that
-        \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
-
-    Note that when multiple files are specified (whether through use of commas, pointing at a directory, or wildcarding),
-    then all those files must contain all of the variables in that datagroup and the files should be 'compatible' - it
-    should be possible to combine them together using a shared dimension (in a NetCDF file this is usually the unlimited
-    dimension). So selecting multiple monthly files for a model run would be OK, but selecting files from two different
-    datatypes would not be OK.
+  See :ref:`datagroups` for a more detailed explanation of datagroups.
 
 ``<options>``
   Optional arguments given as ``keyword=value`` in a comma separated list. Options are:
@@ -75,10 +62,15 @@ where:
     form ``coordinate=[start,end,step]``. The step may be missed out, in which case the bin will span the whole range
     given. Partial collapse is currently only supported for ungridded data.
 
+  .. note::
+     Longitude coordinates are considered to be circular, so that -10 is equivalent to 350. The start and end must
+     describe a monotonically increasing coordinate range, so ``x=[90,-90,10]`` is invalid, but could be specified
+     using ``x=[90,270,10]``. The range between the start and end must not be greater than 360 degrees.
+
   Complete and partial collapses may be mixed where applicable - for example, to completely collapse time and to
   aggregate latitude on a grid from -45 degrees to 45 degrees, using a step size of 10 degrees:
 
-  * ``t,y=[-45,45,10]``
+  ``t,y=[-45,45,10]``
 
   .. note::
       For ungridded data, if a coordinate is left unspecified it is collapsed completely. This is in contrast to

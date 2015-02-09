@@ -1,3 +1,5 @@
+.. |nbsp| unicode:: 0xA0
+
 ====================================
 What kind of data can CIS deal with?
 ====================================
@@ -53,6 +55,51 @@ This is of course far from being an exhaustive list of what's out there. To cope
 .. todo:: [CommunityIntercomparisonSuite/Design Maintenance Guide]
 
 the plugins are always read first, so one can also overwrite default behaviour if the built-in products listed above do not achieve a very specific purpose.
+
+.. _datagroups:
+
+Datagroups
+==========
+Most CIS commands operate on a 'datagroup', which is a unit of data containing one or more similar variables and one or
+more files from which those variables should be taken. A datagroup represents closely related data from a specific
+instrument or model and as such is associated with only one data product.
+
+A datagroup is specified with the syntax:
+
+``<variable>...:<filename>[:product=<productname>]`` where:
+
+    * ``<variable>`` is a mandatory argument specifying the variable or variable names to use. This should be the name of
+      the variable as described in the file, e.g. the NetCDF variable name or HDF SDS/VDATA variable name. Multiple
+      variables may be specified by commas, and variables may be wildcarded using any wildcards compatible with the
+      python module glob, so that *, ? and [] can all be used
+
+    .. attention::
+        When specifying multiple variables, it is essential that they be on the same grid (i.e. use the same coordinates).
+
+    * ``<filenames>`` is a mandatory argument used to specify the files to read the variable from. These can be specified
+      as a comma seperated list of the following possibilities:
+
+      \1. |nbsp| a single filename - this should be the full path to the file
+
+      \2. |nbsp| a single directory - all files in this directory will be read
+
+      \3. |nbsp| a wildcarded filename - A filename with any wildcards compatible with the python module glob, so that \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
+
+    .. attention::
+        When multiple files are specified (whether through use of commas, pointing at a directory, or wildcarding),
+        then all those files must contain all of the specified variables, and the files should be 'compatible' - it
+        should be possible to aggregate them together using a shared dimension - typically time (in a NetCDF file this
+        is usually the unlimited dimension). So selecting multiple monthly files for a model run would be OK, but
+        selecting files from two different datatypes would not be OK.
+
+    * ``<productname>`` is an optional argument used to specify the type of files being read.
+      If omitted, the program will attempt to figure out which product to use based on the filename.
+      See :ref:`data-products-reading` to see a list of available products and their file signatures.
+
+For example::
+
+    illum:20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc
+    Cloud_Fraction_*:MOD*,MODIS_dir/:product=MODIS_L2
 
 Example plots
 =============
