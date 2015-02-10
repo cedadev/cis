@@ -31,14 +31,14 @@ class Subset(object):
             # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
             # the specified files.
             logging.info("Reading data for variables: %s", variables)
-            data = self._data_reader.read_data(filenames, variables, product)
+            data = self._data_reader.read_data_list(filenames, variables, product)
         except (IrisError, ex.InvalidVariableError) as e:
             raise ex.CISError("There was an error reading in data: \n" + str(e))
         except IOError as e:
             raise ex.CISError("There was an error reading one of the files: \n" + str(e))
 
         # Set subset constraint type according to the type of the data object.
-        if isinstance(data, cube.Cube) or isinstance(data, cube.CubeList):
+        if data.is_gridded:
             # Gridded data on Cube
             subset_constraint = GriddedSubsetConstraint()
         else:
