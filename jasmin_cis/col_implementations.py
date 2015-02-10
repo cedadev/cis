@@ -6,6 +6,7 @@ import iris.analysis.interpolate
 import iris.coords
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
+import psutil
 
 from jasmin_cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel, AbstractDataOnlyKernel)
@@ -15,6 +16,7 @@ from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
 import jasmin_cis.data_index as data_index
 import jasmin_cis.utils
+from jasmin_cis.utils import memory_profile
 
 
 class GeneralUngriddedColocator(Colocator):
@@ -74,13 +76,17 @@ class GeneralUngriddedColocator(Colocator):
             _fix_longitude_range(points.coords(), data_points)
 
         # Create index if constraint and/or kernel require one.
+        memory_profile("Mem before index")
+
         coord_map = None
         data_index.create_indexes(constraint, points, data_points, coord_map)
         data_index.create_indexes(kernel, points, data_points, coord_map)
+        memory_profile("Mem after index")
 
         logging.info("--> Colocating...")
 
         sample_points = points.get_all_points()
+        memory_profile("After get sample points")
 
         # Create output arrays.
         self.var_name = data.name()
@@ -92,6 +98,7 @@ class GeneralUngriddedColocator(Colocator):
         sample_points_count = len(sample_points)
         values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
 
+        memory_profile("Created output arrays")
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
         total_count = 0
@@ -119,6 +126,7 @@ class GeneralUngriddedColocator(Colocator):
             except ValueError:
                 pass
 
+        memory_profile("After kernel")
         return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
             if idx == 0:
@@ -266,10 +274,11 @@ class SepConstraintKdtree(PointConstraint):
     def constrain_points(self, ref_point, data):
         con_points = HyperPointList()
         if self.haversine_distance_kd_tree_index:
-            point_indices = self._get_cached_indices(ref_point)
+#            point_indices = self._get_cached_indices(ref_point)
+            point_indices = None
             if point_indices is None:
                 point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
-                self._add_cached_indices(ref_point, point_indices)
+#                self._add_cached_indices(ref_point, point_indices)
             for idx in point_indices:
                 point = data[idx]
                 if all(check(point, ref_point) for check in self.checks):

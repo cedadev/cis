@@ -66,7 +66,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
 
     if lon_dim_length:
         coord_list[coord_map['lon']] = (DimCoord(np.linspace(-5., 5., lon_dim_length) + horizontal_offset,
-                                        standard_name='longitude', units='degrees'), coord_map['lon'])
+                                        standard_name='longitude', units='degrees', circular=True), coord_map['lon'])
         data_size *= lon_dim_length
 
     if alt_dim_length:
@@ -828,9 +828,9 @@ def make_regular_2d_with_time_ungridded_data():
 
     x_points = np.arange(-10, 11, 5)
     y_points = np.arange(-5, 6, 5)
-    y, x = np.meshgrid(y_points,x_points)
+    y, x = np.meshgrid(y_points, x_points)
 
-    t0 = datetime.datetime(1984,8,27)
+    t0 = datetime.datetime(1984, 8, 27)
     times = np.reshape(np.array([t0+datetime.timedelta(days=d) for d in xrange(15)]),(5,3))
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
@@ -838,6 +838,28 @@ def make_regular_2d_with_time_ungridded_data():
     t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
 
     data = np.reshape(np.arange(15)+1.0,(5,3))
+
+    coords = CoordList([x, y, t])
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+
+
+def make_lat_lon_time_fly_round_the_world_ungridded_data(num_points = 5, lon_start=0, lon_delta=1, lat_min = 10, lat_max=10, time_start= datetime.datetime(2000, 1, 1), time_end= datetime.datetime(2000, 1, 10)):
+
+    import numpy as np
+    from jasmin_cis.data_io.Coord import CoordList, Coord
+    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
+    import datetime
+
+    x_points = np.remainder(np.linspace(lon_start, lon_delta * num_points, num_points), 360)
+    y_points = np.linspace(lat_min, lat_max, num_points)
+
+    times = np.array([time_start+datetime.timedelta(hours=d) for d in xrange(num_points)])
+
+    x = Coord(x_points, Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(y_points, Metadata(standard_name='longitude', units='degrees'))
+    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
+
+    data = np.arange(num_points)+1.0
 
     coords = CoordList([x, y, t])
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)

@@ -6,6 +6,7 @@ from nose.tools import istest, raises
 from iris.exceptions import CoordinateNotFoundError
 import numpy
 
+from jasmin_cis.test.utils_for_testing import *
 from jasmin_cis.exceptions import ClassNotFoundError
 from jasmin_cis.col_implementations import GriddedColocator, GriddedColocatorUsingIrisRegrid, gridded_gridded_nn, \
     gridded_gridded_li, nn_gridded
@@ -303,7 +304,7 @@ class GriddedGriddedColocatorTests(object):
                                [91.44, 92.44, 93.44, 94.44, 95.44, 96.44, 97.44],
                                [98.44, 99.44, 100.44, 101.44, 102.44, 103.44, 104.44]]])
 
-        assert numpy.allclose(out_cube.data, result)
+        assert_arrays_almost_equal(out_cube.data, result)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(data_cube.coord('time').points, out_cube.coord('time').points)
@@ -339,7 +340,7 @@ class GriddedGriddedColocatorTests(object):
                               [9.92, 10.92, 11.92],
                               [12.92, 13.92, 14.92]])
 
-        assert numpy.allclose(out_cube.data, result)
+        assert_arrays_almost_equal(out_cube.data, result)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert not does_coord_exist_in_cube(out_cube, 'time')
@@ -407,8 +408,8 @@ class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests, TestCase
                                         [71., 72., 73., 74., 75., 76., 77.]]])
 
         assert isinstance(out_cube, GriddedDataList)
-        assert numpy.array_equal(out_cube[0].data, expected_result)
-        assert numpy.array_equal(out_cube[1].data, expected_result + 3)
+        assert_arrays_equal(out_cube[0].data, expected_result)
+        assert_arrays_equal(out_cube[1].data, expected_result + 3)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[0].coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[0].coord('longitude').points)
         assert numpy.array_equal(data_list.coord('time').points, out_cube[0].coord('time').points)

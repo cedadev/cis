@@ -5,6 +5,7 @@ import warnings
 import iris
 from iris.exceptions import CoordinateNotFoundError
 import numpy as np
+import psutil
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
 
@@ -755,7 +756,7 @@ def deprecated(func):
         def log_warning(message, category, filename, lineno, file=None):
             logging.warning('%s:%s %s:%s' % (category.__name__, message, filename, lineno))
         warnings.showwarning = log_warning
-        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.simplefilter('once', DeprecationWarning)  # turn off filter
         warnings.warn("Call to deprecated function %s." % func.__name__,
                       category=DeprecationWarning, stacklevel=2)
         return func(*args, **kwargs)
@@ -763,3 +764,8 @@ def deprecated(func):
     newFunc.__doc__ = func.__doc__
     newFunc.__dict__.update(func.__dict__)
     return newFunc
+
+dictionary = []
+def memory_profile(key):
+    mem = psutil.Process().memory_info().rss
+    dictionary.append((key, mem))
