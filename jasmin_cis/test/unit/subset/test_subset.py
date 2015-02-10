@@ -1,5 +1,5 @@
 from unittest import TestCase
-from hamcrest import assert_that, is_, instance_of, contains_inanyorder
+from hamcrest import assert_that, is_, instance_of
 from mock import MagicMock, Mock
 
 from jasmin_cis.data_io.data_reader import DataReader
@@ -9,8 +9,7 @@ from jasmin_cis.data_io.gridded_data import GriddedDataList
 from jasmin_cis.subsetting.subset import Subset
 from jasmin_cis.subsetting.subset_limits import SubsetLimits
 from jasmin_cis.subsetting.subsetter import Subsetter
-from jasmin_cis.test.util.mock import make_regular_2d_ungridded_data, make_square_5x3_2d_cube, \
-    make_2d_ungridded_data_list_on_multiple_coordinate_sets
+from jasmin_cis.test.util.mock import make_regular_2d_ungridded_data, make_square_5x3_2d_cube
 from jasmin_cis.subsetting.subset_constraint import UngriddedSubsetConstraint, GriddedSubsetConstraint
 
 
