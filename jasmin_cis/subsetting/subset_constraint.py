@@ -65,32 +65,52 @@ class SubsetConstraint(SubsetConstraintInterface):
 
 
 class GriddedSubsetConstraint(SubsetConstraint):
-    """Implementation of SubsetConstraint for subsetting gridded data.
     """
-    def make_iris_constraint(self):
-        """Constructs an Iris constraint corresponding to the limits set for each dimension.
-
-        :return: iris.Constraint object
-        """
-        constraint = None
-        for coord, limits in self._limits.iteritems():
-            constraint_function = limits.constraint_function
-            if constraint is None:
-                constraint = iris.Constraint(**{coord: constraint_function})
-            else:
-                constraint = constraint & iris.Constraint(**{coord: constraint_function})
-        return constraint
+    Implementation of SubsetConstraint for subsetting gridded data.
+    """
 
     def constrain(self, data):
-        """Subsets the supplied data.
-
+        """
+        Subsets the supplied data using a combination of iris.cube.Cube.extract and iris.cube.Cube.intersection,
+        depending on whether intersection is supported (whether the coordinate has a defined modulus).
         :param data: data to be subsetted
         :type data: iris.cube.Cube
-        :return: subsetted data
+        :return: subsetted data or None if all data excluded.
         @rtype: jasmin_cis.data_io.gridded_data.GriddedData
         """
-        iris_constraint = self.make_iris_constraint()
-        return gridded_data.make_from_cube(data.extract(iris_constraint))
+        extract_constraint, intersection_constraint = self._make_extract_and_intersection_constraints(data)
+        if extract_constraint is not None:
+            data = data.extract(extract_constraint)
+        if intersection_constraint:
+            try:
+                data = data.intersection(**intersection_constraint)
+            except IndexError:
+                return None
+        return gridded_data.make_from_cube(data)
+
+    def _make_extract_and_intersection_constraints(self, data):
+        """
+        Make the appropriate constraints:
+        - dictionary of coord_name -> (min, max) for coordinates with defined modulus (to be used on the IRIS
+          intersection method).
+        - iris.Constraint if no defined modulus
+        :param data:
+        :return:
+        """
+        extract_constraint = None
+        intersection_constraint = {}
+        for coord, limits in self._limits.iteritems():
+            if data.coord(coord).units.modulus is not None:
+                # These coordinates can be safely used with iris.cube.Cube.intersection()
+                intersection_constraint[coord] = (limits.start, limits.end)
+            else:
+                # These coordinates cannot be used with iris.cube.Cube.intersection(), will use iris.cube.Cube.extract()
+                constraint_function = limits.constraint_function
+                if extract_constraint is None:
+                    extract_constraint = iris.Constraint(**{coord: constraint_function})
+                else:
+                    extract_constraint = extract_constraint & iris.Constraint(**{coord: constraint_function})
+        return extract_constraint, intersection_constraint
 
 
 class UngriddedSubsetConstraint(SubsetConstraint):

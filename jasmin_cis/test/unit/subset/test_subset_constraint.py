@@ -24,35 +24,79 @@ class TestGriddedSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [[2, 3], [5, 6], [8, 9], [11, 12], [14, 15]])
 
+    def test_can_subset_2d_gridded_data_by_latitude(self):
+        data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube()
+        lat_coord = data.coord('latitude')
+        constraint = subset_constraint.GriddedSubsetConstraint()
+        constraint.set_limit(lat_coord, 0.0, 10.0, False)
+        subset = constraint.constrain(data)
+        assert (subset.data.tolist() == [[7, 8, 9], [10, 11, 12], [13, 14, 15]])
+
+    def test_can_subset_3d_gridded_data_by_altitude(self):
+        data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube_with_altitude()
+        alt_coord = data.coord('altitude')
+        constraint = subset_constraint.GriddedSubsetConstraint()
+        constraint.set_limit(alt_coord, 2, 5, False)
+        subset = constraint.constrain(data)
+        assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
+                                         [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
+                                         [[45, 46, 47, 48], [52, 53, 54, 55], [59, 60, 61, 62]],
+                                         [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
+                                         [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
+
+    def test_can_subset_3d_gridded_data_by_pressure(self):
+        data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube_with_pressure()
+        press_coord = data.coord('air_pressure')
+        constraint = subset_constraint.GriddedSubsetConstraint()
+        constraint.set_limit(press_coord, 2, 5, False)
+        subset = constraint.constrain(data)
+        assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
+                                         [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
+                                         [[45, 46, 47, 48], [52, 53, 54, 55], [59, 60, 61, 62]],
+                                         [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
+                                         [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
+
+    def test_can_subset_2d_gridded_data_by_time(self):
+        data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube_with_time()
+        time_coord = data.coord('time')
+        constraint = subset_constraint.GriddedSubsetConstraint()
+        constraint.set_limit(time_coord, 140494, 140497, False)
+        subset = constraint.constrain(data)
+        assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
+                                         [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
+                                         [[45, 46, 47, 48], [52, 53, 54, 55], [59, 60, 61, 62]],
+                                         [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
+                                         [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
+
     def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
         data = jasmin_cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9)
         long_coord = data.coord('longitude')
-        long_coord.points = np.array([-180., -135., -90., -45., 0., 45., 90., 135., 180.])
+        long_coord.points = np.arange(-175, 185, 40)
         long_coord.bounds = None
         long_coord.guess_bounds()
         constraint = subset_constraint.GriddedSubsetConstraint()
-        constraint.set_limit(long_coord, 135.0, -90.0, True)
+        constraint.set_limit(long_coord, 135.0, 270, False)
         subset = constraint.constrain(data)
-        assert (subset.data.tolist() == [[1, 2, 3, 8, 9],
-                                         [10, 11, 12, 17, 18],
-                                         [19, 20, 21, 26, 27],
-                                         [28, 29, 30, 35, 36],
-                                         [37, 38, 39, 44, 45]])
+        assert (subset.data.tolist() == [[9, 1, 2, 3],
+                                         [18, 10, 11, 12],
+                                         [27, 19, 20, 21],
+                                         [36, 28, 29, 30],
+                                         [45, 37, 38, 39]])
 
     def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_360(self):
         data = jasmin_cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9)
         long_coord = data.coord('longitude')
-        long_coord.points = np.array([0., 45., 90., 135., 180., 225., 270., 315., 360.])
+        long_coord.points = np.arange(5, 365, 40)
         long_coord.bounds = None
         long_coord.guess_bounds()
         constraint = subset_constraint.GriddedSubsetConstraint()
-        constraint.set_limit(long_coord, 315.0, 90.0, True)
+        constraint.set_limit(long_coord, -45.0, 90.0, False)
         subset = constraint.constrain(data)
-        assert (subset.data.tolist() == [[1, 2, 3, 8, 9],
-                                         [10, 11, 12, 17, 18],
-                                         [19, 20, 21, 26, 27],
-                                         [28, 29, 30, 35, 36],
-                                         [37, 38, 39, 44, 45]])
+        assert (subset.data.tolist() == [[9, 1, 2, 3],
+                                         [18, 10, 11, 12],
+                                         [27, 19, 20, 21],
+                                         [36, 28, 29, 30],
+                                         [45, 37, 38, 39]])
 
     def test_can_subset_2d_gridded_data_with_missing_data(self):
         """This test just shows that missing values do not interfere with subsetting -
