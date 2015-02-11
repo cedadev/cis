@@ -15,6 +15,7 @@ from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data, HDF_SDS
 from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
+from utils import listify
 
 
 class Metadata(object):
@@ -113,10 +114,7 @@ class LazyData(object):
             self._data = None
             # Although the data can be a list or a single item it's useful to cast it
             #  to a list here to make accessing it consistent
-            if isinstance(data, list):
-                self._data_manager = data
-            else:
-                self._data_manager = [ data ]
+            self._data_manager = listify(data)
 
             if data_retrieval_callback is not None:
                 # Use the given data retrieval method
@@ -199,8 +197,8 @@ class LazyData(object):
 
     @data.setter
     def data(self, value):
-        # TODO remove this - it's only for testing colocation at the moment
         self._data = value
+        self._data_flattened = None
 
     @property
     def data_flattened(self):
@@ -294,8 +292,20 @@ class UngriddedData(LazyData, CommonData):
                             long_name=long_name, history='', units=units)
         data = UngriddedData(data=data, metadata=metadata, coords=self._coords)
         # Copy the history in separately so it gets the timestamp added.
-        data.add_history(history)
+        if history:
+            data.add_history(history)
         return data
+
+    def copy(self):
+        """
+        Create a copy of this UngriddedData object with new data and coordinates
+        so that that they can be modified without held references being affected.
+        Will call any lazy loading methods in the data and coordinates
+        :return: Copied UngriddedData object
+        """
+        data = numpy.ma.copy(self.data)  # This will load the data if lazy load
+        coords = self._coords.copy()
+        return UngriddedData(data=data, metadata=self.metadata, coords=coords)
 
     @property
     def history(self):
@@ -550,3 +560,25 @@ class UngriddedDataList(CommonDataList):
         for data in self:
             points_list.append(data.get_non_masked_points())
         return points_list
+
+    def coord(self, *args, **kwargs):
+        """
+        Call UnGriddedData.coord(*args, **kwargs) for the first item of data (assumes all data in list has
+        same coordinates)
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return self[0].coord(*args, **kwargs)
+
+    def copy(self):
+        """
+        Create a copy of this UngriddedDataList with new data and coordinates
+        so that that they can be modified without held references being affected.
+        Will call any lazy loading methods in the data and coordinates
+        :return: Copied UngriddedData object
+        """
+        output = UngriddedDataList()
+        for variable in self:
+            output.append(variable.copy())
+        return output
