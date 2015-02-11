@@ -75,9 +75,14 @@ class BaseIntegrationTest(unittest.TestCase):
                 for info in vs.vdatainfo():
                     if info[0] == sample_var:
                         sample_shape = (info[3],)
-        elif sample_file.endswith('.lev20') or sample_file.endswith('.txt'):
+        else:
+            headers = 0
+            if sample_file.endswith('.lev20'):
+                headers = 5  # Aeronet headers are five lines.
+            elif sample_file.endswith('.txt'):
+                headers = 1
             f = open(sample_file)
-            line_count = - 5  # Aeronet headers are five lines.
+            line_count = - headers
             for line in f:
                 if line.strip():
                     line_count += 1
@@ -85,12 +90,6 @@ class BaseIntegrationTest(unittest.TestCase):
         output = Dataset(output_file)
         for output_var in output_vars:
             output_shape = output.variables[output_var].shape
-            try:
-                assert sample_shape == output_shape
-            except AssertionError:
-                try:
-                    # Sometimes there is a dimension which is flattened out, try just lat lon
-                    assert sample_shape[-2:] == output_shape
-                except AssertionError:
-                    # If the data gets flattened (MODIS L3 I think?) then check with the number of points
-                    assert output_shape == (sample_shape[-1] * sample_shape[-2],)
+            from operator import mul
+            # This copes with dims in different orders, length 1 values being taken out etc
+            assert reduce(mul, sample_shape) == reduce(mul, output_shape)

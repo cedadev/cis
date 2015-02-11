@@ -15,7 +15,7 @@ from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data, HDF_SDS
 from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
-from utils import listify
+from jasmin_cis.utils import listify
 
 
 class Metadata(object):
