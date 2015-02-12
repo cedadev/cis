@@ -2,7 +2,7 @@ import numpy
 from jasmin_cis.data_io.hyperpoint import HyperPoint
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.ungridded_data import LazyData
-from utils import fix_longitude_range
+from jasmin_cis.utils import fix_longitude_range
 
 
 class Coord(LazyData):

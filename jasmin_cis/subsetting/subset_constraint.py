@@ -8,7 +8,7 @@ import iris.coords
 
 from jasmin_cis.subsetting.subset_framework import SubsetConstraintInterface
 import jasmin_cis.data_io.gridded_data as gridded_data
-from utils import guess_coord_axis
+from jasmin_cis.utils import guess_coord_axis
 
 
 class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
