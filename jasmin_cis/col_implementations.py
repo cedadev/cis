@@ -59,6 +59,9 @@ class GeneralUngriddedColocator(Colocator):
             return output
 
         metadata = data.metadata
+        data_points_count = 1
+        for dim_len in data.shape:
+            data_points_count *= dim_len
 
         # Convert ungridded data to a list of points if kernel needs it.
         # Special case checks for kernels that use a cube - this could be done more elegantly.
@@ -92,6 +95,8 @@ class GeneralUngriddedColocator(Colocator):
         sample_points_count = len(sample_points)
         values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
 
+
+        logging.info("    {} data points onto {} sample points".format(data_points_count, sample_points_count))
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
         total_count = 0
