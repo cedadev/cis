@@ -54,7 +54,7 @@ class HDF_SDS(object):
         from pyhdf.SD import SD
 
         self._sd = SD(self._filename)
-        self._sds = SD(self._filename).select(self._variable)
+        self._sds = self._sd.select(self._variable)
 
     def _close_sds(self):
         """
