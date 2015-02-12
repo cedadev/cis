@@ -1,6 +1,7 @@
 """
 Module containing NetCDF file reading functions
 """
+from jasmin_cis.exceptions import InvalidVariableError
 from jasmin_cis.utils import listify
 
 
@@ -20,15 +21,17 @@ def get_netcdf_file_attributes(filename):
 
 def get_netcdf_file_variables(filename, exclude_coords=False):
     """
-    Get all the variables from a NetCDF file
-    
+    Get all the variables contained in a NetCDF file. Variables in NetCDF4 Hierarchical groups
+    are returned with their fully qualified variable name in the form <group1>.<group2....>.<variable_name>, e.g.
+   'AVHRR.Ch4CentralWavenumber'.
     :param filename: The filename of the file to get the variables from
-    :param exclude_coords: Exclude coordinate variables
-    :return: An OrderedDict containing the variables from the file
+    :param exclude_coords: Exclude coordinate variables if True
+    :return: An OrderedDict containing {variable_name: NetCDF Variable instance}
     """
-    from netCDF4 import Dataset    
+    from netCDF4 import Dataset
     f = Dataset(filename)
-    variables = f.variables
+    # Include NetCDF4 hierarchical groups too:
+    variables = _get_all_fully_qualified_variables(f)
     if exclude_coords:
         for var in f.dimensions:
             try:
@@ -38,12 +41,45 @@ def get_netcdf_file_variables(filename, exclude_coords=False):
     return variables
 
 
+def _get_all_fully_qualified_variables(dataset):
+    """
+    List all variables in a file.
+    Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
+    <group1>.<group2....>.<variable_name>, e.g. 'AVHRR.Ch4CentralWavenumber'.
+    :param dataset: Dataset to get variables for
+    :return: Dictionary of variable_name : netCDF4 Variable instance
+    """
+
+    def get_variables_for_group(group, var_dict, previous_groups=None):
+        """
+        Recursively get Variables for this group and all subgroups,
+        adding them to a dictionary.
+        :param group: Group to start from (typically root group, i.e. netCDF4.Dataset)
+        :param var_dict: Dictionary to add Variable instances to
+        :param previous_groups: List of all groups up to this point  in the recursion
+        """
+        if not previous_groups:
+            previous_groups = []
+        for group_key, group in group.groups.iteritems():
+            current_groups = previous_groups + [group_key]
+            for var_key, var in group.variables.iteritems():
+                path = current_groups + [var_key]
+                var_dict[".".join(path)] = var
+            get_variables_for_group(group, var_dict, current_groups)
+
+    all_vars = dataset.variables
+    get_variables_for_group(dataset, all_vars)
+    return all_vars
+
+
 def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotemporal_var_names):
     """
     Remove from a list of netCDF variables any which have dimensionality which is not in an approved list
     of valid spatial or temporal dimensions (e.g. sensor number, pseudo dimensions). CIS currently does not
     support variables with this dimensionality and will fail if they are used.
-    :param variables: Dictionary of netCDF variable names : Variable objects
+    :param variables: Dictionary of netCDF variable names : Variable objects. Variable names may be fully qualified
+    NetCDF4 Hierarchical group variables in the form <group1>.<group2....>.<variable_name>,
+    e.g. 'AVHRR.Ch4CentralWavenumber'.
     :param spatiotemporal_var_names: List of valid spatiotemporal dimensions.
     :return: None
     """
@@ -60,7 +96,9 @@ def read_attributes_and_variables_many_files(filenames):
     Read attributes and variables from a netcdf file collection
     It uses first file as the master from which it reads the data
     :param filenames:  A list of NetCDF filenames to read, or a string with wildcards.
-    :return: a dictionary of attributes and their values, a list of variable names, dictionary of variables
+    :return: a dictionary of attributes and their values, a list of variable names, dictionary of variables.
+    Variables in NetCDF4 Hierarchical groups are given as fully qualified variables in the form
+    <group1>.<group2....>.<variable_name>, e.g. 'AVHRR.Ch4CentralWavenumber'.
     """
     import glob
     from netCDF4 import Dataset
@@ -77,20 +115,22 @@ def read_attributes_and_variables_many_files(filenames):
     except RuntimeError as e:
         raise IOError(e)
 
-    variable_dimensions = {name: variable.dimensions for name, variable in datafile.variables.items()}
-    return datafile.__dict__, datafile.variables.keys(), variable_dimensions
+    # Include NetCDF4 hierarchical groups too:
+    datafile_variables = _get_all_fully_qualified_variables(datafile)
+    variable_dimensions = {name: variable.dimensions for name, variable in datafile_variables.items()}
+    return datafile.__dict__, datafile_variables.keys(), variable_dimensions
 
 
 def read_many_files(filenames, usr_variables, dim=None):
     """
-    Reads a single Variable from many NetCDF files.
-
-        :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
-        :param usr_variables: A list of variable (dataset) names to read from the
-                       files. The names must appear exactly as in in the NetCDF file.
-        :param dim: The name of the dimension on which to aggregate the data. None is the default
-                     which tries to aggregate over the unlimited dimension
-        :return: A list of variable instances constructed from all of the input files
+    Reads a single Variable from many NetCDF files. 
+    This method uses the netCDF4 MFDataset class and so is NOT suitable for NetCDF4 datasets (only 'CLASSIC' netcdf).
+    :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
+    :param usr_variables: A list of variable (dataset) names to read from the files. 
+    The names must appear exactly as in in the NetCDF file.
+    :param dim: The name of the dimension on which to aggregate the data. None is the default
+    which tries to aggregate over the unlimited dimension
+    :return: A list of variable instances constructed from all of the input files
     """
     from netCDF4 import MFDataset
     from jasmin_cis.exceptions import InvalidVariableError
@@ -115,13 +155,14 @@ def read_many_files(filenames, usr_variables, dim=None):
 
 def read_many_files_individually(filenames, usr_variables):
     """
-    Read multiple Variables from many NetCDF files manually - i.e. not with MFDataset as this doesn't alays work
-
-        :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
-        :param usr_variables: A list of variable (dataset) names to read from the
-                       files. The names must appear exactly as in in the NetCDF file.
-        :return: A dictionary of lists of variable instances constructed from all of the input files with the variable
-                    name as the key
+    Read multiple Variables from many NetCDF files manually - i.e. not with MFDataset as this doesn't alays work, 
+    in particular for NetCDF4 files.
+    :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
+    :param usr_variables: A list of variable (dataset) names to read from the files. The names must appear exactly as 
+    in in the NetCDF file. Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
+    <group1>.<group2....>.<variable_name>, e.g. AVHRR.Ch4CentralWavenumber.
+    :return: A dictionary of lists of variable instances constructed from all of the input files with the fully 
+    qualified variable name as the key
     """
     from jasmin_cis.utils import add_element_to_list_in_dict
 
@@ -141,15 +182,14 @@ def read_many_files_individually(filenames, usr_variables):
 def read(filename, usr_variables):
     """
     Reads a Variable from a NetCDF file
-
-        :param filename: The name (with path) of the NetCDF file to read.
-        :param usr_variables: A variable (dataset) name to read from the
-                       files. The name must appear exactly as in in the NetCDF file.
-        :return: A Variable instance constructed from  the input file
+    :param filename: The name (with path) of the NetCDF file to read.
+    :param usr_variables: A variable (dataset) name to read from the files. The name must appear exactly as in in the
+    NetCDF file. Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
+    <group1>.<group2....>.<variable_name>, e.g. 'AVHRR.Ch4CentralWavenumber'.
+    :return: A Variable instance constructed from  the input file
 
     """
     from netCDF4 import Dataset
-    from jasmin_cis.exceptions import InvalidVariableError
 
     usr_variables = listify(usr_variables)
 
@@ -159,12 +199,18 @@ def read(filename, usr_variables):
         raise IOError(str(e))
 
     data = {}
-    for variable in usr_variables:
-        # Get data.
+    for full_variable in usr_variables:
+        # Split the fully qualified variable (group.variable) into group and variable
+        parts = full_variable.split(".")
+        groups = parts[:-1]
+        variable = parts[-1]
+        current_group = datafile
+        for group in groups:
+            current_group = current_group.groups[group]
         try:
-            data[variable] = datafile.variables[variable]
+            data[full_variable] = current_group.variables[variable]
         except:
-            raise InvalidVariableError(variable+' could not be found in '+filename)
+            raise InvalidVariableError(full_variable + ' could not be found in ' + filename)
 
     return data
 
