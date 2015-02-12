@@ -1,4 +1,5 @@
 import datetime as dt
+from hamcrest import *
 from nose.tools import istest, eq_, assert_almost_equal, raises
 
 import numpy as np
@@ -10,6 +11,7 @@ from jasmin_cis.test.util import mock
 from jasmin_cis.col_implementations import (GeneralUngriddedColocator, nn_horizontal_kdtree, DummyConstraint,
                                             SepConstraintKdtree, make_coord_map)
 from jasmin_cis.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
+from jasmin_cis.kdtree import KDTree
 
 
 def is_colocated(data1, data2):
@@ -192,6 +194,31 @@ class TestSepConstraint(object):
 
         eq_(ref_vals.size, new_vals.size)
         assert(np.equal(ref_vals, new_vals).all())
+
+
+    def get_max_depth(self, node, depth):
+        if isinstance(node, KDTree.leafnode):
+            return depth
+        return max(self.get_max_depth(node.less, depth + 1), self.get_max_depth(node.greater, depth + 1))
+
+    @istest
+    def test_horizontal_constraint_in_2d_when_lats_are_the_same_produces_a_balanced_tree(self):
+        ug_data = mock.make_regular_2d_ungridded_data(lat_dim_length=1001, lat_max=10, lat_min=10)
+        ug_data_points = ug_data.get_non_masked_points()
+        sample_point = HyperPoint(lat=7.5, lon=-2.5)
+        sample_points = HyperPointList([sample_point])
+        coord_map = None
+
+        # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
+        #  in each direction
+        constraint = SepConstraintKdtree(h_sep=400)
+
+        index = HaversineDistanceKDTreeIndex()
+        index.index_data(sample_points, ug_data_points, coord_map, leafsize=2)
+
+        depth = self.get_max_depth(index.index.tree, 0)
+
+        assert_that(depth, is_(2), "Depth is 2, there are three unique values -10, 0, 10")
 
 
 class TestSepConstraintWithoutHorizontalSeparation(object):

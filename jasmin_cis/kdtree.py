@@ -482,13 +482,15 @@ class KDTree(object):
             data = self.data[idx]
             #maxes = np.amax(data,axis=0)
             #mins = np.amin(data,axis=0)
-            d = np.argmax(maxes-mins)
+            d = np.argmax(maxes-mins)  #  the dimension with the biggest difference
             maxval = maxes[d]
             minval = mins[d]
+            # the mins and maxes are not recalculated but the min/max is set to split on build so unless the split is on a border this is will
+            # never triger
             if maxval==minval:
                 # all points are identical; warn user?
                 return KDTree.leafnode(idx)
-            data = data[:,d]
+            data = data[:,d] # data is the data to split on
 
             # sliding midpoint rule; see Maneewongvatana and Mount 1999
             # for arguments that this is a good idea.
@@ -507,9 +509,7 @@ class KDTree(object):
                 # _still_ zero? all must have the same value
                 if not np.all(data==data[0]):
                     raise ValueError("Troublesome data array: %s" % data)
-                split = data[0]
-                less_idx = np.arange(len(data)-1)
-                greater_idx = np.array([len(data)-1])
+                return KDTree.leafnode(idx)
 
             lessmaxes = np.copy(maxes)
             lessmaxes[d] = split
