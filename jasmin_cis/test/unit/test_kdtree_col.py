@@ -195,7 +195,6 @@ class TestSepConstraint(object):
         eq_(ref_vals.size, new_vals.size)
         assert(np.equal(ref_vals, new_vals).all())
 
-
     def get_max_depth(self, node, depth):
         if isinstance(node, KDTree.leafnode):
             return depth
