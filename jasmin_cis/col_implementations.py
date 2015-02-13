@@ -14,10 +14,13 @@ from jasmin_cis.data_io.gridded_data import GriddedData, make_from_cube, Gridded
 from jasmin_cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from jasmin_cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
 import jasmin_cis.data_index as data_index
-import jasmin_cis.utils
+from jasmin_cis.utils import log_memory_profile
 
 
 class GeneralUngriddedColocator(Colocator):
+    """
+    Colocator for locating onto ungridded sample points
+    """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
@@ -50,6 +53,8 @@ class GeneralUngriddedColocator(Colocator):
                        a single value
         :return: A single LazyData object
         """
+        log_memory_profile("GeneralUngriddedColocator Initial")
+
         if isinstance(data, list):
             # Indexing and constraints (for SepConstraintKdTree) will only take place on the first iteration,
             # so we really can just call this method recursively if we've got a list of data.
@@ -59,9 +64,6 @@ class GeneralUngriddedColocator(Colocator):
             return output
 
         metadata = data.metadata
-        data_points_count = 1
-        for dim_len in data.shape:
-            data_points_count *= dim_len
 
         # Convert ungridded data to a list of points if kernel needs it.
         # Special case checks for kernels that use a cube - this could be done more elegantly.
@@ -75,11 +77,13 @@ class GeneralUngriddedColocator(Colocator):
         else:
             data_points = data.get_non_masked_points()
             _fix_longitude_range(points.coords(), data_points)
+        log_memory_profile("GeneralUngriddedColocator after data retrieval")
 
         # Create index if constraint and/or kernel require one.
         coord_map = None
         data_index.create_indexes(constraint, points, data_points, coord_map)
         data_index.create_indexes(kernel, points, data_points, coord_map)
+        log_memory_profile("GeneralUngriddedColocator after indexing")
 
         logging.info("--> Colocating...")
 
@@ -94,9 +98,9 @@ class GeneralUngriddedColocator(Colocator):
                                                       self.var_standard_name, self.var_units)
         sample_points_count = len(sample_points)
         values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
+        log_memory_profile("GeneralUngriddedColocator after output array creation")
 
-
-        logging.info("    {} data points onto {} sample points".format(data_points_count, sample_points_count))
+        logging.info("    {} sample points".format(sample_points_count))
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
         total_count = 0
@@ -123,6 +127,7 @@ class GeneralUngriddedColocator(Colocator):
                     values[0, i] = value_obj
             except ValueError:
                 pass
+        log_memory_profile("GeneralUngriddedColocator after running kernel on sample points")
 
         return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
@@ -139,6 +144,7 @@ class GeneralUngriddedColocator(Colocator):
                                         missing_value=self.fill_value, units=var_details[2])
                 new_data = UngriddedData(values[idx, :], var_metadata, points.coords())
             return_data.append(new_data)
+        log_memory_profile("GeneralUngriddedColocator final")
 
         return return_data
 
