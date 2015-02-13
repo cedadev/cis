@@ -5,7 +5,6 @@ import warnings
 import iris
 from iris.exceptions import CoordinateNotFoundError
 import numpy as np
-import psutil
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
 # number of bytes in a MB
@@ -759,7 +758,7 @@ def deprecated(func):
         def log_warning(message, category, filename, lineno, file=None):
             logging.warning('%s:%s %s:%s' % (category.__name__, message, filename, lineno))
         warnings.showwarning = log_warning
-        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.simplefilter('once', DeprecationWarning)  # turn off filter
         warnings.warn("Call to deprecated function %s." % func.__name__,
                       category=DeprecationWarning, stacklevel=2)
         return func(*args, **kwargs)
@@ -786,5 +785,9 @@ def log_memory_profile(location):
     :param location: location in the program where the memory measurement was taken
     :return: nothing
     """
-    mem = psutil.Process().memory_info().rss / BYTES_IN_A_MB
-    logging.debug("App Memory MB ({}): {}".format(location, mem))
+    try:
+        import psutil
+        mem = psutil.Process().memory_info().rss / BYTES_IN_A_MB
+        logging.debug("App Memory MB ({}): {}".format(location, mem))
+    except ImportError:
+        pass
