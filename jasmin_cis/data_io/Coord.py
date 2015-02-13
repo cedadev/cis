@@ -1,7 +1,9 @@
-import logging, collections
+import numpy
 from jasmin_cis.data_io.hyperpoint import HyperPoint
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.ungridded_data import LazyData
+from jasmin_cis.utils import fix_longitude_range
+
 
 class Coord(LazyData):
 
@@ -69,6 +71,26 @@ class Coord(LazyData):
         self._data = convert_obj_to_standard_date_array(self.data)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
+
+    def set_longitude_range(self, range_start):
+        """
+        Confine the coordinate longitude range to 360 degrees from the range_start value
+        :param range_start: Start of the longitude range
+        :return:
+        """
+        self._data = fix_longitude_range(self._data, range_start)
+        self._data_flattened = None
+
+    def copy(self):
+        """
+        Create a copy of this Coord object with new data so that that they
+        can be modified without held references being affected.
+
+        Will call any lazy loading methods in the coordinate data
+        :return: Copied Coord
+        """
+        data = numpy.ma.copy(self.data)  # Will call lazy load method
+        return Coord(data, self.metadata)
 
 
 class CoordList(list):
@@ -209,3 +231,16 @@ class CoordList(list):
             ret_list.append(coord)
 
         return ret_list
+
+    def copy(self):
+        """
+        Create a copy of this CoordList object with new data so that that they can
+        be modified without held references being affected.
+
+        Will call any lazy loading methods in the coordinate data
+        :return: Copied CoordList
+        """
+        copied = CoordList()
+        for coord in self:
+            copied.append(coord.copy())
+        return copied

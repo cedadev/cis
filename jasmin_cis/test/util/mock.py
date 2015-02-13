@@ -717,37 +717,6 @@ def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lo
                                         long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
-
-def make_2d_ungridded_data_list_on_multiple_coordinate_sets(lat_dim_length=5, lat_min=-10, lat_max=10, lon_dim_length=3,
-                                                            lon_min=-5, lon_max=5, data_offset=0, mask=False):
-    import numpy as np
-    from jasmin_cis.data_io.Coord import CoordList, Coord
-    from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedDataList
-
-    x_points = np.linspace(lat_min, lat_max, lat_dim_length)
-    y_points = np.linspace(lon_min, lon_max, lon_dim_length)
-    y_1, x_1 = np.meshgrid(y_points, x_points)
-    x_points = np.linspace(lat_min, lat_max - 1, lat_dim_length + 1)
-    y_points = np.linspace(lon_min, lon_max - 1, lon_dim_length + 1)
-    y_2, x_2 = np.meshgrid(y_points, x_points)
-    x_1 = Coord(x_1, Metadata(name='lat', standard_name='latitude', units='degrees north'))
-    y_1 = Coord(y_1, Metadata(name='lon', standard_name='longitude', units='degrees east'))
-    x_2 = Coord(x_2, Metadata(name='lat_1', standard_name='latitude', units='degrees north'))
-    y_2 = Coord(y_2, Metadata(name='lon_1', standard_name='longitude', units='degrees east'))
-    data = np.reshape(np.arange(lat_dim_length * lon_dim_length) + data_offset + 1.0, (lat_dim_length, lon_dim_length))
-    if mask:
-        data = np.ma.asarray(data)
-        data.mask = mask
-    coords_1 = CoordList([x_1, y_1])
-    coords_2 = CoordList([x_2, y_2])
-    ungridded1 = UngriddedData(data, Metadata(name='rain', standard_name='rainfall_rate',
-                                              long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                              units="kg m-2 s-1", missing_value=-999), coords_1)
-    ungridded2 = UngriddedData(data, Metadata(name='snow', standard_name='snowfall_rate',
-                                              long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
-                                              units="kg m-2 s-1", missing_value=-999), coords_2)
-    return UngriddedDataList([ungridded1, ungridded2])
-
 def make_regular_2d_ungridded_data_with_missing_values():
     '''
         Makes a well defined ungridded data object of shape 5x3 with data as follows, in which M denotes a missing

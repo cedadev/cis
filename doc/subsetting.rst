@@ -1,43 +1,52 @@
 .. _subsetting:
+.. include:: <isonum.txt>
 
 ==========
 Subsetting
 ==========
 
-Subsetting allows the reduction of data by extracting a variable and restricting to ranges of one or more coordinates.
+Subsetting allows the reduction of data by extracting variables and restricting them to ranges of one or more coordinates.
 
 To perform subsetting, run a command of the format::
 
-  $ cis subset datagroup limits -o outputfile
+  $ cis subset <datagroup> <limits> [-o <outputfile>]
 
 where:
 
-``datagroup``
-  is of the format ``variable:filenames[:product]`` in which product is optional. Each is described in more detail below.
+``<datagroup>``
+  is a :ref:`CIS datagroup <datagroups>` specifying the variables and files to read and is of the format
+  ``<variable>...:<filename>[:product=<productname>]`` where:
 
-    * ``variable`` is a non-optional argument used to specify the variable to use. Alternatively, this may be a comma separated list of variables to colocate, in which case output file will contain all of these variables. Currently, for ungridded data all variables must be on the same grid / use the same coordinates.
-    * ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma seperated list of the following possibilities:
+    * ``variable`` is a mandatory variable or list of variables to use.
+    * ``filenames`` is a mandatory file or list of files to read from.
+    * ``product`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-      #. A single filename - this should be the full path to the file
-      #. A single directory - all files in this directory will be read
-      #. A wildcarded filename - A filename with any wildcards compatible with the python module glob, so that *, ? and [] can all be used. E.g. ``/path/to/my/test*file_[0-9]``.
+  See :ref:`datagroups` for a more detailed explanation of datagroups.
 
-      Note that when using option (b), the filenames in the directory will be automatically sorted into alphabetical order. When using option (c), the filenames matching the wildcard will also be sorted into alphabetical order.
-
-      The order of the comma separated list will however remain as the user specified, e.g.``filename1,filename2,wildc*rd,/my/dir/,filename3 `` would read filename1, then filename2, then all the files that match "wildc*rd" (in alphabetical order), then all the files in the directory "/my/dir/" (in alphabetical order) and then finally filename3.
-
-    * ``product`` is an optional argument used to specify the type of files being read. If omitted, the program will attempt to figure out which product to use based on the filename. See :ref:`data-products-reading` to see a list of available products and their file signatures. As there is only one optional argument available the ``product=`` keyword, as used elsewhere, is optional.
-
-``limits``
+``<limits>``
   is a comma separated sequence of one or more coordinate range assignments of the form ``variable=[start,end]`` or ``variable=[value]`` in which
 
     * ``variable`` is the name of the variable to be subsetted, or one of x, y, z or t, which refer to longitude, latitude, altitude or time, respectively.
     * ``start`` is the value at the start of the coordinate range to be included
     * ``end`` is the value at the end of the coordinate range to be included
     * ``value`` is taken as the start and end value.
-    * Date/times are specified in the format: ``YYYY-MM-DDThh:mm:ss`` in which ``YYYY-MM-DD`` is a date and ``hh:mm:ss`` is a time. A colon or space can be used instead of the 'T' separator (but if a space is used, the argument must be quoted). Any trailing components of the date/time may be omitted. When a date/time is used as a range start, the earliest date/time compatible with the supplied components is used (e.g., ``2010-04`` is treated as ``2010-04-01T00:00:00``) and when used as a range end, the latest compatible date/time is used. Including optional and alternative components, the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``. When the ``t=[value]`` form is used, value is interpretted as both the start and end value, as described above, giving a range spanning the specified date/time, e.g., ``t=[2010]`` gives a range spanning the whole of the year 2010.
-    * Longitude coordinates are considered to be circular, so that 370 is equivalent to 10. The values are constrained to be within the range 0 to 360 or -180 to 180, depending on the coordinate values found in the file, as follows: If the subset range is already within the range of the coordinate no change is made. If the range of values for the coordinate in the file is such that 180 <= coord_min < 0 and coord_max <= 180.0 the range -180 to 180 is used. Otherwise, if 0 <= coord_min and coord_max <= 360, the range 0 to 360 is used.
-    * Other coordinates ranges are interpreted so that the subset includes values for which the coordinate value is greater than the smaller of start and end, and less than the larger of start and end (so the order in which start and end are specified is not significant).
+
+    .. note::
+      Longitude coordinates are considered to be circular, so that -10 is equivalent to 350. The start and end must
+      describe a monotonically increasing coordinate range, so ``x=[90,-90]`` is invalid, but could be specified
+      using ``x=[90,270]``. The range between the start and end must not be greater than 360 degrees. The output
+      coordinates will be on the requested grid, not the grid of the source data.
+
+    .. note::
+      Date/times are specified in the format: ``YYYY-MM-DDThh:mm:ss`` in which ``YYYY-MM-DD`` is a date and ``hh:mm:ss``
+      is a time. A colon or space can be used instead of the 'T' separator (but if a space is used, the argument must be
+      quoted). Any trailing components of the date/time may be omitted. When a date/time is used as a range start, the
+      earliest date/time compatible with the supplied components is used (e.g., ``2010-04`` is treated as
+      ``2010-04-01T00:00:00``) and when used as a range end, the latest compatible date/time is used. Including
+      optional and alternative components, the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``. When the
+      ``t=[value]`` form is used, value is interpreted as both the start and end value, as described above, giving a
+      range spanning the specified date/time, e.g., ``t=[2010]`` gives a range spanning the whole of the year 2010.
+
 
 ``outputfile``
   is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.

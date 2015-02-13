@@ -15,6 +15,10 @@ from jasmin_cis.plotting.plot import Plotter
 
 
 class TestParse(TestCase):
+    """
+    Generic parser tests not specific to one particular command
+    """
+
     def test_order_is_preserved_when_specifying_individual_files(self):
         parser = argparse.ArgumentParser()
         files = expand_file_list(valid_1d_filename + "," + valid_2d_filename, parser)
@@ -103,6 +107,39 @@ class TestParse(TestCase):
             if e.code != 2:
                 raise e
 
+    def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
+        args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", dummy_cis_out[:-3]],
+                     ["col", "var1,var2:" + dummy_cis_out, valid_aerosol_cci_filename + ':colocator=bin',
+                      "-o", dummy_cis_out[:-3]],
+                     ["col", "var1,var2:" + valid_aerosol_cci_filename, dummy_cis_out + ':colocator=bin',
+                      "-o", dummy_cis_out[:-3]],
+                     ["aggregate", "var:" + dummy_cis_out, "t", "-o", dummy_cis_out[:-3]]]
+        for args in args_list:
+            try:
+                parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise e
+
+    def test_GIVEN_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output_name']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output_name.nc'))
+
+    def test_GIVEN_output_has_file_extension_WHEN_parse_THEN_extension_not_added(self):
+        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
+                'var1 + var2 + var3', '-o', 'output_name.nc']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output_name.nc'))
+
+
+class TestParsePlot(TestCase):
+    """
+    Tests specific to the plot command
+    """
+
     def test_can_specify_valid_chart_type(self):
         args = ["plot", valid_variable_in_valid_filename + ":" + valid_1d_filename, "--type",
                 Plotter.plot_types.keys()[0]]
@@ -132,45 +169,6 @@ class TestParse(TestCase):
                 valid_variable_in_valid_filename + ":" + valid_1d_filename]
         parse_args(args)
 
-    def test_GIVEN_subset_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
-        var1, var2 = 'rain', 'snow'
-        limits = 'x=[-10,10],y=[40,60]'
-        output = 'subset-out'
-        product = 'cis'
-        args = ["subset", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, limits, '-o', output]
-        main_args = parse_args(args)
-        dg = main_args.datagroups
-        assert_that(len(dg), is_(1))
-        assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
-        assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
-
-    def test_GIVEN_colocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
-        var1, var2 = 'rain', 'snow'
-        output = 'aggregate-out'
-        samplegroup = valid_1d_filename + ':colocator=bin'
-        product = 'cis'
-        args = ["col", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, samplegroup, '-o', output]
-        main_args = parse_args(args)
-        dg = main_args.datagroups
-        assert_that(len(dg), is_(1))
-        assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
-        assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
-
-    def test_GIVEN_aggregate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
-        var1, var2 = 'rain', 'snow'
-        grid = 'x=[-10,10,2]'
-        output = 'aggregate-out'
-        product = 'cis'
-        args = ["aggregate", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, grid, '-o', output]
-        main_args = parse_args(args)
-        dg = main_args.datagroups
-        assert_that(len(dg), is_(1))
-        assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
-        assert_that(dg[0]['product'], is_('cis'))
-        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
-
     def test_should_raise_error_when_no_variable_is_specified(self):
         try:
             args = ["plot", valid_1d_filename]
@@ -198,32 +196,11 @@ class TestParse(TestCase):
             if e.code != 2:
                 raise e
 
-    def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
-        args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" + dummy_cis_out, valid_aerosol_cci_filename + ':colocator=bin',
-                      "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" + valid_aerosol_cci_filename, dummy_cis_out + ':colocator=bin',
-                      "-o", dummy_cis_out[:-3]],
-                     ["aggregate", "var:" + dummy_cis_out, "t", "-o", dummy_cis_out[:-3]]]
-        for args in args_list:
-            try:
-                parse_args(args)
-                assert False
-            except SystemExit as e:
-                if e.code != 2:
-                    raise e
 
-    def test_GIVEN_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
-        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
-                'var1 + var2 + var3', '-o', 'output_name']
-        parsed = parse_args(args)
-        assert_that(parsed.output, is_('output_name.nc'))
-
-    def test_GIVEN_output_has_file_extension_WHEN_parse_THEN_extension_not_added(self):
-        args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
-                'var1 + var2 + var3', '-o', 'output_name.nc']
-        parsed = parse_args(args)
-        assert_that(parsed.output, is_('output_name.nc'))
+class TestParseEvaluate(TestCase):
+    """
+    Tests specific to the evaluate command
+    """
 
     def test_parse_evaluate_single_datagroup(self):
         args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
@@ -313,6 +290,12 @@ class TestParse(TestCase):
                 if e.code != 2:
                     raise e
 
+
+class TestParseStats(TestCase):
+    """
+    Tests specific to the stats command
+    """
+
     def test_GIVEN_no_output_WHEN_parse_stats_THEN_output_is_None(self):
         args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values]
         arguments = parse_args(args)
@@ -349,3 +332,116 @@ class TestParse(TestCase):
         args = ['stats', 'var1,var2:%s' % ascii_filename_with_no_values, '-o', 'output']
         arguments = parse_args(args)
         assert_that(arguments.output, is_('output.nc'))
+
+
+class TestParseSubset(TestCase):
+    """
+    Tests specific to the subset command
+    """
+
+    def test_GIVEN_longitude_limits_not_monotonically_increasing_WHEN_subset_THEN_raises_error(self):
+        limits = ['x=[270,90]', 'x=[-30,-60]']
+        for lim in limits:
+            args = ['subset', 'var1:%s' % valid_ascii_filename, lim]
+            try:
+                parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise
+
+    def test_GIVEN_longitude_limits_wider_than_360_WHEN_subset_THEN_raises_error(self):
+        limits = ['x=[-180,360]', 'x=[-1,360]']
+        for lim in limits:
+            args = ['subset', 'var1:%s' % valid_ascii_filename, lim]
+            try:
+                parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise
+
+    def test_GIVEN_longitude_limits_valid_WHEN_subset_THEN_parsed_OK(self):
+        limits = ['x=[-10,10]', 'x=[0,360]', 'x=[-180.0,180.0]']
+        for lim in limits:
+            args = ['subset', 'var1:%s' % valid_ascii_filename, lim]
+            parse_args(args)
+
+    def test_GIVEN_subset_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
+        var1, var2 = 'rain', 'snow'
+        limits = 'x=[-10,10],y=[40,60]'
+        output = 'subset-out'
+        product = 'cis'
+        args = ["subset", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, limits, '-o', output]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
+        assert_that(dg[0]['product'], is_('cis'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
+
+
+class TestParseAggregate(TestCase):
+    """
+    Tests specific to the aggregate command
+    """
+
+    def test_GIVEN_aggregate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
+        var1, var2 = 'rain', 'snow'
+        grid = 'x=[-10,10,2]'
+        output = 'aggregate-out'
+        product = 'cis'
+        args = ["aggregate", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, grid, '-o', output]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
+        assert_that(dg[0]['product'], is_('cis'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
+
+    def test_GIVEN_longitude_limits_not_monotonically_increasing_WHEN_aggregate_THEN_raises_error(self):
+        limits = ['x=[270,90,10]', 'x=[-30,-60,1]']
+        for lim in limits:
+            args = ['aggregate', 'var1:%s' % valid_ascii_filename, lim]
+            try:
+                parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise
+
+    def test_GIVEN_longitude_limits_wider_than_360_WHEN_aggregate_THEN_raises_error(self):
+        limits = ['x=[-180,360,10]', 'x=[-1,360,5]']
+        for lim in limits:
+            args = ['aggregate', 'var1:%s' % valid_ascii_filename, lim]
+            try:
+                parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise
+
+    def test_GIVEN_longitude_limits_valid_WHEN_aggregate_THEN_parsed_OK(self):
+        limits = ['x=[-10,10,1]', 'x=[0,360,10]', 'x=[-180.0,180.0,5]']
+        for lim in limits:
+            args = ['aggregate', 'var1:%s' % valid_ascii_filename, lim]
+            parse_args(args)
+
+
+class TestParseColocate(TestCase):
+    """
+    Tests specific to the colocate command
+    """
+
+    def test_GIVEN_colocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
+        var1, var2 = 'rain', 'snow'
+        output = 'aggregate-out'
+        samplegroup = valid_1d_filename + ':colocator=bin'
+        product = 'cis'
+        args = ["col", var1 + "," + var2 + ':' + valid_1d_filename + ':product=' + product, samplegroup, '-o', output]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([valid_1d_filename]))
+        assert_that(dg[0]['product'], is_('cis'))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))

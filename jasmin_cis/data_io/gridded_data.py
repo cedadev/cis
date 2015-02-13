@@ -328,9 +328,21 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         :param kwargs: Keyword arguments for the Iris regrid method
         :return: Regridded GriddedDataList
         """
-        output = CubeList()
+        output = GriddedDataList()
         for data in self:
             output.append(data.regrid(*args, **kwargs))
+        return output
+
+    def intersection(self, *args, **kwargs):
+        """
+        Call the iris.cube.Cube.intersection() method over all the cubes in a GriddedDataList
+        :param args: Arguments for the Iris intersection method
+        :param kwargs: Keyword arguments for the Iris intersection method
+        :return: Intersected GriddedDataList
+        """
+        output = GriddedDataList()
+        for data in self:
+            output.append(data.intersection(*args, **kwargs))
         return output
 
     @property

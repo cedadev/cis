@@ -50,7 +50,7 @@ def __read_hdf4(filename,variables):
     from jasmin_cis.exceptions import InvalidVariableError
     from pyhdf.error import HDF4Error
 
-    if not isinstance(variables,list): variables = [ variables ]
+    variables = utils.listify(variables)
 
     try:
         sds_dict = hdf_sd.read(filename,variables)

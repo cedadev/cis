@@ -1,7 +1,8 @@
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
-from utils import index_iterator_for_non_masked_data, index_iterator_nditer
+
+from jasmin_cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
 
 
 class Colocator(object):

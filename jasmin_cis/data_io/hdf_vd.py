@@ -6,7 +6,7 @@ from pyhdf.HDF import *
 from pyhdf.VS import *
 from collections import namedtuple
 import logging
-from jasmin_cis.utils import create_masked_array_for_missing_values
+from jasmin_cis.utils import create_masked_array_for_missing_values, listify
 
 
 class VDS(namedtuple('VDS',['filename','variable'])):
@@ -46,7 +46,7 @@ def read(filename, variables=None, datadict=None):
     if datadict == None:
         datadict = {}
 
-    if not isinstance(variables,list): variables = [ variables ]
+    variables = listify(variables)
 
     vs = None
     datafile = None

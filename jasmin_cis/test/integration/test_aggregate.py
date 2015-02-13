@@ -157,9 +157,14 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
     - Check that all variables requested are in the output file.
     """
 
-    def test_aggregate_Aerosol_CCI(self):
-        # This is tested in the TestAggregation class above
-        pass
+    def test_aggregate_Aerosol_CCI_with_lon_wraparound(self):
+        variable = valid_aerosol_cci_variable
+        filename = valid_aerosol_cci_filename
+        lon_min, lon_max, lon_delta = 10, 350, 10
+        lat_min, lat_max, lat_delta = -90, 90, 30
+        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Cloud_CCI(self):
         # Takes 826s

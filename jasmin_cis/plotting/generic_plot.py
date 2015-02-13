@@ -1,10 +1,14 @@
-from mpl_toolkits.basemap import Basemap
 import logging
-from matplotlib.ticker import MaxNLocator, AutoMinorLocator
+
 import numpy as np
+from mpl_toolkits.basemap import Basemap
+from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 import matplotlib.pyplot as plt
+
+from jasmin_cis.exceptions import CISError
 from jasmin_cis.utils import find_longitude_wrap_start
 from jasmin_cis.plotting.formatter import LogFormatterMathtextSpecial
+
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
@@ -37,7 +41,9 @@ class Generic_Plot(object):
         logging.debug("Unpacking the data items")
         self.x_wrap_start = self.set_x_wrap_start(x_wrap_start)
         self.unpacked_data_items = self.unpack_data_items()
-        if calculate_min_and_max_values: self.calculate_min_and_max_values()
+
+        if calculate_min_and_max_values:
+            self.calculate_min_and_max_values()
 
         self.matplotlib = plt
 
@@ -45,7 +51,33 @@ class Generic_Plot(object):
 
         self.set_width_and_height()
 
+        if self.is_map():
+            self.check_data_is_2d()
+            self.sort_by_lons_and_lats()
+
         self.plot()
+
+    def check_data_is_2d(self):
+        if len(self.packed_data_items[0].shape) > 2:
+            raise CISError("Data is not 1D or 2D - can't plot it on a map.")
+
+    def sort_by_lons_and_lats(self):
+        """
+        Sort the data by longitude as the Basemap plotting routines requires the data to be montonically increasing by
+        longitude. Also sorts in latitude (this won't cause Basemap to fail but contour plotting etc will be wrong).
+        :return:
+        """
+        lons = self.unpacked_data_items[0]['x']
+        lats = self.unpacked_data_items[0]['y']
+        if lons is not None and lats is not None:
+            shape = lons.shape
+            lons = lons.flatten()
+            lats = lats.flatten()
+            sort_order = np.lexsort((lons, -lats))
+            for var_name, variable in self.unpacked_data_items[0].iteritems():
+                if variable is not None:
+                    reordered_points = variable.flatten()[sort_order]
+                    self.unpacked_data_items[0][var_name] = np.reshape(reordered_points, shape)
 
     def set_x_wrap_start(self, x_wrap_start):
         if x_wrap_start is None:

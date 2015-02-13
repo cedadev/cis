@@ -36,11 +36,11 @@ The evaluate syntax looks like this::
 where square brackets denote optional commands and:
 
 ``<datagroup>``
-  is of the format ``<variable>[=<alias>]...:<filename>[:product=<productname>]``. One or more
+  is a modified :ref:`CIS datagroup <datagroups>` of the format
+  ``<variable>[=<alias>]...:<filename>[:product=<productname>]``. One or more
   datagroups should be given.
 
-  * ``<variable>`` is a mandatory argument used to specify the name of the variable in the file to use. You may
-    specify more than one variable to load, in which case you should separate them with commas.
+  * ``<variable>`` is a mandatory variable or list of variables to use.
 
   * ``<alias>`` is an optional alternative variable name to use in place of the name given in the file. As you will see
     in the :ref:`expression <expr>` section, the variable names given will need to be valid python variable names,
@@ -58,28 +58,15 @@ where square brackets denote optional commands and:
       \4. |nbsp| Avoid using names of `python builtins <https://docs.python.org/2/library/functions.html#built-in-funcs>`_
       like ``max`` or ``abs`` (again, it's OK if they're only part of a name).
 
-      So if the variable name in your file violates these rules (e.g. *'550-870Angstrom'*) use an alias:
+    So if the variable name in your file violates these rules (e.g. *'550-870Angstrom'*) use an alias:
 
-      ``550-870Angstrom=a550to870``
+    ``550-870Angstrom=a550to870``
 
-  * ``<filename>`` is a mandatory argument specifying the file to read the variable or variables from. You may specify
-    multiple filenames separated using commas; each filename should be one of:
+  * ``<filename>`` is a mandatory file or list of files to read from.
 
-      \1. |nbsp| a single filename - this should be the full path to the file
+  * ``<productname>`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-      \2. |nbsp| a single directory - all files in this directory will be read
-
-      \3. |nbsp| a wildcarded filename - A filename with any wildcards compatible with the python module glob, so that \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
-
-    Note that when multiple files are specified (whether through use of commas, pointing at a directory, or wildcarding),
-    then all those files must contain all of the variables in that datagroup and the files should be 'compatible' - it
-    should be possible to aggregate them together using a shared dimension (in a NetCDF file this is usually the unlimited
-    dimension). So selecting multiple monthly files for a model run would be OK, but selecting files from two different
-    datatypes would not be OK.
-
-  * ``<productname>`` is an optional argument used to specify the type of files being read. If omitted, the program will
-    attempt to figure out which product to use based on the filename. See :ref:`data-products-reading` to see a list of
-    available products and their file signatures.
+See :ref:`datagroups` for a more detailed explanation of datagroups.
 
 .. _expr:
 
@@ -133,47 +120,96 @@ where square brackets denote optional commands and:
     *calculated_variable*
 
 
-Evaluation Example
-==================
+Evaluation Examples
+===================
 
-In this example, we calculate the ratio of aerosol optical depth at two wavelengths. The data we are using is
-shown in the following CIS plot commands and can be found at ``/group_workspaces/jasmin/cis/data``::
+Comparison of annual Aerosol Optical Thickness from models
+----------------------------------------------------------
 
+In this example we compare annual Aerosol Optical Thickness from ECHAM and HadGEM model data. The data used in this
+example can be found at ``/group_workspaces/jasmin/cis/data``.
 
-    $ cis plot od550aer:HadGEM/2007_2D_3hr/od550aer.nc --title "Aerosol optical depth 550nm" --cbarscale 0.5 --vmin 0.0 --vmax 1.5
-    $ cis plot od675aer:HadGEM/2007_2D_3hr/od675aer.nc --title "Aerosol optical depth 675nm" --cbarscale 0.5 --vmin 0.0 --vmax 1.5
+First we produce annual averages of our data by :ref:`aggregating <aggregation>`::
 
-.. image:: img/eval_550.png
+    $ cis aggregate od550aer:ECHAM_fixed/2007_2D_3hr/od550aer.nc t -o echam-od550aer
+    $ cis aggregate od550aer:HadGEM_fixed/test_fix/od550aer.nc t -o hadgem-od550aer
+
+    $ cis plot od550aer:echam-od550aer.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="ECHAM AOT550" --vmin=0 --vmax=0.5
+    $ cis plot od550aer:hadgem-od550aer.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="HadGEM AOT550" --vmin=0 --vmax=0.5
+
+.. image:: img/eval/echam_aggregated.png
    :width: 450px
 
-.. image:: img/eval_675.png
+.. image:: img/eval/hadgem_aggregated.png
    :width: 450px
 
-.. note::
+We then linearly interpolate the HadGEM data onto the ECHAM grid::
 
-    In this example the files have been given the same name as the variable that is contained inside that file - e.g.
-    variable ``od550aer`` is inside file ``od550aer.nc``. This doesn't always have to be the case; ``od550aer`` and
-    ``od550aer.nc`` are two different things.
+    $ cis col od550aer:hadgem-od550aer.nc echam-od550aer.nc:colocator=lin -o hadgem-od550aer-colocated
 
+    $ cis plot od550aer:hadgem-od550aer-colocated.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="HadGEM AOT550" --vmin=0 --vmax=0.5
 
-The following command is used to perform the evaluation::
+.. image:: img/eval/hadgem_colocated.png
+   :width: 450px
 
-    $ cis eval od550aer:HadGEM/2007_2D_3hr/od550aer.nc od675aer:HadGEM/2007_2D_3hr/od675aer.nc "od550aer/od675aer" -o aerosol_ratio:eval_out.nc
+Next we subtract the two fields using::
 
-Which, when plotted gives the following result::
+    $ cis eval od550aer=a:echam-od550aer.nc od550=b:hadgem-od550aer-collocated.nc "a-b" -o modeldifference
 
-    $ cis plot aerosol_ratio:eval_out.nc --title "Aerosol optical depth ratio 550nm / 675nm" --cbarscale 0.5
+Finally we plot the evaluated output::
 
-.. image:: img/eval_ratio.png
+    $ cis plot od550aer:modeldifference.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="ECHAM-HadGEM difference AOT550" --v min=-0.25 --vmax=0.2
+
+.. image:: img/eval/echam_hadgem_difference.png
    :width: 450px
 
 
-.. _evaluation-conditional:
+Calculation of Angstrom exponent for AERONET data
+-------------------------------------------------
+AERONET data allows us to calculate Angstrom Exponent (AE) and then compare it against the AE already in the file.
+They should strongly correlate although it is not expected they will be identical due to averaging etc during
+production of AERONET datafiles.
+
+The file agoufou.lev20 refers to ``/group_workspaces/jasmin/cis/data/aeronet/AOT/LEV20/ALL_POINTS/920801_121229_Agoufou.lev20``
+
+The AE is calculated using an eval statement::
+
+    $ cis eval AOT_440,AOT_870:agoufou.lev20 "(-1)* (numpy.log(AOT_870/AOT_440)/numpy.log(870./440.))" -o alfa
+
+Plotting it shows the expected correlation::
+
+    $ cis plot 440-870Angstrom:agoufou.lev20 calculated_variable:cis-alfa.nc --type comparativescatter --itemwidth=10 --xlabel="AERONET 440-870Angstrom" --ylabel="AERONET (-1)*(numpy.log(AOT_870/AOT_440)/numpy.log(870./440.))"
+
+.. image:: img/eval/angstrom_exponent.png
+   :width: 450px
+
+This correlation can be confirmed by using the CIS :ref:`stats <statistics>` command::
+
+    $ cis stats 440-870Angstrom:agoufou.lev20 calculated_variable:cis-alfa.nc
+
+    ==================================
+    RESULTS OF STATISTICAL COMPARISON:
+    ==================================
+    Number of points: 63126
+    Mean value of dataset 1: 0.290989032142
+    Mean value of dataset 2: 0.295878214327
+    Standard deviation for dataset 1: 0.233995525021
+    Standard deviation for dataset 2: 0.235381075635
+    Mean of absolute difference: 0.00488918218519
+    Standard deviation of absolute difference: 0.00546343157047
+    Mean of relative difference: 0.0284040419499
+    Standard deviation of relative difference: 3.95137224542
+    Spearman's rank coefficient: 0.999750939223
+    Linear regression gradient: 1.00566622549
+    Linear regression intercept: 0.003240372714
+    Linear regression r-value: 0.999746457079
+    Linear regression standard error: 0.00530006646489
+
 
 Using Evaluation for Conditional Aggregation
-============================================
+--------------------------------------------
 
-The eval command can be combined with other CIS commands to allow you to perform more complex tasks than would
+The `eval` command can be combined with other CIS commands to allow you to perform more complex tasks than would
 otherwise be possible.
 
 For example, you might want to aggregate a satellite measurement of one variable only when the corresponding cloud cover
@@ -187,10 +223,10 @@ following two plots::
     $ cis plot Optical_Depth_Land_And_Ocean:MOD04_L2.A2010001.2255.005.2010005215814.hdf --xmin 132 --xmax 162 --ymin -70 --title "Aerosol optical depth" --cbarscale 0.5 --itemwidth 10 -o cloud_fraction.png
     $ cis plot Cloud_Fraction_Ocean:MOD04_L2.A2010001.2255.005.2010005215814.hdf --xmin 132 --xmax 162 --ymin -70 --title "Cloud cover fraction" --cbarscale 0.5 --itemwidth 10 -o cloud_fraction.png
 
-.. image:: img/eval_optical_depth.png
+.. image:: img/eval/modis_optical_depth.png
    :width: 450px
 
-.. image:: img/eval_cloud_fraction.png
+.. image:: img/eval/modis_cloud_fraction.png
    :width: 450px
 
 First we perform an evaluation using the `numpy.masked_where <http://docs.scipy.org/doc/numpy/reference/generated/numpy.ma.masked_where.html#numpy.ma.masked_where>`_
@@ -199,7 +235,7 @@ method to produce an optical depth variable that is masked at all points where t
     $ cis eval Cloud_Fraction_Ocean=cloud,Optical_Depth_Land_And_Ocean=od:MOD04_L2.A2010001.2255.005.2010005215814.hdf "numpy.ma.masked_where(cloud > 0.2, od)" -o od:masked_optical_depth.nc
     $ cis plot od:cis-masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title Aerosol optical depth --cbarscale 0.5 --itemwidth 10 -o masked_optical_depth.png'
 
-.. image:: img/eval_masked_optical_depth.png
+.. image:: img/eval/modis_masked_optical_depth.png
    :width: 450px
 
 Then we perform an aggregation on this masked output file to give the end result - aerosol optical depth aggregated only
@@ -208,5 +244,5 @@ using points where the cloud cover is less than 20%::
     $ cis aggregate od:cis-masked_optical_depth.nc x=[132,162,0.5],y=[-70,-57,0.5] -o aggregated_masked_optical_depth
     $ cis plot od:aggregated_masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title "Aerosol optical depth (cloud fraction > 0.2)" --cbarscale 0.5 -o aggregated_aod.png
 
-.. image:: img/eval_aggregated_aod.png
+.. image:: img/eval/modis_aggregated_aod.png
    :width: 450px

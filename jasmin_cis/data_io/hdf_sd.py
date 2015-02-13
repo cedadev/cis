@@ -2,7 +2,7 @@
 Module containing hdf file utility functions for the SD object
 """
 import logging
-from jasmin_cis.utils import create_masked_array_for_missing_values
+from jasmin_cis.utils import create_masked_array_for_missing_values, listify
 
 
 def get_hdf_SD_file_variables(filename):
@@ -52,53 +52,55 @@ class HDF_SDS(object):
         Open the SDS file for reading
         """
         from pyhdf.SD import SD
-        sd = None
-        sds = None
-        try:
-            sd = SD(self._filename)
-            sds = sd.select(self._variable)
-            self._sd = sd
-            self._sds = sds
-        except Exception as e:
-            if sds is not None:
-                sds.endaccess()
-            if sd is not None:
-                sd.end()
-            raise e
+
+        self._sd = SD(self._filename)
+        self._sds = self._sd.select(self._variable)
 
     def _close_sds(self):
         """
         Close the SDS file for reading
+
+        NB: Exceptions thrown from here may hide an exception thrown in get(), info(), etc.
         """
-        self._sds.endaccess()
-        self._sd.end()
+        try:
+            if self._sds is not None:
+                self._sds.endaccess()
+        finally:
+            if self._sd is not None:
+                self._sd.end()
 
     def get(self):
         """
         Call pyhdf.SD.SDS.get(), opening and closing the file
         """
-        self._open_sds()
-        data = self._sds.get()
-        self._close_sds()
-        return data
+        try:
+            self._open_sds()
+            data = self._sds.get()
+            return data
+        finally:
+            self._close_sds()
 
     def attributes(self):
         """
         Call pyhdf.SD.SDS.attributes(), opening and closing the file
         """
-        self._open_sds()
-        attributes = self._sds.attributes()
-        self._close_sds()
-        return attributes
+        try:
+            self._open_sds()
+            attributes = self._sds.attributes()
+            return attributes
+        finally:
+            self._close_sds()
 
     def info(self):
         """
         Call pyhdf.SD.SDS.info(), opening and closing the file
         """
-        self._open_sds()
-        info = self._sds.info()
-        self._close_sds()
-        return info
+        try:
+            self._open_sds()
+            info = self._sds.info()
+            return info
+        finally:
+            self._close_sds()
 
 
 def read(filename, variables=None, datadict=None):
@@ -121,25 +123,26 @@ def read(filename, variables=None, datadict=None):
     from pyhdf import SD
 
     # List of required variable names.
-    if variables is None:
-        # Open the file.
-        datafile = None
-        try:
-            datafile = SD.SD(filename)
-            variables = datafile.datasets().keys()
-        finally:
-            if datafile is not None:
-                datafile.end()
+    # Open the file.
+    datafile = None
+    try:
+        datafile = SD.SD(filename)
+        sd_variables = datafile.datasets().keys()
+    finally:
+        if datafile is not None:
+            datafile.end()
 
-    if not isinstance(variables, list):
-        variables = [variables]
+    if variables is None:
+        requested_sd_variables = sd_variables
+    else:
+        requested_sd_variables = set(listify(variables)).intersection(set(sd_variables))
 
     # Create dictionary to hold data arrays for returning.
     if datadict is None:
         datadict = {}
 
     # Get data.
-    for variable in variables:
+    for variable in requested_sd_variables:
         datadict[variable] = HDF_SDS(filename, variable)
 
     return datadict
