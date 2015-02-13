@@ -83,6 +83,8 @@ jasmin_cis.data_io.hyperpoint_view module
     :undoc-members:
     :show-inheritance:
 
+.. _netcdf_reading:
+
 jasmin_cis.data_io.netcdf module
 --------------------------------
 
