@@ -206,6 +206,8 @@ This correlation can be confirmed by using the CIS :ref:`stats <statistics>` com
     Linear regression standard error: 0.00530006646489
 
 
+.. _evaluation-conditional:
+
 Using Evaluation for Conditional Aggregation
 --------------------------------------------
 

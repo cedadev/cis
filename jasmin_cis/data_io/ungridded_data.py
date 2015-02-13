@@ -107,6 +107,7 @@ class LazyData(object):
             # If the data input is a numpy array we can just copy it in and ignore the data_manager
             self._data = data
             self._data_manager = None
+            self._post_process()
         else:
             # If the data input wasn't a numpy array we assume it is a data reference (e.g. SDS) and we refer
             #  this as a 'data manager' as it is responsible for getting the actual data.
@@ -184,16 +185,24 @@ class LazyData(object):
         import numpy.ma as ma
         if self._data is None:
             try:
-                # If we ere given a list of data managers then we need to concatenate them now...
-                self._data=self.retrieve_raw_data(self._data_manager[0])
+                # If we were given a list of data managers then we need to concatenate them now...
+                self._data = self.retrieve_raw_data(self._data_manager[0])
                 if len(self._data_manager) > 1:
                     for manager in self._data_manager[1:]:
-                        self._data = ma.concatenate((self._data,self.retrieve_raw_data(manager)),axis=0)
+                        self._data = ma.concatenate((self._data, self.retrieve_raw_data(manager)), axis=0)
+                self._post_process()
             except MemoryError:
                 raise MemoryError(
                     "Failed to read the ungridded data as there was not enough memory available.\n"
                     "Consider freeing up variables or indexing the cube before getting its data.")
         return self._data
+
+    def _post_process(self):
+        """
+        Perform a post-processing step on lazy loaded data
+        :return: None
+        """
+        pass
 
     @data.setter
     def data(self, value):
@@ -257,8 +266,6 @@ class UngriddedData(LazyData, CommonData):
         '''
         from jasmin_cis.data_io.Coord import CoordList, Coord
 
-        super(UngriddedData, self).__init__(data, metadata, data_retrieval_callback)
-
         if isinstance(coords, list):
             self._coords = CoordList(coords)
         elif isinstance(coords, CoordList):
@@ -273,6 +280,30 @@ class UngriddedData(LazyData, CommonData):
         #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
         if str(metadata.units) == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
+
+        super(UngriddedData, self).__init__(data, metadata, data_retrieval_callback)
+
+    def _post_process(self):
+        """
+        Perform a post processing step on lazy loaded Ungridded Data
+        :return:
+        """
+        # Remove any points with missing coordinate values:
+        combined_mask = numpy.zeros(self._data.shape, dtype=bool).flatten()
+        for coord in self._coords:
+            combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
+        if combined_mask.any():
+            n_points = numpy.count_nonzero(combined_mask)
+            logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
+                            "these points have been removed from the data.".format(n_points=n_points))
+            for coord in self._coords:
+                coord.data = numpy.ma.masked_array(coord.data.flatten(), mask=combined_mask).compressed()
+            if numpy.ma.is_masked(self._data):
+                new_data_mask = numpy.ma.masked_array(self._data.mask.flatten(), mask=combined_mask).compressed()
+                new_data = numpy.ma.masked_array(self._data.data.flatten(), mask=combined_mask).compressed()
+                self._data = numpy.ma.masked_array(new_data, mask=new_data_mask)
+            else:
+                self._data = numpy.ma.masked_array(self._data.flatten(), mask=combined_mask).compressed()
 
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
                                        long_name=None, history=None, units=None):
