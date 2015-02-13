@@ -43,4 +43,4 @@ LSF Batch Job Submission
 
 CIS jobs may be submitted to an LSF type batch submission system (e.g. the JASMIN environment) by using the
 command ``cis.lsf`` instead of cis. In this case the job will be sent to the batch system and any output will be written
- to the log file.
+to the log file.

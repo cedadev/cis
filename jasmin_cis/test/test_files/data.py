@@ -481,7 +481,7 @@ cis_test_files["GASSP_station"] = TestFileTestData(
     )
 
 valid_GASSP_station_filename = cis_test_files["GASSP_station"].master_filename
-valid_GASSP_station_vars =cis_test_files["GASSP_station"].all_variable_names
+valid_GASSP_station_vars = cis_test_files["GASSP_station"].all_variable_names
 
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
@@ -492,6 +492,13 @@ valid_hybrid_pressure_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_a
 
 valid_hybrid_height_filename = make_pathname('hybrid-height.nc')
 valid_hybrid_height_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+
+# Has netCDF4 hierarchical groups
+valid_netcdf_groups_file = make_pathname('W_XX-EUMETSAT-Darmstadt_SOUNDING_and_SATELLITE_METOPB_and_'
+                                         'GOME_C_EUMP_20140405235655_08032_eps_t_pmap_l2.nc')
+valid_netcdf_groups_variable = 'AVHRR.Ch4CentralWavenumber'
+valid_nested_groups_file = make_pathname('nested_groups.nc')
+valid_nested_groups_variable = 'group1.group2.var4'
 
 test_directory = make_pathname('test_directory_for_parser')
 test_directory_file1 = test_directory + "/test_file_for_parser_1"

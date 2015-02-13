@@ -5,8 +5,16 @@ from distutils.spawn import find_executable
 from setuptools import setup, find_packages, Command
 from pkg_resources import require, DistributionNotFound, VersionConflict
 
-dependencies = ["matplotlib>=1.2.0", "pyke", "cartopy", "Shapely", "netcdf4>=1.0",
-                "numpy", "scipy", "iris>=1.7.3", 'pyhdf']
+dependencies = ["matplotlib>=1.2.0",
+                "pyke",
+                "cartopy",
+                "Shapely",
+                "netcdf4>=1.0",
+                "numpy",
+                "scipy",
+                "iris>=1.7.3",
+                'pyhdf',
+                'psutil']
 
 test_dependencies = ["pyhamcrest", "mock", "nose"]
 
