@@ -166,7 +166,7 @@ and implement ``get_value_for_data_only(self, values)`` and optionally overload 
 
 ``get_value(self, point, data)``
 
-  This method should return a single value (with ``return_size`` = 1) or a list of n values (with ``return_size`` = n)
+  This method should return a single value (if ``Kernel.return_size`` is 1) or a list of n values (if ``Kernel.return_size`` is n)
   based on some calculation on the data given a single point.
   The data is deliberately left unspecified in the interface as it may be any type of data, however it is expected that
   each implementation will only work with a specific type of data (gridded, ungridded etc.) Note that this method will
@@ -176,7 +176,7 @@ and implement ``get_value_for_data_only(self, values)`` and optionally overload 
 
 ``get_value_for_data_only(self, values)``
 
-  This method should return a single value (with ``return_size`` = 1) or a list of n values (with ``return_size`` = n)
+  This method should return a single value (if ``Kernel.return_size`` is 1) or a list of n values (if ``Kernel.return_size`` is n)
   based on some calculation on the values (a numpy array).
   Note that this method will
   be called for every sample point in which data can be placed and so could become a bottleneck for calculations,
@@ -191,8 +191,9 @@ The constraint limits the data points for a given sample point.
 The user can also add a new constraint method by subclassing Constraint and providing an implementation for
 ``constrain_points``. If more control is needed over the iteration sequence then the method
 ``get_iterator`` can be
-overloaded in additional to constrain_points. To enable a constraint to use a AbstractDataOnlyKernel the method
-``get_interator_for_data_only`` should be implemented.
+overloaded in additional to constrain_points, this may not be respected by all colocators who may still iterate over all
+sample data points. To enable a constraint to use a AbstractDataOnlyKernel the method
+``get_interator_for_data_only`` should be implemented (again this may be ignored by a colocator).
 
 ``constrain_points(self, ref_point, data)``
 
@@ -204,7 +205,8 @@ overloaded in additional to constrain_points. To enable a constraint to use a Ab
 ``get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data)``
 
  The method should return an iterator over the output indices, hyper point for the output and data points for that output
- hyper point. If parameters are:
+ hyper point. This may not be called by all colocators who may choose to iterate over all sample points instead.
+ The arguments are:
  * ``missing_data_for_missing_sample`` if True the iterator should not iterate over any points in the sample points which are missing.
  * ``coord_map`` is a list of tuples of indexes of sample points coords, data coords and output coords
  * ``coords`` are the coords that the data should be mapped on
@@ -215,7 +217,8 @@ overloaded in additional to constrain_points. To enable a constraint to use a Ab
 
 ``get_interator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)``
 
- The method should return an iterator over the output indices and a numpy array of the data values. The parameters are
+ The method should return an iterator over the output indices and a numpy array of the data values.
+ This may not be called by all colocators who may choose to iterate over all sample points instead. The parameters are
  the same as ``get_iterator``.
 
 Co-locator
