@@ -36,11 +36,11 @@ The evaluate syntax looks like this::
 where square brackets denote optional commands and:
 
 ``<datagroup>``
-  is of the format ``<variable>[=<alias>]...:<filename>[:product=<productname>]``. One or more
+  is a modified :ref:`CIS datagroup <datagroups>` of the format
+  ``<variable>[=<alias>]...:<filename>[:product=<productname>]``. One or more
   datagroups should be given.
 
-  * ``<variable>`` is a mandatory argument used to specify the name of the variable in the file to use. You may
-    specify more than one variable to load, in which case you should separate them with commas.
+  * ``<variable>`` is a mandatory variable or list of variables to use.
 
   * ``<alias>`` is an optional alternative variable name to use in place of the name given in the file. As you will see
     in the :ref:`expression <expr>` section, the variable names given will need to be valid python variable names,
@@ -62,24 +62,11 @@ where square brackets denote optional commands and:
 
     ``550-870Angstrom=a550to870``
 
-  * ``<filename>`` is a mandatory argument specifying the file to read the variable or variables from. You may specify
-    multiple filenames separated using commas; each filename should be one of:
+  * ``<filename>`` is a mandatory file or list of files to read from.
 
-      \1. |nbsp| a single filename - this should be the full path to the file
+  * ``<productname>`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-      \2. |nbsp| a single directory - all files in this directory will be read
-
-      \3. |nbsp| a wildcarded filename - A filename with any wildcards compatible with the python module glob, so that \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
-
-    Note that when multiple files are specified (whether through use of commas, pointing at a directory, or wildcarding),
-    then all those files must contain all of the variables in that datagroup and the files should be 'compatible' - it
-    should be possible to aggregate them together using a shared dimension (in a NetCDF file this is usually the unlimited
-    dimension). So selecting multiple monthly files for a model run would be OK, but selecting files from two different
-    datatypes would not be OK.
-
-  * ``<productname>`` is an optional argument used to specify the type of files being read. If omitted, the program will
-    attempt to figure out which product to use based on the filename. See :ref:`data-products-reading` to see a list of
-    available products and their file signatures.
+See :ref:`datagroups` for a more detailed explanation of datagroups.
 
 .. _expr:
 
@@ -218,6 +205,8 @@ This correlation can be confirmed by using the CIS :ref:`stats <statistics>` com
     Linear regression r-value: 0.999746457079
     Linear regression standard error: 0.00530006646489
 
+
+.. _evaluation-conditional:
 
 Using Evaluation for Conditional Aggregation
 --------------------------------------------

@@ -405,7 +405,8 @@ class KDTree(object):
         so modifying this data will result in bogus results.
     :param leafsize: int, optional
         The number of points at which the algorithm switches over to
-        brute-force.  Has to be positive.
+        brute-force.  Has to be positive. In the case of points which have
+        the same position this is not the minimum
 
     :raises:
      RuntimeError
@@ -476,48 +477,63 @@ class KDTree(object):
             self.children = less.children+greater.children
 
     def _build(self, idx, maxes, mins):
-        if len(idx)<=self.leafsize:
+        """
+        build the tree
+        :param idx: the data indexes which are part of this node
+        :param maxes: the maximum value of each dimension for this node
+        :param mins: the minimum value of each dimension for this node
+        :return: the node
+        """
+        if len(idx) <= self.leafsize:
             return KDTree.leafnode(idx)
         else:
             data = self.data[idx]
+            # I suspect these are commented out because calculating the max takes a long time and for reasonably
+            # distributed data does not speed up the algorithm
             #maxes = np.amax(data,axis=0)
             #mins = np.amin(data,axis=0)
+
+            # Fins the dimension with the biggest difference (is it lat or lon)
             d = np.argmax(maxes-mins)
             maxval = maxes[d]
             minval = mins[d]
-            if maxval==minval:
+
+            # the mins and maxes are not recalculated but the min/max is set to split on build so unless the split
+            # is on a border this is will never triger
+            if maxval == minval:
                 # all points are identical; warn user?
                 return KDTree.leafnode(idx)
-            data = data[:,d]
+            data = data[:, d]  # data is the data to split on
 
             # sliding midpoint rule; see Maneewongvatana and Mount 1999
-            # for arguments that this is a good idea.
+            # for arguments that this is a good idea. (I am not sure this is implemented correctly
+            # because we are not sliding the min or max)
             split = (maxval+minval)/2
-            less_idx = np.nonzero(data<=split)[0]
-            greater_idx = np.nonzero(data>split)[0]
-            if len(less_idx)==0:
+            less_idx = np.nonzero(data <= split)[0]
+            greater_idx = np.nonzero(data > split)[0]
+            if len(less_idx) == 0:
                 split = np.amin(data)
-                less_idx = np.nonzero(data<=split)[0]
-                greater_idx = np.nonzero(data>split)[0]
-            if len(greater_idx)==0:
+                less_idx = np.nonzero(data <= split)[0]
+                greater_idx = np.nonzero(data > split)[0]
+            if len(greater_idx) == 0:
                 split = np.amax(data)
-                less_idx = np.nonzero(data<split)[0]
-                greater_idx = np.nonzero(data>=split)[0]
-            if len(less_idx)==0:
-                # _still_ zero? all must have the same value
-                if not np.all(data==data[0]):
+                less_idx = np.nonzero(data < split)[0]
+                greater_idx = np.nonzero(data >= split)[0]
+            if len(less_idx) == 0:
+                # _still_ zero? all must have the same value check and assign them all to the same node
+                if not np.all(data == data[0]):
                     raise ValueError("Troublesome data array: %s" % data)
-                split = data[0]
-                less_idx = np.arange(len(data)-1)
-                greater_idx = np.array([len(data)-1])
+                return KDTree.leafnode(idx)
 
             lessmaxes = np.copy(maxes)
             lessmaxes[d] = split
             greatermins = np.copy(mins)
             greatermins[d] = split
-            return KDTree.innernode(d, split,
-                    self._build(idx[less_idx],lessmaxes,mins),
-                    self._build(idx[greater_idx],maxes,greatermins))
+            return KDTree.innernode(
+                d,
+                split,
+                self._build(idx[less_idx], lessmaxes, mins),
+                self._build(idx[greater_idx], maxes, greatermins))
 
     def _query(self, x, k=1, eps=0, p=2, distance_upper_bound=np.inf):
 

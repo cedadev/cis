@@ -23,7 +23,7 @@ The following should be displayed::
     -h, --help   show this help message and exit
 
 
-There are 8 commands the program can execute the moment:
+There are 8 commands the program can execute:
 
   * ``plot`` which is used to plot the data
   * ``info`` which prints information about a given input file
@@ -37,3 +37,10 @@ There are 8 commands the program can execute the moment:
 
 If an error occurs while running any of these commands, you may wish to check the log file 'cis.log'; the default
 location for this is the current user's home directory.
+
+LSF Batch Job Submission
+------------------------
+
+CIS jobs may be submitted to an LSF type batch submission system (e.g. the JASMIN environment) by using the
+command ``cis.lsf`` instead of cis. In this case the job will be sent to the batch system and any output will be written
+to the log file.

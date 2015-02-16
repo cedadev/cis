@@ -372,6 +372,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+
 class TestUngriddedUngriddedColocate(BaseIntegrationTest):
 
     @unittest.skip("Very resource intensive")
@@ -620,7 +621,7 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars, (687155,))
 
     def test_NetCDF_Gridded_onto_aerosol_cci(self):
         # Takes 30s
@@ -665,7 +666,7 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars, (30153,))
 
     def test_NetCDF_Gridded_onto_cis_output_data(self):
         # Takes 3s

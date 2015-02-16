@@ -422,6 +422,20 @@ class TestUngriddedAggregation(TestCase):
         assert numpy.allclose(actual_stddev.data, expect_stddev)
         assert numpy.allclose(actual_count.data, expect_count)
 
+    def test_aggregating_on_grid_0_to_360_when_data_is_minus_180_to_180(self):
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=-175., lon_max=145.)
+        grid = {'x': AggregationGrid(125, 270, 40, False)}
+        agg = Aggregator(data, grid)
+        output = agg.aggregate_ungridded(self.kernel)
+        assert (output.data.tolist() == [13.5, 5.5, 6.5, 7.5])
+
+    def test_aggregating_on_grid_minus_180_to_180_when_data_is_0_to_360(self):
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=5., lon_max=325.)
+        grid = {'x': AggregationGrid(-75, 125, 40, False)}
+        agg = Aggregator(data, grid)
+        output = agg.aggregate_ungridded(self.kernel)
+        assert (output.data.tolist() == [12.5, 13.5, 5.5, 6.5, 7.5])
+
 
 class TestUngriddedListAggregation(TestCase):
 

@@ -416,6 +416,13 @@ def get_aggregate_grid(aggregategrid, parser):
                 end_parsed = parse_float(end, 'aggregation grid end coordinate', parser)
                 delta_parsed = parse_float(delta, 'aggregation grid delta coordinate', parser)
                 is_time = False
+                if dim_name.lower() == 'x':
+                    if not start_parsed <= end_parsed:
+                        parser.error("Longitude grid must be monotonically increasing (i.e. for x[A,B,C] A <= B). For "
+                                     "example, x=[90,-90,10] is invalid but x=[90,270,10] is valid")
+                    if not end_parsed - start_parsed <= 360:
+                        parser.error("Longitude grid should not be wider than 360 degrees "
+                                     "(i.e. for x[A,B,C] B-A <= 360)")
             else:
                 start_parsed = parse_as_number_or_datetime(start, 'aggregation grid start coordinate', parser)
                 end_parsed = parse_as_number_or_datetime(end, 'aggregation grid end coordinate', parser)
@@ -483,6 +490,13 @@ def get_subset_limits(subsetlimits, parser):
                 limit1_parsed = parse_float(limit1, 'subset range start coordinate', parser)
                 limit2_parsed = parse_float(limit2, 'subset range start coordinate', parser)
                 is_time = False
+                if dim_name.lower() == 'x':
+                    if not limit1_parsed <= limit2_parsed:
+                        parser.error("Longitude limits must be monotonically increasing (i.e. for x[A,B] A <= B). For "
+                                     "example, x=[90,-90] is invalid but x=[90,270] is valid")
+                    if not limit2_parsed - limit1_parsed <= 360:
+                        parser.error("Longitude limits should not be more than 360 degrees apart "
+                                     "(i.e. for x[A,B] B-A <= 360)")
             else:
                 limit1_parsed = parse_as_number_or_datetime(limit1, 'subset range start coordinate', parser)
                 limit2_parsed = parse_as_number_or_datetime(limit2, 'subset range start coordinate', parser)

@@ -1,8 +1,7 @@
 """Tests for ungridded_data module
 """
 from unittest import TestCase
-from hamcrest import assert_that, is_, contains_inanyorder, instance_of
-from nose.tools import istest
+from hamcrest import assert_that, is_, contains_inanyorder
 
 import numpy as np
 
@@ -10,8 +9,8 @@ from jasmin_cis.data_io.Coord import CoordList, Coord
 from jasmin_cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata, UngriddedDataList
 
 
-class TestUngriddedData(object):
-    @istest
+class TestUngriddedData(TestCase):
+
     def test_can_create_ungridded_data(self):
         x_points = np.arange(-10, 11, 5)
         y_points = np.arange(-5, 6, 5)
@@ -28,8 +27,6 @@ class TestUngriddedData(object):
         assert(standard_coords == [x, y, None, None, None])
         assert(ug.data.size == 15)
 
-
-    @istest
     def test_get_all_points_returns_points(self):
         x_points = np.arange(-10, 11, 5)
         y_points = np.arange(-5, 6, 5)
@@ -46,8 +43,6 @@ class TestUngriddedData(object):
         num_points = len([p for p in points])
         assert(num_points == 15)
 
-
-    @istest
     def test_get_non_masked_points_returns_points(self):
         x_points = np.arange(-10, 11, 5)
         y_points = np.arange(-5, 6, 5)
@@ -68,8 +63,6 @@ class TestUngriddedData(object):
         num_points = len([p for p in points])
         assert(num_points == 12)
 
-
-    @istest
     def test_get_coordinates_points_returns_points(self):
         x_points = np.arange(-10, 11, 5)
         y_points = np.arange(-5, 6, 5)
@@ -90,8 +83,6 @@ class TestUngriddedData(object):
         num_points = len([p for p in points])
         assert(num_points == 15)
 
-
-    @istest
     def test_can_add_history(self):
         x_points = np.arange(-10, 11, 5)
         y_points = np.arange(-5, 6, 5)
@@ -109,9 +100,120 @@ class TestUngriddedData(object):
         ug.add_history(new_history)
         assert(ug.metadata.history.find(new_history) >= 0)
 
+    def test_GIVEN_numpy_array_data_with_missing_coordinate_values_WHEN_data_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
 
-class TestUngriddedCoordinates(object):
-    @istest
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+        coords = CoordList([x, y])
+
+        data = np.reshape(np.arange(15) + 1.0, (5, 3))
+
+        ug = UngriddedData(data, Metadata(), coords)
+        data = ug.data.flatten()
+        assert_that(len(data), is_(14))
+        for coord in ug.coords():
+            assert_that(len(coord.points), is_(14))
+
+
+class TestUngriddedDataLazyLoading(TestCase):
+
+    def test_GIVEN_missing_coord_values_WHEN_data_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+        coords = CoordList([x, y])
+
+        data = np.reshape(np.arange(15) + 1.0, (5, 3))
+
+        ug = UngriddedData(None, Metadata(), coords, lambda x: data)
+        data = ug.data.flatten()
+        assert_that(len(data), is_(14))
+
+    def test_GIVEN_missing_coord_values_WHEN_data_flattened_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+        coords = CoordList([x, y])
+
+        data = np.reshape(np.arange(15) + 1.0, (5, 3))
+
+        ug = UngriddedData(None, Metadata(), coords, lambda x: data)
+        data = ug.data_flattened
+        assert_that(len(data), is_(14))
+
+    def test_GIVEN_missing_coord_values_WHEN_coords_points_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+        coords = CoordList([x, y])
+
+        data = np.reshape(np.arange(15) + 1.0, (5, 3))
+
+        ug = UngriddedData(None, Metadata(), coords, lambda x: data)
+        coords = ug.coords()
+        for coord in coords:
+            assert_that(len(coord.points), is_(14))
+
+    def test_GIVEN_missing_coord_values_WHEN_coords_data_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+        coords = CoordList([x, y])
+
+        data = np.reshape(np.arange(15) + 1.0, (5, 3))
+
+        ug = UngriddedData(None, Metadata(), coords, lambda x: data)
+        coords = ug.coords()
+        for coord in coords:
+            assert_that(len(coord.data), is_(14))
+
+    def test_GIVEN_missing_coord_values_WHEN_coords_flattened_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+        coords = CoordList([x, y])
+
+        data = np.reshape(np.arange(15) + 1.0, (5, 3))
+
+        ug = UngriddedData(None, Metadata(), coords, lambda x: data)
+        coords = ug.coords_flattened
+        for coord in coords:
+            if coord is not None:
+                assert_that(len(coord), is_(14))
+
+
+class TestUngriddedCoordinates(TestCase):
+
     def test_can_create_ungridded_coordinates(self):
         x_points = np.arange(-10, 11, 5)
         y_points = np.arange(-5, 6, 5)
@@ -125,8 +227,6 @@ class TestUngriddedCoordinates(object):
         standard_coords = ug.coords().find_standard_coords()
         assert(standard_coords == [x, y, None, None, None])
 
-
-    @istest
     def test_get_coordinates_points_returns_points(self):
         x_points = np.arange(-10, 11, 5)
         y_points = np.arange(-5, 6, 5)

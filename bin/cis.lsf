@@ -8,12 +8,12 @@ then
   exit
 fi
 
-echo "Submitting job to LSF. Use bjobs to check if it has finished output is in ~/cis.log"
+echo "Submitting job to LSF. Use bjobs to check if it has finished - output is in ~/cis.log"
 
 # Send the following lines to bsub
 cat <<EOF | bsub
 
-# log that we started a job inthe cis log
+# log that we started a job in the cis log
 echo "\$LSB_JOBID: Job Starting on Lotus" >> ~/cis.log
 
 # run the cis command redirecting standard error to stanard out

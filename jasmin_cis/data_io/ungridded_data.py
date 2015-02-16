@@ -15,6 +15,7 @@ from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data, HDF_SDS
 from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
+from jasmin_cis.utils import listify
 
 
 class Metadata(object):
@@ -106,6 +107,7 @@ class LazyData(object):
             # If the data input is a numpy array we can just copy it in and ignore the data_manager
             self._data = data
             self._data_manager = None
+            self._post_process()
         else:
             # If the data input wasn't a numpy array we assume it is a data reference (e.g. SDS) and we refer
             #  this as a 'data manager' as it is responsible for getting the actual data.
@@ -113,10 +115,7 @@ class LazyData(object):
             self._data = None
             # Although the data can be a list or a single item it's useful to cast it
             #  to a list here to make accessing it consistent
-            if isinstance(data, list):
-                self._data_manager = data
-            else:
-                self._data_manager = [ data ]
+            self._data_manager = listify(data)
 
             if data_retrieval_callback is not None:
                 # Use the given data retrieval method
@@ -186,21 +185,29 @@ class LazyData(object):
         import numpy.ma as ma
         if self._data is None:
             try:
-                # If we ere given a list of data managers then we need to concatenate them now...
-                self._data=self.retrieve_raw_data(self._data_manager[0])
+                # If we were given a list of data managers then we need to concatenate them now...
+                self._data = self.retrieve_raw_data(self._data_manager[0])
                 if len(self._data_manager) > 1:
                     for manager in self._data_manager[1:]:
-                        self._data = ma.concatenate((self._data,self.retrieve_raw_data(manager)),axis=0)
+                        self._data = ma.concatenate((self._data, self.retrieve_raw_data(manager)), axis=0)
+                self._post_process()
             except MemoryError:
                 raise MemoryError(
                     "Failed to read the ungridded data as there was not enough memory available.\n"
                     "Consider freeing up variables or indexing the cube before getting its data.")
         return self._data
 
+    def _post_process(self):
+        """
+        Perform a post-processing step on lazy loaded data
+        :return: None
+        """
+        pass
+
     @data.setter
     def data(self, value):
-        # TODO remove this - it's only for testing colocation at the moment
         self._data = value
+        self._data_flattened = None
 
     @property
     def data_flattened(self):
@@ -259,8 +266,6 @@ class UngriddedData(LazyData, CommonData):
         '''
         from jasmin_cis.data_io.Coord import CoordList, Coord
 
-        super(UngriddedData, self).__init__(data, metadata, data_retrieval_callback)
-
         if isinstance(coords, list):
             self._coords = CoordList(coords)
         elif isinstance(coords, CoordList):
@@ -269,12 +274,43 @@ class UngriddedData(LazyData, CommonData):
             self._coords = CoordList([coords])
         else:
             raise ValueError("Invalid Coords type")
-        all_coords = self._coords.find_standard_coords()
-        self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
 
         #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
         if str(metadata.units) == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
+
+        super(UngriddedData, self).__init__(data, metadata, data_retrieval_callback)
+
+    @property
+    def coords_flattened(self):
+        all_coords = self.coords().find_standard_coords()
+        return [(c.data_flattened if c is not None else None) for c in all_coords]
+
+    def _post_process(self):
+        """
+        Perform a post processing step on lazy loaded Ungridded Data
+        :return:
+        """
+        # Load the data if not already loaded
+        if self._data is None:
+            data = self.data
+        else:
+            # Remove any points with missing coordinate values:
+            combined_mask = numpy.zeros(self._data.shape, dtype=bool).flatten()
+            for coord in self._coords:
+                combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
+            if combined_mask.any():
+                n_points = numpy.count_nonzero(combined_mask)
+                logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
+                                "these points have been removed from the data.".format(n_points=n_points))
+                for coord in self._coords:
+                    coord.data = numpy.ma.masked_array(coord.data.flatten(), mask=combined_mask).compressed()
+                if numpy.ma.is_masked(self._data):
+                    new_data_mask = numpy.ma.masked_array(self._data.mask.flatten(), mask=combined_mask).compressed()
+                    new_data = numpy.ma.masked_array(self._data.data.flatten(), mask=combined_mask).compressed()
+                    self._data = numpy.ma.masked_array(new_data, mask=new_data_mask)
+                else:
+                    self._data = numpy.ma.masked_array(self._data.flatten(), mask=combined_mask).compressed()
 
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
                                        long_name=None, history=None, units=None):
@@ -294,8 +330,20 @@ class UngriddedData(LazyData, CommonData):
                             long_name=long_name, history='', units=units)
         data = UngriddedData(data=data, metadata=metadata, coords=self._coords)
         # Copy the history in separately so it gets the timestamp added.
-        data.add_history(history)
+        if history:
+            data.add_history(history)
         return data
+
+    def copy(self):
+        """
+        Create a copy of this UngriddedData object with new data and coordinates
+        so that that they can be modified without held references being affected.
+        Will call any lazy loading methods in the data and coordinates
+        :return: Copied UngriddedData object
+        """
+        data = numpy.ma.copy(self.data)  # This will load the data if lazy load
+        coords = self.coords().copy()
+        return UngriddedData(data=data, metadata=self.metadata, coords=coords)
 
     @property
     def history(self):
@@ -333,19 +381,17 @@ class UngriddedData(LazyData, CommonData):
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
-
         :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
+        self._post_process()
         return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
 
     def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
-
         :raise: CoordinateNotFoundError
         :return: A single coord given the same arguments as L(coords).
-
         """
-        return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
+        return self.coords().get_coord(name, standard_name, long_name, attributes, axis)
 
     def get_coordinates_points(self):
         """Returns a HyperPointView of the coordinates of points.
@@ -371,7 +417,7 @@ class UngriddedData(LazyData, CommonData):
         list in this order.
         :return: list of coordinates or None if coordinate not present
         """
-        return self._coords.find_standard_coords()
+        return self.coords().find_standard_coords()
 
     @property
     def is_gridded(self):
@@ -550,3 +596,25 @@ class UngriddedDataList(CommonDataList):
         for data in self:
             points_list.append(data.get_non_masked_points())
         return points_list
+
+    def coord(self, *args, **kwargs):
+        """
+        Call UnGriddedData.coord(*args, **kwargs) for the first item of data (assumes all data in list has
+        same coordinates)
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return self[0].coord(*args, **kwargs)
+
+    def copy(self):
+        """
+        Create a copy of this UngriddedDataList with new data and coordinates
+        so that that they can be modified without held references being affected.
+        Will call any lazy loading methods in the data and coordinates
+        :return: Copied UngriddedData object
+        """
+        output = UngriddedDataList()
+        for variable in self:
+            output.append(variable.copy())
+        return output

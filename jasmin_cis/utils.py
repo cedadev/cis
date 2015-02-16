@@ -7,6 +7,9 @@ from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 from jasmin_cis.exceptions import InvalidCommandLineOptionError
 
+# number of bytes in a MB
+BYTES_IN_A_MB = 1048576.0
+
 
 def add_element_to_list_in_dict(my_dict,key,value):
     try:
@@ -755,7 +758,7 @@ def deprecated(func):
         def log_warning(message, category, filename, lineno, file=None):
             logging.warning('%s:%s %s:%s' % (category.__name__, message, filename, lineno))
         warnings.showwarning = log_warning
-        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.simplefilter('once', DeprecationWarning)  # turn off filter
         warnings.warn("Call to deprecated function %s." % func.__name__,
                       category=DeprecationWarning, stacklevel=2)
         return func(*args, **kwargs)
@@ -774,3 +777,17 @@ def listify(item):
     if not isinstance(item, list):
         return [item]
     return item
+
+
+def log_memory_profile(location):
+    """
+    Write the total memory to the log as debug message
+    :param location: location in the program where the memory measurement was taken
+    :return: nothing
+    """
+    try:
+        import psutil
+        mem = psutil.Process().memory_info().rss / BYTES_IN_A_MB
+        logging.debug("App Memory MB ({}): {}".format(location, mem))
+    except ImportError:
+        pass

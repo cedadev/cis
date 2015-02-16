@@ -328,10 +328,39 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         :param kwargs: Keyword arguments for the Iris regrid method
         :return: Regridded GriddedDataList
         """
-        output = CubeList()
+        output = GriddedDataList()
         for data in self:
             output.append(data.regrid(*args, **kwargs))
         return output
+
+    def intersection(self, *args, **kwargs):
+        """
+        Call the iris.cube.Cube.intersection() method over all the cubes in a GriddedDataList
+        :param args: Arguments for the Iris intersection method
+        :param kwargs: Keyword arguments for the Iris intersection method
+        :return: Intersected GriddedDataList
+        """
+        output = GriddedDataList()
+        for data in self:
+            output.append(data.intersection(*args, **kwargs))
+        return output
+
+    def transpose(self, *args, **kwargs):
+        """
+        Call the iris.cube.Cube.transpose() method over all the cubes in a GriddedDataList
+        :param args: Arguments for the Iris transpose method
+        :param kwargs: Keyword arguments for the Iris transpose method
+        """
+        for data in self:
+            data.transpose(*args, **kwargs)
+
+    @property
+    def dim_coords(self):
+        """
+        The dimension coordinates of this data
+        """
+        # Use the dimensions of the first item since all items should have the same dimensions
+        return self[0].dim_coords
 
     @property
     def ndim(self):

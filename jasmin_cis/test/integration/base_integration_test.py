@@ -1,7 +1,7 @@
 from netCDF4 import Dataset
 import os
 import unittest
-from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to
+from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to, is_
 
 
 class BaseIntegrationTest(unittest.TestCase):
@@ -47,7 +47,7 @@ class BaseIntegrationTest(unittest.TestCase):
         assert_that(min(lat), greater_than_or_equal_to(lat_min))
         assert_that(max(lat), less_than_or_equal_to(lat_max))
 
-    def check_output_col_grid(self, sample_file, sample_var, output_file, output_vars):
+    def check_output_col_grid(self, sample_file, sample_var, output_file, output_vars, expected_shape=None):
         """
         Check that the output grid matches the sample grid in shape.
         :param sample_file:
@@ -57,40 +57,42 @@ class BaseIntegrationTest(unittest.TestCase):
         :return:
         """
         from netCDF4 import Dataset
-        sample_shape = None
-        if sample_file.endswith('.nc'):
-            sample = Dataset(sample_file)
-            sample_shape = sample.variables[sample_var].shape
-        elif sample_file.endswith('.hdf'):
-            from pyhdf.SD import SD
-            sd = SD(sample_file)
-            svars = sd.datasets()
-            if sample_var in svars:
-                sample_shape = svars[sample_var][1]
+        if expected_shape is None:
+            sample_shape = None
+            if sample_file.endswith('.nc'):
+                sample = Dataset(sample_file)
+                sample_shape = sample.variables[sample_var].shape
+            elif sample_file.endswith('.hdf'):
+                from pyhdf.SD import SD
+                sd = SD(sample_file)
+                svars = sd.datasets()
+                if sample_var in svars:
+                    sample_shape = svars[sample_var][1]
+                else:
+                    from pyhdf.HDF import HDF
+                    from pyhdf.VS import VS
+                    hdf = HDF(sample_file)
+                    vs = hdf.vstart()
+                    for info in vs.vdatainfo():
+                        if info[0] == sample_var:
+                            sample_shape = (info[3],)
             else:
-                from pyhdf.HDF import HDF
-                from pyhdf.VS import VS
-                hdf = HDF(sample_file)
-                vs = hdf.vstart()
-                for info in vs.vdatainfo():
-                    if info[0] == sample_var:
-                        sample_shape = (info[3],)
-        elif sample_file.endswith('.lev20') or sample_file.endswith('.txt'):
-            f = open(sample_file)
-            line_count = - 5  # Aeronet headers are five lines.
-            for line in f:
-                if line.strip():
-                    line_count += 1
-            sample_shape = (line_count,)
+                headers = 0
+                if sample_file.endswith('.lev20'):
+                    headers = 5  # Aeronet headers are five lines.
+                elif sample_file.endswith('.txt'):
+                    headers = 1
+                f = open(sample_file)
+                line_count = - headers
+                for line in f:
+                    if line.strip():
+                        line_count += 1
+                sample_shape = (line_count,)
+        else:
+            sample_shape = expected_shape
         output = Dataset(output_file)
         for output_var in output_vars:
             output_shape = output.variables[output_var].shape
-            try:
-                assert sample_shape == output_shape
-            except AssertionError:
-                try:
-                    # Sometimes there is a dimension which is flattened out, try just lat lon
-                    assert sample_shape[-2:] == output_shape
-                except AssertionError:
-                    # If the data gets flattened (MODIS L3 I think?) then check with the number of points
-                    assert output_shape == (sample_shape[-1] * sample_shape[-2],)
+            from operator import mul
+            # This copes with dims in different orders, length 1 values being taken out etc
+            assert_that(reduce(mul, sample_shape), is_(reduce(mul, output_shape)))
