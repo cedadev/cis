@@ -608,11 +608,11 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         _fix_cube_longitude_range(points.coords(), data)
 
         # Initialise variables used to create an output mask based on the sample data mask.
-        sample_coord_lookup = {}
+        sample_coord_lookup = {}  # Maps coordinate in sample data -> location in dimension order
         for idx, coord in enumerate(points.dim_coords):
             sample_coord_lookup[coord] = idx
-        sample_coord_transpose_map = []
-        other_coord_transpose_map = []
+        sample_coord_transpose_map = []  # For coords in both sample and data, contains the position in the sample
+        other_coord_transpose_map = []  # For coords in data but not in sample, records that coord's position in data.
         repeat_size = 1
         output_mask = np.ma.nomask
 
@@ -636,6 +636,12 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
                 repeat_size *= len(coord.points)
                 other_coord_transpose_map.append(idx)
 
+        # Now we sort the sample coordinates so that they are in the same order as in the sample file,
+        # rather than the order of the data file (that's the order we want the output dimensions).
+        coord_names_and_sizes_for_sample_grid = [x[0] for x in sorted(zip(coord_names_and_sizes_for_sample_grid,
+                                                                          sample_coord_transpose_map),
+                                                                      key=lambda t: t[1])]
+
         # Adding the lists together in this way ensures that the coordinates not in the sample grid appear in the final
         # position, which is important for adding the points from the Iris interpolater to the new array. The data
         # returned from the Iris interpolater method will have dimensions of these missing coordinates, which needs
@@ -648,9 +654,8 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         new_data = np.zeros(output_shape)
 
         if self.missing_data_for_missing_sample:
-            output_mask = self._make_output_mask(coord_names_and_sizes_for_sample_grid, kernel,
-                                                 other_coord_transpose_map, output_shape, points,
-                                                 repeat_size, sample_coord_transpose_map)
+            output_mask = self._make_output_mask(coord_names_and_sizes_for_sample_grid, output_shape,
+                                                 points, repeat_size)
 
         # Now recreate the points cube, while ignoring any DimCoords in points that are not in the data cube
         new_dim_coord_list = []
@@ -674,26 +679,21 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         # iris.analysis.interpolate.linear, so we need need to make an exception for how we treat the linear
         # interpolation case.
         if kernel.name == 'bilinear':
-            output_cube = self._colocate_bilinear(coord_names_and_sizes_for_sample_grid, data, kernel, output_mask,
-                                                  points)
+            output_cube = self._colocate_bilinear(coord_names_and_sizes_for_output_grid,
+                                                  coord_names_and_sizes_for_sample_grid, data,
+                                                  kernel, output_mask, points)
         else:
             output_cube = self._colocate_nearest(coord_names_and_sizes_for_output_grid,
                                                  coord_names_and_sizes_for_sample_grid, data, kernel, new_data,
                                                  output_mask, points)
-        # if isinstance(output_cube, list) and len(output_cube) == 1:
-        #     return output_cube[0]
-        # else:
-        #     return output_cube
         if not isinstance(output_cube, list):
             return GriddedDataList([output_cube])
         else:
             return output_cube
 
     @staticmethod
-    def _make_output_mask(coord_names_and_sizes_for_sample_grid, kernel, other_coord_transpose_map,
-                          output_shape, points, repeat_size, sample_coord_transpose_map):
-        """ Creates a mask to apply to the output data based on the sample data mask, but rearranged to match
-        the coordinate order of the output cube. This order depends on the kernel. If there are coordinates in
+    def _make_output_mask(coord_names_and_sizes_for_sample_grid, output_shape, points, repeat_size):
+        """ Creates a mask to apply to the output data based on the sample data mask. If there are coordinates in
         the data grid that are not in the sample grid, the same mask value is repeated for all values of the
         extra coordinates. If there are coordinates in the sample grid that are not in the data grid, a mask
         is not created since there is many to one correspondence between sample and output grid points.
@@ -710,32 +710,14 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
                 # No sample data missing-value mask.
                 pass
             else:
-                # Transpose the mask from the sample cube to match the coordinate order of the
-                # the data coordinates (but only including those in common with the sample cube).
-                output_mask = np.transpose(points.data.mask, sample_coord_transpose_map)
-
-                # Fill in the remaining coordinates by repeating the constructed mask for each value
-                # of those coordinates. This matches the coordinate order for the nearest neighbour kernel.
-                output_mask = np.reshape(np.repeat(output_mask, repeat_size), output_shape)
-
-                if kernel.name == 'bilinear':
-                    # iris.analysis.interpolate.linear returns the colocated data in a cube with
-                    # the coordinates in the order of the input data. Transpose the mask back to
-                    # the data coordinate order.
-                    inv_transpose_map = []
-                    for i in xrange(len(output_shape)):
-                        if i not in other_coord_transpose_map:
-                            inv_transpose_map.append(i)
-                    inv_transpose_map.extend(other_coord_transpose_map)
-                    transpose_map = [None] * len(inv_transpose_map)
-                    for i in range(len(inv_transpose_map)):
-                        transpose_map[inv_transpose_map[i]] = i
-                    output_mask = np.transpose(output_mask, transpose_map)
-
+                # Fill in the remaining coordinates (those from the data which are not in the sample) by repeating
+                # the constructed mask for each value of those coordinates
+                output_mask = np.reshape(np.repeat(points.data.mask, repeat_size), output_shape)
         return output_mask
 
     @staticmethod
-    def _colocate_bilinear(coord_names_and_sizes_for_sample_grid, data, kernel, output_mask, points):
+    def _colocate_bilinear(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
+                           output_mask, points):
         """ Colocates using iris.analysis.interpolate.linear
         """
         coordinate_point_pairs = []
@@ -748,6 +730,15 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
         # in coord_names_and_sizes_for_output_grid.
         output_cube = make_from_cube(kernel.interpolater(data, coordinate_point_pairs))
+
+        # Iris outputs interpolated cubes with the dimensions in the order of the data grid, not the sample grid,
+        # so we need to rearrange the order of the dimensions.
+        output_coord_lookup = {}
+        for idx, coord in enumerate(output_cube.dim_coords):
+            output_coord_lookup[coord.name()] = idx
+        transpose_map = [output_coord_lookup[coord[0]] for coord in coord_names_and_sizes_for_output_grid]
+        output_cube.transpose(transpose_map)
+
         if isinstance(output_cube, list):
             for idx, data in enumerate(output_cube):
                 output_cube[idx].data = jasmin_cis.utils.apply_mask_to_numpy_array(data.data, output_mask)
