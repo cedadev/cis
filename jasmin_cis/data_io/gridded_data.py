@@ -338,11 +338,29 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         Call the iris.cube.Cube.intersection() method over all the cubes in a GriddedDataList
         :param args: Arguments for the Iris intersection method
         :param kwargs: Keyword arguments for the Iris intersection method
-        :return: Intersected GriddedDataList
+        :return: Intersected GriddedDataList or None if no data in intersection
         """
         output = GriddedDataList()
         for data in self:
+            new_data = data.intersection(*args, **kwargs)
+            if new_data is None:
+                return None
             output.append(data.intersection(*args, **kwargs))
+        return output
+
+    def extract(self, *args, **kwargs):
+        """
+        Call the iris.cube.Cube.extract() method over all the cubes in a GriddedDataList
+        :param args: Arguments for the Iris extract method
+        :param kwargs: Keyword arguments for the Iris extract method
+        :return: Extracted GriddedDataList oR None if all data excluded
+        """
+        output = GriddedDataList()
+        for data in self:
+            new_data = data.extract(*args, **kwargs)
+            if new_data is None:
+                return None
+            output.append(data.extract(*args, **kwargs))
         return output
 
     def transpose(self, *args, **kwargs):

@@ -119,13 +119,27 @@ class TestGriddedSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [[5, 6], [8, 9], [11, 12]])
 
-    def test_empty_subset_of_gridded_data_returns_no_data(self):
-        """Checks that the convention of returning None if subsetting results in an empty subset.
+    def test_empty_longitude_subset_of_gridded_data_list_returns_no_data(self):
         """
-        data = jasmin_cis.test.util.mock.make_square_5x3_2d_cube()
+        Checks that the convention of returning None if subsetting results in an empty subset.
+        Longitude has a modulus and so uses the IRIS intersection method
+        """
+        data = GriddedDataList([jasmin_cis.test.util.mock.make_square_5x3_2d_cube()])
         long_coord = data.coord('longitude')
         constraint = subset_constraint.GriddedSubsetConstraint()
         constraint.set_limit(long_coord, 1.0, 3.0)
+        subset = constraint.constrain(data)
+        assert (subset is None)
+
+    def test_empty_time_subset_of_gridded_data_list_returns_no_data(self):
+        """
+        Checks that the convention of returning None if subsetting results in an empty subset.
+        Longitude has no modulus and so uses the IRIS extract method
+        """
+        data = GriddedDataList([jasmin_cis.test.util.mock.make_square_5x3_2d_cube_with_time()])
+        long_coord = data.coord('time')
+        constraint = subset_constraint.GriddedSubsetConstraint()
+        constraint.set_limit(long_coord, 140500, 140550)
         subset = constraint.constrain(data)
         assert (subset is None)
 
