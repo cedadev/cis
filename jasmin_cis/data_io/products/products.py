@@ -489,10 +489,13 @@ class ASCII_Hyperpoints(AProduct):
         """
         return "ASCII/ASCIIHyperpoints"
 
+
 class default_NetCDF(NetCDF_Gridded):
     """
     This class should always be the last in the sorted list (last alphabetically) - and hence the default for *.nc
     files which have not otherwise been matched.
     """
+    priority = 1
+
     def get_file_signature(self):
         return [r'.*\.nc']
