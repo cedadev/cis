@@ -230,9 +230,13 @@ def stats_cmd(main_arguments):
     analyzer = StatsAnalyzer(*data_list)
     results = analyzer.analyze()
     header = "RESULTS OF STATISTICAL COMPARISON:"
-    print(len(header) * '=')
+    note = "Compared all points which have non-missing values in both variables"
+    header_length = max(len(header), len(note))
+    print(header_length * '=')
     print(header)
-    print(len(header) * '=')
+    print(header_length * '-')
+    print(note)
+    print(header_length * '=')
     for result in results:
         print(result.pprint())
     if main_arguments.output:

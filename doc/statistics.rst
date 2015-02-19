@@ -21,9 +21,13 @@ These values will be displayed on screen and can optionally be save as NetCDF ou
 
 .. note::
     Both variables used in a statistical analysis **must** be of the same shape in order to be compatible, i.e. the
-    same number of points in each dimension, and of the same type (Ungridded or Gridded). This means that, for example,
+    same number of points in each dimension, and of the same type (ungridded or gridded). This means that, for example,
     operations between different data products are unlikely to work correctly - performing a colocation or aggregation
     onto a common grid would be a good pre-processing step.
+
+.. note::
+    Only points which have non-missing values for both variables will be included in the analysis. The number of points
+    this includes is part of the output of the stats command.
 
 The statistics syntax looks like this::
 
@@ -86,9 +90,11 @@ We then perform a statistical comparison of these variables using::
 
 Which gives the following output::
 
-    ==================================
+    ===================================================================
     RESULTS OF STATISTICAL COMPARISON:
-    ==================================
+    -------------------------------------------------------------------
+    Compared all points which have non-missing values in both variables
+    ===================================================================
     Number of points: 10727
     Mean value of dataset 1: 0.427751965508
     Mean value of dataset 2: 0.501316673814
