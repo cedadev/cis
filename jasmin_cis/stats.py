@@ -308,6 +308,16 @@ class StatsAnalyzer(object):
 
         self.data1 = data1
         self.data2 = data2
+        # Keep a record of whether we have already combined the masks so that we don't unnecessarily repeat it
+        self._masks_combined = False
+
+    def _get_data_for_combined_masks(self):
+        if numpy.ma.is_masked(self.data1.data) or numpy.ma.is_masked(self.data2.data):
+            mask1 = numpy.ma.getmaskarray(self.data1.data)
+            mask2 = numpy.ma.getmaskarray(self.data2.data)
+            # Creating a new masked array combines the masks and preserves the originals
+            return numpy.ma.masked_array(self.data1.data, mask2), numpy.ma.masked_array(self.data2.data, mask1)
+        return self.data1.data, self.data2.data
 
     def analyze(self):
         """
@@ -340,17 +350,20 @@ class StatsAnalyzer(object):
         Means of two datasets
         :return: List of StatisticsResults
         """
-
-        return [DatasetMean(numpy.mean(self.data1.data), self.data1.var_name, 1),
-                DatasetMean(numpy.mean(self.data2.data), self.data2.var_name, 2)]
+        # This command requires the masks to be combined
+        data1_combined, data2_combined = self._get_data_for_combined_masks()
+        return [DatasetMean(numpy.mean(data1_combined), self.data1.var_name, 1),
+                DatasetMean(numpy.mean(data2_combined), self.data2.var_name, 2)]
 
     def stddevs(self):
         """
         Corrected sample standard deviation of datasets
         :return: List of StatisticsResults
         """
-        return [DatasetStddev(numpy.std(self.data1.data, ddof=1), self.data1.var_name, 1),
-                DatasetStddev(numpy.std(self.data2.data, ddof=1), self.data2.var_name, 2)]
+        # This command requires the masks to be combined
+        data1_combined, data2_combined = self._get_data_for_combined_masks()
+        return [DatasetStddev(numpy.std(data1_combined, ddof=1), self.data1.var_name, 1),
+                DatasetStddev(numpy.std(data2_combined, ddof=1), self.data2.var_name, 2)]
 
     def abs_mean(self):
         """

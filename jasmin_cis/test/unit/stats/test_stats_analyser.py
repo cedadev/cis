@@ -24,6 +24,14 @@ class TestStatsAnalyser(unittest.TestCase):
         results = stats.analyze()
         assert_that(len(results), is_(14))
 
+    def test_GIVEN_missing_values_WHEN_analyze_THEN_original_data_unchanged(self):
+        # We perform some manipulation on the data masks, but we don't want the
+        # original data to be changed.
+        stats = StatsAnalyzer(self.missing1, self.missing2)
+        results = stats.analyze()
+        assert_that(len(self.missing1.data.compressed()), is_(7))
+        assert_that(len(self.missing2.data.compressed()), is_(7))
+
     # ======================== POINTS COUNT
 
     def test_GIVEN_no_missing_vals_WHEN_count_THEN_points_count_correct(self):
@@ -44,26 +52,30 @@ class TestStatsAnalyser(unittest.TestCase):
     # ======================== MEAN
 
     def test_GIVEN_no_missing_vals_WHEN_mean_THEN_mean_correct(self):
-        stats = StatsAnalyzer(self.data1, self.missing1)
+        stats = StatsAnalyzer(self.data1, self.data2)
         res = stats.means()
         assert_that(res[0].mean, is_(5.1))
+        assert_that(res[1].mean, is_(5.19))
 
     def test_GIVEN_missing_vals_WHEN_count_THEN_mean_correct(self):
-        stats = StatsAnalyzer(self.data1, self.missing1)
+        stats = StatsAnalyzer(self.missing1, self.missing2)
         res = stats.means()
-        assert_that(res[1].mean, close_to(-11.4285714286, 1e-5))
+        assert_that(res[0].mean, close_to(-13.5, 1e-5))
+        assert_that(res[1].mean, close_to(-16.783333333, 1e-5))
 
     # ======================= STDDEV
 
     def test_GIVEN_no_missing_vals_WHEN_stddev_THEN_stddev_correct(self):
-        stats = StatsAnalyzer(self.data1, self.missing1)
+        stats = StatsAnalyzer(self.data1, self.data2)
         res = stats.stddevs()
         assert_that(res[0].stddev, close_to(3.7252889523, 1e-5))
+        assert_that(res[1].stddev, close_to(3.7020864988, 1e-5))
 
     def test_GIVEN_missing_vals_WHEN_stddev_THEN_stddev_correct(self):
-        stats = StatsAnalyzer(self.data1, self.missing1)
+        stats = StatsAnalyzer(self.missing1, self.missing2)
         res = stats.stddevs()
-        assert_that(res[1].stddev, close_to(39.1912283675, 1e-5))
+        assert_that(res[0].stddev, close_to(42.5099988238, 1e-5))
+        assert_that(res[1].stddev, close_to(50.6813344997, 1e-5))
 
     # ================= ABS MEAN
 
