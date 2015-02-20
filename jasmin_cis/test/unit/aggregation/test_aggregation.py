@@ -1,6 +1,5 @@
 from unittest import TestCase
 from nose.tools import istest
-import numpy
 
 from jasmin_cis.data_io.gridded_data import make_from_cube, GriddedDataList
 from jasmin_cis.data_io.ungridded_data import UngriddedDataList
@@ -44,7 +43,7 @@ class TestGriddedAggregation(TestCase):
         result = numpy.array([2, 5, 8, 11, 14])
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
-        assert numpy.allclose(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
         assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     @istest
@@ -57,7 +56,7 @@ class TestGriddedAggregation(TestCase):
         result = numpy.array([2, 5, 8, 11, 14])
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
-        assert numpy.allclose(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
         assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     @istest
@@ -137,7 +136,7 @@ class TestGriddedAggregation(TestCase):
         cube_out = agg.aggregate_gridded(self.kernel)
 
         result_data = numpy.array(53)
-        assert numpy.allclose(result_data, cube_out[0].data)
+        assert_arrays_almost_equal(result_data, cube_out[0].data)
 
 
 class TestGriddedListAggregation(TestCase):
@@ -162,8 +161,8 @@ class TestGriddedListAggregation(TestCase):
         assert isinstance(cube_out, GriddedDataList)
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
-        assert numpy.allclose(result1, cube_out[0].data)
-        assert numpy.allclose(result2, cube_out[1].data)
+        assert_arrays_almost_equal(result1, cube_out[0].data)
+        assert_arrays_almost_equal(result2, cube_out[1].data)
         assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     def test_aggregate_mean(self):
@@ -183,8 +182,8 @@ class TestGriddedListAggregation(TestCase):
         assert isinstance(cube_out, GriddedDataList)
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
-        assert numpy.allclose(result1, cube_out[0].data)
-        assert numpy.allclose(result2, cube_out[1].data)
+        assert_arrays_almost_equal(result1, cube_out[0].data)
+        assert_arrays_almost_equal(result2, cube_out[1].data)
 
     def test_complete_collapse_one_dim_using_moments_kernel(self):
         self.kernel = aggregation_kernels['moments']
@@ -213,12 +212,12 @@ class TestGriddedListAggregation(TestCase):
         assert mean_2.var_name == 'var2'
         assert stddev_2.var_name == 'var2_std_dev'
         assert count_2.var_name == 'var2_num_points'
-        assert numpy.allclose(mean_1.data, expect_mean)
-        assert numpy.allclose(mean_2.data, expect_mean + 10)
-        assert numpy.allclose(stddev_1.data, expect_stddev)
-        assert numpy.allclose(stddev_2.data, expect_stddev)
-        assert numpy.allclose(count_1.data, expect_count)
-        assert numpy.allclose(count_2.data, expect_count)
+        assert_arrays_almost_equal(mean_1.data, expect_mean)
+        assert_arrays_almost_equal(mean_2.data, expect_mean + 10)
+        assert_arrays_almost_equal(stddev_1.data, expect_stddev)
+        assert_arrays_almost_equal(stddev_2.data, expect_stddev)
+        assert_arrays_almost_equal(count_1.data, expect_count)
+        assert_arrays_almost_equal(count_2.data, expect_count)
 
     def test_complete_collapse_two_dims_using_moments_kernel(self):
         self.kernel = aggregation_kernels['moments']
@@ -269,9 +268,9 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         cube_out = agg.aggregate_ungridded(self.kernel)
 
-        result = numpy.ma.array([0, 0, 1.0, 0, 0], mask=[1, 1, 0, 1, 1], fill_value=float('inf'))
+        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
 
-        assert numpy.array_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
+        assert_arrays_equal(numpy.ma.filled(cube_out.data), numpy.ma.filled(result))
 
     @istest
     def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
@@ -385,9 +384,9 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
 
-        expect_mean = numpy.array([3.2, 11])
-        expect_stddev = numpy.array([numpy.sqrt(3.7), numpy.sqrt(26/3.0)])
-        expect_count = numpy.array([5, 7])
+        expect_mean = numpy.array([[3.2], [11]])
+        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26/3.0)]])
+        expect_count = numpy.array([[5], [7]])
 
         assert isinstance(output, GriddedDataList)
         assert len(output) == 3
@@ -395,9 +394,9 @@ class TestUngriddedAggregation(TestCase):
         assert actual_mean.var_name == 'rain'
         assert actual_stddev.var_name == 'rain_std_dev'
         assert actual_count.var_name == 'rain_num_points'
-        assert numpy.allclose(actual_mean.data, expect_mean)
-        assert numpy.allclose(actual_stddev.data, expect_stddev)
-        assert numpy.allclose(actual_count.data, expect_count)
+        assert_arrays_almost_equal(actual_mean.data, expect_mean)
+        assert_arrays_almost_equal(actual_stddev.data, expect_stddev)
+        assert_arrays_almost_equal(actual_count.data, expect_count)
 
     def test_aggregation_two_dims_using_moments_kernel(self):
         self.kernel = moments()
@@ -418,23 +417,39 @@ class TestUngriddedAggregation(TestCase):
         assert actual_mean.var_name == 'rain'
         assert actual_stddev.var_name == 'rain_std_dev'
         assert actual_count.var_name == 'rain_num_points'
-        assert numpy.allclose(actual_mean.data, expect_mean)
-        assert numpy.allclose(actual_stddev.data, expect_stddev)
-        assert numpy.allclose(actual_count.data, expect_count)
+        assert_arrays_almost_equal(actual_mean.data, expect_mean)
+        assert_arrays_almost_equal(actual_stddev.data, expect_stddev)
+        assert_arrays_almost_equal(actual_count.data, expect_count)
 
     def test_aggregating_on_grid_0_to_360_when_data_is_minus_180_to_180(self):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=-175., lon_max=145.)
         grid = {'x': AggregationGrid(125, 270, 40, False)}
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
-        assert (output.data.tolist() == [13.5, 5.5, 6.5, 7.5])
+        assert_arrays_equal(output.data, [[13.5, 5.5, 6.5, 7.5]])
 
     def test_aggregating_on_grid_minus_180_to_180_when_data_is_0_to_360(self):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=5., lon_max=325.)
         grid = {'x': AggregationGrid(-75, 125, 40, False)}
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
-        assert (output.data.tolist() == [12.5, 13.5, 5.5, 6.5, 7.5])
+        assert_arrays_equal(output.data, [[12.5, 13.5, 5.5, 6.5, 7.5]])
+
+    def test_collapsed_coords_get_output_as_length_1(self):
+        data = make_regular_2d_ungridded_data()
+        grid = {'x': AggregationGrid(0, 360, 10, False)}
+        agg = Aggregator(data, grid)
+        output = agg.aggregate_ungridded(self.kernel)
+        lat = output.coord('latitude')
+        assert_that(lat.points, is_([0]))
+
+    def test_collapsed_coords_get_max_min_bounds(self):
+        data = make_regular_2d_ungridded_data()
+        grid = {'y': AggregationGrid(-90, 90, 10, False)}
+        agg = Aggregator(data, grid)
+        output = agg.aggregate_ungridded(self.kernel)
+        lon = output.coord('longitude')
+        assert_arrays_equal(lon.bounds, [[-5, 5]])
 
 
 class TestUngriddedListAggregation(TestCase):
@@ -482,9 +497,9 @@ class TestUngriddedListAggregation(TestCase):
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
 
-        expect_mean = numpy.array([3.2, 11])
-        expect_stddev = numpy.array([numpy.sqrt(3.7), numpy.sqrt(26.0/3)])
-        expect_count = numpy.array([5, 7])
+        expect_mean = numpy.array([[3.2], [11]])
+        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26.0/3)]])
+        expect_count = numpy.array([[5], [7]])
 
         assert isinstance(output, GriddedDataList)
         assert len(output) == 6
@@ -495,12 +510,12 @@ class TestUngriddedListAggregation(TestCase):
         assert mean_2.var_name == 'snow'
         assert stddev_2.var_name == 'snow_std_dev'
         assert count_2.var_name == 'snow_num_points'
-        assert numpy.allclose(mean_1.data, expect_mean)
-        assert numpy.allclose(stddev_1.data, expect_stddev)
-        assert numpy.allclose(count_1.data, expect_count)
-        assert numpy.allclose(mean_2.data, expect_mean + 10)
-        assert numpy.allclose(stddev_2.data, expect_stddev)
-        assert numpy.allclose(count_2.data, expect_count)
+        assert_arrays_almost_equal(mean_1.data, expect_mean)
+        assert_arrays_almost_equal(stddev_1.data, expect_stddev)
+        assert_arrays_almost_equal(count_1.data, expect_count)
+        assert_arrays_almost_equal(mean_2.data, expect_mean + 10)
+        assert_arrays_almost_equal(stddev_2.data, expect_stddev)
+        assert_arrays_almost_equal(count_2.data, expect_count)
 
     def test_aggregation_two_dims_using_moments_kernel(self):
         self.kernel = moments()
@@ -528,9 +543,9 @@ class TestUngriddedListAggregation(TestCase):
         assert mean_2.var_name == 'snow'
         assert stddev_2.var_name == 'snow_std_dev'
         assert count_2.var_name == 'snow_num_points'
-        assert numpy.allclose(mean_1.data, expect_mean)
-        assert numpy.allclose(stddev_1.data, expect_stddev)
-        assert numpy.allclose(count_1.data, expect_count)
-        assert numpy.allclose(mean_2.data, expect_mean + 10)
-        assert numpy.allclose(stddev_2.data, expect_stddev)
-        assert numpy.allclose(count_2.data, expect_count)
+        assert_arrays_almost_equal(mean_1.data, expect_mean)
+        assert_arrays_almost_equal(stddev_1.data, expect_stddev)
+        assert_arrays_almost_equal(count_1.data, expect_count)
+        assert_arrays_almost_equal(mean_2.data, expect_mean + 10)
+        assert_arrays_almost_equal(stddev_2.data, expect_stddev)
+        assert_arrays_almost_equal(count_2.data, expect_count)

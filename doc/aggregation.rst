@@ -57,7 +57,9 @@ where:
   ``z``, ``p`` which refer to longitude, latitude, time, altitude and pressure respectively.
 
   * *Complete collapse* - To perform a complete collapse of a coordinate, simply provide the name of the coordinate(s)
-    as a comma separated list - e.g. ``x,y`` will aggregate data completely over both latitude and longitude.
+    as a comma separated list - e.g. ``x,y`` will aggregate data completely over both latitude and longitude. For
+    ungridded data this will result in length one coordinates with bounds reflecting the maximum and minimum values of the
+    collapsed coordinate.
   * *Partial collapse* - To aggregate a coordinate into bins, specify the start, end and step size of those bins in the
     form ``coordinate=[start,end,step]``. The step may be missed out, in which case the bin will span the whole range
     given. Partial collapse is currently only supported for ungridded data.

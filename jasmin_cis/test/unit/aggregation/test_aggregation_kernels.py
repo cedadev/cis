@@ -74,9 +74,9 @@ class TestMomentsKernel(unittest.TestCase):
         expected_std_dev = numpy.array([numpy.sqrt(3.5), numpy.sqrt(7.5)])
         expected_no = numpy.array([6, 9])
         assert_that(len(result), is_(3))
-        assert_arrays_almost_equal(result[0].data, expected_means)
-        assert_arrays_almost_equal(result[1].data, expected_std_dev)
-        assert_that(numpy.array_equal(result[2].data, expected_no))
+        assert_arrays_almost_equal(result[0].data.flatten(), expected_means)
+        assert_arrays_almost_equal(result[1].data.flatten(), expected_std_dev)
+        assert_that(numpy.array_equal(result[2].data.flatten(), expected_no))
 
     def test_GIVEN_ungridded_data_WHEN_collapse_THEN_metadata_correct(self):
         grid = {'y': AggregationGrid(-10, 10, 10, False)}

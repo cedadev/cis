@@ -75,31 +75,19 @@ class Aggregator(object):
 
         for coord in self.data.coords():
             grid, guessed_axis = self.get_grid(coord)
-
+            if grid is None:
+                new_coord = self._make_fully_collapsed_coord(coord)
             if grid is not None and isnan(grid.delta):
+                # Issue a warning and then still collapse fully
                 logging.warning('Coordinate ' + guessed_axis + ' was given without a grid. No need to specify '
                                 'coordinates for complete collapse, all coordinates without a grid specified are '
                                 'automatically collapsed for ungridded aggregation.')
-
+                new_coord = self._make_fully_collapsed_coord(coord)
             if grid is not None and not isnan(grid.delta):
-                if grid.is_time or guessed_axis == 'T':
-                    # Ensure that the limits are date/times.
-                    dt = parse_datetime.convert_datetime_components_to_datetime(grid.start, True)
-                    grid_start = Subset._convert_datetime_to_coord_unit(coord, dt)
-                    dt = parse_datetime.convert_datetime_components_to_datetime(grid.end, False)
-                    grid_end = Subset._convert_datetime_to_coord_unit(coord, dt)
-                    grid_delta = grid.delta
-                else:
-                    # Assume to be a non-time axis
-                    (grid_start, grid_end) = Subset._fix_non_circular_limits(float(grid.start), float(grid.end))
-                    grid_delta = float(grid.delta)
-
-                new_coordinate_grid = aggregation_grid_array(grid_start, grid_end, grid_delta, grid.is_time, coord)
-                new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
-                                     units=coord.units)
-                new_cube_coords.append((new_coord, i))
-                new_cube_shape.append(len(new_coord.points))
-                i += 1
+                new_coord = self._make_partially_collapsed_coord(coord, grid, guessed_axis)
+            new_cube_coords.append((new_coord, i))
+            new_cube_shape.append(len(new_coord.points))
+            i += 1
 
         if len(self._grid) != 0:
             raise CoordinateNotFoundError('No coordinate found that matches {}. Please check the coordinate '
@@ -111,11 +99,78 @@ class Aggregator(object):
         colocator = GeneralGriddedColocator()
         constraint = BinnedCubeCellOnlyConstraint()
         aggregated_cube = colocator.colocate(aggregation_cube, self.data, constraint, kernel)
+        self._add_max_min_bounds_for_collapsed_coords(aggregated_cube, self.data)
 
         if len(aggregated_cube) == 1:
             return aggregated_cube[0]
         else:
             return aggregated_cube
+
+    def _make_fully_collapsed_coord(self, coord):
+        """
+        Make a new DimCoord which represents a fully collapsed coordinate.
+        This DimCoord will have infinite bounds so as to include all points.
+        :param coord:
+        :return:
+        """
+        cell_start, cell_end, cell_centre = self._get_coord_start_end_centre(coord)
+        cell_points = numpy.array([cell_centre])
+        cell_bounds = numpy.array([[-numpy.inf, numpy.inf]])
+        new_coord = DimCoord(cell_points, var_name=coord.name(), standard_name=coord.standard_name,
+                             units=coord.units, bounds=cell_bounds)
+        return new_coord
+
+    def _make_partially_collapsed_coord(self, coord, grid, guessed_axis):
+        """
+        Make a new DimCoord which represents a partially collapsed (aggregated into bins) coordinate.
+        This dimcoord will have a grid
+        :type coord: data_io.Coord.Coord
+        :param coord: Coordinate to partially collapse
+        :type grid: aggregation.aggregation_grid.AggregationGrid
+        :param grid: grid on which this coordinate will aggregate
+        :type guessed_axis: str
+        :param guessed_axis: String identifier of the axis to which this coordinate belongs (e.g. 'T', 'X')
+        :return: DimCoord
+        """
+        if grid.is_time or guessed_axis == 'T':
+            # Ensure that the limits are date/times.
+            dt = parse_datetime.convert_datetime_components_to_datetime(grid.start, True)
+            grid_start = Subset._convert_datetime_to_coord_unit(coord, dt)
+            dt = parse_datetime.convert_datetime_components_to_datetime(grid.end, False)
+            grid_end = Subset._convert_datetime_to_coord_unit(coord, dt)
+            grid_delta = grid.delta
+        else:
+            # Assume to be a non-time axis
+            (grid_start, grid_end) = Subset._fix_non_circular_limits(float(grid.start), float(grid.end))
+            grid_delta = float(grid.delta)
+        new_coordinate_grid = aggregation_grid_array(grid_start, grid_end, grid_delta, grid.is_time, coord)
+        new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
+                             units=coord.units)
+        return new_coord
+
+    def _add_max_min_bounds_for_collapsed_coords(self, aggregated_cube, source_cube):
+        """
+        Add bounds onto all coordinates which have been full collapsed. These bounds will
+        be the maximum and minimum values of those coordinates
+        :param aggregated_cube: The aggregated cube to give new bounds
+        :param source_cube: The source cube which the aggregation was made from.
+        """
+        for coord in aggregated_cube.coords():
+            if len(coord.points) == 1:
+                source_coord = source_cube.coord(coord.name())
+                coord_start, coord_end, coord_centre = self._get_coord_start_end_centre(source_coord)
+                coord.bounds = numpy.array([[coord_start, coord_end]])
+
+    def _get_coord_start_end_centre(self, coord):
+        """
+        Get the coordinates start, end and midpoint values
+        :param coord: Coordinate
+        :return: Tuple of (start, end, midpoint)
+        """
+        start = numpy.min(coord.points)
+        end = numpy.max(coord.points)
+        centre = start + (end - start) / 2.0
+        return start, end, centre
 
     def get_grid(self, coord):
 
