@@ -917,9 +917,9 @@ class GeneralGriddedColocator(Colocator):
 
         logging.info("--> Co-locating...")
 
-        if hasattr(kernel, "get_value_for_data_only") and hasattr(constraint, "get_interator_for_data_only"):
+        if hasattr(kernel, "get_value_for_data_only") and hasattr(constraint, "get_iterator_for_data_only"):
             # Iterate over constrained cells
-            iterator = constraint.get_interator_for_data_only(
+            iterator = constraint.get_iterator_for_data_only(
                 self.missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)
             for out_indices, data_values in iterator:
                 try:
@@ -1077,7 +1077,7 @@ class BinnedCubeCellOnlyConstraint(Constraint):
 
                 yield out_indices, hp, con_points
 
-    def get_interator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+    def get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
 
         data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
         if missing_data_for_missing_sample:

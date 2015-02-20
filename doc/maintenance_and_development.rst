@@ -193,7 +193,7 @@ The user can also add a new constraint method by subclassing Constraint and prov
 ``get_iterator`` can be
 overloaded in additional to constrain_points, this may not be respected by all colocators who may still iterate over all
 sample data points. To enable a constraint to use a AbstractDataOnlyKernel the method
-``get_interator_for_data_only`` should be implemented (again this may be ignored by a colocator).
+``get_iterator_for_data_only`` should be implemented (again this may be ignored by a colocator).
 
 ``constrain_points(self, ref_point, data)``
 
@@ -215,7 +215,7 @@ sample data points. To enable a constraint to use a AbstractDataOnlyKernel the m
  * ``points`` is the original sample points object
  * ``output_data`` is the output data
 
-``get_interator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)``
+``get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)``
 
  The method should return an iterator over the output indices and a numpy array of the data values.
  This may not be called by all colocators who may choose to iterate over all sample points instead. The parameters are
