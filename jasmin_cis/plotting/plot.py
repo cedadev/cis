@@ -13,7 +13,7 @@ from jasmin_cis.plotting.comparative_scatter import Comparative_Scatter
 from jasmin_cis.plotting.overlay import Overlay
 from jasmin_cis.plotting.histogram2d import Histogram_2D
 from jasmin_cis.plotting.histogram3d import Histogram_3D
-from jasmin_cis.utils import wrap_longitude_coordinate_values
+from jasmin_cis.utils import wrap_longitude_coordinate_values, listify
 import matplotlib.pyplot as mpl
 
 plot_options = { 'title' : mpl.title,
@@ -85,10 +85,12 @@ class Plotter(object):
                      "plotheight" : mplkwargs.pop("plotheight"),
                      "cbarscale" : mplkwargs.pop("cbarscale") }
 
+        packed_data_items = self._remove_length_one_dimensions(packed_data_items)
         self.mplkwargs = mplkwargs
         self.remove_unassigned_arguments()
 
-        if plot_type is None: plot_type = self.set_default_plot_type(packed_data_items)
+        if plot_type is None:
+            plot_type = self.set_default_plot_type(packed_data_items)
 
         # Do wrapping
         x_range = plot_args.get('xrange', None)
@@ -170,3 +172,19 @@ class Plotter(object):
             if all_coords_are_of_same_shape:
                 error_message += "\nThe shape of its coordinates is: " + str(data[0].coords()[0].shape)
             raise InvalidPlotTypeError(error_message)
+
+    def _remove_length_one_dimensions(self, packed_data):
+        listify(packed_data)
+        new_data_list = []
+        for data in packed_data:
+            if data.is_gridded:
+                #  Ensure that there are no extra dimensions which can confuse the plotting.
+                # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
+                #  the dimension whose length is one. The above list comprehension would return a cube of
+                #  shape (145, 165)
+                new_data = list(data.slices([coord for coord in data.coords(dim_coords=True)
+                                            if coord.points.size > 1]))[0]
+                new_data_list.append(new_data)
+            else:
+                new_data_list.append(data)
+        return new_data_list

@@ -314,13 +314,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         except iris.exceptions.CoordinateNotFoundError:
             pass
 
-        sub_cube = list(cube.slices([ coord for coord in cube.coords(dim_coords=True) if coord.points.size > 1]))[0]
-        #  Ensure that there are no extra dimensions which can confuse the plotting.
-        # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
-        #  the dimension whose length is one. The above list comprehension would return a cube of
-        #  shape (145, 165)
-
-        return sub_cube
+        return cube
 
 
 class DisplayConstraint(iris.Constraint):

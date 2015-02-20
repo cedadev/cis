@@ -3,7 +3,7 @@ Module to do integration tests of plots to files. Does not check the graph creat
 created without errors.
 """
 from jasmin_cis.data_io.products.AProduct import ProductPluginException
-from jasmin_cis.cis import plot_cmd, subset_cmd
+from jasmin_cis.cis import plot_cmd, subset_cmd, aggregate_cmd
 from jasmin_cis.parse import parse_args
 from jasmin_cis.test.test_files.data import *
 from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
@@ -124,7 +124,7 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_subset_ECHAM_over_0_360_boundary_plots_OK(self):
         var = valid_echamham_variable_1
         filename = valid_echamham_filename
-        args = ['subset', var + ':' + filename, 'x=[350,10]', '-o', self.OUTPUT_NAME]
+        args = ['subset', var + ':' + filename, 'x=[-10,10]', '-o', self.OUTPUT_NAME]
         args = parse_args(args)
         subset_cmd(args)
         out_name = 'subset_echam_boundary.png'
@@ -167,6 +167,23 @@ class TestPlotIntegration(BaseIntegrationTest):
         subset_cmd(args)
         out_name = '3d_out.png'
         args = ['plot', variable + ':' + self.GRIDDED_OUTPUT_FILENAME, '-o', out_name]
+        main_arguments = parse_args(args)
+        plot_cmd(main_arguments)
+
+        os.remove(out_name)
+
+    def test_plot_aggregated_aeronet(self):
+        # Aggregated aeronet has multiple length 1 dimensions, so we want to make sure we can plot it OK.
+        # JASCIS-183
+        variable = 'Solar_Zenith_Angle'
+        filename = valid_aeronet_filename
+        agg_args = ['aggregate', variable + ':' + filename,
+                    't=[2003-09-24T07:00:00,2003-11-04T07:00:00,P1D]', '-o', self.OUTPUT_NAME]
+        args = parse_args(agg_args)
+        aggregate_cmd(args)
+        out_name = 'aeronet_out.png'
+        args = ['plot', variable + ':' + self.GRIDDED_OUTPUT_FILENAME,
+                '--xaxis', 'time', '--yaxis', variable, '-o', out_name]
         main_arguments = parse_args(args)
         plot_cmd(main_arguments)
 
