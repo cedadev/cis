@@ -306,14 +306,6 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         except ValueError as e:
             raise IOError(str(e))
 
-        # Fix to create a hybrid pressure factory in Iris. More attempts may be required for different file types. This
-        # should be removed once the relevant Iris issue is resolved https://github.com/SciTools/iris/issues/933.
-        try:
-            cube.add_aux_factory(iris.aux_factory.HybridPressureFactory(
-                cube.coord(var_name="hyam"), cube.coord(var_name="hybm"), cube.coord(var_name="PS")))
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
-
         return cube
 
 
