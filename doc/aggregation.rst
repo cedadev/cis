@@ -36,13 +36,13 @@ where:
   * ``kernel=<kernel>`` - the method by which the value in each aggregation cell is determined. ``<kernel>`` should be
     one of:
 
-    * ``mean`` - use the mean value of all the data points in that aggregation cell. This mean is weighted to take into
-      account differing cell areas due to the projection of lat/lon lines on the Earth.
+    * ``mean`` - use the mean value of all the data points in that aggregation cell. For gridded data, this mean is
+      weighted to take into account differing cell areas due to the projection of lat/lon lines on the Earth.
     * ``min`` - use the lowest valid value of all the data points in that aggregate cell.
     * ``max`` - use the highest valid value of all the data points in that aggregate cell.
-    * ``moments`` - In addition to returning the weighted mean value of each cell, this kernel also outputs the number
-      of points used to calculate that mean and the standard deviation of those values, each as a separate variable
-      in the output file.
+    * ``moments`` - In addition to returning the mean value of each cell (weighted where applicable), this kernel also
+      outputs the number of points used to calculate that mean and the standard deviation of those values, each as a
+      separate variable in the output file.
 
     If not specified the default is ``moments``.
 

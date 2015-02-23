@@ -29,6 +29,10 @@ These values will be displayed on screen and can optionally be save as NetCDF ou
     Only points which have non-missing values for both variables will be included in the analysis. The number of points
     this includes is part of the output of the stats command.
 
+.. warning::
+    Unlike :ref:`aggregation <aggregation>`, ``stats`` does **not** currently use latitude weighting to account for the
+    relative areas of different grid cells.
+
 The statistics syntax looks like this::
 
     $ cis stats <datagroup>... [-o <outputfile>]
