@@ -25,6 +25,8 @@ class Heatmap(Generic_Plot):
             self.mplkwargs["latlon"] = True
 
         x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.plot_args)
+        x_coord = self.packed_data_items[0].coord(self.plot_args['x_variable'])
+        self.plotting_library.projparams['lon_0'] = max(x_coord)
 
         self.plotting_library.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs)
 
