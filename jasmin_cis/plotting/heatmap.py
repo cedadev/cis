@@ -25,9 +25,7 @@ class Heatmap(Generic_Plot):
             self.mplkwargs["latlon"] = True
 
         x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.plot_args)
-        # If latlon=True, Basemap does some clever manipulation of the coordinates. It
-        # causes lots of problems and seems to work OK without it though, so remove it for heatmaps
-        self.mplkwargs.pop("latlon", None)
+
         self.plotting_library.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs)
 
     def set_default_axis_label(self, axis):
@@ -60,4 +58,11 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     y_vals = [b[0] for b in y_bounds] + [y_bounds[-1][1]]
 
     xv, yv = numpy.meshgrid(x_vals, y_vals)
-    return xv, yv, data
+
+    # The data needs to have an empty column and row appended to pass through Basemap's longitude shifting routine.
+    # This is a bug in Basemap really, since the underlying pcolormesh() method recommends that the data be smaller
+    # than the x and y arrays.
+    wider_data = numpy.ma.zeros(xv.shape)
+    for index, v in numpy.ndenumerate(data):
+        wider_data[index] = data[index]
+    return xv, yv, wider_data
