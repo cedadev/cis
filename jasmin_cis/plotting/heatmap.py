@@ -1,5 +1,6 @@
 import numpy
 
+from jasmin_cis.exceptions import UserPrintableException
 from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 
@@ -13,6 +14,9 @@ class Heatmap(Generic_Plot):
             raise InvalidNumberOfDatagroupsSpecifiedError("Invalid number of datagroups specified. Only one datagroup "
                                                           "can be plotted for a heatmap.")
 
+        if not self.packed_data_items[0].is_gridded:
+            raise UserPrintableException("Heatmap can only be plotted for gridded data")
+
         # Set the options specific to a datagroup with the heatmap type
         self.mplkwargs['cmap'] = self.plot_args['datagroups'][self.datagroup]['cmap']
 
@@ -25,10 +29,13 @@ class Heatmap(Generic_Plot):
             self.mplkwargs["latlon"] = True
 
         x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.plot_args)
-        x_coord = self.packed_data_items[0].coord(self.plot_args['x_variable'])
-        self.plotting_library.projparams['lon_0'] = max(x_coord)
 
         self.plotting_library.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs)
+
+    def get_data_items_max(self):
+        # Take into account the bounds
+        x_coord = self.packed_data_items[0].coord(self.plot_args['x_variable'])
+        return max(x_coord.bounds)
 
     def set_default_axis_label(self, axis):
         return self.set_3daxis_label(axis)
