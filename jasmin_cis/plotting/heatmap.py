@@ -35,7 +35,9 @@ class Heatmap(Generic_Plot):
     def get_data_items_max(self):
         # Take into account the bounds
         x_coord = self.packed_data_items[0].coord(self.plot_args['x_variable'])
-        return max(x_coord.bounds)
+        if not x_coord.has_bounds():
+            x_coord.guess_bounds()
+        return numpy.max(x_coord.bounds)
 
     def set_default_axis_label(self, axis):
         return self.set_3daxis_label(axis)
