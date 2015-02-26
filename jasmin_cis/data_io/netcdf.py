@@ -93,37 +93,6 @@ def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotempora
                     break
 
 
-def read_attributes_and_variables_many_files(filenames):
-    """
-    Read attributes and variables from a netcdf file collection. It uses first file as the master from which it reads
-    the data
-
-    :param filenames:  A list of NetCDF filenames to read, or a string with wildcards.
-    :return: a dictionary of attributes and their values, a list of variable names, dictionary of variables.
-      Variables in NetCDF4 Hierarchical groups are given as fully qualified variables in the form
-      ``<group1>.<group2....>.<variable_name>``, e.g. ``AVHRR.Ch4CentralWavenumber``.
-    """
-    import glob
-    from netCDF4 import Dataset
-
-    if len(filenames) == 0:
-        raise IOError("No filenames in filename list to read")
-
-    files = glob.glob(filenames[0])
-    if len(files) == 0:
-        raise IOError("No filenames in filename list to read")
-
-    try:
-        datafile = Dataset(files[0])
-    except RuntimeError as e:
-        raise IOError(e)
-
-    # Include NetCDF4 hierarchical groups too:
-    datafile_variables = _get_all_fully_qualified_variables(datafile)
-    variable_dimensions = {name: variable.dimensions for name, variable in datafile_variables.items()}
-    return datafile.__dict__, datafile_variables.keys(), variable_dimensions
-
-
 def read_many_files(filenames, usr_variables, dim=None):
     """
     Reads a single Variable from many NetCDF files. This method uses the netCDF4 MFDataset class and so is NOT
