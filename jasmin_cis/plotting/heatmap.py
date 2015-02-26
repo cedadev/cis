@@ -58,9 +58,12 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     :param plot_args: dictionary of plot arguments
     :return:
     """
-    x = packed_data_item.coord(plot_args['x_variable'])
-    y = packed_data_item.coord(plot_args['y_variable'])
+    from jasmin_cis.utils import get_coord
     data = packed_data_item.data
+    x = get_coord(packed_data_item, plot_args['x_variable'], data)
+    y = get_coord(packed_data_item, plot_args['y_variable'], data)
+    x_dim = packed_data_item.coord_dims(x)
+    y_dim = packed_data_item.coord_dims(x)
     for coord in (x, y):
         if not coord.has_bounds():
             coord.guess_bounds()
@@ -68,7 +71,11 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     x_vals = [b[0] for b in x.bounds] + [x.bounds[-1][1]]
     y_vals = [b[0] for b in y_bounds] + [y_bounds[-1][1]]
 
-    xv, yv = numpy.meshgrid(x_vals, y_vals)
+    # Get the order right
+    if x_dim > y_dim:
+        xv, yv = numpy.meshgrid(x_vals, y_vals)
+    else:
+        yv, xv = numpy.meshgrid(y_vals, x_vals)
 
     # The data needs to have an empty column and row appended to pass through Basemap's longitude shifting routine.
     # This is a bug in Basemap really, since the underlying pcolormesh() method recommends that the data be smaller
