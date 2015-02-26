@@ -109,9 +109,9 @@ class TestAggregation(BaseAggregationTest):
                             [i, i, i, i, 0.127948367761241, i, i, i, i, i, i, i, i, i, i, 0.0958142693422429]])
         ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         data_550 = ds.variables['AOD550']
-        assert_that(np.allclose(data_550[:], arr_550))
+        assert_arrays_almost_equal(data_550[:], arr_550.reshape(arr_550.shape + (1,)))
         data_870 = ds.variables['AOD870']
-        assert_that(np.allclose(data_870[:], arr_870))
+        assert_arrays_almost_equal(data_870[:], arr_870.reshape(arr_870.shape + (1,)))
 
     def test_aggregation_over_time(self):
         # Takes 14s

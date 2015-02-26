@@ -146,6 +146,7 @@ class Aggregator(object):
         new_coordinate_grid = aggregation_grid_array(grid_start, grid_end, grid_delta, grid.is_time, coord)
         new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
                              units=coord.units)
+        new_coord.guess_bounds()
         return new_coord
 
     def _add_max_min_bounds_for_collapsed_coords(self, aggregated_cube, source_cube):
