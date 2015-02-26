@@ -110,6 +110,10 @@ See :ref:`datagroups` for a more detailed explanation of datagroups.
     would be invalid (consider the previous rule). However, you could add the mean (over the whole array) of one
     variable to every point on a second variable by doing ``var1 + numpy.mean(var2)``.
 
+.. note::
+    CIS eval command will flatten ungridded data so that structure present in the input files will be ignored. This
+    allows you to compare ungridded data with different shapes, e.g. (3,5) and (15,)
+
 ``<outputfile>``
   is an optional argument specifying the file to output to. This will be automatically given a ``.nc`` extension if not
   present and if the output is ungridded, will be prepended with ``cis-`` to identify it as a CIS output file. This must

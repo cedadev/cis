@@ -84,9 +84,24 @@ class TestCalculator(unittest.TestCase):
         expr = 'var1 + var2'
 
         res = self.calc.evaluate(self.data, expr)
-        expected = 2 * self.data[1].data
+        expected = 2 * self.data[1].data.flatten()
 
         assert_that(numpy.array_equal(res.data, expected))
+
+    def test_GIVEN_ungridded_data_one_flattened_WHEN_calculate_THEN_compared_on_flattened_grid(self):
+        data1 = mock.make_regular_2d_ungridded_data()
+        data2 = mock.make_regular_2d_ungridded_data()
+        data2._data = data2.data_flattened
+        for coord in data2.coords():
+            coord._data = coord.data_flattened
+        data1.metadata._name = 'var1'
+        data2.metadata._name = 'var2'
+        self.data = [data1, data2]
+        expr = 'var1 + var2'
+        res = self.calc.evaluate(self.data, expr)
+        expected = 2 * self.data[1].data
+        assert_that(numpy.array_equal(res.data, expected))
+        assert_that(res.data.shape, is_((15,)))
 
     def test_GIVEN_ungridded_missing_values_WHEN_calculate_THEN_missing_values_preserved(self):
         data = mock.make_regular_2d_ungridded_data_with_missing_values()
@@ -96,7 +111,7 @@ class TestCalculator(unittest.TestCase):
 
         res = self.calc.evaluate(self.data, expr)
         expected = numpy.ma.masked_invalid([[11, 12, 13], [14, float('Nan'), 16], [17, 18, float('Nan')],
-                                            [20, 21, 22], [float('Nan'), 24, 25]])
+                                            [20, 21, 22], [float('Nan'), 24, 25]]).flatten()
         compare_masked_arrays(res.data, expected)
 
     def test_GIVEN_two_variables_WHEN_calculate_THEN_variable_values_not_changed(self):

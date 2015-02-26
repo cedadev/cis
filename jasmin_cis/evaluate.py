@@ -1,3 +1,4 @@
+from operator import mul
 import numpy
 
 from jasmin_cis.cis import __version__
@@ -37,7 +38,10 @@ class Calculator(object):
         for var in data_list:
             assert isinstance(var.alias, str)
             assert isinstance(var.data, numpy.ndarray)
-            safe_locals[var.alias] = var.data
+            if not var.is_gridded:
+                safe_locals[var.alias] = var.data_flattened
+            else:
+                safe_locals[var.alias] = var.data
         try:
             result = eval(expr, safe_globals, safe_locals)
         except NameError as ex:
@@ -67,12 +71,16 @@ class Calculator(object):
         # - The coordinates are all the same
         # - The shape is all the same
         sample_data = data_list[0]
-        if not sample_data.data.shape == result_array.shape:
+        sample_shape = sample_data.data.shape
+        if not sample_data.is_gridded:
+            # Allow ungridded data to be flattened
+            sample_shape = (reduce(mul, sample_shape),)
+        if not sample_shape == result_array.shape:
             raise EvaluationError("The resulting array is not the same shape as the original data. "
                                   "Check your expression")
         return sample_data.make_new_with_same_coordinates(data=result_array, var_name=var_name,
                                                           standard_name=standard_name, long_name=long_name,
-                                                          history=history, units=units)
+                                                          history=history, units=units, flatten=True)
 
     def _make_history(self, data_list, expr):
         """

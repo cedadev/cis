@@ -8,31 +8,26 @@ One of the key features of the Community Intercomparison Suite (CIS) is the abil
 
 To perform co-location, run a command of the format::
 
-  $ cis col datagroup [datagroup [...]] samplegroup -o outputfile
+  $ cis col <datagroup> [<datagroup> [...]] <samplegroup> -o <outputfile>
 
 where:
 
-``datagroup``
-  is of the format ``variable:filenames[:product_option]``. One or more datagroups should be specified. 
+``<datagroup>``
+  is a :ref:`CIS datagroup <datagroups>` specifying the variables and files to read and is of the format
+  ``<variable>...:<filename>[:product=<productname>]`` where:
 
-    * ``variable`` is the name of the variable the data of which is to be colocated. Alternatively, this may be a comma separated list of variables to colocate, in which case output file will contain all of these variables. Currently, they must be on the same grid / use the same coordinates.
+    * ``<variable>`` is a mandatory variable or list of variables to use.
+    * ``<filenames>`` is a mandatory file or list of files to read from.
+    * ``<productname>`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-    * ``filenames`` specifies the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
+  See :ref:`datagroups` for a more detailed explanation of datagroups.
 
-      \1. |nbsp| a single filename - this should be the full path to the file
+``<samplegroup>``
+  is of the format ``<filename>[:<options>]`` The available options are described in more detail below. They are entered
+   in a comma separated list, such as ``variable=Temperature,colocator=bin,kernel=mean``. Not all combinations of
+   colocator and kernel options can be used - see the descriptions below.
 
-      \2. |nbsp| a single directory - all files in this directory will be read
-
-      \3. |nbsp| a wildcarded filename - A filename with any wildcards compatible with the python module glob, so that \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
-
-      Note that when using option 2, the filenames in the directory will be automatically sorted into alphabetical order. When using option 3, the filenames matching the wildcard will also be sorted into alphabetical order. The order of the comma separated list will however remain as the user specified, e.g. ``filename1,filename2,wildc*rd,/my/dir/,filename3``, would read ``filename1``, then ``filename2``, then all the files that match ``"wildc*rd"`` (in alphabetical order), then all the files in the directory ``"/my/dir/"`` (in alphabetical order) and then finally ``filename3``.
-
-    * ``product_option`` is of the form ``product=<product name>``. It should be supplied if the data file name does not match the signature for the correct product type as listed at :ref:`data-products-reading`.
-
-``samplegroup``
-  is of the format ``filename:options`` The available options are described in more detail below. They are entered in a comma separated list, such as ``variable=Temperature,colocator=bin,kernel=mean``. Not all combinations of colocator and kernel options can be used - see the descriptions below.
-
-    * ``filename`` is a single filename with the points to colocate onto.
+    * ``<filename>`` is a single filename with the points to colocate onto.
 
     * ``variable`` is an optional argument used to specify which variable's coordinates to use for colocation. If a variable is specified, a missing value will be set in the output file at every point for which the sample variable has a missing value. If a variable is not specified, non-missing values will be set at all sample points unless colocation at a point does not result in a valid value.
 
@@ -89,7 +84,7 @@ where:
 
     ``product`` is an optional argument used to specify the type of files being read. If omitted, the program will attempt to determine which product to use based on the filename, as listed at :ref:`data-products-reading`.
 
-``outputfile``
+``<outputfile>``
   is an optional argument to specify the name to use for the file output. For ungridded data this is automatically given a ``.nc`` extension and prepended with ``cis-`` to make it distinguishable as a colocated file. For gridded this is only given the ``.nc`` extenstion.
 
 A full example would be::

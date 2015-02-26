@@ -51,7 +51,7 @@ class GriddedData(iris.cube.Cube, CommonData):
             super(GriddedData, self).__init__(*args, **kwargs)
 
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
-                                       long_name=None, history=None, units=None):
+                                       long_name=None, history=None, units=None, flatten=False):
         """
         Create a new, empty GriddedData object with the same coordinates as this one
         :param data: Data to use (if None then defaults to all zeros)
@@ -60,6 +60,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         :param long_name: Variable long name
         :param history: Data history string
         :param units: Variable units
+        :param flatten: Whether to flatten the data shape (for ungridded data only)
         :return: GriddedData instance
         """
         if data is None:
