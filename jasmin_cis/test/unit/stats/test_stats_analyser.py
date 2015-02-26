@@ -5,6 +5,7 @@ from hamcrest import assert_that, is_, close_to
 
 from jasmin_cis.stats import StatsAnalyzer
 from jasmin_cis.data_io.gridded_data import GriddedData
+from jasmin_cis.test.util import mock
 
 
 class TestStatsAnalyser(unittest.TestCase):
@@ -21,6 +22,16 @@ class TestStatsAnalyser(unittest.TestCase):
 
     def test_GIVEN_datasets_WHEN_analyze_THEN_StatisticsResults_returned(self):
         stats = StatsAnalyzer(self.data1, self.data2)
+        results = stats.analyze()
+        assert_that(len(results), is_(14))
+
+    def test_GIVEN_flattened_and_unflattened_datasets_WHEN_analyze_THEN_StatisticsResults_returned(self):
+        data1 = mock.make_regular_2d_ungridded_data()
+        data2 = mock.make_regular_2d_ungridded_data()
+        data2._data = data2.data_flattened
+        for coord in data2.coords():
+            coord._data = coord.data_flattened
+        stats = StatsAnalyzer(data1, data2)
         results = stats.analyze()
         assert_that(len(results), is_(14))
 
