@@ -28,12 +28,12 @@ def delete_file_if_exists():
         os.remove(out_filename)
 
 
-def make_cube(filename, variable = None):
+def make_cube(filename, variable=None):
     if variable is None:
         variable = valid_variable_in_valid_filename
-    variable = iris.AttributeConstraint(name = variable)
+    variable = iris.AttributeConstraint(name=variable)
     cube = iris.load_cube(filename, variable)
-    cube = list(cube.slices([ coord for coord in cube.coords() if coord.points.size > 1]))[0]
+    cube = list(cube.slices([coord for coord in cube.coords() if coord.points.size > 1]))[0]
     return cube
 
 
@@ -92,7 +92,7 @@ class TestHeatMap(unittest.TestCase):
                                     'cmax': None}},
                  'nasabluemarble': False,
                  'coastlinescolour': None
-                }
+                 }
     kwargs = {}
 
     def test_lat_lon_increasing_no_bounds_over_greenwich(self):
@@ -109,9 +109,12 @@ class TestHeatMap(unittest.TestCase):
         expected_y = np.array([[50, 50, 50],
                                [51, 51, 51],
                                [52, 52, 52]])
+        expected_v = np.array([[1, 2, 0],
+                               [3, 4, 0],
+                               [0, 0, 0]])
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
-        assert_arrays_equal(out_values, values)
+        assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
         map = Heatmap([data], self.plot_args)
@@ -131,9 +134,12 @@ class TestHeatMap(unittest.TestCase):
         expected_y = np.array([[50, 50, 50],
                                [51, 51, 51],
                                [52, 52, 52]])
+        expected_v = np.array([[1, 2, 0],
+                               [3, 4, 0],
+                               [0, 0, 0]])
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
-        assert_arrays_equal(out_values, values)
+        assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
         map = Heatmap([data], self.plot_args)
@@ -153,9 +159,12 @@ class TestHeatMap(unittest.TestCase):
         expected_y = np.array([[52, 52, 52],
                                [51, 51, 51],
                                [50, 50, 50]])
+        expected_v = np.array([[1, 2, 0],
+                               [3, 4, 0],
+                               [0, 0, 0]])
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
-        assert_arrays_equal(out_values, values)
+        assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
         map = Heatmap([data], self.plot_args)
@@ -174,7 +183,6 @@ class TestHeatMap(unittest.TestCase):
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
-        assert_arrays_equal(out_values, values)
 
         # Test that a plot doesn't fail.
         map = Heatmap([data], self.plot_args)
@@ -193,7 +201,6 @@ class TestHeatMap(unittest.TestCase):
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
-        assert_arrays_equal(out_values, values)
 
         # Test that a plot doesn't fail.
         map = Heatmap([data], self.plot_args)
