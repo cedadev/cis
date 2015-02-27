@@ -85,6 +85,8 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         self.time_dimensions = None
 
         self._attributes = [{k.lower(): v for k, v in attrs.items()} for attrs in listify(attributes)]
+        if len(variables) == 0:
+            raise InvalidVariableError("No variables in the file so the type of data is unknown")
         self._variables = variables[0].keys()
         self._variable_dimensions = [{name: var.dimensions for name, var in vars.items()}
                                      for vars in listify(variables)]
