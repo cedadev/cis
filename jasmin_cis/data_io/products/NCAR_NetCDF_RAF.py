@@ -85,7 +85,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         self.time_dimensions = None
 
         self._attributes = [{k.lower(): v for k, v in attrs.items()} for attrs in listify(attributes)]
-        self._variables = variables
+        self._variables = variables[0].keys()
         self._variable_dimensions = [{name: var.dimensions for name, var in vars.items()}
                                      for vars in listify(variables)]
         self._check_has_variables_and_attributes()
@@ -130,7 +130,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         """
         if attribute_name.lower() in self._attributes[0]:
             variable_name = self._attributes[0][attribute_name.lower()]
-            if variable_name not in self._variables[0]:  # Just check the first file
+            if variable_name not in self._variables:  # Just check the first file
                 raise InvalidVariableError("There is no variable for the {} co-ordinate '{}'"
                                            .format(coordinate_display_name, variable_name))
             return variable_name
@@ -164,7 +164,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         """
         Check that netcdf file has variables and attributes
         """
-        if self._variables[0] is None or len(self._variables[0]) == 0:
+        if self._variables is None or len(self._variables) == 0:
             raise InvalidVariableError("No variables in the file so the type of data is unknown")
         if self._attributes[0] is None or len(self._attributes[0]) == 0:
             raise InvalidVariableError("No attributes in the file so type of data is unknown")
