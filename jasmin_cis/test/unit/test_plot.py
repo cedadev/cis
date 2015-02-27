@@ -8,8 +8,8 @@ import iris
 from iris.coords import DimCoord
 from iris.cube import Cube
 import numpy as np
-from data_io.gridded_data import make_from_cube
 
+from jasmin_cis.data_io.gridded_data import make_from_cube
 from jasmin_cis.test.test_files.data import *
 from jasmin_cis.plotting.plot import Plotter
 from jasmin_cis.plotting.generic_plot import Generic_Plot
