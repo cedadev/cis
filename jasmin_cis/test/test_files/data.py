@@ -310,6 +310,12 @@ valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_1d_variable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
+valid_echamham_geopotential_filename = make_pathname('ECHAM6.1-HAM2.2_GLOFIR1_2008_mmrbc_zgeopotm.nc')
+valid_echamham_geopotential_variable = 'mmrbc'
+
+valid_echamham_geopotential_height_filename = make_pathname('ECHAM6.1-HAM2.2_GLOFIR1_2008_mmrbc_zgeopotm.nc')
+valid_echamham_geopotential_height_variable = 'mmrbc'
+
 cis_test_files["2D_GRIDDED"] = TestFileTestData(
     master_filename=valid_2d_filename,
     file_format="NetCDF/Gridded",
