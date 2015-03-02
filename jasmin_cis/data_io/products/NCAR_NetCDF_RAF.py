@@ -141,6 +141,24 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             "No attributes indicating {} variable name, expecting '{}'"
             .format(coordinate_display_name, attribute_name))
 
+    def _parse_station_altitude(self, altitude_string):
+        """
+        Parse a station's altitude string. Will try and read it directly as a float, then will try and read the first
+        white-space separated part of the string (e.g. '80 m asl' -> float(80)), finally sets the default altitude and
+        logs a warning indicating this.
+        :param altitude_string:
+        :return:
+        """
+        try:
+            return float(altitude_string)
+        except ValueError:
+            try:
+                return float(altitude_string.split()[0])
+            except ValueError:
+                logging.warning("Couldn't parse station altitude attribute '{alt_string}'. Using default altitude "
+                                "({default}m)".format(alt_string=altitude_string, default=self.DEFAULT_ALTITUDE))
+                return self.DEFAULT_ALTITUDE
+
     def _stationary_setup(self):
         """
         Set up object when latitude and longitude are fixed
@@ -158,7 +176,8 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         self.station = True
 
         if self.STATION_ALTITUDE_NAME.lower() in self._attributes[0]:
-            self.altitude = [attr[self.STATION_ALTITUDE_NAME.lower()] for attr in self._attributes]
+            self.altitude = [self._parse_station_altitude(attr[self.STATION_ALTITUDE_NAME.lower()])
+                             for attr in self._attributes]
         else:
             self.altitude = [self.DEFAULT_ALTITUDE for attr in self._attributes]
 
