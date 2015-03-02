@@ -53,7 +53,6 @@ class Generic_Plot(object):
 
         if self.is_map():
             self.check_data_is_2d()
-            self.sort_by_lons_and_lats()
 
         self.plot()
 
@@ -61,28 +60,10 @@ class Generic_Plot(object):
         if len(self.packed_data_items[0].shape) > 2:
             raise CISError("Data is not 1D or 2D - can't plot it on a map.")
 
-    def sort_by_lons_and_lats(self):
-        """
-        Sort the data by longitude as the Basemap plotting routines requires the data to be montonically increasing by
-        longitude. Also sorts in latitude (this won't cause Basemap to fail but contour plotting etc will be wrong).
-        :return:
-        """
-        lons = self.unpacked_data_items[0]['x']
-        lats = self.unpacked_data_items[0]['y']
-        if lons is not None and lats is not None:
-            shape = lons.shape
-            lons = lons.flatten()
-            lats = lats.flatten()
-            sort_order = np.lexsort((lons, -lats))
-            for var_name, variable in self.unpacked_data_items[0].iteritems():
-                if variable is not None:
-                    reordered_points = variable.flatten()[sort_order]
-                    self.unpacked_data_items[0][var_name] = np.reshape(reordered_points, shape)
-
     def set_x_wrap_start(self, x_wrap_start):
         if x_wrap_start is None:
             x_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.plot_args.get('xrange'),
-                                                          self.packed_data_items)
+                                                     self.packed_data_items)
         return x_wrap_start
 
     def set_plotting_library(self):

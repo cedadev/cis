@@ -21,28 +21,6 @@ class TestPlotIntegration(BaseIntegrationTest):
         # Remove plotted file, will throw an OSError if file was not created
         os.remove(valid_aerosol_cci_filename+'.png')
 
-    def test_should_do_contour_plot_of_valid_aerosol_cci_file(self):
-        # Actual file name: 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc
-        # Trac issue #98
-        arguments = ['plot', valid_aerosol_cci_variable+':'+valid_aerosol_cci_filename, '--output',
-                     valid_aerosol_cci_filename+'.png', '--type', 'contour']
-        main_arguments = parse_args(arguments)
-        plot_cmd(main_arguments)
-
-        # Remove plotted file, will throw an OSError if file was not created
-        os.remove(valid_aerosol_cci_filename+'.png')
-
-    def test_should_do_contourf_plot_of_valid_aerosol_cci_file(self):
-        # Actual file name: 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc
-        # Trac issue #98
-        arguments = ['plot', valid_aerosol_cci_variable+':'+valid_aerosol_cci_filename, '--output',
-                     valid_aerosol_cci_filename+'.png', '--type', 'contourf']
-        main_arguments = parse_args(arguments)
-        plot_cmd(main_arguments)
-
-        # Remove plotted file, will throw an OSError if file was not created
-        os.remove(valid_aerosol_cci_filename+'.png')
-
     def test_should_do_scatter_plot_of_valid_2d_file(self):
         # Actual file name: xglnwa.pm.k8dec-k9nov.col.tm.nc
         arguments = ['plot', valid_1d_variable+':'+valid_2d_filename, '--output', valid_2d_filename+'.png']
@@ -134,18 +112,6 @@ class TestPlotIntegration(BaseIntegrationTest):
 
         os.remove(out_name)
 
-    def test_plot_Cloud_CCI_contourf(self):
-        # JASCIS-58
-        # Takes ~1 min
-        var = 'cwp'
-        filename = valid_cloud_cci_filename
-        out_name = 'cloud_cci.png'
-        args = ['plot', var + ':' + filename, '--type', 'contourf', '-o', out_name]
-        main_arguments = parse_args(args)
-        plot_cmd(main_arguments)
-
-        os.remove(out_name)
-
     def test_plot_gridded_3d_exits_with_CISError(self):
         variable = valid_cis_gridded_output_variable
         filename = valid_cis_gridded_output_filename
@@ -188,3 +154,10 @@ class TestPlotIntegration(BaseIntegrationTest):
         plot_cmd(main_arguments)
 
         os.remove(out_name)
+
+    def test_plot_ungridded_histogram2d(self):
+        filename = valid_GASSP_station_filename
+        variable = valid_GASSP_station_vars[0]
+        args = ['plot', variable + ':' + filename, '--type', 'histogram2d']
+        args = parse_args(args)
+        plot_cmd(args)
