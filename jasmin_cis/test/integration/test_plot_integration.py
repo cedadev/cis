@@ -67,7 +67,7 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_should_do_plot_of_hybrid_height_when_formula_terms_not_marked_as_coordinates(self):
         # Actual file name: hybrid-height.nc
         # Trac issue #417 (fixed in IRIS v.1.7.1)
-        arguments = ['plot', valid_hybrid_height_variable+':'+valid_hybrid_height_filename,
+        arguments = ['plot', valid_hybrid_height_flat_variable+':'+valid_hybrid_height_flat_filename,
                      '--output', valid_hybrid_height_filename+'.png']
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)

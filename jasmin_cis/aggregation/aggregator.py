@@ -34,7 +34,8 @@ class Aggregator(object):
 
     def aggregate_gridded(self, kernel):
         # Make sure all coordinate have bounds - important for weighting and aggregating
-        for coord in self.data.coords():
+        # Only try and guess bounds on Dim Coords
+        for coord in self.data.coords(dim_coords=True):
             if not coord.has_bounds() and len(coord.points) > 1:
                 coord.guess_bounds()
                 logging.warning("Creating guessed bounds as none exist in file")

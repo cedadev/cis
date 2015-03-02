@@ -494,8 +494,11 @@ valid_zonal_time_mean_CMIP5_variable = "rsutcs"
 valid_hybrid_pressure_filename = make_pathname('hybrid-pressure.nc')
 valid_hybrid_pressure_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
 
-valid_hybrid_height_filename = make_pathname('hybrid-height.nc')
-valid_hybrid_height_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+valid_hybrid_height_flat_filename = make_pathname('hybrid-height.nc')
+valid_hybrid_height_flat_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+
+valid_hybrid_height_filename = make_pathname('aerocom.CAM4-Oslo.A2.CTRL.monthly.mmrbc.9999_fixed.nc')
+valid_hybrid_height_variable = 'mmrbc'
 
 # Has netCDF4 hierarchical groups
 valid_netcdf_groups_file = make_pathname('W_XX-EUMETSAT-Darmstadt_SOUNDING_and_SATELLITE_METOPB_and_'
