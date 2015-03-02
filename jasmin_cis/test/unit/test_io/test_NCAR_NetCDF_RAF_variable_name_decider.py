@@ -354,7 +354,7 @@ class TestDataReader(TestCase):
 
         selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(selector.time_stamp_info, is_(expected_timestamp), "time stamp info")
+        assert_that(selector.time_stamp_info, is_([expected_timestamp]), "time stamp info")
 
     def test_GIVEN_valid_file_with_all_variables_same_shape_as_time_WHEN_get_vars_THEN_all_variables_returned(self):
         expected_time_var = "time_var"
