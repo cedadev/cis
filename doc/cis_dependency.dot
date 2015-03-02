@@ -1,10 +1,14 @@
 digraph cis {
     cis -> iris;
     cis -> nose;
-    cis -> netcdf;
+    cis -> netcdf4;
 	cis -> pyhdf;
+	cis -> psutil;
+	cis -> numpy;
+	cis -> matplotlib;
+	cis -> basemap;
 
-    iris -> netcdf;
+    iris -> netcdf4;
     iris -> nose;
     iris -> numpy;
     iris -> scipy;
@@ -15,7 +19,7 @@ digraph cis {
     iris -> PythonImagingLibrary;
     iris -> basemap;
     iris -> shapely;
-    
+
     basemap -> "proj.4";
     basemap -> geos;
 
@@ -25,7 +29,7 @@ digraph cis {
     cartopy -> shapely;
     cartopy -> pyshp;
     cartopy -> nose;
-    cartopy -> scipy;    
+    cartopy -> scipy;
 
 }
 
