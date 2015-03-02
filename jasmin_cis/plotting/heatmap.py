@@ -63,7 +63,7 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     x = get_coord(packed_data_item, plot_args['x_variable'], data)
     y = get_coord(packed_data_item, plot_args['y_variable'], data)
     x_dim = packed_data_item.coord_dims(x)
-    y_dim = packed_data_item.coord_dims(x)
+    y_dim = packed_data_item.coord_dims(y)
     for coord in (x, y):
         if not coord.has_bounds():
             coord.guess_bounds()
