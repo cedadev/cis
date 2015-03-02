@@ -483,6 +483,10 @@ cis_test_files["GASSP_station"] = TestFileTestData(
 valid_GASSP_station_filename = cis_test_files["GASSP_station"].master_filename
 valid_GASSP_station_vars = cis_test_files["GASSP_station"].all_variable_names
 
+valid_GASSP_station_files_with_different_timestamps = [make_pathname('CCN_mrg60_NP3_20080329_R6.ict.nc'),
+                                                       make_pathname('CCN_mrg60_NP3_20080401_R6.ict.nc')]
+valid_GASSP_station_var_with_different_timestamps = 'Number_Concentration'
+
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
 valid_zonal_time_mean_CMIP5_variable = "rsutcs"

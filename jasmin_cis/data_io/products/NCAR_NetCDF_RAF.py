@@ -1,11 +1,13 @@
 import logging
 import os
+
+import numpy as np
+
 from jasmin_cis.data_io.Coord import CoordList
 from jasmin_cis.exceptions import InvalidVariableError, FileFormatError
 from jasmin_cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
 from jasmin_cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
 from jasmin_cis.utils import add_to_list_if_not_none, dimensions_equal, listify
-import numpy as np
 from jasmin_cis.data_io.netcdf import get_metadata, get_netcdf_file_attributes, read_many_files_individually, \
     get_netcdf_file_variables
 from jasmin_cis.data_io.Coord import Coord
@@ -118,7 +120,8 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             self.pressure_variable_name = None
 
         if self.TIME_STAMP_INFO_NAME.lower() in self._attributes[0]:
-            self.time_stamp_info = self._attributes[0][self.TIME_STAMP_INFO_NAME.lower()]
+            # Not all files will have the same timestamp -> Retrieve a list of timestamps for each file.
+            self.time_stamp_info = [attrs[self.TIME_STAMP_INFO_NAME.lower()] for attrs in self._attributes]
 
         self.time_dimensions = self._variable_dimensions[0][self.time_variable_name]
 
@@ -360,8 +363,8 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         coords = CoordList()
 
         # Time
-        time_coord = self._create_coord("T", variable_selector.time_variable_name, data_variables, "time")
-        time_coord.convert_to_std_time(variable_selector.time_stamp_info)
+        time_coord = self._create_time_coord(variable_selector.time_stamp_info, variable_selector.time_variable_name,
+                                             data_variables)
         coords.append(time_coord)
 
         # Lat and Lon
@@ -434,6 +437,34 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         metadata = get_metadata(data_variable[0])  # Use the first file as a master
         metadata.alter_standard_name(standard_name)
         return Coord(data_variable, metadata, coord_axis)
+
+    def _create_time_coord(self, timestamp, time_variable_name, data_variables, coord_axis='T', standard_name='time'):
+        """
+        Create a time coordinate, taking into account the fact that each file may have a different timestamp.
+        :param timestamp: Timestamp or list of timestamps for
+        :param time_variable_name: Name of the time variable
+        :param data_variables: Dictionary containing one or multiple netCDF data variables for each variable name
+        :param coord_axis: Axis, default 'T'
+        :param standard_name: Coord standard name, default 'time'
+        :return: Coordinate
+        """
+        timestamps = listify(timestamp)
+        time_variables = data_variables[time_variable_name]
+        time_coords = []
+        # Create a coordinate for each separate file to account for differing timestamps
+        for file_time_var, timestamp in zip(time_variables, timestamps):
+            metadata = get_metadata(file_time_var)
+            metadata.alter_standard_name(standard_name)
+            coord = Coord(file_time_var, metadata, coord_axis)
+            coord.convert_to_std_time(timestamp)
+            time_coords.append(coord)
+        # Now recombine
+        # We can use the first coordinates metadata since the time units will have been converted
+        metadata = time_coords[0].metadata
+        data = time_coords[0].data
+        for coord in time_coords[1:]:
+            data = np.ma.concatenate((data, coord.data), axis=0)
+        return Coord(data, metadata, coord_axis)
 
     def _create_fixed_value_coord(self, coord_axis, values, coord_units, points_counts, coord_name):
         """

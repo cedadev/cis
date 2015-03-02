@@ -16,6 +16,18 @@ class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
         for key in exclude_vars:
             assert key not in vars
 
+    def test_can_concatenate_files_with_different_time_stamps(self):
+        from jasmin_cis.data_io.read import read_data
+        import numpy as np
+        from jasmin_cis.test.test_files.data import valid_GASSP_station_files_with_different_timestamps,\
+            valid_GASSP_station_var_with_different_timestamps
+        var = valid_GASSP_station_var_with_different_timestamps
+        filename = valid_GASSP_station_files_with_different_timestamps
+        data = read_data(filename, var)
+        time_coord = data.coord(axis='T')
+        assert_that(np.min(time_coord.data), close_to(149107 + 54690.0/86400, 1e-5))
+        assert_that(np.max(time_coord.data), close_to(149110 + 81330.0/86400, 1e-5))
+
 
 class TestNCAR_NetCDF_RAF_with_GASSP_aeroplane(ProductTests, unittest.TestCase):
 
