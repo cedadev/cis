@@ -337,7 +337,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (192, 145))
 
     def test_ECHAMHAM_onto_HadGem_using_moments_kernel(self):
         # Takes 2s
@@ -355,7 +355,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         for var in vars:
             out_vars.extend([var, var + '_std_dev', var + '_num_points'])
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars, (192, 145))
 
     def test_HadGem_onto_ECHAMHAM_nn(self):
         # Takes
