@@ -261,7 +261,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
             raise FileFormatError(["File does not exist"])
         try:
             attributes = get_netcdf_file_attributes(filename)
-        except RuntimeError as ex:
+        except (RuntimeError, IOError) as ex:
             raise FileFormatError(["File is unreadable", ex.message])
 
         attributes_lower = {attr.lower(): val for attr, val in attributes.items()}

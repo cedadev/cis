@@ -14,7 +14,10 @@ def get_netcdf_file_attributes(filename):
     """
 
     from netCDF4 import Dataset
-    f = Dataset(filename)
+    try:
+        f = Dataset(filename)
+    except RuntimeError as e:
+        raise IOError(e)
 
     return f.__dict__
 
@@ -30,7 +33,10 @@ def get_netcdf_file_variables(filename, exclude_coords=False):
     :return: An OrderedDict containing {variable_name: NetCDF Variable instance}
     """
     from netCDF4 import Dataset
-    f = Dataset(filename)
+    try:
+        f = Dataset(filename)
+    except RuntimeError as e:
+        raise IOError(e)
     # Include NetCDF4 hierarchical groups too:
     variables = _get_all_fully_qualified_variables(f)
     if exclude_coords:

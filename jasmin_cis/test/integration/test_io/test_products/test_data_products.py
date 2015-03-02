@@ -65,11 +65,9 @@ class ProductTests(object):
         else:
             assert_that(len(vars), is_(self.valid_vars_count ), "Number of valid variables in the file")
 
-    @istest
     def test_create_data_object(self):
         self.product().create_data_object([self.filename], self.valid_variable)
 
-    @istest
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
         coords = self.product().create_coords([self.filename])
@@ -83,7 +81,6 @@ class ProductTests(object):
 
         assert (all([coord.standard_name in valid_standard_names for coord in coord_list]))
 
-    @istest
     def test_write_coords(self):
         from jasmin_cis.data_io.write_netcdf import write_coordinates
         from os import remove
@@ -92,28 +89,25 @@ class ProductTests(object):
         write_coordinates(coords, test_file)
         remove(test_file)
 
-    @istest
     @raises(IOError)
-    def should_raise_ioerror_with_invalid_filename(self):
+    def test_should_raise_ioerror_with_invalid_filename(self):
         self.product().create_data_object([invalid_filename], self.valid_variable)
 
-    @istest
     @raises(IOError, TranslationError)
-    def should_raise_ioerror_or_translationerror_with_file_that_is_not_a_recognised_format(self):
+    def test_should_raise_ioerror_or_translationerror_with_file_that_is_not_a_recognised_format(self):
         self.product().create_data_object([invalid_format], self.valid_variable)
 
-    @istest
     @raises(InvalidVariableError)
-    def should_raise_error_when_variable_does_not_exist_in_file(self):
+    def test_should_raise_error_when_variable_does_not_exist_in_file(self):
         self.product().create_data_object([self.filename], invalid_variable)
 
-    @istest
     def test_file_format(self):
         expected_file_format = self.file_format
         if expected_file_format is None:
             expected_file_format = self.product.__name__
         file_format = self.product().get_file_format(self.filename)
         assert_that(file_format, is_(expected_file_format), "File format")
+
 
 class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
     def setUp(self):
@@ -205,6 +199,7 @@ class TestMODIS_L3(ProductTests, unittest.TestCase):
     def check_valid_vars(self, vars):
         assert len(vars) == 700
 
+
 class TestMODIS_L2(ProductTests, unittest.TestCase):
     def setUp(self):
 
@@ -231,9 +226,11 @@ class TestCis(ProductTests, unittest.TestCase):
     def setUp(self):
         self.setup(cis_test_files["CIS_Ungridded"], cis)
 
+
 class TestAeronet(ProductTests, unittest.TestCase):
     def setUp(self):
-        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, another_valid_aeronet_filename
+        from jasmin_cis.test.test_files.data import valid_aeronet_filename, valid_aeronet_variable, \
+            another_valid_aeronet_filename
         self.setup(cis_test_files["aeronet"], Aeronet)
         self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
 
