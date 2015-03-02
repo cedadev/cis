@@ -245,9 +245,8 @@ class TestASCII(ProductTests, unittest.TestCase):
         self.setup(cis_test_files["ascii"], ASCII_Hyperpoints)
         self.no_value_filename = ascii_filename_with_no_values
 
-    @istest
     @raises(IOError)
-    def should_raise_error_when_variable_does_not_exist_in_file(self):
+    def test_should_raise_error_when_variable_does_not_exist_in_file(self):
         '''
          This product throws an IO error rather than an InvalidVariable error as the file can only have one variable
         :return:
@@ -287,16 +286,16 @@ class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
         # There are no valid variables in this file.
         pass
 
-    # TODO Create a new implementation of bypassed tests
     @nottest
     def test_write_coords(self):
-        # This won't work for model data yet as the coordinates aren't all the same shape, they need to be 'expanded'
+        # Model data is gridded so IRIS takes care of this
         pass
 
     @nottest
     def test_create_coords(self):
-        # This won't work for model data yet as the coordinates can have names other than the expected ones
+        # Model data is gridded so IRIS takes care of this
         pass
+
 
 
 class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
@@ -313,15 +312,14 @@ class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
         # Not tested
         pass
 
-    # TODO Create a new implementation of bypassed tests
     @nottest
     def test_write_coords(self):
-        # This won't work for model data yet as the coordinates aren't all the same shape, they need to be 'expanded'
+        # Model data is gridded so IRIS takes care of this
         pass
 
     @nottest
     def test_create_coords(self):
-        # This won't work for model data yet as the coordinates can have names other than the expected ones
+        # Model data is gridded so IRIS takes care of this
         pass
 
 
@@ -334,3 +332,8 @@ class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
         self.product = default_NetCDF
         self.vars = ['od550aer']
         self.file_format = "NetCDF/Gridded"
+
+    @nottest
+    def test_write_coords(self):
+        # Gridded coordinates are taken care of by IRIS
+        pass
