@@ -8,7 +8,7 @@ One of the key features of the Community Intercomparison Suite (CIS) is the abil
 
 To perform co-location, run a command of the format::
 
-  $ cis col <datagroup> [<datagroup> [...]] <samplegroup> -o <outputfile>
+  $ cis col <datagroup> <samplegroup> -o <outputfile>
 
 where:
 
