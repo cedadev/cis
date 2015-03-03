@@ -957,7 +957,13 @@ class GeneralGriddedColocator(Colocator):
                 cube.units = kernel_var_details[idx][3]
             except ValueError:
                 logging.warn(
-                    "Units are not cf compliant, not setting then. Units {}".format(kernel_var_details[idx][3]))
+                    "Units are not cf compliant, not setting them. Units {}".format(kernel_var_details[idx][3]))
+
+            # Sort the cube into the correct shape, so that the order of coordinates
+            # is the same as in the source data
+            coord_map = sorted(coord_map, key=lambda x: x[1])
+            transpose_order = [coord[2] for coord in coord_map]
+            cube.transpose(transpose_order)
             output.append(cube)
 
         return output
