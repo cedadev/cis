@@ -48,10 +48,10 @@ class TestAProduct(TestCase):
                 pass
 
             def create_coords(self, filenames):
-               pass
+                pass
 
             def get_file_signature(self):
-                 return [r'.*\.ending']
+                return [r'.*\.ending']
 
             def get_file_type_error(self, filesname):
                 return ["Not correct type"]
