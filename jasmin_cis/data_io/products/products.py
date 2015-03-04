@@ -239,9 +239,9 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
                     not units.is_time() and \
                     not units.is_time_reference() and \
                     not units.is_vertical() and \
-                    not units.is_convertible(unit.Unit('degrees')):
-                    is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
-                    break
+                        not units.is_convertible(unit.Unit('degrees')):
+                            is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
+                            break
             if is_time_lat_lon_pressure_altitude_or_has_only_1_point:
                 variables.append(cube.var_name)
 
@@ -265,34 +265,37 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
                 variable_name = None
         else:
             variable_name = variable
-        return self._create_cube(filenames, variable_name, False)
+        return self._create_cube(filenames, variable_name)
 
     def create_data_object(self, filenames, variable):
         """
 
         :param filenames: List of filenames to read coordinates from
-        :param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
+        :param variable: Optional variable to read while we're reading the coordinates, can be a string or a
+        VariableConstraint object
         :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
-        return self._create_cube(filenames, variable, True)
+        return self._create_cube(filenames, variable)
 
-    def _create_cube(self, filenames, variable, remove_length_one_dimensions):
+    def _create_cube(self, filenames, variable):
         """Creates a cube for the specified variable.
         :param filenames: List of filenames to read coordinates from
-        :param variable: Optional variable to read while we're reading the coordinates, can be a string or a VariableConstraint object
+        :param variable: Optional variable to read while we're reading the coordinates, can be a string or a
+        VariableConstraint object
         :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         from jasmin_cis.exceptions import InvalidVariableError
 
         # Check if the files given actually exist.
         for filename in filenames:
-            with open(filename) as f: pass
+            with open(filename) as f:
+                pass
 
         variable_constraint = variable
         if isinstance(variable, basestring):
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
-                                                                         c.standard_name == variable or
-                                                                         c.long_name == variable), display=variable)
+                                                               c.standard_name == variable or
+                                                               c.long_name == variable), display=variable)
 
         try:
             cube = gridded_data.load_cube(filenames, variable_constraint)
@@ -306,7 +309,63 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         except ValueError as e:
             raise IOError(str(e))
 
+        self._add_available_aux_coords(cube, filenames)
+
         return cube
+
+    def _add_available_aux_coords(self, cube, filenames):
+        """
+        Add any altitude or pressure Auxiliary coordinates that IRIS does not load by default.
+        :type cube: data_io.gridded_data.GriddedData
+        :type filenames: list
+        :return:
+        """
+        from iris.coords import AuxCoord
+
+        def _make_aux_coord_and_dims_from_geopotential(g_cube):
+            from scipy.constants import g
+            points = g_cube.data / g
+            dims = range(len(g_cube.shape))
+            coord = AuxCoord(points=points,
+                             standard_name='altitude',
+                             long_name='Geopotential height at layer midpoints',
+                             var_name='altitude',
+                             units='meter',
+                             attributes={'positive': 'up'})
+            return coord, dims
+
+        def _make_aux_coord_and_dims_from_geopotential_height(g_ht_cube):
+            dims = range(len(g_ht_cube.shape))
+            coord = AuxCoord(points=g_ht_cube.data,
+                             standard_name='altitude',
+                             long_name='Geopotential height at layer midpoints',
+                             var_name='altitude',
+                             units='meter',
+                             attributes={'positive': 'up'})
+            return coord, dims
+
+        def _make_aux_coord_and_dims_from_air_pressure(aps_cube):
+            dims = range(len(aps_cube.shape))
+            coord = AuxCoord(points=aps_cube.data,
+                             standard_name='air_pressure',
+                             long_name='Air Pressure',
+                             var_name='air_pressure',
+                             units='Pa')
+            return coord, dims
+
+        aux_coord_creation_functions = {'geopotential': _make_aux_coord_and_dims_from_geopotential,
+                                        'geopotential_height': _make_aux_coord_and_dims_from_geopotential_height,
+                                        'air_pressure': _make_aux_coord_and_dims_from_air_pressure}
+
+        for standard_name, make_aux_coord in aux_coord_creation_functions.items():
+            constraint = DisplayConstraint(cube_func=lambda c: c.standard_name == standard_name,
+                                           display=standard_name)
+            try:
+                aux_cube = gridded_data.load_cube(filenames, constraint)
+                aux_coord, dims = make_aux_coord(aux_cube)
+                cube.add_aux_coord(aux_coord, dims)
+            except iris.exceptions.ConstraintMismatchError:
+                pass  # The field doesn't exist; that's OK we just won't add it.
 
 
 class DisplayConstraint(iris.Constraint):

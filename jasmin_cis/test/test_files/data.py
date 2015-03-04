@@ -310,6 +310,12 @@ valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_1d_variable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
+valid_echamham_geopotential_filename = make_pathname('ECHAM6.1-HAM2.2_GLOFIR1_2008_mmrbc_zgeopotm.nc')
+valid_echamham_geopotential_variable = 'mmrbc'
+
+valid_echamham_geopotential_height_filename = make_pathname('ECHAM6.1-HAM2.2_GLOFIR1_2008_mmrbc_zgeopotm.nc')
+valid_echamham_geopotential_height_variable = 'mmrbc'
+
 cis_test_files["2D_GRIDDED"] = TestFileTestData(
     master_filename=valid_2d_filename,
     file_format="NetCDF/Gridded",
@@ -483,6 +489,10 @@ cis_test_files["GASSP_station"] = TestFileTestData(
 valid_GASSP_station_filename = cis_test_files["GASSP_station"].master_filename
 valid_GASSP_station_vars = cis_test_files["GASSP_station"].all_variable_names
 
+valid_GASSP_station_files_with_different_timestamps = [make_pathname('CCN_mrg60_NP3_20080329_R6.ict.nc'),
+                                                       make_pathname('CCN_mrg60_NP3_20080401_R6.ict.nc')]
+valid_GASSP_station_var_with_different_timestamps = 'Number_Concentration'
+
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
 valid_zonal_time_mean_CMIP5_variable = "rsutcs"
@@ -490,8 +500,11 @@ valid_zonal_time_mean_CMIP5_variable = "rsutcs"
 valid_hybrid_pressure_filename = make_pathname('hybrid-pressure.nc')
 valid_hybrid_pressure_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
 
-valid_hybrid_height_filename = make_pathname('hybrid-height.nc')
-valid_hybrid_height_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+valid_hybrid_height_flat_filename = make_pathname('hybrid-height.nc')
+valid_hybrid_height_flat_variable = 'mass_fraction_of_black_carbon_dry_aerosol_in_air'
+
+valid_hybrid_height_filename = make_pathname('aerocom.CAM4-Oslo.A2.CTRL.monthly.mmrbc.9999_fixed.nc')
+valid_hybrid_height_variable = 'mmrbc'
 
 # Has netCDF4 hierarchical groups
 valid_netcdf_groups_file = make_pathname('W_XX-EUMETSAT-Darmstadt_SOUNDING_and_SATELLITE_METOPB_and_'

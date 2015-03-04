@@ -313,7 +313,7 @@ class UngriddedData(LazyData, CommonData):
                     self._data = numpy.ma.masked_array(self._data.flatten(), mask=combined_mask).compressed()
 
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
-                                       long_name=None, history=None, units=None):
+                                       long_name=None, history=None, units=None, flatten=False):
         """
         Create a new, empty GriddedData object with the same coordinates as this one
         :param data: Data to use (if None then defaults to all zeros)
@@ -322,17 +322,26 @@ class UngriddedData(LazyData, CommonData):
         :param long_name: Variable long name
         :param history: Data history string
         :param units: Variable units
+        :param flatten: Whether to flatten the data and coordinates (for ungridded data only)
         :return: GriddedData instance
         """
         if data is None:
             data = numpy.zeros(self.shape)
         metadata = Metadata(name=var_name, standard_name=standard_name,
                             long_name=long_name, history='', units=units)
-        data = UngriddedData(data=data, metadata=metadata, coords=self._coords)
+        if flatten:
+            from jasmin_cis.data_io.Coord import Coord
+            data = data.flatten()
+            new_coords = []
+            for coord in self._coords:
+                new_coords.append(Coord(coord.data_flattened, coord.metadata, coord.axis))
+        else:
+            new_coords = self._coords
+        ug_data = UngriddedData(data=data, metadata=metadata, coords=new_coords)
         # Copy the history in separately so it gets the timestamp added.
         if history:
-            data.add_history(history)
-        return data
+            ug_data.add_history(history)
+        return ug_data
 
     def copy(self):
         """

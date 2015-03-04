@@ -21,28 +21,6 @@ class TestPlotIntegration(BaseIntegrationTest):
         # Remove plotted file, will throw an OSError if file was not created
         os.remove(valid_aerosol_cci_filename+'.png')
 
-    def test_should_do_contour_plot_of_valid_aerosol_cci_file(self):
-        # Actual file name: 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc
-        # Trac issue #98
-        arguments = ['plot', valid_aerosol_cci_variable+':'+valid_aerosol_cci_filename, '--output',
-                     valid_aerosol_cci_filename+'.png', '--type', 'contour']
-        main_arguments = parse_args(arguments)
-        plot_cmd(main_arguments)
-
-        # Remove plotted file, will throw an OSError if file was not created
-        os.remove(valid_aerosol_cci_filename+'.png')
-
-    def test_should_do_contourf_plot_of_valid_aerosol_cci_file(self):
-        # Actual file name: 20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc
-        # Trac issue #98
-        arguments = ['plot', valid_aerosol_cci_variable+':'+valid_aerosol_cci_filename, '--output',
-                     valid_aerosol_cci_filename+'.png', '--type', 'contourf']
-        main_arguments = parse_args(arguments)
-        plot_cmd(main_arguments)
-
-        # Remove plotted file, will throw an OSError if file was not created
-        os.remove(valid_aerosol_cci_filename+'.png')
-
     def test_should_do_scatter_plot_of_valid_2d_file(self):
         # Actual file name: xglnwa.pm.k8dec-k9nov.col.tm.nc
         arguments = ['plot', valid_1d_variable+':'+valid_2d_filename, '--output', valid_2d_filename+'.png']
@@ -89,7 +67,7 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_should_do_plot_of_hybrid_height_when_formula_terms_not_marked_as_coordinates(self):
         # Actual file name: hybrid-height.nc
         # Trac issue #417 (fixed in IRIS v.1.7.1)
-        arguments = ['plot', valid_hybrid_height_variable+':'+valid_hybrid_height_filename,
+        arguments = ['plot', valid_hybrid_height_flat_variable+':'+valid_hybrid_height_flat_filename,
                      '--output', valid_hybrid_height_filename+'.png']
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
@@ -131,18 +109,6 @@ class TestPlotIntegration(BaseIntegrationTest):
         args = ['plot', var + ":" + self.GRIDDED_OUTPUT_FILENAME, '--type', 'contourf', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
-
-        os.remove(out_name)
-
-    def test_plot_Cloud_CCI_contourf(self):
-        # JASCIS-58
-        # Takes ~1 min
-        var = 'cwp'
-        filename = valid_cloud_cci_filename
-        out_name = 'cloud_cci.png'
-        args = ['plot', var + ':' + filename, '--type', 'contourf', '-o', out_name]
-        main_arguments = parse_args(args)
-        plot_cmd(main_arguments)
 
         os.remove(out_name)
 
@@ -188,3 +154,10 @@ class TestPlotIntegration(BaseIntegrationTest):
         plot_cmd(main_arguments)
 
         os.remove(out_name)
+
+    def test_plot_ungridded_histogram2d(self):
+        filename = valid_GASSP_station_filename
+        variable = valid_GASSP_station_vars[0]
+        args = ['plot', variable + ':' + filename, '--type', 'histogram2d']
+        args = parse_args(args)
+        plot_cmd(args)

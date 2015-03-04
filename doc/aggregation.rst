@@ -24,9 +24,9 @@ where:
   is a :ref:`CIS datagroup <datagroups>` specifying the variables and files to read and is of the format
   ``<variable>...:<filename>[:product=<productname>]`` where:
 
-    * ``variable`` is a mandatory variable or list of variables to use.
-    * ``filenames`` is a mandatory file or list of files to read from.
-    * ``product`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
+    * ``<variable>`` is a mandatory variable or list of variables to use.
+    * ``<filenames>`` is a mandatory file or list of files to read from.
+    * ``<productname>`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
   See :ref:`datagroups` for a more detailed explanation of datagroups.
 
@@ -101,8 +101,8 @@ where:
 
 
 ``<outputfile>``
-  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc` if not
-  present. This must not be the same file path as any of the input files. If not supplied, the default filename is``out.nc``.
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension if not
+  present. This must not be the same file path as any of the input files. If not supplied, the default filename is ``out.nc``.
 
 A full example would be::
 

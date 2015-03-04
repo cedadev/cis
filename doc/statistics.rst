@@ -40,30 +40,16 @@ The statistics syntax looks like this::
 where:
 
 ``<datagroup>``
-  is of the format ``<variable>...:<filename>[:product=<productname>]``. One or more
-  datagroups should be given, but the total number of variables declared in all datagroups must be exactly two.
+  is a :ref:`CIS datagroup <datagroups>` specifying the variables and files to read and is of the format
+  ``<variable>...:<filename>[:product=<productname>]`` where:
 
-  * ``<variable>`` is a mandatory argument used to specify the name of the variable in the file to use. You may
-    specify more than one variable to load, in which case you should separate them with commas.
+    * ``<variable>`` is a mandatory variable or list of variables to use.
+    * ``<filenames>`` is a mandatory file or list of files to read from.
+    * ``<productname>`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-  * ``<filename>`` is a mandatory argument specifying the file to read the variable or variables from. You may specify
-    multiple filenames separated using commas; each filename should be one of:
+  One or more datagroups should be given, but the total number of variables declared in all datagroups must be exactly
+  two. See :ref:`datagroups` for a more detailed explanation of datagroups.
 
-      \1. |nbsp| a single filename - this should be the full path to the file
-
-      \2. |nbsp| a single directory - all files in this directory will be read
-
-      \3. |nbsp| a wildcarded filename - A filename with any wildcards compatible with the python module glob, so that \*, ? and [] can all be used. E.g., ``/path/to/my/test*file_[0-9]``.
-
-    Note that when multiple files are specified (whether through use of commas, pointing at a directory, or wildcarding),
-    then all those files must contain all of the variables in that datagroup and the files should be 'compatible' - it
-    should be possible to aggregate them together using a shared dimension (in a NetCDF file this is usually the unlimited
-    dimension). So selecting multiple monthly files for a model run would be OK, but selecting files from two different
-    datatypes would not be OK.
-
-  * ``<productname>`` is an optional argument used to specify the type of files being read. If omitted, the program will
-    attempt to figure out which product to use based on the filename. See :ref:`data-products-reading` to see a list of
-    available products and their file signatures.
 
 ``<outputfile>``
   is an optional argument specifying a file to output to. This will be automatically given a ``.nc`` extension if not

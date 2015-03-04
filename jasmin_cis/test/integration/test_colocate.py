@@ -45,20 +45,6 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['AOD550', 'AOD870'])
 
-    def test_GIVEN_multiple_datagroups_on_same_coords_WHEN_colocate_THEN_successful_colocation(self):
-        variable1 = valid_aerosol_cci_variable
-        variable2 = valid_aerosol_cci_variable_2
-        filename = valid_aerosol_cci_filename
-        sample_file = valid_echamham_filename
-        colocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
-        arguments = ['col', variable1 + ':' + filename,
-                     variable2 + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
-                     '-o', self.OUTPUT_NAME]
-        main_arguments = parse_args(arguments)
-        col_cmd(main_arguments)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['AOD550', 'AOD870'])
-
     def test_Aeronet_onto_NetCDF_Gridded(self):
         # JASCIS-120
         # Takes 6s
@@ -337,7 +323,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (192, 145))
 
     def test_ECHAMHAM_onto_HadGem_using_moments_kernel(self):
         # Takes 2s
@@ -355,7 +341,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         for var in vars:
             out_vars.extend([var, var + '_std_dev', var + '_num_points'])
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars, (192, 145))
 
     def test_HadGem_onto_ECHAMHAM_nn(self):
         # Takes

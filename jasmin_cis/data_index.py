@@ -195,7 +195,7 @@ class GridCellBinIndex(object):
         self.index = np.empty(tuple(shape), dtype=np.dtype(object))
         self.index.fill(None)
 
-        coord_descreasing = [False] * len(coords)
+        coord_decreasing = [False] * len(coords)
         coord_lengths = [0] * len(coords)
         lower_bounds = [None] * len(coords)
         upper_bounds = [None] * len(coords)
@@ -204,9 +204,9 @@ class GridCellBinIndex(object):
             # Coordinates must be monotonic; determine whether increasing or decreasing.
             if len(coord.points) > 1:
                 if coord.points[1] < coord.points[0]:
-                    coord_descreasing[ci] = True
+                    coord_decreasing[ci] = True
             coord_lengths[ci] = len(coord.points)
-            if coord_descreasing[ci]:
+            if coord_decreasing[ci]:
                 lower_bounds[ci] = coord.bounds[::-1, 1]
                 upper_bounds[ci] = coord.bounds[::-1, 0]
             else:
@@ -224,7 +224,7 @@ class GridCellBinIndex(object):
             for (hpi, ci, shi) in coord_map:
                 search_index = np.searchsorted(lower_bounds[ci], point[hpi], side='right') - 1
                 if (search_index >= 0) and (point[hpi] < upper_bounds[ci][search_index]):
-                    if coord_descreasing[ci]:
+                    if coord_decreasing[ci]:
                         point_cell_indices[shi] = coord_lengths[ci] - search_index - 1
                     else:
                         point_cell_indices[shi] = search_index

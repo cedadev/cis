@@ -52,19 +52,6 @@ def should_raise_ioerror_with_file_that_does_not_have_read_permissions():
     read(file_without_read_permissions, valid_variable_in_valid_filename)
 
 
-@istest
-def test_WHEN_file_has_attributes_WHEN_read_THEN_attribute_list_returned_with_know_attribute_value_in():
-    expected_attribute_variable_name = "UTC_mid"
-
-    attributes, variables_names, dummy = read_attributes_and_variables_many_files([valid_GASSP_aeroplane_filename])
-
-    assert_that(attributes, has_item(valid_GASSP_attribute), "Attribute %s not read from file" % valid_GASSP_attribute)
-    assert_that(attributes[valid_GASSP_attribute], expected_attribute_variable_name,
-                "Attribute %s value" % valid_GASSP_attribute)
-    assert_that(variables_names, has_item(expected_attribute_variable_name),
-                "Attribute value is not a variable in the file")
-
-
 class TestNetCDFGroups(unittest.TestCase):
     root_vars = [u'StartOrbit', u'EndOrbit', u'SpaceCraftID', u'Year', u'Month', u'Day', u'Hour', u'Minute',
                  u'DegradedInstMdr', u'DegradedProcMdr', u'GOMEScanMode']
@@ -104,17 +91,6 @@ class TestNetCDFGroups(unittest.TestCase):
         all_vars = self._get_fully_qualified_vars()
         nc_vars = get_netcdf_file_variables(valid_netcdf_groups_file)
         assert_that(set(nc_vars.keys()), is_(set(all_vars)))
-
-    def test_can_read_attributes_and_variables_many_files(self):
-        all_vars = self._get_fully_qualified_vars()
-        attrs, vars, var_dims = read_attributes_and_variables_many_files([valid_netcdf_groups_file])
-        assert_that(len(attrs), is_(0))
-        assert_that(set(vars), is_(set(all_vars)))
-        assert_that(set(var_dims.keys()), is_(set(all_vars)))
-        assert_that(var_dims[u'StartOrbit'], is_(('Dim1',)))
-        assert_that(var_dims[u'GOME2.ChannelNumber'], is_(('Dim5',)))
-        assert_that(var_dims[u'AVHRR.Ch4CentralWavenumber'], is_(('Dim1',)))
-        assert_that(var_dims[u'IASI.IASIFlag'], is_(('Dim1',)))
 
     def test_can_read_many_files_individually(self):
         all_vars = self._get_fully_qualified_vars()

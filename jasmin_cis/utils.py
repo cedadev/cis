@@ -173,6 +173,31 @@ def array_equal_including_nan(array1, array2):
     return True
 
 
+def get_coord(data_object, variable, data):
+    """
+    Find a specified coord
+    :param data_object:
+    :param variable: 
+    :param data:
+    :return:
+    """
+    if variable == data_object.name() or variable == "default" or variable == data_object.standard_name or \
+       variable == data_object.long_name:
+        return data
+    else:
+        if variable.startswith("search:"):
+            number_of_points = float(variable.split(":")[1])
+            for coord in data_object.coords():
+                if coord.shape[0] == number_of_points:
+                    break
+        else:
+            try:
+                coord = data_object.coord(name=variable)
+            except CoordinateNotFoundError:
+                return None
+        return coord
+
+
 def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     '''
     :param data_object    A cube or an UngriddedData object
@@ -184,40 +209,22 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     import logging
     from mpl_toolkits.basemap import addcyclic
 
-    def __get_coord(data_object, variable, data):
-
-        if variable == data_object.name() or variable == "default" or variable == data_object.standard_name or \
-           variable == data_object.long_name:
-            return data
-        else:
-            if variable.startswith("search:"):
-                number_of_points = float(variable.split(":")[1])
-                for coord in data_object.coords():
-                    if coord.shape[0] == number_of_points:
-                        break
-            else:
-                try:
-                    coord = data_object.coord(name=variable)
-                except CoordinateNotFoundError:
-                    return None
-            if isinstance(data_object, Cube):
-                return coord.points
-            else:
-                return coord.data
-
     no_of_dims = len(data_object.shape)
 
     data = data_object.data #ndarray
 
-    x = __get_coord(data_object, x_variable, data)
+    x = get_coord(data_object, x_variable, data)
+    if hasattr(x, 'points'):
+        x = x.points
     try:
         coord = data_object.coord(name=x_variable)
         x_axis_name = guess_coord_axis(coord)
     except CoordinateNotFoundError:
         x_axis_name = None
 
-    y = __get_coord(data_object, y_variable, data)
-
+    y = get_coord(data_object, y_variable, data)
+    if hasattr(y, 'points'):
+        y = y.points
     # Must use special function to check equality of array here, so NaNs are returned as equal and False is returned if
     # arrays have a diffent shape
     if array_equal_including_nan(y, data) or array_equal_including_nan(y, x):

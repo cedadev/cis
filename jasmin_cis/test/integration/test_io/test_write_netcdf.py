@@ -29,7 +29,7 @@ class TestWriteNetcdf(unittest.TestCase):
         data_object = prod.create_data_object([make_pathname('cis-col-latlon-renamed.nc')], 'AOT_440')
         write(data_object, tmp_file)
 
-        d = nc.MFDataset([tmp_file], aggdim='pixel_number')
+        d = nc.Dataset(tmp_file)
 
         v = d.variables['AOT_440']
 
@@ -40,9 +40,9 @@ class TestWriteNetcdf(unittest.TestCase):
         # Copy a colocated file and try to reload it.  This exposes a bug where
         # latitude and longitude aren't recognised on reload
         from jasmin_cis.data_io.write_netcdf import write
-        from jasmin_cis.data_io.products import Aerosol_CCI
+        from jasmin_cis.data_io.products import cis
 
-        prod = Aerosol_CCI()
+        prod = cis()
         data_object = prod.create_data_object([make_pathname('cis-col-latlon-renamed.nc')], 'AOT_440')
         write(data_object, tmp_file)
 

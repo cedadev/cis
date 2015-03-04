@@ -34,7 +34,8 @@ class Aggregator(object):
 
     def aggregate_gridded(self, kernel):
         # Make sure all coordinate have bounds - important for weighting and aggregating
-        for coord in self.data.coords():
+        # Only try and guess bounds on Dim Coords
+        for coord in self.data.coords(dim_coords=True):
             if not coord.has_bounds() and len(coord.points) > 1:
                 coord.guess_bounds()
                 logging.warning("Creating guessed bounds as none exist in file")
@@ -146,6 +147,7 @@ class Aggregator(object):
         new_coordinate_grid = aggregation_grid_array(grid_start, grid_end, grid_delta, grid.is_time, coord)
         new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
                              units=coord.units)
+        new_coord.guess_bounds()
         return new_coord
 
     def _add_max_min_bounds_for_collapsed_coords(self, aggregated_cube, source_cube):

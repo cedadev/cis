@@ -14,7 +14,8 @@ dependencies = ["matplotlib>=1.2.0",
                 "scipy",
                 "iris>=1.7.3",
                 'pyhdf',
-                'psutil']
+                'psutil',
+                'basemap>=1.0.7']
 
 test_dependencies = ["pyhamcrest", "mock", "nose"]
 

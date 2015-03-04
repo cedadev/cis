@@ -1025,3 +1025,42 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         kernel = FastMoments()
 
         list_moments(constraint, kernel)
+
+    def test_gridded_gridded_bin_when_grids_have_different_dims_order(self):
+        # JASCIS-204
+        from jasmin_cis.data_io.gridded_data import make_from_cube
+        sample = make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time']))
+        data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
+                                             time_dim_length=10, dim_order=['time', 'lon', 'lat']))
+
+        col = GeneralGriddedColocator()
+        constraint = BinningCubeCellConstraint()
+        kernel = mean()
+        out_cube = col.colocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        assert out_cube[0].shape == sample.shape
+
+    def test_gridded_gridded_bin_when_grids_have_different_dims_order_2(self):
+        # JASCIS-204
+        from jasmin_cis.data_io.gridded_data import make_from_cube
+        sample = make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'time', 'lon']))
+        data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
+                                             time_dim_length=10, dim_order=['lon', 'lat', 'time']))
+
+        col = GeneralGriddedColocator()
+        constraint = BinningCubeCellConstraint()
+        kernel = mean()
+        out_cube = col.colocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        assert out_cube[0].shape == sample.shape
+
+    def test_gridded_gridded_bin_when_sample_has_dimension_data_doesnt(self):
+        # JASCIS-204
+        from jasmin_cis.data_io.gridded_data import make_from_cube
+        sample = make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time']))
+        data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
+                                             time_dim_length=0, dim_order=['time', 'lon', 'lat']))
+
+        col = GeneralGriddedColocator()
+        constraint = BinningCubeCellConstraint()
+        kernel = mean()
+        out_cube = col.colocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        assert out_cube[0].shape == (5, 3)

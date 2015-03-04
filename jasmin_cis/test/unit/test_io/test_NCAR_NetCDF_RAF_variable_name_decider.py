@@ -1,73 +1,74 @@
 from unittest import TestCase
 from hamcrest import *
-from mock import MagicMock
+
 from jasmin_cis.data_io.products.NCAR_NetCDF_RAF import NCAR_NetCDF_RAF_variable_name_selector
 from jasmin_cis.exceptions import InvalidVariableError
 
 
 class TestDataReader(TestCase):
 
+    class MockVar(object):
+        def __init__(self, dimensions=('Time',)):
+            self.dimensions = dimensions
+
     def test_GIVEN_no_attributes_or_variables_WHEN_construct_THEN_throw_exception(self):
         variables = []
         attributes = {}
-        variable_dimensions = {}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(cm.exception.message, is_("No variables in the file so the type of data is unknown"))
 
     def test_GIVEN_no_attributes_WHEN_construct_THEN_throw_exception(self):
-        variables = ["Var"]
+        variables = [{"Var": self.MockVar()}]
         attributes = {}
-        variable_dimensions = {variables[0]: "Time"}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(cm.exception.message, is_("No attributes in the file so type of data is unknown"))
 
     def test_GIVEN_no_time_coordinate_or_general_coordinates_WHEN_construct_THEN_throw_exception(self):
-        variables = ["Var"]
+        variables = [{"Var": self.MockVar()}]
         attributes = {"not time": "not time"}
-        variable_dimensions = {variables[0]: "Time"}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("No attributes indicating time variable name, expecting either 'Time_Coordinate' or 'Coordinates'"))
+        assert_that(cm.exception.message, is_("No attributes indicating time variable name, "
+                                              "expecting either 'Time_Coordinate' or 'Coordinates'"))
 
     def test_GIVEN_time_coordinate_but_no_variable_WHEN_construct_THEN_throw_exception(self):
         expected_time_var = "time_var"
-        variables = ["not time var"]
+        variables = [{"not time var": self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var}
-        variable_dimensions = {variables[0]: "Time"}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("There is no variable for the time co-ordinate '{}'".format(expected_time_var)))
+        assert_that(cm.exception.message, is_("There is no variable for the time co-ordinate '{}'"
+                                              .format(expected_time_var)))
 
     def test_GIVEN_time_coordinate_but_no_lat_variable_WHEN_construct_THEN_throw_exception(self):
         expected_time_var = "time_var"
-        variables = [expected_time_var]
+        variables = [{expected_time_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var}
-        variable_dimensions = {variables[0]: "Time"}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("No attributes indicating latitude, expecting 'Station_Lat' or 'Longitude_Coordinate'"))
+        assert_that(cm.exception.message, is_("No attributes indicating latitude, "
+                                              "expecting 'Station_Lat' or 'Longitude_Coordinate'"))
 
     def test_GIVEN_time_coordinate_station_lat_but_no_lon_variable_WHEN_construct_THEN_throw_exception(self):
         expected_time_var = "time_var"
-        variables = [expected_time_var]
+        variables = [{expected_time_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Station_Lat": "27.2"}
-        variable_dimensions = {variables[0]: ["Time"]}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(cm.exception.message, is_("No attributes indicating longitude, expecting 'Station_Lon'"))
 
@@ -75,22 +76,20 @@ class TestDataReader(TestCase):
         expected_time_var = "time_var"
         expected_station_latitude = "27.1"
         expected_station_longitude = "10"
-        variables = [expected_time_var]
+        variables = [{expected_time_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Station_Lat": expected_station_latitude,
                       "Station_Lon": expected_station_longitude}
         aggregated_dim = "Time"
-        expected_time_dimensions = [aggregated_dim]
-        variable_dimensions = {variables[0]: expected_time_dimensions}
-        
-        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        expected_time_dimensions = (aggregated_dim,)
+
+        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(decider.station, is_(True), "File should be for station")
         assert_that(decider.time_variable_name, is_(expected_time_var))
-        assert_that(decider.station_latitude, is_(expected_station_latitude))
-        assert_that(decider.station_longitude, is_(expected_station_longitude))
-        assert_that(decider.altitude, is_(0))
-        assert_that(decider.aggregation_dimensions, is_(aggregated_dim))
+        assert_that(decider.station_latitude, is_([expected_station_latitude]))
+        assert_that(decider.station_longitude, is_([expected_station_longitude]))
+        assert_that(decider.altitude, is_([0]))
         assert_that(decider.time_dimensions, is_(expected_time_dimensions))
 
     def test_GIVEN_station_alt_WHEN_construct_THEN_alt_set(self):
@@ -98,89 +97,87 @@ class TestDataReader(TestCase):
         expected_station_latitude = "27.1"
         expected_station_longitude = "10"
         expected_alt = 125.4
-        variables = [expected_time_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Station_Lat": expected_station_latitude,
                       "Station_Lon": expected_station_longitude,
                       "Station_Altitude": expected_alt}
 
-        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(decider.altitude, is_(expected_alt))
+        assert_that(decider.altitude, is_([expected_alt]))
 
     def test_GIVEN_time_coordinate_station_lat_and_lon_variable_and_alt_in_different_case_WHEN_construct_THEN_values_are_correct(self):
         expected_time_var = "time_var"
         expected_station_latitude = "27.1"
         expected_station_longitude = "10"
         expected_alt = 125.4
-        variables = [expected_time_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar()}]
         attributes = {"tIME_CoorDinate": expected_time_var,
                       "StatioN_lat": expected_station_latitude,
                       "StaTion_Lon": expected_station_longitude,
                       "StAtion_Altitude": expected_alt}
 
-        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(decider.station, is_(True), "File should be for station")
         assert_that(decider.time_variable_name, is_(expected_time_var))
-        assert_that(decider.station_latitude, is_(expected_station_latitude))
-        assert_that(decider.station_longitude, is_(expected_station_longitude))
-        assert_that(decider.altitude, is_(expected_alt))
+        assert_that(decider.station_latitude, is_([expected_station_latitude]))
+        assert_that(decider.station_longitude, is_([expected_station_longitude]))
+        assert_that(decider.altitude, is_([expected_alt]))
 
     def test_GIVEN_time_coordinate_variable_lat_but_lat_variable_does_not_exist_WHEN_construct_THEN_throw_exception(self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
-        variables = [expected_time_var, "not LON"]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), "not LON": self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("There is no variable for the latitude co-ordinate '{}'".format(expected_lat_var)))
+        assert_that(cm.exception.message, is_("There is no variable for the latitude co-ordinate '{}'"
+                                              .format(expected_lat_var)))
 
     def test_GIVEN_time_coordinate_variable_lat_but_no_lon_variable_WHEN_construct_THEN_throw_exception(self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
-        variables = [expected_time_var, expected_lat_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("No attributes indicating longitude variable name, expecting 'Longitude_Coordinate'"))
+        assert_that(cm.exception.message, is_("No attributes indicating longitude variable name, "
+                                              "expecting 'Longitude_Coordinate'"))
 
     def test_GIVEN_time_coordinate_variable_lat_lon_but_lon_variable_does_not_exist_WHEN_construct_THEN_throw_exception(self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
-        variables = [expected_time_var, expected_lat_var, "not LAT"]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(), "not LAT": self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("There is no variable for the longitude co-ordinate '{}'".format(expected_lon_var)))
+        assert_that(cm.exception.message, is_("There is no variable for the longitude co-ordinate '{}'"
+                                              .format(expected_lon_var)))
 
     def test_GIVEN_time_coordinate_variable_lat_lon_with_no_alt_WHEN_construct_THEN_values_are_set(self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(selector.station, is_(False), "station")
         assert_that(selector.time_variable_name, is_(expected_time_var), "time variable name")
@@ -194,15 +191,15 @@ class TestDataReader(TestCase):
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_alt_var = "ALT"
-        variables = [expected_time_var, expected_lat_var, "not ALT", expected_lon_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      "not ALT": self.MockVar(), expected_lon_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var,
                       "Vertical_Coordinate": expected_alt_var}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(cm.exception.message, is_("There is no variable for the vertical co-ordinate '{}'".format(expected_alt_var)))
 
@@ -211,14 +208,14 @@ class TestDataReader(TestCase):
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_alt_var = "ALT"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_alt_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_alt_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var,
                       "Vertical_Coordinate": expected_alt_var}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(selector.altitude, is_(None), "altitude not fixed")
         assert_that(selector.altitude_variable_name, is_(expected_alt_var), "altitude var name")
@@ -228,13 +225,13 @@ class TestDataReader(TestCase):
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_pressure_var = "PSXC"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_pressure_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_pressure_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(selector.pressure_variable_name, is_(expected_pressure_var), "pressure variable name")
 
@@ -243,13 +240,13 @@ class TestDataReader(TestCase):
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_pressure_var = "PRE"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_pressure_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_pressure_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(selector.pressure_variable_name, is_(expected_pressure_var), "pressure variable name")
 
@@ -258,13 +255,13 @@ class TestDataReader(TestCase):
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_pressure_var = "PSXC"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_pressure_var, "PRE"]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_pressure_var: self.MockVar(), "PRE": self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(selector.pressure_variable_name, is_(expected_pressure_var), "pressure variable name")
 
@@ -273,26 +270,29 @@ class TestDataReader(TestCase):
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_alt_var = "ALT"
-        variables = [expected_time_var, expected_lat_var, expected_alt_var, expected_lon_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_alt_var: self.MockVar()}]
         attributes = {"Coordinates": "incorect"}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("The coordinate attribute does not have four entries. It should be space separated \"longitude latitude altitude time\""))
+        assert_that(cm.exception.message, is_("The coordinate attribute does not have four entries. "
+                                              "It should be space separated \"longitude latitude altitude time\""))
 
     def test_GIVEN_coordinate_attribute_but_no_variable_for_one_value_WHEN_construct_THEN_throw_exception(self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_alt_var = "ALT"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, "NOT ALT"]
-        variable_dimensions = {variables[0]: "Time"}
-        attributes = {"Coordinates": "{} {} {} {}".format(expected_lon_var, expected_lat_var, expected_alt_var, expected_time_var)}
+
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), "NOT ALT": self.MockVar()}]
+        attributes = {"Coordinates": "{} {} {} {}".format(expected_lon_var, expected_lat_var,
+                                                          expected_alt_var, expected_time_var)}
 
         with self.assertRaises(InvalidVariableError) as cm:
-            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+            NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(cm.exception.message, is_("There is no variable for the co-ordinate '{}'".format(expected_alt_var)))
 
@@ -301,11 +301,12 @@ class TestDataReader(TestCase):
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
         expected_alt_var = "ALT"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_alt_var]
-        variable_dimensions = {variables[0]: "Time"}
-        attributes = {"Coordinates": "{} {} {} {}".format(expected_lon_var, expected_lat_var, expected_alt_var, expected_time_var)}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_alt_var: self.MockVar()}]
+        attributes = {"Coordinates": "{} {} {} {}".format(expected_lon_var, expected_lat_var,
+                                                          expected_alt_var, expected_time_var)}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(selector.station, is_(False), "station")
         assert_that(selector.time_variable_name, is_(expected_time_var), "time variable name")
@@ -321,11 +322,13 @@ class TestDataReader(TestCase):
         expected_lon_var = "LON"
         expected_alt_var = "ALT"
         expected_pres_var = "PSXC"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_alt_var, expected_pres_var]
-        variable_dimensions = {variables[0]: "Time"}
-        attributes = {"Coordinates": "{} {} {} {}".format(expected_lon_var, expected_lat_var, expected_alt_var, expected_time_var)}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_alt_var: self.MockVar(),
+                      expected_pres_var: self.MockVar()}]
+        attributes = {"Coordinates": "{} {} {} {}".format(expected_lon_var, expected_lat_var,
+                                                          expected_alt_var, expected_time_var)}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         assert_that(selector.station, is_(False), "station")
         assert_that(selector.time_variable_name, is_(expected_time_var), "time variable name")
@@ -341,30 +344,29 @@ class TestDataReader(TestCase):
         expected_lon_var = "LON"
         expected_alt_var = "ALT"
         expected_timestamp = "timestamp"
-        variables = [expected_time_var, expected_lat_var, expected_lon_var, expected_alt_var]
-        variable_dimensions = {variables[0]: "Time"}
+        variables = [{expected_time_var: self.MockVar(), expected_lat_var: self.MockVar(),
+                      expected_lon_var: self.MockVar(), expected_alt_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Latitude_Coordinate": expected_lat_var,
                       "Longitude_Coordinate": expected_lon_var,
                       "Vertical_Coordinate": expected_alt_var,
                       "Time_Stamp_Info": expected_timestamp}
 
-        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        selector = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(selector.time_stamp_info, is_(expected_timestamp), "time stamp info")
+        assert_that(selector.time_stamp_info, is_([expected_timestamp]), "time stamp info")
 
     def test_GIVEN_valid_file_with_all_variables_same_shape_as_time_WHEN_get_vars_THEN_all_variables_returned(self):
         expected_time_var = "time_var"
         expected_station_latitude = "27.1"
         expected_station_longitude = "10"
-        variables = [expected_time_var, "another_var"]
+        variables = [{expected_time_var: self.MockVar(), "another_var": self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Station_Lat": expected_station_latitude,
                       "Station_Lon": expected_station_longitude}
         aggregated_dim = "Time"
         expected_time_dimensions = [aggregated_dim]
-        variable_dimensions = {name: expected_time_dimensions for name in variables}
-        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         vars = decider.get_variable_names_with_same_dimensions_as_time_coord()
 
@@ -387,8 +389,8 @@ class TestDataReader(TestCase):
                       "Station_Lat": "27.1",
                       "Station_Lon": "10"}
 
-        variables = variable_dimensions.keys()
-        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        variables = [{key: self.MockVar(val) for key, val in variable_dimensions.items()}]
+        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         vars = decider.get_variable_names_with_same_dimensions_as_time_coord()
 
@@ -414,8 +416,8 @@ class TestDataReader(TestCase):
                       "Station_Lat": "27.1",
                       "Station_Lon": "10"}
 
-        variables = variable_dimensions.keys()
-        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables, variable_dimensions)
+        variables = [{key: self.MockVar(val) for key, val in variable_dimensions.items()}]
+        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
         vars = decider.get_variable_names_with_same_dimensions_as_time_coord()
 

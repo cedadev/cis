@@ -21,7 +21,6 @@ class Coord(LazyData):
         if self.units == 'deg':
             self.units = 'degrees'
 
-
     @property
     def points(self):
         """Alias for data to match iris.coords.Coord.points

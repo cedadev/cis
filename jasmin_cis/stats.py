@@ -305,19 +305,22 @@ class StatsAnalyzer(object):
         :param data2: Second data object
         :return: List of StatisticsResult instances.
         """
-
-        self.data1 = data1
-        self.data2 = data2
+        self._var_name_1 = data1.var_name
+        self._var_name_2 = data2.var_name
+        # Flatten the data, so that data of different shapes but same overall size can be compared (e.g. the case where
+        # you have colocated some data).
+        self._data1 = data1.data.flatten()
+        self._data2 = data2.data.flatten()
         # Keep a record of whether we have already combined the masks so that we don't unnecessarily repeat it
         self._masks_combined = False
 
     def _get_data_for_combined_masks(self):
-        if numpy.ma.is_masked(self.data1.data) or numpy.ma.is_masked(self.data2.data):
-            mask1 = numpy.ma.getmaskarray(self.data1.data)
-            mask2 = numpy.ma.getmaskarray(self.data2.data)
+        if numpy.ma.is_masked(self._data1) or numpy.ma.is_masked(self._data2):
+            mask1 = numpy.ma.getmaskarray(self._data1)
+            mask2 = numpy.ma.getmaskarray(self._data2)
             # Creating a new masked array combines the masks and preserves the originals
-            return numpy.ma.masked_array(self.data1.data, mask2), numpy.ma.masked_array(self.data2.data, mask1)
-        return self.data1.data, self.data2.data
+            return numpy.ma.masked_array(self._data1, mask2), numpy.ma.masked_array(self._data2, mask1)
+        return self._data1, self._data2
 
     def analyze(self):
         """
@@ -342,7 +345,7 @@ class StatsAnalyzer(object):
         (i.e. are non-missing in both datasets).
         :return: List of StatisticsResults
         """
-        count = numpy.ma.count(self.data1.data + self.data2.data)
+        count = numpy.ma.count(self._data1 + self._data2)
         return [PointsCount(count)]
 
     def means(self):
@@ -352,8 +355,8 @@ class StatsAnalyzer(object):
         """
         # This command requires the masks to be combined
         data1_combined, data2_combined = self._get_data_for_combined_masks()
-        return [DatasetMean(numpy.mean(data1_combined), self.data1.var_name, 1),
-                DatasetMean(numpy.mean(data2_combined), self.data2.var_name, 2)]
+        return [DatasetMean(numpy.mean(data1_combined), self._var_name_1, 1),
+                DatasetMean(numpy.mean(data2_combined), self._var_name_2, 2)]
 
     def stddevs(self):
         """
@@ -362,15 +365,15 @@ class StatsAnalyzer(object):
         """
         # This command requires the masks to be combined
         data1_combined, data2_combined = self._get_data_for_combined_masks()
-        return [DatasetStddev(numpy.std(data1_combined, ddof=1), self.data1.var_name, 1),
-                DatasetStddev(numpy.std(data2_combined, ddof=1), self.data2.var_name, 2)]
+        return [DatasetStddev(numpy.std(data1_combined, ddof=1), self._var_name_1, 1),
+                DatasetStddev(numpy.std(data2_combined, ddof=1), self._var_name_2, 2)]
 
     def abs_mean(self):
         """
         Mean of absolute difference d2-d1
         :return: List of StatisticsResults
         """
-        mean = numpy.mean(self.data2.data - self.data1.data)
+        mean = numpy.mean(self._data2 - self._data1)
         return [AbsoluteMean(mean)]
 
     def abs_stddev(self):
@@ -378,7 +381,7 @@ class StatsAnalyzer(object):
         Standard deviation of absolute difference d2-d1
         :return: List of StatisticsResults
         """
-        stddev = numpy.std(self.data2.data - self.data1.data, ddof=1)
+        stddev = numpy.std(self._data2 - self._data1, ddof=1)
         return [AbsoluteStddev(stddev)]
 
     def rel_mean(self):
@@ -386,7 +389,7 @@ class StatsAnalyzer(object):
         Mean of relative difference (d2-d1)/d1
         :return: List of StatisticsResults
         """
-        mean = numpy.mean((self.data2.data - self.data1.data)/self.data1.data)
+        mean = numpy.mean((self._data2 - self._data1)/self._data1)
         return [RelativeMean(mean)]
 
     def rel_stddev(self):
@@ -394,7 +397,7 @@ class StatsAnalyzer(object):
         Mean of relative difference (d2-d1)/d1
         :return: List of StatisticsResults
         """
-        stddev = numpy.std((self.data2.data - self.data1.data)/self.data1.data, ddof=1)
+        stddev = numpy.std((self._data2 - self._data1)/self._data1, ddof=1)
         return [RelativeStddev(stddev)]
 
     def spearmans_rank(self):
@@ -402,7 +405,7 @@ class StatsAnalyzer(object):
         Perform a spearman's rank on the data
         :return: List of StatisticsResults
         """
-        spearman = scipy.stats.mstats.spearmanr(self.data1.data, self.data2.data, None)[0]
+        spearman = scipy.stats.mstats.spearmanr(self._data1, self._data2, None)[0]
         return [SpearmansRank(spearman)]
 
     def linear_regression(self):
@@ -410,7 +413,7 @@ class StatsAnalyzer(object):
         Perform a linear regression on the data
         :return: List of StatisticsResults
         """
-        grad, intercept, r, p, stderr = scipy.stats.mstats.linregress(self.data1.data, self.data2.data)
+        grad, intercept, r, p, stderr = scipy.stats.mstats.linregress(self._data1, self._data2)
         return [LinearRegressionGradient(grad),
                 LinearRegressionIntercept(intercept),
                 LinearRegressionRValue(r),
