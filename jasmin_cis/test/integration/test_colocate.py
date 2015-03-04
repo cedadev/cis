@@ -316,9 +316,9 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'lin,variable=%s' % sample_var
+        colocator_and_opts = 'variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':' + colocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -331,15 +331,13 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
+        colocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
                      sample_file + ':colocator=' + colocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         out_vars = []
-        for var in vars:
-            out_vars.extend([var, var + '_std_dev', var + '_num_points'])
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars, (192, 145))
 
