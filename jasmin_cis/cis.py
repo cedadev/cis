@@ -210,11 +210,8 @@ def evaluate_cmd(main_arguments):
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
     calculator = Calculator()
-    if main_arguments.output_var is not None:
-        result = calculator.evaluate(data_list, main_arguments.expr, main_arguments.output_var,
-                                     main_arguments.units, main_arguments.attributes)
-    else:
-        result = calculator.evaluate(data_list, main_arguments.expr)
+    result = calculator.evaluate(data_list, main_arguments.expr, main_arguments.output_var,
+                                 main_arguments.units, main_arguments.attributes)
     result.save_data(main_arguments.output)
 
 

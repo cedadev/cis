@@ -19,13 +19,13 @@ class Calculator(object):
                      'min', 'pow', 'range', 'reduce', 'reversed', 'round', 'sorted', 'sum', 'xrange', 'zip']
     SAFE_MODULES = ['numpy']
 
-    def evaluate(self, data_list, expr, output_var='calculated_variable', units=None, attributes=None):
+    def evaluate(self, data_list, expr, output_var=None, units=None, attributes=None):
         """
         Evaluate a given expression over a list of data to produce an output data
         :param data_list: List of data used in the evaluation (these will be identified by alias or var_name).
         Should all be of the same data type and shape.
         :param expr: String python expression to evaluate.
-        :param output_var: Name to use for the output variable.
+        :param output_var: Name to use for the output variable (defaults to 'calculated_variable' if not provided.
         :param units: String indicating the units of the output expression
         :param attributes: Dictionary of attribute names : values to add to the output NetCDF variable
         :return: Data object matching the type of the input data (i.e. GriddedData or UngriddedData).
@@ -65,7 +65,8 @@ class Calculator(object):
         :param attributes: Dictionary of attributes to add to output variable
         :return: Post processed data object (GriddedData, UngriddedData or Cube)
         """
-        var_name = output_var
+        if output_var is None:
+            output_var = 'calculated_variable'
         standard_name = None
         long_name = 'Calculated value for expression "%s"' % expr
         history = self._make_history(data_list, expr)
@@ -83,7 +84,7 @@ class Calculator(object):
         if not sample_shape == result_array.shape:
             raise EvaluationError("The resulting array is not the same shape as the original data. "
                                   "Check your expression")
-        data = sample_data.make_new_with_same_coordinates(data=result_array, var_name=var_name,
+        data = sample_data.make_new_with_same_coordinates(data=result_array, var_name=output_var,
                                                           standard_name=standard_name, long_name=long_name,
                                                           history=history, units=units, flatten=True)
         if attributes is not None:

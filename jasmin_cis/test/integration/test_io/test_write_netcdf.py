@@ -1,12 +1,13 @@
 import unittest
 import os
 from netCDF4 import Dataset
+from data_io.gridded_data import make_from_cube
 
-from jasmin_cis.test.util.mock import make_dummy_2d_ungridded_data
+from jasmin_cis.test.util.mock import make_dummy_2d_ungridded_data, make_mock_cube
 from jasmin_cis.test.test_files.data import make_pathname
 from jasmin_cis.data_io.write_netcdf import write
 
-tmp_file = "tmp_file"
+tmp_file = "tmp_file.nc"
 
 
 class TestWriteNetcdf(unittest.TestCase):
@@ -45,9 +46,32 @@ class TestWriteNetcdf(unittest.TestCase):
 
         data_object2 = prod.create_data_object([tmp_file], 'AOT_440')
 
-    def test_write_attributes(self):
+    def test_ungridded_write_attributes(self):
         data = make_dummy_2d_ungridded_data()
-        data.attributes['attr_name'] = 'attr_val'
+        data.add_attributes({'attr_name': 'attr_val'})
         write(data, tmp_file)
         d = Dataset(tmp_file)
         assert d.variables['rain'].attr_name == 'attr_val'
+
+    def test_gridded_write_attributes(self):
+        data = make_from_cube(make_mock_cube())
+        data.var_name = 'rain'
+        data.add_attributes({'attr_name': 'attr_val'})
+        data.save_data(tmp_file)
+        d = Dataset(tmp_file)
+        assert d.variables['rain'].attr_name == 'attr_val'
+
+    def test_ungridded_write_units(self):
+        data = make_dummy_2d_ungridded_data()
+        data.units = 'kg'
+        write(data, tmp_file)
+        d = Dataset(tmp_file)
+        assert d.variables['rain'].units == 'kg'
+
+    def test_gridded_write_units(self):
+        data = make_from_cube(make_mock_cube())
+        data.var_name = 'rain'
+        data.units = 'ppm'
+        data.save_data(tmp_file)
+        d = Dataset(tmp_file)
+        assert d.variables['rain'].units == 'ppm'
