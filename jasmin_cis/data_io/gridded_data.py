@@ -21,11 +21,9 @@ def load_cube(*args, **kwargs):
 def make_from_cube(cube):
     gd = None
     if isinstance(cube, iris.cube.Cube):
-        gd = cube
-        gd.__class__ = GriddedData
+        return GriddedData.make_from_cube(cube)
     elif isinstance(cube, iris.cube.CubeList):
-        gd = cube
-        gd.__class__ = GriddedDataList
+        return GriddedDataList(cube)
     return gd
 
 
@@ -52,6 +50,18 @@ class GriddedData(iris.cube.Cube, CommonData):
             rejected_unit = kwargs.pop('units')
             logging.warning("Attempted to set invalid unit '{}'.".format(rejected_unit))
             super(GriddedData, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def make_from_cube(cls, cube):
+        """
+        Create a GriddedData object from a cube
+        :param cube:
+        :return:
+        """
+        if not isinstance(cube, GriddedData):
+            cube.__class__ = GriddedData
+            cube._local_attributes = []
+        return cube
 
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
                                        long_name=None, history=None, units=None, flatten=False):
@@ -244,11 +254,6 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         if isinstance(p_object, iris.cube.Cube):
             p_object = make_from_cube(p_object)
         super(GriddedDataList, self).append(p_object)
-
-    def extend(self, iterable):
-        if isinstance(iterable, iris.cube.CubeList):
-            iterable = make_from_cube(iterable)
-        super(GriddedDataList, self).extend(iterable)
 
     def save_data(self, output_file):
         """
