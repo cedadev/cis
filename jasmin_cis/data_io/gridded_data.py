@@ -30,6 +30,7 @@ def make_from_cube(cube):
 
 
 class GriddedData(iris.cube.Cube, CommonData):
+
     def __init__(self, *args, **kwargs):
 
         try:
@@ -42,6 +43,8 @@ class GriddedData(iris.cube.Cube, CommonData):
                                 "used in the output file.".format(rejected_name))
         except KeyError:
             pass
+
+        self._local_attributes = []
 
         try:
             super(GriddedData, self).__init__(*args, **kwargs)
@@ -188,13 +191,35 @@ class GriddedData(iris.cube.Cube, CommonData):
             self.data = new_data
             self.dim_coords[lon_idx].points = new_lon_points
 
+    def add_attributes(self, attributes):
+        """
+        Add a variable attribute to this data
+        :param attributes: Dictionary of attribute names (keys) and values.
+        :return:
+        """
+        self.attributes.update(attributes)
+        # Record that this is a local (variable) attribute, not a global attribute
+        self._local_attributes.extend(attributes.keys())
+
+    def remove_attribute(self, key):
+        """
+        Remove a variable attribute to this data
+        :param key: Attribute key to remove
+        :return:
+        """
+        self.attributes.pop(key, None)
+        try:
+            self._local_attributes.remove(key)
+        except ValueError:
+            pass
+
     def save_data(self, output_file):
         """
         Save this data object to a given output file
         :param output_file: Output file to save to.
         """
         logging.info('Saving data to %s' % output_file)
-        iris.save(self, output_file)
+        iris.save(self, output_file, local_keys=self._local_attributes)
 
 
 class GriddedDataList(iris.cube.CubeList, CommonDataList):

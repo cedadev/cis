@@ -244,6 +244,22 @@ class LazyData(object):
         else:
             self.metadata.history = timestamp + new_history
 
+    def add_attributes(self, attributes):
+        """
+        Add a variable attribute to this data
+        :param attributes: Dictionary of attribute names (keys) and values.
+        :return:
+        """
+        self.attributes.update(attributes)
+
+    def remove_attribute(self, key):
+        """
+        Remove a variable attribute from this data
+        :param key: Attribute key to remove
+        :return:
+        """
+        self.attributes.pop(key, None)
+
     def save_data(self, output_file):
         output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
