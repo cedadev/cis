@@ -101,6 +101,8 @@ class LazyData(object):
 
         self._data_flattened = None
 
+        self.attributes = {}
+
         self.metadata = Metadata.from_CubeMetadata(metadata) if isinstance(metadata, CubeMetadata) else metadata
 
         if isinstance(data, np.ndarray):
