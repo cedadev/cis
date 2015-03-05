@@ -48,18 +48,28 @@ class TestWriteNetcdf(unittest.TestCase):
 
     def test_ungridded_write_attributes(self):
         data = make_dummy_2d_ungridded_data()
-        data.add_attributes({'attr_name': 'attr_val'})
+        attrs = {'attr_name': 'attr_val',
+                 'standard_name': 'std_val',
+                 'long_name': 'lg_val',
+                 'units': 'units'}
+        data.add_attributes(attrs)
         write(data, tmp_file)
         d = Dataset(tmp_file)
-        assert d.variables['rain'].attr_name == 'attr_val'
+        for key, val in attrs.iteritems():
+            assert getattr(d.variables['rain'], key) == val
 
     def test_gridded_write_attributes(self):
         data = make_from_cube(make_mock_cube())
         data.var_name = 'rain'
-        data.add_attributes({'attr_name': 'attr_val'})
+        attrs = {'attr_name': 'attr_val',
+                 'standard_name': 'convective_rainfall_amount',
+                 'long_name': 'lg_val',
+                 'units': 'units'}
+        data.add_attributes(attrs)
         data.save_data(tmp_file)
         d = Dataset(tmp_file)
-        assert d.variables['rain'].attr_name == 'attr_val'
+        for key, val in attrs.iteritems():
+            assert getattr(d.variables['rain'], key) == val
 
     def test_ungridded_write_units(self):
         data = make_dummy_2d_ungridded_data()

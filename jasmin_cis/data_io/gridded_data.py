@@ -207,7 +207,14 @@ class GriddedData(iris.cube.Cube, CommonData):
         :param attributes: Dictionary of attribute names (keys) and values.
         :return:
         """
-        self.attributes.update(attributes)
+        for key, value in attributes.items():
+            try:
+                self.attributes[key] = value
+            except ValueError:
+                try:
+                    setattr(self, key, value)
+                except ValueError as e:
+                    logging.warning("Could not set NetCDF attribute '%s' because %s" % (key, e.message))
         # Record that this is a local (variable) attribute, not a global attribute
         self._local_attributes.extend(attributes.keys())
 
