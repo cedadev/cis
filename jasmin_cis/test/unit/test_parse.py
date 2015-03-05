@@ -124,13 +124,13 @@ class TestParse(TestCase):
 
     def test_GIVEN_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
         args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
-                'var1 + var2 + var3', '-o', 'output_name']
+                'var1 + var2 + var3', 'units', '-o', 'output_name']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output_name.nc'))
 
     def test_GIVEN_output_has_file_extension_WHEN_parse_THEN_extension_not_added(self):
         args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
-                'var1 + var2 + var3', '-o', 'output_name.nc']
+                'var1 + var2 + var3', 'units', '-o', 'output_name.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output_name.nc'))
 
@@ -204,10 +204,11 @@ class TestParseEvaluate(TestCase):
 
     def test_parse_evaluate_single_datagroup(self):
         args = ['eval', 'var1,var2:%s:product=cis' % ascii_filename_with_no_values,
-                'var1 + var2 + var3', '-o', 'output.nc']
+                'var1 + var2 + var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.command, is_('eval'))
         assert_that(parsed.expr, is_('var1 + var2 + var3'))
+        assert_that(parsed.units, is_('units'))
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(1))
         assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
@@ -216,10 +217,11 @@ class TestParseEvaluate(TestCase):
 
     def test_parse_evaluate_multiple_datagroups(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
-                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.command, is_('eval'))
         assert_that(parsed.expr, is_('var1^var2 / var3'))
+        assert_that(parsed.units, is_('units'))
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(2))
         assert_that(parsed.datagroups[0]['filenames'], is_([ascii_filename_with_no_values]))
@@ -229,28 +231,28 @@ class TestParseEvaluate(TestCase):
 
     def test_parse_evaluate_output_variable(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
-                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'out_var:output.nc']
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'out_var:output.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output.nc'))
         assert_that(parsed.output_var, is_('out_var'))
 
     def test_parse_evaluate_no_output_variable(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
-                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output.nc'))
         assert_that(parsed.output_var, is_(None))
 
     def test_parse_evaluate_no_output(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
-                'var3:%s' % dummy_cis_out, 'var1^var2 / var3']
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('out.nc'))
         assert_that(parsed.output_var, is_(None))
 
     def test_parse_evaluate_invalid_output(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
-                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'var:var:out']
+                'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'var:var:out']
         try:
             parse_args(args)
             assert False
@@ -261,7 +263,7 @@ class TestParseEvaluate(TestCase):
     def test_parse_evaluate_valid_aliases(self):
         # Should use the given alias or the variable name if not provided
         args = ['eval', 'var1=alias1,var2:%s' % ascii_filename_with_no_values,
-                'var3=alias3:%s' % dummy_cis_out, 'var1^var2 / var3', '-o', 'output.nc']
+                'var3=alias3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[0]['aliases'], is_(['alias1', 'var2']))
@@ -270,7 +272,7 @@ class TestParseEvaluate(TestCase):
 
     def test_parse_evaluate_duplicate_aliases(self):
         args = ['eval', 'var1=alias1,var2=alias1:%s' % ascii_filename_with_no_values,
-                'var1^var2 / var3', '-o', 'output.nc']
+                'var1^var2 / var3', 'units', '-o', 'output.nc']
         try:
             parse_args(args)
             assert False
@@ -282,9 +284,46 @@ class TestParseEvaluate(TestCase):
         invalid_var_aliases = ['var1=', '=alias', '=', 'var=a=a']
         for var in invalid_var_aliases:
             args = ['eval', '%s:%s' % (var, ascii_filename_with_no_values),
-                    'var1^var2 / var3', '-o', 'output.nc']
+                    'var1^var2 / var3', 'units', '-o', 'output.nc']
             try:
                 parse_args(args)
+                assert False
+            except SystemExit as e:
+                if e.code != 2:
+                    raise e
+
+    def test_parse_evaluate_missing_units_single_datagroup(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values,
+                'var1 + var2']
+        try:
+            parse_args(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 2:
+                raise e
+
+    def test_can_specify_attributes(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values, 'var1^var2 / var3', 'units',
+                '--attributes', 'att1:val1,att2:val2']
+        parsed = parse_args(args)
+        assert_that(parsed.attributes, is_({'att1': 'val1',
+                                            'att2': 'val2'}))
+
+    def test_can_specify_attributes_shorthand(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values, 'var1^var2 / var3', 'units',
+                '-a', 'att1:val1,att2:val2']
+        parsed = parse_args(args)
+        assert_that(parsed.attributes, is_({'att1': 'val1',
+                                            'att2': 'val2'}))
+
+    def test_invalid_attributes_throws_parser_error(self):
+        args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values, 'var1^var2 / var3', 'units',
+                '-a']
+        attributes = ['att1val1,att2:val2', ':', ':val', 'key:']
+        for attr in attributes:
+            full_args = args + [attr]
+            try:
+                parse_args(full_args)
                 assert False
             except SystemExit as e:
                 if e.code != 2:

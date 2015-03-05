@@ -31,7 +31,7 @@ using the 'eval' command. For example, you might want to interpolate a value bet
 
 The evaluate syntax looks like this::
 
-    $ cis eval <datagroup>... <expr> [-o [<output_var>:]<outputfile>]
+    $ cis eval <datagroup>... <expr> <units> [-o [<output_var>:]<outputfile>] [--attributes <attributes>]
 
 where square brackets denote optional commands and:
 
@@ -114,6 +114,11 @@ See :ref:`datagroups` for a more detailed explanation of datagroups.
     CIS eval command will flatten ungridded data so that structure present in the input files will be ignored. This
     allows you to compare ungridded data with different shapes, e.g. (3,5) and (15,)
 
+``<units>``
+  is a mandatory argument describing the units of the resulting expression. This should be a `CF compliant
+  <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch03.html#table-supported-units>` units string,
+  e.g. ``"kg m^-3"``. Where this contains spaces, the whole string should be enclosed in quotes.
+
 ``<outputfile>``
   is an optional argument specifying the file to output to. This will be automatically given a ``.nc`` extension if not
   present and if the output is ungridded, will be prepended with ``cis-`` to identify it as a CIS output file. This must
@@ -122,6 +127,11 @@ See :ref:`datagroups` for a more detailed explanation of datagroups.
   * ``<output_var>`` is an optional prefix to the output file argument to specify the name of the output variable within
     the output file, e.g. ``-o my_new_var:output_filename.nc``. If not provided, the default output variable name is
     *calculated_variable*
+
+``<attributes>``
+  is an optional argument allowing users to provide additional metadata to be included in the evaluation output variable.
+  This should be indicated by the attributes flag (``--attributes`` or ``-a``). The attributes should then follow in
+  comma-separated, key-value pairs, for example ``--attributes attribute_name:attribute_value,attr2:val2``.
 
 
 Evaluation Examples

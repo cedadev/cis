@@ -170,8 +170,10 @@ def add_eval_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs='+',
                         help="Variables to evalute using with filenames and optional product separated by colon(s)")
     parser.add_argument("expr", metavar="Calculation expression to evaluate")
+    parser.add_argument("units", metavar="Units of output expression")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file")
+    parser.add_argument("-a", "--attributes", metavar="Output metadata attributes", nargs="?")
 
 
 def add_stats_parser_arguments(parser):
@@ -909,6 +911,24 @@ def _check_output_filepath_not_input(arguments, parser):
                     parser.error("The input file must not be the same as the output file")
 
 
+def _create_attributes_dictionary(arguments, parser):
+    """
+    Convert the attributes string (of the form 'attr1:val1,attr2:val2') into a dictionary of key-value pairs
+    """
+    if arguments.attributes is not None:
+        dict_pairs = arguments.attributes.split(',')
+        attributes = {}
+        for pair in dict_pairs:
+            try:
+                key, value = pair.split(':')
+                if not (key and value):
+                    raise ValueError
+                attributes[key] = value
+            except ValueError:
+                parser.error("Invalid attribute: expected key-value pair in the format 'key:value', got '%s'" % pair)
+        arguments.attributes = attributes
+
+
 def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
     check_plot_type(arguments.type, parser)
@@ -978,6 +998,7 @@ def validate_subset_args(arguments, parser):
 
 def validate_eval_args(arguments, parser):
     arguments.datagroups = get_eval_datagroups(arguments.datagroups, parser)
+    _create_attributes_dictionary(arguments, parser)
     _validate_output_file(arguments, parser)
     return arguments
 
