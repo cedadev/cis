@@ -67,7 +67,7 @@ class TestCalculator(unittest.TestCase):
     def test_GIVEN_two_cubes_interpolated_WHEN_calculate_THEN_interpolation_successful(self):
         self._make_two_gridded()
         # Simulate the use case of interpolating between two wavelengths
-        #550 -> [600] -> 670
+        # 550 -> [600] -> 670
         expr = 'var1 + (var2 - var1) * (600 - 550) / (670 - 550)'
 
         res = self.calc.evaluate(self.data, expr)
@@ -164,7 +164,7 @@ class TestCalculator(unittest.TestCase):
                            "\nExpression evaluated: 'var1 + var2'" + \
                            "\nwith variables: 'var1' from files ['filename1']," + \
                            "\n'var2' from files ['filename2']."
-       # Do an ends_with comparison because history starts with timestamp
+        # Do an ends_with comparison because history starts with timestamp
         assert_that(res.history, ends_with(expected_history))
 
     def test_GIVEN_output_var_name_WHEN_calculate_THEN_output_uses_var_name(self):
@@ -190,3 +190,33 @@ class TestCalculator(unittest.TestCase):
         expr = 'var1 + var2'
         with self.assertRaises(EvaluationError):
             res = self.calc.evaluate(self.data, expr)
+
+    def test_GIVEN_units_string_WHEN_calculate_ungridded_THEN_units_set_on_output(self):
+        self._make_two_ungridded_data()
+        expr = 'var1 + var2'
+        units = 'kg m^-3'
+        res = self.calc.evaluate(self.data, expr, units=units)
+        assert_that(res.units, is_(units))
+
+    def test_GIVEN_units_string_WHEN_calculate_gridded_THEN_units_set_on_output(self):
+        self._make_two_gridded()
+        expr = 'var1 + var2'
+        units = 'kg m^-3'
+        res = self.calc.evaluate(self.data, expr, units=units)
+        assert_that(res.units, is_(units))
+
+    def test_GIVEN_attributes_WHEN_calculate_ungridded_THEN_attributes_set_on_output(self):
+        self._make_two_ungridded_data()
+        expr = 'var1 + var2'
+        attributes = {'att1': 'val1', 'att2': 'val2'}
+        res = self.calc.evaluate(self.data, expr, attributes=attributes)
+        assert_that(res.attributes['att1'], is_('val1'))
+        assert_that(res.attributes['att2'], is_('val2'))
+
+    def test_GIVEN_attributes_WHEN_calculate_gridded_THEN_attributes_set_on_output(self):
+        self._make_two_gridded()
+        expr = 'var1 + var2'
+        attributes = {'att1': 'val1', 'att2': 'val2'}
+        res = self.calc.evaluate(self.data, expr, attributes=attributes)
+        assert_that(res.attributes['att1'], is_('val1'))
+        assert_that(res.attributes['att2'], is_('val2'))

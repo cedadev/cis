@@ -19,13 +19,15 @@ class Calculator(object):
                      'min', 'pow', 'range', 'reduce', 'reversed', 'round', 'sorted', 'sum', 'xrange', 'zip']
     SAFE_MODULES = ['numpy']
 
-    def evaluate(self, data_list, expr, output_var='calculated_variable'):
+    def evaluate(self, data_list, expr, output_var='calculated_variable', units=None, attributes=None):
         """
         Evaluate a given expression over a list of data to produce an output data
         :param data_list: List of data used in the evaluation (these will be identified by alias or var_name).
         Should all be of the same data type and shape.
         :param expr: String python expression to evaluate.
         :param output_var: Name to use for the output variable.
+        :param units: String indicating the units of the output expression
+        :param attributes: Dictionary of attribute names : values to add to the output NetCDF variable
         :return: Data object matching the type of the input data (i.e. GriddedData or UngriddedData).
         """
         if '__' in expr:
@@ -50,22 +52,25 @@ class Calculator(object):
         except ValueError as ex:
             raise EvaluationError("An error occurred evaluating your expression - check that it's correct and that "
                                   "the variables are compatible shapes. Error is: %s" % ex.message)
-        return self._post_process(data_list, result, expr, output_var)
+        return self._post_process(data_list, result, expr, output_var,  units, attributes)
 
-    def _post_process(self, data_list, result_array, expr, output_var):
+    def _post_process(self, data_list, result_array, expr, output_var, units, attributes):
         """
         Take sample data and the resultant output array, combine them and add appropriate metadata.
         :param data_list: The original sample data
         :param result_array: The calculated output array
         :param expr: The expression used to calculate the output
         :param output_var: Name to use for the output variable.
+        :param units: Units of output variable
+        :param attributes: Dictionary of attributes to add to output variable
         :return: Post processed data object (GriddedData, UngriddedData or Cube)
         """
         var_name = output_var
         standard_name = None
         long_name = 'Calculated value for expression "%s"' % expr
         history = self._make_history(data_list, expr)
-        units = 'unknown'
+        if units is None:
+            units = 'unknown'
 
         # Use the first item from the data list as we assume that:
         # - The coordinates are all the same
@@ -78,9 +83,12 @@ class Calculator(object):
         if not sample_shape == result_array.shape:
             raise EvaluationError("The resulting array is not the same shape as the original data. "
                                   "Check your expression")
-        return sample_data.make_new_with_same_coordinates(data=result_array, var_name=var_name,
+        data = sample_data.make_new_with_same_coordinates(data=result_array, var_name=var_name,
                                                           standard_name=standard_name, long_name=long_name,
                                                           history=history, units=units, flatten=True)
+        if attributes is not None:
+            data.add_attributes(attributes)
+        return data
 
     def _make_history(self, data_list, expr):
         """
