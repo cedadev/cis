@@ -5,6 +5,13 @@ from jasmin_cis.plotting.generic_plot import Generic_Plot
 
 
 class Heatmap(Generic_Plot):
+
+    def __init__(self, packed_data_items, plot_args, *mplargs, **mplkwargs):
+        # Do this here because if this is ungridded data, we won't be able to complete the super() call
+        if not packed_data_items[0].is_gridded:
+            raise UserPrintableException("Heatmap can only be plotted for gridded data")
+        super(Heatmap, self).__init__(packed_data_items, plot_args, *mplargs, **mplkwargs)
+
     def plot(self):
         '''
         Plots a heatmap

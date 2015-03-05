@@ -2,6 +2,7 @@
 Module to do integration tests of plots to files. Does not check the graph created is correct, only that a graph is
 created without errors.
 """
+from jasmin_cis.exceptions import UserPrintableException
 from jasmin_cis.data_io.products.AProduct import ProductPluginException
 from jasmin_cis.cis import plot_cmd, subset_cmd, aggregate_cmd
 from jasmin_cis.parse import parse_args
@@ -161,3 +162,15 @@ class TestPlotIntegration(BaseIntegrationTest):
         args = ['plot', variable + ':' + filename, '--type', 'histogram2d']
         args = parse_args(args)
         plot_cmd(args)
+
+    def test_plot_ungridded_heatmap(self):
+        filename = valid_GASSP_station_filename
+        variable = valid_GASSP_station_vars[0]
+        args = ['plot', variable + ':' + filename, '--type', 'heatmap']
+        args = parse_args(args)
+        try:
+            plot_cmd(args)
+            assert False
+        except SystemExit as e:
+            if e.code != 1:
+                raise e
