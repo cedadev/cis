@@ -66,7 +66,7 @@ where square brackets denote optional commands and:
 
   * ``<productname>`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-See :ref:`datagroups` for a more detailed explanation of datagroups.
+  See :ref:`datagroups` for a more detailed explanation of datagroups.
 
 .. _expr:
 
@@ -115,9 +115,9 @@ See :ref:`datagroups` for a more detailed explanation of datagroups.
     allows you to compare ungridded data with different shapes, e.g. (3,5) and (15,)
 
 ``<units>``
-  is a mandatory argument describing the units of the resulting expression. This should be a `CF compliant
-  <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch03.html#table-supported-units>` units string,
-  e.g. ``"kg m^-3"``. Where this contains spaces, the whole string should be enclosed in quotes.
+  is a mandatory argument describing the units of the resulting expression. This should be a
+  `CF compliant <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch03.html#table-supported-units>`_
+  units string, e.g. ``"kg m^-3"``. Where this contains spaces, the whole string should be enclosed in quotes.
 
 ``<outputfile>``
   is an optional argument specifying the file to output to. This will be automatically given a ``.nc`` extension if not
@@ -131,7 +131,9 @@ See :ref:`datagroups` for a more detailed explanation of datagroups.
 ``<attributes>``
   is an optional argument allowing users to provide additional metadata to be included in the evaluation output variable.
   This should be indicated by the attributes flag (``--attributes`` or ``-a``). The attributes should then follow in
-  comma-separated, key-value pairs, for example ``--attributes attribute_name:attribute_value,attr2:val2``.
+  comma-separated, key=value pairs, for example ``--attributes standard_name=convective_rainfall_amount,echam_version=6.1.00``.
+  Whitespace is permitted in both the names and the values, but then must be enclosed in quotes: ``-a "operating system = "AIX 6.1 Power6"``.
+  Colons or equals signs may not be used in attribute names or values.
 
 
 Evaluation Examples
@@ -168,7 +170,7 @@ We then linearly interpolate the HadGEM data onto the ECHAM grid::
 
 Next we subtract the two fields using::
 
-    $ cis eval od550aer=a:echam-od550aer.nc od550=b:hadgem-od550aer-collocated.nc "a-b" -o modeldifference
+    $ cis eval od550aer=a:echam-od550aer.nc od550=b:hadgem-od550aer-collocated.nc "a-b" 1 -o modeldifference
 
 Finally we plot the evaluated output::
 
@@ -188,7 +190,7 @@ The file agoufou.lev20 refers to ``/group_workspaces/jasmin/cis/data/aeronet/AOT
 
 The AE is calculated using an eval statement::
 
-    $ cis eval AOT_440,AOT_870:agoufou.lev20 "(-1)* (numpy.log(AOT_870/AOT_440)/numpy.log(870./440.))" -o alfa
+    $ cis eval AOT_440,AOT_870:agoufou.lev20 "(-1)* (numpy.log(AOT_870/AOT_440)/numpy.log(870./440.))" 1 -o alfa
 
 Plotting it shows the expected correlation::
 
@@ -248,7 +250,7 @@ following two plots::
 First we perform an evaluation using the `numpy.masked_where <http://docs.scipy.org/doc/numpy/reference/generated/numpy.ma.masked_where.html#numpy.ma.masked_where>`_
 method to produce an optical depth variable that is masked at all points where the cloud cover is more than 20%::
 
-    $ cis eval Cloud_Fraction_Ocean=cloud,Optical_Depth_Land_And_Ocean=od:MOD04_L2.A2010001.2255.005.2010005215814.hdf "numpy.ma.masked_where(cloud > 0.2, od)" -o od:masked_optical_depth.nc
+    $ cis eval Cloud_Fraction_Ocean=cloud,Optical_Depth_Land_And_Ocean=od:MOD04_L2.A2010001.2255.005.2010005215814.hdf "numpy.ma.masked_where(cloud > 0.2, od)" 1 -o od:masked_optical_depth.nc
     $ cis plot od:cis-masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title Aerosol optical depth --cbarscale 0.5 --itemwidth 10 -o masked_optical_depth.png'
 
 .. image:: img/eval/modis_masked_optical_depth.png

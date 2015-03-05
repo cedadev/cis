@@ -913,19 +913,19 @@ def _check_output_filepath_not_input(arguments, parser):
 
 def _create_attributes_dictionary(arguments, parser):
     """
-    Convert the attributes string (of the form 'attr1:val1,attr2:val2') into a dictionary of key-value pairs
+    Convert the attributes string (of the form 'attr1=val1,attr2=val2') into a dictionary of key-value pairs
     """
     if arguments.attributes is not None:
         dict_pairs = arguments.attributes.split(',')
         attributes = {}
         for pair in dict_pairs:
             try:
-                key, value = pair.split(':')
+                key, value = pair.split('=')
                 if not (key and value):
                     raise ValueError
                 attributes[key] = value
             except ValueError:
-                parser.error("Invalid attribute: expected key-value pair in the format 'key:value', got '%s'" % pair)
+                parser.error("Invalid attribute: expected key-value pair in the format 'key=value', got '%s'" % pair)
         arguments.attributes = attributes
 
 

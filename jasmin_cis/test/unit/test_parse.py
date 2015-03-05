@@ -304,14 +304,14 @@ class TestParseEvaluate(TestCase):
 
     def test_can_specify_attributes(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values, 'var1^var2 / var3', 'units',
-                '--attributes', 'att1:val1,att2:val2']
+                '--attributes', 'att1=val1,att2=val2']
         parsed = parse_args(args)
         assert_that(parsed.attributes, is_({'att1': 'val1',
                                             'att2': 'val2'}))
 
     def test_can_specify_attributes_shorthand(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values, 'var1^var2 / var3', 'units',
-                '-a', 'att1:val1,att2:val2']
+                '-a', 'att1=val1,att2=val2']
         parsed = parse_args(args)
         assert_that(parsed.attributes, is_({'att1': 'val1',
                                             'att2': 'val2'}))
@@ -319,7 +319,7 @@ class TestParseEvaluate(TestCase):
     def test_invalid_attributes_throws_parser_error(self):
         args = ['eval', 'var1,var2:%s' % ascii_filename_with_no_values, 'var1^var2 / var3', 'units',
                 '-a']
-        attributes = ['att1val1,att2:val2', ':', ':val', 'key:']
+        attributes = ['att1val1,att2=val2', '=', '=val', 'key=']
         for attr in attributes:
             full_args = args + [attr]
             try:
