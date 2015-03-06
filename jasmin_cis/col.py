@@ -41,6 +41,18 @@ class ColocatorFactory(object):
         kernel = self._instantiate_with_params(kernel_cls, kernel_params)
         return col, con, kernel
 
+    def get_default_colocator_name(self, method_name, sample_gridded, data_gridded):
+        # Default colocators - (sample_gridded, data_gridded) : colocator_name
+        default_methods = {(True, True): 'lin',
+                           (True, False): 'bin',
+                           (False, True): 'nn',
+                           (False, False): 'box'}
+
+        if method_name is None:
+            # If no colocator has been specified we'll identify a default.
+            method_name = default_methods.get((sample_gridded, data_gridded))
+        return method_name
+
     def _get_colocator_classes_for_method(self, method_name, kernel_name, sample_gridded, data_gridded):
         """
         Gets the colocator, constraint and kernel classes corresponding to a specified colocation method and kernel
@@ -51,15 +63,7 @@ class ColocatorFactory(object):
         :param data_gridded: True if data points are gridded, otherwise False
         :return: ColocationOptions containing relevant classes
         """
-        # Default colocators - (sample_gridded, data_gridded) : colocator_name
-        default_methods = {(True, True): 'lin',
-                           (True, False): 'bin',
-                           (False, True): 'nn',
-                           (False, False): 'box'}
-
-        if method_name is None:
-            # If no colocator has been specified we'll identify a default.
-            method_name = default_methods.get((sample_gridded, data_gridded))
+        method_name = self.get_default_colocator_name(method_name, sample_gridded, data_gridded)
 
         key = '_'.join([method_name, str(sample_gridded), str(data_gridded)])
 
@@ -171,8 +175,16 @@ class Colocate(object):
                                                                                      kern_params,
                                                                                      self.sample_points.is_gridded,
                                                                                      data.is_gridded)
+
+        col_name = self.colocator_factory.get_default_colocator_name(col_name, self.sample_points.is_gridded,
+                                                                     data.is_gridded)
         logging.info("Colocator: " + str(col_name))
-        logging.info("Kernel: " + str(kern))
+        if kern is None:
+            kernel_name = kernel.__class__.__name__
+        else:
+            kernel_name = str(kern)
+
+        logging.info("Kernel: " + str(kernel_name))
 
         logging.info("Colocating, this could take a while...")
         t1 = time()
