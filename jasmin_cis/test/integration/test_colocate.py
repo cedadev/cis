@@ -92,19 +92,19 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
     def test_GASSP_station_onto_NetCDF_Gridded(self):
-        # Takes 27s
-        vars = valid_GASSP_station_vars
+        # Takes 1s
+        var = valid_GASSP_station_vars[0]
         filename = valid_GASSP_station_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
         colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
-        arguments = ['col', ",".join(vars) + ':' + filename,
+        arguments = ['col', var + ':' + filename,
                      sample_file + ':colocator=' + colocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [var])
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, [var])
 
     def test_cis_output_onto_NetCDF_Gridded(self):
         # Takes 5s
@@ -293,7 +293,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (96, 192, 240))
 
     def test_HadGem_onto_cis_gridded_output(self):
         # Takes 1s
