@@ -124,7 +124,7 @@ def col_cmd(main_arguments):
     data_reader = DataReader()
     missing_data_for_missing_samples = False
     if main_arguments.samplevariable is not None:
-        sample_data = data_reader.read_data(main_arguments.samplefiles, main_arguments.samplevariable,
+        sample_data = data_reader.read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
                                             main_arguments.sampleproduct)
     else:
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
@@ -145,7 +145,7 @@ def col_cmd(main_arguments):
         filenames = input_group['filenames']
         product = input_group["product"] if input_group["product"] is not None else None
 
-        data = data_reader.read_data(filenames, variables, product)
+        data = data_reader.read_data_list(filenames, variables, product)
         data_writer = DataWriter()
         try:
             output = col.colocate(data, col_name, col_options, kern_name, kern_options)
