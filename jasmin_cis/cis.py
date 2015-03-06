@@ -294,6 +294,7 @@ def main():
     import os
     import logging
     from logging import config
+    import traceback
 
     # configure logging
     try:
@@ -304,7 +305,12 @@ def main():
         print("WARNING: Unable to write to the log: %s" % e)
     logging.captureWarnings(True)  # to catch warning from 3rd party libraries
 
-    parse_and_run_arguments()
+    try:
+        parse_and_run_arguments()
+    except Exception as e:
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        logging.error(e.message + " - check cis.log for details")
 
 
 if __name__ == '__main__':
