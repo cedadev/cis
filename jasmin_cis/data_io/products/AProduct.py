@@ -7,6 +7,7 @@ from jasmin_cis.data_io.hdf import get_hdf4_file_variables
 from jasmin_cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 from jasmin_cis import __version__
 
+
 class AProduct(object):
     """
     Abstract class for the various possible data products. This just defines the interface which
@@ -93,7 +94,6 @@ class AProduct(object):
         return self.__class__.__name__
 
 
-
 def __get_class(filename, product=None):
     """
     Identify the subclass of L{AProduct} to a given product name if specified.
@@ -163,7 +163,7 @@ def get_data(filenames, variable, product=None):
         data = product_cls().create_data_object(filenames, variable)
         return data
     except Exception as e:
-        logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
+        logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving data using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
@@ -185,7 +185,7 @@ def get_coordinates(filenames, product=None):
         coord = product_cls().create_coords(filenames)
         return coord
     except Exception as e:
-        logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
+        logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving coordinates using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
@@ -199,7 +199,7 @@ def get_variables(filenames, product=None):
         variables = product_cls().get_variable_names(filenames)
         return variables
     except Exception as e:
-        logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
+        logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving variables using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
@@ -220,7 +220,7 @@ def get_file_format(filenames, product=None):
     try:
         file_format = product_cls().get_file_format(filenames[0])
     except Exception as e:
-        logging.error("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
+        logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving the file format using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
@@ -243,6 +243,7 @@ def get_product_full_name(filenames, product=None):
     logging.info("Retrieving product fill name using product " + product_cls.__name__ + "...")
 
     return "CIS/{product}/{version}".format(product=product_cls.__name__, version=__version__)
+
 
 class ProductPluginException(Exception):
     """

@@ -73,8 +73,8 @@ class TestAggregation(BaseAggregationTest):
         # Takes 20s
         variable = 'AOD550,AOD870'
         filename = valid_aerosol_cci_filename
-        lat_start, lat_end, lat_delta = -40, 80, 10
-        lon_start, lon_end, lon_delta = -20, 140, 10
+        lat_start, lat_end, lat_delta = -40, 80, 10  # 12
+        lon_start, lon_end, lon_delta = -20, 140, 10  # 16
         self.do_spatial_aggregate(variable, filename, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta)
         self.check_grid_aggregation(lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
@@ -109,9 +109,11 @@ class TestAggregation(BaseAggregationTest):
                             [i, i, i, i, 0.127948367761241, i, i, i, i, i, i, i, i, i, i, 0.0958142693422429]])
         ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         data_550 = ds.variables['AOD550']
-        assert_arrays_almost_equal(data_550[:], arr_550.reshape(arr_550.shape + (1,)))
+        arr_550 = np.transpose(arr_550).reshape((16, 12, 1))
+        arr_870 = np.transpose(arr_870).reshape((16, 12, 1))
+        assert_arrays_almost_equal(data_550[:], arr_550)
         data_870 = ds.variables['AOD870']
-        assert_arrays_almost_equal(data_870[:], arr_870.reshape(arr_870.shape + (1,)))
+        assert_arrays_almost_equal(data_870[:], arr_870)
 
     def test_aggregation_over_time(self):
         # Takes 14s

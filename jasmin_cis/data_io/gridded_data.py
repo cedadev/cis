@@ -21,15 +21,14 @@ def load_cube(*args, **kwargs):
 def make_from_cube(cube):
     gd = None
     if isinstance(cube, iris.cube.Cube):
-        gd = cube
-        gd.__class__ = GriddedData
+        return GriddedData.make_from_cube(cube)
     elif isinstance(cube, iris.cube.CubeList):
-        gd = cube
-        gd.__class__ = GriddedDataList
+        return GriddedDataList(cube)
     return gd
 
 
 class GriddedData(iris.cube.Cube, CommonData):
+
     def __init__(self, *args, **kwargs):
 
         try:
@@ -43,12 +42,26 @@ class GriddedData(iris.cube.Cube, CommonData):
         except KeyError:
             pass
 
+        self._local_attributes = []
+
         try:
             super(GriddedData, self).__init__(*args, **kwargs)
         except ValueError:
             rejected_unit = kwargs.pop('units')
             logging.warning("Attempted to set invalid unit '{}'.".format(rejected_unit))
             super(GriddedData, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def make_from_cube(cls, cube):
+        """
+        Create a GriddedData object from a cube
+        :param cube:
+        :return:
+        """
+        if not isinstance(cube, GriddedData):
+            cube.__class__ = GriddedData
+            cube._local_attributes = []
+        return cube
 
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
                                        long_name=None, history=None, units=None, flatten=False):
@@ -188,13 +201,42 @@ class GriddedData(iris.cube.Cube, CommonData):
             self.data = new_data
             self.dim_coords[lon_idx].points = new_lon_points
 
+    def add_attributes(self, attributes):
+        """
+        Add a variable attribute to this data
+        :param attributes: Dictionary of attribute names (keys) and values.
+        :return:
+        """
+        for key, value in attributes.items():
+            try:
+                self.attributes[key] = value
+            except ValueError:
+                try:
+                    setattr(self, key, value)
+                except ValueError as e:
+                    logging.warning("Could not set NetCDF attribute '%s' because %s" % (key, e.message))
+        # Record that this is a local (variable) attribute, not a global attribute
+        self._local_attributes.extend(attributes.keys())
+
+    def remove_attribute(self, key):
+        """
+        Remove a variable attribute to this data
+        :param key: Attribute key to remove
+        :return:
+        """
+        self.attributes.pop(key, None)
+        try:
+            self._local_attributes.remove(key)
+        except ValueError:
+            pass
+
     def save_data(self, output_file):
         """
         Save this data object to a given output file
         :param output_file: Output file to save to.
         """
         logging.info('Saving data to %s' % output_file)
-        iris.save(self, output_file)
+        iris.save(self, output_file, local_keys=self._local_attributes)
 
 
 class GriddedDataList(iris.cube.CubeList, CommonDataList):
@@ -219,11 +261,6 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         if isinstance(p_object, iris.cube.Cube):
             p_object = make_from_cube(p_object)
         super(GriddedDataList, self).append(p_object)
-
-    def extend(self, iterable):
-        if isinstance(iterable, iris.cube.CubeList):
-            iterable = make_from_cube(iterable)
-        super(GriddedDataList, self).extend(iterable)
 
     def save_data(self, output_file):
         """

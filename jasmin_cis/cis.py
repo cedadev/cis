@@ -124,7 +124,7 @@ def col_cmd(main_arguments):
     data_reader = DataReader()
     missing_data_for_missing_samples = False
     if main_arguments.samplevariable is not None:
-        sample_data = data_reader.read_data(main_arguments.samplefiles, main_arguments.samplevariable,
+        sample_data = data_reader.read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
                                             main_arguments.sampleproduct)
     else:
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
@@ -136,7 +136,7 @@ def col_cmd(main_arguments):
         __error_occurred("There was an error reading one of the files: \n" + str(e))
 
     col_name = main_arguments.samplegroup['colocator'][0] if main_arguments.samplegroup['colocator'] is not None else None
-    col_options = main_arguments.samplegroup['colocator'][1] if main_arguments.samplegroup['colocator'] is not None else None
+    col_options = main_arguments.samplegroup['colocator'][1] if main_arguments.samplegroup['colocator'] is not None else {}
     kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
     kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
 
@@ -145,7 +145,7 @@ def col_cmd(main_arguments):
         filenames = input_group['filenames']
         product = input_group["product"] if input_group["product"] is not None else None
 
-        data = data_reader.read_data(filenames, variables, product)
+        data = data_reader.read_data_list(filenames, variables, product)
         data_writer = DataWriter()
         try:
             output = col.colocate(data, col_name, col_options, kern_name, kern_options)
@@ -210,10 +210,8 @@ def evaluate_cmd(main_arguments):
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
     calculator = Calculator()
-    if main_arguments.output_var is not None:
-        result = calculator.evaluate(data_list, main_arguments.expr, main_arguments.output_var)
-    else:
-        result = calculator.evaluate(data_list, main_arguments.expr)
+    result = calculator.evaluate(data_list, main_arguments.expr, main_arguments.output_var,
+                                 main_arguments.units, main_arguments.attributes)
     result.save_data(main_arguments.output)
 
 
@@ -296,6 +294,7 @@ def main():
     import os
     import logging
     from logging import config
+    import traceback
 
     # configure logging
     try:
@@ -306,7 +305,12 @@ def main():
         print("WARNING: Unable to write to the log: %s" % e)
     logging.captureWarnings(True)  # to catch warning from 3rd party libraries
 
-    parse_and_run_arguments()
+    try:
+        parse_and_run_arguments()
+    except Exception as e:
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        logging.error(e.message + " - check cis.log for details")
 
 
 if __name__ == '__main__':

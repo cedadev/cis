@@ -19,20 +19,28 @@ index_name = 'pixel_number'
 
 
 def __add_metadata(var, data):
-    if data.standard_name: var.standard_name = data.standard_name
-    if data.units: var.units = str(data.units)
-    if data.long_name: var.long_name = data.long_name
-    if data.metadata.range : var.valid_range = data.metadata.range
-    if data.metadata.missing_value : var.missing_value = data.metadata.missing_value
-    if data.metadata.calendar : var.calendar = data.metadata.calendar
-    if data.metadata.history : var.history = data.metadata.history
-
+    if data.standard_name:
+        var.standard_name = data.standard_name
+    if data.units:
+        var.units = str(data.units)
+    if data.long_name:
+        var.long_name = data.long_name
+    if data.metadata.range:
+        var.valid_range = data.metadata.range
+    if data.metadata.missing_value:
+        var.missing_value = data.metadata.missing_value
+    if data.metadata.calendar:
+        var.calendar = data.metadata.calendar
+    if data.metadata.history:
+        var.history = data.metadata.history
+    for name, value in data.attributes.iteritems():
+        setattr(var, name, value)
     return var
 
 
 def __get_missing_value(coord):
     f = coord.metadata.missing_value
-    if not f and f !=0:
+    if not f and f != 0:
         f = None
     return f
 
@@ -46,21 +54,24 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
     :return: created netCDF variable
     """
     from jasmin_cis.exceptions import InconsistentDimensionsError
+
     name = None
     if (data.metadata._name is not None) and (len(data.metadata._name) > 0):
         name = data.metadata._name
     if (name is None) or prefer_standard_name:
         if (data.metadata.standard_name is not None) and (len(data.metadata.standard_name) > 0):
             name = data.metadata.standard_name
-    logging.info("Creating variable: " + name + "("+index_name+")" + " " + types[str(data.data.dtype)])
+    logging.info("Creating variable: " + name + "(" + index_name + ")" + " " + types[str(data.data.dtype)])
     if name not in nc_file.variables:
-        var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name, fill_value=__get_missing_value(data))
+        var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name,
+                                     fill_value=__get_missing_value(data))
         var = __add_metadata(var, data)
         try:
             var[:] = data.data.flatten()
         except IndexError as e:
-            raise InconsistentDimensionsError(str(e)+"\nInconsistent dimensions in output file, unable to write "
-                                                     ""+data.standard_name+" to file (it's shape is "+str(data.shape)+").")
+            raise InconsistentDimensionsError(str(e) + "\nInconsistent dimensions in output file, unable to write "
+                                                       "" + data.standard_name + " to file (it's shape is " + str(
+                data.shape) + ").")
         return var
     else:
         return nc_file.variables[name]
@@ -68,6 +79,7 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
 
 def __create_index(nc_file, length):
     import numpy as np
+
     dimension = nc_file.createDimension(index_name, length)
     dimensions = ( index_name, )
     var = nc_file.createVariable(index_name, np.int32, dimensions)

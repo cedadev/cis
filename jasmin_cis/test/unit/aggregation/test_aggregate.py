@@ -18,11 +18,11 @@ class TestAggregate(unittest.TestCase):
         output_file = 'output.hdf'
         kernel = 'mean'
         grid = None
-        input_data = make_from_cube(make_square_5x3_2d_cube())
+        input_data = GriddedDataList([make_from_cube(make_square_5x3_2d_cube())])
         output_data = input_data
 
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=input_data)
+        mock_data_reader.read_data_list = MagicMock(return_value=input_data)
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = Mock()
         mock_aggregator = Aggregator(None, None)
@@ -32,9 +32,9 @@ class TestAggregate(unittest.TestCase):
         aggregate._create_aggregator = MagicMock(return_value=mock_aggregator)
         aggregate.aggregate(variables, filenames, None, kernel)
 
-        assert_that(mock_data_reader.read_data.call_count, is_(1))
-        assert_that(mock_data_reader.read_data.call_args[0][0], is_(filenames))
-        assert_that(mock_data_reader.read_data.call_args[0][1], is_(variables))
+        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(mock_data_reader.read_data_list.call_args[0][0], is_(filenames))
+        assert_that(mock_data_reader.read_data_list.call_args[0][1], is_(variables))
 
     def test_GIVEN_multiple_variables_and_filenames_WHEN_aggregate_THEN_DataReader_called_correctly(self):
         variables = ['var_name1', 'var_name2']
@@ -46,7 +46,7 @@ class TestAggregate(unittest.TestCase):
         output_data = input_data
 
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=input_data)
+        mock_data_reader.read_data_list = MagicMock(return_value=input_data)
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = Mock()
         mock_aggregator = Aggregator(None, None)
@@ -56,9 +56,9 @@ class TestAggregate(unittest.TestCase):
         aggregate._create_aggregator = MagicMock(return_value=mock_aggregator)
         aggregate.aggregate(variables, filenames, None, kernel)
 
-        assert_that(mock_data_reader.read_data.call_count, is_(1))
-        assert_that(mock_data_reader.read_data.call_args[0][0], is_(filenames))
-        assert_that(mock_data_reader.read_data.call_args[0][1], is_(variables))
+        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(mock_data_reader.read_data_list.call_args[0][0], is_(filenames))
+        assert_that(mock_data_reader.read_data_list.call_args[0][1], is_(variables))
 
     def test_GIVEN_multiple_variables_and_filenames_WHEN_aggregate_THEN_Aggregate_called_correctly(self):
         variables = ['var_name1', 'var_name2']
@@ -70,7 +70,7 @@ class TestAggregate(unittest.TestCase):
         output_data = input_data
 
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=input_data)
+        mock_data_reader.read_data_list = MagicMock(return_value=input_data)
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = Mock()
         mock_aggregator = Aggregator(None, None)
@@ -89,11 +89,11 @@ class TestAggregate(unittest.TestCase):
         output_file = 'output.hdf'
         kernel = 'mean'
         grid = None
-        input_data = make_from_cube(make_square_5x3_2d_cube())
+        input_data = GriddedDataList([make_from_cube(make_square_5x3_2d_cube())])
         output_data = make_from_cube(make_square_5x3_2d_cube() + 1)
 
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=input_data)
+        mock_data_reader.read_data_list = MagicMock(return_value=input_data)
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = Mock()
         mock_aggregator = Aggregator(None, None)
@@ -119,7 +119,7 @@ class TestAggregate(unittest.TestCase):
         output_data = GriddedDataList(2*[make_from_cube(make_square_5x3_2d_cube()) + 1])
 
         mock_data_reader = DataReader()
-        mock_data_reader.read_data = MagicMock(return_value=input_data)
+        mock_data_reader.read_data_list = MagicMock(return_value=input_data)
         mock_data_writer = DataWriter()
         mock_data_writer.write_data = Mock()
         mock_aggregator = Aggregator(None, None)

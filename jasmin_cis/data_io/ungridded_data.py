@@ -101,6 +101,8 @@ class LazyData(object):
 
         self._data_flattened = None
 
+        self.attributes = {}
+
         self.metadata = Metadata.from_CubeMetadata(metadata) if isinstance(metadata, CubeMetadata) else metadata
 
         if isinstance(data, np.ndarray):
@@ -241,6 +243,22 @@ class LazyData(object):
             self.metadata.history += '\n' + timestamp + new_history
         else:
             self.metadata.history = timestamp + new_history
+
+    def add_attributes(self, attributes):
+        """
+        Add a variable attribute to this data
+        :param attributes: Dictionary of attribute names (keys) and values.
+        :return:
+        """
+        self.attributes.update(attributes)
+
+    def remove_attribute(self, key):
+        """
+        Remove a variable attribute from this data
+        :param key: Attribute key to remove
+        :return:
+        """
+        self.attributes.pop(key, None)
 
     def save_data(self, output_file):
         output_file = utils.add_file_prefix('cis-', output_file)

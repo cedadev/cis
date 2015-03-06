@@ -30,7 +30,7 @@ class Aggregate(object):
             # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
             # the specified files.
             logging.info("Reading data for variables: %s", variables)
-            data = self._data_reader.read_data(filenames, variables, product)
+            data = self._data_reader.read_data_list(filenames, variables, product)
         except (IrisError, InvalidVariableError) as e:
             raise CISError("There was an error reading in data: \n" + str(e))
         except IOError as e:
@@ -38,7 +38,7 @@ class Aggregate(object):
 
         aggregator = self._create_aggregator(data, self._grid)
 
-        if isinstance(data, iris.cube.Cube) or isinstance(data, iris.cube.CubeList):
+        if isinstance(data, iris.cube.CubeList):
             kernel = aggregation_kernels[kernel_name]
             data = aggregator.aggregate_gridded(kernel)
         else:
@@ -46,7 +46,7 @@ class Aggregate(object):
             kernel = kernel_class()
             data = aggregator.aggregate_ungridded(kernel)
 
-        #TODO Tidy up output of grid in the history
+        # TODO Tidy up output of grid in the history
         history = "Aggregated using CIS version " + __version__ + \
                   "\n variables: " + str(variables) + \
                   "\n from files: " + str(filenames) + \
