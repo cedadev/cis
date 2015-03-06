@@ -1,3 +1,4 @@
+import logging
 import numpy
 
 from jasmin_cis.exceptions import UserPrintableException
@@ -36,6 +37,19 @@ class Heatmap(Generic_Plot):
             self.mplkwargs["latlon"] = True
 
         x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.plot_args)
+
+        from mpl_toolkits import basemap
+        if isinstance(self.plotting_library, basemap.Basemap):
+            try:
+                version_tuple = tuple(int(s) for s in basemap.__version__.split("."))
+                if version_tuple <= (1, 0, 7):
+                    logging.warning("Basemap version %s has known issues when plotting heatmaps, particularly when "
+                                    "using '--xmin' or '--xmax' options. Use a newer version if available, otherwise "
+                                    "check your output for validity, especially around the meridians."
+                                    % basemap.__version__)
+            except ValueError:
+                # We don't want an error if this doesn't work for some reason
+                pass
 
         self.plotting_library.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs)
 

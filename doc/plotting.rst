@@ -17,6 +17,11 @@ This will attempt to locate the variable ``variable`` in all of the specified ``
 ``heatmap``
   a heatmap especially suitable for gridded data
 
+.. warning::
+    Basemap versions <= 1.0.7 have known issues when plotting heatmaps, particularly when using ``--xmin`` or ``--xmax``
+    options. Use a newer version if available, otherwise check your output for validity, especially around the meridians."
+
+
 ``contour``
   a standard contour plot, see :ref:`contour options <contour-options>`
 
