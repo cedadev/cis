@@ -159,9 +159,12 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_plot_ungridded_histogram2d(self):
         filename = valid_GASSP_station_filename
         variable = valid_GASSP_station_vars[0]
-        args = ['plot', variable + ':' + filename, '--type', 'histogram2d']
+        out_name = 'histogram2d.png'
+        args = ['plot', variable + ':' + filename, '--type', 'histogram2d', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
+
+        os.remove(out_name)
 
     def test_plot_ungridded_heatmap(self):
         filename = valid_GASSP_station_filename
@@ -174,3 +177,33 @@ class TestPlotIntegration(BaseIntegrationTest):
         except SystemExit as e:
             if e.code != 1:
                 raise e
+
+    def test_plot_heatmap_horizontal_cbar(self):
+        var = valid_echamham_variable_1
+        filename = valid_echamham_filename
+        out_name = 'cbarh.png'
+        args = ['plot', var + ':' + filename, '--cbarorient', 'horizontal', '-o', out_name]
+        args = parse_args(args)
+        plot_cmd(args)
+
+        os.remove(out_name)
+
+    def test_plot_heatmap_vertical_cbar(self):
+        var = valid_echamham_variable_1
+        filename = valid_echamham_filename
+        out_name = 'cbarv.png'
+        args = ['plot', var + ':' + filename, '--cbarorient', 'vertical', '-o', out_name]
+        args = parse_args(args)
+        plot_cmd(args)
+
+        os.remove(out_name)
+
+    def test_plot_heatmap_cbar_scale(self):
+        var = valid_echamham_variable_1
+        filename = valid_echamham_filename
+        out_name = 'cbarscale.png'
+        args = ['plot', var + ':' + filename, '--cbarscale', '0.75', '-o', out_name]
+        args = parse_args(args)
+        plot_cmd(args)
+
+        os.remove(out_name)

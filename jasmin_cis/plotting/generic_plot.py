@@ -222,13 +222,21 @@ class Generic_Plot(object):
             formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
         else:
             formatter = None
+        #
+        scale = self.plot_args["cbarscale"]
+        if scale is None:
+            orientation = self.plot_args.get("cbarorient", "vertical")
+            default_scales = {"horizontal": 1.0, "vertical": 0.55}
+            scale = default_scales.get(orientation, 1.0)
+        else:
+            scale = float(scale)
 
-        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks,
-                                        shrink=float(self.plot_args["cbarscale"]), format=formatter)
+        cbar = self.matplotlib.colorbar(orientation=self.plot_args["cbarorient"], ticks=ticks,
+                                        shrink=scale, format=formatter)
 
         if not self.plot_args["logv"]:
             cbar.formatter.set_scientific(True)
-            cbar.formatter.set_powerlimits((-3,3))
+            cbar.formatter.set_powerlimits((-3, 3))
             cbar.update_ticks()
 
         if self.plot_args["cbarlabel"] is None:

@@ -181,7 +181,8 @@ There are a number of plot formatting options available:
   height of the plot in inches
 
 ``--cbarscale``
-  this can be used to change the size of the colourbar when plotting, use --cbarscale 0.5 for lat-lon plots of the entire Earth (this is a temporary fix)
+  this can be used to change the size of the colourbar when plotting and defaults to 0.55 for vertical colorbars, 1.0
+  for horizontal.
 
 ``--coastlinescolour``
   The colour of the coastlines on a map, see :ref:`colours-and-markers`
