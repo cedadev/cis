@@ -452,7 +452,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         time_variables = data_variables[time_variable_name]
         time_coords = []
         # Create a coordinate for each separate file to account for differing timestamps
-        for file_time_var, timestamp in zip(time_variables, timestamps):
+        for file_time_var, timestamp in map(None, time_variables, timestamps):
             metadata = get_metadata(file_time_var)
             metadata.alter_standard_name(standard_name)
             coord = Coord(file_time_var, metadata, coord_axis)
@@ -479,6 +479,7 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         values = listify(values)
         points_counts = listify(points_counts)
         all_points = np.array([])
+        # This may run into the same problem as was fixed for JASCIS-243...
         for value, points_count in zip(values, points_counts):
             file_points = np.ma.array(np.zeros(points_count) + float(value))
             all_points = np.append(all_points, file_points)

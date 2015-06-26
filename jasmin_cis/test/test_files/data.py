@@ -493,6 +493,11 @@ valid_GASSP_station_files_with_different_timestamps = [make_pathname('CCN_mrg60_
                                                        make_pathname('CCN_mrg60_NP3_20080401_R6.ict.nc')]
 valid_GASSP_station_var_with_different_timestamps = 'Number_Concentration'
 
+valid_GASSP_aircraft_files_with_different_timestamps = [make_pathname('ACE1_CCN_RF11_11171995224801_11181995073133.nc'),
+                                                        make_pathname('ACE1_CCN_RF12_11181995222509_11191995072145.nc')]
+valid_GASSP_aircraft_var_with_different_timestamps = 'PRESSURE_ALTITUDE'
+
+
 valid_zonal_time_mean_CMIP5_filename = \
     make_pathname('rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.CMIP5.tm.zm.nc')
 valid_zonal_time_mean_CMIP5_variable = "rsutcs"

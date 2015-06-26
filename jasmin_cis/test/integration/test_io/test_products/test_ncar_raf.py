@@ -28,6 +28,15 @@ class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
         assert_that(np.min(time_coord.data), close_to(149107 + 54690.0/86400, 1e-5))
         assert_that(np.max(time_coord.data), close_to(149110 + 81330.0/86400, 1e-5))
 
+    def test_can_concatenate_aircraft_files(self):
+        from jasmin_cis.data_io.read import read_data
+        from jasmin_cis.test.test_files.data import valid_GASSP_aircraft_files_with_different_timestamps,\
+            valid_GASSP_aircraft_var_with_different_timestamps
+        data = read_data(valid_GASSP_aircraft_files_with_different_timestamps,
+                         valid_GASSP_aircraft_var_with_different_timestamps)
+        time_coord = data.coord(axis='T')
+        assert_that(len(time_coord.data), equal_to(63610))
+
 
 class TestNCAR_NetCDF_RAF_with_GASSP_aeroplane(ProductTests, unittest.TestCase):
 
