@@ -34,7 +34,7 @@ def test_that_can_parse_datetimestr_to_obj():
     # GOTCHA: when not specifying an element of a date (i.e. the year, month or day), the current date is used
     now = dt.datetime.now()
     eq_(parse_datetimestr_to_std_time("2010-02-05"),convert_datetime_to_std_time(dt.datetime(2010,02,05)))
-    eq_(parse_datetimestr_to_std_time("2010-02"),convert_datetime_to_std_time(dt.datetime(2010,02,now.day)))
+    eq_(parse_datetimestr_to_std_time("2010-12"),convert_datetime_to_std_time(dt.datetime(2010,12,now.day)))
     eq_(parse_datetimestr_to_std_time("2010-"),convert_datetime_to_std_time(dt.datetime(2010,now.month,now.day)))
     eq_(parse_datetimestr_to_std_time(""),convert_datetime_to_std_time(dt.datetime(now.year,now.month,now.day)))
 
