@@ -2,6 +2,7 @@ from jasmin_cis.data_io import hdf_sd as hdf_sd, hdf_vd
 import jasmin_cis.utils as utils
 import logging
 
+
 def get_hdf4_file_variables(filename, data_type):
     """
     Get all variables from a file containing ungridded data.
@@ -34,10 +35,16 @@ def get_hdf4_file_metadata(filename):
     :param filename
     :return: dictionary of string attributes
     """
-    from pyhdf.SD import SD
+    # Optional HDF import, if the module isn't found we defer raising ImportError until it is actually needed.
+    try:
+        from pyhdf.SD import SD
+    except ImportError:
+        raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
+
     return SD(filename).attributes()
 
-def __read_hdf4(filename,variables):
+
+def __read_hdf4(filename, variables):
     '''
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
          for each VD and SD data types.
@@ -53,14 +60,14 @@ def __read_hdf4(filename,variables):
     variables = utils.listify(variables)
 
     try:
-        sds_dict = hdf_sd.read(filename,variables)
+        sds_dict = hdf_sd.read(filename, variables)
 
         # remove the variables identified as SD (i.e. the keys in sds_dict)
         # no need to try looking for them as VD variable
         # AND this can cause a crash in some version/implementations of the core HDF4 libraries!
 
-        # First create a copy of the list in order for the original list to be left intact when elements are removed from it
-        # This enables the original list to be used when many files are read
+        # First create a copy of the list in order for the original list to be left intact when elements are removed
+        # from it, this enables the original list to be used when many files are read
         vdvariables = list(variables)
         for sds_dict_key in sds_dict:
             vdvariables.remove(sds_dict_key)
@@ -77,7 +84,7 @@ def __read_hdf4(filename,variables):
     return sds_dict, vds_dict
 
 
-def read(filenames,variables):
+def read(filenames, variables):
 
     sdata = {}
     vdata = {}
@@ -89,28 +96,30 @@ def read(filenames,variables):
         # reading in all variables into a 2 dictionaries:
         # sdata, key: variable name, value: list of sds
         # vdata, key: variable name, value: list of vds
-        sds_dict, vds_dict = __read_hdf4(filename,variables)
+        sds_dict, vds_dict = __read_hdf4(filename, variables)
         for var in sds_dict.keys():
-            utils.add_element_to_list_in_dict(sdata,var,sds_dict[var])
+            utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
         for var in vds_dict.keys():
-            utils.add_element_to_list_in_dict(vdata,var,vds_dict[var])
+            utils.add_element_to_list_in_dict(vdata, var, vds_dict[var])
 
-    return sdata,vdata
+    return sdata, vdata
+
 
 def read_data(data_dict, data_type, missing_values=None):
-    if data_type=='VD':
-        out =  utils.concatenate([hdf_vd.get_data(i, missing_values=missing_values) for i in data_dict ])
-    if data_type=='SD':
-        out =  utils.concatenate([hdf_sd.get_data(i, missing_values=missing_values) for i in data_dict ])
+    if data_type == 'VD':
+        out = utils.concatenate([hdf_vd.get_data(i, missing_values=missing_values) for i in data_dict])
+    elif data_type == 'SD':
+        out = utils.concatenate([hdf_sd.get_data(i, missing_values=missing_values) for i in data_dict])
+    else:
+        raise ValueError("Invalid data-type: %s, HDF variables must be VD or SD only" % data_type)
     return out
+
 
 def read_metadata(data_dict, data_type):
-    if data_type=='VD':
+    if data_type == 'VD':
         out = hdf_vd.get_metadata(data_dict[0])
-    if data_type=='SD':
+    elif data_type == 'SD':
         out = hdf_sd.get_metadata(data_dict[0])
+    else:
+        raise ValueError("Invalid data-type: %s, HDF variables must be VD or SD only" % data_type)
     return out
-
-
-
-

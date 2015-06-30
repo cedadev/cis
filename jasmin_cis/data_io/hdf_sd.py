@@ -3,6 +3,11 @@ Module containing hdf file utility functions for the SD object
 """
 import logging
 from jasmin_cis.utils import create_masked_array_for_missing_values, listify
+# Optional HDF import, if the module isn't found we defer raising ImportError until it is actually needed.
+try:
+    from pyhdf import SD
+except ImportError:
+    SD = None
 
 
 def get_hdf_SD_file_variables(filename):
@@ -15,7 +20,8 @@ def get_hdf_SD_file_variables(filename):
     returns:
         An OrderedDict containing the variables from the file
     '''
-    from pyhdf import SD
+    if not SD:
+        raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
 
     variables = None
 
@@ -51,9 +57,9 @@ class HDF_SDS(object):
         """
         Open the SDS file for reading
         """
-        from pyhdf.SD import SD
+        from pyhdf.SD import SD as SDS
 
-        self._sd = SD(self._filename)
+        self._sd = SDS(self._filename)
         self._sds = self._sd.select(self._variable)
 
     def _close_sds(self):
@@ -120,7 +126,9 @@ def read(filename, variables=None, datadict=None):
                        dictionary is created
     
     """
-    from pyhdf import SD
+    # Optional HDF import
+    if not SD:
+        raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
 
     # List of required variable names.
     # Open the file.
@@ -162,16 +170,16 @@ def get_calipso_data(sds):
     """
     from jasmin_cis.utils import create_masked_array_for_missing_data
 
-    calipso_fill_values = {'Float_32' : -9999.0,
-                           #'Int_8' : 'See SDS description',
-                           'Int_16' : -9999,
-                           'Int_32' : -9999,
-                           'UInt_8' : -127,
-                           #'UInt_16' : 'See SDS description',
-                           #'UInt_32' : 'See SDS description',
-                           'ExtinctionQC Fill Value' : 32768,
-                           'FeatureFinderQC No Features Found' : 32767,
-                           'FeatureFinderQC Fill Value' : 65535}
+    calipso_fill_values = {'Float_32': -9999.0,
+                           # 'Int_8' : 'See SDS description',
+                           'Int_16': -9999,
+                           'Int_32': -9999,
+                           'UInt_8': -127,
+                           # 'UInt_16' : 'See SDS description',
+                           # 'UInt_32' : 'See SDS description',
+                           'ExtinctionQC Fill Value': 32768,
+                           'FeatureFinderQC No Features Found': 32767,
+                           'FeatureFinderQC Fill Value': 65535}
 
     data = sds.get()
     attributes = sds.attributes()
@@ -188,7 +196,7 @@ def get_calipso_data(sds):
     data = create_masked_array_for_missing_data(data, missing_val)
 
     # Offsets and scaling.
-    offset  = attributes.get('add_offset', 0)
+    offset = attributes.get('add_offset', 0)
     scale_factor = attributes.get('scale_factor', 1)
     data = __apply_scaling_factor_CALIPSO(data, scale_factor, offset)
 
@@ -208,8 +216,6 @@ def get_data(sds, missing_values=None):
         sds        -- The specific sds instance to read
 
     """
-    from jasmin_cis.utils import create_masked_array_for_missing_data
-
     data = sds.get()
     attributes = sds.attributes()
 
@@ -217,10 +223,10 @@ def get_data(sds, missing_values=None):
     if missing_values is None:
         missing_values = [attributes.get('_FillValue', None)]
 
-    data = create_masked_array_for_missing_values(data,missing_values)
+    data = create_masked_array_for_missing_values(data, missing_values)
 
     # Offsets and scaling.
-    offset  = attributes.get('add_offset', 0)
+    offset = attributes.get('add_offset', 0)
     scale_factor = attributes.get('scale_factor', 1)
     data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
 
@@ -231,7 +237,7 @@ def get_metadata(sds):
     from jasmin_cis.data_io.ungridded_data import Metadata
 
     name = sds.info()[0]
-    long_name = sds.attributes().get('long_name',None)
+    long_name = sds.attributes().get('long_name', None)
     shape = sds.info()[2]
     units = sds.attributes().get('units')
     valid_range = sds.attributes().get('valid_range')
@@ -243,9 +249,8 @@ def get_metadata(sds):
     # so that other metadata of interest can still be retrieved if need be
     misc = sds.attributes()
 
-    metadata = Metadata( name=name, long_name=long_name, shape=shape, units=units, range=valid_range,
-        factor=factor, offset=offset, missing_value=missing, misc=misc)
-
+    metadata = Metadata(name=name, long_name=long_name, shape=shape, units=units, range=valid_range,
+                        factor=factor, offset=offset, missing_value=missing, misc=misc)
 
     return metadata
 
@@ -273,4 +278,3 @@ def __apply_scaling_factor_MODIS(data, scale_factor, offset):
     '''
     data = (data - offset) * scale_factor
     return data
-
