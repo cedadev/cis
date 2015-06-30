@@ -13,9 +13,10 @@ dependencies = ["matplotlib>=1.2.0",
                 "numpy",
                 "scipy",
                 "iris>=1.7.3",
-                'pyhdf',
                 'psutil',
                 'basemap>=1.0.7']
+
+optional_dependencies = {"HDF": ["pyhdf"]}
 
 test_dependencies = ["pyhamcrest", "mock", "nose"]
 
@@ -99,5 +100,6 @@ setup(
     cmdclass={"gendoc": gen_doc,
               "checkdep": check_dep},
     install_requires=dependencies,
+    extras_require=optional_dependencies,
     tests_require=test_dependencies
 )
