@@ -26,8 +26,10 @@ TestFileTestData = namedtuple('TestFile',
                        "data_variable_standard_name",
                        "data_variable_properties"])
 
+data_directory = os.path.dirname(__file__)
+
 def make_pathname(filename):
-    return os.path.join(os.path.dirname(__file__), filename)
+    return os.path.join(data_directory, filename)
 
 valid_hdf_vd_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")
 valid_hdf_sd_file = make_pathname("MOD04_L2.A2010001.2255.005.2010005215814.hdf")
@@ -59,6 +61,7 @@ valid_modis_l2_variables = \
      'Deep_Blue_Aerosol_Optical_Depth_550_Land',
      'Fitting_Error_Land',
      'Optical_Depth_Land_And_Ocean']
+
 cis_test_files["modis_L2"] = TestFileTestData(
     master_filename=valid_modis_l2_filename,
     file_format="HDF4/ModisL2",
@@ -524,14 +527,15 @@ test_directory_file2 = test_directory + "/test_file_for_parser_2"
 test_directory_file3 = test_directory + "/test_file_for_parser_3"
 test_directory_files = [test_directory_file1, test_directory_file2, test_directory_file3]
 
-large_15GB_file_filename = "/run/media/daniel/Storage/xglnwa.pm.k8dec-k9nov.nc"
 invalid_filename = "invalidfilename"
 non_netcdf_file = make_pathname("notanetcdffile")
 file_without_read_permissions = make_pathname("Unreadable Folder/xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
-netcdf_file_with_incorrect_file_extension = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.waldm")
+netcdf_file_with_incorrect_file_extension = make_pathname("hybrid-pressure.nc.bad_extension")
 non_netcdf_file_with_netcdf_file_extension = make_pathname("notarealnetcdffile.nc")
-not1Dvariable = "u" 
+not1Dvariable = "u"
+
 valid_variable_in_valid_filename = "rain"
+
 out_filename = "cube_image.png"
 valid_colour = "green"
 invalid_colour = "greenn"
