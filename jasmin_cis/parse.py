@@ -762,50 +762,13 @@ def check_colour_bar_orientation(orientation, parser):
     return orientation
 
 
-def parse_as_float_or_date(arg, name, parser):
-    from time_util import parse_datetimestr_to_std_time
-
-    if arg:
-        try:
-            # First try and parse as a float
-            arg = float(arg)
-        except ValueError:
-            # Then try and parse as a date
-            try:
-                arg = parse_datetimestr_to_std_time(arg)
-            except ValueError:
-                # Otherwise throw an error
-                parser.error("'" + arg + "' is not a valid " + name)
-        return arg
-    else:
-        return None
-
-
-def parse_as_float_or_time_delta(arg, name, parser):
-    from time_util import parse_datetimestr_delta_to_float_days
-
-    if arg:
-        try:
-            # First try and parse as a float
-            arg = float(arg)
-        except ValueError:
-            # Then try and parse as a timedelta
-            try:
-                arg = parse_datetimestr_delta_to_float_days(arg)
-            except ValueError:
-                # Otherwise throw an error
-                parser.error("'" + arg + "' is not a valid " + name)
-        return arg
-    else:
-        return None
-
-
 def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
     '''
     If a val range was specified, checks that they are valid numbers and the min is less than the max
     '''
-    from jasmin_cis.parse_datetime import parse_as_number_or_datetime
-    from jasmin_cis.time_util import parse_datetimestr_to_std_time
+    from jasmin_cis.parse_datetime import parse_as_number_or_datetime, parse_as_float_or_time_delta, \
+        parse_datetimestr_to_std_time
+    from jasmin_cis.time_util import convert_datetime_to_std_time
     import datetime
 
     ax_range = {}
@@ -813,7 +776,7 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
     if min_val is not None:
         dt = parse_as_number_or_datetime(min_val, range_axis + "min", parser)
         if isinstance(dt, datetime.datetime):
-            ax_range[range_axis + "min"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
+            ax_range[range_axis + "min"] = convert_datetime_to_std_time(dt)
         else:
             ax_range[range_axis + "min"] = dt
 
@@ -823,7 +786,6 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
             ax_range[range_axis + "max"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
         else:
             ax_range[range_axis + "max"] = dt
-
     if step is not None:
         ax_range[range_axis + "step"] = parse_as_float_or_time_delta(step, range_axis + "step", parser)
 

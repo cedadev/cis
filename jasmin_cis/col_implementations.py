@@ -199,7 +199,7 @@ class SepConstraint(PointConstraint):
                 raise InvalidCommandLineOptionError('Separation Constraint p_sep must be a valid float')
             self.checks.append(self.pressure_constraint)
         if t_sep is not None:
-            from jasmin_cis.time_util import parse_datetimestr_delta_to_float_days
+            from jasmin_cis.parse_datetime import parse_datetimestr_delta_to_float_days
             try:
                 self.t_sep = parse_datetimestr_delta_to_float_days(t_sep)
             except ValueError as e:
@@ -254,7 +254,7 @@ class SepConstraintKdtree(PointConstraint):
                 raise InvalidCommandLineOptionError('Separation Constraint p_sep must be a valid float')
             self.checks.append(self.pressure_constraint)
         if t_sep is not None:
-            from jasmin_cis.time_util import parse_datetimestr_delta_to_float_days
+            from jasmin_cis.parse_datetime import parse_datetimestr_delta_to_float_days
             try:
                 self.t_sep = parse_datetimestr_delta_to_float_days(t_sep)
             except ValueError as e:

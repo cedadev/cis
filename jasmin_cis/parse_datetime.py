@@ -1,13 +1,24 @@
 from collections import namedtuple
 import datetime
 import re
+from jasmin_cis.time_util import cis_standard_time_unit
+
+
+def parse_datetimestr_to_std_time(s):
+    import dateutil.parser as du
+    return cis_standard_time_unit.date2num(du.parse(s))
+
+
+def parse_datetimestr_to_std_time_array(string_time_array):
+    from utils import convert_numpy_array
+    return convert_numpy_array(string_time_array, 'float64', parse_datetimestr_to_std_time)
 
 
 def _parse_datetime(dt_string):
     """Parse a date/time string.
 
     The string should be in an ISO 8601 format except that the date and time
-    parts may be separated by a space or colon instead of T. 
+    parts may be separated by a space or colon instead of T.
     :param dt_string: String to parse
     :return: list of datetime components
     :raise ValueError: if the string cannot be parsed as a date/time
@@ -140,6 +151,25 @@ def parse_datetime_delta(dt_string, name, parser):
     return dt
 
 
+def parse_datetimestr_delta_to_float_days(string):
+    """
+    Parses "PY2M3DT4H5M6S" (ISO 8061) into a fractional day
+    :param string: string to be parsed
+    :return: a float representation of a day
+    """
+    from datetime import timedelta
+
+    date_delta = _parse_datetime_delta(string)
+
+    sec = 1.0/(24.0*60.0*60.0)  # Conversion from sec to day
+
+    days = date_delta.day + date_delta.month*365.2425/12.0 + date_delta.year*365.2425
+
+    td = timedelta(days=days, hours=date_delta.hour, minutes=date_delta.minute, seconds=date_delta.second)
+
+    return td.total_seconds()*sec
+
+
 def parse_as_number_or_datetime(in_string, name, parser):
     """Parse a string as a number from the command line, or if that fails, as a datetime, reporting parse errors.
 
@@ -148,8 +178,9 @@ def parse_as_number_or_datetime(in_string, name, parser):
     :param in_string: String to parse
     :param name:      A description of the argument used for error messages
     :param parser:    The parser used to report errors
-    :return: int, float or datetime value
+    :return: int, or float value (possibly converted to the standard time from a time string)
     """
+    import dateutil.parser as du
     try:
         ret = int(in_string)
     except ValueError:
@@ -157,11 +188,28 @@ def parse_as_number_or_datetime(in_string, name, parser):
             ret = float(in_string)
         except ValueError:
             try:
-                ret = _parse_datetime(in_string)
+                ret = cis_standard_time_unit.date2num(du.parse(in_string))
             except ValueError:
                 parser.error("'" + in_string + "' is not a valid " + name)
                 ret = None
     return ret
+
+
+def parse_as_float_or_time_delta(arg, name, parser):
+    if arg:
+        try:
+            # First try and parse as a float
+            arg = float(arg)
+        except ValueError:
+            # Then try and parse as a timedelta
+            try:
+                arg = parse_datetimestr_delta_to_float_days(arg)
+            except ValueError:
+                # Otherwise throw an error
+                parser.error("'" + arg + "' is not a valid " + name)
+        return arg
+    else:
+        return None
 
 
 def convert_datetime_components_to_datetime(dt_components, is_lower_limit):
@@ -229,5 +277,6 @@ def parse_partial_datetime(datetime_string, use_upper_limit=False):
     '2010' -> '2010-01-01T00:00:00'
     :return: A Python datetime object corresponding to the parsed string
     """
-    date_parts = _parse_datetime(datetime_string)
+    import dateutil.parser as du
+    date_parts = du.parse(datetime_string)
     return convert_datetime_components_to_datetime(date_parts, use_upper_limit)

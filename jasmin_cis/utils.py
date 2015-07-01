@@ -11,6 +11,33 @@ from jasmin_cis.exceptions import InvalidCommandLineOptionError
 BYTES_IN_A_MB = 1048576.0
 
 
+def convert_masked_array_type(masked_array, new_type, operation, *args, **kwargs):
+    from numpy.ma import getmaskarray
+    converted_arr = np.ma.array(np.zeros(masked_array.shape, dtype=new_type),
+                                 mask=masked_array.mask)
+
+    masks = getmaskarray(masked_array)
+    for i, val in np.ndenumerate(masked_array):
+        if not masks[i]:
+            converted_arr[i] = operation(val, *args, **kwargs)
+    return converted_arr
+
+
+def convert_array_type(array, new_type, operation, *args, **kwargs):
+    converted_arr = np.zeros(array.shape, dtype=new_type)
+    for i, val in np.ndenumerate(array):
+        converted_arr[i] = operation(val, *args, **kwargs)
+    return converted_arr
+
+
+def convert_numpy_array(array, new_type, operation, *args, **kwargs):
+    if isinstance(array, np.ma.MaskedArray):
+        new_array = convert_masked_array_type(array, new_type, operation, *args, **kwargs)
+    else:
+        new_array = convert_array_type(array, new_type, operation, *args, **kwargs)
+    return new_array
+
+
 def add_element_to_list_in_dict(my_dict,key,value):
     try:
         my_dict[key].append(value)
