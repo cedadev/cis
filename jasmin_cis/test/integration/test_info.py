@@ -11,7 +11,7 @@ class TestInfo(unittest.TestCase):
         info(valid_1d_filename)
     
     def test_can_get_info_on_a_variable_in_a_netcdf_file(self):
-        info(valid_1d_filename, [valid_variable_in_valid_filename])
+        info(valid_1d_filename, [valid_1d_variable])
     
     def test_should_raise_error_when_file_is_not_netcdf(self):
         with self.assertRaises(ProductPluginException):

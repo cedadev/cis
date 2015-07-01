@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 
 from jasmin_cis.data_io.gridded_data import make_from_cube
 from jasmin_cis.test.util.mock import make_dummy_2d_ungridded_data, make_mock_cube
-from jasmin_cis.test.test_files.integration_test_data import make_pathname
+from jasmin_cis.test.test_files.integration_test_data import valid_cis_col_file, valid_cis_col_variable
 from jasmin_cis.data_io.write_netcdf import write
 
 tmp_file = "tmp_file.nc"
@@ -25,7 +25,7 @@ class TestWriteNetcdf(unittest.TestCase):
         from jasmin_cis.data_io.products import Aerosol_CCI
 
         prod = Aerosol_CCI()
-        data_object = prod.create_data_object([make_pathname('cis-col-latlon-renamed.nc')], 'AOT_440')
+        data_object = prod.create_data_object([valid_cis_col_file], valid_cis_col_variable)
         write(data_object, tmp_file)
 
         d = Dataset(tmp_file)
@@ -41,10 +41,10 @@ class TestWriteNetcdf(unittest.TestCase):
         from jasmin_cis.data_io.products import cis
 
         prod = cis()
-        data_object = prod.create_data_object([make_pathname('cis-col-latlon-renamed.nc')], 'AOT_440')
+        data_object = prod.create_data_object([valid_cis_col_file], valid_cis_col_variable)
         write(data_object, tmp_file)
 
-        data_object2 = prod.create_data_object([tmp_file], 'AOT_440')
+        data_object2 = prod.create_data_object([tmp_file], valid_cis_col_variable)
 
     def test_ungridded_write_attributes(self):
         data = make_dummy_2d_ungridded_data()
