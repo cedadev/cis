@@ -3,7 +3,7 @@ import jasmin_cis.utils as utils
 import logging
 
 
-def get_hdf4_file_variables(filename, data_type):
+def get_hdf4_file_variables(filename, data_type=None):
     """
     Get all variables from a file containing ungridded data.
     Concatenate variable from both VD and SD data
@@ -14,15 +14,12 @@ def get_hdf4_file_variables(filename, data_type):
 
     SD_vars = VD_vars = None
 
-    if data_type is None:
+    if data_type.lower() is "sd" or data_type is None:
         SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
+    elif data_type.lower() is "vd" or data_type is None:
         VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
     else:
-        if data_type.lower() == 'SD'.lower() or data_type.lower() == "all".lower():
-            SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
-
-        if data_type.lower() == 'VD'.lower() or data_type.lower() == "all".lower():
-            VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
+        raise ValueError("Invalid data-type: %s, HDF variables must be VD or SD only" % data_type)
 
     return SD_vars, VD_vars
 
