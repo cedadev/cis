@@ -281,7 +281,6 @@ cis_test_files["caliop_L2"] = TestFileTestData(
 )
 
 valid_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2009-12-31T23-36-08ZN.hdf")
-valid_second_caliop_l1_filename = make_pathname("CAL_LID_L1-ValStage1-V3-01.2010-01-01T00-22-28ZD.hdf")
 valid_caliop_l1_variable = "Attenuated_Backscatter_1064"
 valid_caliop_l1_variables = ['Perpendicular_Attenuated_Backscatter_532',
                              'Attenuated_Backscatter_1064',
@@ -314,6 +313,7 @@ valid_1d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.vprof.tm.nc")
 valid_1d_variable = "q"
 valid_2d_filename = make_pathname("xglnwa.pm.k8dec-k9nov.col.tm.nc")
 
+#TODO These two test files are the same but appear to be testing different things...
 valid_echamham_geopotential_filename = make_pathname('ECHAM6.1-HAM2.2_GLOFIR1_2008_mmrbc_zgeopotm.nc')
 valid_echamham_geopotential_variable = 'mmrbc'
 
