@@ -10,7 +10,7 @@ from iris.cube import Cube
 import numpy as np
 
 from jasmin_cis.data_io.gridded_data import make_from_cube
-from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.test_files.unittest_data import *
 from jasmin_cis.plotting.plot import Plotter
 from jasmin_cis.plotting.generic_plot import Generic_Plot
 from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata

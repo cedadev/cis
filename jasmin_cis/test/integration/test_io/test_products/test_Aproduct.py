@@ -6,7 +6,7 @@ from hamcrest import *
 
 from nose.tools import eq_, raises
 
-from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.test_files.integration_test_data import *
 from jasmin_cis.data_io.products.AProduct import get_data, __get_class as _get_class, get_coordinates
 from jasmin_cis.exceptions import ClassNotFoundError
 

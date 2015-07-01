@@ -7,7 +7,7 @@ import unittest
 
 from jasmin_cis.cis import aggregate_cmd
 from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
-from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.test_files.integration_test_data import *
 from jasmin_cis.test.utils_for_testing import *
 from jasmin_cis.parse import parse_args
 

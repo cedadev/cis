@@ -7,7 +7,7 @@ from netCDF4 import Variable
 from hamcrest import *
 from nose.tools import istest, raises, eq_
 
-from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.test_files.integration_test_data import *
 from jasmin_cis.data_io.netcdf import *
 
 
@@ -44,12 +44,6 @@ def test_that_can_get_metadata_for_known_variable():
     eq_(metadata.long_name, "TOTAL RAINFALL RATE: LS+CONV KG/M2/S")
     eq_(metadata.units,
         "kg m-2 s-1")
-
-
-@istest
-@raises(IOError)
-def should_raise_ioerror_with_file_that_does_not_have_read_permissions():
-    read(file_without_read_permissions, valid_variable_in_valid_filename)
 
 
 class TestNetCDFGroups(unittest.TestCase):

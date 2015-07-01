@@ -2,7 +2,7 @@ from nose.tools import istest, eq_
 from jasmin_cis.data_io.products.caliop import Caliop_L2
 
 from jasmin_cis.data_io.products.AProduct import __get_class
-from jasmin_cis.test.test_files.data import valid_caliop_l2_filename
+from jasmin_cis.test.test_files.unittest_data import valid_caliop_l2_filename
 from jasmin_cis.parse import parse_args
 
 

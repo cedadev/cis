@@ -1,7 +1,7 @@
 import unittest
 
 from jasmin_cis.info import info
-from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.test_files.integration_test_data import *
 from jasmin_cis.data_io.products.AProduct import ProductPluginException
 
 

@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 
 from jasmin_cis.data_io.gridded_data import make_from_cube
 from jasmin_cis.test.util.mock import make_dummy_2d_ungridded_data, make_mock_cube
-from jasmin_cis.test.test_files.data import make_pathname
+from jasmin_cis.test.test_files.integration_test_data import make_pathname
 from jasmin_cis.data_io.write_netcdf import write
 
 tmp_file = "tmp_file.nc"

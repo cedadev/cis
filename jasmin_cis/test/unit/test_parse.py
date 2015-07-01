@@ -11,8 +11,8 @@ from hamcrest import is_, assert_that, contains_inanyorder
 from nose.tools import eq_
 
 from jasmin_cis.parse import parse_args, expand_file_list
-from jasmin_cis.test.test_files.data import test_directory_files, test_directory, invalid_filename, \
-    valid_GASSP_station_files_with_different_timestamps, valid_aeronet_filename, data_directory, dummy_cis_out
+from jasmin_cis.test.test_files.unittest_data import test_directory_files, test_directory, invalid_filename, \
+    multiple_valid_files, single_valid_file, data_directory, dummy_cis_out
 
 from jasmin_cis.plotting.plot import Plotter
 
@@ -42,14 +42,14 @@ class TestParse(TestCase):
 
     def test_order_is_preserved_when_specifying_files_even_when_wildcards_and_directories_are_specified_too(self):
         parser = argparse.ArgumentParser()
-        files = expand_file_list(','.join([valid_aeronet_filename, os.path.join(data_directory, 'CCN_*'),
+        files = expand_file_list(','.join([single_valid_file, os.path.join(data_directory, 'CCN_*'),
                                            test_directory]), parser)
-        eq_(files, [valid_aeronet_filename] + valid_GASSP_station_files_with_different_timestamps + test_directory_files)
+        eq_(files, [single_valid_file] + multiple_valid_files + test_directory_files)
 
     def test_can_specify_one_valid_filename_and_a_directory(self):
         parser = argparse.ArgumentParser()
-        files = expand_file_list(valid_aeronet_filename + ',' + test_directory, parser)
-        eq_(files, [valid_aeronet_filename] + test_directory_files)
+        files = expand_file_list(single_valid_file + ',' + test_directory, parser)
+        eq_(files, [single_valid_file] + test_directory_files)
 
     def test_can_specify_a_directory(self):
         parser = argparse.ArgumentParser()
@@ -69,9 +69,9 @@ class TestParse(TestCase):
 
     def test_can_specify_one_valid_filename_and_a_wildcarded_file(self):
         parser = argparse.ArgumentParser()
-        files = expand_file_list(valid_aeronet_filename + ',' + os.path.join(test_directory, 'test_file_for_parser_[0-9]'),
+        files = expand_file_list(single_valid_file + ',' + os.path.join(test_directory, 'test_file_for_parser_[0-9]'),
                                  parser)
-        eq_(files, [valid_aeronet_filename] + test_directory_files)
+        eq_(files, [single_valid_file] + test_directory_files)
 
     def test_duplicate_files_are_not_returned_from_expand_file_list(self):
         parser = argparse.ArgumentParser()
@@ -109,9 +109,9 @@ class TestParse(TestCase):
 
     def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
         args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" + dummy_cis_out, valid_aeronet_filename + ':colocator=bin',
+                     ["col", "var1,var2:" + dummy_cis_out, single_valid_file + ':colocator=bin',
                       "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" + valid_aeronet_filename, dummy_cis_out + ':colocator=bin',
+                     ["col", "var1,var2:" + single_valid_file, dummy_cis_out + ':colocator=bin',
                       "-o", dummy_cis_out[:-3]],
                      ["aggregate", "var:" + dummy_cis_out, "t", "-o", dummy_cis_out[:-3]]]
         for args in args_list:
@@ -123,13 +123,13 @@ class TestParse(TestCase):
                     raise e
 
     def test_GIVEN_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
-        args = ['eval', 'var1,var2:%s:product=cis' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s:product=cis' % single_valid_file,
                 'var1 + var2 + var3', 'units', '-o', 'output_name']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output_name.nc'))
 
     def test_GIVEN_output_has_file_extension_WHEN_parse_THEN_extension_not_added(self):
-        args = ['eval', 'var1,var2:%s:product=cis' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s:product=cis' % single_valid_file,
                 'var1 + var2 + var3', 'units', '-o', 'output_name.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output_name.nc'))
@@ -202,7 +202,7 @@ class TestParseEvaluate(TestCase):
     """
 
     def test_parse_evaluate_single_datagroup(self):
-        args = ['eval', 'var1,var2:%s:product=cis' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s:product=cis' % single_valid_file,
                 'var1 + var2 + var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.command, is_('eval'))
@@ -210,12 +210,12 @@ class TestParseEvaluate(TestCase):
         assert_that(parsed.units, is_('units'))
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(1))
-        assert_that(parsed.datagroups[0]['filenames'], is_([valid_aeronet_filename]))
+        assert_that(parsed.datagroups[0]['filenames'], is_([single_valid_file]))
         assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[0]['product'], is_('cis'))
 
     def test_parse_evaluate_multiple_datagroups(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s' % single_valid_file,
                 'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.command, is_('eval'))
@@ -223,34 +223,34 @@ class TestParseEvaluate(TestCase):
         assert_that(parsed.units, is_('units'))
         assert_that(parsed.output, is_('output.nc'))
         assert_that(len(parsed.datagroups), is_(2))
-        assert_that(parsed.datagroups[0]['filenames'], is_([valid_aeronet_filename]))
+        assert_that(parsed.datagroups[0]['filenames'], is_([single_valid_file]))
         assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[1]['filenames'], is_([dummy_cis_out]))
         assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
 
     def test_parse_evaluate_output_variable(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s' % single_valid_file,
                 'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'out_var:output.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output.nc'))
         assert_that(parsed.output_var, is_('out_var'))
 
     def test_parse_evaluate_no_output_variable(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s' % single_valid_file,
                 'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output.nc'))
         assert_that(parsed.output_var, is_(None))
 
     def test_parse_evaluate_no_output(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename,
-                'var3:%s' % valid_aeronet_filename, 'var1^var2 / var3', 'units']
+        args = ['eval', 'var1,var2:%s' % single_valid_file,
+                'var3:%s' % single_valid_file, 'var1^var2 / var3', 'units']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('out.nc'))
         assert_that(parsed.output_var, is_(None))
 
     def test_parse_evaluate_invalid_output(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s' % single_valid_file,
                 'var3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'var:var:out']
         try:
             parse_args(args)
@@ -261,7 +261,7 @@ class TestParseEvaluate(TestCase):
 
     def test_parse_evaluate_valid_aliases(self):
         # Should use the given alias or the variable name if not provided
-        args = ['eval', 'var1=alias1,var2:%s' % valid_aeronet_filename,
+        args = ['eval', 'var1=alias1,var2:%s' % single_valid_file,
                 'var3=alias3:%s' % dummy_cis_out, 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
@@ -270,7 +270,7 @@ class TestParseEvaluate(TestCase):
         assert_that(parsed.datagroups[1]['aliases'], is_(['alias3']))
 
     def test_parse_evaluate_duplicate_aliases(self):
-        args = ['eval', 'var1=alias1,var2=alias1:%s' % valid_aeronet_filename,
+        args = ['eval', 'var1=alias1,var2=alias1:%s' % single_valid_file,
                 'var1^var2 / var3', 'units', '-o', 'output.nc']
         try:
             parse_args(args)
@@ -282,7 +282,7 @@ class TestParseEvaluate(TestCase):
     def test_parse_evaluate_invalid_aliases(self):
         invalid_var_aliases = ['var1=', '=alias', '=', 'var=a=a']
         for var in invalid_var_aliases:
-            args = ['eval', '%s:%s' % (var, valid_aeronet_filename),
+            args = ['eval', '%s:%s' % (var, single_valid_file),
                     'var1^var2 / var3', 'units', '-o', 'output.nc']
             try:
                 parse_args(args)
@@ -292,7 +292,7 @@ class TestParseEvaluate(TestCase):
                     raise e
 
     def test_parse_evaluate_missing_units_single_datagroup(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename,
+        args = ['eval', 'var1,var2:%s' % single_valid_file,
                 'var1 + var2']
         try:
             parse_args(args)
@@ -302,21 +302,21 @@ class TestParseEvaluate(TestCase):
                 raise e
 
     def test_can_specify_attributes(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename, 'var1^var2 / var3', 'units',
+        args = ['eval', 'var1,var2:%s' % single_valid_file, 'var1^var2 / var3', 'units',
                 '--attributes', 'att1=val1,att2=val2']
         parsed = parse_args(args)
         assert_that(parsed.attributes, is_({'att1': 'val1',
                                             'att2': 'val2'}))
 
     def test_can_specify_attributes_shorthand(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename, 'var1^var2 / var3', 'units',
+        args = ['eval', 'var1,var2:%s' % single_valid_file, 'var1^var2 / var3', 'units',
                 '-a', 'att1=val1,att2=val2']
         parsed = parse_args(args)
         assert_that(parsed.attributes, is_({'att1': 'val1',
                                             'att2': 'val2'}))
 
     def test_invalid_attributes_throws_parser_error(self):
-        args = ['eval', 'var1,var2:%s' % valid_aeronet_filename, 'var1^var2 / var3', 'units',
+        args = ['eval', 'var1,var2:%s' % single_valid_file, 'var1^var2 / var3', 'units',
                 '-a']
         attributes = ['att1val1,att2=val2', '=', '=val', 'key=']
         for attr in attributes:
@@ -335,12 +335,12 @@ class TestParseStats(TestCase):
     """
 
     def test_GIVEN_no_output_WHEN_parse_stats_THEN_output_is_None(self):
-        args = ['stats', 'var1,var2:%s' % valid_aeronet_filename]
+        args = ['stats', 'var1,var2:%s' % single_valid_file]
         arguments = parse_args(args)
         assert_that(arguments.output, is_(None))
 
     def test_GIVEN_one_variable_WHEN_parse_stats_THEN_parser_error(self):
-        args = ['stats', 'var1:%s' % valid_aeronet_filename]
+        args = ['stats', 'var1:%s' % single_valid_file]
         try:
             parse_args(args)
             assert False
@@ -349,8 +349,8 @@ class TestParseStats(TestCase):
                 raise e
 
     def test_GIVEN_more_than_two_variables_WHEN_parse_stats_THEN_parser_error(self):
-        args = ['stats', 'var1,var2:%s' % valid_aeronet_filename,
-                'var3:%s' % valid_aeronet_filename]
+        args = ['stats', 'var1,var2:%s' % single_valid_file,
+                'var3:%s' % single_valid_file]
         try:
             parse_args(args)
             assert False
@@ -359,15 +359,15 @@ class TestParseStats(TestCase):
                 raise e
 
     def test_GIVEN_two_variables_WHEN_parse_stats_THEN_variables_are_in_datagroups(self):
-        args = ['stats', 'var1:%s' % valid_aeronet_filename, 'var2:%s' % dummy_cis_out]
+        args = ['stats', 'var1:%s' % single_valid_file, 'var2:%s' % dummy_cis_out]
         arguments = parse_args(args)
-        assert_that(arguments.datagroups[0]['filenames'], is_([valid_aeronet_filename]))
+        assert_that(arguments.datagroups[0]['filenames'], is_([single_valid_file]))
         assert_that(arguments.datagroups[0]['variables'], is_(['var1']))
         assert_that(arguments.datagroups[1]['filenames'], is_([dummy_cis_out]))
         assert_that(arguments.datagroups[1]['variables'], is_(['var2']))
 
     def test_GIVEN_output_file_WHEN_parse_stats_THEN_output_file_in_arguments(self):
-        args = ['stats', 'var1,var2:%s' % valid_aeronet_filename, '-o', 'output']
+        args = ['stats', 'var1,var2:%s' % single_valid_file, '-o', 'output']
         arguments = parse_args(args)
         assert_that(arguments.output, is_('output.nc'))
 
@@ -380,7 +380,7 @@ class TestParseSubset(TestCase):
     def test_GIVEN_longitude_limits_not_monotonically_increasing_WHEN_subset_THEN_raises_error(self):
         limits = ['x=[270,90]', 'x=[-30,-60]']
         for lim in limits:
-            args = ['subset', 'var1:%s' % valid_aeronet_filename, lim]
+            args = ['subset', 'var1:%s' % single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -391,7 +391,7 @@ class TestParseSubset(TestCase):
     def test_GIVEN_longitude_limits_wider_than_360_WHEN_subset_THEN_raises_error(self):
         limits = ['x=[-180,360]', 'x=[-1,360]']
         for lim in limits:
-            args = ['subset', 'var1:%s' % valid_aeronet_filename, lim]
+            args = ['subset', 'var1:%s' % single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -402,7 +402,7 @@ class TestParseSubset(TestCase):
     def test_GIVEN_longitude_limits_valid_WHEN_subset_THEN_parsed_OK(self):
         limits = ['x=[-10,10]', 'x=[0,360]', 'x=[-180.0,180.0]']
         for lim in limits:
-            args = ['subset', 'var1:%s' % valid_aeronet_filename, lim]
+            args = ['subset', 'var1:%s' % single_valid_file, lim]
             parse_args(args)
 
     def test_GIVEN_subset_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
@@ -440,7 +440,7 @@ class TestParseAggregate(TestCase):
     def test_GIVEN_longitude_limits_not_monotonically_increasing_WHEN_aggregate_THEN_raises_error(self):
         limits = ['x=[270,90,10]', 'x=[-30,-60,1]']
         for lim in limits:
-            args = ['aggregate', 'var1:%s' % valid_aeronet_filename, lim]
+            args = ['aggregate', 'var1:%s' % single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -451,7 +451,7 @@ class TestParseAggregate(TestCase):
     def test_GIVEN_longitude_limits_wider_than_360_WHEN_aggregate_THEN_raises_error(self):
         limits = ['x=[-180,360,10]', 'x=[-1,360,5]']
         for lim in limits:
-            args = ['aggregate', 'var1:%s' % valid_aeronet_filename, lim]
+            args = ['aggregate', 'var1:%s' % single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -462,7 +462,7 @@ class TestParseAggregate(TestCase):
     def test_GIVEN_longitude_limits_valid_WHEN_aggregate_THEN_parsed_OK(self):
         limits = ['x=[-10,10,1]', 'x=[0,360,10]', 'x=[-180.0,180.0,5]']
         for lim in limits:
-            args = ['aggregate', 'var1:%s' % valid_aeronet_filename, lim]
+            args = ['aggregate', 'var1:%s' % single_valid_file, lim]
             parse_args(args)
 
 

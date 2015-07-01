@@ -4,7 +4,7 @@ from hamcrest import assert_that, is_
 
 from jasmin_cis.cis import evaluate_cmd, col_cmd
 from jasmin_cis.test.integration.base_integration_test import BaseIntegrationTest
-from jasmin_cis.test.test_files.data import *
+from jasmin_cis.test.test_files.integration_test_data import *
 from jasmin_cis.parse import parse_args
 from jasmin_cis.test.unit.eval.test_calc import compare_masked_arrays
 
