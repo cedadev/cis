@@ -119,7 +119,7 @@ class GridCellBinIndexInSlices(object):
         self.sort_order = np.argsort(self.cell_numbers)
         self.cell_numbers = self.cell_numbers[self.sort_order]
         self._indices = indices[:, self.sort_order]
-        self.hp_coords = [hp_coord[:, self.sort_order] for hp_coord in hp_coords]
+        self.hp_coords = [hp_coord[self.sort_order] for hp_coord in hp_coords]
 
     def get_iterator(self):
         """
