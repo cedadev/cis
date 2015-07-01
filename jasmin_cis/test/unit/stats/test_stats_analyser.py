@@ -65,8 +65,8 @@ class TestStatsAnalyser(unittest.TestCase):
     def test_GIVEN_no_missing_vals_WHEN_mean_THEN_mean_correct(self):
         stats = StatsAnalyzer(self.data1, self.data2)
         res = stats.means()
-        assert_that(res[0].mean, is_(5.1))
-        assert_that(res[1].mean, is_(5.19))
+        assert_that(res[0].mean, close_to(5.1, 1e-5))
+        assert_that(res[1].mean, close_to(5.19, 1e-5))
 
     def test_GIVEN_missing_vals_WHEN_count_THEN_mean_correct(self):
         stats = StatsAnalyzer(self.missing1, self.missing2)
