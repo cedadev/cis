@@ -16,7 +16,7 @@ test_directory_files = [test_directory_file1, test_directory_file2, test_directo
 
 # Note that the below is only used as a filename to test the product matching routines - there is no need for the actual
 #  file to be present
-valid_caliop_l2_filename = make_pathname("CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08ZN.hdf")
+example_caliop_l2_filename = make_pathname("CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08ZN.hdf")
 
 single_valid_file = make_pathname("single_data_file")
 
