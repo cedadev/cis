@@ -1,5 +1,4 @@
 import logging
-import pyhdf.SD
 from jasmin_cis.data_io import hdf as hdf
 from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.data_io.hdf_vd import get_data, VDS
@@ -18,12 +17,15 @@ class abstract_Caliop(AProduct):
         return []
 
     def get_variable_names(self, filenames, data_type=None):
-        import pyhdf.SD
-        import pyhdf.HDF
+        try:
+            from pyhdf.SD import SD
+        except ImportError:
+            raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
+
         variables = set([])
 
         # Determine the valid shape for variables
-        sd = pyhdf.SD.SD(filenames[0])
+        sd = SD(filenames[0])
         datasets = sd.datasets()
         len_x = datasets['Latitude'][1][0]  # Assumes that latitude shape == longitude shape (it should)
         alt_data = get_data(VDS(filenames[0], "Lidar_Data_Altitudes"), True)
@@ -31,7 +33,7 @@ class abstract_Caliop(AProduct):
         valid_shape = (len_x, len_y)
 
         for filename in filenames:
-            sd = pyhdf.SD.SD(filename)
+            sd = SD(filename)
             for var_name, var_info in sd.datasets().iteritems():
                 if var_info[1] == valid_shape:
                     variables.add(var_name)

@@ -20,8 +20,11 @@ class CloudSat(AProduct):
         return [r'.*_CS_.*GRANULE.*\.hdf']
 
     def get_variable_names(self, filenames, data_type=None):
-        from pyhdf.HDF import HDF
-        from pyhdf.SD import SD
+        try:
+            from pyhdf.SD import SD
+            from pyhdf.HDF import HDF
+        except ImportError:
+            raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
 
         valid_variables = set([])
         for filename in filenames:

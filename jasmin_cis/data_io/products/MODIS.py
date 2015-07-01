@@ -48,11 +48,14 @@ class MODIS_L3(AProduct):
         return regex_list
 
     def get_variable_names(self, filenames, data_type=None):
-        import pyhdf.SD
+        try:
+            from pyhdf.SD import SD
+        except ImportError:
+            raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
 
         variables = set([])
         for filename in filenames:
-            sd = pyhdf.SD.SD(filename)
+            sd = SD(filename)
             for var_name, var_info in sd.datasets().iteritems():
                 # Check that the dimensions are correct
                 if var_info[0] == ('YDim:mod08', 'XDim:mod08'):
@@ -167,10 +170,10 @@ class MODIS_L2(AProduct):
 
     def __get_data_scale(self, filename, variable):
         from jasmin_cis.exceptions import InvalidVariableError
-        from pyhdf import SD
+        from pyhdf.SD import SD
 
         try:
-            meta = SD.SD(filename).datasets()[variable][0][0]
+            meta = SD(filename).datasets()[variable][0][0]
         except KeyError:
             raise InvalidVariableError("Variable "+variable+" not found")
 

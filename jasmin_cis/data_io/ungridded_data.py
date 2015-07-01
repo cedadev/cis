@@ -3,10 +3,15 @@
 '''
 import logging
 from time import gmtime, strftime
-
-from netCDF4 import _Variable, Variable
-from pyhdf.SD import SDS
 import numpy
+
+from netCDF4 import Variable
+
+# Optional HDF import, if the module isn't found we defer raising ImportError until it is actually needed.
+try:
+    from pyhdf.SD import SDS
+except ImportError:
+    SDS = None
 
 from jasmin_cis import utils
 from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
