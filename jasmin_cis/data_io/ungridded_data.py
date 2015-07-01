@@ -80,9 +80,7 @@ class Metadata(object):
 static_mappings = {SDS: hdf_sd_get_data,
                    HDF_SDS: hdf_sd_get_data,
                    VDS: hdf_vd_get_data,
-                   Variable: netcdf_get_data,
-                   _Variable: netcdf_get_data}
-
+                   Variable: netcdf_get_data}
 
 class LazyData(object):
     '''
