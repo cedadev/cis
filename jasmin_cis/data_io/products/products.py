@@ -495,7 +495,7 @@ class ASCII_Hyperpoints(AProduct):
         from jasmin_cis.data_io.ungridded_data import Metadata
         from numpy import genfromtxt
         from jasmin_cis.exceptions import InvalidVariableError
-        from jasmin_cis.time_util import parse_datetimestr_to_std_time_array
+        from jasmin_cis.parse_datetime import parse_datetimestr_to_std_time_array
 
         array_list = []
 

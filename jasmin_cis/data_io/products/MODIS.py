@@ -27,7 +27,7 @@ class MODIS_L3(AProduct):
         return res
 
     def _get_start_date(self, filename):
-        from jasmin_cis.time_util import parse_datetimestr_to_std_time
+        from jasmin_cis.parse_datetime import parse_datetimestr_to_std_time
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
         date = self._parse_datetime(metadata_dict, 'RANGEBEGINNINGDATE')
         time = self._parse_datetime(metadata_dict, 'RANGEBEGINNINGTIME')
@@ -35,7 +35,7 @@ class MODIS_L3(AProduct):
         return parse_datetimestr_to_std_time(datetime_str)
 
     def _get_end_date(self, filename):
-        from jasmin_cis.time_util import parse_datetimestr_to_std_time
+        from jasmin_cis.parse_datetime import parse_datetimestr_to_std_time
         metadata_dict = hdf.get_hdf4_file_metadata(filename)
         date = self._parse_datetime(metadata_dict, 'RANGEENDINGDATE')
         time = self._parse_datetime(metadata_dict, 'RANGEENDINGTIME')
