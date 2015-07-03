@@ -5,18 +5,10 @@ import logging
 from time import gmtime, strftime
 import numpy
 
-from netCDF4 import Variable
-
-# Optional HDF import, if the module isn't found we defer raising ImportError until it is actually needed.
-try:
-    from pyhdf.SD import SDS
-except ImportError:
-    SDS = None
-
 from jasmin_cis import utils
 from jasmin_cis.data_io.netcdf import get_data as netcdf_get_data
-from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data, VDS
-from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data, HDF_SDS
+from jasmin_cis.data_io.hdf_vd import get_data as hdf_vd_get_data
+from jasmin_cis.data_io.hdf_sd import get_data as hdf_sd_get_data
 from jasmin_cis.data_io.common_data import CommonData, CommonDataList
 from jasmin_cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from jasmin_cis.data_io.write_netcdf import add_data_to_file, write_coordinates
@@ -82,10 +74,11 @@ class Metadata(object):
 
 
 # This defines the mappings for each of the ungridded data types to their reading routines, this allows 'lazy loading'
-static_mappings = {SDS: hdf_sd_get_data,
-                   HDF_SDS: hdf_sd_get_data,
-                   VDS: hdf_vd_get_data,
-                   Variable: netcdf_get_data}
+static_mappings = {"SDS": hdf_sd_get_data,
+                   "HDF_SDS": hdf_sd_get_data,
+                   "VDS": hdf_vd_get_data,
+                   "Variable": netcdf_get_data,
+                   "_Variable": netcdf_get_data}
 
 class LazyData(object):
     '''
@@ -126,11 +119,12 @@ class LazyData(object):
             if data_retrieval_callback is not None:
                 # Use the given data retrieval method
                 self.retrieve_raw_data = data_retrieval_callback
-            elif self._data_manager[0].__class__ in static_mappings and all([d.__class__ == self._data_manager[0].__class__ for d in self._data_manager ]) :
+            elif type(self._data_manager[0]).__name__ in static_mappings and \
+                    all([type(d).__name__ == type(self._data_manager[0]).__name__ for d in self._data_manager]):
                 # Check that we recognise the data manager and that they are all the same
 
                 # Set the retrieve_raw_data method to it's mapped function name
-                self.retrieve_raw_data = static_mappings[self._data_manager[0].__class__]
+                self.retrieve_raw_data = static_mappings[type(self._data_manager[0]).__name__]
             else:
                 raise InvalidDataTypeError
 
