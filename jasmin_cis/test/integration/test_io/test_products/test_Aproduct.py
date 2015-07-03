@@ -44,6 +44,9 @@ class TestAProduct(TestCase):
         from jasmin_cis.data_io.products.AProduct import AProduct
 
         class MyTestProduct(AProduct):
+            # Ensure this doesn't get picked up as a genuine product (when running integration tests)
+            priority = -1
+
             def create_data_object(self, filenames, variable):
                 pass
 
@@ -64,11 +67,14 @@ class TestAProduct(TestCase):
         check = False
 
         class MyTestProductTestFileTypeTrue(AProduct):
+            # Ensure this doesn't get picked up as a genuine product (when running integration tests)
+            priority = -1
+
             def create_data_object(self, filenames, variable):
                 pass
 
             def create_coords(self, filenames):
-               pass
+                pass
 
             def get_file_signature(self):
                  return [r'.*\.endingtrue']
@@ -80,19 +86,6 @@ class TestAProduct(TestCase):
 
         get_coordinates(["file.endingtrue"])
         assert_that(check, is_(True), "File type check was called")
-
-
-    @raises(TypeError)
-    def test_that_get_data_throws_TypeError_for_invalid_product(self):
-        from jasmin_cis.data_io.products.AProduct import AProduct
-
-        class MyTestProduct(AProduct):
-            """A class which subclasses AProduct but doesn't fully implement the interface"""
-            def get_file_signature(self):
-                return []
-
-        my_product = MyTestProduct()
-
 
     def test_that_get_product_full_name_returns_version_product_and_cis(self):
         from jasmin_cis import __version__
