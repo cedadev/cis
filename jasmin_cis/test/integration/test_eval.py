@@ -119,9 +119,11 @@ class TestEval(BaseIntegrationTest):
         assert_that(ds.variables['var_out'].units, is_('kg m^-3'))
 
     def test_can_specify_units_gridded_no_output_var(self):
-        args = 'eval od550aer:"%s" od550aer ppm -o 222 -a att1=val1' % valid_hadgem_filename
-        arguments = parse_args(args.split(" "))
+        args = ['eval', "%s:%s" % (valid_hadgem_variable, valid_hadgem_filename), "od550aer", "ppm", "-o",
+                self.OUTPUT_NAME, "-a", "att1=val1"]
+        arguments = parse_args(args)
         evaluate_cmd(arguments)
-        ds = netCDF4.Dataset('222.nc')
+
+        ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
         assert_that(ds.variables['calculated_variable'].units, is_('ppm'))
         assert_that(ds.variables['calculated_variable'].att1, is_('val1'))
