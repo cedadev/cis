@@ -14,9 +14,9 @@ def get_hdf4_file_variables(filename, data_type=None):
 
     SD_vars = VD_vars = None
 
-    if data_type.lower() == "sd" or data_type is None:
+    if data_type is None or data_type.lower() == "sd":
         SD_vars = hdf_sd.get_hdf_SD_file_variables(filename)
-    elif data_type.lower() == "vd" or data_type is None:
+    elif data_type is None or data_type.lower() == "vd":
         VD_vars = hdf_vd.get_hdf_VD_file_variables(filename)
     else:
         raise ValueError("Invalid data-type: %s, HDF variables must be VD or SD only" % data_type)
