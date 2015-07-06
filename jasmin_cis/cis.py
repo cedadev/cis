@@ -125,7 +125,7 @@ def col_cmd(main_arguments):
     missing_data_for_missing_samples = False
     if main_arguments.samplevariable is not None:
         sample_data = data_reader.read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
-                                            main_arguments.sampleproduct)
+                                                 main_arguments.sampleproduct)[0]
     else:
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
         missing_data_for_missing_samples = True
