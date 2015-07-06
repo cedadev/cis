@@ -122,7 +122,7 @@ def convert_cube_time_coord_to_standard_time(cube):
         # new_datetime_nums = convert_numpy_array(t_coord.points, 'float64', convert_date)
         if t_coord.nbounds > 0:
             dt_bounds = t_coord.units.num2date(t_coord.bounds)
-            new_bound_nums = cis_standard_time_unit.date2num(dt_points)
+            new_bound_nums = cis_standard_time_unit.date2num(dt_bounds)
             t_coord.bounds = new_bound_nums
 
         # Create a new time coordinate by copying the old one, but using our new points and units
