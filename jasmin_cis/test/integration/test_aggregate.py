@@ -168,10 +168,17 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_aggregate_Cloud_CCI_with_dimension_vars(self):
+        variable = 'time,solar_zenith_view_no1'
+        filename = valid_cloud_cci_filename
+        lon_min, lon_max, lon_delta = 84, 99, 1
+        lat_min, lat_max, lat_delta = -6, 6, 1
+        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
     def test_aggregate_Cloud_CCI(self):
-        # Takes 826s
-        variable = '*'  # Would like to run this but it takes up a lot of memory on Jenkins.
-        variable = 'time,lon,lat,satellite_zenith_view_no1,solar_zenith_view_no1'
+        variable = 'satellite_zenith_view_no1,solar_zenith_view_no1'
         filename = valid_cloud_cci_filename
         lon_min, lon_max, lon_delta = 84, 99, 1
         lat_min, lat_max, lat_delta = -6, 6, 1
@@ -338,10 +345,19 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # This is tested in the TestAggregation class above
         pass
 
-    def test_aggregate_Cloud_CCI(self):
+    def test_aggregate_Cloud_CCI_with_dimension_vars(self):
         # Takes 826s
-        variable = '*'  # Would like to run this but it's slow
         variable = 'time,lon,lat,satellite_zenith_view_no1,solar_zenith_view_no1'
+        filename = valid_cloud_cci_filename
+        time_min, time_max, time_delta = dt.datetime(2008, 7, 1,), dt.datetime(2008, 8, 1),\
+            dt.timedelta(days=5)
+        str_delta = 'P5D'
+        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+    def test_aggregate_Cloud_CCI(self):
+        variable = 'solar_zenith_view_no1'
         filename = valid_cloud_cci_filename
         time_min, time_max, time_delta = dt.datetime(2008, 7, 1,), dt.datetime(2008, 8, 1),\
             dt.timedelta(days=5)
@@ -442,16 +458,27 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
-    def test_aggregate_CloudSatPRECIP(self):
+    def test_aggregate_CloudSatPRECIP_with_dimension_variables(self):
         # Takes 28s
         # RuntimeError: NetCDF: String match to name in use
         variable = 'Profile_time,Latitude,Longitude,DEM_elevation,Data_quality'
+        variable = '*'
         filename = valid_cloudsat_PRECIP_file
         time_min, time_max, time_delta = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36),\
             dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta)
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+    def test_aggregate_CloudSatPRECIP_wildcard(self):
+        variable = '*'
+        filename = valid_cloudsat_PRECIP_file
+        time_min, time_max, time_delta = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36),\
+            dt.timedelta(minutes=30)
+        str_delta = 'PT30M'
+        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_CloudSatRVOD(self):
