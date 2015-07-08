@@ -342,7 +342,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars, (192, 145))
 
     def test_HadGem_onto_ECHAMHAM_nn(self):
-        # Takes
+        # Takes 51s
         vars = [valid_hadgem_variable]
         filename = valid_hadgem_filename
         sample_file = valid_echamham_filename
