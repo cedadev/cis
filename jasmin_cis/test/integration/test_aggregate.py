@@ -462,7 +462,6 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 28s
         # RuntimeError: NetCDF: String match to name in use
         variable = 'Profile_time,Latitude,Longitude,DEM_elevation,Data_quality'
-        variable = '*'
         filename = valid_cloudsat_PRECIP_file
         time_min, time_max, time_delta = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36),\
             dt.timedelta(minutes=30)

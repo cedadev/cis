@@ -33,17 +33,28 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
 
     def test_GIVEN_multiple_variables_on_same_coords_WHEN_colocate_THEN_successful_colocation(self):
-        variable1 = valid_aerosol_cci_variable
-        variable2 = valid_aerosol_cci_variable_2
+        variables = valid_aerosol_cci_variable, valid_aerosol_cci_variable_2,
         filename = valid_aerosol_cci_filename
         sample_file = valid_echamham_filename
         colocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
-        arguments = ['col', variable1 + ',' + variable2 + ':' + filename,
+        arguments = ['col', ','.join(variables) + ':' + filename,
                      sample_file + ':colocator=' + colocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['AOD550', 'AOD870'])
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variables)
+
+    def test_GIVEN_multiple_variables_on_same_coords_plus_dim_vars_WHEN_colocate_THEN_successful_colocation(self):
+        variables = valid_aerosol_cci_variable, valid_aerosol_cci_variable_2, 'time'
+        filename = valid_aerosol_cci_filename
+        sample_file = valid_echamham_filename
+        colocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
+        arguments = ['col', ','.join(variables) + ':' + filename,
+                     sample_file + ':colocator=' + colocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variables)
 
     def test_Aeronet_onto_NetCDF_Gridded(self):
         # JASCIS-120
