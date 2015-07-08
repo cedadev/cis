@@ -353,7 +353,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
             dt.timedelta(days=5)
         str_delta = 'P5D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Cloud_CCI(self):
@@ -363,7 +363,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
             dt.timedelta(days=5)
         str_delta = 'P5D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_NCAR_RAF(self):
