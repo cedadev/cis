@@ -471,15 +471,15 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
-    def test_aggregate_CloudSatPRECIP_wildcard(self):
-        variable = '*'
+    def test_aggregate_CloudSatPRECIP(self):
+        variable = valid_cloudsat_PRECIP_variable
         filename = valid_cloudsat_PRECIP_file
         time_min, time_max, time_delta = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36),\
             dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [valid_cloudsat_PRECIP_variable])
 
     def test_aggregate_CloudSatRVOD(self):
         # Takes 41s
