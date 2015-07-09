@@ -113,10 +113,7 @@ class Aggregator(object):
                 logging.warning("Variable {} clashes with a coordinate variable name and has been renamed to: {}"
                                 .format(d.var_name, new_name))
 
-        if len(aggregated_cube) == 1:
-            return aggregated_cube[0]
-        else:
-            return aggregated_cube
+        return aggregated_cube
 
     def _make_fully_collapsed_coord(self, coord):
         """
