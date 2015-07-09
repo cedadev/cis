@@ -145,9 +145,9 @@ class TestAggregation(BaseAggregationTest):
                             0.0623867045505904, 0.0538315528589818]]])
         ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         data_550 = ds.variables['AOD550']
-        assert_arrays_almost_equal(data_550[:], arr_550, 1.0e-4)
+        assert_arrays_almost_equal(data_550[:], arr_550, 1.0e-2)
         data_870 = ds.variables['AOD870']
-        assert_arrays_almost_equal(data_870[:], arr_870, 1.0e-4)
+        assert_arrays_almost_equal(data_870[:], arr_870, 1.0e-2)
 
 
 class TestSpatialAggregationByDataProduct(BaseAggregationTest):
