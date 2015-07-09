@@ -102,6 +102,17 @@ class Aggregator(object):
         aggregated_cube = colocator.colocate(aggregation_cube, self.data, constraint, kernel)
         self._add_max_min_bounds_for_collapsed_coords(aggregated_cube, self.data)
 
+        # We need to rename any variables which clash with coordinate names otherwise they will not output correctly, we
+        # prepend it with 'aggregated_' to make it clear which variable has been aggregated (the original coordinate
+        # value will not have been.)
+        for idx, d in enumerate(aggregated_cube):
+            if d.var_name in [coord.var_name for coord in aggregation_cube.coords()]:
+                new_name = "aggregated_" + d.var_name
+                aggregated_cube[idx].rename(new_name)
+                aggregated_cube[idx].var_name = new_name
+                logging.warning("Variable {} clashes with a coordinate variable name and has been renamed to: {}"
+                                .format(d.var_name, new_name))
+
         if len(aggregated_cube) == 1:
             return aggregated_cube[0]
         else:

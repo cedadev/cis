@@ -175,7 +175,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lat_min, lat_max, lat_delta = -6, 6, 1
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['aggregated_time', 'solar_zenith_view_no1'])
 
     def test_aggregate_Cloud_CCI(self):
         variable = 'satellite_zenith_view_no1,solar_zenith_view_no1'
@@ -468,7 +468,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(',') +
+                                             ['aggregated_Profile_time'])
 
     def test_aggregate_CloudSatPRECIP(self):
         variable = valid_cloudsat_PRECIP_variable
