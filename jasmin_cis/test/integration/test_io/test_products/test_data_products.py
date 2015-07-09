@@ -6,7 +6,7 @@ import unittest
 import logging
 
 from hamcrest import *
-from nose.tools import istest, eq_, raises, nottest
+from nose.tools import istest, eq_, raises, nottest, with_setup
 from iris.exceptions import TranslationError
 
 from jasmin_cis.data_io.products import *
@@ -22,6 +22,18 @@ def check_regex_matching(cls_name, filename):
 invalid_variable = "im_an_invalid_variable"
 invalid_filename = "im_an_invalid_file"
 invalid_format = non_netcdf_file
+
+test_file = '/tmp/test_out.nc'
+
+def remove_test_file():
+    """
+        Try and remove the test file if it exists
+    :return:
+    """
+    from os import remove
+    from os.path import isfile
+    if isfile(test_file):
+        remove(test_file)
 
 
 class ProductTests(object):
@@ -81,13 +93,11 @@ class ProductTests(object):
 
         assert (all([coord.standard_name in valid_standard_names for coord in coord_list]))
 
+    @with_setup(remove_test_file, remove_test_file)
     def test_write_coords(self):
         from jasmin_cis.data_io.write_netcdf import write_coordinates
-        from os import remove
-        test_file = '/tmp/test_out.nc'
         coords = self.product().create_coords([self.filename], self.valid_variable)
         write_coordinates(coords, test_file)
-        remove(test_file)
 
     @raises(IOError)
     def test_should_raise_ioerror_with_invalid_filename(self):
