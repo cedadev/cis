@@ -36,9 +36,7 @@ class nose_test(TestCommand):
 
         n_processors = max(self.num_processors, 1)
 
-        args = ['', self.test_set, '--processes=%s' % n_processors,
-                '--verbosity=2',
-                '--process-timeout=250']
+        args = ['', self.test_set, '--processes=%s' % n_processors, '--verbosity=2',]
 
         if self.stop:
             args.append('--stop')
