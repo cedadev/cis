@@ -3,8 +3,8 @@ import os.path
 from distutils.spawn import find_executable
 
 from setuptools import setup, find_packages, Command
-from setuptools.command.test import test as TestCommand
 from pkg_resources import require, DistributionNotFound, VersionConflict
+from jasmin_cis.test.runner import nose_test
 
 root_path = os.path.dirname(__file__)
 
@@ -72,23 +72,6 @@ class gen_doc(Command):
 
         import webbrowser
         webbrowser.open(os.path.join(output_dir, "index.html"))
-
-
-class nose_test(TestCommand):
-    """
-    Command to run unit tests
-    """
-    description = "Run all CIS unit tests"
-    user_options = []
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        import nose
-        nose.run_exit(argv=['nosetests',os.path.join(root_path, 'jasmin_cis/test/unit')])
 
 
 # Extract long-description from README
