@@ -10,31 +10,10 @@ from iris.cube import Cube
 import numpy as np
 
 from jasmin_cis.data_io.gridded_data import make_from_cube
-from jasmin_cis.test.test_files.unittest_data import *
 from jasmin_cis.plotting.plot import Plotter
 from jasmin_cis.plotting.generic_plot import Generic_Plot
-from jasmin_cis.data_io.ungridded_data import UngriddedData, Metadata
-from jasmin_cis.data_io.Coord import Coord, CoordList
 from jasmin_cis.test.utils_for_testing import assert_arrays_equal
 from jasmin_cis.plotting.heatmap import make_color_mesh_cells, Heatmap
-
-
-def delete_file_if_exists():
-    '''
-    Used to delete the file that will be created before tests are run
-    in order to be able to check after the test if the file was created by the test
-    '''
-    if os.path.isfile(out_filename):
-        os.remove(out_filename)
-
-
-def make_cube(filename, variable=None):
-    if variable is None:
-        variable = valid_variable_in_valid_filename
-    variable = iris.AttributeConstraint(name=variable)
-    cube = iris.load_cube(filename, variable)
-    cube = list(cube.slices([coord for coord in cube.coords() if coord.points.size > 1]))[0]
-    return cube
 
 
 class TestPlotting(unittest.TestCase):
@@ -51,7 +30,7 @@ class TestPlotting(unittest.TestCase):
 
     def test_should_raise_io_error_with_invalid_filename(self):
         with self.assertRaises(IOError):
-            cube = make_cube("/")
+            cube = iris.load_cube("/")
             Plotter([cube], "line", "/")
 
 
