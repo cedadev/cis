@@ -13,7 +13,7 @@ dependencies = ["matplotlib>=1.2.0",
                 "numpy",
                 "scipy",
                 "iris>=1.7.3",
-                'psutil',
+                'psutil>=2.0.0',
                 'basemap>=1.0.7']
 
 optional_dependencies = {"HDF": ["pyhdf"]}
