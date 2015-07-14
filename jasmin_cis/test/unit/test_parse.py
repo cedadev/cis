@@ -42,7 +42,7 @@ class TestParse(TestCase):
 
     def test_order_is_preserved_when_specifying_files_even_when_wildcards_and_directories_are_specified_too(self):
         parser = argparse.ArgumentParser()
-        files = expand_file_list(','.join([single_valid_file, os.path.join(data_directory, 'CCN_*'),
+        files = expand_file_list(','.join([single_valid_file, os.path.join(data_directory, 'data_file*'),
                                            test_directory]), parser)
         eq_(files, [single_valid_file] + multiple_valid_files + test_directory_files)
 
