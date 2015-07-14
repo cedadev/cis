@@ -26,7 +26,7 @@ TestFileTestData = namedtuple('TestFile',
                                "data_variable_standard_name",
                                "data_variable_properties"])
 
-data_directory = os.path.dirname(__file__)
+data_directory = os.environ.get("CIS_DATA_HOME", os.path.dirname(__file__))
 
 
 def make_pathname(filename):
