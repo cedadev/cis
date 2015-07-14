@@ -3,7 +3,7 @@ import os.path
 from distutils.spawn import find_executable
 
 from setuptools import setup, find_packages, Command
-from setuptools.command import test as TestCommand
+from setuptools.command.test import test as TestCommand
 from pkg_resources import require, DistributionNotFound, VersionConflict
 
 root_path = os.path.dirname(__file__)
@@ -81,9 +81,6 @@ class nose_test(TestCommand):
     description = "Run all CIS unit tests"
     user_options = []
 
-    def initialize_options(self):
-        pass
-
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
@@ -91,7 +88,7 @@ class nose_test(TestCommand):
 
     def run_tests(self):
         import nose
-        nose.run_exit(argv=['nosetests',os.path.join(root_path, 'test/unit')])
+        nose.run_exit(argv=['nosetests',os.path.join(root_path, 'jasmin_cis/test/unit')])
 
 
 # Extract long-description from README
