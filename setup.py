@@ -3,12 +3,12 @@ import os.path
 from distutils.spawn import find_executable
 
 from setuptools import setup, find_packages, Command
+from setuptools.command import test as TestCommand
 from pkg_resources import require, DistributionNotFound, VersionConflict
 
+root_path = os.path.dirname(__file__)
+
 dependencies = ["matplotlib>=1.2.0",
-                "pyke",
-                "cartopy",
-                "Shapely",
                 "netcdf4>=1.0",
                 "numpy",
                 "scipy",
@@ -74,11 +74,30 @@ class gen_doc(Command):
         webbrowser.open(os.path.join(output_dir, "index.html"))
 
 
-# Extract long-description from README
-here = os.path.dirname(__file__)
-README = open(os.path.join(here, 'README')).read()
+class nose_test(TestCommand):
+    """
+    Command to run unit tests
+    """
+    description = "Run all CIS unit tests"
+    user_options = []
 
-from jasmin_cis import __version__
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import nose
+        nose.run_exit(argv=['nosetests',os.path.join(root_path, 'test/unit')])
+
+
+# Extract long-description from README
+README = open(os.path.join(root_path, 'README')).read()
+
+from jasmin_cis import __version__, __website__
 
 setup(
     name='jasmin_cis',
@@ -87,7 +106,7 @@ setup(
     long_description=README,
     maintainer='Philip Kershaw',
     maintainer_email='Philip.Kershaw@stfc.ac.uk',
-    url='http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite',
+    url=__website__,
     classifiers=[
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
         'Topic :: Scientific/Engineering :: Atmospheric Science',
@@ -98,7 +117,8 @@ setup(
     package_data={'': ['logging.conf']},
     scripts=['bin/cis', 'bin/cis.lsf'],
     cmdclass={"gendoc": gen_doc,
-              "checkdep": check_dep},
+              "checkdep": check_dep,
+              "test": nose_test},
     install_requires=dependencies,
     extras_require=optional_dependencies,
     tests_require=test_dependencies
