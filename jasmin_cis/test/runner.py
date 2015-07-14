@@ -15,15 +15,16 @@ class nose_test(TestCommand):
         TestCommand.initialize_options(self)
         self.integration_tests = False
         self.stop = False
+        self.num_processors = None
 
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
         self.test_suite = True
         if self.integration_tests:
-            self.test_set = ['jasmin_cis.test.integration']
+            self.test_set = 'jasmin_cis.test.integration'
         else:
-            self.test_set = ['jasmin_cis.test.unit']
+            self.test_set = 'jasmin_cis.test.unit'
 
         if self.num_processors is None:
             self.num_processors = multiprocessing.cpu_count() - 1
