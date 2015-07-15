@@ -1,6 +1,17 @@
 from setuptools.command.test import test as TestCommand
 import multiprocessing
 
+def run(test_set='jasmin_cis.test.unit', n_processors=1, stop=False):
+    import nose
+
+    args = ['', test_set, '--processes=%s' % max(n_processors, 1), '--verbosity=2',]
+
+    if stop:
+        args.append('--stop')
+
+    nose.run(argv=args)
+
+
 class nose_test(TestCommand):
     """
     Command to run unit tests
@@ -32,16 +43,7 @@ class nose_test(TestCommand):
             self.num_processors = int(self.num_processors)
 
     def run_tests(self):
-        import nose
-
-        n_processors = max(self.num_processors, 1)
-
-        args = ['', self.test_set, '--processes=%s' % n_processors, '--verbosity=2',]
-
-        if self.stop:
-            args.append('--stop')
-
-        nose.run(argv=args)
+        run(self.test_set, self.num_processors, self.stop)
 
         # nose.run_exit(argv=['nosetests',os.path.join(os.path.dirname(__file__), 'unit')])
 
