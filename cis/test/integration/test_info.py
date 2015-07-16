@@ -1,7 +1,7 @@
 import unittest
 
 from cis.info import info
-from cis.test.test_files.integration_test_data import *
+from cis.test.integration_test_data import *
 from cis.data_io.products.AProduct import ProductPluginException
 
 

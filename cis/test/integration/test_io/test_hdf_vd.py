@@ -2,8 +2,9 @@
 module to test the hdf4 utility function of hdf_vd.py
 '''
 from nose.tools import istest, eq_
+
 import cis.data_io.hdf_vd as hdf_vd
-from cis.test.test_files.integration_test_data import valid_hdf_vd_file
+from cis.test.integration_test_data import valid_hdf_vd_file
 
 
 @istest

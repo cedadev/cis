@@ -3,7 +3,7 @@ import unittest
 from hamcrest import assert_that, is_, close_to
 
 from cis.data_io.read import read_data
-from cis.test.test_files.integration_test_data import *
+from cis.test.integration_test_data import *
 
 
 class TestNetCDF_CF_Gridded_ECHAM_Hybrid_Pressure_Geopotential(unittest.TestCase):

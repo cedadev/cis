@@ -2,11 +2,11 @@
 Module to test the abstract AProduct class and it's helper methods
 """
 from unittest import TestCase
-from hamcrest import *
 
+from hamcrest import *
 from nose.tools import eq_, raises
 
-from cis.test.test_files.integration_test_data import *
+from cis.test.integration_test_data import *
 from cis.data_io.products.AProduct import get_data, __get_class as _get_class, get_coordinates
 from cis.exceptions import ClassNotFoundError
 

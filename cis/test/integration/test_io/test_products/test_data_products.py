@@ -11,7 +11,7 @@ from iris.exceptions import TranslationError
 
 from cis.data_io.products import *
 from cis.exceptions import InvalidVariableError
-from cis.test.test_files.integration_test_data import non_netcdf_file, cis_test_files
+from cis.test.integration_test_data import non_netcdf_file, cis_test_files
 
 
 def check_regex_matching(cls_name, filename):
@@ -47,7 +47,7 @@ class ProductTests(object):
 
     @nottest
     def setup(self, test_file_metadata, product):
-        from cis.test.test_files.integration_test_data import TestFileTestData
+        from test.integration_test_data import TestFileTestData
         assert isinstance(test_file_metadata, TestFileTestData)
         self.filename = test_file_metadata.master_filename
         self.valid_variable = test_file_metadata.data_variable_name
@@ -121,7 +121,7 @@ class ProductTests(object):
 
 class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable, \
+        from test.integration_test_data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable, \
             valid_cloudsat_RVOD_file_format
 
         self.filename = valid_cloudsat_RVOD_file
@@ -135,7 +135,7 @@ class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
 
 class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable, \
+        from test.integration_test_data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable, \
             valid_cloudsat_RVOD_file_format
 
         self.filename = valid_cloudsat_RVOD_file
@@ -149,7 +149,7 @@ class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
 
 class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable, \
+        from test.integration_test_data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable, \
             valid_cloudsat_PRECIP_file_format
 
         self.filename = valid_cloudsat_PRECIP_file
@@ -239,8 +239,7 @@ class TestCis(ProductTests, unittest.TestCase):
 
 class TestAeronet(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import valid_aeronet_filename, valid_aeronet_variable, \
-            another_valid_aeronet_filename
+        from test.integration_test_data import valid_aeronet_filename, another_valid_aeronet_filename
         self.setup(cis_test_files["aeronet"], Aeronet)
         self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
 
@@ -251,7 +250,7 @@ class TestAeronet(ProductTests, unittest.TestCase):
 
 class TestASCII(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import ascii_filename_with_no_values
+        from test.integration_test_data import ascii_filename_with_no_values
         self.setup(cis_test_files["ascii"], ASCII_Hyperpoints)
         self.no_value_filename = ascii_filename_with_no_values
 
@@ -284,7 +283,7 @@ class TestASCII(ProductTests, unittest.TestCase):
 
 class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import valid_xenida_filename, valid_xenida_variable
+        from test.integration_test_data import valid_xenida_filename, valid_xenida_variable
 
         self.filename = valid_xenida_filename
         self.valid_variable = valid_xenida_variable
@@ -310,7 +309,7 @@ class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
 
 class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import valid_1d_filename, valid_1d_variable
+        from test.integration_test_data import valid_1d_filename, valid_1d_variable
 
         self.filename = valid_1d_filename
         self.valid_variable = valid_1d_variable
@@ -335,7 +334,7 @@ class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
 
 class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
     def setUp(self):
-        from cis.test.test_files.integration_test_data import valid_hadgem_filename, valid_hadgem_variable
+        from test.integration_test_data import valid_hadgem_filename, valid_hadgem_variable
 
         self.filename = valid_hadgem_filename
         self.valid_variable = valid_hadgem_variable

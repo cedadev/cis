@@ -2,12 +2,12 @@
 module to test the NetCDF module
 '''
 import unittest
-
 from netCDF4 import Variable
+
 from hamcrest import *
 from nose.tools import istest, raises, eq_
 
-from cis.test.test_files.integration_test_data import *
+from cis.test.integration_test_data import *
 from cis.data_io.netcdf import *
 
 

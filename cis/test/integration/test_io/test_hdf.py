@@ -2,7 +2,7 @@ from nose.tools import eq_, istest, raises
 
 from cis.data_io.hdf import __read_hdf4
 from cis.exceptions import InvalidVariableError
-from cis.test.test_files.integration_test_data import *
+from cis.test.integration_test_data import *
 
 
 @istest

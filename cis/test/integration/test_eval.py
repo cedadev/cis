@@ -1,10 +1,11 @@
-import numpy
 import netCDF4
+
+import numpy
 from hamcrest import assert_that, is_
 
 from cis.cis_main import evaluate_cmd, col_cmd
 from cis.test.integration.base_integration_test import BaseIntegrationTest
-from cis.test.test_files.integration_test_data import *
+from cis.test.integration_test_data import *
 from cis.parse import parse_args
 from cis.test.unit.eval.test_calc import compare_masked_arrays
 

@@ -3,7 +3,7 @@ module to test the hdf4 utility function of hdf_sd.py
 '''
 from nose.tools import istest, eq_
 
-from cis.test.test_files.integration_test_data import valid_hdf_sd_file
+from cis.test.integration_test_data import valid_hdf_sd_file
 import cis.data_io.hdf_sd as hdf_sd
 
 

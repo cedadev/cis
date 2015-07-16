@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 
 from cis.data_io.gridded_data import make_from_cube
 from cis.test.util.mock import make_dummy_2d_ungridded_data, make_mock_cube
-from cis.test.test_files.integration_test_data import valid_cis_col_file, valid_cis_col_variable
+from cis.test.integration_test_data import valid_cis_col_file, valid_cis_col_variable
 from cis.data_io.write_netcdf import write
 
 tmp_file = "tmp_file.nc"
