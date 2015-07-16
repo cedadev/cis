@@ -1,5 +1,3 @@
-/jasmin_cis/test/test_details.txt
-/jasmin_cis/test/manual/.~lock.test_plot_script_expected_results.ods#
 .project
 .pydevproject
 /.idea
@@ -7,6 +5,6 @@
 *.pyc
 build/
 dist/
-jasmin_cis.egg-info/
+cis.egg-info/
 *~
 doc/_build

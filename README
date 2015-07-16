@@ -1,4 +1,4 @@
-This package contains code for the JASMIN Community Inter-comparison Suite.  Development is documented at http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite
+This package contains code for the Community Inter-comparison Suite.  Development is documented at http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite
 
 Contact
 -------
@@ -12,7 +12,7 @@ Copyright and licence
 
 (C) University of Oxford 2013
 
-This file is part of the JASMIN Community Inter-comparison Suite (CIS).
+This file is part of the Community Inter-comparison Suite (CIS).
 
 CIS is free software: you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the

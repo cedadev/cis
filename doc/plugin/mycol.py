@@ -1,5 +1,5 @@
-from jasmin_cis.col_framework import Colocator, Constraint, Kernel
-from jasmin_cis.data_io.ungridded_data import LazyData
+from cis.col_framework import Colocator, Constraint, Kernel
+from cis.data_io.ungridded_data import LazyData
 
 
 class MyColocator(Colocator):

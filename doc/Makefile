@@ -50,7 +50,7 @@ clean:
 	rm -rf $(BUILDDIR)/*
 
 apidoc:
-	sphinx-apidoc -f -T -o api ../jasmin_cis ../jasmin_cis/test
+	sphinx-apidoc -f -T -o api ../cis ../cis/test
 	@echo
 	@echo "apidoc generation finished."
 
@@ -90,17 +90,17 @@ qthelp: apidoc
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/JASMINCommunityInter-comparrisonSuite.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/CommunityInter-comparrisonSuite.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/JASMINCommunityInter-comparrisonSuite.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/CommunityInter-comparrisonSuite.qhc"
 
 devhelp: apidoc
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/JASMINCommunityInter-comparrisonSuite"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/JASMINCommunityInter-comparrisonSuite"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/CommunityInter-comparrisonSuite"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/CommunityInter-comparrisonSuite"
 	@echo "# devhelp"
 
 epub: apidoc

@@ -4,7 +4,7 @@ from distutils.spawn import find_executable
 
 from setuptools import setup, find_packages, Command
 from pkg_resources import require, DistributionNotFound, VersionConflict
-from jasmin_cis.test.runner import nose_test
+from cis.test.runner import nose_test
 
 root_path = os.path.dirname(__file__)
 
@@ -77,12 +77,12 @@ class gen_doc(Command):
 # Extract long-description from README
 README = open(os.path.join(root_path, 'README')).read()
 
-from jasmin_cis import __version__, __website__
+from cis import __version__, __website__
 
 setup(
-    name='jasmin_cis',
+    name='cis',
     version=__version__,
-    description='JASMIN Community Inter-comparison Suite',
+    description='Community Inter-comparison Suite',
     long_description=README,
     maintainer='Philip Kershaw',
     maintainer_email='Philip.Kershaw@stfc.ac.uk',

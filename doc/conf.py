@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# JASMIN Community Inter-comparrison Suite documentation build configuration file, created by
+# Community Inter-comparrison Suite documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar 25 10:10:43 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -46,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'JASMIN Community Inter-comparison Suite'
+project = u'Community Inter-comparison Suite'
 copyright = u'2014, Centre of Environmental Data Archival'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -70,7 +70,7 @@ release = '0.6.5'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', 'api/jasmin_cis.test.harness.rst']
+exclude_patterns = ['_build', 'api/cis.test.harness.rst']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -186,7 +186,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'JASMINCommunityInter-comparrisonSuitedoc'
+htmlhelp_basename = 'CommunityInter-comparrisonSuitedoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -206,7 +206,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'JASMINCommunityInter-comparrisonSuite.tex', u'JASMIN Community Inter-comparrison Suite Documentation',
+  ('index', 'CommunityInter-comparrisonSuite.tex', u'Community Inter-comparrison Suite Documentation',
    u'Centre of Environmental Data Archival', 'manual'),
 ]
 
@@ -236,7 +236,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'jasmincommunityinter-comparrisonsuite', u'JASMIN Community Inter-comparrison Suite Documentation',
+    ('index', 'communityinter-comparrisonsuite', u'Community Inter-comparrison Suite Documentation',
      [u'Centre of Environmental Data Archival'], 1)
 ]
 
@@ -250,8 +250,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'JASMINCommunityInter-comparrisonSuite', u'JASMIN Community Inter-comparrison Suite Documentation',
-   u'Centre of Environmental Data Archival', 'JASMINCommunityInter-comparrisonSuite', 'One line description of project.',
+  ('index', 'CommunityInter-comparrisonSuite', u'Community Inter-comparrison Suite Documentation',
+   u'Centre of Environmental Data Archival', 'CommunityInter-comparrisonSuite', 'One line description of project.',
    'Miscellaneous'),
 ]
 

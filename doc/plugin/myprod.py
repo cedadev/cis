@@ -1,7 +1,7 @@
-from jasmin_cis.data_io.products.AProduct import AProduct
-from jasmin_cis.data_io.Coord import Coord, CoordList
-from jasmin_cis.data_io.ungridded_data import UngriddedData
-from jasmin_cis.data_io.ungridded_data import Metadata
+from cis.data_io.products.AProduct import AProduct
+from cis.data_io.Coord import Coord, CoordList
+from cis.data_io.ungridded_data import UngriddedData
+from cis.data_io.ungridded_data import Metadata
 
 import logging
 

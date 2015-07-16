@@ -120,7 +120,7 @@ CIS currently does not support writing out of NetCDF4 groups, so any groups read
 
 Reading groups in user-developed product plugins
 ------------------------------------------------
-Most of the methods in the :ref:`jasmin_cis.data_io.netcdf module <netcdf_reading>` support netCDF4 groups using the
+Most of the methods in the :ref:`cis.data_io.netcdf module <netcdf_reading>` support netCDF4 groups using the
 syntax described above - users should use this module when designing their own plugins to ensure support for groups.
 
 Example plots

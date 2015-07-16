@@ -15,7 +15,7 @@ Note that these branches are deemed experimental and therefore not stable (that'
 Unit test suite
 ===============
 
-The unit tests suite can be ran using Nose readily. Just go the root of the repository (i.e. jasmin_cis) and type ``nose`` and this will run the full suite of tests.
+The unit tests suite can be ran using Nose readily. Just go the root of the repository (i.e. cis) and type ``nose`` and this will run the full suite of tests.
 A comprehensive set of test data sets can be found under the ``test/test_files`` directory. A ``harness`` directory is provided and contains a couple of test harness for those data files.
 Finally, integration system-level tests are provided under the ``test/plot_tests`` directory and be ran using the ``run_all.sh`` script.
 
