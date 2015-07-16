@@ -4,7 +4,7 @@ from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_t
 import sys
 from mock import MagicMock
 
-from cis.cis import subset_cmd
+from cis.cis_main import subset_cmd
 from cis.parse import parse_args
 from cis.test.test_files.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest

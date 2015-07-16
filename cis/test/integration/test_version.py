@@ -4,7 +4,7 @@ created without errors.
 """
 from unittest import TestCase
 
-from cis.cis import parse_and_run_arguments
+from cis.cis_main import parse_and_run_arguments
 
 
 class TestVersionIntegration(TestCase):

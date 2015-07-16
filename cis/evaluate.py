@@ -1,7 +1,7 @@
 from operator import mul
 import numpy
 
-from cis.cis import __version__
+from cis import __version__
 
 
 class EvaluationError(Exception):

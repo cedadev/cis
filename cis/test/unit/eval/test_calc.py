@@ -7,7 +7,7 @@ from cis.data_io.gridded_data import make_from_cube, GriddedDataList, GriddedDat
 from cis.evaluate import Calculator, EvaluationError
 from cis.test.util import mock
 from cis.test.utils_for_testing import compare_masked_arrays
-from cis.cis import __version__
+from cis import __version__
 
 
 class TestCalculator(unittest.TestCase):

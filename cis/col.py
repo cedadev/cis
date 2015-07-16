@@ -167,7 +167,7 @@ class Colocate(object):
         """
         from cis.exceptions import CoordinateNotFoundError
         from time import time
-        from cis.cis import __version__
+        from cis import __version__
 
         # Find colocator, constraint and kernel to use
         col_params['missing_data_for_missing_sample'] = self.missing_data_for_missing_sample

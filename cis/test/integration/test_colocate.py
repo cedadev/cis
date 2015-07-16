@@ -1,6 +1,6 @@
 import unittest
 
-from cis.cis import col_cmd
+from cis.cis_main import col_cmd
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.parse import parse_args
 from cis.test.test_files.integration_test_data import *

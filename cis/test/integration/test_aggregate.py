@@ -5,7 +5,7 @@ import numpy as np
 
 import unittest
 
-from cis.cis import aggregate_cmd
+from cis.cis_main import aggregate_cmd
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.test.test_files.integration_test_data import *
 from cis.test.utils_for_testing import *

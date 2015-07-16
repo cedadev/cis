@@ -8,7 +8,7 @@ from cis.data_io.data_writer import DataWriter
 from cis.aggregation.aggregator import Aggregator
 from cis.col_framework import get_kernel
 from cis.exceptions import CISError, InvalidVariableError
-from cis.cis import __version__
+from cis import __version__
 from cis.aggregation.aggregation_kernels import aggregation_kernels
 from iris.exceptions import IrisError
 

@@ -2,5 +2,5 @@
 # This file is part of the CIS package.  
 # http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite
 
-from cis.cis import main
+from cis.cis_main import main
 main()

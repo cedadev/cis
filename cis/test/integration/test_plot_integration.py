@@ -4,7 +4,7 @@ created without errors.
 """
 from cis.exceptions import UserPrintableException
 from cis.data_io.products.AProduct import ProductPluginException
-from cis.cis import plot_cmd, subset_cmd, aggregate_cmd
+from cis.cis_main import plot_cmd, subset_cmd, aggregate_cmd
 from cis.parse import parse_args
 from cis.test.test_files.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest

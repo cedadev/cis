@@ -11,7 +11,7 @@ import cis.exceptions as ex
 import cis.parse_datetime as parse_datetime
 from cis.subsetting.subsetter import Subsetter
 from cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
-from cis.cis import __version__
+from cis import __version__
 from cis.utils import guess_coord_axis
 
 
