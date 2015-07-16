@@ -4,7 +4,7 @@ import multiprocessing
 def run(test_set='cis.test.unit', n_processors=1, stop=False):
     import nose
 
-    args = ['', test_set, '--processes=%s' % max(n_processors, 1), '--verbosity=2',]
+    args = ['', test_set, '--processes=%s' % n_processors, '--verbosity=2',]
 
     if stop:
         args.append('--stop')
