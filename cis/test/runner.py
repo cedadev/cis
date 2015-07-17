@@ -1,7 +1,7 @@
 from setuptools.command.test import test as TestCommand
 import multiprocessing
 
-def run(test_set='cis.test.unit', n_processors=1, stop=False):
+def run(test_set='cis/test/unit', n_processors=1, stop=False):
     import nose
 
     args = ['', test_set, '--processes=%s' % n_processors, '--verbosity=2',]
@@ -33,9 +33,9 @@ class nose_test(TestCommand):
         self.test_args = []
         self.test_suite = True
         if self.integration_tests:
-            self.test_set = 'cis.test.integration'
+            self.test_set = 'cis/test/integration'
         else:
-            self.test_set = 'cis.test.unit'
+            self.test_set = 'cis/test/unit'
 
         if self.num_processors is None:
             self.num_processors = multiprocessing.cpu_count() - 1
