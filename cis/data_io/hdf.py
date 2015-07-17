@@ -56,6 +56,11 @@ def __read_hdf4(filename, variables):
 
     variables = utils.listify(variables)
 
+    # I'd rather not have to make this check but for pyhdf 0.9.0 and hdf 4.2.9 on OS X the c-level read routine will at
+    # some point call exit(138) when reading valid netcdf files (rather than returning a negative status).
+    if not filename.endswith('.hdf'):
+        raise IOError("Tried to read non HDF file: {}".format(filename))
+
     try:
         sds_dict = hdf_sd.read(filename, variables)
 
