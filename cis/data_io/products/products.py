@@ -241,7 +241,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
                 if dim.points.size > 1 and \
                     not units.is_time() and \
                     not units.is_time_reference() and \
-                    not units.is_vertical() and \
+                    not (units.is_vertical() or units =='level') and \
                         not units.is_convertible(unit.Unit('degrees')):
                             is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
                             break
@@ -302,12 +302,14 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
 
         try:
             cube = gridded_data.load_cube(filenames, variable_constraint)
-        except iris.exceptions.ConstraintMismatchError:
+        except iris.exceptions.ConstraintMismatchError as e:
             if variable is None:
                 message = "File contains more than one cube variable name must be specified"
-            else:
+            elif e.message == "no cubes found":
                 message = "Variable not found: {} \nTo see a list of variables run: cis info {}"\
                     .format(str(variable), filenames[0])
+            else:
+                message = e.message
             raise InvalidVariableError(message)
         except ValueError as e:
             raise IOError(str(e))
