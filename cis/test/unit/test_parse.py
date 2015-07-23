@@ -13,12 +13,11 @@ from nose.tools import eq_
 from cis.parse import parse_args, expand_file_list
 from cis.plotting.plot import Plotter
 
+def escape_colons(string):
+    import re
+    return re.sub(r'([\:])', r'\\\1', string)
 
 class ParseTestFiles(TestCase):
-
-    def _make_pathname(self, path):
-        from os.path import join
-        return join(self.data_directory, path)
 
     def setUp(self):
         '''
@@ -40,22 +39,33 @@ class ParseTestFiles(TestCase):
         self.data_directory = mkdtemp('cis_test_dir')
 
         # Name all of our test files (with full paths)
-        self.test_directory = self._make_pathname('test_directory_for_parser')
-
-        self.test_directory_file1 = os.path.join(self.test_directory, 'test_file_for_parser_1')
-        self.test_directory_file2 = os.path.join(self.test_directory, 'test_file_for_parser_2')
-        self.test_directory_file3 = os.path.join(self.test_directory, 'test_file_for_parser_3')
-        self.test_directory_files = [self.test_directory_file1, self.test_directory_file2, self.test_directory_file3]
-
-        self.single_valid_file = self._make_pathname("single_data_file")
-
-        self.multiple_valid_files = [self._make_pathname("data_file_1"), self._make_pathname("data_file_2")]
-
-        # Create all of our empty test files
+        self.test_directory = os.path.join(self.data_directory, 'test_directory_for_parser')
         os.mkdir(self.test_directory)
-        _make_file(self.single_valid_file)
-        for f in self.test_directory_files: _make_file(f)
-        for f in self.multiple_valid_files: _make_file(f)
+        self.escaped_test_directory = escape_colons(self.test_directory)
+
+        self.escaped_test_directory_files = []
+        self.test_directory_files = []
+        for i in range(1,4):
+            test_directory_file = os.path.join(self.test_directory, 'test_file_for_parser_{}'.format(i))
+            _make_file(test_directory_file)
+            self.escaped_test_directory_files.append(escape_colons(test_directory_file))
+            self.test_directory_files.append(test_directory_file)
+
+        single_valid_file = os.path.join(self.data_directory, "single_data_file")
+        _make_file(single_valid_file)
+        self.single_valid_file = single_valid_file
+        self.escaped_single_valid_file = escape_colons(single_valid_file)
+
+        self.multiple_valid_files = []
+        self.escaped_multiple_valid_files = []
+        for i in range(1,3):
+            valid_file = os.path.join(self.data_directory, 'data_file_{}'.format(i))
+            _make_file(valid_file)
+            self.multiple_valid_files.append(valid_file)
+            self.escaped_multiple_valid_files.append(escape_colons(valid_file))
+
+        self.data_file_wildcard = os.path.join(self.data_directory, 'data_file*')
+
 
     def tearDown(self):
         '''
@@ -91,7 +101,7 @@ class TestParse(ParseTestFiles):
 
     def test_order_is_preserved_when_specifying_files_even_when_wildcards_and_directories_are_specified_too(self):
         parser = argparse.ArgumentParser()
-        files = expand_file_list(','.join([ self.single_valid_file, os.path.join( self.data_directory, 'data_file*'),
+        files = expand_file_list(','.join([ self.single_valid_file, self.data_file_wildcard,
                                            self.test_directory]), parser)
         eq_(files, [ self.single_valid_file] +  self.multiple_valid_files + self.test_directory_files)
 
@@ -131,7 +141,7 @@ class TestParse(ParseTestFiles):
         eq_(files, self.test_directory_files)
 
     def test_can_specify_one_valid_filename(self):
-        args = ["plot", "var:" + self.test_directory_files[0]]
+        args = ["plot", "var:" + self.escaped_test_directory_files[0]]
         parse_args(args)
 
     def test_should_raise_error_with_one_invalid_filename(self):
@@ -144,12 +154,12 @@ class TestParse(ParseTestFiles):
                 raise e
 
     def test_can_specify_more_than_one_valid_filename(self):
-        args = ["plot", "var:" + ','.join(self.test_directory_files[0:1])]
+        args = ["plot", "var:" + ','.join(self.escaped_test_directory_files[0:1])]
         parse_args(args)
 
     def test_should_raise_error_with_a_mixture_of_valid_and_invalid_filenames(self):
         try:
-            args = ["plot", "var:" + self.test_directory_files[0] + ',invalidfilename']
+            args = ["plot", "var:" + self.escaped_test_directory_files[0] + ',invalidfilename']
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -159,9 +169,9 @@ class TestParse(ParseTestFiles):
     def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
         dummy_cis_out = 'out.nc'
         args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" + dummy_cis_out,  self.single_valid_file + ':colocator=bin',
+                     ["col", "var1,var2:" + dummy_cis_out,  self.escaped_single_valid_file + ':colocator=bin',
                       "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" +  self.single_valid_file, dummy_cis_out + ':colocator=bin',
+                     ["col", "var1,var2:" +  self.escaped_single_valid_file, dummy_cis_out + ':colocator=bin',
                       "-o", dummy_cis_out[:-3]],
                      ["aggregate", "var:" + dummy_cis_out, "t", "-o", dummy_cis_out[:-3]]]
         for args in args_list:
@@ -173,17 +183,21 @@ class TestParse(ParseTestFiles):
                     raise e
 
     def test_GIVEN_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
-        args = ['eval', 'var1,var2:%s:product=cis' %  self.single_valid_file,
+        args = ['eval', 'var1,var2:%s:product=cis' %  self.escaped_single_valid_file,
                 'var1 + var2 + var3', 'units', '-o', 'output_name']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output_name.nc'))
 
     def test_GIVEN_output_has_file_extension_WHEN_parse_THEN_extension_not_added(self):
-        args = ['eval', 'var1,var2:%s:product=cis' %  self.single_valid_file,
+        args = ['eval', 'var1,var2:%s:product=cis' % self.escaped_single_valid_file,
                 'var1 + var2 + var3', 'units', '-o', 'output_name.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output_name.nc'))
 
+    def test_can_escape_variables_with_colons(self):
+        args = ['plot', 'my\:var:{0}:product=cis'.format(self.escaped_single_valid_file)]
+        parsed = parse_args(args)
+        assert_that('my:var' in parsed.datagroups[0]['variables'])
 
 class TestParsePlot(ParseTestFiles):
     """
@@ -191,13 +205,13 @@ class TestParsePlot(ParseTestFiles):
     """
 
     def test_can_specify_valid_chart_type(self):
-        args = ["plot", "var:" + self.test_directory_files[0], "--type",
+        args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
                 Plotter.plot_types.keys()[0]]
         parse_args(args)
 
     def test_should_raise_error_with_an_invalid_chart_type(self):
         try:
-            args = ["plot", "var:" + self.test_directory_files[0], "--type", "dfgdfgdfgdfgdfgdf"]
+            args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type", "dfgdfgdfgdfgdfgdf"]
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -206,7 +220,7 @@ class TestParsePlot(ParseTestFiles):
 
     def test_should_raise_error_with_more_than_one_chart_type(self):
         try:
-            args = ["plot", "var:" + self.test_directory_files[0], "--type",
+            args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
                     Plotter.plot_types.keys()[0], Plotter.plot_types.keys()[1]]
             parse_args(args)
             assert False
@@ -215,12 +229,12 @@ class TestParsePlot(ParseTestFiles):
                 raise e
 
     def test_can_specify_more_than_one_variable(self):
-        args = ["plot", "var:" + self.test_directory_files[0], "var:" + self.test_directory_files[0]]
+        args = ["plot", "var:" + self.escaped_test_directory_files[0], "var:" + self.escaped_test_directory_files[0]]
         parse_args(args)
 
     def test_should_raise_error_when_no_variable_is_specified(self):
         try:
-            args = ["plot", self.test_directory_files[0]]
+            args = ["plot", self.escaped_test_directory_files[0]]
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -229,7 +243,7 @@ class TestParsePlot(ParseTestFiles):
 
     def test_should_raise_error_with_invalid_line_width(self):
         try:
-            args = ["plot", "var:" + self.test_directory_files[0], "--itemwidth", "4a0"]
+            args = ["plot", "var:" + self.escaped_test_directory_files[0], "--itemwidth", "4a0"]
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -238,7 +252,7 @@ class TestParsePlot(ParseTestFiles):
 
     def test_should_raise_error_with_invalid_line_style(self):
         try:
-            args = ["plot", "var:" + self.test_directory_files[0], "--linestyle", "4a0"]
+            args = ["plot", "var:" + self.escaped_test_directory_files[0], "--linestyle", "4a0"]
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -252,7 +266,7 @@ class TestParseEvaluate(ParseTestFiles):
     """
 
     def test_parse_evaluate_single_datagroup(self):
-        args = ['eval', 'var1,var2:%s:product=cis' %  self.single_valid_file,
+        args = ['eval', 'var1,var2:%s:product=cis' %  self.escaped_single_valid_file,
                 'var1 + var2 + var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.command, is_('eval'))
@@ -265,8 +279,8 @@ class TestParseEvaluate(ParseTestFiles):
         assert_that(parsed.datagroups[0]['product'], is_('cis'))
 
     def test_parse_evaluate_multiple_datagroups(self):
-        args = ['eval', 'var1,var2:%s' %  self.multiple_valid_files[0],
-                'var3:%s' % self.multiple_valid_files[1], 'var1^var2 / var3', 'units', '-o', 'output.nc']
+        args = ['eval', 'var1,var2:%s' %  self.escaped_multiple_valid_files[0],
+                'var3:%s' % self.escaped_multiple_valid_files[1], 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.command, is_('eval'))
         assert_that(parsed.expr, is_('var1^var2 / var3'))
@@ -279,29 +293,29 @@ class TestParseEvaluate(ParseTestFiles):
         assert_that(parsed.datagroups[1]['variables'], is_(['var3']))
 
     def test_parse_evaluate_output_variable(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file,
-                'var3:%s' % self.multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'out_var:output.nc']
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file,
+                'var3:%s' % self.escaped_multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'out_var:output.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output.nc'))
         assert_that(parsed.output_var, is_('out_var'))
 
     def test_parse_evaluate_no_output_variable(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file,
-                'var3:%s' % self.multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'output.nc']
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file,
+                'var3:%s' % self.escaped_multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('output.nc'))
         assert_that(parsed.output_var, is_(None))
 
     def test_parse_evaluate_no_output(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file,
-                'var3:%s' %  self.single_valid_file, 'var1^var2 / var3', 'units']
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file,
+                'var3:%s' %  self.escaped_single_valid_file, 'var1^var2 / var3', 'units']
         parsed = parse_args(args)
         assert_that(parsed.output, is_('out.nc'))
         assert_that(parsed.output_var, is_(None))
 
     def test_parse_evaluate_invalid_output(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file,
-                'var3:%s' % self.multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'var:var:out']
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file,
+                'var3:%s' % self.escaped_multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'var:var:out']
         try:
             parse_args(args)
             assert False
@@ -311,8 +325,8 @@ class TestParseEvaluate(ParseTestFiles):
 
     def test_parse_evaluate_valid_aliases(self):
         # Should use the given alias or the variable name if not provided
-        args = ['eval', 'var1=alias1,var2:%s' %  self.single_valid_file,
-                'var3=alias3:%s' % self.multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'output.nc']
+        args = ['eval', 'var1=alias1,var2:%s' %  self.escaped_single_valid_file,
+                'var3=alias3:%s' % self.escaped_multiple_valid_files[0], 'var1^var2 / var3', 'units', '-o', 'output.nc']
         parsed = parse_args(args)
         assert_that(parsed.datagroups[0]['variables'], is_(['var1', 'var2']))
         assert_that(parsed.datagroups[0]['aliases'], is_(['alias1', 'var2']))
@@ -320,7 +334,7 @@ class TestParseEvaluate(ParseTestFiles):
         assert_that(parsed.datagroups[1]['aliases'], is_(['alias3']))
 
     def test_parse_evaluate_duplicate_aliases(self):
-        args = ['eval', 'var1=alias1,var2=alias1:%s' %  self.single_valid_file,
+        args = ['eval', 'var1=alias1,var2=alias1:%s' %  self.escaped_single_valid_file,
                 'var1^var2 / var3', 'units', '-o', 'output.nc']
         try:
             parse_args(args)
@@ -332,7 +346,7 @@ class TestParseEvaluate(ParseTestFiles):
     def test_parse_evaluate_invalid_aliases(self):
         invalid_var_aliases = ['var1=', '=alias', '=', 'var=a=a']
         for var in invalid_var_aliases:
-            args = ['eval', '%s:%s' % (var,  self.single_valid_file),
+            args = ['eval', '%s:%s' % (var,  self.escaped_single_valid_file),
                     'var1^var2 / var3', 'units', '-o', 'output.nc']
             try:
                 parse_args(args)
@@ -342,7 +356,7 @@ class TestParseEvaluate(ParseTestFiles):
                     raise e
 
     def test_parse_evaluate_missing_units_single_datagroup(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file,
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file,
                 'var1 + var2']
         try:
             parse_args(args)
@@ -352,21 +366,21 @@ class TestParseEvaluate(ParseTestFiles):
                 raise e
 
     def test_can_specify_attributes(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file, 'var1^var2 / var3', 'units',
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file, 'var1^var2 / var3', 'units',
                 '--attributes', 'att1=val1,att2=val2']
         parsed = parse_args(args)
         assert_that(parsed.attributes, is_({'att1': 'val1',
                                             'att2': 'val2'}))
 
     def test_can_specify_attributes_shorthand(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file, 'var1^var2 / var3', 'units',
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file, 'var1^var2 / var3', 'units',
                 '-a', 'att1=val1,att2=val2']
         parsed = parse_args(args)
         assert_that(parsed.attributes, is_({'att1': 'val1',
                                             'att2': 'val2'}))
 
     def test_invalid_attributes_throws_parser_error(self):
-        args = ['eval', 'var1,var2:%s' %  self.single_valid_file, 'var1^var2 / var3', 'units',
+        args = ['eval', 'var1,var2:%s' %  self.escaped_single_valid_file, 'var1^var2 / var3', 'units',
                 '-a']
         attributes = ['att1val1,att2=val2', '=', '=val', 'key=']
         for attr in attributes:
@@ -385,12 +399,12 @@ class TestParseStats(ParseTestFiles):
     """
 
     def test_GIVEN_no_output_WHEN_parse_stats_THEN_output_is_None(self):
-        args = ['stats', 'var1,var2:%s' %  self.single_valid_file]
+        args = ['stats', 'var1,var2:%s' %  self.escaped_single_valid_file]
         arguments = parse_args(args)
         assert_that(arguments.output, is_(None))
 
     def test_GIVEN_one_variable_WHEN_parse_stats_THEN_parser_error(self):
-        args = ['stats', 'var1:%s' %  self.single_valid_file]
+        args = ['stats', 'var1:%s' %  self.escaped_single_valid_file]
         try:
             parse_args(args)
             assert False
@@ -399,8 +413,8 @@ class TestParseStats(ParseTestFiles):
                 raise e
 
     def test_GIVEN_more_than_two_variables_WHEN_parse_stats_THEN_parser_error(self):
-        args = ['stats', 'var1,var2:%s' %  self.single_valid_file,
-                'var3:%s' %  self.single_valid_file]
+        args = ['stats', 'var1,var2:%s' %  self.escaped_single_valid_file,
+                'var3:%s' %  self.escaped_single_valid_file]
         try:
             parse_args(args)
             assert False
@@ -409,7 +423,7 @@ class TestParseStats(ParseTestFiles):
                 raise e
 
     def test_GIVEN_two_variables_WHEN_parse_stats_THEN_variables_are_in_datagroups(self):
-        args = ['stats', 'var1:%s' %  self.single_valid_file, 'var2:%s' % self.multiple_valid_files[0]]
+        args = ['stats', 'var1:%s' %  self.escaped_single_valid_file, 'var2:%s' % self.escaped_multiple_valid_files[0]]
         arguments = parse_args(args)
         assert_that(arguments.datagroups[0]['filenames'], is_([ self.single_valid_file]))
         assert_that(arguments.datagroups[0]['variables'], is_(['var1']))
@@ -417,7 +431,7 @@ class TestParseStats(ParseTestFiles):
         assert_that(arguments.datagroups[1]['variables'], is_(['var2']))
 
     def test_GIVEN_output_file_WHEN_parse_stats_THEN_output_file_in_arguments(self):
-        args = ['stats', 'var1,var2:%s' %  self.single_valid_file, '-o', 'output']
+        args = ['stats', 'var1,var2:%s' %  self.escaped_single_valid_file, '-o', 'output']
         arguments = parse_args(args)
         assert_that(arguments.output, is_('output.nc'))
 
@@ -430,7 +444,7 @@ class TestParseSubset(ParseTestFiles):
     def test_GIVEN_longitude_limits_not_monotonically_increasing_WHEN_subset_THEN_raises_error(self):
         limits = ['x=[270,90]', 'x=[-30,-60]']
         for lim in limits:
-            args = ['subset', 'var1:%s' %  self.single_valid_file, lim]
+            args = ['subset', 'var1:%s' %  self.escaped_single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -441,7 +455,7 @@ class TestParseSubset(ParseTestFiles):
     def test_GIVEN_longitude_limits_wider_than_360_WHEN_subset_THEN_raises_error(self):
         limits = ['x=[-180,360]', 'x=[-1,360]']
         for lim in limits:
-            args = ['subset', 'var1:%s' %  self.single_valid_file, lim]
+            args = ['subset', 'var1:%s' %  self.escaped_single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -452,7 +466,7 @@ class TestParseSubset(ParseTestFiles):
     def test_GIVEN_longitude_limits_valid_WHEN_subset_THEN_parsed_OK(self):
         limits = ['x=[-10,10]', 'x=[0,360]', 'x=[-180.0,180.0]']
         for lim in limits:
-            args = ['subset', 'var1:%s' %  self.single_valid_file, lim]
+            args = ['subset', 'var1:%s' %  self.escaped_single_valid_file, lim]
             parse_args(args)
 
     def test_GIVEN_subset_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
@@ -460,7 +474,8 @@ class TestParseSubset(ParseTestFiles):
         limits = 'x=[-10,10],y=[40,60]'
         output = 'subset-out'
         product = 'cis'
-        args = ["subset", var1 + "," + var2 + ':' + self.test_directory_files[0] + ':product=' + product, limits, '-o', output]
+        args = ["subset", var1 + "," + var2 + ':' + self.escaped_test_directory_files[0] + ':product=' + product,
+                limits, '-o', output]
         main_args = parse_args(args)
         dg = main_args.datagroups
         assert_that(len(dg), is_(1))
@@ -479,7 +494,8 @@ class TestParseAggregate(ParseTestFiles):
         grid = 'x=[-10,10,2]'
         output = 'aggregate-out'
         product = 'cis'
-        args = ["aggregate", var1 + "," + var2 + ':' + self.test_directory_files[0] + ':product=' + product, grid, '-o', output]
+        args = ["aggregate", var1 + "," + var2 + ':' + self.escaped_test_directory_files[0] + ':product=' + product,
+                grid, '-o', output]
         main_args = parse_args(args)
         dg = main_args.datagroups
         assert_that(len(dg), is_(1))
@@ -490,7 +506,7 @@ class TestParseAggregate(ParseTestFiles):
     def test_GIVEN_longitude_limits_not_monotonically_increasing_WHEN_aggregate_THEN_raises_error(self):
         limits = ['x=[270,90,10]', 'x=[-30,-60,1]']
         for lim in limits:
-            args = ['aggregate', 'var1:%s' %  self.single_valid_file, lim]
+            args = ['aggregate', 'var1:%s' %  self.escaped_single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -501,7 +517,7 @@ class TestParseAggregate(ParseTestFiles):
     def test_GIVEN_longitude_limits_wider_than_360_WHEN_aggregate_THEN_raises_error(self):
         limits = ['x=[-180,360,10]', 'x=[-1,360,5]']
         for lim in limits:
-            args = ['aggregate', 'var1:%s' %  self.single_valid_file, lim]
+            args = ['aggregate', 'var1:%s' %  self.escaped_single_valid_file, lim]
             try:
                 parse_args(args)
                 assert False
@@ -512,7 +528,7 @@ class TestParseAggregate(ParseTestFiles):
     def test_GIVEN_longitude_limits_valid_WHEN_aggregate_THEN_parsed_OK(self):
         limits = ['x=[-10,10,1]', 'x=[0,360,10]', 'x=[-180.0,180.0,5]']
         for lim in limits:
-            args = ['aggregate', 'var1:%s' %  self.single_valid_file, lim]
+            args = ['aggregate', 'var1:%s' %  self.escaped_single_valid_file, lim]
             parse_args(args)
 
 
@@ -524,9 +540,9 @@ class TestParseColocate(ParseTestFiles):
     def test_GIVEN_colocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
         var1, var2 = 'rain', 'snow'
         output = 'aggregate-out'
-        samplegroup = self.test_directory_files[0] + ':colocator=bin'
+        samplegroup = self.escaped_test_directory_files[0] + ':colocator=bin'
         product = 'cis'
-        args = ["col", var1 + "," + var2 + ':' + self.test_directory_files[0] + ':product=' + product, samplegroup, '-o', output]
+        args = ["col", var1 + "," + var2 + ':' + self.escaped_test_directory_files[0] + ':product=' + product, samplegroup, '-o', output]
         main_args = parse_args(args)
         dg = main_args.datagroups
         assert_that(len(dg), is_(1))
@@ -536,15 +552,16 @@ class TestParseColocate(ParseTestFiles):
 
     def test_can_leave_colocator_missing(self):
         var = 'rain'
-        samplegroup = self.test_directory_files[0] + ':variable=rain'
-        args = ["col", var + ':' + self.test_directory_files[0], samplegroup]
+        samplegroup = self.escaped_test_directory_files[0] + ':variable=rain'
+        args = ["col", var + ':' + self.escaped_test_directory_files[0], samplegroup]
         main_args = parse_args(args)
         sg = main_args.samplegroup
         assert_that(sg['colocator'], is_(None))
         assert_that(sg['variable'], is_('rain'))
 
     def test_can_specify_one_valid_samplefile_and_one_complete_datagroup(self):
-        args = ["col", "variable:" + self.test_directory_files[0], self.test_directory_files[0] + ":colocator=col,constraint=con,kernel=nn"]
+        args = ["col", "variable:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0] +
+                ":colocator=col,constraint=con,kernel=nn"]
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_(('col', {}), args.samplegroup['colocator'])
@@ -553,7 +570,8 @@ class TestParseColocate(ParseTestFiles):
         eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_without_other_options(self):
-        args = ["col", "variable:" + self.test_directory_files[0], self.test_directory_files[0] + ':colocator=bin']
+        args = ["col", "variable:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0] +
+                ':colocator=bin']
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_(('bin', {}), args.samplegroup['colocator'])
@@ -562,10 +580,10 @@ class TestParseColocate(ParseTestFiles):
         eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_many_datagroups(self):
-        args = ["col", "variable1:" + self.test_directory_files[0],
-                "variable2:" + self.test_directory_files[0],
-                "variable3:" + self.test_directory_files[0],
-                self.test_directory_files[0] + ':variable=variable4,colocator=col,kernel=nn']
+        args = ["col", "variable1:" + self.escaped_test_directory_files[0],
+                "variable2:" + self.escaped_test_directory_files[0],
+                "variable3:" + self.escaped_test_directory_files[0],
+                self.escaped_test_directory_files[0] + ':variable=variable4,colocator=col,kernel=nn']
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_("variable4", args.samplegroup['variable'])
@@ -580,7 +598,7 @@ class TestParseColocate(ParseTestFiles):
         eq_(["variable3"], args.datagroups[2]['variables'])
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_with_internal_options(self):
-        args = ["col", "var1:" + self.test_directory_files[0], self.test_directory_files[0]
+        args = ["col", "var1:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0]
                 + ":variable=var2,constraint=SepConstraint[h_sep=1500,v_sep=22000,t_sep=5000],kernel=nn,colocator=bin"]
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.datagroups[0]['filenames'])

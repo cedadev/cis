@@ -110,6 +110,13 @@ For example::
     illum:20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc
     Cloud_Fraction_*:MOD*,MODIS_dir/:product=MODIS_L2
 
+
+Some file paths or variable names might contain colons (:), these need to be escaped so that CIS can tell the difference between it and the colons used to separate Datagroup elements. Simply use a backslash (\) to escape these characters. For example:
+
+    "TOTAL RAINFALL RATE\: LS+CONV KG/M2/S:C\:\My files\MODIS_dir:product=MODIS_L2"
+
+Notice that we have used outer quotes to allow for the spaces in the variable and file names, and used the backslashes to escape the colons.
+
 Reading NetCDF4 Hierarchical Groups
 ===================================
 CIS supports the reading of `NetCDF4 hierarchical groups <https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/Data-Model.html>`_.

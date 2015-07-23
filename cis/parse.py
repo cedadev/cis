@@ -506,33 +506,6 @@ def get_subset_limits(subsetlimits, parser):
     return limit_dict
 
 
-def parse_colonic_arguments(inputs, parser, options, min_args=1):
-    '''
-    :param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
-    :param parser:    The parser used to raise an error if one occurs
-    :param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
-    :param min_args:   The minimum number of arguments to expect - we can't say which arguments are compulsory, just how many are
-    :return: A list of dictionaries containing the parsed arguments
-    '''
-    input_dicts = []
-
-    for input_string in inputs:
-        split_input = input_string.split(":")
-        if len(split_input) < min_args:
-            parser.error("A mandatory data group option is missing")
-        input_dict = {}
-
-        for i, option in enumerate(options._asdict().keys()):
-            try:
-                current_option = split_input[i]
-                input_dict[option] = options[i](current_option, parser)
-            except IndexError:
-                input_dict[option] = None
-
-        input_dicts.append(input_dict)
-    return input_dicts
-
-
 def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsary_args):
     '''
     :param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
@@ -544,7 +517,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
     input_dicts = []
 
     for input_string in inputs:
-        split_input = input_string.split(":")
+        split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', input_string)]
         if len(split_input) < compulsary_args:
             parser.error("A mandatory option is missing")
         elif len(split_input) > compulsary_args + 1:
