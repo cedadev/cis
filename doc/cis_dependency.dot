@@ -7,6 +7,9 @@ digraph cis {
 	cis -> numpy;
 	cis -> matplotlib;
 	cis -> basemap;
+	cis -> pyhamcrest;
+	cis -> mock;
+	cis -> scipy;
 
     iris -> netcdf4;
     iris -> nose;
