@@ -2,22 +2,12 @@
 Maintenance and Developer Guide
 ===============================
 
-Experimental Branches
-=====================
-
-To checkout a particular branch, simply type ``git checkout branchname``
-
- - 'slice': this branch has a slicing functionality that can be used via the command line argument --slice
- - 'griddedgriddedcolocation': includes functionality for CF-compliant gridded-gridded colocation using the Iris library.
-
-Note that these branches are deemed experimental and therefore not stable (that's why they are in branch and not the in main trunk!), so it comes with no warranty.
-
 Unit test suite
 ===============
 
-The unit tests suite can be ran using Nose readily. Just go the root of the repository (i.e. cis) and type ``nose`` and this will run the full suite of tests.
-A comprehensive set of test data sets can be found under the ``test/test_files`` directory. A ``harness`` directory is provided and contains a couple of test harness for those data files.
-Finally, integration system-level tests are provided under the ``test/plot_tests`` directory and be ran using the ``run_all.sh`` script.
+The unit tests suite can be ran using Nose readily. Just go the root of the repository (i.e. cis) and type ``nosetests cis/test/unit`` and this will run the full suite of tests.
+A comprehensive set of integration tests are also provided. These require data sets which can be found in the JASMIN CIS group workspace under the ``cis_repo_test_files`` directory. To run the integration tests set the environment variable ``CIS_DATA_HOME`` to the location of the data sets, and then run ``nosetests cis/test/integration``.
+There are also a number of plot tests available under the ``test/plot_tests`` directory which can be run using the ``run_all.sh`` script. These perform a diff of some standard plots against reference plots, however small changes in the platform libraries and fonts can break these tests so they shouldn't be relied on.
 
 
 Dependencies
@@ -27,6 +17,19 @@ A graph representing the dependency tree can be found at ``doc/cis_dependency.do
 
 .. image:: img/dep.png
    :width: 900px
+
+
+Anaconda Build
+==============
+
+The Anaconda build recipes for CIS and the dependencies which can't be found either in the core channel, or in SciTools are stored in their own github repository [https://github.com/cistools/conda-recipes here].
+To build a new CIS package clone the conda-recipes repository and then run the following command:
+    $ conda build -c cistools -c scitools cis --numpy 1.8
+
+By default this will run the full unit-test suite before successful completion. You can also optionally run the integration test suite by specifying the CIS_DATA_HOME environment variable.
+
+To upload the package to the cistools channel on Anaconda.org use:
+    $ binstar upload <package_location> -u cistools
 
 
 API Documentation
