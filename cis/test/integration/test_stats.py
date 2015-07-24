@@ -65,6 +65,7 @@ class TestStats(BaseIntegrationTest):
         arguments = parse_args(args)
         stats_cmd(arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, self.output_vars)
+        os.remove('cis-colocated_gassp.nc')
 
     def test_CloudSat(self):
         # Takes 140s

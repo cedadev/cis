@@ -77,6 +77,7 @@ class TestEval(BaseIntegrationTest):
 
         assert_that(calculated_result.shape, is_((311,)))
         compare_masked_arrays(expected_result, calculated_result[:][0:5])
+        os.remove('cis-colocated_gassp.nc')
 
     def test_CloudSat(self):
         args = ['eval', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,
