@@ -6,5 +6,7 @@
 build/
 dist/
 cis.egg-info/
+.DS_Store
 *~
 doc/_build
+*.png
