@@ -6,7 +6,7 @@ Evaluation
 **********
 
 The Community Intercomparison Suite allows you to perform general arithmetic operations between different variables
-using the 'eval' command. For example, you might want to interpolate a value between two variables.
+using the 'eval' command. For example, you might want to calculate the (relative) difference between two variables.
 
 .. note::
     All variables used in a evaluation **must** be of the same shape in order to be compatible, i.e. the same number of
