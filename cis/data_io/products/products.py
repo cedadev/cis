@@ -241,7 +241,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
                 if dim.points.size > 1 and \
                     not units.is_time() and \
                     not units.is_time_reference() and \
-                    not units.is_vertical() and \
+                    not (units.is_vertical() or units.name == 'level') and \
                         not units.is_convertible(unit.Unit('degrees')):
                             is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
                             break
