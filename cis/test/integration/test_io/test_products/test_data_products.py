@@ -16,6 +16,7 @@ from cis.test.integration_test_data import non_netcdf_file, cis_test_files
 
 from tempfile import mkdtemp
 
+
 def check_regex_matching(cls_name, filename):
     from cis.data_io.products.AProduct import __get_class
     cls = __get_class(filename)
@@ -78,7 +79,7 @@ class ProductTests(object):
         if self.vars is not None:
             assert_that(set(vars), is_(set(self.vars)), "Variables")
         else:
-            assert_that(len(vars), is_(self.valid_vars_count ), "Number of valid variables in the file")
+            assert_that(len(vars), is_(self.valid_vars_count), "Number of valid variables in the file")
 
     def test_create_data_object(self):
         self.product().create_data_object([self.filename], self.valid_variable)
