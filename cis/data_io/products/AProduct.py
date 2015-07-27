@@ -191,12 +191,12 @@ def get_coordinates(filenames, product=None):
                                      % (product_cls.__name__, type(e).__name__, e.message), e)
 
 
-def get_variables(filenames, product=None):
+def get_variables(filenames, product=None, data_type=None):
     product_cls = __get_class(filenames[0], product)
 
     logging.info("Retrieving variables using product " + product_cls.__name__ + "...")
     try:
-        variables = product_cls().get_variable_names(filenames)
+        variables = product_cls().get_variable_names(filenames, data_type)
         return variables
     except Exception as e:
         logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
