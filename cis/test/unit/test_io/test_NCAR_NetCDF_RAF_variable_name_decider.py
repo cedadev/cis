@@ -183,7 +183,7 @@ class TestDataReader(TestCase):
         assert_that(selector.time_variable_name, is_(expected_time_var), "time variable name")
         assert_that(selector.longitude_variable_name, is_(expected_lon_var), "longitude variable name")
         assert_that(selector.latitude_variable_name, is_(expected_lat_var), "latitude variable name")
-        assert_that(selector.altitude, is_(0), "altitude is fixed at zero")
+        assert_that(selector.altitude, is_([0]), "altitude is fixed at zero")
         assert_that(selector.pressure_variable_name, is_(None), "pressure variable name")
 
     def test_GIVEN_time_coordinate_variable_lat_lon_alt_but_alt_variable_does_not_exist_WHEN_construct_THEN_throw_exception(self):

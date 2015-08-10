@@ -7,6 +7,20 @@ from cis.utils import fix_longitude_range
 
 class Coord(LazyData):
 
+    @classmethod
+    def from_many_coordinates(cls, coords):
+        """
+        Create a single coordinate object from the concatenation of all of the coordinate objects in the input list,
+         updating the shape as appropriate
+        :param: A list of coordinate objects to be combined
+        :return: Coord object
+        """
+        from cis.utils import concatenate
+        data = concatenate([ug.data for ug in coords])
+        metadata = coords[0].metadata  # Use the first file as a master for the metadata...
+        metadata.shape = data.shape  # But update the shape
+        return cls(data, metadata, coords[0].axis)
+
     def __init__(self, data, metadata, axis=''):
         """
 

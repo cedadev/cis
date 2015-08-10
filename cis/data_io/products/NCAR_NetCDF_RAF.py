@@ -10,7 +10,6 @@ from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Meta
 from cis.utils import add_to_list_if_not_none, dimensions_equal, listify
 from cis.data_io.netcdf import get_metadata, get_netcdf_file_attributes, read_many_files_individually, \
     get_netcdf_file_variables
-from cis.data_io.Coord import Coord
 
 
 class NCAR_NetCDF_RAF_variable_name_selector(object):
@@ -204,7 +203,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         if self.ALTITUDE_COORDINATE_NAME.lower() in self._attributes[0]:
             self.altitude_variable_name = self._get_coordinate_variable_name(self.ALTITUDE_COORDINATE_NAME, "vertical")
         else:
-            self.altitude = self.DEFAULT_ALTITUDE
+            self.altitude = [self.DEFAULT_ALTITUDE for attr in self._attributes]
 
     def _best_coordinates_setup(self):
         """
@@ -430,13 +429,10 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         :param standard_name: the standard name it should have
         :return: a coords object
         """
-        from cis.data_io.netcdf import get_metadata
         from cis.data_io.Coord import Coord
 
-        data_variable = data_variables[data_variable_name]
-        metadata = get_metadata(data_variable[0])  # Use the first file as a master
-        metadata.alter_standard_name(standard_name)
-        return Coord(data_variable, metadata, coord_axis)
+        coordinate_data_objects = [Coord(d, get_metadata(d), coord_axis) for d in data_variables[data_variable_name]]
+        return Coord.from_many_coordinates(coordinate_data_objects)
 
     def _create_time_coord(self, timestamp, time_variable_name, data_variables, coord_axis='T', standard_name='time'):
         """
@@ -448,6 +444,8 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         :param standard_name: Coord standard name, default 'time'
         :return: Coordinate
         """
+        from cis.data_io.Coord import Coord
+
         timestamps = listify(timestamp)
         time_variables = data_variables[time_variable_name]
         time_coords = []
@@ -458,13 +456,8 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
             coord = Coord(file_time_var, metadata, coord_axis)
             coord.convert_to_std_time(timestamp)
             time_coords.append(coord)
-        # Now recombine
-        # We can use the first coordinates metadata since the time units will have been converted
-        metadata = time_coords[0].metadata
-        data = time_coords[0].data
-        for coord in time_coords[1:]:
-            data = np.ma.concatenate((data, coord.data), axis=0)
-        return Coord(data, metadata, coord_axis)
+
+        return Coord.from_many_coordinates(time_coords)
 
     def _create_fixed_value_coord(self, coord_axis, values, coord_units, points_counts, coord_name):
         """
@@ -476,10 +469,12 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         :param values: Value of coordinate, or list of values for multiple files
         :return:
         """
+        from cis.data_io.Coord import Coord
+
         values = listify(values)
         points_counts = listify(points_counts)
         all_points = np.array([])
-        # This may run into the same problem as was fixed for JASCIS-243...
+        # Create separate arrays with values and sizes corresponding to each of the different input files.
         for value, points_count in zip(values, points_counts):
             file_points = np.ma.array(np.zeros(points_count) + float(value))
             all_points = np.append(all_points, file_points)
