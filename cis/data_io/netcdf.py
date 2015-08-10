@@ -246,14 +246,13 @@ def find_missing_value(var):
     return missing_value
 
 
-def get_data(var, calipso_scaling=False):
+def get_data(var):
     """
     Reads raw data from a NetCDF.Variable instance.
 
     :param var: The specific Variable instance to read
     :return:  A numpy maskedarray. Missing values are False in the mask.
     """
-    from cis.utils import create_masked_array_for_missing_data
     # Note that this will automatically apply any specified scalings and
     #  return a masked array based on _FillValue
     data = var[:]
