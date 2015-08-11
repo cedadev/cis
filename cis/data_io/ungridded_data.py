@@ -70,6 +70,8 @@ class Metadata(object):
             standard_name = 'altitude'
         elif name.lower().startswith('pres'):
             standard_name = 'air_pressure'
+        elif name.lower() == 'time':
+            standard_name = 'time'
         return standard_name
 
 
