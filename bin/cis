@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 # This file is part of the CIS package.  
-# http://proj.badc.rl.ac.uk/cedaservices/wiki/JASMIN/CommunityIntercomparisonSuite
+# www.cistools.net
 
 from cis.cis_main import main
 main()
