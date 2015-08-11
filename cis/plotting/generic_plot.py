@@ -80,9 +80,10 @@ class Generic_Plot(object):
             return self.matplotlib
 
     def get_data_items_max(self):
-        data_max = self.unpacked_data_items[0]['x'].max()
+        import numpy as np
+        data_max = np.nanmax(self.unpacked_data_items[0]['x'])
         for i in self.unpacked_data_items:
-            data_max = max([i["x"].max(), data_max])
+            data_max = max([np.nanmax(i["x"]), data_max])
         return data_max
 
     def unpack_data_items(self):
