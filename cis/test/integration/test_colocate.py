@@ -6,51 +6,51 @@ from cis.parse import parse_args
 from cis.test.integration_test_data import *
 
 
-class TestUngriddedGriddedColocate(BaseIntegrationTest):
+class TestUngriddedGriddedCollocate(BaseIntegrationTest):
 
-    def test_GIVEN_single_variable_WHEN_colocate_THEN_successful_colocation(self):
+    def test_GIVEN_single_variable_WHEN_collocate_THEN_successful_collocation(self):
         variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
         filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
         sample_file = valid_hadgem_filename
-        colocator_and_opts = 'bin,kernel=mean'
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
 
-    def test_GIVEN_single_variable_WHEN_colocate_box_THEN_successful_colocation(self):
+    def test_GIVEN_single_variable_WHEN_collocate_box_THEN_successful_collocation(self):
         variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
         filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
         sample_file = valid_hadgem_filename
-        colocator_and_opts = 'box[h_sep=10],kernel=mean'
+        collocator_and_opts = 'box[h_sep=10],kernel=mean'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
 
-    def test_GIVEN_multiple_variables_on_same_coords_WHEN_colocate_THEN_successful_colocation(self):
+    def test_GIVEN_multiple_variables_on_same_coords_WHEN_collocate_THEN_successful_collocation(self):
         variables = valid_aerosol_cci_variable, valid_aerosol_cci_variable_2,
         filename = valid_aerosol_cci_filename
         sample_file = valid_echamham_filename
-        colocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
+        collocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
         arguments = ['col', ','.join(variables) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variables)
 
-    def test_GIVEN_multiple_variables_on_same_coords_plus_dim_vars_WHEN_colocate_THEN_successful_colocation(self):
+    def test_GIVEN_multiple_variables_on_same_coords_plus_dim_vars_WHEN_collocate_THEN_successful_collocation(self):
         variables = valid_aerosol_cci_variable, valid_aerosol_cci_variable_2, 'time'
         filename = valid_aerosol_cci_filename
         sample_file = valid_echamham_filename
-        colocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
+        collocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
         arguments = ['col', ','.join(variables) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -63,9 +63,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_aeronet_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -78,9 +78,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_GASSP_aeroplane_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -93,9 +93,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_GASSP_ship_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -108,9 +108,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_GASSP_station_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', var + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -123,9 +123,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_cis_ungridded_output_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -138,9 +138,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_ascii_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -153,9 +153,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_cloud_cci_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -168,9 +168,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_cloudsat_PRECIP_file
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=nn_h,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=nn_h,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -183,9 +183,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_cloudsat_PRECIP_file
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -200,9 +200,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_cloudsat_RVOD_file
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -215,9 +215,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_caliop_l1_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -230,9 +230,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_caliop_l2_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -246,9 +246,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_modis_l2_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -261,9 +261,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_modis_l2_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=moments,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -279,9 +279,9 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_modis_l3_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -289,7 +289,7 @@ class TestUngriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
 
-class TestGriddedGriddedColocate(BaseIntegrationTest):
+class TestGriddedGriddedCollocate(BaseIntegrationTest):
 
     def test_HadGem_onto_ECHAMHAM(self):
         # Takes 2s
@@ -297,9 +297,9 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_hadgem_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        colocator_and_opts = 'lin,variable=%s' % sample_var
+        collocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -312,9 +312,9 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_hadgem_filename
         sample_file = valid_cis_gridded_output_filename
         sample_var = valid_cis_gridded_output_variable
-        colocator_and_opts = 'lin,variable=%s' % sample_var
+        collocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -327,9 +327,9 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'variable=%s' % sample_var
+        collocator_and_opts = 'variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':' + colocator_and_opts,
+                     sample_file + ':' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -342,9 +342,9 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        colocator_and_opts = 'lin,variable=%s' % sample_var
+        collocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -358,9 +358,9 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         filename = valid_hadgem_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -368,7 +368,7 @@ class TestGriddedGriddedColocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
 
-class TestUngriddedUngriddedColocate(BaseIntegrationTest):
+class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
 
     @unittest.skip("Very resource intensive")
     def test_GASSP_onto_CALIOP_L1(self):
@@ -376,9 +376,9 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         variable = valid_GASSP_aeroplane_variable
         filename = valid_GASSP_aeroplane_filename
         sample_file = valid_caliop_l1_filename
-        colocator_and_opts = 'box[h_sep=10km],kernel=mean'
+        collocator_and_opts = 'box[h_sep=10km],kernel=mean'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -388,9 +388,9 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         variable = valid_GASSP_aeroplane_variable
         filename = valid_GASSP_aeroplane_filename
         sample_file = valid_caliop_l2_filename
-        colocator_and_opts = 'box[h_sep=10km],kernel=mean'
+        collocator_and_opts = 'box[h_sep=10km],kernel=mean'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -401,9 +401,9 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         variable = "AOT_440,AOT_870"
         filename = valid_aeronet_filename
         sample_file = valid_GASSP_aeroplane_filename
-        colocator_and_opts = 'box[h_sep=10m],kernel=mean'
+        collocator_and_opts = 'box[h_sep=10m],kernel=mean'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -414,9 +414,9 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         variable = valid_GASSP_aeroplane_variable
         filename = valid_GASSP_aeroplane_filename
         sample_file = valid_aeronet_filename
-        colocator_and_opts = 'box[h_sep=10km],kernel=mean'
+        collocator_and_opts = 'box[h_sep=10km],kernel=mean'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -427,9 +427,9 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         variable = valid_GASSP_aeroplane_variable
         filename = valid_GASSP_aeroplane_filename
         sample_file = valid_aeronet_filename
-        colocator_and_opts = 'box[h_sep=10km],kernel=moments'
+        collocator_and_opts = 'box[h_sep=10km],kernel=moments'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -442,9 +442,9 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         vars = valid_GASSP_station_vars[:2]
         filename = valid_GASSP_station_filename
         sample_file = valid_GASSP_aeroplane_filename
-        colocator_and_opts = 'box[h_sep=10km],kernel=mean'
+        collocator_and_opts = 'box[h_sep=10km],kernel=mean'
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -455,16 +455,16 @@ class TestUngriddedUngriddedColocate(BaseIntegrationTest):
         variable = "AOT_440,AOT_870"
         filename = valid_aeronet_filename
         sample_file = valid_cloudsat_PRECIP_file
-        colocator_and_opts = 'box[h_sep=10m],kernel=mean'
+        collocator_and_opts = 'box[h_sep=10m],kernel=mean'
         arguments = ['col', variable + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(","))
 
 
-class TestGriddedUngriddedColocate(BaseIntegrationTest):
+class TestGriddedUngriddedCollocate(BaseIntegrationTest):
 
     def test_NetCDF_Gridded_onto_Aeronet(self):
         # Takes 4s
@@ -472,9 +472,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_aeronet_filename
         sample_var = valid_aeronet_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -486,9 +486,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -501,9 +501,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
-        colocator_and_opts = 'box[h_sep=100km],kernel=moments,variable=%s' % sample_var
+        collocator_and_opts = 'box[h_sep=100km],kernel=moments,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -519,9 +519,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_modis_l2_filename
         sample_var = valid_modis_l2_variable
-        colocator_and_opts = 'lin,variable=%s' % sample_var
+        collocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -534,9 +534,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_hadgem_filename
         sample_file = valid_modis_l3_filename
         sample_var = valid_modis_l3_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -549,9 +549,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_hadgem_filename
         sample_file = valid_caliop_l1_filename
         sample_var = valid_caliop_l1_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -564,9 +564,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_caliop_l2_filename
         sample_var = valid_caliop_l2_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -579,9 +579,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_cloudsat_PRECIP_file
         sample_var = valid_cloudsat_PRECIP_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -594,9 +594,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_cloudsat_RVOD_file
         sample_var = valid_cloudsat_RVOD_sdata_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -609,9 +609,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_cloud_cci_filename
         sample_var = valid_cloud_cci_8_bit_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -624,9 +624,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_aerosol_cci_filename
         sample_var = valid_aerosol_cci_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -639,9 +639,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_ascii_filename
         sample_var = "values"
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -654,9 +654,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_NCAR_NetCDF_RAF_filename
         sample_var = valid_NCAR_NetCDF_RAF_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -669,9 +669,9 @@ class TestGriddedUngriddedColocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_cis_ungridded_output_filename
         sample_var = valid_cis_ungridded_output_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
+                     sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)

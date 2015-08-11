@@ -1,10 +1,10 @@
 import unittest
 
-from cis import data_index
 from hamcrest import *
-from cis.data_io.hyperpoint import HyperPoint
 
-from cis.col_implementations import make_coord_map, BinnedCubeCellOnlyConstraint
+from cis.collocation import data_index
+from cis.data_io.hyperpoint import HyperPoint
+from cis.collocation.col_implementations import make_coord_map, BinnedCubeCellOnlyConstraint
 from cis.test.util.mock import *
 from cis.time_util import convert_datetime_to_std_time
 

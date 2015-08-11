@@ -2,6 +2,7 @@
 Test the constraints
 """
 import unittest
+
 from nose.tools import eq_
 
 from cis.test.util import mock
@@ -11,7 +12,7 @@ from cis.data_io.hyperpoint import HyperPoint
 class TestSepConstraint(unittest.TestCase):
 
     def test_all_constraint_in_4d(self):
-        from cis.col_implementations import SepConstraint
+        from cis.collocation.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
 
@@ -43,7 +44,7 @@ class TestSepConstraint(unittest.TestCase):
         assert (np.equal(ref_vals, new_vals).all())
 
     def test_alt_constraint_in_4d(self):
-        from cis.col_implementations import SepConstraint
+        from cis.collocation.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
 
@@ -68,7 +69,7 @@ class TestSepConstraint(unittest.TestCase):
         assert (np.equal(ref_vals, new_vals).all())
 
     def test_horizontal_constraint_in_4d(self):
-        from cis.col_implementations import SepConstraint
+        from cis.collocation.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
 
@@ -90,7 +91,7 @@ class TestSepConstraint(unittest.TestCase):
         assert (np.equal(ref_vals, new_vals).all())
 
     def test_time_constraint_in_4d(self):
-        from cis.col_implementations import SepConstraint
+        from cis.collocation.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
 
@@ -111,7 +112,7 @@ class TestSepConstraint(unittest.TestCase):
         assert (np.equal(ref_vals, new_vals).all())
 
     def test_pressure_constraint_in_4d(self):
-        from cis.col_implementations import SepConstraint
+        from cis.collocation.col_implementations import SepConstraint
         import datetime as dt
         import numpy as np
 

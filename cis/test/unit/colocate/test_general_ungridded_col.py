@@ -1,20 +1,21 @@
 '''
- Module to test the colocation routines
+ Module to test the collocation routines
 '''
 import unittest
-from nose.tools import eq_
 import datetime as dt
+
+from nose.tools import eq_
 import numpy as np
 
 from cis.data_io.gridded_data import make_from_cube, GriddedDataList
-from cis.col_implementations import GeneralUngriddedColocator, DummyConstraint, moments, li, nn_h, \
+from cis.collocation.col_implementations import GeneralUngriddedCollocator, DummyConstraint, moments, li, \
     SepConstraintKdtree, mean, nn_gridded
 from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 from cis.test.util import mock
 
 
-class TestGeneralUngriddedColocator(unittest.TestCase):
+class TestGeneralUngriddedCollocator(unittest.TestCase):
 
     def test_averaging_basic_col_in_4d(self):
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -22,8 +23,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
 
-        col = GeneralUngriddedColocator()
-        new_data = col.colocate(sample_points, ug_data, DummyConstraint(), moments())
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, ug_data, DummyConstraint(), moments())
         means = new_data[0]
         std_dev = new_data[1]
         no_points = new_data[2]
@@ -47,8 +48,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         constraint = None
         kernel = nn_gridded()
 
-        col = GeneralUngriddedColocator()
-        output = col.colocate(sample, data, constraint, kernel)
+        col = GeneralUngriddedCollocator()
+        output = col.collocate(sample, data, constraint, kernel)
 
         expected_result = np.array([8, 12, 8])
         assert len(output) == 1
@@ -67,8 +68,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         constraint = None
         kernel = li()
 
-        col = GeneralUngriddedColocator()
-        output = col.colocate(sample, data, constraint, kernel)
+        col = GeneralUngriddedCollocator()
+        output = col.collocate(sample, data, constraint, kernel)
 
         expected_result = np.array([8.8, 10.4, 7.2])
         assert len(output) == 1
@@ -87,8 +88,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         constraint = SepConstraintKdtree('500km')
         kernel = mean()
 
-        col = GeneralUngriddedColocator()
-        output = col.colocate(sample, data, constraint, kernel)
+        col = GeneralUngriddedCollocator()
+        output = col.collocate(sample, data, constraint, kernel)
 
         expected_result = np.array([28.0/3, 10.0, 20.0/3])
         assert len(output) == 1
@@ -107,8 +108,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
-        col = GeneralUngriddedColocator()
-        output = col.colocate(sample, data, constraint, kernel)
+        col = GeneralUngriddedCollocator()
+        output = col.collocate(sample, data, constraint, kernel)
 
         expected_result = np.array([28.0/3, 10.0, 20.0/3])
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
@@ -128,8 +129,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
-        col = GeneralUngriddedColocator()
-        output = col.colocate(sample, data, constraint, kernel)
+        col = GeneralUngriddedCollocator()
+        output = col.collocate(sample, data, constraint, kernel)
 
         expected_result = np.array([28.0/3, 10.0, 20.0/3])
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
@@ -151,8 +152,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         sample_points = mock.make_regular_2d_ungridded_data()
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
-        col = GeneralUngriddedColocator()
-        output = col.colocate(sample_points, data_list, constraint, kernel)
+        col = GeneralUngriddedCollocator()
+        output = col.collocate(sample_points, data_list, constraint, kernel)
 
         expected_result = np.array(range(1, 16))
         expected_stddev = np.array(15 * [float('inf')])
@@ -186,8 +187,8 @@ class TestGeneralUngriddedColocator(unittest.TestCase):
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
-        col = GeneralUngriddedColocator()
-        output = col.colocate(sample, data_list, constraint, kernel)
+        col = GeneralUngriddedCollocator()
+        output = col.collocate(sample, data_list, constraint, kernel)
 
         expected_result = np.array([28.0/3, 10.0, 20.0/3])
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])

@@ -46,26 +46,26 @@ class TestStats(BaseIntegrationTest):
         stats_cmd(arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, self.output_vars)
 
-    def test_colocated_NetCDF_Gridded_onto_GASSP(self):
+    def test_collocated_NetCDF_Gridded_onto_GASSP(self):
         # Takes 2s
-        # First do a colocation of ECHAMHAM onto GASSP
+        # First do a collocation of ECHAMHAM onto GASSP
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', '%s:%s' % (valid_echamham_variable_1, valid_echamham_filename),
-                     sample_file + ':colocator=' + colocator_and_opts,
-                     '-o', 'colocated_gassp']
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', 'collocated_gassp']
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
 
-        # Then do a statistics calculation using the colocated data:
-        args = ['stats', "%s:%s" % (valid_echamham_variable_1, 'cis-colocated_gassp.nc'),
+        # Then do a statistics calculation using the collocated data:
+        args = ['stats', "%s:%s" % (valid_echamham_variable_1, 'cis-collocated_gassp.nc'),
                 "%s:%s" % (valid_GASSP_aeroplane_variable, valid_GASSP_aeroplane_filename),
                 '-o', self.OUTPUT_NAME]
         arguments = parse_args(args)
         stats_cmd(arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, self.output_vars)
-        os.remove('cis-colocated_gassp.nc')
+        os.remove('cis-collocated_gassp.nc')
 
     def test_CloudSat(self):
         # Takes 140s

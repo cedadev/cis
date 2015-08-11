@@ -5,9 +5,9 @@ import numpy as np
 from cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
 
 
-class Colocator(object):
+class Collocator(object):
     '''
-    Class which provides a method for performing colocation. This just defines the interface which
+    Class which provides a method for performing collocation. This just defines the interface which
     the subclasses must implement.
     '''
     __metaclass__ = ABCMeta
@@ -16,11 +16,11 @@ class Colocator(object):
         self.fill_value = np.Infinity
 
     @abstractmethod
-    def colocate(self, points, data, constraint, kernel):
+    def collocate(self, points, data, constraint, kernel):
         '''
 
-        :param points: A set of points onto which we will colocate some other 'data'
-        :param data: Some other data to be colocated onto the 'points'
+        :param points: A set of points onto which we will collocate some other 'data'
+        :param data: Some other data to be collocated onto the 'points'
         :param constraint: A Constraint instance which provides a fill_value and constrain method
         :param kernel: A Kernel instance which provides a kernel method
         :return: One or more LazyData objects whose coordinates lie on the points defined above
@@ -115,12 +115,12 @@ class Constraint(object):
         :param coords: the coordinates to map to
         :param data_points: the data points (without masked values)
         :param shape: shape of the final values
-        :param points: the original points object, these are the points to colocate
+        :param points: the original points object, these are the points to collocate
         :param output_data: output data set
         :return: iterator which iterates through sample indices, hyper point and constrained points to be placed in
             these points
         """
-        from cis.col_implementations import HyperPoint
+        from cis.collocation.col_implementations import HyperPoint
         if missing_data_for_missing_sample:
             iterator = index_iterator_for_non_masked_data(shape, points)
         else:
@@ -154,7 +154,7 @@ class CellConstraint(Constraint):
     __metaclass__ = ABCMeta
 
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
-        from cis.col_implementations import HyperPoint
+        from cis.collocation.col_implementations import HyperPoint
         if missing_data_for_missing_sample:
             iterator = index_iterator_for_non_masked_data(shape, points)
         else:
@@ -179,7 +179,7 @@ class IndexedConstraint(Constraint):
     __metaclass__ = ABCMeta
 
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
-        from cis.col_implementations import HyperPoint
+        from cis.collocation.col_implementations import HyperPoint
         if missing_data_for_missing_sample:
             iterator = index_iterator_for_non_masked_data(shape, points)
         else:
@@ -210,7 +210,7 @@ def __get_class(parent_class, name=None):
     from cis.exceptions import ClassNotFoundError
     import logging
 
-    all_classes = find_plugin_classes(parent_class, 'cis.col_implementations')
+    all_classes = find_plugin_classes(parent_class, 'cis.collocation.col_implementations')
     for cls in all_classes:
 
         if name is None:
@@ -250,13 +250,13 @@ def get_kernel(method=None):
     return kernel_cls
 
 
-def get_colocator(method=None):
+def get_collocator(method=None):
     '''
-    Top level routine for finding the correct Colocator object.
+    Top level routine for finding the correct Collocator object.
 
-    :param method: The colocate method to find - this should be a string which matches the name of one
-    of the subclasses of Colocator
-    :return: One of Colocator's subclasses
+    :param method: The collocate method to find - this should be a string which matches the name of one
+    of the subclasses of Collocator
+    :return: One of Collocator's subclasses
     '''
-    colocate_cls = __get_class(Colocator, method)
-    return colocate_cls
+    collocate_cls = __get_class(Collocator, method)
+    return collocate_cls

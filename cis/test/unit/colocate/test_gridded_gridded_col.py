@@ -1,13 +1,14 @@
 """
-Test Gridded - Gridded Colocation
+Test Gridded - Gridded Collocation
 """
 from unittest import TestCase
+
 from nose.tools import istest, raises
 from iris.exceptions import CoordinateNotFoundError
 import numpy
 
 from cis.exceptions import ClassNotFoundError
-from cis.col_implementations import GriddedColocator, GriddedColocatorUsingIrisRegrid, gridded_gridded_nn, \
+from cis.collocation.col_implementations import GriddedCollocator, GriddedCollocatorUsingIrisRegrid, gridded_gridded_nn, \
     gridded_gridded_li, nn_gridded
 import cis.data_io.gridded_data as gridded_data
 from cis.test.util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
@@ -23,10 +24,10 @@ def does_coord_exist_in_cube(cube, coord):
         return False
 
 
-class GriddedGriddedColocatorTests(object):
+class GriddedGriddedCollocatorTests(object):
 
     def setUp(self):
-        self.colocator = None
+        self.collocator = None
 
     @istest
     @raises(ClassNotFoundError)
@@ -34,18 +35,18 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube())
         data_cube = gridded_data.make_from_cube(make_mock_cube())
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=nn_gridded())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=nn_gridded())[0]
 
     @istest
     def test_gridded_gridded_nn_for_same_grids_check_returns_original_data(self):
         sample_cube = gridded_data.make_from_cube(make_mock_cube())
         data_cube = gridded_data.make_from_cube(make_mock_cube())
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -56,9 +57,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
         data_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -72,9 +73,9 @@ class GriddedGriddedColocatorTests(object):
         data_cube = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10,
                                                                lon_dim_length=6, horizontal_offset=0.0))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         result = numpy.array([[1, 3, 6],
                              [13, 15, 18],
@@ -90,9 +91,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(sample_cube)
         data_cube = gridded_data.make_from_cube(data_cube)
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         result = numpy.array([[0., 0., 1., 0., 1.],
                               [0., 0., 1., 0., 1.],
@@ -107,9 +108,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
         data_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert numpy.allclose(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -121,9 +122,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
         data_cube = gridded_data.make_from_cube(make_dummy_2d_cube_with_small_offset_in_lat())
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert numpy.allclose(data_cube.data, out_cube.data, atol=0.1)
         assert not numpy.array_equal(sample_cube.data, out_cube.data)
@@ -135,9 +136,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
         data_cube = gridded_data.make_from_cube(make_dummy_2d_cube_with_small_offset_in_lon())
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert numpy.allclose(data_cube.data, out_cube.data, atol=0.1)
         assert not numpy.array_equal(sample_cube.data, out_cube.data)
@@ -150,9 +151,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
         data_cube = gridded_data.make_from_cube(make_dummy_2d_cube_with_small_offset_in_lat_and_lon())
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert numpy.allclose(data_cube.data, out_cube.data, atol=0.2)
         assert not numpy.array_equal(sample_cube.data, out_cube.data)
@@ -165,9 +166,9 @@ class GriddedGriddedColocatorTests(object):
         data_cube = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10,
                                                                lon_dim_length=6, horizontal_offset=0.0))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[1., 3.5,   6.],
                               [14.5,  17., 19.5],
@@ -184,9 +185,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(sample_cube)
         data_cube = gridded_data.make_from_cube(data_cube)
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         expected_result = numpy.array([[-1.5, 0.5, 0.5, 0.5, 0.5],
                                        [0.5, 0.5, 0.5, 0.5, 0.5],
@@ -203,9 +204,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube())
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -217,9 +218,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube())
         data_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=7))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -231,9 +232,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -245,9 +246,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube())
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=2.6))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         expected_result = numpy.array([[[1., 2., 3., 4., 5., 6., 7.],
                                         [1., 2., 3., 4., 5., 6., 7.],
@@ -279,9 +280,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[[0.44,  1.44,  2.44,  3.44,  4.44,  5.44,  6.44],
                                [7.44,  8.44,  9.44, 10.44, 11.44, 12.44, 13.44],
@@ -314,9 +315,9 @@ class GriddedGriddedColocatorTests(object):
                                                                  pres_dim_length=10, data_offset=1.0))
         data_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1, time_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -329,9 +330,9 @@ class GriddedGriddedColocatorTests(object):
         sample_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=7, time_dim_length=7, data_offset=1.0))
         data_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[0.92, 1.92, 2.92],
                               [3.92, 4.92, 5.92],
@@ -346,9 +347,9 @@ class GriddedGriddedColocatorTests(object):
         assert not does_coord_exist_in_cube(out_cube, 'altitude')
 
 
-class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests, TestCase):
+class TestGriddedCollocatorUsingIrisRegrid(GriddedGriddedCollocatorTests, TestCase):
     def setUp(self):
-        self.colocator = GriddedColocatorUsingIrisRegrid()
+        self.collocator = GriddedCollocatorUsingIrisRegrid()
 
     def test_gridded_gridded_li_for_GriddedDataList(self):
         from cis.data_io.gridded_data import GriddedDataList
@@ -359,9 +360,9 @@ class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests, TestCase
         data_cube2 = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10, data_offset=3,
                                                                 lon_dim_length=6, horizontal_offset=0.0))
         data_list = GriddedDataList([data_cube1, data_cube2])
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
+        out_cube = col.collocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
 
         result = numpy.array([[1., 3.5,   6.],
                               [14.5,  17., 19.5],
@@ -382,9 +383,9 @@ class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests, TestCase
         data_cube2 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=2.6,
                                                                 data_offset=3))
         data_list = GriddedDataList([data_cube1, data_cube2])
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
+        out_cube = col.collocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
 
         expected_result = numpy.array([[[1., 2., 3., 4., 5., 6., 7.],
                                         [1., 2., 3., 4., 5., 6., 7.],
@@ -417,13 +418,13 @@ class TestGriddedColocatorUsingIrisRegrid(GriddedGriddedColocatorTests, TestCase
         assert numpy.array_equal(data_list.coord('time').points, out_cube[1].coord('time').points)
 
 
-class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
+class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     """
-    Contains tests that are not available to Iris Regrid colocator
+    Contains tests that are not available to Iris Regrid collocator
     """
 
     def setUp(self):
-        self.colocator = GriddedColocator()
+        self.collocator = GriddedCollocator()
 
     @istest
     def test_gridded_gridded_nn_with_both_grids_containing_time_and_small_offset(self):
@@ -431,9 +432,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
                                                                horizontal_offset=0.1, time_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -446,9 +447,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
                                                                horizontal_offset=2.6, time_offset=1.5))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         result = numpy.array([[[1., 1., 1., 2., 3., 4., 5.],
                                [1., 1., 1., 2., 3., 4., 5.],
@@ -481,9 +482,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
                                                                horizontal_offset=0.1, time_offset=0.5))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[[-6.e-02, 9.4e-01, 1.94, 2.94, 3.94, 4.94, 5.94],
                                [6.94, 7.94, 8.94, 9.94, 1.094e+01, 1.194e+01, 1.294e+01],
@@ -517,9 +518,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
             time_offset=1.5))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         result = numpy.array([[[1., 1., 1., 2., 3., 4., 5.],
                                [29., 29., 29., 30., 31., 32., 33.],
@@ -553,9 +554,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
             time_offset=1.5))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[[-124.26, -123.26, -122.26, -121.26, -120.26, -119.26, -118.26],
                                [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
@@ -589,9 +590,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
         data_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=4, time_dim_length=3,
                                                 horizontal_offset=0.1, altitude_offset=0.1, time_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         assert numpy.array_equal(data_cube.data, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -607,9 +608,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             alt_dim_length=2, time_dim_length=3, horizontal_offset=0.1, altitude_offset=0.1,
             time_offset=0.1))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[[[0.37714286, 1.37714286, 2.37714286],
                                 [3.37714286, 4.37714286, 5.37714286]],
@@ -669,9 +670,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
             time_offset=1.5))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[[-124.26, -123.26, -122.26, -121.26, -120.26, -119.26, -118.26],
                                [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
@@ -705,9 +706,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             lat_dim_length=3, lon_dim_length=3, alt_dim_length=2, time_dim_length=2,
             horizontal_offset=2.6, time_offset=1.5))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         result = numpy.array([[[[1., 3.],
                                 [1., 3.],
@@ -842,9 +843,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             lat_dim_length=3, lon_dim_length=3, alt_dim_length=2, time_dim_length=2,
             horizontal_offset=2.6, time_offset=1.5))
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[[[-5.7, -4.7, -3.7, -2.7, -1.7, -0.7, 0.3],
                                 [-3.7, -2.7, -1.7, -0.7,  0.3, 1.3, 2.3]],
@@ -907,9 +908,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         # Result should maintain longitude, pressure and time, and discard latitude and altitude
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         # We will not verify the data here, just that the output has the correct shape
         assert out_cube.data.shape == (7, 3, 6)
@@ -929,9 +930,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         # Result should maintain time, longitude and pressure (in that order) and discard latitude and altitude
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         # We will not verify the data here, just that the output has the correct shape
         assert out_cube.data.shape == (7, 3, 6)
@@ -954,9 +955,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         # Result should have longitude, latitude and time.
 
-        col = GriddedColocator(missing_data_for_missing_sample=True)
+        col = GriddedCollocator(missing_data_for_missing_sample=True)
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         # Check that the output has the correct shape and missing values.
         # The order of the dimensions is that of sample with any dimensions not in the sample cube at the end.
@@ -1000,9 +1001,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         # Result should have latitude and longitude.
 
-        col = GriddedColocator(missing_data_for_missing_sample=True)
+        col = GriddedCollocator(missing_data_for_missing_sample=True)
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         # Check that the output has the correct shape and missing values.
         # The order of the dimensions is that of sample with any dimensions not in the sample cube at the end.
@@ -1028,9 +1029,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         # Result should have longitude, latitude and time.
 
-        col = GriddedColocator(missing_data_for_missing_sample=True)
+        col = GriddedCollocator(missing_data_for_missing_sample=True)
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert out_cube.data.shape == (3, 5, 4)
         assert out_cube.data[1, 1, 0] is numpy.ma.masked
@@ -1059,9 +1060,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         # Result should have longitude, latitude and time.
 
-        col = GriddedColocator(missing_data_for_missing_sample=True)
+        col = GriddedCollocator(missing_data_for_missing_sample=True)
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert out_cube.data.shape == (3, 5, 4)
         assert out_cube.data[1, 1, 0] is numpy.ma.masked
@@ -1092,9 +1093,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
 
         # Result should have latitude, longitude, pressure and time.
 
-        col = GriddedColocator(missing_data_for_missing_sample=True)
+        col = GriddedCollocator(missing_data_for_missing_sample=True)
 
-        out_cube = col.colocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert out_cube.data.shape == (5, 3, 2, 4)
         assert out_cube.data[3, 2, 0,  0] is numpy.ma.masked
@@ -1123,9 +1124,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
             time_offset=1.5, data_offset=3))
         data_list = GriddedDataList([data_cube1, data_cube2])
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
+        out_cube = col.collocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
 
         result1 = numpy.array([[[-124.26, -123.26, -122.26, -121.26, -120.26, -119.26, -118.26],
                                [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
@@ -1170,9 +1171,9 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
                                                                 horizontal_offset=2.6, time_offset=1.5))
         data_list = GriddedDataList([data_cube1, data_cube2])
 
-        col = self.colocator
+        col = self.collocator
 
-        out_cube = col.colocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
+        out_cube = col.collocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
 
         result = numpy.array([[[1., 1., 1., 2., 3., 4., 5.],
                                [1., 1., 1., 2., 3., 4., 5.],
@@ -1209,8 +1210,8 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
         data = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                                           time_dim_length=10, dim_order=['time', 'lon', 'lat']))
 
-        col = self.colocator
-        out_cube = col.colocate(points=sample, data=data, constraint=None, kernel=gridded_gridded_li())
+        col = self.collocator
+        out_cube = col.collocate(points=sample, data=data, constraint=None, kernel=gridded_gridded_li())
         assert out_cube[0].shape == sample.shape
 
     def test_gridded_gridded_nn_when_grids_have_different_dims_order(self):
@@ -1219,6 +1220,6 @@ class TestGriddedGriddedColocator(GriddedGriddedColocatorTests, TestCase):
         data = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                                           time_dim_length=10, dim_order=['time', 'lon', 'lat']))
 
-        col = self.colocator
-        out_cube = col.colocate(points=sample, data=data, constraint=None, kernel=gridded_gridded_nn())
+        col = self.collocator
+        out_cube = col.collocate(points=sample, data=data, constraint=None, kernel=gridded_gridded_nn())
         assert out_cube[0].shape == sample.shape

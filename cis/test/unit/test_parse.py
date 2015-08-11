@@ -169,9 +169,9 @@ class TestParse(ParseTestFiles):
     def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
         dummy_cis_out = 'out.nc'
         args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" + dummy_cis_out,  self.escaped_single_valid_file + ':colocator=bin',
+                     ["col", "var1,var2:" + dummy_cis_out,  self.escaped_single_valid_file + ':collocator=bin',
                       "-o", dummy_cis_out[:-3]],
-                     ["col", "var1,var2:" +  self.escaped_single_valid_file, dummy_cis_out + ':colocator=bin',
+                     ["col", "var1,var2:" +  self.escaped_single_valid_file, dummy_cis_out + ':collocator=bin',
                       "-o", dummy_cis_out[:-3]],
                      ["aggregate", "var:" + dummy_cis_out, "t", "-o", dummy_cis_out[:-3]]]
         for args in args_list:
@@ -532,15 +532,15 @@ class TestParseAggregate(ParseTestFiles):
             parse_args(args)
 
 
-class TestParseColocate(ParseTestFiles):
+class TestParseCollocate(ParseTestFiles):
     """
-    Tests specific to the colocate command
+    Tests specific to the collocate command
     """
 
-    def test_GIVEN_colocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
+    def test_GIVEN_collocate_command_WHEN_multiple_variables_in_datagroup_THEN_variables_unpacked(self):
         var1, var2 = 'rain', 'snow'
         output = 'aggregate-out'
-        samplegroup = self.escaped_test_directory_files[0] + ':colocator=bin'
+        samplegroup = self.escaped_test_directory_files[0] + ':collocator=bin'
         product = 'cis'
         args = ["col", var1 + "," + var2 + ':' + self.escaped_test_directory_files[0] + ':product=' + product, samplegroup, '-o', output]
         main_args = parse_args(args)
@@ -550,31 +550,31 @@ class TestParseColocate(ParseTestFiles):
         assert_that(dg[0]['product'], is_('cis'))
         assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
 
-    def test_can_leave_colocator_missing(self):
+    def test_can_leave_collocator_missing(self):
         var = 'rain'
         samplegroup = self.escaped_test_directory_files[0] + ':variable=rain'
         args = ["col", var + ':' + self.escaped_test_directory_files[0], samplegroup]
         main_args = parse_args(args)
         sg = main_args.samplegroup
-        assert_that(sg['colocator'], is_(None))
+        assert_that(sg['collocator'], is_(None))
         assert_that(sg['variable'], is_('rain'))
 
     def test_can_specify_one_valid_samplefile_and_one_complete_datagroup(self):
         args = ["col", "variable:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0] +
-                ":colocator=col,constraint=con,kernel=nn"]
+                ":collocator=col,constraint=con,kernel=nn"]
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
-        eq_(('col', {}), args.samplegroup['colocator'])
+        eq_(('col', {}), args.samplegroup['collocator'])
         eq_(('con', {}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_without_other_options(self):
         args = ["col", "variable:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0] +
-                ':colocator=bin']
+                ':collocator=bin']
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
-        eq_(('bin', {}), args.samplegroup['colocator'])
+        eq_(('bin', {}), args.samplegroup['collocator'])
         eq_(None, args.samplegroup['constraint'])
         eq_(None, args.samplegroup['kernel'])
         eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}], args.datagroups)
@@ -583,11 +583,11 @@ class TestParseColocate(ParseTestFiles):
         args = ["col", "variable1:" + self.escaped_test_directory_files[0],
                 "variable2:" + self.escaped_test_directory_files[0],
                 "variable3:" + self.escaped_test_directory_files[0],
-                self.escaped_test_directory_files[0] + ':variable=variable4,colocator=col,kernel=nn']
+                self.escaped_test_directory_files[0] + ':variable=variable4,collocator=col,kernel=nn']
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_("variable4", args.samplegroup['variable'])
-        eq_(('col', {}), args.samplegroup['colocator'])
+        eq_(('col', {}), args.samplegroup['collocator'])
         eq_(None, args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_([self.test_directory_files[0]], args.datagroups[0]['filenames'])
@@ -599,7 +599,7 @@ class TestParseColocate(ParseTestFiles):
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_with_internal_options(self):
         args = ["col", "var1:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0]
-                + ":variable=var2,constraint=SepConstraint[h_sep=1500,v_sep=22000,t_sep=5000],kernel=nn,colocator=bin"]
+                + ":variable=var2,constraint=SepConstraint[h_sep=1500,v_sep=22000,t_sep=5000],kernel=nn,collocator=bin"]
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.datagroups[0]['filenames'])
         eq_(["var1"], args.datagroups[0]['variables'])
@@ -607,5 +607,5 @@ class TestParseColocate(ParseTestFiles):
         eq_("var2", args.samplegroup['variable'])
         eq_(('SepConstraint', {'h_sep': '1500', 'v_sep': '22000', 't_sep': '5000'}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
-        eq_(('bin', {}), args.samplegroup['colocator'])
+        eq_(('bin', {}), args.samplegroup['collocator'])
         eq_(None, args.samplegroup['product'])

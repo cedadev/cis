@@ -1,8 +1,6 @@
 import unittest
-from hamcrest import is_, assert_that
-import numpy
 
-from cis.col_framework import get_kernel
+from cis.collocation.col_framework import get_kernel
 from cis.aggregation.aggregation_grid import AggregationGrid
 from cis.aggregation.aggregator import Aggregator
 from cis.test.util import mock

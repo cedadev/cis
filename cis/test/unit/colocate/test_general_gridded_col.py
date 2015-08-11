@@ -1,20 +1,20 @@
 import unittest
 import datetime
+
 from hamcrest import *
 import numpy
 
 from cis.exceptions import UserPrintableException
 from cis.data_io.gridded_data import GriddedDataList
 from cis.data_io.ungridded_data import UngriddedDataList
-from cis.col_implementations import GeneralGriddedColocator, mean, CubeCellConstraint, \
+from cis.collocation.col_implementations import GeneralGriddedCollocator, mean, CubeCellConstraint, \
     BinningCubeCellConstraint, moments, BinnedCubeCellOnlyConstraint
 from cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
     make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
     make_square_5x3_2d_cube_with_decreasing_latitude, make_square_5x3_2d_cube, make_regular_2d_ungridded_data, \
-    make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim, \
-    make_regular_2d_ungridded_data_with_missing_values
+    make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim
 from cis.test.utils_for_testing import assert_arrays_equal, assert_arrays_almost_equal
 
 
@@ -73,8 +73,8 @@ class SlowMoments(object):
 def single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -86,8 +86,8 @@ def single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kerne
 def single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, mask=True)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -105,8 +105,8 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
             [False, False, False]]
     sample_cube = make_mock_cube(mask=mask)
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9, missing_data_for_missing_sample=True)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9, missing_data_for_missing_sample=True)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -124,8 +124,8 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
             [False, False, False]]
     sample_cube = make_mock_cube(mask=mask)
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9, missing_data_for_missing_sample=False)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9, missing_data_for_missing_sample=False)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -137,8 +137,8 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
 def single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point([0.5, 99], [0.5, 99], [1.2, 5])
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -150,8 +150,8 @@ def single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(
 def multiple_points_inside_grid_and_outside(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point([0.5, 99, 0.6, 3.0, -9], [0.5, 99, 0.6, 0.5, -3], [1.2, 5, 3.4, 5, 8])
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[8, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 2.3,  -999.9],
@@ -163,8 +163,8 @@ def multiple_points_inside_grid_and_outside(con, kernel):
 def two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_two_points_with_different_values(0.5, 0.5, 1.2, 1.4)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.3, -999.9],
@@ -176,8 +176,8 @@ def two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel):
 def point_on_a_lat_boundary_appears_in_higher_cell(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -189,8 +189,8 @@ def point_on_a_lat_boundary_appears_in_higher_cell(con, kernel):
 def point_on_highest_lat_boundary_is_excluded(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(12.5, 0.0, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -202,8 +202,8 @@ def point_on_highest_lat_boundary_is_excluded(con, kernel):
 def point_on_180_is_included_in_lower_bound(con, kernel):
     sample_cube = make_square_NxM_2d_cube_with_time(start_lon=-135, end_lon=135, lon_point_count=4)
     data_point = make_dummy_ungridded_data_single_point(0, 180.0, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9, -999.9],
                                    [1.2, -999.9, -999.9, -999.9],
@@ -215,8 +215,8 @@ def point_on_180_is_included_in_lower_bound(con, kernel):
 def point_on_a_lon_boundary_appears_in_higher_cell(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, 1.2],
@@ -228,8 +228,8 @@ def point_on_a_lon_boundary_appears_in_higher_cell(con, kernel):
 def point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -241,8 +241,8 @@ def point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel):
 def single_point_outside_grid_is_excluded(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -254,8 +254,8 @@ def single_point_outside_grid_is_excluded(con, kernel):
 def single_point_on_grid_corner_is_counted_once(con, kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(10, 5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -267,8 +267,8 @@ def single_point_on_grid_corner_is_counted_once(con, kernel):
 def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -280,16 +280,16 @@ def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_tim
 def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_and_mising_samples_THEN_error(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedColocator(fill_value=-999.9, missing_data_for_missing_sample=True)
-    assert_that(calling(col.colocate).with_args(points=sample_cube, data=data_point, constraint=con, kernel=kernel),
+    col = GeneralGriddedCollocator(fill_value=-999.9, missing_data_for_missing_sample=True)
+    assert_that(calling(col.collocate).with_args(points=sample_cube, data=data_point, constraint=con, kernel=kernel),
         raises(UserPrintableException, pattern=".*sample variable.*"))
 
 
 def single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, time=datetime.datetime(1984, 8, 28, 0, 0))
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
@@ -316,8 +316,8 @@ def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no
         sample_cube = make_square_5x3_2d_cube_with_extra_dim()
         data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=18)
         print sample_cube.data
-        col = GeneralGriddedColocator(fill_value=-999.9)
-        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+        col = GeneralGriddedCollocator(fill_value=-999.9)
+        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
         expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                        [-999.9, -999.9, -999.9],
                                        [-999.9, 1.2, -999.9],
@@ -330,8 +330,8 @@ def single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with
         sample_cube = make_square_5x3_2d_cube_with_altitude()
         data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
         print sample_cube.data
-        col = GeneralGriddedColocator(fill_value=-999.9)
-        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+        col = GeneralGriddedCollocator(fill_value=-999.9)
+        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
         expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                        [-999.9, -999.9, -999.9],
                                        [-999.9, 1.2, -999.9],
@@ -343,8 +343,8 @@ def single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with
 def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(con, kernel):
         sample_cube = make_square_5x3_2d_cube_with_altitude()
         data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=1.0)
-        col = GeneralGriddedColocator(fill_value=-999.9)
-        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+        col = GeneralGriddedCollocator(fill_value=-999.9)
+        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
         expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                         [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                         [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
@@ -371,8 +371,8 @@ def single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with
         sample_cube = make_square_5x3_2d_cube_with_pressure()
         data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
         print sample_cube.data
-        col = GeneralGriddedColocator(fill_value=-999.9)
-        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+        col = GeneralGriddedCollocator(fill_value=-999.9)
+        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
         expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                        [-999.9, -999.9, -999.9],
                                        [-999.9, 1.2, -999.9],
@@ -384,8 +384,8 @@ def single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with
 def single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_pressure()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, pressure=1.0)
-    col = GeneralGriddedColocator(fill_value=-999.9)
-    out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    col = GeneralGriddedCollocator(fill_value=-999.9)
+    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
@@ -409,12 +409,12 @@ def single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pr
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def can_colocate_list_of_data(constraint, kernel):
-    col = GeneralGriddedColocator()
+def can_collocate_list_of_data(constraint, kernel):
+    col = GeneralGriddedCollocator()
     sample = make_square_5x3_2d_cube()
     data1 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5, 0)
     data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5, 10)
-    output = col.colocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
+    output = col.collocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
     assert len(output) == 2
     expected_data2 = numpy.array([[14.5, 16.5, 18.5],
                                   [26.5, 28.5, 30.5],
@@ -429,8 +429,8 @@ def can_colocate_list_of_data(constraint, kernel):
 def single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, kernel):
         sample_cube = make_square_5x3_2d_cube_with_decreasing_latitude()
         data_point = make_dummy_ungridded_data_single_point(3.0, 0.5, 1.2)
-        col = GeneralGriddedColocator(fill_value=-999.9)
-        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+        col = GeneralGriddedCollocator(fill_value=-999.9)
+        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
         expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                        [-999.9, 1.2, -999.9],
                                        [-999.9, -999.9, -999.9],
@@ -441,10 +441,10 @@ def single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, k
 
 
 def single_moments(constraint, kernel):
-        col = GeneralGriddedColocator()
+        col = GeneralGriddedCollocator()
         sample = make_square_5x3_2d_cube()
         data = make_regular_2d_ungridded_data(10, -9.9, 9.9, 6, -4.9, 4.9, 10)
-        output = col.colocate(sample, data, constraint, kernel)
+        output = col.collocate(sample, data, constraint, kernel)
         expected_data = numpy.array([[14.5, 16.5, 18.5],
                                      [26.5, 28.5, 30.5],
                                      [38.5, 40.5, 42.5],
@@ -463,13 +463,13 @@ def single_moments(constraint, kernel):
 
 
 def list_moments(constraint, kernel):
-    col = GeneralGriddedColocator()
+    col = GeneralGriddedCollocator()
     sample = make_square_5x3_2d_cube()
     data1 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
     data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
     data2.metadata._name = 'snow'
     data2.data *= 2
-    output = col.colocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
+    output = col.collocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
     assert len(output) == 6
     assert output[0].var_name == 'rain'
     assert output[1].var_name == 'rain_std_dev'
@@ -494,16 +494,16 @@ def list_moments(constraint, kernel):
     assert numpy.array_equal(output[5].data, expected_num)
 
 
-class TestGeneralGriddedColocator(unittest.TestCase):
+class TestGeneralGriddedCollocator(unittest.TestCase):
 
     def test_fill_value_for_cube_cell_constraint(self):
         sample_cube = make_mock_cube()
         data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
     
-        col = GeneralGriddedColocator(fill_value=-999.9)
+        col = GeneralGriddedCollocator(fill_value=-999.9)
         con = CubeCellConstraint()
     
-        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=SlowMean())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=SlowMean())[0]
 
         expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                        [-999.9, -999.9, -999.9],
@@ -517,10 +517,10 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         sample_cube = make_mock_cube()
         data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
     
-        col = GeneralGriddedColocator()
+        col = GeneralGriddedCollocator()
         con = CubeCellConstraint()
     
-        out_cube = col.colocate(points=sample_cube, data=data_point, constraint=con, kernel=SlowMean())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=SlowMean())[0]
     
         expected_result = numpy.array([[float('Inf'), float('Inf'), float('Inf')],
                                        [float('Inf'), float('Inf'), float('Inf')],
@@ -559,7 +559,6 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
 
     def test_single_masked_point_results_in_single_value_in_cell_using_kernel_and_con_binned(self):
-        from cis.col_implementations import max
         con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
@@ -576,7 +575,7 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
 
     def test_single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true_binned_only(self):
-        from cis.col_implementations import max
+        from cis.collocation.col_implementations import max
         con = BinnedCubeCellOnlyConstraint()
         kernel = max()
 
@@ -934,19 +933,19 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         sample_cube = make_mock_cube()
         data_points = make_dummy_1d_ungridded_data()
     
-        col = GeneralGriddedColocator(fill_value=-999.9)
+        col = GeneralGriddedCollocator(fill_value=-999.9)
         con = CubeCellConstraint()
     
-        out_cube = col.colocate(points=sample_cube, data=data_points, constraint=con, kernel=SlowMean())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_points, constraint=con, kernel=SlowMean())[0]
     
     def test_data_with_invalid_standard_name(self):
         sample_cube = make_mock_cube()
         data_points = make_dummy_1d_ungridded_data_with_invalid_standard_name()
     
-        col = GeneralGriddedColocator(fill_value=-999.9)
+        col = GeneralGriddedCollocator(fill_value=-999.9)
         con = CubeCellConstraint()
     
-        out_cube = col.colocate(points=sample_cube, data=data_points, constraint=con, kernel=SlowMean())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_points, constraint=con, kernel=SlowMean())[0]
 
     def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude(self):
         con = CubeCellConstraint()
@@ -972,23 +971,23 @@ class TestGeneralGriddedColocator(unittest.TestCase):
 
         single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, kernel)
 
-    def test_can_colocate_list_of_data(self):
+    def test_can_collocate_list_of_data(self):
         constraint = BinningCubeCellConstraint()
         kernel = SlowMean()
 
-        can_colocate_list_of_data(constraint, kernel)
+        can_collocate_list_of_data(constraint, kernel)
 
-    def test_can_colocate_list_of_data_binned_only_con(self):
+    def test_can_collocate_list_of_data_binned_only_con(self):
         constraint = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        can_colocate_list_of_data(constraint, kernel)
+        can_collocate_list_of_data(constraint, kernel)
 
-    def test_can_colocate_list_of_data_binned_only_con_fast_mean(self):
+    def test_can_collocate_list_of_data_binned_only_con_fast_mean(self):
         constraint = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        can_colocate_list_of_data(constraint, kernel)
+        can_collocate_list_of_data(constraint, kernel)
 
     def test_single_moments(self):
         constraint = BinningCubeCellConstraint()
@@ -1033,10 +1032,10 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                              time_dim_length=10, dim_order=['time', 'lon', 'lat']))
 
-        col = GeneralGriddedColocator()
+        col = GeneralGriddedCollocator()
         constraint = BinningCubeCellConstraint()
         kernel = mean()
-        out_cube = col.colocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        out_cube = col.collocate(points=sample, data=data, constraint=constraint, kernel=kernel)
         assert out_cube[0].shape == sample.shape
 
     def test_gridded_gridded_bin_when_grids_have_different_dims_order_2(self):
@@ -1046,10 +1045,10 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                              time_dim_length=10, dim_order=['lon', 'lat', 'time']))
 
-        col = GeneralGriddedColocator()
+        col = GeneralGriddedCollocator()
         constraint = BinningCubeCellConstraint()
         kernel = mean()
-        out_cube = col.colocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        out_cube = col.collocate(points=sample, data=data, constraint=constraint, kernel=kernel)
         assert out_cube[0].shape == sample.shape
 
     def test_gridded_gridded_bin_when_sample_has_dimension_data_doesnt(self):
@@ -1059,8 +1058,8 @@ class TestGeneralGriddedColocator(unittest.TestCase):
         data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                              time_dim_length=0, dim_order=['time', 'lon', 'lat']))
 
-        col = GeneralGriddedColocator()
+        col = GeneralGriddedCollocator()
         constraint = BinningCubeCellConstraint()
         kernel = mean()
-        out_cube = col.colocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        out_cube = col.collocate(points=sample, data=data, constraint=constraint, kernel=kernel)
         assert out_cube[0].shape == (5, 3)

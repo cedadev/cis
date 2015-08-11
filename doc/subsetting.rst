@@ -49,7 +49,7 @@ where:
 
 
 ``outputfile``
-  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a colocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a collocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
 
 A full example would be::
 

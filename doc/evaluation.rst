@@ -11,7 +11,7 @@ using the 'eval' command. For example, you might want to calculate the (relative
 .. note::
     All variables used in a evaluation **must** be of the same shape in order to be compatible, i.e. the same number of
     points in each dimension, and of the same type (Ungridded or Gridded). This means that, for example, operations
-    between different data products are unlikely to work correctly - performing a colocation or aggregation onto a
+    between different data products are unlikely to work correctly - performing a collocation or aggregation onto a
     common grid would be a good pre-processing step.
 
 .. _warning:
@@ -161,11 +161,11 @@ First we produce annual averages of our data by :ref:`aggregating <aggregation>`
 
 We then linearly interpolate the HadGEM data onto the ECHAM grid::
 
-    $ cis col od550aer:hadgem-od550aer.nc echam-od550aer.nc:colocator=lin -o hadgem-od550aer-colocated
+    $ cis col od550aer:hadgem-od550aer.nc echam-od550aer.nc:collocator=lin -o hadgem-od550aer-collocated
 
-    $ cis plot od550aer:hadgem-od550aer-colocated.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="HadGEM AOT550" --vmin=0 --vmax=0.5
+    $ cis plot od550aer:hadgem-od550aer-collocated.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="HadGEM AOT550" --vmin=0 --vmax=0.5
 
-.. image:: img/eval/hadgem_colocated.png
+.. image:: img/eval/hadgem_collocated.png
    :width: 450px
 
 Next we subtract the two fields using::

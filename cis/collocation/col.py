@@ -1,99 +1,100 @@
 """
-    Top level colocation objects
+    Top level collocation objects
 """
 import logging
 
-import cis.col_implementations as ci
-from cis.col_framework import get_kernel
+import cis.collocation.col_implementations as ci
+
+from cis.collocation.col_framework import get_kernel
 from cis.exceptions import InvalidCommandLineOptionError
 
 
 class _GenericKernel(object):
     """
-    Marker class used by _get_colocator_classes_for_method to indicate that one of the generic kernels is needed.
+    Marker class used by _get_collocator_classes_for_method to indicate that one of the generic kernels is needed.
     """
     pass
 
 
-class ColocatorFactory(object):
+class CollocatorFactory(object):
     """
-    Class for creating Colocator, Constraint and Kernel instances
+    Class for creating Collocator, Constraint and Kernel instances
     """
 
-    def get_colocator_instances_for_method(self, method_name, kernel_name, colocator_params, kernel_params,
+    def get_collocator_instances_for_method(self, method_name, kernel_name, collocator_params, kernel_params,
                                            sample_gridded, data_gridded):
         """
-        Get instances of the correct classes for colocation
-        :param method_name: Colocation method name (e.g. 'lin', 'nn')
+        Get instances of the correct classes for collocation
+        :param method_name: Collocation method name (e.g. 'lin', 'nn')
         :param kernel_name: Kernel class name
-        :param colocator_params: Colocation parameters
+        :param collocator_params: Collocation parameters
         :param kernel_params: Kernel parameters
         :param sample_gridded: Is the sample data gridded?
-        :param data_gridded: Is the colocation data gridded?
-        :return: Colocator, Constrain and Kernel instances
+        :param data_gridded: Is the collocation data gridded?
+        :return: Collocator, Constrain and Kernel instances
         """
-        col_cls, constraint_cls, kernel_cls = self._get_colocator_classes_for_method(method_name, kernel_name,
+        col_cls, constraint_cls, kernel_cls = self._get_collocator_classes_for_method(method_name, kernel_name,
                                                                                      sample_gridded, data_gridded)
-        colocator_params, constraint_params = self._get_colocator_params(colocator_params)
-        col = self._instantiate_with_params(col_cls, colocator_params)
+        collocator_params, constraint_params = self._get_collocator_params(collocator_params)
+        col = self._instantiate_with_params(col_cls, collocator_params)
         del constraint_params['missing_data_for_missing_sample']
         con = self._instantiate_with_params(constraint_cls, constraint_params)
         kernel = self._instantiate_with_params(kernel_cls, kernel_params)
         return col, con, kernel
 
-    def get_default_colocator_name(self, method_name, sample_gridded, data_gridded):
-        # Default colocators - (sample_gridded, data_gridded) : colocator_name
+    def get_default_collocator_name(self, method_name, sample_gridded, data_gridded):
+        # Default collocators - (sample_gridded, data_gridded) : collocator_name
         default_methods = {(True, True): 'lin',
                            (True, False): 'bin',
                            (False, True): 'nn',
                            (False, False): 'box'}
 
         if method_name is None:
-            # If no colocator has been specified we'll identify a default.
+            # If no collocator has been specified we'll identify a default.
             method_name = default_methods.get((sample_gridded, data_gridded))
         return method_name
 
-    def _get_colocator_classes_for_method(self, method_name, kernel_name, sample_gridded, data_gridded):
+    def _get_collocator_classes_for_method(self, method_name, kernel_name, sample_gridded, data_gridded):
         """
-        Gets the colocator, constraint and kernel classes corresponding to a specified colocation method and kernel
+        Gets the collocator, constraint and kernel classes corresponding to a specified collocation method and kernel
         name.
-        :param method_name: colocation method name
+        :param method_name: collocation method name
         :param kernel_name: kernel name
         :param sample_gridded: True if sample points are gridded, otherwise False
         :param data_gridded: True if data points are gridded, otherwise False
-        :return: ColocationOptions containing relevant classes
+        :return: CollocationOptions containing relevant classes
         """
-        method_name = self.get_default_colocator_name(method_name, sample_gridded, data_gridded)
+        method_name = self.get_default_collocator_name(method_name, sample_gridded, data_gridded)
 
         key = '_'.join([method_name, str(sample_gridded), str(data_gridded)])
 
-        # Method Sample  Data    colocator                      constraint                    kernel
+        # Method Sample  Data    collocator                      constraint                    kernel
         #   name   gridded gridded
         options = {
             'lin_False_False': None,
             'lin_True_False': None,
-            'lin_False_True': [ci.GeneralUngriddedColocator, None, ci.li],
-            'lin_True_True': [ci.GriddedColocator, None, ci.gridded_gridded_li],
+            'lin_False_True': [ci.GeneralUngriddedCollocator, None, ci.li],
+            'lin_True_True': [ci.GriddedCollocator, None, ci.gridded_gridded_li],
             'nn_False_False': None,
             'nn_True_False': None,
-            'nn_False_True': [ci.GeneralUngriddedColocator, None, ci.nn_gridded],
-            'nn_True_True': [ci.GriddedColocator, None, ci.gridded_gridded_nn],
+            'nn_False_True': [ci.GeneralUngriddedCollocator, None, ci.nn_gridded],
+            'nn_True_True': [ci.GriddedCollocator, None, ci.gridded_gridded_nn],
             'bin_False_False': None,
-            'bin_True_False': [ci.GeneralGriddedColocator, ci.BinnedCubeCellOnlyConstraint, _GenericKernel],
+            'bin_True_False': [ci.GeneralGriddedCollocator, ci.BinnedCubeCellOnlyConstraint, _GenericKernel],
             'bin_False_True': None,
             'bin_True_True': None,
-            'box_False_False': [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree, _GenericKernel],
-            'box_True_False': [ci.GeneralGriddedColocator, ci.SepConstraintKdtree, _GenericKernel],
-            'box_False_True': [ci.GeneralUngriddedColocator, ci.SepConstraintKdtree, _GenericKernel],
-            'box_True_True': [ci.GeneralGriddedColocator, ci.SepConstraintKdtree, _GenericKernel],
-            'dummy_False_False': [ci.DummyColocator, None, None],
+            'box_False_False': [ci.GeneralUngriddedCollocator, ci.SepConstraintKdtree, _GenericKernel],
+            'box_True_False': [ci.GeneralGriddedCollocator, ci.SepConstraintKdtree, _GenericKernel],
+            'box_False_True': [ci.GeneralUngriddedCollocator, ci.SepConstraintKdtree, _GenericKernel],
+            'box_True_True': [ci.GeneralGriddedCollocator, ci.SepConstraintKdtree, _GenericKernel],
+            'dummy_False_False': [ci.DummyCollocator, None, None],
             'dummy_True_False': None,
             'dummy_False_True': None,
             'dummy_True_True': None
         }
         option = options.get(key)
         if option is None:
-            raise InvalidCommandLineOptionError("Colocator/kernel/data type combination is not compatible")
+            raise InvalidCommandLineOptionError("Collocator/kernel/data type combination is not compatible")
         if option[2] is _GenericKernel:
             if kernel_name is None:
                 kernel_name = 'moments'
@@ -101,14 +102,14 @@ class ColocatorFactory(object):
         else:
             if kernel_name is not None:
                 raise InvalidCommandLineOptionError(
-                    'A kernel cannot be specified for colocator "{}"'.format(method_name))
+                    'A kernel cannot be specified for collocator "{}"'.format(method_name))
         return option
 
-    def _get_colocator_params(self, params):
+    def _get_collocator_params(self, params):
         """
-        Separates the parameters understood by the colocator from those for the constraint.
-        :param params: combined colocator/constraint parameters
-        :return: tuple containing (dict of colocator parameters, dict of constraint parameters)
+        Separates the parameters understood by the collocator from those for the constraint.
+        :param params: combined collocator/constraint parameters
+        :return: tuple containing (dict of collocator parameters, dict of constraint parameters)
         """
         col_param_names = ['fill_value', 'var_name', 'var_long_name', 'var_units']
         col_params = {}
@@ -135,16 +136,16 @@ class ColocatorFactory(object):
         return obj
 
 
-class Colocate(object):
+class Collocate(object):
     """
-    Perform a general colocation
+    Perform a general collocation
     """
 
     def __init__(self, sample_points, output_filename, missing_data_for_missing_sample=False,
-                 colocator_factory=ColocatorFactory()):
+                 collocator_factory=CollocatorFactory()):
         """
         Constructor
-        :param sample_points: Sample points to colocate on to
+        :param sample_points: Sample points to collocate on to
         :param output_filename: Filename to output to
         :param missing_data_for_missing_sample: Write missing values out when sample data is missing
         :return:
@@ -153,32 +154,32 @@ class Colocate(object):
         self.output_file = output_filename
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
         self.coords_to_be_written = True
-        self.colocator_factory = colocator_factory
+        self.collocator_factory = collocator_factory
 
-    def colocate(self, data, col_name=None, col_params=None, kern=None, kern_params=None):
+    def collocate(self, data, col_name=None, col_params=None, kern=None, kern_params=None):
         """
-        Perform the colocation
-        :param data: data to colocate
-        :param col_name: name of the colocator
-        :param col_params: parameters dictionary for the colocation and constraint
+        Perform the collocation
+        :param data: data to collocate
+        :param col_name: name of the collocator
+        :param col_params: parameters dictionary for the collocation and constraint
         :param kern: the kernel to use
         :param kern_params: the kernel parameters to use
-        :return: colocated data
+        :return: collocated data
         """
         from cis.exceptions import CoordinateNotFoundError
         from time import time
         from cis import __version__
 
-        # Find colocator, constraint and kernel to use
+        # Find collocator, constraint and kernel to use
         col_params['missing_data_for_missing_sample'] = self.missing_data_for_missing_sample
-        col, con, kernel = self.colocator_factory.get_colocator_instances_for_method(col_name, kern, col_params,
+        col, con, kernel = self.collocator_factory.get_collocator_instances_for_method(col_name, kern, col_params,
                                                                                      kern_params,
                                                                                      self.sample_points.is_gridded,
                                                                                      data.is_gridded)
 
-        col_name = self.colocator_factory.get_default_colocator_name(col_name, self.sample_points.is_gridded,
+        col_name = self.collocator_factory.get_default_collocator_name(col_name, self.sample_points.is_gridded,
                                                                      data.is_gridded)
-        logging.info("Colocator: " + str(col_name))
+        logging.info("Collocator: " + str(col_name))
         if kern is None:
             kernel_name = kernel.__class__.__name__
         else:
@@ -186,13 +187,13 @@ class Colocate(object):
 
         logging.info("Kernel: " + str(kernel_name))
 
-        logging.info("Colocating, this could take a while...")
+        logging.info("Collocating, this could take a while...")
         t1 = time()
         try:
-            new_data = col.colocate(self.sample_points, data, con, kernel)
+            new_data = col.collocate(self.sample_points, data, con, kernel)
         except TypeError as e:
-            raise CoordinateNotFoundError('Colocator was unable to compare data points, check the dimensions of each '
-                                          'data set and the co-location methods chosen. \n' + str(e))
+            raise CoordinateNotFoundError('Collocator was unable to compare data points, check the dimensions of each '
+                                          'data set and the collocation methods chosen. \n' + str(e))
 
         logging.info("Completed. Total time taken: " + str(time() - t1))
 
@@ -205,12 +206,12 @@ class Colocate(object):
             pass  # It's not critical if we can't get the history.
 
         for data in new_data:
-            history = "Colocated onto sampling from: " + str(self.sample_points.filenames) + " " \
+            history = "Collocated onto sampling from: " + str(self.sample_points.filenames) + " " \
                       "\nusing CIS version " + __version__ + " " + \
                       "\nvariables: " + str(variables) + " " + \
                       "\nwith files: " + str(filenames) + " " + \
-                      "\nusing colocator: " + str(col_name) + " " + \
-                      "\ncolocator parameters: " + str(col_params) + " " + \
+                      "\nusing collocator: " + str(col_name) + " " + \
+                      "\ncollocator parameters: " + str(col_params) + " " + \
                       "\nkernel: " + str(kern) + " " + \
                       "\nkernel parameters: " + str(kern_params)
             data.add_history(history)

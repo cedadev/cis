@@ -34,7 +34,7 @@ class InvalidDataTypeError(CISError):
     pass
 
 
-class InvalidColocationMethodError(CISError):
+class InvalidCollocationMethodError(CISError):
     pass
 
 

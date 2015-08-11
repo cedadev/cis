@@ -1,5 +1,5 @@
 """
-Indexes over data used for fast lookup when colocating.
+Indexes over data used for fast lookup when collocating.
 """
 import logging
 import math
@@ -8,7 +8,7 @@ import datetime
 import numpy as np
 import numpy.ma as ma
 
-from cis.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
+from cis.collocation.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 from time_util import convert_obj_to_standard_date_array
 
 

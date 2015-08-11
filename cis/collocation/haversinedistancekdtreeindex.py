@@ -1,6 +1,6 @@
 import numpy as np
 
-from cis.kdtree import HaversineDistanceKDTree
+from cis.collocation.kdtree import HaversineDistanceKDTree
 from cis.data_io.hyperpoint import HyperPoint
 
 

@@ -47,7 +47,7 @@ This will automatically generates the documentation using [http://epydoc.sourcef
 Plugin development
 ==================
 
-Users can write their own "plugins" for providing extra functionality for reading and colocation. The main program will look at the environment variable ``CIS_PLUGIN_HOME`` for any classes that subclass the relevant top level class - as described for data products and colocation below.
+Users can write their own "plugins" for providing extra functionality for reading and collocation. The main program will look at the environment variable ``CIS_PLUGIN_HOME`` for any classes that subclass the relevant top level class - as described for data products and collocation below.
 
 The simplest way to set this environment variable is to add this to your ``.bashrc`` file::
 
@@ -149,13 +149,13 @@ Here is a sketch of a data product implementation::
           return vars
 
 
-.. _colocation_design:
+.. _collocation_design:
 
-Colocation
+Collocation
 ----------
 
-Users can write their own plugins for performing the colocation of two data sets.
-There are three different types of plugin available for colocation and each will be described briefly below.
+Users can write their own plugins for performing the collocation of two data sets.
+There are three different types of plugin available for collocation and each will be described briefly below.
 
 Kernel
 """"""
@@ -194,21 +194,21 @@ The constraint limits the data points for a given sample point.
 The user can also add a new constraint method by subclassing Constraint and providing an implementation for
 ``constrain_points``. If more control is needed over the iteration sequence then the method
 ``get_iterator`` can be
-overloaded in additional to constrain_points, this may not be respected by all colocators who may still iterate over all
+overloaded in additional to constrain_points, this may not be respected by all collocators who may still iterate over all
 sample data points. To enable a constraint to use a AbstractDataOnlyKernel the method
-``get_iterator_for_data_only`` should be implemented (again this may be ignored by a colocator).
+``get_iterator_for_data_only`` should be implemented (again this may be ignored by a collocator).
 
 ``constrain_points(self, ref_point, data)``
 
  This method should return a subset of the data given a single reference point.
  It is expected that the data returned should be of the same type as that given - but this isn't mandatory. It is
- possible that this function will return zero points, or no data. The colocation class is responsible for providing a
+ possible that this function will return zero points, or no data. The collocation class is responsible for providing a
  fill_value.
 
 ``get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data)``
 
  The method should return an iterator over the output indices, hyper point for the output and data points for that output
- hyper point. This may not be called by all colocators who may choose to iterate over all sample points instead.
+ hyper point. This may not be called by all collocators who may choose to iterate over all sample points instead.
  The arguments are:
  * ``missing_data_for_missing_sample`` if True the iterator should not iterate over any points in the sample points which are missing.
  * ``coord_map`` is a list of tuples of indexes of sample points coords, data coords and output coords
@@ -221,18 +221,18 @@ sample data points. To enable a constraint to use a AbstractDataOnlyKernel the m
 ``get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)``
 
  The method should return an iterator over the output indices and a numpy array of the data values.
- This may not be called by all colocators who may choose to iterate over all sample points instead. The parameters are
+ This may not be called by all collocators who may choose to iterate over all sample points instead. The parameters are
  the same as ``get_iterator``.
 
 Co-locator
 """"""""""
 
-Another plugin which is available is the colocation method itself. A new one can be created by subclassing Colocator and
-providing an implementation for ``colocate(self, points, data, constraint, kernel)``. This method takes a number of
+Another plugin which is available is the collocation method itself. A new one can be created by subclassing Collocator and
+providing an implementation for ``collocate(self, points, data, constraint, kernel)``. This method takes a number of
 points and applies the given constraint and kernel methods on the data for each of those points. It is responsible for
-returning the new data object to be written to the output file. As such, the user could create a colocation routine
+returning the new data object to be written to the output file. As such, the user could create a collocation routine
 capable of handling multiple return values from the kernel, and hence creating multiple data objects, by creating a
-new colocation method.
+new collocation method.
 
 Plugins
 """""""
@@ -244,12 +244,12 @@ within the constraint object. This will be set to whatever the user specifies at
 
   $ ./cis.py col my_sample_file rain:"model_data_?.nc"::AreaConstraint,area=6000,fill_value=0.0:nn_gridded
 
-Example implementations of new colocation plugins are demonstrated below for each of the plugin types::
+Example implementations of new collocation plugins are demonstrated below for each of the plugin types::
 
 
-  class MyColocator(Colocator):
+  class MyCollocator(Collocator):
   
-      def colocate(self, points, data, constraint, kernel):
+      def collocate(self, points, data, constraint, kernel):
           values = []
           for point in points:
               con_points = constraint.constrain_points(point, data)

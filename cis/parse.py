@@ -5,9 +5,10 @@ import argparse
 import re
 import sys
 import os.path
+import logging
+
 from cis.exceptions import InvalidCommandLineOptionError
 from plotting.plot import Plotter
-import logging
 from utils import add_file_prefix
 
 
@@ -21,7 +22,7 @@ def initialise_top_parser():
     add_plot_parser_arguments(plot_parser)
     info_parser = subparsers.add_parser("info", help="Get information about a file")
     add_info_parser_arguments(info_parser)
-    col_parser = subparsers.add_parser("col", help="Perform colocation")
+    col_parser = subparsers.add_parser("col", help="Perform collocation")
     add_col_parser_arguments(col_parser)
     aggregate_parser = subparsers.add_parser("aggregate", help="Perform aggregation")
     add_aggregate_parser_arguments(aggregate_parser)
@@ -128,15 +129,15 @@ def add_info_parser_arguments(parser):
 
 
 def add_col_parser_arguments(parser):
-    parser.add_argument("datagroups", metavar="DataGroups", nargs="+", help="Variables and files to colocate, "
+    parser.add_argument("datagroups", metavar="DataGroups", nargs="+", help="Variables and files to collocate, "
                         "which needs to be entered in the format variables:filename[:product=], with multiple files to "
-                        "colocate separated by spaces.")
-    parser.add_argument("samplegroup", metavar="SampleGroup", help="A filename with the points to colocate onto. "
-                        "Additional parameters are variable, colocator, kernel and product, entered as "
-                        "keyword=value. Colocator must always be specified. For example "
-                       "filename:variable=var1,colocator=box[h_sep=10km].")
+                        "collocate separated by spaces.")
+    parser.add_argument("samplegroup", metavar="SampleGroup", help="A filename with the points to collocate onto. "
+                        "Additional parameters are variable, collocator, kernel and product, entered as "
+                        "keyword=value. Collocator must always be specified. For example "
+                       "filename:variable=var1,collocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
-                        help="The filename of the output file containing the colocated data. The name specified will"
+                        help="The filename of the output file containing the collocated data. The name specified will"
                              " be suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and "
                              "so that cis can recognise it when using the file for further operations.")
     return parser
@@ -294,7 +295,7 @@ def check_product(product, parser):
 
 def check_aggregate_kernel(arg, parser):
     import cis.plugin as plugin
-    from cis.col_framework import Kernel
+    from cis.collocation.col_framework import Kernel
     from cis.aggregation.aggregation_kernels import aggregation_kernels
 
     aggregation_classes = plugin.find_plugin_classes(Kernel, 'cis.col_implementations')
@@ -333,7 +334,7 @@ def get_col_samplegroup(samplegroup, parser):
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('SamplegroupOptions',
-                                  ["filenames", "variable", "colocator", "constraint", "kernel", "product"])
+                                  ["filenames", "variable", "collocator", "constraint", "kernel", "product"])
     samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args,
                                            extract_method_and_args, extract_method_and_args, check_product)
 
@@ -833,7 +834,7 @@ def _check_output_filepath_not_input(arguments, parser):
     try:
         input_files = list(arguments.samplefiles)
     except AttributeError:
-        input_files = []  # Only applies to colocation
+        input_files = []  # Only applies to collocation
 
     for datagroup in arguments.datagroups:
         input_files.extend(datagroup['filenames'])

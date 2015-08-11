@@ -814,7 +814,7 @@ def make_regular_2d_with_time_ungridded_data():
 
 def make_MODIS_time_steps():
     '''
-        Useful for debugging MODIS colocation
+        Useful for debugging MODIS collocation
     :return:
     '''
     import numpy as np

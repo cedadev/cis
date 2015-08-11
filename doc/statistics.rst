@@ -22,7 +22,7 @@ These values will be displayed on screen and can optionally be save as NetCDF ou
 .. note::
     Both variables used in a statistical analysis **must** be of the same shape in order to be compatible, i.e. the
     same number of points in each dimension, and of the same type (ungridded or gridded). This means that, for example,
-    operations between different data products are unlikely to work correctly - performing a colocation or aggregation
+    operations between different data products are unlikely to work correctly - performing a collocation or aggregation
     onto a common grid would be a good pre-processing step.
 
 .. note::

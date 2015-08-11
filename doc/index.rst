@@ -18,8 +18,8 @@ Contents:
    file_information
    subsetting
    aggregation
-   colocation
-   colocation_examples
+   collocation
+   collocation_examples
    plotting
    evaluation
    statistics

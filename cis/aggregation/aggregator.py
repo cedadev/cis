@@ -1,11 +1,12 @@
 import logging
 import datetime
+
 import iris.coord_categorisation
 import iris.analysis.cartography
 from iris.coords import DimCoord
 import numpy
-from cis.col_implementations import GeneralGriddedColocator, BinnedCubeCellOnlyConstraint
-from cis.data_io.gridded_data import make_from_cube
+
+from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
 import cis.parse_datetime as parse_datetime
 from cis.subsetting.subset import Subset
 from cis.utils import isnan, guess_coord_axis
@@ -67,7 +68,7 @@ class Aggregator(object):
     def aggregate_ungridded(self, kernel):
         """
         Performs aggregation for ungridded data by first generating a new grid, converting it into a cube, then
-        colocating using the appropriate kernel and a cube cell constraint
+        collocating using the appropriate kernel and a cube cell constraint
         """
         new_cube_coords = []
         new_cube_shape = []
@@ -97,9 +98,9 @@ class Aggregator(object):
         dummy_data = numpy.reshape(numpy.arange(int(numpy.prod(new_cube_shape)))+1.0, tuple(new_cube_shape))
         aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
 
-        colocator = GeneralGriddedColocator()
+        collocator = GeneralGriddedCollocator()
         constraint = BinnedCubeCellOnlyConstraint()
-        aggregated_cube = colocator.colocate(aggregation_cube, self.data, constraint, kernel)
+        aggregated_cube = collocator.collocate(aggregation_cube, self.data, constraint, kernel)
         self._add_max_min_bounds_for_collapsed_coords(aggregated_cube, self.data)
 
         # We need to rename any variables which clash with coordinate names otherwise they will not output correctly, we

@@ -7,24 +7,24 @@ import iris.coords
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
 
-from cis.col_framework import (Colocator, Constraint, PointConstraint, CellConstraint,
+from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
                                       IndexedConstraint, Kernel, AbstractDataOnlyKernel)
 import cis.exceptions
 from cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
-import cis.data_index as data_index
+import collocation.data_index as data_index
 from cis.utils import log_memory_profile
 
 
-class GeneralUngriddedColocator(Colocator):
+class GeneralUngriddedCollocator(Collocator):
     """
-    Colocator for locating onto ungridded sample points
+    Collocator for locating onto ungridded sample points
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
-        super(GeneralUngriddedColocator, self).__init__()
+        super(GeneralUngriddedCollocator, self).__init__()
         if fill_value is not None:
             try:
                 self.fill_value = float(fill_value)
@@ -36,9 +36,9 @@ class GeneralUngriddedColocator(Colocator):
         self.var_units = var_units
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
-    def colocate(self, points, data, constraint, kernel):
+    def collocate(self, points, data, constraint, kernel):
         """
-        This colocator takes a list of HyperPoints and a data object (currently either Ungridded
+        This collocator takes a list of HyperPoints and a data object (currently either Ungridded
         data or a Cube) and returns one new LazyData object with the values as determined by the
         constraint and kernel objects. The metadata for the output LazyData object is copied from
         the input data object.
@@ -53,14 +53,14 @@ class GeneralUngriddedColocator(Colocator):
                        a single value
         :return: A single LazyData object
         """
-        log_memory_profile("GeneralUngriddedColocator Initial")
+        log_memory_profile("GeneralUngriddedCollocator Initial")
 
         if isinstance(data, list):
             # Indexing and constraints (for SepConstraintKdTree) will only take place on the first iteration,
             # so we really can just call this method recursively if we've got a list of data.
             output = UngriddedDataList()
             for var in data:
-                output.extend(self.colocate(points, var, constraint, kernel))
+                output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
         metadata = data.metadata
@@ -77,15 +77,15 @@ class GeneralUngriddedColocator(Colocator):
         else:
             data_points = data.get_non_masked_points()
             _fix_longitude_range(points.coords(), data_points)
-        log_memory_profile("GeneralUngriddedColocator after data retrieval")
+        log_memory_profile("GeneralUngriddedCollocator after data retrieval")
 
         # Create index if constraint and/or kernel require one.
         coord_map = None
         data_index.create_indexes(constraint, points, data_points, coord_map)
         data_index.create_indexes(kernel, points, data_points, coord_map)
-        log_memory_profile("GeneralUngriddedColocator after indexing")
+        log_memory_profile("GeneralUngriddedCollocator after indexing")
 
-        logging.info("--> Colocating...")
+        logging.info("--> Collocating...")
 
         sample_points = points.get_all_points()
 
@@ -98,7 +98,7 @@ class GeneralUngriddedColocator(Colocator):
                                                       self.var_standard_name, self.var_units)
         sample_points_count = len(sample_points)
         values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
-        log_memory_profile("GeneralUngriddedColocator after output array creation")
+        log_memory_profile("GeneralUngriddedCollocator after output array creation")
 
         logging.info("    {} sample points".format(sample_points_count))
         # Apply constraint and/or kernel to each sample point.
@@ -127,7 +127,7 @@ class GeneralUngriddedColocator(Colocator):
                     values[0, i] = value_obj
             except ValueError:
                 pass
-        log_memory_profile("GeneralUngriddedColocator after running kernel on sample points")
+        log_memory_profile("GeneralUngriddedCollocator after running kernel on sample points")
 
         return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
@@ -144,16 +144,16 @@ class GeneralUngriddedColocator(Colocator):
                                         missing_value=self.fill_value, units=var_details[2])
                 new_data = UngriddedData(values[idx, :], var_metadata, points.coords())
             return_data.append(new_data)
-        log_memory_profile("GeneralUngriddedColocator final")
+        log_memory_profile("GeneralUngriddedCollocator final")
 
         return return_data
 
 
-class DummyColocator(Colocator):
+class DummyCollocator(Collocator):
 
-    def colocate(self, points, data, constraint, kernel):
+    def collocate(self, points, data, constraint, kernel):
         """
-            This colocator does no colocation at all - it just returns the original data values. This might be useful
+            This collocator does no collocation at all - it just returns the original data values. This might be useful
             if the input data for one variable is already known to be on the same grid as points. This routine could
             check the coordinates are the same but currently does no such check.
 
@@ -165,7 +165,7 @@ class DummyColocator(Colocator):
         """
         from cis.data_io.ungridded_data import LazyData
 
-        logging.info("--> Colocating...")
+        logging.info("--> Collocating...")
         data = cis.utils.listify(data)
         return [LazyData(var.data, var.metadata) for var in data]
 
@@ -396,7 +396,7 @@ class nn_horizontal(Kernel):
 
     def get_value(self, point, data):
         '''
-            Colocation using nearest neighbours along the face of the earth where both points and
+            Collocation using nearest neighbours along the face of the earth where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
         iterator = data.__iter__()
@@ -417,7 +417,7 @@ class nn_horizontal_kdtree(Kernel):
 
     def get_value(self, point, data):
         """
-        Colocation using nearest neighbours along the face of the earth using a k-D tree index.
+        Collocation using nearest neighbours along the face of the earth using a k-D tree index.
         """
         nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(point)
         if nearest_index is None:
@@ -432,7 +432,7 @@ class nn_altitude(Kernel):
 
     def get_value(self, point, data):
         '''
-            Colocation using nearest neighbours in altitude, where both points and
+            Collocation using nearest neighbours in altitude, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
         iterator = data.__iter__()
@@ -451,7 +451,7 @@ class nn_pressure(Kernel):
 
     def get_value(self, point, data):
         '''
-            Colocation using nearest neighbours in pressure, where both points and
+            Collocation using nearest neighbours in pressure, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
         iterator = data.__iter__()
@@ -470,7 +470,7 @@ class nn_time(Kernel):
 
     def get_value(self, point, data):
         '''
-            Colocation using nearest neighbours in time, where both points and
+            Collocation using nearest neighbours in time, where both points and
               data are a list of HyperPoints. The default point is the first point.
         '''
         iterator = data.__iter__()
@@ -549,10 +549,10 @@ class li(Kernel):
         return interpolate(data, new_coord_tuple_list, method="linear").data
 
 
-class GriddedColocatorUsingIrisRegrid(Colocator):
+class GriddedCollocatorUsingIrisRegrid(Collocator):
 
     def __init__(self, var_name='', var_long_name='', var_units='', missing_data_for_missing_sample=False):
-        super(Colocator, self).__init__()
+        super(Collocator, self).__init__()
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -567,16 +567,16 @@ class GriddedColocatorUsingIrisRegrid(Colocator):
                     cis.utils.get_class_name(gridded_gridded_li)]),
                 cis.utils.get_class_name(type(kernel))))
 
-    def colocate(self, points, data, constraint, kernel):
+    def collocate(self, points, data, constraint, kernel):
         """
-        This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the points cube. The
-        colocator then returns another Iris cube. This uses Iris' implementation, which only works onto a horizontal
+        This collocator takes two Iris cubes, and collocates from the data cube onto the grid of the points cube. The
+        collocator then returns another Iris cube. This uses Iris' implementation, which only works onto a horizontal
         grid.
-        :param points: An Iris cube with the sampling grid to colocate onto.
-        :param data: The Iris cube with the data to be colocated.
+        :param points: An Iris cube with the sampling grid to collocate onto.
+        :param data: The Iris cube with the data to be collocated.
         :param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
         :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
-        :return: An Iris cube with the colocated data.
+        :return: An Iris cube with the collocated data.
         """
         import iris
 
@@ -590,17 +590,17 @@ class GriddedColocatorUsingIrisRegrid(Colocator):
         return new_data
 
 
-class GriddedColocator(GriddedColocatorUsingIrisRegrid):
+class GriddedCollocator(GriddedCollocatorUsingIrisRegrid):
 
-    def colocate(self, points, data, constraint, kernel):
+    def collocate(self, points, data, constraint, kernel):
         """
-        This colocator takes two Iris cubes, and colocates from the data cube onto the grid of the 'points' cube. The
-        colocator then returns another Iris cube.
-        :param points: An Iris cube with the sampling grid to colocate onto.
-        :param data: The Iris cube with the data to be colocated.
+        This collocator takes two Iris cubes, and collocates from the data cube onto the grid of the 'points' cube. The
+        collocator then returns another Iris cube.
+        :param points: An Iris cube with the sampling grid to collocate onto.
+        :param data: The Iris cube with the data to be collocated.
         :param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
         :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
-        :return: An Iris cube with the colocated data.
+        :return: An Iris cube with the collocated data.
         """
         self.check_for_valid_kernel(kernel)
 
@@ -649,7 +649,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         coord_names_and_sizes_for_output_grid = coord_names_and_sizes_for_sample_grid + \
             coord_names_and_sizes_for_output_grid
 
-        # An array for the colocated data, with the correct shape
+        # An array for the collocated data, with the correct shape
         output_shape = tuple(i[1] for i in coord_names_and_sizes_for_output_grid)
         new_data = np.zeros(output_shape)
 
@@ -679,11 +679,11 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         # iris.analysis.interpolate.linear, so we need need to make an exception for how we treat the linear
         # interpolation case.
         if kernel.name == 'bilinear':
-            output_cube = self._colocate_bilinear(coord_names_and_sizes_for_output_grid,
+            output_cube = self._collocate_bilinear(coord_names_and_sizes_for_output_grid,
                                                   coord_names_and_sizes_for_sample_grid, data,
                                                   kernel, output_mask, points)
         else:
-            output_cube = self._colocate_nearest(coord_names_and_sizes_for_output_grid,
+            output_cube = self._collocate_nearest(coord_names_and_sizes_for_output_grid,
                                                  coord_names_and_sizes_for_sample_grid, data, kernel, new_data,
                                                  output_mask, points)
         if not isinstance(output_cube, list):
@@ -716,9 +716,9 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         return output_mask
 
     @staticmethod
-    def _colocate_bilinear(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
+    def _collocate_bilinear(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
                            output_mask, points):
-        """ Colocates using iris.analysis.interpolate.linear
+        """ Collocates using iris.analysis.interpolate.linear
         """
         coordinate_point_pairs = []
         for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
@@ -747,10 +747,10 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
         return output_cube
 
     @staticmethod
-    def _colocate_nearest(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid,
+    def _collocate_nearest(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid,
                           data, kernel, new_data, output_mask, points):
         """
-        Colocate using iris.analysis.interpolate.extract_nearest_neighbour.
+        Collocate using iris.analysis.interpolate.extract_nearest_neighbour.
         """
         # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid.
         # Now for each point in the sample grid we do the interpolation.
@@ -797,7 +797,7 @@ class GriddedColocator(GriddedColocatorUsingIrisRegrid):
                                                             long_name=coord_found[0].long_name,
                                                             units=coord_found[0].units), i))
 
-        # Finally return the new cube with the colocated data. cis.col requires this be returned as a list of
+        # Finally return the new cube with the collocated data. cis.col requires this be returned as a list of
         # Cube objects.
         output_list = GriddedDataList()
         for idx, var in enumerate(data):
@@ -818,9 +818,9 @@ class gridded_gridded_nn(Kernel):
         self.interpolater = iris.analysis.interpolate.extract_nearest_neighbour
 
     def get_value(self, point, data):
-        '''Not needed for gridded/gridded co-location.
+        '''Not needed for gridded/gridded collocation.
         '''
-        raise ValueError("gridded_gridded_nn kernel selected for use with colocator other than GriddedColocator")
+        raise ValueError("gridded_gridded_nn kernel selected for use with collocator other than GriddedCollocator")
 
 
 class gridded_gridded_li(Kernel):
@@ -829,18 +829,18 @@ class gridded_gridded_li(Kernel):
         self.interpolater = iris.analysis.interpolate.linear
 
     def get_value(self, point, data):
-        '''Not needed for gridded/gridded co-location.
+        '''Not needed for gridded/gridded collocation.
         '''
-        raise ValueError("gridded_gridded_li kernel selected for use with colocator other than GriddedColocator")
+        raise ValueError("gridded_gridded_li kernel selected for use with collocator other than GriddedCollocator")
 
 
-class GeneralGriddedColocator(Colocator):
-    """Performs co-location of data on to the points of a cube (ie onto a gridded dataset).
+class GeneralGriddedCollocator(Collocator):
+    """Performs collocation of data on to the points of a cube (ie onto a gridded dataset).
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
-        super(GeneralGriddedColocator, self).__init__()
+        super(GeneralGriddedCollocator, self).__init__()
         if fill_value is not None:
             try:
                 self.fill_value = float(fill_value)
@@ -852,21 +852,21 @@ class GeneralGriddedColocator(Colocator):
         self.var_units = var_units
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
-    def colocate(self, points, data, constraint, kernel):
+    def collocate(self, points, data, constraint, kernel):
         """
         :param points: cube defining the sample points
-        :param data: CommonData object providing data to be co-located (or list of Data)
+        :param data: CommonData object providing data to be collocated (or list of Data)
         :param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
                            data based on it's internal parameters
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
-        :return: GriddedDataList of co-located data
+        :return: GriddedDataList of collocated data
         """
         if isinstance(data, list):
             # If data is a list then call this method recursively over each element
             output_list = []
             for variable in data:
-                colocated = self.colocate(points, variable, constraint, kernel)
-                output_list.extend(colocated)
+                collocated = self.collocate(points, variable, constraint, kernel)
+                output_list.extend(collocated)
             return GriddedDataList(output_list)
 
         data_points = data.get_non_masked_points()
@@ -942,11 +942,11 @@ class GeneralGriddedColocator(Colocator):
                     # We don't need to do anything.
                     pass
 
-        # Construct an output cube containing the colocated data.
+        # Construct an output cube containing the collocated data.
         kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
         output = GriddedDataList([])
         for idx, val in enumerate(values):
-            cube = self._create_colocated_cube(points, data, val, output_coords, self.fill_value)
+            cube = self._create_collocated_cube(points, data, val, output_coords, self.fill_value)
             data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
             data_with_nan_and_inf_removed.set_fill_value(self.fill_value)
             cube.data = data_with_nan_and_inf_removed
@@ -976,15 +976,15 @@ class GeneralGriddedColocator(Colocator):
     def _set_single_value_kernel(self, kernel_val, values, indices):
         values[0][indices] = kernel_val
 
-    def _create_colocated_cube(self, src_cube, src_data, data, coords, fill_value):
+    def _create_collocated_cube(self, src_cube, src_data, data, coords, fill_value):
         """Creates a cube using the metadata from the source cube and supplied data.
 
         :param src_cube: cube of sample points
-        :param src_data: ungridded data that was to be colocated
-        :param data: colocated data values
+        :param src_data: ungridded data that was to be collocated
+        :param data: collocated data values
         :param coords: coordinates for output cube
         :param fill_value: value that has been used as the fill value in data
-        :return: cube of colocated data
+        :return: cube of collocated data
         """
         dim_coords_and_dims = []
         for idx, coord in enumerate(coords):
@@ -1162,7 +1162,7 @@ def _find_longitude_range(coords):
 
 def _fix_longitude_range(coords, data_points):
     """Sets the longitude range of the data points to match that of the sample coordinates.
-    :param coords: coordinates for grid on which to colocate
+    :param coords: coordinates for grid on which to collocate
     :param data_points: HyperPointList of data to fix
     """
     range_start = _find_longitude_range(coords)
@@ -1172,7 +1172,7 @@ def _fix_longitude_range(coords, data_points):
 
 def _fix_cube_longitude_range(coords, data):
     """Sets the longitude range of the data cube to match that of the sample coordinates.
-    :param coords: coordinates for grid on which to colocate
+    :param coords: coordinates for grid on which to collocate
     :param data: cube of data to fix
     """
     range_start = _find_longitude_range(coords)

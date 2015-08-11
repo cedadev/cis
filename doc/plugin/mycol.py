@@ -1,10 +1,10 @@
-from cis.col_framework import Colocator, Constraint, Kernel
+from cis.collocation.col_framework import Collocator, Constraint, Kernel
 from cis.data_io.ungridded_data import LazyData
 
 
-class MyColocator(Colocator):
+class MyCollocator(Collocator):
 
-    def colocate(self, points, data, constraint, kernel):
+    def collocate(self, points, data, constraint, kernel):
         values = []
         for point in points:
             con_points = constraint.constrain_points(point, data)

@@ -11,7 +11,6 @@ from cis.data_io.data_writer import DataWriter
 from cis.exceptions import CISError, NoDataInSubsetError
 from cis import __version__, __status__
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -113,12 +112,12 @@ def info_cmd(main_arguments):
 
 def col_cmd(main_arguments):
     '''
-    Main routine for handling calls to the co-locate ('col') command.
+    Main routine for handling calls to the collocate ('col') command.
 
     :param main_arguments:    The command line arguments (minus the col command)
     '''
     from cis.exceptions import ClassNotFoundError, CISError
-    from cis.col import Colocate
+    from cis.collocation.col import Collocate
 
     output_file = main_arguments.output
     data_reader = DataReader()
@@ -131,12 +130,12 @@ def col_cmd(main_arguments):
         missing_data_for_missing_samples = True
 
     try:
-        col = Colocate(sample_data, output_file, missing_data_for_missing_samples)
+        col = Collocate(sample_data, output_file, missing_data_for_missing_samples)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
 
-    col_name = main_arguments.samplegroup['colocator'][0] if main_arguments.samplegroup['colocator'] is not None else None
-    col_options = main_arguments.samplegroup['colocator'][1] if main_arguments.samplegroup['colocator'] is not None else {}
+    col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup['collocator'] is not None else None
+    col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup['collocator'] is not None else {}
     kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
     kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
 
@@ -148,10 +147,10 @@ def col_cmd(main_arguments):
         data = data_reader.read_data_list(filenames, variables, product)
         data_writer = DataWriter()
         try:
-            output = col.colocate(data, col_name, col_options, kern_name, kern_options)
+            output = col.collocate(data, col_name, col_options, kern_name, kern_options)
             data_writer.write_data(output, output_file)
         except ClassNotFoundError as e:
-            __error_occurred(str(e) + "\nInvalid co-location option.")
+            __error_occurred(str(e) + "\nInvalid collocation option.")
         except (CISError, IOError) as e:
             __error_occurred(e)
 

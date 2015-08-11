@@ -20,7 +20,7 @@ class TestWriteNetcdf(unittest.TestCase):
         write(data_object, tmp_file)
 
     def test_write_col_and_reload_1(self):
-        # Copy a colocated file and try to reload it.  This exposes a bug where
+        # Copy a collocated file and try to reload it.  This exposes a bug where
         # var.shape is set in the NetCDF metadata
         from cis.data_io.products import Aerosol_CCI
 
@@ -36,7 +36,7 @@ class TestWriteNetcdf(unittest.TestCase):
         print v[:2]
 
     def test_write_col_and_reload_2(self):
-        # Copy a colocated file and try to reload it.  This exposes a bug where
+        # Copy a collocated file and try to reload it.  This exposes a bug where
         # latitude and longitude aren't recognised on reload
         from cis.data_io.products import cis
 

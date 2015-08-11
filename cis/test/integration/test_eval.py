@@ -47,22 +47,22 @@ class TestEval(BaseIntegrationTest):
         assert_that(calculated_result.shape, is_((96, 192)))
         assert numpy.allclose(expected_result, calculated_result[:][0][0:5])
 
-    def test_colocated_NetCDF_Gridded_onto_GASSP(self):
-        # First do a colocation of ECHAMHAM onto GASSP
+    def test_collocated_NetCDF_Gridded_onto_GASSP(self):
+        # First do a collocation of ECHAMHAM onto GASSP
         vars = valid_echamham_variable_1, valid_echamham_variable_2
         filename = valid_echamham_filename
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
-        colocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':colocator=' + colocator_and_opts,
-                     '-o', 'colocated_gassp']
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', 'collocated_gassp']
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
 
-        # Then do an evaluation using the colocated data:
+        # Then do an evaluation using the collocated data:
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2,
-                                      'cis-colocated_gassp.nc'),
+                                      'cis-collocated_gassp.nc'),
                 "%s=gassp_alias:%s" % (valid_GASSP_aeroplane_variable, valid_GASSP_aeroplane_filename),
                 "(%s + %s) / gassp_alias " % (valid_echamham_variable_1, valid_echamham_variable_2),
                 '1', '-o', self.OUTPUT_NAME]
@@ -77,7 +77,7 @@ class TestEval(BaseIntegrationTest):
 
         assert_that(calculated_result.shape, is_((311,)))
         compare_masked_arrays(expected_result, calculated_result[:][0:5])
-        os.remove('cis-colocated_gassp.nc')
+        os.remove('cis-collocated_gassp.nc')
 
     def test_CloudSat(self):
         args = ['eval', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,

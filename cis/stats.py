@@ -308,7 +308,7 @@ class StatsAnalyzer(object):
         self._var_name_1 = data1.var_name
         self._var_name_2 = data2.var_name
         # Flatten the data, so that data of different shapes but same overall size can be compared (e.g. the case where
-        # you have colocated some data).
+        # you have collocated some data).
         self._data1 = data1.data.flatten()
         self._data2 = data2.data.flatten()
         # Keep a record of whether we have already combined the masks so that we don't unnecessarily repeat it

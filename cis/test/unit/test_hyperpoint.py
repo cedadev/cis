@@ -1,5 +1,5 @@
 """
- Module to test the colocation routines
+ Module to test the collocation routines
 """
 from cis.data_io.hyperpoint import HyperPoint
 from nose.tools import assert_almost_equal, istest, eq_

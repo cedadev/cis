@@ -12,7 +12,7 @@ The following should be displayed::
     {plot,info,col,aggregate,subset,version}
       plot           Create plots
       info           Get information about a file
-      col            Perform colocation
+      col            Perform collocation
       aggregate      Perform aggregation
       subset         Perform subsetting
       eval           Evaluate a numeric expression
@@ -27,7 +27,7 @@ There are 8 commands the program can execute:
 
   * ``plot`` which is used to plot the data
   * ``info`` which prints information about a given input file
-  * ``col`` which is used to perform colocation on data
+  * ``col`` which is used to perform collocation on data
   * ``aggregate`` which is used to perform aggregation along coordinates in the data
   * ``subset`` which is used to perform subsetting of the data
   * ``eval`` which is used to evaluate a numeric expression on data
