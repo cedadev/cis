@@ -431,7 +431,12 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         """
         from cis.data_io.Coord import Coord
 
-        coordinate_data_objects = [Coord(d, get_metadata(d), coord_axis) for d in data_variables[data_variable_name]]
+        coordinate_data_objects = []
+        for d in data_variables[data_variable_name]:
+            m = get_metadata(d)
+            m.alter_standard_name(standard_name)
+            coordinate_data_objects.append(Coord(d, m, coord_axis))
+        
         return Coord.from_many_coordinates(coordinate_data_objects)
 
     def _create_time_coord(self, timestamp, time_variable_name, data_variables, coord_axis='T', standard_name='time'):
