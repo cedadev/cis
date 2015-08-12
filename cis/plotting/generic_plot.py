@@ -73,7 +73,10 @@ class Generic_Plot(object):
             x_max_requested = x_range_dict.get('xmax')
             max_found = max([max_found, x_max_requested])
             data_max = self.get_data_items_max()
-            max_found = max(data_max, max_found)
+            # lon_0 must be between -360 and 720 so if the max longitude in the data is outside this then don't consider
+            #  it for lon_0.
+            if -180 < data_max < 900.0:
+                max_found = max(data_max, max_found)
             self.basemap = Basemap(lon_0=(max_found-180.0))
             return self.basemap
         else:
