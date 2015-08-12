@@ -174,17 +174,15 @@ class Plotter(object):
             raise InvalidPlotTypeError(error_message)
 
     def _remove_length_one_dimensions(self, packed_data):
+        from iris.util import squeeze
         listify(packed_data)
         new_data_list = []
         for data in packed_data:
             if data.is_gridded:
                 #  Ensure that there are no extra dimensions which can confuse the plotting.
                 # E.g. the shape of the cube might be (1, 145, 165) and so we don't need to know about
-                #  the dimension whose length is one. The above list comprehension would return a cube of
-                #  shape (145, 165)
-                new_data = list(data.slices([coord for coord in data.coords(dim_coords=True)
-                                            if coord.points.size > 1]))[0]
-                new_data_list.append(new_data)
+                #  the dimension whose length is one.
+                new_data_list.append(squeeze(data))
             else:
                 new_data_list.append(data)
         return new_data_list
