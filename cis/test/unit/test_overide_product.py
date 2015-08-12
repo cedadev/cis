@@ -10,7 +10,7 @@ example_caliop_l2_filename = "CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08
 
 @istest
 def can_overide_default_product():
-    from cis.data_io.products.products import NetCDF_Gridded
+    from data_io.products import NetCDF_Gridded
     eq_(__get_class(example_caliop_l2_filename), Caliop_L2)
     eq_(__get_class(example_caliop_l2_filename, "NetCDF_Gridded"), NetCDF_Gridded)
 

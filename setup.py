@@ -12,7 +12,7 @@ dependencies = ["matplotlib>=1.2.0",
                 "netcdf4>=1.0",
                 "numpy",
                 "scipy",
-                "iris>=1.7.3",
+                "iris>=1.8.0",
                 'psutil>=2.0.0',
                 'basemap>=1.0.7']
 

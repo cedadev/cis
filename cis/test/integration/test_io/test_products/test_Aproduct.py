@@ -90,7 +90,7 @@ class TestAProduct(TestCase):
     def test_that_get_product_full_name_returns_version_product_and_cis(self):
         from cis import __version__
         from cis.data_io.products.AProduct import get_product_full_name
-        from cis.data_io.products.products import CloudSat
+        from data_io.products import CloudSat
 
         product_name = get_product_full_name([valid_cloudsat_RVOD_file])
 
