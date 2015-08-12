@@ -13,7 +13,7 @@ import cis.exceptions
 from cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
-import collocation.data_index as data_index
+import cis.collocation.data_index as data_index
 from cis.utils import log_memory_profile
 
 
@@ -549,7 +549,7 @@ class li(Kernel):
         return interpolate(data, new_coord_tuple_list, method="linear").data
 
 
-class GriddedCollocatorUsingIrisRegrid(Collocator):
+class GriddedCollocator(Collocator):
 
     def __init__(self, var_name='', var_long_name='', var_units='', missing_data_for_missing_sample=False):
         super(Collocator, self).__init__()
@@ -558,7 +558,8 @@ class GriddedCollocatorUsingIrisRegrid(Collocator):
         self.var_units = var_units
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
-    def check_for_valid_kernel(self, kernel):
+    @staticmethod
+    def _check_for_valid_kernel(kernel):
         from cis.exceptions import ClassNotFoundError
 
         if not (isinstance(kernel, gridded_gridded_nn) or isinstance(kernel, gridded_gridded_li)):
@@ -566,31 +567,6 @@ class GriddedCollocatorUsingIrisRegrid(Collocator):
                 str([cis.utils.get_class_name(gridded_gridded_nn),
                     cis.utils.get_class_name(gridded_gridded_li)]),
                 cis.utils.get_class_name(type(kernel))))
-
-    def collocate(self, points, data, constraint, kernel):
-        """
-        This collocator takes two Iris cubes, and collocates from the data cube onto the grid of the points cube. The
-        collocator then returns another Iris cube. This uses Iris' implementation, which only works onto a horizontal
-        grid.
-        :param points: An Iris cube with the sampling grid to collocate onto.
-        :param data: The Iris cube with the data to be collocated.
-        :param constraint: None allowed yet, as this is unlikely to be required for gridded-gridded.
-        :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
-        :return: An Iris cube with the collocated data.
-        """
-        import iris
-
-        self.check_for_valid_kernel(kernel)
-        if not isinstance(data, list):
-            data = GriddedDataList([data])
-        new_data = GriddedDataList()
-        for var in data:
-            new_data.append(iris.analysis.interpolate.regrid(var, points, mode=kernel.name))
-
-        return new_data
-
-
-class GriddedCollocator(GriddedCollocatorUsingIrisRegrid):
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -602,7 +578,7 @@ class GriddedCollocator(GriddedCollocatorUsingIrisRegrid):
         :param kernel: The kernel to use, current options are gridded_gridded_nn and gridded_gridded_li.
         :return: An Iris cube with the collocated data.
         """
-        self.check_for_valid_kernel(kernel)
+        self._check_for_valid_kernel(kernel)
 
         # Force the data longitude range to be the same as that of the sample grid.
         _fix_cube_longitude_range(points.coords(), data)
@@ -678,6 +654,7 @@ class GriddedCollocator(GriddedCollocatorUsingIrisRegrid):
         # Iris has a different interface for iris.analysis.interpolate.extract_nearest_neighbour, compared to
         # iris.analysis.interpolate.linear, so we need need to make an exception for how we treat the linear
         # interpolation case.
+        # TODO: This can now be treated together since iris 1.8
         if kernel.name == 'bilinear':
             output_cube = self._collocate_bilinear(coord_names_and_sizes_for_output_grid,
                                                   coord_names_and_sizes_for_sample_grid, data,

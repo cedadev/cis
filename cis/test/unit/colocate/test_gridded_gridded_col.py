@@ -8,7 +8,7 @@ from iris.exceptions import CoordinateNotFoundError
 import numpy
 
 from cis.exceptions import ClassNotFoundError
-from cis.collocation.col_implementations import GriddedCollocator, GriddedCollocatorUsingIrisRegrid, gridded_gridded_nn, \
+from cis.collocation.col_implementations import GriddedCollocator, gridded_gridded_nn, \
     gridded_gridded_li, nn_gridded
 import cis.data_io.gridded_data as gridded_data
 from cis.test.util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
@@ -345,77 +345,6 @@ class GriddedGriddedCollocatorTests(object):
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert not does_coord_exist_in_cube(out_cube, 'time')
         assert not does_coord_exist_in_cube(out_cube, 'altitude')
-
-
-class TestGriddedCollocatorUsingIrisRegrid(GriddedGriddedCollocatorTests, TestCase):
-    def setUp(self):
-        self.collocator = GriddedCollocatorUsingIrisRegrid()
-
-    def test_gridded_gridded_li_for_GriddedDataList(self):
-        from cis.data_io.gridded_data import GriddedDataList
-
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
-        data_cube1 = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10,
-                                                                lon_dim_length=6, horizontal_offset=0.0))
-        data_cube2 = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10, data_offset=3,
-                                                                lon_dim_length=6, horizontal_offset=0.0))
-        data_list = GriddedDataList([data_cube1, data_cube2])
-        col = self.collocator
-
-        out_cube = col.collocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
-
-        result = numpy.array([[1., 3.5,   6.],
-                              [14.5,  17., 19.5],
-                              [28., 30.5,  33.],
-                              [41.5, 44.,   46.5],
-                              [55., 57.5,  60.]])
-
-        assert isinstance(out_cube, GriddedDataList)
-        assert numpy.allclose(out_cube[0].data, result)
-        assert numpy.allclose(out_cube[1].data, result + 3)
-
-    @istest
-    def test_gridded_gridded_nn_for_GriddedDataList(self):
-        from cis.data_io.gridded_data import GriddedDataList
-
-        sample_cube = gridded_data.make_from_cube(make_mock_cube())
-        data_cube1 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=2.6))
-        data_cube2 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=2.6,
-                                                                data_offset=3))
-        data_list = GriddedDataList([data_cube1, data_cube2])
-        col = self.collocator
-
-        out_cube = col.collocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_nn())
-
-        expected_result = numpy.array([[[1., 2., 3., 4., 5., 6., 7.],
-                                        [1., 2., 3., 4., 5., 6., 7.],
-                                        [8., 9., 10., 11., 12., 13., 14.]],
-
-                                       [[1., 2., 3., 4., 5., 6., 7.],
-                                        [1., 2., 3., 4., 5., 6., 7.],
-                                        [8., 9., 10., 11., 12., 13., 14.]],
-
-                                       [[22., 23., 24., 25., 26., 27., 28.],
-                                        [22., 23., 24., 25., 26., 27., 28.],
-                                        [29., 30., 31., 32., 33., 34., 35.]],
-
-                                       [[43., 44., 45., 46., 47., 48., 49.],
-                                        [43., 44., 45., 46., 47., 48., 49.],
-                                        [50., 51., 52., 53., 54., 55., 56.]],
-
-                                       [[64., 65., 66., 67., 68., 69., 70.],
-                                        [64., 65., 66., 67., 68., 69., 70.],
-                                        [71., 72., 73., 74., 75., 76., 77.]]])
-
-        assert isinstance(out_cube, GriddedDataList)
-        assert numpy.array_equal(out_cube[0].data, expected_result)
-        assert numpy.array_equal(out_cube[1].data, expected_result + 3)
-        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[0].coord('latitude').points)
-        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[0].coord('longitude').points)
-        assert numpy.array_equal(data_list.coord('time').points, out_cube[0].coord('time').points)
-        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube[1].coord('latitude').points)
-        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube[1].coord('longitude').points)
-        assert numpy.array_equal(data_list.coord('time').points, out_cube[1].coord('time').points)
 
 
 class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
