@@ -298,7 +298,7 @@ def check_aggregate_kernel(arg, parser):
     from cis.collocation.col_framework import Kernel
     from cis.aggregation.aggregation_kernels import aggregation_kernels
 
-    aggregation_classes = plugin.find_plugin_classes(Kernel, 'cis.col_implementations')
+    aggregation_classes = plugin.find_plugin_classes(Kernel, 'cis.collocation.col_implementations')
     aggregation_names = [cls().__class__.__name__ for cls in aggregation_classes]
     if arg in aggregation_kernels.keys() or arg in aggregation_names:
         return arg
