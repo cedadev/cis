@@ -371,6 +371,232 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
 
     @istest
+    def test_gridded_gridded_nn_with_sample_grid_containing_scalar_time(self):
+        import iris.coords
+        from iris.util import squeeze
+        import datetime
+        from cis.time_util import convert_datetime_to_std_time
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
+        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+
+        sample_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
+                                                       standard_name='time',
+                                                       units='days since 1600-01-01 00:00:00'))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        time_units = out_cube.coord('time').units
+        val = time_units.date2num(datetime.datetime(1984, 8, 28))
+        sample_slice = data_cube.extract(iris.Constraint(time=val))
+
+        assert numpy.array_equal(sample_slice.data, squeeze(out_cube).data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal([val], out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_sample_grid_containing_time_length_one(self):
+        import iris.coords
+        from iris.util import squeeze
+        import datetime
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0, time_dim_length=1, time_offset=1))
+        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        time_units = out_cube.coord('time').units
+        val = time_units.date2num(datetime.datetime(1984, 8, 28))
+        sample_slice = data_cube.extract(iris.Constraint(time=val))
+
+        assert numpy.array_equal(sample_slice.data, squeeze(out_cube).data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal([val], out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_sample_grid_containing_scalar_time_and_small_offset(self):
+        import iris.coords
+        from iris.util import squeeze
+        import datetime
+        from cis.time_util import convert_datetime_to_std_time
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0, horizontal_offset=1.0))
+        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+
+        sample_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
+                                                       standard_name='time',
+                                                       units='days since 1600-01-01 00:00:00'))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        time_units = out_cube.coord('time').units
+        val = time_units.date2num(datetime.datetime(1984, 8, 28))
+        sample_slice = data_cube.extract(iris.Constraint(time=val))
+
+        assert numpy.array_equal(sample_slice.data, squeeze(out_cube).data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal([val], out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_data_grid_containing_scalar_time(self):
+        import iris.coords
+        import datetime
+        from cis.time_util import convert_datetime_to_std_time
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        data_cube = gridded_data.make_from_cube(make_mock_cube())
+
+        data_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
+                                                       standard_name='time',
+                                                       units='days since 1600-01-01 00:00:00'))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        time_units = out_cube.coord('time').units
+        val = time_units.date2num(datetime.datetime(1984, 8, 28))
+
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal([val], out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_data_grid_containing_time_length_one(self):
+        import numpy as np
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=1, time_offset=3))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        expected = np.array([[[ 1.,  1.,  1.,  1.,  1.,  1.,  1.],  [ 2.,  2.,  2.,  2.,  2.,  2.,  2.],  [ 3.,  3.,  3.,  3.,  3.,  3.,  3.]],
+                    [[ 4.,  4.,  4.,  4.,  4.,  4.,  4.],  [ 5.,  5.,  5.,  5.,  5.,  5.,  5.],  [ 6.,  6.,  6.,  6.,  6.,  6.,  6.]],
+                    [[ 7.,  7.,  7.,  7.,  7.,  7.,  7.],  [ 8.,  8.,  8.,  8.,  8.,  8.,  8.],  [ 9.,  9.,  9.,  9.,  9.,  9.,  9.]],
+                    [[ 10.,  10.,  10.,  10.,  10.,  10.,  10.],  [ 11.,  11.,  11.,  11.,  11.,  11.,  11.],  [ 12.,  12.,  12.,  12.,  12.,  12.,  12.]],
+                    [[ 13., 13.,  13.,  13.,  13.,  13.,  13.],  [ 14.,  14.,  14.,  14.,  14.,  14.,  14.],  [ 15.,  15.,  15.,  15.,  15.,  15.,  15.]]])
+
+        assert numpy.array_equal(expected, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_data_grid_containing_no_time(self):
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=1.0, time_dim_length=7))
+        data_cube = gridded_data.make_from_cube(make_mock_cube())
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+
+    @istest
+    def test_gridded_gridded_nn_with_sample_grid_containing_no_time(self):
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=1.0))
+        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
+
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+
+    @istest
+    def test_gridded_gridded_li_with_data_grid_containing_time_length_one(self):
+        import numpy as np
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=1, time_offset=1))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        expected = np.array([[[ 1.,  1.,  1.,  1.,  1.,  1.,  1.],  [ 2.,  2.,  2.,  2.,  2.,  2.,  2.],  [ 3.,  3.,  3.,  3.,  3.,  3.,  3.]],
+                    [[ 4.,  4.,  4.,  4.,  4.,  4.,  4.],  [ 5.,  5.,  5.,  5.,  5.,  5.,  5.],  [ 6.,  6.,  6.,  6.,  6.,  6.,  6.]],
+                    [[ 7.,  7.,  7.,  7.,  7.,  7.,  7.],  [ 8.,  8.,  8.,  8.,  8.,  8.,  8.],  [ 9.,  9.,  9.,  9.,  9.,  9.,  9.]],
+                    [[ 10.,  10.,  10.,  10.,  10.,  10.,  10.],  [ 11.,  11.,  11.,  11.,  11.,  11.,  11.],  [ 12.,  12.,  12.,  12.,  12.,  12.,  12.]],
+                    [[ 13., 13.,  13.,  13.,  13.,  13.,  13.],  [ 14.,  14.,  14.,  14.,  14.,  14.,  14.],  [ 15.,  15.,  15.,  15.,  15.,  15.,  15.]]])
+
+        assert numpy.array_equal(expected, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
+
+
+    @istest
+    def test_gridded_gridded_li_with_sample_grid_containing_scalar_time(self):
+        import iris.coords
+        from iris.util import squeeze
+        import datetime
+        from cis.time_util import convert_datetime_to_std_time
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
+        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+
+        sample_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
+                                                       standard_name='time',
+                                                       units='days since 1600-01-01 00:00:00'))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        time_units = out_cube.coord('time').units
+        val = time_units.date2num(datetime.datetime(1984, 8, 28))
+        sample_slice = data_cube.extract(iris.Constraint(time=val))
+
+        assert numpy.array_equal(sample_slice.data, squeeze(out_cube).data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal([val], out_cube.coord('time').points)
+
+    @istest
+    def test_gridded_gridded_li_with_data_grid_containing_scalar_time(self):
+        import iris.coords
+        import datetime
+        from cis.time_util import convert_datetime_to_std_time
+
+        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        data_cube = gridded_data.make_from_cube(make_mock_cube())
+
+        data_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
+                                                       standard_name='time',
+                                                       units='days since 1600-01-01 00:00:00'))
+
+        col = self.collocator
+
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
+
+        time_units = out_cube.coord('time').units
+        val = time_units.date2num(datetime.datetime(1984, 8, 28))
+
+        assert numpy.array_equal(data_cube.data, out_cube.data)
+        assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
+        assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
+        assert numpy.array_equal([val], out_cube.coord('time').points)
+
+    @istest
     def test_gridded_gridded_nn_with_both_grids_containing_time_and_moderate_offset(self):
         sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
         data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,

@@ -585,7 +585,7 @@ class GriddedCollocator(Collocator):
 
         # Initialise variables used to create an output mask based on the sample data mask.
         sample_coord_lookup = {}  # Maps coordinate in sample data -> location in dimension order
-        for idx, coord in enumerate(points.dim_coords):
+        for idx, coord in enumerate(points.coords()):
             sample_coord_lookup[coord] = idx
         sample_coord_transpose_map = []  # For coords in both sample and data, contains the position in the sample
         other_coord_transpose_map = []  # For coords in data but not in sample, records that coord's position in data.
@@ -603,7 +603,7 @@ class GriddedCollocator(Collocator):
             # name does not appear in the sample grid, and instead take the coordinate name and length from the original
             # data, as this is what we will be keeping.
             try:
-                sample_coord = points.coords(coord.name(), dim_coords=True)[0]
+                sample_coord = points.coords(coord.name())[0]
                 coord_names_and_sizes_for_sample_grid.append([coord.name(), len(sample_coord.points)])
                 # Find the index of the sample coordinate corresponding to the data coordinate.
                 sample_coord_transpose_map.append(sample_coord_lookup[sample_coord])

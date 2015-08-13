@@ -290,23 +290,13 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
 
 
 class TestGriddedGriddedCollocate(BaseIntegrationTest):
+    """
+        The HadGEM test file (os550aer) has three extended dimensions lon (192), lat(145) and t(240)
+         The ECHAMHAM test file (ECHAMHAM_AOT550_670) has two extended dimensions lon (192) and lat(96) and a scalar
+         t coordinate.
+    """
 
-    def test_HadGem_onto_ECHAMHAM(self):
-        # Takes 2s
-        vars = [valid_hadgem_variable]
-        filename = valid_hadgem_filename
-        sample_file = valid_echamham_filename
-        sample_var = valid_echamham_variable_1
-        collocator_and_opts = 'lin,variable=%s' % sample_var
-        arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':collocator=' + collocator_and_opts,
-                     '-o', self.OUTPUT_NAME]
-        main_arguments = parse_args(arguments)
-        col_cmd(main_arguments)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (96, 192, 240))
-
-    def test_HadGem_onto_cis_gridded_output(self):
+    def test_HadGem_onto_cis_gridded_output_lin(self):
         # Takes 1s
         vars = [valid_hadgem_variable]
         filename = valid_hadgem_filename
@@ -321,7 +311,44 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
-    def test_ECHAMHAM_onto_HadGem(self):
+    def test_HadGem_onto_ECHAMHAM_lin(self):
+        # Sampling HadGEM (higher dimensionality) with ECHAMHAM (lower dimensionality) results in a lower dimensional
+        #  dataset
+        # Takes 2s
+        vars = [valid_hadgem_variable]
+        filename = valid_hadgem_filename
+        sample_file = valid_echamham_filename
+        sample_var = valid_echamham_variable_1
+        collocator_and_opts = 'lin,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_HadGem_onto_ECHAMHAM_nn(self):
+        # Sampling HadGEM (higher dimensionality) with ECHAMHAM (lower dimensionality) results in a lower dimensional
+        #  dataset
+        # Takes 51s
+        vars = [valid_hadgem_variable]
+        filename = valid_hadgem_filename
+        sample_file = valid_echamham_filename
+        sample_var = valid_echamham_variable_1
+        collocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_ECHAMHAM_onto_HadGem_lin(self):
+        # Sampling ECHAMHAM (lower dimensionality) with HadGEM (higher dimensionality) results in a lower dimensional
+        #  dataset
+        # Uses the default kernel which for gridded gridded is lin
         # Takes 2s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
         filename = valid_echamham_filename
@@ -336,13 +363,15 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (192, 145))
 
-    def test_ECHAMHAM_onto_HadGem_using_moments_kernel(self):
+    def test_ECHAMHAM_onto_HadGem_nn(self):
+        # Sampling ECHAMHAM (lower dimensionality) with HadGEM (higher dimensionality) results in a lower dimensional
+        #  dataset
         # Takes 2s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
         filename = valid_echamham_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        collocator_and_opts = 'lin,variable=%s' % sample_var
+        collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
@@ -351,21 +380,6 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
         out_vars = []
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars, (192, 145))
-
-    def test_HadGem_onto_ECHAMHAM_nn(self):
-        # Takes 51s
-        vars = [valid_hadgem_variable]
-        filename = valid_hadgem_filename
-        sample_file = valid_echamham_filename
-        sample_var = valid_echamham_variable_1
-        collocator_and_opts = 'nn,variable=%s' % sample_var
-        arguments = ['col', ",".join(vars) + ':' + filename,
-                     sample_file + ':collocator=' + collocator_and_opts,
-                     '-o', self.OUTPUT_NAME]
-        main_arguments = parse_args(arguments)
-        col_cmd(main_arguments)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
 
 class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
