@@ -651,18 +651,10 @@ class GriddedCollocator(Collocator):
         # Use the new_data array to recreate points, without the DimCoords not in the data cube
         points = iris.cube.Cube(new_points_array, dim_coords_and_dims=new_dim_coord_list)
 
-        # Iris has a different interface for iris.analysis.interpolate.extract_nearest_neighbour, compared to
-        # iris.analysis.interpolate.linear, so we need need to make an exception for how we treat the linear
-        # interpolation case.
-        # TODO: This can now be treated together since iris 1.8
-        if kernel.name == 'bilinear':
-            output_cube = self._collocate_bilinear(coord_names_and_sizes_for_output_grid,
-                                                  coord_names_and_sizes_for_sample_grid, data,
-                                                  kernel, output_mask, points)
-        else:
-            output_cube = self._collocate_nearest(coord_names_and_sizes_for_output_grid,
-                                                 coord_names_and_sizes_for_sample_grid, data, kernel, new_data,
-                                                 output_mask, points)
+        output_cube = self._iris_interpolate(coord_names_and_sizes_for_output_grid,
+                                              coord_names_and_sizes_for_sample_grid, data,
+                                              kernel, output_mask, points)
+
         if not isinstance(output_cube, list):
             return GriddedDataList([output_cube])
         else:
@@ -693,9 +685,9 @@ class GriddedCollocator(Collocator):
         return output_mask
 
     @staticmethod
-    def _collocate_bilinear(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
+    def _iris_interpolate(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
                            output_mask, points):
-        """ Collocates using iris.analysis.interpolate.linear
+        """ Collocates using iris.analysis.interpolate
         """
         coordinate_point_pairs = []
         for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
@@ -706,7 +698,7 @@ class GriddedCollocator(Collocator):
 
         # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
         # in coord_names_and_sizes_for_output_grid.
-        output_cube = make_from_cube(kernel.interpolater(data, coordinate_point_pairs))
+        output_cube = make_from_cube(data.interpolate(coordinate_point_pairs, kernel.interpolater()))
 
         # Iris outputs interpolated cubes with the dimensions in the order of the data grid, not the sample grid,
         # so we need to rearrange the order of the dimensions.
@@ -723,76 +715,11 @@ class GriddedCollocator(Collocator):
             output_cube.data = cis.utils.apply_mask_to_numpy_array(output_cube.data, output_mask)
         return output_cube
 
-    @staticmethod
-    def _collocate_nearest(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid,
-                          data, kernel, new_data, output_mask, points):
-        """
-        Collocate using iris.analysis.interpolate.extract_nearest_neighbour.
-        """
-        # index_iterator returns an iterator over every dimension stored in coord_names_and_sizes_for_sample_grid.
-        # Now for each point in the sample grid we do the interpolation.
-        if not isinstance(data, list):
-            # Convert GriddedData to GriddedDataList to simplify multi-variable operations.
-            data = GriddedDataList([data])
-        new_data_list = [np.zeros(new_data.shape) for d in data]
-        for i in cis.utils.index_iterator([i[1] for i in coord_names_and_sizes_for_sample_grid]):
-            coordinate_point_pairs = []
-            for j in range(0, len(coord_names_and_sizes_for_sample_grid)):
-                # For each coordinate make the list of tuple pair Iris requires, for example
-                # [('latitude', -90), ('longitude, 0')]
-                coordinate_point_pairs.append((coord_names_and_sizes_for_sample_grid[j][0],
-                                               points.dim_coords[j].points[i[j]]))
-
-            for idx, var in enumerate(data):
-                # The result here will either be a single data value, if the sample grid and data have matching
-                # coordinates, or an array if the data grid as more coordinate dimensions than the sample grid. The Iris
-                # interpolation functions actually return a Cube.
-                new_data_list[idx][i] = kernel.interpolater(var, coordinate_point_pairs).data
-
-            # Log a progress update, as this can take a long time.
-            if all(x == 0 for x in i[1:]):
-                logging.info('Currently on {0} coordinate at {1}'.format(
-                    coord_names_and_sizes_for_sample_grid[0][0], points.dim_coords[0].points[i[0]]))
-
-        # Now we need to make a list with the appropriate coordinates, i.e. based on that in
-        # coord_names_and_sizes_for_output_grid. This means choosing the grid points from the sampling grid in the
-        # case of coordinates that exist in both the data and the sample grid, and taking the points from the
-        # sampling grid otherwise.
-        new_dim_coord_list = []
-        for i in range(0, len(coord_names_and_sizes_for_output_grid)):
-            # Try and find the coordinate in the sample grid
-            coord_found = points.coords(coord_names_and_sizes_for_output_grid[i][0])
-
-            # If the coordinate did not exist in the sample grid then look for it in the data grid
-            if len(coord_found) == 0:
-                coord_found = data.coords(coord_names_and_sizes_for_output_grid[i][0])
-
-            # Append the new coordinate to the list. Iris requires this be given as a DimCoord object, along with a
-            # axis number, in a tuple pair.
-            new_dim_coord_list.append((iris.coords.DimCoord(coord_found[0].points,
-                                                            standard_name=coord_found[0].standard_name,
-                                                            long_name=coord_found[0].long_name,
-                                                            units=coord_found[0].units), i))
-
-        # Finally return the new cube with the collocated data. cis.col requires this be returned as a list of
-        # Cube objects.
-        output_list = GriddedDataList()
-        for idx, var in enumerate(data):
-            output_cube = GriddedData(new_data_list[idx], dim_coords_and_dims=new_dim_coord_list, var_name=var.var_name,
-                                      long_name=var.long_name, units=var.units, attributes=var.attributes)
-            output_cube.data = cis.utils.apply_mask_to_numpy_array(output_cube.data, output_mask)
-            output_list.append(output_cube)
-        # Return a single GriddedData object if there is only one item
-        if len(output_list) > 1:
-            return output_list
-        else:
-            return output_list[0]
-
 
 class gridded_gridded_nn(Kernel):
     def __init__(self):
         self.name = 'nearest'
-        self.interpolater = iris.analysis.interpolate.extract_nearest_neighbour
+        self.interpolater = iris.analysis.Nearest
 
     def get_value(self, point, data):
         '''Not needed for gridded/gridded collocation.
@@ -803,7 +730,7 @@ class gridded_gridded_nn(Kernel):
 class gridded_gridded_li(Kernel):
     def __init__(self):
         self.name = 'bilinear'
-        self.interpolater = iris.analysis.interpolate.linear
+        self.interpolater = iris.analysis.Linear
 
     def get_value(self, point, data):
         '''Not needed for gridded/gridded collocation.
