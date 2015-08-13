@@ -9,7 +9,7 @@ import numpy as np
 import numpy.ma as ma
 
 from cis.collocation.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
-from time_util import convert_obj_to_standard_date_array
+from cis.time_util import convert_obj_to_standard_date_array
 
 
 class GridCellBinIndexInSlices(object):
