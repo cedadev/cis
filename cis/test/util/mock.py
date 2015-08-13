@@ -83,7 +83,12 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
         t0 = datetime.datetime(1984, 8, 27)
         times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(time_dim_length)])
         time_nums = convert_obj_to_standard_date_array(times)
-        coord_list[coord_map['time']] = (DimCoord(time_nums, standard_name='time', units='days since 1600-01-01 00:00:00'),
+        time_bounds = None
+        if time_dim_length == 1:
+            time_bounds = convert_obj_to_standard_date_array(np.array([times[0] - datetime.timedelta(days=0.5),
+                                                                       times[0] + datetime.timedelta(days=0.5)]))
+        coord_list[coord_map['time']] = (DimCoord(time_nums, standard_name='time',
+                                                  units='days since 1600-01-01 00:00:00', bounds=time_bounds),
                                          coord_map['time'])
         data_size *= time_dim_length
 
@@ -95,7 +100,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
     return_cube = Cube(data, dim_coords_and_dims=coord_list)
 
     for coord in return_cube.coords():
-        coord.guess_bounds()
+        if coord.bounds is None: coord.guess_bounds()
 
     return return_cube
 
