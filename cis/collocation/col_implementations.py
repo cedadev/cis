@@ -534,19 +534,25 @@ class li(Kernel):
     Linear Interpolation Kernel
     """
 
+    def __init__(self):
+        self.coord_names = []
+        self.interpolator = None
+
     def get_value(self, point, data):
         """
         Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
         """
-        from iris.analysis.trajectory import interpolate
+        # Setup the interpolator if not already done
+        if not self.interpolator:
+            # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
+            for coord_name, val in point.coord_tuple:
+                if len(data.coords(coord_name, dim_coords=True)) > 0:
+                    self.coord_names.append(coord_name)
 
-        # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
-        new_coord_tuple_list = []
-        for coord_name, val in point.coord_tuple:
-            if len(data.coords(coord_name, dim_coords=True)) > 0:
-                new_coord_tuple_list.append([coord_name, [val]])
+            self.interpolator = iris.analysis.Linear().interpolator(data, self.coord_names)
 
-        return interpolate(data, new_coord_tuple_list, method="linear").data
+        # Return the data from the result of interpolating over those coordinates which are on the cube.
+        return self.interpolator([getattr(point,c) for c in self.coord_names]).data
 
 
 class GriddedCollocator(Collocator):
