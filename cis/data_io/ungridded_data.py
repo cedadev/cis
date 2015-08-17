@@ -508,8 +508,26 @@ class UngriddedCoordinates(CommonData):
             self._coords = CoordList([coords])
         else:
             raise ValueError("Invalid Coords type")
+        self._post_process()
         all_coords = self._coords.find_standard_coords()
         self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
+
+    def _post_process(self):
+        """
+        Perform a post processing step on lazy loaded Ungridded Data
+        :return:
+        """
+        # Remove any points with missing coordinate values:
+        combined_mask = numpy.zeros(self._coords[0].data_flattened.shape, dtype=bool)
+        for coord in self._coords:
+            combined_mask |= numpy.ma.getmaskarray(coord.data_flattened)
+        if combined_mask.any():
+            n_points = numpy.count_nonzero(combined_mask)
+            logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
+                            "these points have been removed from the data.".format(n_points=n_points))
+            for coord in self._coords:
+                coord.data = numpy.ma.masked_array(coord.data_flattened, mask=combined_mask).compressed()
+                coord.shape = coord.data.shape
 
     @property
     def history(self):

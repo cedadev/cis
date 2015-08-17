@@ -241,6 +241,41 @@ class TestUngriddedCoordinates(TestCase):
         num_points = len([p for p in points])
         assert(num_points == 15)
 
+    def test_GIVEN_missing_coord_values_WHEN_coords_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+
+        coords = CoordList([x, y])
+
+        ug = UngriddedCoordinates(coords)
+        coords = ug.coords()
+        for coord in coords:
+            assert_that(len(coord.data), is_(14))
+
+    def test_GIVEN_missing_coord_values_WHEN_coords_flattened_THEN_missing_values_removed(self):
+        x_points = np.arange(-10, 11, 5)
+        y_points = np.arange(-5, 6, 5)
+        y, x = np.meshgrid(y_points, x_points)
+        y = np.ma.masked_array(y, np.zeros(y.shape, dtype=bool))
+        y.mask[1, 2] = True
+
+        x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+        y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+
+        coords = CoordList([x, y])
+
+        ug = UngriddedCoordinates(coords)
+        coords = ug.coords_flattened
+        for coord in coords:
+            if coord is not None:
+                assert_that(len(coord), is_(14))
+
 
 class TestUngriddedDataList(TestCase):
 
