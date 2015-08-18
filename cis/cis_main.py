@@ -92,20 +92,20 @@ def plot_cmd(main_arguments):
 def info_cmd(main_arguments):
     '''
     Main routine for handling calls to the 'info' command.
-    Reads in the variables from the data file specified and lists them to stdout if no
+    Reads in the variables from the data files specified and lists them to stdout if no
     particular variable was specified, otherwise prints detailed information about each
     variable specified
 
     :param main_arguments:    The command line arguments (minus the info command)
     '''
-    variables = main_arguments.variables
-    filename = main_arguments.filename
-    data_type = main_arguments.type
-
     from cis.info import info
+    variables = main_arguments.variables
+    filenames = main_arguments.filenames
+    data_type = main_arguments.type
+    product = main_arguments.product
 
     try:
-        info(filename, variables, data_type)
+        info(filenames, variables, product, data_type)
     except CISError as e:
         __error_occurred(e)
 

@@ -121,9 +121,12 @@ def add_plot_parser_arguments(parser):
 
 
 def add_info_parser_arguments(parser):
-    parser.add_argument("filename", metavar="Filename", help="The filename of the file to inspect")
+    parser.add_argument("filenames", metavar="Filenames", help="The filenames of the files to inspect", nargs='*')
     parser.add_argument("-v", "--variables", metavar="Variable(s)", nargs="+", help="The variable(s) to inspect")
-    parser.add_argument("--type", metavar="type of HDF data", nargs="?",
+    parser.add_argument("--product", metavar="The specific data product to use", nargs="?",
+                        help="CIS will try and automatically determine the best product to use, but this option can"
+                             "override CIS to specify a different data product to use for reading the data..")
+    parser.add_argument("--type", metavar="Type of HDF data", nargs="?",
                         help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
 
@@ -894,7 +897,7 @@ def validate_plot_args(arguments, parser):
 
 
 def validate_info_args(arguments, parser):
-    check_file_exists(arguments.filename, parser)
+    arguments.filenames = expand_file_list(','.join(arguments.filenames), parser)
     return arguments
 
 

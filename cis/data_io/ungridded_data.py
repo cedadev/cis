@@ -43,6 +43,24 @@ class Metadata(object):
         else:
             self.misc = misc
 
+    def summary(self, offset=5):
+        string = ''
+        string += '{pad:{width}}Long name = '.format(pad=' ', width=offset) + self.long_name + '\n'
+        string += '{pad:{width}}Standard name = '.format(pad=' ', width=offset) + self.standard_name+ '\n'
+        string += '{pad:{width}}Units = '.format(pad=' ', width=offset) + self.units + '\n'
+        if self.calendar:
+            string += '{pad:{width}}Calendar = '.format(pad=' ', width=offset) + self.calendar + '\n'
+        string += '{pad:{width}}Missing value = '.format(pad=' ', width=offset) + str(self.missing_value) + '\n'
+        string += '{pad:{width}}Range = '.format(pad=' ', width=offset) + str(self.range) + '\n'
+        string += '{pad:{width}}History = '.format(pad=' ', width=offset) + str(self.history) + '\n'
+        if self.misc:
+            for k, v in self.misc.iteritems():
+                print '{pad:{width}}'.format(pad=' ', width=offset) + k.title() + ' = ' + str(v) + '\n'
+        return string
+
+    def __str__(self):
+        return self.summary()
+
     def alter_standard_name(self, new_standard_name):
         """
         Alter the standard name and log an info line to say this is happening if the standard name is not empty
@@ -266,6 +284,31 @@ class LazyData(object):
         write_coordinates(self, output_file)
         add_data_to_file(self, output_file)
 
+    def update_range(self, range=None):
+        from cis.time_util import cis_standard_time_unit
+
+        # If the user hasn't specified a range then work it out...
+        if not range:
+            standard_time = False
+            try:
+                standard_time = self.units == cis_standard_time_unit
+            except ValueError:
+                # If UDUNITS can't compare the units then it will raise a ValueError, in which case it's definitely not
+                # our standard time
+                pass
+
+            try:
+                if standard_time:
+                    range = (str(cis_standard_time_unit.num2date(self.data.min())),
+                             str(cis_standard_time_unit.num2date(self.data.max())))
+                else:
+                    range = (self.data.min(), self.data.max())
+            except ValueError as e:
+                # If we can't set a range for some reason then just leave it blank
+                range = ()
+
+        self.metadata.range = str(range)
+
 
 class UngriddedData(LazyData, CommonData):
     '''
@@ -486,6 +529,28 @@ class UngriddedData(LazyData, CommonData):
 
         return cls(values, Metadata(), coords)
 
+    def summary(self):
+        """
+        String summary of the UngriddedData with metadata of itself and its coordinates
+        """
+        summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
+        summary += '     Shape = ' + str(self.data.shape) + '\n'
+        summary += '     Total number of points = ' + str(len(self.get_all_points())) + '\n'
+        summary += '     Number of non-masked points = ' + str(len(self.get_non_masked_points())) + '\n'
+
+        self.update_range()
+        summary += str(self.metadata)
+
+        summary += '     Coordinates: \n'
+        for c in self.coords():
+            summary += '{pad:{width}}'.format(pad=' ', width=7) + c.name() + '\n'
+            c.update_range()
+            summary += c.metadata.summary(offset=10)
+
+        return summary
+
+    def __str__(self):
+        return self.summary()
 
 class UngriddedCoordinates(CommonData):
     '''
