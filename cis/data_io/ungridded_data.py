@@ -27,7 +27,7 @@ class Metadata(object):
         self._name = name
         if standard_name:
             self.standard_name = standard_name
-        else:
+        elif name:
             self.standard_name = Metadata.guess_standard_name(name)
         self.long_name = long_name
         self.shape = shape
