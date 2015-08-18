@@ -29,5 +29,6 @@ __all__ = [
     "Aeronet",
     "ASCII_Hyperpoints",
     "cis",
+    "HadGEM_CONVSH",
     "HadGEM_PP"]
 
