@@ -284,6 +284,12 @@ class LazyData(object):
         write_coordinates(self, output_file)
         add_data_to_file(self, output_file)
 
+    def update_shape(self, shape=None):
+        if shape:
+            self.metadata.shape = shape
+        else:
+            self.metadata.shape = self.data.shape
+
     def update_range(self, range=None):
         from cis.time_util import cis_standard_time_unit
 
@@ -372,6 +378,8 @@ class UngriddedData(LazyData, CommonData):
                     self._data = numpy.ma.masked_array(new_data, mask=new_data_mask)
                 else:
                     self._data = numpy.ma.masked_array(self._data.flatten(), mask=combined_mask).compressed()
+            self.update_shape()
+            self.update_range()
 
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
                                        long_name=None, history=None, units=None, flatten=False):
@@ -538,7 +546,6 @@ class UngriddedData(LazyData, CommonData):
         summary += '     Total number of points = ' + str(len(self.get_all_points())) + '\n'
         summary += '     Number of non-masked points = ' + str(len(self.get_non_masked_points())) + '\n'
 
-        self.update_range()
         summary += str(self.metadata)
 
         summary += '     Coordinates: \n'
@@ -592,7 +599,8 @@ class UngriddedCoordinates(CommonData):
                             "these points have been removed from the data.".format(n_points=n_points))
             for coord in self._coords:
                 coord.data = numpy.ma.masked_array(coord.data_flattened, mask=combined_mask).compressed()
-                coord.shape = coord.data.shape
+                coord.update_shape()
+                coord.update_range()
 
     @property
     def history(self):
