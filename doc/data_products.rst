@@ -48,7 +48,8 @@ It can also read the following gridded data types:
   ==================== =========================== ================== =================================================================================
   Dataset              Product name                Type               File Signature                                      
   ==================== =========================== ================== =================================================================================
-  MODIS L3 daily       MODIS_L3                    Satellite          \*MYD08_D3*.hdf, \*MOD08_D3*.hdf, \*MOD08_E3*.hdf  
+  MODIS L3 daily       MODIS_L3                    Satellite          \*MYD08_D3*.hdf, \*MOD08_D3*.hdf, \*MOD08_E3*.hdf
+  HadGEM pp data       HadGEM_PP                   Gridded Model Data \*.pp
   Net_CDF Gridded Data NetCDF_Gridded              Gridded Model Data \*.nc (this is the default for NetCDF Files that do not match any other signature)
   ==================== =========================== ================== =================================================================================
 
@@ -116,6 +117,12 @@ Some file paths or variable names might contain colons (:), these need to be esc
     "TOTAL RAINFALL RATE\: LS+CONV KG/M2/S:C\:\My files\MODIS_dir:product=MODIS_L2"
 
 Notice that we have used outer quotes to allow for the spaces in the variable and file names, and used the backslashes to escape the colons.
+
+Reading hybrid height data with separate orography data
+=======================================================
+CIS supports the reading of gridded data containing hybrid height and pressure fields, with an orography field supplied in a separate file.
+The file containing the orography field (which should be properly referenced from a formula term in the data file) can just be appended to the list of files to be read in and CIS will attempt to create an appropriate altitude dimension.
+
 
 Reading NetCDF4 Hierarchical Groups
 ===================================

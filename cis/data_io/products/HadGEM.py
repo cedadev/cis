@@ -1,19 +1,24 @@
 from cis.data_io.products import NetCDF_Gridded
 
 
-class HadGEM(NetCDF_Gridded):
+class HadGEM_PP(NetCDF_Gridded):
     """
-        HadGEM plugin which implements a callback to pass to iris when reading multiple files to allow correct merging
+        HadGEM plugin for reading native pp files
     """
 
     def get_file_signature(self):
-        return [r'[a-z]{6}[\._][pamd]{2}[0-9]{4,6}.*\.nc']
+        return [r'.*\.pp']
 
     @staticmethod
     def load_multiple_files_callback(cube, field, filename):
-        from iris.util import squeeze
-        # We need to remove the history field when reading multiple files so that the cubes can be properly merged
-        cube.attributes.pop('history')
-        # We also need to remove the length one time dimension so that the cube can be merged correctly (iris preserves
-        #  the value as a scalar which then gets converted back into a full coordinate again on merge).
-        return squeeze(cube)
+        # This method sets the var_name (used for outputting the cube to NetCDF) to the cube name. This can be quite
+        #  for some HadGEM variables but most commands allow the user to override this field on output.
+        var_name = cube.name()
+        cube.var_name = var_name
+
+    @staticmethod
+    def load_single_file_callback(cube, field, filename):
+        # This method sets the var_name (used for outputting the cube to NetCDF) to the cube name. This can be quite
+        #  for some HadGEM variables but most commands allow the user to override this field on output.
+        var_name = cube.name()
+        cube.var_name = var_name
