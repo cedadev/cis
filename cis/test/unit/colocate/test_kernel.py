@@ -76,6 +76,25 @@ class TestNNGridded(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
 
+    def test_colocation_of_points_on_hybrid_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded, DummyConstraint
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            # This point actually lies outside the lower bounds for altitude at this point in space
+            [HyperPoint(lat=1.0, lon=1.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies in the middle of the altitude bounds at this point
+             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies outside the upper bounds for altitude at this point
+             HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
+        eq_(new_data.data[0], float(cube[2,1,1,0].data))
+        eq_(new_data.data[1], float(cube[3,2,1,4].data))
+        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+
     def test_coordinates_exactly_between_points_in_col_gridded_to_ungridded_in_2d(self):
         '''
             This works out the edge case where the points are exactly in the middle or two or more datapoints.
@@ -463,6 +482,21 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 11.2)
         assert_almost_equal(new_data.data[2], 4.8)
 
+    def test_colocation_of_points_on_hybrid_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, alt=5550.0, t=dt.datetime(1984, 8, 28)),
+             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28)),
+             HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, DummyConstraint(), li())[0]
+        assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
+        assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
+        assert_almost_equal(new_data.data[2], 127.1183206, decimal=7)
 
 if __name__ == '__main__':
     unittest.main()

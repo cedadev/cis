@@ -14,7 +14,7 @@ from cis.time_util import convert_obj_to_standard_date_array
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
-                   dim_order=None, mask=False):
+                   hybrid_ht_len=0, dim_order=None, mask=False):
     """
     Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
     given get a 5x3 cube of the form:
@@ -39,10 +39,11 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
     :param dim_order: List of 'lat', 'lon', 'alt', 'pres', 'time' in the order in which the dimensions occur
     :return: A cube with well defined data.
     """
+    import iris
 
     data_size = 1
-    DIM_NAMES = ['lat', 'lon', 'alt', 'pres', 'time']
-    dim_lengths = [lat_dim_length, lon_dim_length, alt_dim_length, pres_dim_length, time_dim_length]
+    DIM_NAMES = ['lat', 'lon', 'alt', 'pres', 'time', 'hybrid_ht']
+    dim_lengths = [lat_dim_length, lon_dim_length, alt_dim_length, pres_dim_length, time_dim_length, hybrid_ht_len]
 
     if dim_order is None:
         dim_order = list(DIM_NAMES)
@@ -92,6 +93,11 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
                                          coord_map['time'])
         data_size *= time_dim_length
 
+    if hybrid_ht_len:
+        coord_list[coord_map['hybrid_ht']] = (DimCoord(np.arange(hybrid_ht_len, dtype='i8')+10,
+                                        "model_level_number", units="1"), coord_map['hybrid_ht'])
+        data_size *= hybrid_ht_len
+
     data = np.reshape(np.arange(data_size) + data_offset + 1., tuple(len(i[0].points) for i in coord_list))
     if mask:
         data = np.ma.asarray(data)
@@ -99,7 +105,22 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
 
     return_cube = Cube(data, dim_coords_and_dims=coord_list)
 
-    for coord in return_cube.coords():
+    if hybrid_ht_len:
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8')+40,
+                                                long_name="level_height",
+                                                units="m"), coord_map['hybrid_ht'])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8')+50,
+                                                long_name="sigma", units="1"), coord_map['hybrid_ht'])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(lat_dim_length*lon_dim_length, dtype='i8').reshape(lat_dim_length, lon_dim_length)+100,
+                                                long_name="surface_altitude",
+                                                units="m"), [coord_map['lat'], coord_map['lon']])
+
+        return_cube.add_aux_factory(iris.aux_factory.HybridHeightFactory(
+                                        delta=return_cube.coord("level_height"),
+                                        sigma=return_cube.coord("sigma"),
+                                        orography=return_cube.coord("surface_altitude")))
+
+    for coord in return_cube.coords(dim_coords=True):
         if coord.bounds is None: coord.guess_bounds()
 
     return return_cube
@@ -285,7 +306,6 @@ def make_square_5x3_2d_cube_with_missing_data():
     values[12] = np.ma.masked
     data = np.reshape(values, (5, 3))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
-    print cube.data
 
     return cube
 
@@ -930,12 +950,12 @@ def make_regular_4d_ungridded_data():
     alt = np.linspace(0,90,10)
 
     data = np.reshape(np.arange(50)+1.0,(10,5))
-    print np.mean(data[:,1:3])
-    print np.mean(data[4:6,:])
-    print np.mean(data[:,2])
-    print np.std(data)
-    print np.mean(data)
-    print len(data.flat)
+    # print np.mean(data[:,1:3])
+    # print np.mean(data[4:6,:])
+    # print np.mean(data[:,2])
+    # print np.std(data)
+    # print np.mean(data)
+    # print len(data.flat)
 
     y, a = np.meshgrid(y_points,alt)
     x, a = np.meshgrid(x_points,alt)

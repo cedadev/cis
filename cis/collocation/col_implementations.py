@@ -4,6 +4,7 @@ import iris
 import iris.analysis
 import iris.analysis.interpolate
 import iris.coords
+from iris.exceptions import CoordinateMultiDimError
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
 
@@ -125,7 +126,9 @@ class GeneralUngriddedCollocator(Collocator):
                             values[idx, i] = val
                 else:
                     values[0, i] = value_obj
-            except ValueError:
+            except CoordinateMultiDimError as e:
+                raise NotImplementedError(e)
+            except ValueError as e:
                 pass
         log_memory_profile("GeneralUngriddedCollocator after running kernel on sample points")
 
@@ -516,16 +519,20 @@ class nn_gridded(Kernel):
         Co-location routine using nearest neighbour algorithm optimized for gridded data.
         This calls out to iris to do the work.
         """
-        from iris.analysis.interpolate import nearest_neighbour_data_value
+        from iris.analysis.interpolate import extract_nearest_neighbour, nearest_neighbour_data_value
 
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         new_coord_tuple_list = []
+        alt_tuples = []
         for i in point.coord_tuple:
             if len(data.coords(i[0], dim_coords=True)) > 0:
                 new_coord_tuple_list.append(i)
-        point.coord_tuple = new_coord_tuple_list
+            elif len(data.coords(i[0], dim_coords=False)) > 0:
+                alt_tuples.append(i)
 
-        return nearest_neighbour_data_value(data, point.coord_tuple)
+        slice = extract_nearest_neighbour(data, new_coord_tuple_list)
+        val = nearest_neighbour_data_value(slice, alt_tuples)
+        return val
 
 
 # noinspection PyPep8Naming
@@ -536,6 +543,7 @@ class li(Kernel):
 
     def __init__(self):
         self.coord_names = []
+        self.hybrid_ht = False
         self.interpolator = None
 
     def get_value(self, point, data):
@@ -548,11 +556,18 @@ class li(Kernel):
             for coord_name, val in point.coord_tuple:
                 if len(data.coords(coord_name, dim_coords=True)) > 0:
                     self.coord_names.append(coord_name)
+            if len(data.coords('altitude', dim_coords=False)) > 0:
+                self.hybrid_ht = True
 
             self.interpolator = iris.analysis.Linear().interpolator(data, self.coord_names)
 
         # Return the data from the result of interpolating over those coordinates which are on the cube.
-        return self.interpolator([getattr(point,c) for c in self.coord_names]).data
+        slice = self.interpolator([getattr(point,c) for c in self.coord_names])
+        if self.hybrid_ht:
+            val = slice.interpolate([('altitude', point.altitude)], iris.analysis.Linear()).data
+        else:
+            val = slice.data
+        return val
 
 
 class GriddedCollocator(Collocator):
