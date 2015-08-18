@@ -77,6 +77,13 @@ class HadGEM_CONVSH(NetCDF_Gridded):
 
         return cube
 
+    def get_variable_names(self, filenames, data_type=None):
+        # Don't do any checks on valid variables at the moment as iris can't parse the hybrid height dimension units...
+        import iris
+        cubes = iris.load(filenames)
+
+        return set(cube.name() for cube in cubes)
+
 
 class HadGEM_PP(NetCDF_Gridded):
     """
