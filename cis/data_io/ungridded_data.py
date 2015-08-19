@@ -44,21 +44,30 @@ class Metadata(object):
             self.misc = misc
 
     def summary(self, offset=5):
-        string = ''
-        string += '{pad:{width}}Long name = '.format(pad=' ', width=offset) + self.long_name + '\n'
-        string += '{pad:{width}}Standard name = '.format(pad=' ', width=offset) + self.standard_name+ '\n'
-        string += '{pad:{width}}Units = '.format(pad=' ', width=offset) + self.units + '\n'
+        """
+            Creates a unicode summary of the metadata object
+        :param offset: The left hand padding to apply to the text
+        :return: The summary
+        """
+        string = u''
+        string += u'{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
+        string += u'{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
+        string += u'{pad:{width}}Units = {units}\n'.format(pad=' ', width=offset, units=self.units)
         if self.calendar:
-            string += '{pad:{width}}Calendar = '.format(pad=' ', width=offset) + self.calendar + '\n'
-        string += '{pad:{width}}Missing value = '.format(pad=' ', width=offset) + str(self.missing_value) + '\n'
-        string += '{pad:{width}}Range = '.format(pad=' ', width=offset) + str(self.range) + '\n'
-        string += '{pad:{width}}History = '.format(pad=' ', width=offset) + str(self.history) + '\n'
+            string += u'{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
+        string += u'{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
+        string += u'{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=self.range)
+        string += u'{pad:{width}}History = {history}\n'.format(pad=' ', width=offset, history=self.history)
         if self.misc:
+            string += u'{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
             for k, v in self.misc.iteritems():
-                print '{pad:{width}}'.format(pad=' ', width=offset) + k.title() + ' = ' + str(v) + '\n'
+                string += u'{pad:{width}}{att} = {val}\n'.format(pad=' ', width=offset+2, att=k.title(), val=v)
         return string
 
     def __str__(self):
+        return self.summary().encode(errors='replace')
+
+    def __unicode__(self):
         return self.summary()
 
     def alter_standard_name(self, new_standard_name):
@@ -539,24 +548,27 @@ class UngriddedData(LazyData, CommonData):
 
     def summary(self):
         """
-        String summary of the UngriddedData with metadata of itself and its coordinates
+            Unicode summary of the UngriddedData with metadata of itself and its coordinates
         """
-        summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
-        summary += '     Shape = ' + str(self.data.shape) + '\n'
-        summary += '     Total number of points = ' + str(len(self.get_all_points())) + '\n'
-        summary += '     Number of non-masked points = ' + str(len(self.get_non_masked_points())) + '\n'
+        summary = u'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
+        summary += u'     Shape = {}\n'.format(self.data.shape) + '\n'
+        summary += u'     Total number of points = {}\n'.format(len(self.get_all_points()))
+        summary += u'     Number of non-masked points = {}\n'.format(len(self.get_non_masked_points()))
 
-        summary += str(self.metadata)
+        summary += unicode(self.metadata)
 
-        summary += '     Coordinates: \n'
+        summary += u'     Coordinates: \n'
         for c in self.coords():
-            summary += '{pad:{width}}'.format(pad=' ', width=7) + c.name() + '\n'
+            summary += u'{pad:{width}}{name}\n'.format(pad=' ', width=7, name=c.name())
             c.update_range()
             summary += c.metadata.summary(offset=10)
 
         return summary
 
     def __str__(self):
+        return self.summary().encode(errors='replace')
+
+    def __unicode__(self):
         return self.summary()
 
 class UngriddedCoordinates(CommonData):

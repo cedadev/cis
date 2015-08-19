@@ -8,7 +8,7 @@ import os
 from tempfile import mkdtemp
 
 from hamcrest import *
-from nose.tools import istest, eq_, raises, nottest, with_setup
+from nose.tools import istest, eq_, raises, nottest, with_setup, assert_is_instance
 from iris.exceptions import TranslationError
 
 from cis.data_io.products import *
@@ -75,6 +75,12 @@ class ProductTests(object):
         vars = self.product().get_variable_names([self.filename])
         self.check_valid_vars(vars)
 
+    @istest
+    def test_variable_printing(self):
+        data_obj = self.product().create_data_object([self.filename], self.valid_variable)
+        summary = data_obj.summary()
+        assert_is_instance(summary, basestring)
+
     def check_valid_vars(self, vars):
         if self.vars is not None:
             assert_that(set(vars), is_(set(self.vars)), "Variables")
@@ -82,7 +88,9 @@ class ProductTests(object):
             assert_that(len(vars), is_(self.valid_vars_count), "Number of valid variables in the file")
 
     def test_create_data_object(self):
-        self.product().create_data_object([self.filename], self.valid_variable)
+        from cis.data_io.common_data import CommonData
+        data = self.product().create_data_object([self.filename], self.valid_variable)
+        assert_is_instance(data, CommonData)
 
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
@@ -91,9 +99,6 @@ class ProductTests(object):
 
         for coord in coord_list:
             logging.debug(coord.standard_name)
-
-        for coord in coord_list:
-            print coord.standard_name
 
         assert (all([coord.standard_name in valid_standard_names for coord in coord_list]))
 
