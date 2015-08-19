@@ -156,18 +156,23 @@ class Aggregator(object):
         new_coordinate_grid = aggregation_grid_array(grid_start, grid_end, grid_delta, grid.is_time, coord)
         new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
                              units=coord.units)
-        new_coord.guess_bounds()
+        if len(new_coord.points) == 1:
+            new_coord.bounds = [[grid_start, grid_end]]
+        else:
+            new_coord.guess_bounds()
         return new_coord
 
     def _add_max_min_bounds_for_collapsed_coords(self, aggregated_cube, source_cube):
         """
-        Add bounds onto all coordinates which have been full collapsed. These bounds will
-        be the maximum and minimum values of those coordinates
+        Add bounds onto all coordinates which have been full collapsed, and for which no explicit bounds have been
+        supplied (iris will have guessed these to be +/- inf). The new bounds will be the maximum and minimum values of
+        those coordinates
         :param aggregated_cube: The aggregated cube to give new bounds
         :param source_cube: The source cube which the aggregation was made from.
         """
+        from numpy import isinf, all
         for coord in aggregated_cube.coords():
-            if len(coord.points) == 1:
+            if len(coord.points) == 1 and all(isinf(coord.bounds)):
                 source_coord = source_cube.coord(coord.name())
                 coord_start, coord_end, coord_centre = self._get_coord_start_end_centre(source_coord)
                 coord.bounds = numpy.array([[coord_start, coord_end]])

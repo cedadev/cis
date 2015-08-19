@@ -449,6 +449,21 @@ class TestUngriddedAggregation(TestCase):
         lon = output.coord('longitude')
         assert_arrays_equal(lon.bounds, [[-5, 5]])
 
+    def test_aggregating_coord_to_length_one_with_explicit_bounds_gets_output_as_length_one(self):
+        data = make_regular_2d_ungridded_data()
+        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False), }
+        agg = Aggregator(data, grid)
+        output = agg.aggregate_ungridded(self.kernel)
+        lon = output.coord('longitude')
+        assert_that(lon.points, is_([0]))
+
+    def test_aggregating_to_length_one_with_explicit_bounds_get_correct_bounds(self):
+        data = make_regular_2d_ungridded_data()
+        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False), }
+        agg = Aggregator(data, grid)
+        output = agg.aggregate_ungridded(self.kernel)
+        lon = output.coord('longitude')
+        assert_arrays_equal(lon.bounds, [[-180, 180]])
 
 class TestUngriddedListAggregation(TestCase):
 
