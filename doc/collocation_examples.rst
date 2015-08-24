@@ -1,9 +1,9 @@
-===================
+====================
 Collocation Examples
-===================
+====================
 
 Ungridded to Ungridded Collocation Examples
-==========================================
+===========================================
 
 Ungridded data with vertical component
 --------------------------------------
@@ -47,7 +47,7 @@ The files used above can be found at::
 
 
 Ungridded data collocation using k-D tree indexing
--------------------------------------------------
+--------------------------------------------------
 
 These examples show the syntax for using the k-D tree optimisation of the separation constraint. The indexing is only by horizontal position.
 
@@ -282,7 +282,7 @@ The files used above can be found at::
 
 
 Examples of Gridded to Gridded Collocation
-=========================================
+==========================================
 
 Example of Gridded Data onto a Finer Grid
 -----------------------------------------

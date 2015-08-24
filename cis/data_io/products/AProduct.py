@@ -37,7 +37,7 @@ class AProduct(object):
     @abstractmethod
     def create_coords(self, filenames):
         """
-        Reads the coordinates from a bunch of files
+        Reads the coordinates from multiple files
         :param filenames: List of filenames to read coordinates from
         :return: L{CoordList} object
         """
@@ -47,18 +47,16 @@ class AProduct(object):
         """
         :return: a list of regex to match the product's file naming convention.
 
-        Example
-        -------
+        Example::
+            ``return [r'.*CODE*.nc']``
 
-        return [r'.*CODE*.nc']
         This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
 
-        Additional
-        ----------
+        .. note::
 
-        If the signature has matched the framework will call get_file_type_error(filename), this gives the product a
-        chance to open the file and check the contents. If this returns None then the match is complete otherwise
-        the error may be printed for the user
+            If the signature has matched the framework will call get_file_type_error(filename), this gives the product a
+            chance to open the file and check the contents. If this returns None then the match is complete otherwise
+            the error may be printed for the user
         """
 
     def get_variable_names(self, filenames, data_type=None):

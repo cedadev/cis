@@ -203,7 +203,7 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
         Note: This calls create_data_object because the coordinates are returned as a Cube.
         :param filenames: list of names of files from which to read coordinates
         :param variable: name of variable for which the coordinates are required
-                         (optional if file contains only one cube)
+        (optional if file contains only one cube)
         :return: iris.cube.Cube
         """
 

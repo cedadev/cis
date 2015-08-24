@@ -130,12 +130,12 @@ A full example would be::
 .. _available:
 
 Available Collocators and Kernels
-================================
+=================================
 
-====================== ========================= ================= =================
+====================== ========================= =================== =================
 Collocation type
 ( data -> sample)      Available Collocators      Default Collocator Default Kernel
-====================== ========================= ================= =================
+====================== ========================= =================== =================
 Gridded -> gridded     ``lin``, ``nn``, ``box``  ``lin``           *None*
 Ungridded -> gridded   ``bin``, ``box``          ``bin``           ``moments``
 Gridded -> ungridded   ``nn``, ``lin``           ``nn``            *None*
@@ -144,7 +144,7 @@ Ungridded -> ungridded ``box``                   ``box``           ``moments``
 
 
 Collocation output files
-=======================
+========================
 
 All ungridded collocation output files are prefixed with ``cis-`` and both ungridded and gridded data files are suffixed with ``.nc`` (so there is no need to specify the extension in the output parameter). This is to ensure the cis data product is always used to read collocated ungridded data.
 
@@ -168,7 +168,7 @@ Each collocated output variable has a history attributed created (or appended to
       ...
 
 Basic collocation design
-=======================
+========================
 
 The diagram below demonstrates the basic design of the collocation system, and the roles of each of the components. In the simple case of the default collocator (which returns only one value) the Collocator loops over each of the sample points, calls the relevant constraint to reduce the number of data points, and then the kernel which returns a single value which the collocator stores.
 

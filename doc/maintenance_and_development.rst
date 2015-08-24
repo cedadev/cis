@@ -152,7 +152,7 @@ Here is a sketch of a data product implementation::
 .. _collocation_design:
 
 Collocation
-----------
+-----------
 
 Users can write their own plugins for performing the collocation of two data sets.
 There are three different types of plugin available for collocation and each will be described briefly below.
@@ -224,7 +224,7 @@ sample data points. To enable a constraint to use a AbstractDataOnlyKernel the m
  This may not be called by all collocators who may choose to iterate over all sample points instead. The parameters are
  the same as ``get_iterator``.
 
-Co-locator
+Collocator
 """"""""""
 
 Another plugin which is available is the collocation method itself. A new one can be created by subclassing Collocator and
