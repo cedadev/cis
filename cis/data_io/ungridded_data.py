@@ -375,6 +375,7 @@ class UngriddedData(LazyData, CommonData):
             combined_mask = numpy.zeros(self._data.shape, dtype=bool).flatten()
             for coord in self._coords:
                 combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
+                if coord.data.dtype != 'object': combined_mask |= numpy.isnan(coord.data).flatten()
             if combined_mask.any():
                 n_points = numpy.count_nonzero(combined_mask)
                 logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
@@ -605,6 +606,7 @@ class UngriddedCoordinates(CommonData):
         combined_mask = numpy.zeros(self._coords[0].data_flattened.shape, dtype=bool)
         for coord in self._coords:
             combined_mask |= numpy.ma.getmaskarray(coord.data_flattened)
+            if coord.data.dtype != 'object': combined_mask |= numpy.isnan(coord.data).flatten()
         if combined_mask.any():
             n_points = numpy.count_nonzero(combined_mask)
             logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "

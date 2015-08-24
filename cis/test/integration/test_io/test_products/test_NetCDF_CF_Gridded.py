@@ -2,7 +2,7 @@ import unittest
 
 from hamcrest import assert_that, is_, close_to
 
-from cis.data_io.read import read_data
+from cis import read_data
 from cis.test.integration_test_data import *
 
 

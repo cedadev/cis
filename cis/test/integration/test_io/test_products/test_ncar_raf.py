@@ -19,7 +19,7 @@ class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
             assert key not in vars
 
     def test_can_concatenate_files_with_different_time_stamps(self):
-        from cis.data_io.read import read_data
+        from cis import read_data
         import numpy as np
         from cis.test.integration_test_data import valid_GASSP_station_files_with_different_timestamps,\
             valid_GASSP_station_var_with_different_timestamps
@@ -31,13 +31,13 @@ class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
         assert_that(np.max(time_coord.data), close_to(149110 + 81330.0/86400, 1e-5))
 
     def test_can_concatenate_aircraft_files(self):
-        from cis.data_io.read import read_data
+        from cis import read_data
         from cis.test.integration_test_data import valid_GASSP_aircraft_files_with_different_timestamps,\
             valid_GASSP_aircraft_var_with_different_timestamps
         data = read_data(valid_GASSP_aircraft_files_with_different_timestamps,
                          valid_GASSP_aircraft_var_with_different_timestamps)
         time_coord = data.coord(axis='T')
-        assert_that(len(time_coord.data), equal_to(63610))
+        assert_that(len(time_coord.data), equal_to(63609))
 
 
 class TestNCAR_NetCDF_RAF_with_GASSP_aeroplane(ProductTests, unittest.TestCase):
