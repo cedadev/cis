@@ -68,6 +68,9 @@ where:
         other separation constraints.
 
       * ``lin`` For use with gridded source data only. A value is calculated by linear interpolation for each sample point.
+        The extrapolation mode can be controlled with the ``extrapolate`` keyword. The default mode is not to extrapolate values
+        to points outside of the gridded data source (masking them in the output instead). Setting ``extrapolate=True``
+        will instruct the kernel to extrapolate these values outside of the data source instead.
 
       * ``nn`` For use with gridded source data only. The data point closest to each sample point is found, and the
         data value is set at the sample point.

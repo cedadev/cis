@@ -541,10 +541,11 @@ class li(Kernel):
     Linear Interpolation Kernel
     """
 
-    def __init__(self):
+    def __init__(self, extrapolate=False):
         self.coord_names = []
         self.hybrid_ht = False
         self.interpolator = None
+        self.extrapolation_mode = 'linear' if extrapolate else 'error'
 
     def get_value(self, point, data):
         """
@@ -559,12 +560,12 @@ class li(Kernel):
             if len(data.coords('altitude', dim_coords=False)) > 0:
                 self.hybrid_ht = True
 
-            self.interpolator = iris.analysis.Linear().interpolator(data, self.coord_names)
+            self.interpolator = iris.analysis.Linear(self.extrapolation_mode).interpolator(data, self.coord_names)
 
         # Return the data from the result of interpolating over those coordinates which are on the cube.
         slice = self.interpolator([getattr(point,c) for c in self.coord_names])
         if self.hybrid_ht:
-            val = slice.interpolate([('altitude', point.altitude)], iris.analysis.Linear()).data
+            val = slice.interpolate([('altitude', point.altitude)], iris.analysis.Linear(self.extrapolation_mode)).data
         else:
             val = slice.data
         return val
