@@ -12,9 +12,10 @@ from cis.data_io.common_data import CommonData
 from cis.data_io.hyperpoint import HyperPointList
 from cis.time_util import convert_obj_to_standard_date_array
 
+
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
-                   hybrid_ht_len=0, dim_order=None, mask=False):
+                   hybrid_ht_len=0, hybrid_pr_len=0, dim_order=None, mask=False):
     """
     Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
     given get a 5x3 cube of the form:
@@ -36,14 +37,20 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
     :param altitude_offset: Offset from the default grid in altitude
     :param pressure_offset: Offset from the default grid in pressure
     :param time_offset: Offset from the default grid in time
+    :param data_offset: Offset from the default data values
+    :param hybrid_ht_len: Hybrid height grid length
+    :param hybrid_pr_len: Hybrid pressure grid length
     :param dim_order: List of 'lat', 'lon', 'alt', 'pres', 'time' in the order in which the dimensions occur
+    :param mask: A mask to apply to the data, this should be either a scalar or the same shape as the data
     :return: A cube with well defined data.
     """
     import iris
+    from iris.aux_factory import HybridHeightFactory, HybridPressureFactory
 
     data_size = 1
-    DIM_NAMES = ['lat', 'lon', 'alt', 'pres', 'time', 'hybrid_ht']
-    dim_lengths = [lat_dim_length, lon_dim_length, alt_dim_length, pres_dim_length, time_dim_length, hybrid_ht_len]
+    DIM_NAMES = ['lat', 'lon', 'alt', 'pres', 'time', 'hybrid_ht', 'hybrid_pr']
+    dim_lengths = [lat_dim_length, lon_dim_length, alt_dim_length, pres_dim_length, time_dim_length, hybrid_ht_len,
+                   hybrid_pr_len]
 
     if dim_order is None:
         dim_order = list(DIM_NAMES)
@@ -98,7 +105,14 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
                                         "model_level_number", units="1"), coord_map['hybrid_ht'])
         data_size *= hybrid_ht_len
 
+    if hybrid_pr_len:
+        coord_list[coord_map['hybrid_pr']] = (DimCoord(np.arange(hybrid_pr_len, dtype='i8'),
+                                                       "atmosphere_hybrid_sigma_pressure_coordinate", units="1"),
+                                              coord_map['hybrid_pr'])
+        data_size *= hybrid_pr_len
+
     data = np.reshape(np.arange(data_size) + data_offset + 1., tuple(len(i[0].points) for i in coord_list))
+
     if mask:
         data = np.ma.asarray(data)
         data.mask = mask
@@ -115,10 +129,31 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
                                                 long_name="surface_altitude",
                                                 units="m"), [coord_map['lat'], coord_map['lon']])
 
-        return_cube.add_aux_factory(iris.aux_factory.HybridHeightFactory(
+        return_cube.add_aux_factory(HybridHeightFactory(
                                         delta=return_cube.coord("level_height"),
                                         sigma=return_cube.coord("sigma"),
                                         orography=return_cube.coord("surface_altitude")))
+    elif hybrid_pr_len:
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='i8')+40,
+                                                long_name="hybrid A coefficient at layer midpoints",
+                                                units="Pa"), coord_map['hybrid_pr'])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='f8')+50,
+                                                long_name="hybrid B coefficient at layer midpoints", units="1"), coord_map['hybrid_pr'])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(time_dim_length*lat_dim_length*lon_dim_length, dtype='i8')
+                                                       .reshape(time_dim_length, lat_dim_length, lon_dim_length)*100000,
+                                                       "surface_air_pressure", units="Pa"),
+                                  [coord_map['time'], coord_map['lat'], coord_map['lon']])
+
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len*time_dim_length*lat_dim_length*lon_dim_length, dtype='i8')
+                                                       .reshape(time_dim_length, hybrid_pr_len, lat_dim_length, lon_dim_length)+10,
+                                                       "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
+                                  [coord_map['time'], coord_map['hybrid_pr'], coord_map['lat'], coord_map['lon']])
+
+        return_cube.add_aux_factory(HybridPressureFactory(
+                                        delta=return_cube.coord("hybrid A coefficient at layer midpoints"),
+                                        sigma=return_cube.coord("hybrid B coefficient at layer midpoints"),
+                                        surface_air_pressure=return_cube.coord("surface_air_pressure")))
+
 
     for coord in return_cube.coords(dim_coords=True):
         if coord.bounds is None: coord.guess_bounds()

@@ -4,7 +4,7 @@ Tests the various kernels
 import unittest
 
 from nose.tools import eq_
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_equal
 import numpy as np
 
 from cis.data_io import gridded_data
@@ -76,7 +76,7 @@ class TestNNGridded(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
 
-    def test_colocation_of_points_on_hybrid_coordinates(self):
+    def test_colocation_of_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded, DummyConstraint
         import datetime as dt
 
@@ -89,6 +89,44 @@ class TestNNGridded(unittest.TestCase):
              HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
              # This point lies outside the upper bounds for altitude at this point
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
+        eq_(new_data.data[0], float(cube[2,1,1,0].data))
+        eq_(new_data.data[1], float(cube[3,2,1,4].data))
+        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+
+    def test_colocation_of_points_on_hybrid_pressure_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded, DummyConstraint
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            # This point actually lies outside the lower bounds for altitude at this point in space
+            [HyperPoint(lat=1.0, lon=1.0, pres=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies in the middle of the altitude bounds at this point
+             HyperPoint(lat=4.0, lon=4.0, pres=6000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies outside the upper bounds for altitude at this point
+             HyperPoint(lat=-4.0, lon=-4.0, pres=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
+        eq_(new_data.data[0], float(cube[2,1,1,0].data))
+        eq_(new_data.data[1], float(cube[3,2,1,4].data))
+        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+
+    def test_colocation_of_points_on_hybrid_pressure_and_altitude_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded, DummyConstraint
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            # This point actually lies outside the lower bounds for altitude at this point in space
+            [HyperPoint(lat=1.0, lon=1.0, alt=10, pres=100000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies in the middle of the altitude bounds at this point
+             HyperPoint(lat=4.0, lon=4.0, alt=1000, pres=10000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies outside the upper bounds for altitude at this point
+             HyperPoint(lat=-4.0, lon=-4.0, alt=10000, pres=1000.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, DummyConstraint(), nn_gridded())[0]
         eq_(new_data.data[0], float(cube[2,1,1,0].data))
@@ -482,7 +520,7 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 11.2)
         assert_almost_equal(new_data.data[2], 4.8)
 
-    def test_colocation_of_points_on_hybrid_coordinates(self):
+    def test_colocation_of_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
         import datetime as dt
 
@@ -492,6 +530,53 @@ class TestLi(unittest.TestCase):
             [HyperPoint(lat=0.0, lon=0.0, alt=5550.0, t=dt.datetime(1984, 8, 28)),
              HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28)),
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27))])
+
+        col = GeneralUngriddedCollocator(fill_value=np.NAN)
+        new_data = col.collocate(sample_points, cube, DummyConstraint(), li())[0]
+        assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
+        assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
+        # Test that points outside the cell are returned as masked, rather than extrapolated by default
+        assert_equal(new_data.data[2], np.NAN)
+
+    def test_extrapolation(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27))])
+
+        col = GeneralUngriddedCollocator(fill_value=np.NAN)
+        new_data = col.collocate(sample_points, cube, DummyConstraint(), li(extrapolate=True))[0]
+        assert_almost_equal(new_data.data[0], 127.1183206, decimal=7)
+
+    def test_colocation_of_points_on_hybrid_pressure_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, pres=5550.0, t=dt.datetime(1984, 8, 28)),
+             HyperPoint(lat=4.0, lon=4.0, pres=6000.0, t=dt.datetime(1984, 8, 28)),
+             HyperPoint(lat=-4.0, lon=-4.0, pres=6500.0, t=dt.datetime(1984, 8, 27))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, DummyConstraint(), li())[0]
+        assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
+        assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
+        assert_almost_equal(new_data.data[2], 127.1183206, decimal=7)
+
+    def test_colocation_of_points_on_hybrid_altitude_and_pressure_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=1.0, alt=10, pres=100000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             HyperPoint(lat=4.0, lon=4.0, alt=1000, pres=10000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             HyperPoint(lat=-4.0, lon=-4.0, alt=10000, pres=1000.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, DummyConstraint(), li())[0]
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
