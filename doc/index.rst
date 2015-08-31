@@ -1,10 +1,10 @@
-.. Community Inter-comparrison Suite documentation master file, created by
+.. Community Intercomparison Suite documentation master file, created by
    sphinx-quickstart on Tue Mar 25 10:10:43 2014.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the Community Inter-comparison Suite's documentation!
-================================================================
+Welcome to the Community Intercomparison Suite's documentation!
+===============================================================
 
 Contents:
 

@@ -82,7 +82,7 @@ from cis import __version__, __website__
 setup(
     name='cis',
     version=__version__,
-    description='Community Inter-comparison Suite',
+    description='Community Intercomparison Suite',
     long_description=README,
     maintainer='Philip Kershaw',
     maintainer_email='Philip.Kershaw@stfc.ac.uk',

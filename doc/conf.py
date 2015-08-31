@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Community Inter-comparrison Suite documentation build configuration file, created by
+# Community Intercomparison Suite documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar 25 10:10:43 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -54,7 +54,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Community Inter-comparison Suite'
+project = u'Community Intercomparison Suite'
 copyright = u'2014, Centre of Environmental Data Archival'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -194,7 +194,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'CommunityInter-comparrisonSuitedoc'
+htmlhelp_basename = 'CommunityIntercomparisonSuitedoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -214,7 +214,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'CommunityInter-comparrisonSuite.tex', u'Community Inter-comparrison Suite Documentation',
+  ('index', 'CommunityIntercomparrisonSuite.tex', u'Community Intercomparison Suite Documentation',
    u'Centre of Environmental Data Archival', 'manual'),
 ]
 
@@ -244,7 +244,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'communityinter-comparrisonsuite', u'Community Inter-comparrison Suite Documentation',
+    ('index', 'CommunityIntercomparisonSuite', u'Community Intercomparison Suite Documentation',
      [u'Centre of Environmental Data Archival'], 1)
 ]
 
@@ -258,8 +258,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'CommunityInter-comparrisonSuite', u'Community Inter-comparrison Suite Documentation',
-   u'Centre of Environmental Data Archival', 'CommunityInter-comparrisonSuite', 'One line description of project.',
+  ('index', 'CommunityIntercomparisonSuite', u'Community Intercomparison Suite Documentation',
+   u'Centre of Environmental Data Archival', 'CommunityIntercomparisonSuite', 'One line description of project.',
    'Miscellaneous'),
 ]
 
