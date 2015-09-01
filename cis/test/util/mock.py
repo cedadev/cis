@@ -139,21 +139,20 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
                                                 units="Pa"), coord_map['hybrid_pr'])
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='f8')+50,
                                                 long_name="hybrid B coefficient at layer midpoints", units="1"), coord_map['hybrid_pr'])
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(time_dim_length*lat_dim_length*lon_dim_length, dtype='i8')
-                                                       .reshape(time_dim_length, lat_dim_length, lon_dim_length)*100000,
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(lat_dim_length*lon_dim_length*time_dim_length, dtype='i8')
+                                                       .reshape(lat_dim_length, lon_dim_length, time_dim_length)*100000,
                                                        "surface_air_pressure", units="Pa"),
-                                  [coord_map['time'], coord_map['lat'], coord_map['lon']])
+                                  [coord_map['lat'], coord_map['lon'], coord_map['time']])
 
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len*time_dim_length*lat_dim_length*lon_dim_length, dtype='i8')
-                                                       .reshape(time_dim_length, hybrid_pr_len, lat_dim_length, lon_dim_length)+10,
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(lat_dim_length*lon_dim_length*time_dim_length*hybrid_pr_len, dtype='i8')
+                                                       .reshape(lat_dim_length, lon_dim_length, time_dim_length, hybrid_pr_len)+10,
                                                        "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
-                                  [coord_map['time'], coord_map['hybrid_pr'], coord_map['lat'], coord_map['lon']])
+                                  [coord_map['lat'], coord_map['lon'], coord_map['time'], coord_map['hybrid_pr']])
 
         return_cube.add_aux_factory(HybridPressureFactory(
                                         delta=return_cube.coord("hybrid A coefficient at layer midpoints"),
                                         sigma=return_cube.coord("hybrid B coefficient at layer midpoints"),
                                         surface_air_pressure=return_cube.coord("surface_air_pressure")))
-
 
     for coord in return_cube.coords(dim_coords=True):
         if coord.bounds is None: coord.guess_bounds()
