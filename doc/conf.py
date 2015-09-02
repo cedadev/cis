@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Community Intercomparison Suite'
-copyright = u'2014, Centre of Environmental Data Archival'
+copyright = u'2013, University of Oxford'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

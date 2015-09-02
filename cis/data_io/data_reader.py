@@ -4,7 +4,44 @@ import logging
 from cis.data_io.gridded_data import GriddedDataList
 from cis.data_io.ungridded_data import UngriddedDataList
 from cis.data_io.products.AProduct import get_data, get_coordinates, get_variables
-from cis.utils import deprecated, listify
+from cis.utils import listify
+
+
+def expand_filelist(filelist):
+    """
+    :param filelist: A single element, or list, or comma seperated string of filenames, wildcarded filenames or directories
+    :return: A flat list of files which exist - with no duplicate
+    :raises: ValueError if any of the files in the list do not exist.
+    """
+    import os
+    from glob import glob
+    from cis.utils import OrderedSet
+
+    if isinstance(filelist,basestring):
+        input_list = filelist.split(',')
+    else:
+        input_list = listify(filelist)
+
+    # Ensure we don't get duplicates by making file_set a set
+    file_set = OrderedSet()
+    for element in input_list:
+        if any(wildcard in element for wildcard in ['*', '?', ']', '}']):
+            filelist = glob(element)
+            filelist.sort()
+            for filename in filelist:
+                file_set.add(filename)
+        elif os.path.isdir(element):
+            filelist = os.listdir(element)
+            filelist.sort()
+            for a_file in filelist:
+                full_file = os.path.join(element, a_file)
+                if os.path.isfile(full_file):
+                    file_set.add(full_file)
+        elif os.path.isfile(element):
+            file_set.add(element)
+        else:
+            raise ValueError("{} is not a valid filename".format(element))
+    return list(file_set)
 
 
 class DataReader(object):
@@ -24,21 +61,6 @@ class DataReader(object):
         self._get_coords_func = get_coords_func
         self._get_vars_func = get_variables_func
 
-    @deprecated
-    def read_data(self, filenames, variables, product=None):
-        """
-        Read a specific variable from a list of files
-        Files can be either gridded or ungridded but not a mix of both.
-        First tries to read data as gridded, if that fails, tries as ungridded.
-        :param filenames:   The filenames of the files to read
-        :param variables:    The variables to read from the files
-        :return:  The specified data with unnecessary dimensions removed (or a list if multiple variables)
-        """
-        data_list = self.read_data_list(filenames, variables, product)
-        if len(data_list) == 1:
-            return data_list[0]
-        return data_list
-
     def read_data_list(self, filenames, variables, product=None, aliases=None):
         """
         Read multiple data objects
@@ -49,8 +71,9 @@ class DataReader(object):
         :param aliases: List of variable aliases to put on each variables
         data object as an alternative means of identifying them.
         :return:  A list of the data read out (either a GriddedDataList or UngriddedDataList depending on the
-        type of data contained in the files
+        type of data contained in the files)
         """
+        from cis.utils import apply_mask_to_numpy_array
         # if filenames or variables are not lists, make them lists of 1 element
         filenames = listify(filenames)
         variables = listify(variables)
