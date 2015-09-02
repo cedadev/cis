@@ -194,43 +194,23 @@ def expand_file_list(filenames, parser):
     :param parser: A reference parser for raising errors on
     :return: A flat list of files which exist - with no duplicate
     '''
-    from glob import glob
-    from cis.utils import OrderedSet
+    from cis.data_io.data_reader import expand_filelist
 
     if not filenames:
         parser.error("Please specify at least one filename")
-    input_list = filenames.split(',')
 
-    # Ensure we don't get duplicates by making file_set a set
-    file_set = OrderedSet()
-    for element in input_list:
-        if any(wildcard in element for wildcard in ['*', '?', ']', '}']):
-            filenames = glob(element)
-            filenames.sort()
-            for filename in filenames:
-                file_set.add(filename)
-        elif os.path.isdir(element):
-            filenames = os.listdir(element)
-            filenames.sort()
-            for a_file in filenames:
-                full_file = os.path.join(element, a_file)
-                if os.path.isfile(full_file):
-                    file_set.add(full_file)
-        elif os.path.isfile(element):
-            file_set.add(element)
-        else:
-            parser.error("'" + element + "' is not a valid filename")
+    try:
+        file_set = expand_filelist(filenames)
+    except ValueError as e:
+        parser.error(str(e))
 
     # Check we matched at least one file
-    if not file_set:
+    if file_set:
+        logging.info("Identified input file list: " + str(file_set))
+    else:
         parser.error("No files found which match: " + str(filenames))
 
-    # Cast set to a list to make it easier to index etc. later on
-    alist = list(file_set)
-
-    logging.info("Identified input file list: " + str(alist))
-
-    return alist
+    return file_set
 
 
 def check_file_exists(filename, parser):

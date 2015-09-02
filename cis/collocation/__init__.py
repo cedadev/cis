@@ -1,1 +1,1 @@
-__author__ = 'watson-parris'
+from col import Collocate

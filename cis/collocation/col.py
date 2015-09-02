@@ -2,10 +2,6 @@
     Top level collocation objects
 """
 import logging
-
-import cis.collocation.col_implementations as ci
-
-from cis.collocation.col_framework import get_kernel
 from cis.exceptions import InvalidCommandLineOptionError
 
 
@@ -33,6 +29,7 @@ class CollocatorFactory(object):
         :param data_gridded: Is the collocation data gridded?
         :return: Collocator, Constrain and Kernel instances
         """
+        import cis.collocation.col_implementations as ci
         col_cls, constraint_cls, kernel_cls = self._get_collocator_classes_for_method(method_name, kernel_name,
                                                                                      sample_gridded, data_gridded)
         # We aren't able to pass any arguments to the li kernel when using the lin collocator so we pop them off here...
@@ -67,6 +64,9 @@ class CollocatorFactory(object):
         :param data_gridded: True if data points are gridded, otherwise False
         :return: CollocationOptions containing relevant classes
         """
+        import cis.collocation.col_implementations as ci
+        from cis.collocation.col_framework import get_kernel
+
         method_name = self.get_default_collocator_name(method_name, sample_gridded, data_gridded)
 
         key = '_'.join([method_name, str(sample_gridded), str(data_gridded)])

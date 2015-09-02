@@ -54,22 +54,18 @@ def plot_cmd(main_arguments):
     :param main_arguments:    The command line arguments
     '''
     from plotting.plot import Plotter
-    from cis.data_io.read import read_data
+    from cis.data_io.data_reader import DataReader
     import cis.exceptions as ex
     from iris.exceptions import IrisError
 
     # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
     data = []
-    for datagroup in main_arguments.datagroups:
-        try:
-            data.append(read_data(datagroup['filenames'], datagroup['variables'], datagroup['product']))
-        except (IrisError, ex.InvalidVariableError, ex.ClassNotFoundError, IOError) as e:
-            __error_occurred('Error when trying to read variable {} in file(s) {} using requested product {}.\nError '
-                             'was: {}'.format(datagroup['variables'], datagroup['filenames'], datagroup['product'], e))
-        except MemoryError as e:
-         __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
-                          "of data to be plotted, increase the swap space available on your machine or use a machine "
-                          "with more memory (for example the JASMIN facility).")
+    try:
+        data = DataReader().read_datagroups(main_arguments.datagroups)
+    except MemoryError:
+     __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
+                      "of data to be plotted, increase the swap space available on your machine or use a machine "
+                      "with more memory (for example the JASMIN facility).")
 
     main_arguments = vars(main_arguments)
     main_arguments.pop('command') # Remove the command argument now it is not needed

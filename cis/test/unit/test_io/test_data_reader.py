@@ -1,7 +1,7 @@
 from unittest import TestCase
 from hamcrest import assert_that, is_, instance_of
 from mock import MagicMock
-
+import os
 from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 from cis.data_io.gridded_data import GriddedData, GriddedDataList, make_from_cube
 from cis.data_io.data_reader import DataReader
@@ -18,7 +18,7 @@ class TestDataReader(TestCase):
         gridded_data.__class__ = GriddedData
         get_data_func = MagicMock(return_value=gridded_data)
         reader = DataReader(get_data_func=get_data_func)
-        data = reader.read_data(filenames, variables, product)
+        data = reader.read_data_list(filenames, variables, product)[0]
 
         # Check the data read function is called correctly
         assert_that(get_data_func.call_count, is_(1))
@@ -37,7 +37,7 @@ class TestDataReader(TestCase):
         product = None
         get_data_func = MagicMock(return_value=make_regular_2d_ungridded_data())
         reader = DataReader(get_data_func=get_data_func)
-        data = reader.read_data(filenames, variables, product)
+        data = reader.read_data_list(filenames, variables, product)[0]
 
         # Check the data read function is called correctly
         assert_that(get_data_func.call_count, is_(1))
@@ -58,7 +58,7 @@ class TestDataReader(TestCase):
         gridded_data.__class__ = GriddedData
         get_data_func = MagicMock(return_value=gridded_data)
         reader = DataReader(get_data_func=get_data_func)
-        data = reader.read_data(filenames, variables, product)
+        data = reader.read_data_list(filenames, variables, product)
 
         # Check the data read function is called correctly
         assert_that(get_data_func.call_count, is_(2))
@@ -80,7 +80,7 @@ class TestDataReader(TestCase):
         product = None
         get_data_func = MagicMock(return_value=make_regular_2d_ungridded_data())
         reader = DataReader(get_data_func=get_data_func)
-        data = reader.read_data(filenames, variables, product)
+        data = reader.read_data_list(filenames, variables, product)
 
         # Check the data read function is called correctly
         assert_that(get_data_func.call_count, is_(2))
@@ -106,7 +106,7 @@ class TestDataReader(TestCase):
         get_data_func = MagicMock(side_effect=[gridded_data, ungridded_data])
         reader = DataReader(get_data_func=get_data_func)
         with self.assertRaises(TypeError):
-            data = reader.read_data(filenames, variables, product)
+            data = reader.read_data_list(filenames, variables, product)[0]
 
     def test_GIVEN_wildcards_WHEN_read_data_THEN_matching_variables_identified(self):
         variables = ['*.nc', 'test?.hdf']
@@ -116,7 +116,7 @@ class TestDataReader(TestCase):
         get_data_func = MagicMock(return_value=make_regular_2d_ungridded_data())
         get_var_func = MagicMock(return_value=file_vars)
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
-        reader.read_data(filenames, variables)
+        reader.read_data_list(filenames, variables)[0]
         assert_that(reader._get_data_func.call_count, is_(len(should_match)))
         for i in range(len(should_match)):
             assert_that(reader._get_data_func.call_args_list[i][0][1], is_(should_match[i]))
@@ -128,7 +128,7 @@ class TestDataReader(TestCase):
         get_data_func = MagicMock(return_value=make_regular_2d_ungridded_data())
         get_var_func = MagicMock(return_value=file_vars)
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
-        reader.read_data(filenames, variables)
+        reader.read_data_list(filenames, variables)[0]
         assert_that(reader._get_data_func.call_count, is_(1))
         assert_that(reader._get_data_func.call_args_list[0][0][1], is_('aeronet.lev20'))
 
@@ -140,7 +140,7 @@ class TestDataReader(TestCase):
         get_var_func = MagicMock(return_value=file_vars)
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         with self.assertRaises(ValueError):
-            reader.read_data(filenames, variables)
+            reader.read_data_list(filenames, variables)[0]
 
     def test_GIVEN_multiple_datagroups_WHEN_read_datagroups_THEN_get_data_called_correctly(self):
         datagroup_1 = {'variables': ['var1', 'var2'],
