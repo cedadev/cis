@@ -509,6 +509,132 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    def test_NetCDF_Gridded_onto_GASSP_li(self):
+        # Takes 1s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'lin,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_hybrid_height_onto_GASSP_nn(self):
+        # Takes 1s
+        vars = [valid_hybrid_height_variable]
+        filename = valid_hybrid_height_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_hybrid_pressure_onto_GASSP_nn(self):
+        # Takes 1s
+        vars = [valid_hybrid_pressure_variable]
+        filename = valid_hybrid_pressure_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, ['mmrbc'])
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, ['mmrbc'])
+
+    def test_hybrid_height_onto_GASSP_li(self):
+        # Takes 1s
+        vars = [valid_hybrid_height_variable]
+        filename = valid_hybrid_height_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'lin,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_hybrid_pressure_onto_GASSP_li(self):
+        # Takes 1s
+        vars = [valid_hybrid_pressure_variable]
+        filename = valid_hybrid_pressure_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'lin,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, ['mmrbc'])
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, ['mmrbc'])
+
+    def test_NetCDF_Gridded_onto_GASSP_li_with_extrapolation(self):
+        # Takes 1s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'lin[extrapolate=True],variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_file_variable_attribute_contains_string(self.UNGRIDDED_OUTPUT_FILENAME, vars[0], 'history',
+                                                                  "'extrapolate': 'True'")
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_NetCDF_Gridded_onto_GASSP_li_with_nn_in_the_vertical(self):
+        # Takes 1s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'lin[nn_vertical=True],variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_file_variable_attribute_contains_string(self.UNGRIDDED_OUTPUT_FILENAME, vars[0], 'history',
+                                                                  "'nn_vertical': 'True'")
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_NetCDF_Gridded_onto_GASSP_li_with_nn_in_the_vertical_and_extrapolation(self):
+        # Takes 1s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_GASSP_aeroplane_filename
+        sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'lin[nn_vertical=True,extrapolate=True],variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_file_variable_attribute_contains_string(self.UNGRIDDED_OUTPUT_FILENAME, vars[0], 'history',
+                                                                  "'extrapolate': 'True', 'nn_vertical': 'True'")
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
     def test_NetCDF_Gridded_onto_GASSP_using_moments_kernel(self):
         # Takes 850s
         vars = valid_echamham_variable_1, valid_echamham_variable_2

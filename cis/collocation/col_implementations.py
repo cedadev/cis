@@ -553,11 +553,17 @@ class li(Kernel):
     Linear Interpolation Kernel
     """
 
-    def __init__(self, extrapolate=False):
+    def __init__(self, extrapolate=False, nn_vertical=False):
         self.coord_names = []
         self.hybrid_coord = ''
         self.interpolator = None
         self.extrapolation_mode = 'linear' if extrapolate else 'error'
+        if nn_vertical:
+            logging.warn("The extrapolate option is incompatible with nearest neighbour interpolation and will be "
+                         "ignored for the vertical collocation")
+            self.vertical_interp = iris.analysis.Nearest()
+        else:
+            self.vertical_interp = iris.analysis.Linear(self.extrapolation_mode)
 
     def get_value(self, point, data):
         """
@@ -579,8 +585,7 @@ class li(Kernel):
         # Return the data from the result of interpolating over those coordinates which are on the cube.
         slice = self.interpolator([getattr(point, c) for c in self.coord_names])
         if self.hybrid_coord:
-            val = slice.interpolate([(self.hybrid_coord, getattr(point, self.hybrid_coord))],
-                                    iris.analysis.Linear(self.extrapolation_mode)).data
+            val = slice.interpolate([(self.hybrid_coord, getattr(point, self.hybrid_coord))], self.vertical_interp).data
         else:
             val = slice.data
         return val

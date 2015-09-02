@@ -35,6 +35,9 @@ class CollocatorFactory(object):
         """
         col_cls, constraint_cls, kernel_cls = self._get_collocator_classes_for_method(method_name, kernel_name,
                                                                                      sample_gridded, data_gridded)
+        # We aren't able to pass any arguments to the li kernel when using the lin collocator so we pop them off here...
+        if kernel_cls is ci.li:
+            kernel_params = {k: collocator_params.get(k, None) for k in ('nn_vertical', 'extrapolate')}
         collocator_params, constraint_params = self._get_collocator_params(collocator_params)
         col = self._instantiate_with_params(col_cls, collocator_params)
         del constraint_params['missing_data_for_missing_sample']

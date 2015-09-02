@@ -601,6 +601,21 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 11.2)
         assert_almost_equal(new_data.data[2], 4.8)
 
+    def test_negative_lon_points_in_2d_dont_matter(self):
+        """
+            This is exactly the same test as above, except we ommit the point with negative longitude, this makes the
+            collocator wrap the longitude coordinate and gives a slightly different interpolation result...
+        """
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+
+        cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube())
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0)])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li())[0]
+        assert_almost_equal(new_data.data[0], 8.8)
+        assert_almost_equal(new_data.data[1], 11.2)
+
     def test_colocation_of_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
@@ -677,11 +692,28 @@ class TestLi(unittest.TestCase):
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
 
         sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27))])
+            [HyperPoint(lat=-4.0, lon=-4.0, alt=6382.8, t=dt.datetime(1984, 8, 27))])
 
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, li(extrapolate=True))[0]
-        assert_almost_equal(new_data.data[0], 127.1183206, decimal=7)
+        assert_almost_equal(new_data.data[0], 126.0, decimal=7)
+
+    def test_nearest_neighbour_vertical_interpolation_on_hybrid_altitude(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            # This is just past the top of the vertical coordinate slice
+            [HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27)),
+             # This is well past the bottom of the vertical coordinate slice
+             HyperPoint(lat=-4.0, lon=-4.0, alt=0.0, t=dt.datetime(1984, 8, 27))])
+
+        col = GeneralUngriddedCollocator(fill_value=np.NAN)
+        new_data = col.collocate(sample_points, cube, None, li(nn_vertical=True))[0]
+        assert_almost_equal(new_data.data[0], 124.0, decimal=7)
+        assert_almost_equal(new_data.data[1], 115.0, decimal=7)
 
     def test_colocation_of_pres_points_on_hybrid_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
@@ -705,9 +737,37 @@ class TestLi(unittest.TestCase):
         # Outside of the pressure bounds - extrapolation off
         assert_equal(new_data.data[3], np.inf)
 
-        # eq_(new_data.data[0], float(cube[2,1,1,0].data))
-        # eq_(new_data.data[1], float(cube[3,2,1,4].data))
-        # eq_(new_data.data[2], float(cube[1,0,0,9].data))
+    def test_negative_lon_points_on_hybrid_pressure_coordinates_dont_matter(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0 ,0))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li())[0]
+        # Exactly on the lat, lon, time points, interpolated over pressure
+        assert_almost_equal(new_data.data[0], 221.5, decimal=5)
+        # Exactly on the lat, time points, interpolated over latitude and pressure
+        assert_almost_equal(new_data.data[1], 330.5, decimal=7)
+
+    def test_nearest_neighbour_vertical_interpolation_on_hybrid_pressure(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0 ,0)),
+             HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li(nn_vertical=True))[0]
+        assert_almost_equal(new_data.data[0], 221)
+        assert_almost_equal(new_data.data[1], 330)
+        assert_almost_equal(new_data.data[2], 124.0)
 
     def test_extapolation_of_pres_points_on_hybrid_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li

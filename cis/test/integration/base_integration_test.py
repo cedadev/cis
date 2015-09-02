@@ -27,7 +27,19 @@ class BaseIntegrationTest(unittest.TestCase):
             try:
                 var = ds.variables[var]
             except KeyError:
-                raise AssertionError("Variable %s not found in subset output file" % var)
+                raise AssertionError("Variable %s not found in output file" % var)
+
+    def check_output_file_variable_attribute_contains_string(self, output_path, variable, attribute, string):
+        ds = Dataset(output_path)
+        try:
+            var = ds.variables[variable]
+        except KeyError:
+            raise AssertionError("Variable %s not found in output file" % variable)
+        try:
+            att_string = getattr(var, attribute)
+        except AttributeError:
+            raise AssertionError("Attribute %s not found in variable" % attribute)
+        assert string in att_string
 
     def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, gridded):
         if gridded:

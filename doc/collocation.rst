@@ -69,8 +69,14 @@ where:
 
       * ``lin`` For use with gridded source data only. A value is calculated by linear interpolation for each sample point.
         The extrapolation mode can be controlled with the ``extrapolate`` keyword. The default mode is not to extrapolate values
-        to points outside of the gridded data source (masking them in the output instead). Setting ``extrapolate=True``
-        will instruct the kernel to extrapolate these values outside of the data source instead.
+        for sample points outside of the gridded data source (masking them in the output instead). Setting ``extrapolate=True``
+        will override this and instruct the kernel to extrapolate these values outside of the data source instead.
+
+        Sometimes it can be useful to use a different kernel in the vertical direction, for example when collocating
+        ship data you may want to linearly interpolate the data points horizontaly and in time, but just take the
+        nearest vertical value. Set the ``nn_vertical`` keyword to ``True`` to set the vertical interpolation to
+        nearest neighbour rather than linear intepolation. Note, this will only work when the vertical coordinates of
+        the source data are hybrid height or hybrid pressure.
 
       * ``nn`` For use with gridded source data only. The data point closest to each sample point is found, and the
         data value is set at the sample point.
