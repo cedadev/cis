@@ -67,43 +67,14 @@ class BaseIntegrationTest(unittest.TestCase):
         :param output_vars:
         :return:
         """
-        from netCDF4 import Dataset
+        from cis import read_data, read_data_list
+        from operator import mul
         if expected_shape is None:
-            sample_shape = None
-            if sample_file.endswith('.nc'):
-                sample = Dataset(sample_file)
-                sample_shape = sample.variables[sample_var].shape
-            elif sample_file.endswith('.hdf'):
-                from pyhdf.SD import SD
-                sd = SD(sample_file)
-                svars = sd.datasets()
-                if sample_var in svars:
-                    sample_shape = svars[sample_var][1]
-                else:
-                    from pyhdf.HDF import HDF
-                    from pyhdf.VS import VS
-                    hdf = HDF(sample_file)
-                    vs = hdf.vstart()
-                    for info in vs.vdatainfo():
-                        if info[0] == sample_var:
-                            sample_shape = (info[3],)
-            else:
-                headers = 0
-                if sample_file.endswith('.lev20'):
-                    headers = 5  # Aeronet headers are five lines.
-                elif sample_file.endswith('.txt'):
-                    headers = 1
-                f = open(sample_file)
-                line_count = - headers
-                for line in f:
-                    if line.strip():
-                        line_count += 1
-                sample_shape = (line_count,)
+            sample_shape = read_data(sample_file, sample_var).data.shape
         else:
             sample_shape = expected_shape
-        output = Dataset(output_file)
-        for output_var in output_vars:
-            output_shape = output.variables[output_var].shape
-            from operator import mul
+        output = read_data_list(output_file, output_vars)
+        for output_var in output:
+            output_shape = output_var.data.shape
             # This copes with dims in different orders, length 1 values being taken out etc
             assert_that(reduce(mul, sample_shape), is_(reduce(mul, output_shape)))

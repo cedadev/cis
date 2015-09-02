@@ -480,6 +480,36 @@ class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
 
 class TestGriddedUngriddedCollocate(BaseIntegrationTest):
 
+    def test_NetCDF_Gridded_onto_ASCII_with_variable(self):
+        # Takes 4s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = cis_test_files["ascii"].master_filename
+        sample_var = cis_test_files["ascii"].data_variable_name
+        collocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
+    def test_NetCDF_Gridded_onto_ASCII_no_variable(self):
+        # Takes 4s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = cis_test_files["ascii"].master_filename
+        sample_var = cis_test_files["ascii"].data_variable_name
+        collocator_and_opts = 'nn'
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
     def test_NetCDF_Gridded_onto_Aeronet(self):
         # Takes 4s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
@@ -493,6 +523,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_NetCDF_Gridded_onto_GASSP(self):
         # Takes 1s
@@ -772,7 +803,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars, (687155,))
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_NetCDF_Gridded_onto_aerosol_cci(self):
         # Takes 30s
@@ -789,12 +820,12 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
-    def test_NetCDF_Gridded_onto_ASCII(self):
-        # Takes 1s
+    def test_NetCDF_Gridded_onto_NCAR_RAF_with_var(self):
+        # Takes 30s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
         filename = valid_echamham_filename
-        sample_file = valid_ascii_filename
-        sample_var = "values"
+        sample_file = valid_NCAR_NetCDF_RAF_filename
+        sample_var = valid_NCAR_NetCDF_RAF_variable
         collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,
@@ -810,14 +841,14 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_NCAR_NetCDF_RAF_filename
         sample_var = valid_NCAR_NetCDF_RAF_variable
-        collocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn'
         arguments = ['col', ",".join(vars) + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars, (30153,))
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_NetCDF_Gridded_onto_cis_output_data(self):
         # Takes 3s
