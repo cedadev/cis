@@ -732,7 +732,7 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 221.5, decimal=5)
         # Exactly on the lat, lon, points, interpolated over time and pressure
         assert_almost_equal(new_data.data[1], 226.5, decimal=7)
-        # Exactly on the lat, time points, interpolated over latitude and pressure
+        # Exactly on the lat, time points, interpolated over longitude and pressure
         assert_almost_equal(new_data.data[2], 330.5, decimal=7)
         # Outside of the pressure bounds - extrapolation off
         assert_equal(new_data.data[3], np.inf)
@@ -791,11 +791,13 @@ class TestLi(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
             #  present in the data cube)
-            [HyperPoint(lat=0.0, lon=0.0, alt=200.5, t=dt.datetime(1984, 8, 28,0,0,0))])
+            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, t=dt.datetime(1984, 8, 28,0,0,0)),
+             HyperPoint(lat=5.0, lon=5.0, alt=355.5, t=dt.datetime(1984, 8, 28, 0, 0))])
 
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, li())[0]
-        assert_almost_equal(new_data.data[0], 221.5, decimal=7)
+        assert_almost_equal(new_data.data[0], 225.5, decimal=7)
+        assert_almost_equal(new_data.data[1], 346.5, decimal=7)
 
     def test_colocation_of_alt_pres_points_on_hybrid_altitude_and_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
@@ -806,11 +808,11 @@ class TestLi(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
             #  present in the data cube)
-            [HyperPoint(lat=0.0, lon=0.0, alt=200.5, pres=1000, t=dt.datetime(1984, 8, 28,0,0,0))])
+            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, pres=1000, t=dt.datetime(1984, 8, 28,0,0,0))])
 
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, li())[0]
-        assert_almost_equal(new_data.data[0], 221.5, decimal=7)
+        assert_almost_equal(new_data.data[0], 225.5, decimal=7)
 
 if __name__ == '__main__':
     unittest.main()

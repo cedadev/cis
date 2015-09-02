@@ -74,7 +74,6 @@ class GeneralUngriddedCollocator(Collocator):
             if constraint is not None and not isinstance(constraint, DummyConstraint):
                 raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
             data_points = data
-            _fix_cube_longitude_range(points.coords(), data)
         else:
             data_points = data.get_non_masked_points()
             _fix_longitude_range(points.coords(), data_points)
