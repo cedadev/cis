@@ -808,6 +808,8 @@ def listify(item):
     :param item: Item which may or may not be a list
     :return: List
     """
+    if isinstance(item, tuple):
+        return list(item)
     if not isinstance(item, list):
         return [item]
     return item
