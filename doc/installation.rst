@@ -7,10 +7,10 @@ A pre-packaged version of CIS is available for installation using conda for 64-b
 
 Once conda is installed, you can easily install CIS with the following command:
 
-    $ conda install -c cistools –c scitools cis
+    $ conda install -c cistools -c scitools cis
 
 
-If you don’t already have conda, you must first download and install it. Anaconda is a free conda package that includes Python and many common scientific and data analysis libraries, and is available [http://continuum.io/downloads here]. Further documentation on using Anaconda and the features it provides can be found at [http://docs.continuum.io/anaconda/index.html].
+If you don't already have conda, you must first download and install it. Anaconda is a free conda package that includes Python and many common scientific and data analysis libraries, and is available [http://continuum.io/downloads here]. Further documentation on using Anaconda and the features it provides can be found at [http://docs.continuum.io/anaconda/index.html].
 
 To check that CIS is installed correctly, simply type ``cis version`` to display the version number, for example::
 
@@ -23,3 +23,4 @@ Dependencies
 Use the following command to check the dependencies that CIS requries to run::
 
     $ python setup.py checkdep
+
