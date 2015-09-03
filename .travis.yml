@@ -40,19 +40,18 @@ install:
   - conda list
   - conda info -a
 
-# Install
+  # Install
   - python setup.py --quiet install
 
 script:
+
   - if [[ $TEST_TARGET == 'unit' ]]; then
-      # Run unit tests
       python setup.py test;
     fi
+  # Get test data, then run the integration tests
   - if [[ $TEST_TARGET == 'integration' ]]; then
-      # Get test data
       wget -O test-data.zip https://github.com/cistools/test-data/archive/master.zip
       unzip -q test-data.zip
       export CIS_DATA_HOME="$(pwd)/test-data"
-      # Run integration tests
       python setup.py test -i -p 0;
     fi
