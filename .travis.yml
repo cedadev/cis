@@ -1,0 +1,58 @@
+language: python
+python:
+  - 2.7
+sudo: false
+
+env:
+  - TEST_TARGET=unit
+  - TEST_TARGET=integration
+
+install:
+
+  # Install miniconda
+  # -----------------
+  - export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda
+  - if [[ "$TRAVIS_PYTHON_VERSION" == 2* ]]; then
+      wget ${CONDA_BASE}-3.7.0-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget ${CONDA_BASE}3-3.7.0-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+
+  # Create the basic testing environment
+  # ------------------------------------
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --set show_channel_urls True
+  - conda update --quiet conda
+  - ENV_NAME='test-environment'
+  - conda create --quiet -n $ENV_NAME python=$TRAVIS_PYTHON_VERSION
+  - source activate $ENV_NAME
+
+  # Customise the testing environment
+  # ---------------------------------
+  - conda config --add channels scitools cistools
+  - conda install --quiet --file conda_requirements.txt
+
+  - PREFIX=$HOME/miniconda/envs/$ENV_NAME
+
+  # Output debug info
+  - conda list
+  - conda info -a
+
+# Install
+  - python setup.py --quiet install
+
+script:
+  - if [[ $TEST_TARGET == 'unit' ]]; then
+      # Run unit tests
+      python setup.py test
+    fi
+  - if [[ $TEST_TARGET == 'integration' ]]; then
+      # Get test data
+      wget -O test-data.zip https://github.com/cistools/test-data/archive/master.zip
+      unzip -q test-data.zip
+      export CIS_DATA_HOME="$(pwd)/test-data"
+      # Run integration tests
+      python setup.py test -i
+    fi

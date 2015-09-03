@@ -1,0 +1,31 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+
+# Python dependencies
+matplotlib
+basemap=1.0.7
+numpy
+scipy
+iris=1.8
+
+# IO Dependencies
+hdf4
+hdf5
+pyhdf
+libnetcdf
+netcdf4
+zlib
+
+
+# jpeg=8d=0
+
+# Testing dependencies
+nose
+mock
+psutil
+
+
+
+
+
+
