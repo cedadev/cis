@@ -377,9 +377,8 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
-        out_vars = []
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars, (192, 145))
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (192, 145))
 
 
 class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
