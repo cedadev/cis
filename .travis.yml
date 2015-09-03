@@ -46,7 +46,7 @@ install:
 script:
   - if [[ $TEST_TARGET == 'unit' ]]; then
       # Run unit tests
-      python setup.py test
+      python setup.py test;
     fi
   - if [[ $TEST_TARGET == 'integration' ]]; then
       # Get test data
@@ -54,5 +54,5 @@ script:
       unzip -q test-data.zip
       export CIS_DATA_HOME="$(pwd)/test-data"
       # Run integration tests
-      python setup.py test -i
+      python setup.py test -i -p 0;
     fi
