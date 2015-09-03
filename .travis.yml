@@ -31,9 +31,7 @@ install:
 
   # Customise the testing environment
   # ---------------------------------
-  - conda config --add channels scitools
-  - conda config --add channels cistools
-  - conda install --quiet --file conda_requirements.txt
+  - conda install -c scitools -c cistools --quiet --file conda_requirements.txt
 
   - PREFIX=$HOME/miniconda/envs/$ENV_NAME
 
