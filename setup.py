@@ -75,7 +75,7 @@ class gen_doc(Command):
 
 
 # Extract long-description from README
-README = open(os.path.join(root_path, 'README')).read()
+README = open(os.path.join(root_path, 'README.md')).read()
 
 from cis import __version__, __website__
 
