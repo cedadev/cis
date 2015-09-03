@@ -13,7 +13,7 @@ There are also a number of plot tests available under the ``test/plot_tests`` di
 Dependencies
 ============
 
-A graph representing the dependency tree can be found at ``doc/cis_dependency.dot`` (use [http://code.google.com/p/jrfonseca/wiki/XDot XDot] to read it)
+A graph representing the dependency tree can be found at ``doc/cis_dependency.dot`` (use `XDot <http://code.google.com/p/jrfonseca/wiki/XDot>`_ to read it)
 
 .. image:: img/dep.png
    :width: 900px
@@ -22,13 +22,13 @@ A graph representing the dependency tree can be found at ``doc/cis_dependency.do
 Anaconda Build
 ==============
 
-The Anaconda build recipes for CIS and the dependencies which can't be found either in the core channel, or in SciTools are stored in their own github repository [https://github.com/cistools/conda-recipes here].
-To build a new CIS package clone the conda-recipes repository and then run the following command:
+The Anaconda build recipes for CIS and the dependencies which can't be found either in the core channel, or in SciTools are stored in their own github repository `here <https://github.com/cistools/conda-recipes>`_.
+To build a new CIS package clone the conda-recipes repository and then run the following command::
     $ conda build -c cistools -c scitools cis --numpy 1.8
 
 By default this will run the full unit-test suite before successful completion. You can also optionally run the integration test suite by specifying the CIS_DATA_HOME environment variable.
 
-To upload the package to the cistools channel on Anaconda.org use:
+To upload the package to the cistools channel on Anaconda.org use::
     $ binstar upload <package_location> -u cistools
 
 
@@ -41,7 +41,7 @@ The API reference can be generated using the following command
 
 `` python setup.py gendoc``
 
-This will automatically generates the documentation using [http://epydoc.sourceforge.net/ Epydoc] in html under the directory ''doc/api'' from the [http://epydoc.sourceforge.net/docstrings.html docstrings] in the code.
+This will automatically generates the documentation using `Epydoc <http://epydoc.sourceforge.net/>`_ in html under the directory ''doc/api'' from the `docstrings <http://epydoc.sourceforge.net/docstrings.html>`_ in the code.
 
 
 Plugin development
