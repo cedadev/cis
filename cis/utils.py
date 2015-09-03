@@ -46,11 +46,18 @@ def add_element_to_list_in_dict(my_dict,key,value):
 
 
 def concatenate(arrays, axis=0):
+    """
+    Concatenate a list of numpy arrays into one larger array along the axis specified (the default axis is zero). If any
+    of the arrays are masked arrays then the returned array will be a masked array with the correct mask, otherwise a
+    numpy array is returned.
+    :param arrays: A list of numpy arrays (masked or not)
+    :param axis: The axis along which to concatenate (the default is 0)
+    :return: The concatenated array
+    """
     from numpy.ma import MaskedArray
-    from numpy import ndarray
-    if isinstance(arrays[0], MaskedArray):
+    if any(isinstance(array, MaskedArray) for array in arrays):
         from numpy.ma import concatenate
-    elif isinstance(arrays[0], ndarray):
+    else:
         from numpy import concatenate
 
     res = arrays[0]
@@ -60,6 +67,7 @@ def concatenate(arrays, axis=0):
             res = concatenate((res,array),axis)
 
     return res
+
 
 def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = False):
     '''
