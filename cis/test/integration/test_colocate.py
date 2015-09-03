@@ -21,9 +21,10 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, ['ATX'])
 
     def test_GIVEN_single_variable_WHEN_collocate_box_THEN_successful_collocation(self):
+        # Takes 13 s
         variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
         filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
-        sample_file = valid_hadgem_filename
+        sample_file = valid_echamham_filename
         collocator_and_opts = 'box[h_sep=10],kernel=mean'
         arguments = ['col', variable + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,
