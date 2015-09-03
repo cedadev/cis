@@ -4,29 +4,30 @@ CIS as a Python library (API)
 
 Reading and Writing
 ===================
-    from cis import read_data, read_data_list
+    ``from cis import read_data, read_data_list``
 
 
 Data Objects
 ============
 
 
-Collocation
-===========
-    from cis.collocation import Collocate
+.. These API are to be finalised before they are officially documented (to save needing a major version change)
+    Collocation
+    ===========
+        from cis.collocation import Collocate
 
-Aggregation
-===========
-    from cis.aggregation import Aggregate
+..    Aggregation
+    ===========
+        from cis.aggregation import Aggregate
 
-Subsetting
-==========
-    from cis.subsetting import Subset
+..    Subsetting
+    ==========
+        from cis.subsetting import Subset
 
-Plotting
-========
-    from cis.plotting import Plotter
+..    Plotting
+    ========
+        from cis.plotting import Plotter
 
-Stats
-=====
-    from cis.stats import StatsAnalyzer
+..    Stats
+    =====
+        from cis.stats import StatsAnalyzer
