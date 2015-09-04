@@ -8,17 +8,25 @@ from cis.test.runner import nose_test
 
 root_path = os.path.dirname(__file__)
 
-dependencies = ["matplotlib>=1.2.0",
-                "netcdf4>=1.0",
-                "numpy",
-                "scipy",
-                "iris>=1.8.0",
-                'psutil>=2.0.0',
-                'basemap>=1.0.7']
+# If we're building docs on readthedocs we don't have any dependencies as they're all mocked out
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    dependencies = []
+    optional_dependencies = {}
+    test_dependencies = []
 
-optional_dependencies = {"HDF": ["pyhdf"]}
+else:
+    dependencies = ["matplotlib>=1.2.0",
+                    "netcdf4>=1.0",
+                    "numpy",
+                    "scipy",
+                    "iris>=1.8.0",
+                    'psutil>=2.0.0',
+                    'basemap>=1.0.7']
 
-test_dependencies = ["pyhamcrest", "mock", "nose"]
+    optional_dependencies = {"HDF": ["pyhdf"]}
+
+    test_dependencies = ["pyhamcrest", "mock", "nose"]
 
 
 class check_dep(Command):
