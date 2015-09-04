@@ -24,11 +24,13 @@ Anaconda Build
 
 The Anaconda build recipes for CIS and the dependencies which can't be found either in the core channel, or in SciTools are stored in their own github repository `here <https://github.com/cistools/conda-recipes>`_.
 To build a new CIS package clone the conda-recipes repository and then run the following command::
+
     $ conda build -c cistools -c scitools cis --numpy 1.8
 
 By default this will run the full unit-test suite before successful completion. You can also optionally run the integration test suite by specifying the CIS_DATA_HOME environment variable.
 
 To upload the package to the cistools channel on Anaconda.org use::
+
     $ binstar upload <package_location> -u cistools
 
 

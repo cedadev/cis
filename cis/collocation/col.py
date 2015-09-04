@@ -144,30 +144,32 @@ class Collocate(object):
     Perform a general collocation
     """
 
-    def __init__(self, sample_points, output_filename, missing_data_for_missing_sample=False,
-                 collocator_factory=CollocatorFactory()):
+    def __init__(self, sample_points, missing_data_for_missing_sample=False, collocator_factory=CollocatorFactory()):
         """
         Constructor
-        :param sample_points: Sample points to collocate on to
+
+        :param CommonData sample_points: Sample points to collocate on to
         :param output_filename: Filename to output to
         :param missing_data_for_missing_sample: Write missing values out when sample data is missing
+        :param CollocatorFactory collocator_factory: An optional configuration object
         :return:
         """
         self.sample_points = sample_points
-        self.output_file = output_filename
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
         self.coords_to_be_written = True
         self.collocator_factory = collocator_factory
 
     def collocate(self, data, col_name=None, col_params=None, kern=None, kern_params=None):
         """
-        Perform the collocation
-        :param data: data to collocate
-        :param col_name: name of the collocator
-        :param col_params: parameters dictionary for the collocation and constraint
-        :param kern: the kernel to use
-        :param kern_params: the kernel parameters to use
-        :return: collocated data
+        Perform the collocation.
+
+        :param CommonData data: Data to collocate
+        :param str col_name: Name of the collocator
+        :param dict col_params: Parameters dictionary for the collocation and constraint
+        :param str kern: The kernel to use
+        :param dict kern_params: The kernel parameters to use
+        :return CommonData: The collocated data
+        :raises CoordinateNotFoundError: If the collocator was unable to compare the sample and data points
         """
         from cis.exceptions import CoordinateNotFoundError
         from time import time

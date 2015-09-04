@@ -301,8 +301,9 @@ class StatsAnalyzer(object):
     def __init__(self, data1, data2):
         """
         Create a statistics analyser for two data sets
-        :param data1: First data object
-        :param data2: Second data object
+
+        :param CommonData data1: First data object
+        :param CommonData data2: Second data object
         :return: List of StatisticsResult instances.
         """
         self._var_name_1 = data1.var_name
@@ -325,6 +326,7 @@ class StatsAnalyzer(object):
     def analyze(self):
         """
         Perform a statistical analysis on two data sets.
+
         :return: List of StatisticsResult instances.
         """
         out = []
@@ -343,6 +345,7 @@ class StatsAnalyzer(object):
         """
         Count all points which will be used for statistical comparison operations
         (i.e. are non-missing in both datasets).
+
         :return: List of StatisticsResults
         """
         count = numpy.ma.count(self._data1 + self._data2)
@@ -351,6 +354,7 @@ class StatsAnalyzer(object):
     def means(self):
         """
         Means of two datasets
+
         :return: List of StatisticsResults
         """
         # This command requires the masks to be combined
@@ -361,6 +365,7 @@ class StatsAnalyzer(object):
     def stddevs(self):
         """
         Corrected sample standard deviation of datasets
+
         :return: List of StatisticsResults
         """
         # This command requires the masks to be combined
@@ -371,6 +376,7 @@ class StatsAnalyzer(object):
     def abs_mean(self):
         """
         Mean of absolute difference d2-d1
+
         :return: List of StatisticsResults
         """
         mean = numpy.mean(self._data2 - self._data1)
@@ -379,6 +385,7 @@ class StatsAnalyzer(object):
     def abs_stddev(self):
         """
         Standard deviation of absolute difference d2-d1
+
         :return: List of StatisticsResults
         """
         stddev = numpy.std(self._data2 - self._data1, ddof=1)
@@ -387,6 +394,7 @@ class StatsAnalyzer(object):
     def rel_mean(self):
         """
         Mean of relative difference (d2-d1)/d1
+
         :return: List of StatisticsResults
         """
         mean = numpy.mean((self._data2 - self._data1)/self._data1)
@@ -395,6 +403,7 @@ class StatsAnalyzer(object):
     def rel_stddev(self):
         """
         Mean of relative difference (d2-d1)/d1
+
         :return: List of StatisticsResults
         """
         stddev = numpy.std((self._data2 - self._data1)/self._data1, ddof=1)
@@ -403,6 +412,7 @@ class StatsAnalyzer(object):
     def spearmans_rank(self):
         """
         Perform a spearman's rank on the data
+
         :return: List of StatisticsResults
         """
         spearman = scipy.stats.mstats.spearmanr(self._data1, self._data2, None)[0]
@@ -411,6 +421,7 @@ class StatsAnalyzer(object):
     def linear_regression(self):
         """
         Perform a linear regression on the data
+
         :return: List of StatisticsResults
         """
         grad, intercept, r, p, stderr = scipy.stats.mstats.linregress(self._data1, self._data2)

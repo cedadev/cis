@@ -1,6 +1,6 @@
 '''
 Class for plotting graphs.
-Also contains a dictionary for the valid plot types
+Also contains a dictionary for the valid plot types.
 All plot types need to be imported and added to the plot_types dictionary in order to be used.
 '''
 from cis.plotting.contour_plot import Contour_Plot

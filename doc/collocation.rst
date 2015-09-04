@@ -145,11 +145,11 @@ Available Collocators and Kernels
 Collocation type
 ( data -> sample)      Available Collocators      Default Collocator Default Kernel
 ====================== ========================= =================== =================
-Gridded -> gridded     ``lin``, ``nn``, ``box``  ``lin``           *None*
-Ungridded -> gridded   ``bin``, ``box``          ``bin``           ``moments``
-Gridded -> ungridded   ``nn``, ``lin``           ``nn``            *None*
-Ungridded -> ungridded ``box``                   ``box``           ``moments``
-====================== ========================= ================= =================
+Gridded -> gridded     ``lin``, ``nn``, ``box``  ``lin``             *None*
+Ungridded -> gridded   ``bin``, ``box``          ``bin``             ``moments``
+Gridded -> ungridded   ``nn``, ``lin``           ``nn``              *None*
+Ungridded -> ungridded ``box``                   ``box``             ``moments``
+====================== ========================= =================== =================
 
 
 Collocation output files

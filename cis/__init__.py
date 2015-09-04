@@ -1,13 +1,15 @@
 """
 CIS is an open source command-line tool for easy collocation, visualization, analysis, and
-comparison of diverse gridded and ungridded datasets used in the atmospheric sciences
+comparison of diverse gridded and ungridded datasets used in the atmospheric sciences.
 
 .. note ::
 
-    The CIS documentation has detailed usage information, including a :ref:`user guide <user_guide_index>`.
-    call for new users.
+    The CIS documentation has detailed usage information, including a :doc:`user guide <../index>`
+    for new users.
 
-The functions in this module provide the main way to load your data.
+As a commmand line tool, CIS has not been designed with a python API in mind. There are however some utility functions
+that may provide a useful start for those who wish to use CIS as a python library. The functions in this module provide
+the main way to load your data. They can be easily import using, for example: `from cis import read_data`.
 
 The :func:`read_data` function is a simple way to read a single gridded or ungridded data object (e.g. a NetCDF
 variable) from one or more files. CIS will determine the best way to interperet the datafile by comparing the file
@@ -31,12 +33,14 @@ def read_data(filenames, variable, product=None):
     Read a specific variable from a list of files
     Files can be either gridded or ungridded but not a mix of both.
     First tries to read data as gridded, if that fails, tries as ungridded.
-    :param filenames:   The filenames of the files to read. This can be either a single filename as a string, a list of
-    string filenames, or a comma separated list. Filenames can include directories which will be expanded to include all
-      files in that directory, or wildcards such as ``*`` or ``?``.
-    :param variable: The variable to read from the files
-    :param product:  The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
-    :return:  The specified data as either a GriddedData or UngriddedData object.
+
+    :param filenames:   The filenames of the files to read. This can be either a single filename as a string, a comma
+     separated list, or a :class:`list` of string filenames. Filenames can include directories which will be expanded to
+     include all files in that directory, or wildcards such as ``*`` or ``?``.
+    :type filenames: string or list
+    :param str variable: The variable to read from the files
+    :param str product:  The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
+    :return:  The specified data as either a :class:`GriddedData` or :class:`UngriddedData` object.
     """
     from cis.exceptions import InvalidVariableError
     data_list = read_data_list(filenames, variable, product)
@@ -49,16 +53,19 @@ def read_data(filenames, variable, product=None):
 
 def read_data_list(filenames, variables, product=None, aliases=None):
     """
-    Read multiple data objects from a list of files
-    Files can be either gridded or ungridded but not a mix of both.
-    :param filenames: The filenames of the files to read. This can be either a single filename as a string, a list of
-    string filenames, or a comma separated list. Filenames can include directories which will be expanded to include all
-      files in that directory, or wildcards such as ``*`` or ``?``.
+    Read multiple data objects from a list of files. Files can be either gridded or ungridded but not a mix of both.
+
+    :param filenames:   The filenames of the files to read. This can be either a single filename as a string, a comma
+     separated list, or a :class:`list` of string filenames. Filenames can include directories which will be expanded to
+     include all files in that directory, or wildcards such as ``*`` or ``?``.
+    :type filenames: string or list
     :param variables: One or more variables to read from the files
-    :param product: The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
+    :type variables: string or list
+    :param str product: The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
     :param aliases: List of aliases to put on each variable's data object as an alternative means of identifying them.
-    :return:  A list of the data read out (either a GriddedDataList or UngriddedDataList depending on the
-    type of data contained in the files)
+    :type aliases: string or list
+    :return:  A list of the data read out (either a :class:`GriddedDataList` or :class:`UngriddedDataList` depending on the
+     type of data contained in the files)
     """
     from cis.data_io.data_reader import DataReader, expand_filelist
     return DataReader().read_data_list(expand_filelist(filenames), variables, product, aliases)

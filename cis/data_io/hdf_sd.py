@@ -14,11 +14,8 @@ def get_hdf_SD_file_variables(filename):
     '''
     Get all the variables from an HDF SD file
 
-    args:
-        filename: The filename of the file to get the variables from
-
-    returns:
-        An OrderedDict containing the variables from the file
+    :param str filename: The filename of the file to get the variables from
+    :returns: An OrderedDict containing the variables from the file
     '''
     if not SD:
         raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
@@ -112,19 +109,12 @@ class HDF_SDS(object):
 def read(filename, variables=None, datadict=None):
     """
     Reads SD from a HDF4 file into a dictionary. 
-    
-    Returns:
-        A dictionary containing data for requested variables.
-        Missing data is replaced by NaN.
-        
-    Arguments:
-        filename    -- The name (with path) of the HDF file to read.
-        names       -- A sequence of variable (dataset) names to read from the
-                       file (default None, causing all variables to be read).
-                       The names must appear exactly as in in the HDF file.
-        datadict     -- Optional dictionary to add data to, otherwise a new, empty
-                       dictionary is created
-    
+
+    :param str filename: The name (with path) of the HDF file to read.
+    :param iterable names: A sequence of variable (dataset) names to read from the
+     file (default None, causing all variables to be read). The names must appear exactly as in in the HDF file.
+    :param dict datadict: Optional dictionary to add data to, otherwise a new, empty dictionary is created
+    :return: A dictionary containing data for requested variables. Missing data is replaced by NaN.
     """
     # Optional HDF import
     if not SD:
@@ -161,12 +151,8 @@ def get_calipso_data(sds):
     Reads raw data from an SD instance. Automatically applies the
     scaling factors and offsets to the data arrays found in Calipso data.
 
-    Returns:
-        A numpy array containing the raw data with missing data is replaced by NaN.
-
-    Arguments:
-        sds        -- The specific sds instance to read
-
+    :param sds: The specific sds instance to read
+    :returns: A numpy array containing the raw data with missing data is replaced by NaN.
     """
     from cis.utils import create_masked_array_for_missing_data
 
@@ -209,12 +195,8 @@ def get_data(sds, missing_values=None):
     scaling factors and offsets to the data arrays often found in NASA HDF-EOS
     data (e.g. MODIS)
 
-    Returns:
-        A numpy array containing the raw data with missing data is replaced by NaN.
-
-    Arguments:
-        sds        -- The specific sds instance to read
-
+    :param sds: The specific sds instance to read
+    :return: A numpy array containing the raw data with missing data is replaced by NaN.
     """
     data = sds.get()
     attributes = sds.attributes()
@@ -257,11 +239,13 @@ def get_metadata(sds):
 
 def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
     '''
-    Apply scaling factor Calipso data
-    :param data:
+    Apply scaling factor (applicable to Calipso data) of the form:
+    ``data = (data/scale_factor) + offset``
+
+    :param data: A numpy array like object
     :param scale_factor:
     :param offset:
-    :return:
+    :return: Scaled data
     '''
 
     data = (data/scale_factor) + offset
@@ -270,11 +254,13 @@ def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
 
 def __apply_scaling_factor_MODIS(data, scale_factor, offset):
     '''
-    Apply scaling factor for MODIS data
-    :param data:
+    Apply scaling factor (applicable to MODIS data) of the form:
+    ``data = (data - offset) * scale_factor``
+
+    :param data: A numpy array like object
     :param scale_factor:
     :param offset:
-    :return:
+    :return: Scaled data
     '''
     data = (data - offset) * scale_factor
     return data

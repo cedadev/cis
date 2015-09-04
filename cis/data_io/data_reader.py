@@ -10,8 +10,8 @@ from cis.utils import listify
 def expand_filelist(filelist):
     """
     :param filelist: A single element, or list, or comma seperated string of filenames, wildcarded filenames or directories
-    :return: A flat list of files which exist - with no duplicate
-    :raises: ValueError if any of the files in the list do not exist.
+    :return: A flat list of files which exist - with no duplicates
+    :raises ValueError: if any of the files in the list do not exist.
     """
     import os
     from glob import glob
@@ -46,16 +46,17 @@ def expand_filelist(filelist):
 
 class DataReader(object):
     """
-    High level class to manage reading data from a file
+    High level class to manage reading data from a file.
     Principally, manages operations between one or multiple variables, and gridded or un-gridded data.
     """
 
     def __init__(self, get_data_func=get_data, get_coords_func=get_coordinates, get_variables_func=get_variables):
         """
         Construct a new DataReader object
-        :param get_data_func: Function to read data from a file and return a CubeList
-        :param get_coords_func:
-        :return:
+
+        :param get_data_func: Function to read data from file and return a CommonDataList
+        :param get_coords_func: Function to read data from a file and return a CoordList
+        :param get_variables_func: Function to read variables from a file and return a list of variable strings
         """
         self._get_data_func = get_data_func
         self._get_coords_func = get_coords_func
@@ -63,20 +64,20 @@ class DataReader(object):
 
     def read_data_list(self, filenames, variables, product=None, aliases=None):
         """
-        Read multiple data objects
-        Files can be either gridded or ungridded but not a mix of both.
+        Read multiple data objects. Files can be either gridded or ungridded but not a mix of both.
+
         :param filenames: The filenames of the files to read
         :param variables: The variables to read from the files
         :param product: Name of data product to use
         :param aliases: List of variable aliases to put on each variables
-        data object as an alternative means of identifying them.
+         data object as an alternative means of identifying them.
         :return:  A list of the data read out (either a GriddedDataList or UngriddedDataList depending on the
-        type of data contained in the files)
+         type of data contained in the files)
         """
-        from cis.utils import apply_mask_to_numpy_array
         # if filenames or variables are not lists, make them lists of 1 element
         filenames = listify(filenames)
         variables = listify(variables)
+        aliases = listify(aliases)
 
         variables = self._expand_wildcards(variables, filenames)
 
@@ -98,6 +99,7 @@ class DataReader(object):
     def _expand_wildcards(self, variables, filenames):
         """
         Convert any wildcards into actual variable names by inspecting the file
+
         :param variables: List of variables names, some of which may be wilcards
         :param filenames: Filenames
         :return: List of variable names to use.
@@ -124,19 +126,20 @@ class DataReader(object):
     def read_datagroups(self, datagroups):
         """
         Read data from a set of datagroups
+
         :param datagroups: A list of datagroups. Each datagroup represents a grouping of files and variables, where the
-        set of files may be logically considered to represent the same data (an example would be 2D model data split
-        into monthly output files where the grid is the same).
-        The following should be true of a datagroup:
-        1) All variables in a datagroup are present in all the files in that datagroup
-        2) The shape of the data returned from each variable must be the same in each file, so that they may be
-        concatenated
-        3) They should all be openable by the same CIS data product
-        4) They should be dictionaries of the following format:
-         { 'filenames': ['filename1.nc', 'filename2.nc'],
-            'variables': ['variable1', 'variable2'],
-            'product' : 'Aerosol_CCI'
-         }
+         set of files may be logically considered to represent the same data (an example would be 2D model data split
+         into monthly output files where the grid is the same).
+         The following should be true of a datagroup:
+
+         1. All variables in a datagroup are present in all the files in that datagroup
+         2. The shape of the data returned from each variable must be the same in each file, so that they may be concatenated
+         3. They should all be openable by the same CIS data product
+         4. They should be dictionaries of the following format::
+
+                 {'filenames': ['filename1.nc', 'filename2.nc'],
+                   'variables': ['variable1', 'variable2'],
+                   'product' : 'Aerosol_CCI'}
 
         :return: A list of data (either a GriddedDataList or an UngriddedDataList, depending on the data format)
         """

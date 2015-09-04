@@ -38,8 +38,9 @@ class AProduct(object):
     def create_coords(self, filenames):
         """
         Reads the coordinates from multiple files
+
         :param filenames: List of filenames to read coordinates from
-        :return: L{CoordList} object
+        :return: :class:`CoordList` object
         """
 
     @abstractmethod
@@ -61,8 +62,7 @@ class AProduct(object):
 
     def get_variable_names(self, filenames, data_type=None):
         """
-        Get a list of available variable names
-        This can be overridden in specific products to improve on this
+        Get a list of available variable names. This can be overridden in specific products to improve on this.
         """
         variables = []
         for filename in filenames:
@@ -84,9 +84,10 @@ class AProduct(object):
         """
         Return the file format, in general this string is parent format/specific instance/version
         e.g. NetCDF/GASSP/1.0
-        :param filenames: filenames of files that make up the dataset
-        :returns: file format, of the form parent format/specific instance/version, if there is not a specific fileformat
-        for the data product returns the data product name
+
+        :param filenames: Filenames of files that make up the dataset
+        :returns: File format, of the form "[parent/]format/specific instance/version". If there is not a specific
+         fileformat for the data product returns the data product name.
         """
 
         return self.__class__.__name__
@@ -94,15 +95,15 @@ class AProduct(object):
 
 def __get_class(filename, product=None):
     """
-    Identify the subclass of L{AProduct} to a given product name if specified.
+    Identify the subclass of :class:`AProduct` to a given product name if specified.
     If the product name is not specified, the routine uses the signature (regex)
-    given by get_file_signature() to infer the product class from the filename.
+    given by :func:`get_file_signature()` to infer the product class from the filename.
 
     Note, only the first filename of the list is use here.
 
     :param filename: A single filename
     :param product: name of the product
-    :return: a subclass of L{AProduct}
+    :return: a subclass of :class:`AProduct`
     """
     import re
     import os
@@ -146,13 +147,13 @@ def __get_class(filename, product=None):
 
 def get_data(filenames, variable, product=None):
     """
-    Top level routine for calling the correct product's create_ungridded_data routine.
+    Top level routine for calling the correct product's :func:`create_data_object` routine.
 
-    :param product: The product to read data from - this should be a string which matches the name of one of the
-    subclasses of AProduct
-    :param filenames: A list of filenames to read data from
-    :param variable: The variable to create the UngriddedData object from
-    :return: An Ungridded data variable
+    :param list filenames: A list of filenames to read data from
+    :param str variable: The variable to create the CommonData object from
+    :param str product: The product to read data with - this should be a string which matches the name of one of the
+     subclasses of :class:`AProduct`. If none is supplied it is guessed from the filename signature.
+    :return: A :class:`CommonData` variable
     """
     product_cls = __get_class(filenames[0], product)
 
@@ -169,12 +170,12 @@ def get_data(filenames, variable, product=None):
 
 def get_coordinates(filenames, product=None):
     """
-    Top level routine for calling the correct product's create_coords routine.
+    Top level routine for calling the correct product's :func:`create_coords` routine.
 
-    :param product: The product to read data from - this should be a string which matches the name of one of the
-    subclasses of AProduct
-    :param filenames: A list of filenames to read data from
-    :return: A CoordList object
+    :param list filenames: A list of filenames to read data from
+    :param str product: The product to read data with - this should be a string which matches the name of one of the
+     subclasses of AProduct
+    :return: A :class:`CoordList` object
     """
     product_cls = __get_class(filenames[0], product)
 
@@ -190,6 +191,14 @@ def get_coordinates(filenames, product=None):
 
 
 def get_variables(filenames, product=None, data_type=None):
+    """
+    Top level routine for calling the correct product's :func:`get_variable_names` routine.
+
+    :param list filenames: A list of filenames to read the variables from
+    :param str product: The product to read data with - this should be a string which matches the name of one of the
+     subclasses of AProduct
+    :return: A set of variable names as strings
+    """
     product_cls = __get_class(filenames[0], product)
 
     logging.info("Retrieving variables using product " + product_cls.__name__ + "...")
@@ -207,9 +216,9 @@ def get_file_format(filenames, product=None):
     """
     Returns the files format of throws FileFormatError if there is an error in the format
 
-    :param filenames: the filenames to read
-    :param product: the product to use, if not specified search
-    :return: file format
+    :param list filenames: the filenames to read
+    :param str product: the product to use, if not specified search
+    :return: File format
     :raises ClassNotFoundError: if there is no reader for this class
     """
     product_cls = __get_class(filenames[0], product)
@@ -233,8 +242,9 @@ def get_file_format(filenames, product=None):
 def get_product_full_name(filenames, product=None):
     """
     Get the full name of the product which would read this file
-    :param filenames: list of filenames to read
-    :param product: specified product to use
+
+    :param list filenames: list of filenames to read
+    :param str product: specified product to use
     """
 
     product_cls = __get_class(filenames[0], product)

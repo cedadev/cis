@@ -1049,7 +1049,7 @@ def make_coord_map(points, data):
     :param points: sample points
     :param data: data to map
     :return: list of tuples, each tuple is index of coordinate to use
-        tuple is (hyper point coord index, sample point coord index, output coord index)
+    tuple is (hyper point coord index, sample point coord index, output coord index)
     """
     # If there are coordinates in the sample grid that are not present for the data,
     # omit the from the set of coordinates in the output grid. Find a mask of coordinates

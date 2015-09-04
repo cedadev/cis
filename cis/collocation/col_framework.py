@@ -110,7 +110,7 @@ class Constraint(object):
         Iterator to iterate through the points needed to be calculated
         The default iterator, iterates through all the sample points calling constrain_points for each one
         :param missing_data_for_missing_sample: if true anywhere there is missing data on the sample then final point is
-            missing; otherwise just use the sample
+        missing; otherwise just use the sample
         :param coord_map: coordinate map - list of tuples of indexes of hyperpoint coord, data coords and output coords
         :param coords: the coordinates to map to
         :param data_points: the data points (without masked values)
@@ -118,7 +118,7 @@ class Constraint(object):
         :param points: the original points object, these are the points to collocate
         :param output_data: output data set
         :return: iterator which iterates through sample indices, hyper point and constrained points to be placed in
-            these points
+        these points
         """
         from cis.collocation.col_implementations import HyperPoint
         if missing_data_for_missing_sample:
@@ -229,7 +229,6 @@ def get_constraint(method=None):
     '''
     Top level routine for finding the correct Constraint object. This doesn't instantiate the constraint class as it
     may need variables passed to the constructor
-
     :param method: The constraint method to find - this should be a string which matches the name of one
     of the subclasses of Constraint
     :return: One of Constraint's subclasses
@@ -241,7 +240,6 @@ def get_constraint(method=None):
 def get_kernel(method=None):
     '''
     Top level routine for finding the correct Kernel object.
-
     :param method: The kernel method to find - this should be a string which matches the name of one
     of the subclasses of Kernel
     :return: One of Kernel's subclasses
@@ -253,7 +251,6 @@ def get_kernel(method=None):
 def get_collocator(method=None):
     '''
     Top level routine for finding the correct Collocator object.
-
     :param method: The collocate method to find - this should be a string which matches the name of one
     of the subclasses of Collocator
     :return: One of Collocator's subclasses

@@ -22,11 +22,8 @@ def get_hdf_VD_file_variables(filename):
     '''
     Get all the variables from an HDF VD file
 
-    args:
-        filename: The filename of the file to get the variables from
-
-    returns:
-        An OrderedDict containing the variables from the file
+    :param filename: The filename of the file to get the variables from
+    :returns: An OrderedDict containing the variables from the file
     '''
     variables = None
     if not HDF:
@@ -53,7 +50,8 @@ def get_hdf_VD_file_variables(filename):
 
 def read(filename, variables=None, datadict=None):
     """
-        Given a filename and a list of file names return a dictionary of VD data handles
+    Given a filename and a list of file names return a dictionary of VD data handles
+
     :param filename: full path to a single HDF4 file
     :param variables: A list of variables to read, if no variables are given, no variables are read
     :param datadict: A dictionary of variable name, data handle pairs to be appended to
@@ -93,9 +91,9 @@ def read(filename, variables=None, datadict=None):
 
 def get_data(vds, first_record=False, missing_values=None):
     """
-        Actually read the data from the VDS handle.
-        We shouldn't need to check for HDF being installed here because the VDS object which is being passed to us can
-        only have come from pyhdf.
+    Actually read the data from the VDS handle. We shouldn't need to check for HDF being installed here because the
+    VDS object which is being passed to us can only have come from pyhdf.
+
     :param vds:
     :param first_record:
     :param missing_values:

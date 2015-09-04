@@ -13,7 +13,7 @@ Contents:
    :numbered:
 
    installation
-   whats_new_1.2
+   whats_new
    data_products
    command_line
    file_information
@@ -26,7 +26,7 @@ Contents:
    statistics
    overlay_examples
    maintenance_and_development
-   Python API Reference <api/cis>
+   CIS as a Python library (API) <api/cis>
 
 Indices and tables
 ==================

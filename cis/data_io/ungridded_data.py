@@ -45,7 +45,8 @@ class Metadata(object):
 
     def summary(self, offset=5):
         """
-            Creates a unicode summary of the metadata object
+        Creates a unicode summary of the metadata object
+
         :param offset: The left hand padding to apply to the text
         :return: The summary
         """
@@ -72,11 +73,10 @@ class Metadata(object):
 
     def alter_standard_name(self, new_standard_name):
         """
-        Alter the standard name and log an info line to say this is happening if the standard name is not empty
-        Also changes internal name for metadata
-        or the same
+        Alter the standard name and log an info line to say this is happening if the standard name is not empty.
+        Also changes internal name for metadata or the same.
+
         :param new_standard_name:
-        :return: nothing
         """
         if self.standard_name is not None \
                 and self.standard_name.strip() is not "" \
@@ -159,8 +159,8 @@ class LazyData(object):
 
     def name(self):
         """
-            This routine returns the first name property which is not empty out of: _name, standard_name and long_name
-                If they are all empty it returns an empty string
+        This routine returns the first name property which is not empty out of: _name, standard_name and long_name.
+        If they are all empty it returns an empty string
         :return: The name of the data object as a string
         """
 
@@ -208,8 +208,8 @@ class LazyData(object):
     @property
     def data(self):
         '''
-            This is a getter for the data property. It caches the raw data if it has not already been read.
-             Throws a MemoryError when reading for the first time if the data is too large.
+        This is a getter for the data property. It caches the raw data if it has not already been read.
+        Throws a MemoryError when reading for the first time if the data is too large.
         '''
         import numpy.ma as ma
         if self._data is None:
@@ -249,7 +249,7 @@ class LazyData(object):
 
     def copy_metadata_from(self, other_data):
         '''
-            Method to copy the metadata from one UngriddedData/Cube object to another
+        Method to copy the metadata from one UngriddedData/Cube object to another
         '''
         self._coords = other_data.coords()
         self.metadata = other_data._metadata
@@ -261,8 +261,8 @@ class LazyData(object):
 
     def add_history(self, new_history):
         """Appends to, or creates, the metadata history attribute using the supplied history string.
-
         The new entry is prefixed with a timestamp.
+
         :param new_history: history string
         """
         timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
@@ -274,6 +274,7 @@ class LazyData(object):
     def add_attributes(self, attributes):
         """
         Add a variable attribute to this data
+
         :param attributes: Dictionary of attribute names (keys) and values.
         :return:
         """
@@ -282,6 +283,7 @@ class LazyData(object):
     def remove_attribute(self, key):
         """
         Remove a variable attribute from this data
+
         :param key: Attribute key to remove
         :return:
         """
@@ -334,8 +336,8 @@ class UngriddedData(LazyData, CommonData):
         '''
         Constructor
 
-        :param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
-                        This can be a list of data handlers, or a single data handler
+        :param data: The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data.
+         This can be a list of data handlers, or a single data handler
         :param metadata: Any associated metadata
         :param coords: A list of the associated Coord objects
         :param data_retrieval_callback: A method for retrieving data when needed
@@ -364,7 +366,8 @@ class UngriddedData(LazyData, CommonData):
 
     def _post_process(self):
         """
-        Perform a post processing step on lazy loaded Ungridded Data
+        Perform a post processing step on lazy loaded Ungridded Data.
+
         :return:
         """
         # Load the data if not already loaded
@@ -394,7 +397,8 @@ class UngriddedData(LazyData, CommonData):
     def make_new_with_same_coordinates(self, data=None, var_name=None, standard_name=None,
                                        long_name=None, history=None, units=None, flatten=False):
         """
-        Create a new, empty GriddedData object with the same coordinates as this one
+        Create a new, empty UngriddedData object with the same coordinates as this one.
+
         :param data: Data to use (if None then defaults to all zeros)
         :param var_name: Variable name
         :param standard_name: Variable CF standard name
@@ -402,7 +406,7 @@ class UngriddedData(LazyData, CommonData):
         :param history: Data history string
         :param units: Variable units
         :param flatten: Whether to flatten the data and coordinates (for ungridded data only)
-        :return: GriddedData instance
+        :return: UngriddedData instance
         """
         if data is None:
             data = numpy.zeros(self.shape)
@@ -427,6 +431,7 @@ class UngriddedData(LazyData, CommonData):
         Create a copy of this UngriddedData object with new data and coordinates
         so that that they can be modified without held references being affected.
         Will call any lazy loading methods in the data and coordinates
+
         :return: Copied UngriddedData object
         """
         data = numpy.ma.copy(self.data)  # This will load the data if lazy load
@@ -455,7 +460,6 @@ class UngriddedData(LazyData, CommonData):
 
     def hyper_point(self, index):
         """
-
         :param index: The index in the array to find the point for
         :return: A hyperpoint representing the data at that point
         """
@@ -483,18 +487,21 @@ class UngriddedData(LazyData, CommonData):
 
     def get_coordinates_points(self):
         """Returns a HyperPointView of the coordinates of points.
+
         :return: HyperPointView of the coordinates of points
         """
         return UngriddedHyperPointView(self.coords_flattened, None)
 
     def get_all_points(self):
         """Returns a HyperPointView of the points.
+
         :return: HyperPointView of all the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, self.data_flattened)
 
     def get_non_masked_points(self):
         """Returns a HyperPointView for which the default iterator omits masked points.
+
         :return: HyperPointView of the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, self.data_flattened, non_masked_iteration=True)
@@ -503,6 +510,7 @@ class UngriddedData(LazyData, CommonData):
         """Constructs a list of the standard coordinates.
         The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
         list in this order.
+
         :return: list of coordinates or None if coordinate not present
         """
         return self.coords().find_standard_coords()
@@ -517,6 +525,7 @@ class UngriddedData(LazyData, CommonData):
     def from_points_array(cls, hyperpoints):
         """
         Constuctor for building an UngriddedData object from a list of hyper points
+
         :param hyperpoints: list of HyperPoints
         """
         from cis.data_io.Coord import Coord, CoordList
@@ -549,7 +558,7 @@ class UngriddedData(LazyData, CommonData):
 
     def summary(self):
         """
-            Unicode summary of the UngriddedData with metadata of itself and its coordinates
+        Unicode summary of the UngriddedData with metadata of itself and its coordinates
         """
         summary = u'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
         summary += u'     Shape = {}\n'.format(self.data.shape) + '\n'
@@ -574,7 +583,7 @@ class UngriddedData(LazyData, CommonData):
 
 class UngriddedCoordinates(CommonData):
     '''
-        Wrapper (adaptor) class for the different types of possible ungridded data.
+    Wrapper (adaptor) class for the different types of possible ungridded data.
     '''
 
     def __init__(self, coords):
@@ -599,7 +608,8 @@ class UngriddedCoordinates(CommonData):
 
     def _post_process(self):
         """
-        Perform a post processing step on lazy loaded Ungridded Data
+        Perform a post processing step on lazy loaded Coordinate Data
+
         :return:
         """
         # Remove any points with missing coordinate values:
@@ -618,10 +628,6 @@ class UngriddedCoordinates(CommonData):
 
     @property
     def history(self):
-        """
-        Return the associated
-        :return:
-        """
         return "UngriddedCoordinates have no history"
 
     @property
@@ -642,7 +648,6 @@ class UngriddedCoordinates(CommonData):
 
     def hyper_point(self, index):
         """
-
         :param index: The index in the array to find the point for
         :return: A hyperpoint representing the data at that point
         """
@@ -656,14 +661,12 @@ class UngriddedCoordinates(CommonData):
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
-
         :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
         return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
 
     def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
-
         :raise: CoordinateNotFoundError
         :return: A single coord given the same arguments as L(coords).
 
@@ -675,12 +678,14 @@ class UngriddedCoordinates(CommonData):
 
     def get_all_points(self):
         """Returns a HyperPointView of the points.
+
         :return: HyperPointView of all the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, None)
 
     def get_non_masked_points(self):
         """Returns a HyperPointView for which the default iterator omits masked points.
+
         :return: HyperPointView of the data points
         """
         return UngriddedHyperPointView(self.coords_flattened, None, non_masked_iteration=True)
@@ -708,6 +713,7 @@ class UngriddedDataList(CommonDataList):
     def save_data(self, output_file):
         """
         Save the UngriddedDataList to a file
+
         :param output_file: output filename
         :return:
         """
@@ -722,6 +728,7 @@ class UngriddedDataList(CommonDataList):
         """
         Returns a list containing a HyperPointViews for which the default iterator omits masked points, for each item in
         this UngriddedDataList.
+
         :return: List of HyperPointViews of the data points
         """
         points_list = []
@@ -731,8 +738,9 @@ class UngriddedDataList(CommonDataList):
 
     def coord(self, *args, **kwargs):
         """
-        Call UnGriddedData.coord(*args, **kwargs) for the first item of data (assumes all data in list has
+        Call :func:`UnGriddedData.coord(*args, **kwargs)` for the first item of data (assumes all data in list has
         same coordinates)
+
         :param args:
         :param kwargs:
         :return:
@@ -744,6 +752,7 @@ class UngriddedDataList(CommonDataList):
         Create a copy of this UngriddedDataList with new data and coordinates
         so that that they can be modified without held references being affected.
         Will call any lazy loading methods in the data and coordinates
+
         :return: Copied UngriddedData object
         """
         output = UngriddedDataList()

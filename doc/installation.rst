@@ -17,6 +17,10 @@ To check that CIS is installed correctly, simply type ``cis version`` to display
     $ cis version
     Using CIS version: V1R1M0 (Stable)
 
+In order to upgrade CIS to the latest version use::
+
+    $ conda update cis
+
 Dependencies
 ============
 

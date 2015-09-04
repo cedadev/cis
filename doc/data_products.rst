@@ -81,7 +81,7 @@ A datagroup is specified with the syntax:
     * ``<variable>`` is a mandatory argument specifying the variable or variable names to use. This should be the name of
       the variable as described in the file, e.g. the NetCDF variable name or HDF SDS/VDATA variable name. Multiple
       variables may be specified by commas, and variables may be wildcarded using any wildcards compatible with the
-      python module glob, so that *, ? and [] can all be used
+      python module glob, so that `*`, `?` and `[]` can all be used
 
     .. attention::
         When specifying multiple variables, it is essential that they be on the same grid (i.e. use the same coordinates).

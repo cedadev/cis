@@ -16,10 +16,18 @@ import mock
 import sys
 import os
 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy', 'basemap', 'iris', 'netCDF4', 'nose',
-                'psutil', 'pyhdf']
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib.pyplot', 'scipy', 'basemap', 'iris', 'netCDF4', 'nose',
+                'psutil', 'pyhdf', 'iris.cube', 'iris.exceptions', 'iris.unit', 'scipy.stats',
+                'iris.analysis', 'iris.std_names', 'iris.coords', 'scipy.stats.mstats', 'iris.coord_categorisation',
+                'iris.analysis.interpolate', 'iris.analysis.cartography', 'numpy.ma', 'scipy.sparse', 'iris.util',
+                'matplotlib.cbook', 'matplotlib.ticker', 'matplotlib', 'mpl_toolkits.basemap']
+
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
+
+import numpy, matplotlib
+numpy.pi = 3.4
+matplotlib.__version__ = 1
 
 import cis
 
@@ -145,7 +153,7 @@ except ImportError:
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied

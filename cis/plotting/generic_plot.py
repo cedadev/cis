@@ -18,6 +18,7 @@ class Generic_Plot(object):
         '''
         Constructor for Generic_Plot.
         Note: This also calls the plot method
+
         :param calculate_min_and_max_values: If true calculates min and max for the data values
         :param datagroup: The data group number in an overlay plot, 0 is the 'base' plot
         :param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items

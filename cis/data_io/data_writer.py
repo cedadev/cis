@@ -5,9 +5,9 @@ class DataWriter(object):
 
     def write_data(self, data, output_file):
         """
-        Write data to a file
-        :param data: Data to write
-        :param output_file: Output file name
-        :return:
+        Write data to a file.
+
+        :param CommonData data: Data to write
+        :param str output_file: Output file name
         """
         data.save_data(output_file)

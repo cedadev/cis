@@ -11,9 +11,10 @@ class Coord(LazyData):
     def from_many_coordinates(cls, coords):
         """
         Create a single coordinate object from the concatenation of all of the coordinate objects in the input list,
-         updating the shape as appropriate
-        :param: A list of coordinate objects to be combined
-        :return: Coord object
+        updating the shape as appropriate
+
+        :param coords: A list of coordinate objects to be combined
+        :return: A single :class:`Coord` object
         """
         from cis.utils import concatenate
         data = concatenate([ug.data for ug in coords])
@@ -37,8 +38,9 @@ class Coord(LazyData):
 
     @property
     def points(self):
-        """Alias for data to match iris.coords.Coord.points
-        :return: coordinate data
+        """Alias for :func:`self.data`, to match :func:`iris.coords.Coord.points` interface
+
+        :return: Coordinate data values
         """
         return self.data
 
@@ -60,11 +62,11 @@ class Coord(LazyData):
 
     def convert_to_std_time(self, time_stamp_info=None):
         """
-        Convert this coordinate to standard time. It will use:
-         the units of the coordinate if it is in the standard x since x
-         the first word of the units combined with the time stamp (if the timestamp is not given an error is thrown)
+        Convert this coordinate to standard time. It will use either: the units of the coordinate if it is in the
+        standard 'x since y' format; or
+        the first word of the units, combined with the time stamp (if the timestamp is not given an error is thrown).
+
         :param time_stamp_info: the time stamp info from the file, None if it does not exist
-        :return: nothing
         """
         from cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit, \
             convert_time_using_time_stamp_info_to_std_time
@@ -87,34 +89,29 @@ class Coord(LazyData):
 
     def set_longitude_range(self, range_start):
         """
-        Confine the coordinate longitude range to 360 degrees from the range_start value
-        :param range_start: Start of the longitude range
-        :return:
+        Confine the coordinate longitude range to 360 degrees from the :attr:`range_start` value.
+
+        :param float range_start: Start of the longitude range
         """
         self._data = fix_longitude_range(self._data, range_start)
         self._data_flattened = None
 
     def copy(self):
         """
-        Create a copy of this Coord object with new data so that that they
-        can be modified without held references being affected.
+        Create a copy of this Coord object with new data so that that they can be modified without held references
+        being affected. This will call any lazy loading methods in the coordinate data
 
-        Will call any lazy loading methods in the coordinate data
-        :return: Copied Coord
+        :return: Copied :class:`Coord`
         """
         data = numpy.ma.copy(self.data)  # Will call lazy load method
         return Coord(data, self.metadata)
 
 
 class CoordList(list):
-    """All the functionality of a standard `list` with added "Coord" context."""
+    """All the functionality of a standard :class:`list` with added :class:`Coord` context."""
 
     def __init__(self, *args):
-        """
-        Given a `list` of Coords, return a CoordList instance.
-
-        :param list_of_coords: list of coordinates with which to initialise the list
-        """
+        """ Given many :class:`Coord`s, return a :class:`CoordList` instance. """
         list.__init__(self, *args)
 
         # Check that all items in the incoming list are coords. Note that this checking
@@ -125,10 +122,10 @@ class CoordList(list):
 
     def append(self, other):
         """
-            Safely add a new coordinate object to the list, this checks for a unique axis and standard_name
-        :param other: Other coord to add
-        :raise: DuplicateCoordinateError
-        :return:
+        Safely add a new coordinate object to the list, this checks for a unique :attr:`axis` and :attr:`standard_name`.
+
+        :param :class:`Coord` other: Other coord to add
+        :raises DuplicateCoordinateError: If the coordinate is not unique in the list
         """
         from cis.exceptions import DuplicateCoordinateError
         if any([ other == item for item in self ]):
@@ -137,19 +134,24 @@ class CoordList(list):
 
     def get_coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
-        Return a list of coordinates in this UngriddedData object fitting the given criteria. This is deliberately very
-         similar to Cube.coords() to maintain a similar interface and because the functionality is similar. There
-          is no distrinction between dimension coordinates and auxilliary coordinates here though.
+        Return a list of coordinates in this :class:`CoordList` fitting the given criteria. This is deliberately very
+        similar to :func:`Cube.coords()` to maintain a similar interface and because the functionality is similar. There
+        is no distinction between dimension coordinates and auxilliary coordinates here though.
 
         :param name:  The standard name or long name or default name of the desired coordinate.
-            If None, does not check for name. Also see, :attr:`Cube.name`.
+         If None, does not check for name. Also see, :attr:`Cube.name`.
+        :type name: string or None
         :param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
+        :type standard_name: string or None
         :param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
+        :type long_name: string or None
         :param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes.
+        :type attributes: dict or None
         :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for axis.
-            Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
+         Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
+        :type axis: string or None
 
-        :return: A list of coordinates in this UngriddedData object fitting the given criteria
+        :return: A :class:`CoordList` of coordinates fitting the given criteria
         """
         from collections import Mapping
         coords = self
@@ -177,11 +179,26 @@ class CoordList(list):
 
     def get_coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
-        Return a single coord given the same arguments as L(coords). If the arguments given do not result in precisely
-         1 coordinate being matched, a CoordinateNotFoundError is raised.
+        Return a single coord fitting the given criteria. This is deliberately very
+        similar to :func:`Cube.coord()` method to maintain a similar interface and because the functionality is similar.
+        There is no distinction between dimension coordinates and auxilliary coordinates here though.
 
-        :raise: CoordinateNotFoundError
-        :return: A single coord given the same arguments as L(coords).
+        :param name:  The standard name or long name or default name of the desired coordinate.
+         If None, does not check for name. Also see, :attr:`Cube.name`.
+        :type name: string or None
+        :param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
+        :type standard_name: string or None
+        :param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
+        :type long_name: string or None
+        :param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes.
+        :type attributes: dict or None
+        :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for axis.
+         Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
+        :type axis: string or None
+
+        :raises CoordinateNotFoundError: If the arguments given do not result in precisely
+         1 coordinate being matched.
+        :return: A single :class:`Coord`.
 
         """
         from cis.exceptions import CoordinateNotFoundError
@@ -208,9 +225,11 @@ class CoordList(list):
     def get_standard_coords(self, data_len):
         """Constructs a list of the standard coordinate values.
         The standard coordinates are latitude, longitude, altitude, time and air_pressure; they occur in the return
-        list in this order.
-        :param data_len: expected length of coordinate data
-        :return: list of indexed sequences of coordinate values
+        list in this order. If a standard coordinate has not been found it's values are returned as a list of length
+        :attr:`data_len`.
+
+        :param int data_len: Expected length of coordinate data
+        :return: :class:`list` of indexed sequences of coordinate values
         """
         from cis.exceptions import CoordinateNotFoundError
 
@@ -230,7 +249,8 @@ class CoordList(list):
         """Constructs a list of the standard coordinates.
         The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
         list in this order.
-        :return: list of coordinates or None if coordinate not present
+
+        :return: :class:`list` of coordinates or None if coordinate not present
         """
         from cis.exceptions import CoordinateNotFoundError
 
@@ -248,10 +268,9 @@ class CoordList(list):
     def copy(self):
         """
         Create a copy of this CoordList object with new data so that that they can
-        be modified without held references being affected.
+        be modified without held references being affected. This will call any lazy loading methods in the coordinate data
 
-        Will call any lazy loading methods in the coordinate data
-        :return: Copied CoordList
+        :return: Copied :class:`CoordList`
         """
         copied = CoordList()
         for coord in self:

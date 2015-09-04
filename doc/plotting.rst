@@ -112,7 +112,7 @@ The axes can be specified with ``--xaxis`` and ``--yaxis``. Gridded data support
   * ``air_pressure``
   * ``variable`` - the variable being plotted
 
-If the product is not specified, the program will attempt to figure out which product should be used based on the filename.  See :ref:`data-products` to see a list of available products and their file signatures, or run ``cis plot -h``.
+If the product is not specified, the program will attempt to figure out which product should be used based on the filename.  See :doc:`data_products` to see a list of available products and their file signatures, or run ``cis plot -h``.
 
 
 Saving to a File
@@ -254,7 +254,7 @@ To overlay several line graphs or scatter plots, simply use the plot command as 
 
   $ cis plot $var1:$filename1:edgecolor=black $var2:$filename2:edgecolor=red
 
-To plot two variables from the same file, simply use the above command with `` $filename1 `` in place of `` $filename2 ``.
+To plot two variables from the same file, simply use the above command with `$filename1` in place of `$filename2`.
 
 To overlay a heatmap with several scatter graphs, use the following command::
 
