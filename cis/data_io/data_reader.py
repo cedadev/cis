@@ -77,7 +77,7 @@ class DataReader(object):
         # if filenames or variables are not lists, make them lists of 1 element
         filenames = listify(filenames)
         variables = listify(variables)
-        aliases = listify(aliases)
+        aliases = listify(aliases) if aliases else None
 
         variables = self._expand_wildcards(variables, filenames)
 
