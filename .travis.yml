@@ -5,7 +5,8 @@ sudo: false
 
 env:
   - TEST_TARGET=unit
-  - TEST_TARGET=integration
+  # Disable integration tests until we can access the test data remotely
+  #- TEST_TARGET=integration
 
 install:
 
@@ -49,7 +50,7 @@ script:
     fi
   # Get test data, then run the integration tests
   - if [[ $TEST_TARGET == 'integration' ]]; then
-      wget -O test-data.zip https://github.com/cistools/test-data/archive/master.zip
+      wget -O test-data.zip http://gws-access.ceda.ac.uk/public/cis/test-data.zip
       unzip -q test-data.zip
       export CIS_DATA_HOME="$(pwd)/test-data"
       python setup.py test -i -p 0;
