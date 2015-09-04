@@ -9,4 +9,4 @@ cis.egg-info/
 .DS_Store
 *~
 doc/_build
-*.png
+cis/*.png
