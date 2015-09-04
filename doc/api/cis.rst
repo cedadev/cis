@@ -76,11 +76,11 @@ the result for the user to output as needed.
    :special-members:
 
 
-Plotting
---------
-The main collocation class can be imported using :code:`from cis.plotting import Plotter`, it's methods are outlined below:
-
-.. automethod:: cis.plotting.Plotter.__init__
+.. todo:: Fix the plotting interface
+.. Plotting
+   --------
+   The main collocation class can be imported using :code:`from cis.plotting import Plotter`, it's methods are outlined below:
+   .. automethod:: cis.plotting.Plotter.__init__
 
 
 Stats
