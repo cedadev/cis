@@ -5,8 +5,8 @@
 matplotlib
 basemap=1.0.7
 numpy
-scipy
 iris=1.8.0
+scipy
 
 # IO Dependencies
 hdf4
