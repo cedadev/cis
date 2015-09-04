@@ -9,7 +9,7 @@ def run(test_set='cis/test/unit', n_processors=1, stop=False):
     if stop:
         args.append('--stop')
 
-    nose.run(argv=args)
+    nose.run_exit(argv=args)
 
 
 class nose_test(TestCommand):
