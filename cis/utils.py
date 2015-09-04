@@ -50,6 +50,7 @@ def concatenate(arrays, axis=0):
     Concatenate a list of numpy arrays into one larger array along the axis specified (the default axis is zero). If any
     of the arrays are masked arrays then the returned array will be a masked array with the correct mask, otherwise a
     numpy array is returned.
+
     :param arrays: A list of numpy arrays (masked or not)
     :param axis: The axis along which to concatenate (the default is 0)
     :return: The concatenated array
@@ -168,8 +169,8 @@ def create_masked_array_for_missing_values(data, missing_values):
 
 def apply_mask_to_numpy_array(in_array, mask):
     """Elementwise ORs the mask with the mask of the array.
-
     If the mask masks no elements, no change is made. If the array is not masked, it is converted to a masked array.
+
     :param in_array: input array
     :type in_array: numpy array or masked array
     :param mask: mask
@@ -211,6 +212,7 @@ def array_equal_including_nan(array1, array2):
 def get_coord(data_object, variable, data):
     """
     Find a specified coord
+
     :param data_object:
     :param variable: 
     :param data:
@@ -321,8 +323,8 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
 
 def fix_longitude_range(lons, range_start):
     """Shifts longitude values by +/- 360 to fit within a 360 degree range starting at a specified value.
-
     It is assumed that a no shifts larger than 360 are needed.
+
     :param lons: numpy array of longitude values
     :param range_start: longitude at start of 360 degree range into which values are required to fit
     :return: array of fixed longitudes
@@ -421,6 +423,7 @@ def add_file_prefix(prefix, filepath):
 def remove_file_prefix(prefix, filepath):
     """
     Remove a prefix from a filename, taking into account any path that might be present before that actual filename
+
     :param prefix: The prefix to remove
     :param filepath: Filename, optionall including path
     :return: A sring with the full path to the unprefixed file
@@ -468,7 +471,7 @@ def parse_key_val_list(input_list):
 
 def haversine(lat, lon, lat2, lon2):
     '''
-        Computes the Haversine distance between two points
+    Computes the Haversine distance between two points
     '''
     import math
     R_E = 6378 # Radius of the earth in km
@@ -545,8 +548,8 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     """
     Ensure two (optionally) masked arrays have the same mask.
     If both arrays are masked the intersection of the masks is used.
-    If one array is masked and the other is not, the mask from the masked array is applied to the unmasked array
-    If neither array is masked then both arrays are returned as masked arrays with an empty mask
+    If one array is masked and the other is not, the mask from the masked array is applied to the unmasked array.
+    If neither array is masked then both arrays are returned as masked arrays with an empty mask.
 
     :param array1: An (optionally masked) array
     :param array2: Another (optionally masked) array
@@ -573,8 +576,8 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
 
 def index_iterator_nditer(shape, points):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
-
     The last index changes most rapidly.
+
     :param shape: sequence of array dimensions
     :return: yields tuples of array indexes
     """
@@ -600,8 +603,8 @@ def index_iterator_nditer(shape, points):
 
 def index_iterator(shape):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
-
     The last index changes most rapidly.
+
     :param shape: sequence of array dimensions
     :return: yields tuples of array indexes
     """
@@ -622,8 +625,8 @@ def index_iterator(shape):
 
 def index_iterator_for_non_masked_data(shape, points):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
-
     The last index changes most rapidly.
+
     :param shape: sequence of array dimensions
     :return: yields tuples of array indexes
     """
@@ -658,6 +661,7 @@ def index_iterator_for_non_masked_data(shape, points):
 
 def parse_distance_with_units_to_float_km(distance):
     """Parse a string such as '10km' or '1.0e3m' to a distance in km
+
     :param distance: string to parse
     :return: A distance in km
     """
@@ -675,6 +679,7 @@ def parse_distance_with_units_to_float_km(distance):
 
 def parse_distance_with_units_to_float_m(distance):
     """Parse a string such as '10km' or '1.0e3m' to a distance in m
+
     :param distance: string to parse
     :return: A distance in m
     """
@@ -687,6 +692,7 @@ def parse_distance_with_units_to_float_m(distance):
 
 def split_into_float_and_units(measurement):
     """Split a string such as '1000m' or '1.0e3' to a value and, optionally, units
+
     :param distance: string to parse
     :return: A distance in m
     """
@@ -719,6 +725,7 @@ def split_into_float_and_units(measurement):
 
 def get_class_name(cls):
     """Returns the qualified class name of a class.
+
     :param cls: class
     :return: class name
     """
@@ -750,6 +757,7 @@ def guess_coord_axis(coord):
 def add_to_list_if_not_none(item, list):
     """
     Add a value to a list if it is not None
+
     :param item: the item to add
     :param list: the list to append it to
     :return: nothing
@@ -761,6 +769,7 @@ def add_to_list_if_not_none(item, list):
 def dimensions_equal(dimensions, other_dimensions):
     """
     Check to see if two dimensions are the same (contain the same variables in the same order)
+
     :param dimensions: dimension list
     :param other_dimensions: other dimension list
     """
@@ -776,6 +785,7 @@ def dimensions_equal(dimensions, other_dimensions):
 def set_cube_standard_name_if_valid(cube, standard_name):
     """
     Set a cube's standard name if it is a valid CF compliant name, otherwise set it to None
+
     :param cube: Cube to set standard name on
     :param standard_name: Standard name to set
     :return:
@@ -813,6 +823,7 @@ def deprecated(func):
 def listify(item):
     """
     If item is not a list, return it as a list
+
     :param item: Item which may or may not be a list
     :return: List
     """
@@ -826,6 +837,7 @@ def listify(item):
 def log_memory_profile(location):
     """
     Write the total memory to the log as debug message
+
     :param location: location in the program where the memory measurement was taken
     :return: nothing
     """
