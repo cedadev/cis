@@ -9,10 +9,6 @@ from iris.coords import DimCoord
 from iris.cube import Cube
 import numpy as np
 
-# Ensure we're using a headless matplotlib for testing.
-import matplotlib
-matplotlib.use("Agg")
-
 from cis.data_io.gridded_data import make_from_cube
 from cis.plotting.plot import Plotter
 from cis.plotting.generic_plot import Generic_Plot
