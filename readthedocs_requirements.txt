@@ -1,0 +1,3 @@
+# An empty requirements file to force readthedocs to ignore our other dependencies (these are mocked out for
+# documentation anyway)
+cis/
