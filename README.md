@@ -2,6 +2,7 @@ CIS
 ===
 
 [![Build Status](https://travis-ci.org/cedadev/cis.svg)](https://travis-ci.org/cedadev/cis)
+[![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
 
 CIS is an open source command-line tool for easy collocation, visualization, analysis, and comparison of
 diverse gridded and ungridded datasets used in the atmospheric sciences. Visit our homepage at www.cistools.net.

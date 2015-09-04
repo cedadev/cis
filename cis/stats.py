@@ -304,7 +304,6 @@ class StatsAnalyzer(object):
 
         :param CommonData data1: First data object
         :param CommonData data2: Second data object
-        :return: List of StatisticsResult instances.
         """
         self._var_name_1 = data1.var_name
         self._var_name_2 = data2.var_name

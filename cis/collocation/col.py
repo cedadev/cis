@@ -152,7 +152,6 @@ class Collocate(object):
         :param output_filename: Filename to output to
         :param missing_data_for_missing_sample: Write missing values out when sample data is missing
         :param CollocatorFactory collocator_factory: An optional configuration object
-        :return:
         """
         self.sample_points = sample_points
         self.missing_data_for_missing_sample = missing_data_for_missing_sample

@@ -16,6 +16,14 @@ from cis.aggregation.aggregation_kernels import aggregation_kernels
 
 class Aggregate(object):
     def __init__(self, grid, output_file, data_reader=DataReader(), data_writer=DataWriter()):
+        """
+        Constructor
+
+        :param dict grid: A dictionary of dimension_name:AggregationGrid key value pairs.
+        :param output_file: The filename to output the result to
+        :param data_reader: Optional :class:`DataReader` configuration object
+        :param data_writer: Optional :class:`DataWriter` configuration object
+        """
         self._data_writer = data_writer
         self._data_reader = data_reader
         self._grid = grid
@@ -24,8 +32,17 @@ class Aggregate(object):
     def _create_aggregator(self, data, grid):
         return Aggregator(data, grid)
 
-    def aggregate(self, variables, filenames, product, kernel_name):
+    def aggregate(self, variables, filenames, product=None, kernel_name='moments'):
+        """
+        Aggregate the given variables based on the initialised grid
 
+        :param variables: One or more variables to read from the files
+        :type variables: string or list
+        :param filenames: One or more filenames of the files to read
+        :type filenames: string or list
+        :param str product: Name of data product to use (optional)
+        :param str kernel_name: Name of kernel to use (the default is 'moments')
+        """
         # Read the input data - the parser limits the number of data groups to one for this command.
         try:
             # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from

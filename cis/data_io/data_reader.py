@@ -66,11 +66,13 @@ class DataReader(object):
         """
         Read multiple data objects. Files can be either gridded or ungridded but not a mix of both.
 
-        :param filenames: The filenames of the files to read
-        :param variables: The variables to read from the files
-        :param product: Name of data product to use
+        :param filenames: One or more filenames of the files to read
+        :type filenames: string or list
+        :param variables: One or more variables to read from the files
+        :type variables: string or list
+        :param str product: Name of data product to use (optional)
         :param aliases: List of variable aliases to put on each variables
-         data object as an alternative means of identifying them.
+         data object as an alternative means of identifying them. (Optional)
         :return:  A list of the data read out (either a GriddedDataList or UngriddedDataList depending on the
          type of data contained in the files)
         """

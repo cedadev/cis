@@ -16,14 +16,36 @@ from cis.utils import guess_coord_axis
 
 
 class Subset(object):
+    """
+    Class for subsetting Ungridded or Gridded data either temporally, or spatially or both.
+    """
+
     def __init__(self, limits, output_file, subsetter=Subsetter(), data_reader=DataReader(), data_writer=DataWriter()):
+        """
+        Constructor
+
+        :param dict limits: A dictionary of dimension_name:SubsetLimits key value pairs.
+        :param output_file: The filename to output the result to
+        :param subsetter: Optional :class:`Subsetter` configuration object
+        :param data_reader: Optional :class:`DataReader` configuration object
+        :param data_writer: Optional :class:`DataWriter` configuration object
+        """
         self._limits = limits
         self._output_file = output_file
         self._subsetter = subsetter
         self._data_reader = data_reader
         self._data_writer = data_writer
 
-    def subset(self, variables, filenames, product):
+    def subset(self, variables, filenames, product=None):
+        """
+        Subset the given variables based on the initialised limits
+
+        :param variables: One or more variables to read from the files
+        :type variables: string or list
+        :param filenames: One or more filenames of the files to read
+        :type filenames: string or list
+        :param str product: Name of data product to use (optional)
+        """
         # Read the input data - the parser limits the number of data groups to one for this command.
         data = None
         try:
@@ -61,8 +83,9 @@ class Subset(object):
     def _set_constraint_limits(self, data, subset_constraint):
         """
         Identify and set the constraint limits by:
-         - parsing anything that needs parsing (datetimes)
-         - ordering them always
+        * parsing anything that needs parsing (datetimes)
+        * ordering them always
+
         :param data:
         :param subset_constraint:
         :return:

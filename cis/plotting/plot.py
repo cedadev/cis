@@ -21,6 +21,7 @@ plot_options = { 'title' : mpl.title,
                  'ylabel' : mpl.ylabel,
                  'fontsize' : mpl.rcParams.update }
 
+
 class Plotter(object):
 
     plot_types = {"contour" : Contour_Plot,
@@ -36,7 +37,7 @@ class Plotter(object):
 
     def __init__(self, packed_data_items, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
         '''
-        Constructor for the plotter
+        Constructor for the plotter. Note that this method also does the actual plotting.
 
         :param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
         :param plot_type: The plot type to be used, as a string
