@@ -32,7 +32,7 @@ class Aggregate(object):
     def _create_aggregator(self, data, grid):
         return Aggregator(data, grid)
 
-    def aggregate(self, variables, filenames, product=None, kernel_name='moments'):
+    def aggregate(self, variables, filenames, product=None, kernel=None):
         """
         Aggregate the given variables based on the initialised grid
 
@@ -41,8 +41,10 @@ class Aggregate(object):
         :param filenames: One or more filenames of the files to read
         :type filenames: string or list
         :param str product: Name of data product to use (optional)
-        :param str kernel_name: Name of kernel to use (the default is 'moments')
+        :param str kernel: Name of kernel to use (the default is 'moments')
         """
+        # Set the default kernel here rather than in the signature as the input_group dict passes None by default
+        kernel_name = kernel or 'moments'
         # Read the input data - the parser limits the number of data groups to one for this command.
         try:
             # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
@@ -57,12 +59,12 @@ class Aggregate(object):
         aggregator = self._create_aggregator(data, self._grid)
 
         if isinstance(data, iris.cube.CubeList):
-            kernel = aggregation_kernels[kernel_name]
-            data = aggregator.aggregate_gridded(kernel)
+            kernel_inst = aggregation_kernels[kernel_name]
+            data = aggregator.aggregate_gridded(kernel_inst)
         else:
             kernel_class = get_kernel(kernel_name)
-            kernel = kernel_class()
-            data = aggregator.aggregate_ungridded(kernel)
+            kernel_inst = kernel_class()
+            data = aggregator.aggregate_ungridded(kernel_inst)
 
         # TODO Tidy up output of grid in the history
         history = "Aggregated using CIS version " + __version__ + \
