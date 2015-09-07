@@ -95,13 +95,9 @@ def info_cmd(main_arguments):
     :param main_arguments:    The command line arguments (minus the info command)
     '''
     from cis.info import info
-    variables = main_arguments.variables
-    filenames = main_arguments.filenames
-    data_type = main_arguments.type
-    product = main_arguments.product
 
     try:
-        info(filenames, variables, product, data_type)
+        info(main_arguments.filenames, main_arguments.variables, main_arguments.product, main_arguments.type)
     except CISError as e:
         __error_occurred(e)
 
@@ -126,7 +122,7 @@ def col_cmd(main_arguments):
         missing_data_for_missing_samples = True
 
     try:
-        col = Collocate(sample_data, output_file, missing_data_for_missing_samples)
+        col = Collocate(sample_data, missing_data_for_missing_samples)
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
 
