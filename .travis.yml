@@ -49,7 +49,7 @@ script:
     fi
   # Get test data, then run the integration tests
   - if [[ $TEST_TARGET == 'integration' ]]; then
-      wget -O test-data.zip http://gws-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz
+      wget -O cis_repo_test_files.tar.gz "http://gws-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz"
       tar -xzvf cis_repo_test_files.tar.gz
       export CIS_DATA_HOME="$(pwd)/test-data"
       python setup.py test -i -p 0;
