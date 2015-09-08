@@ -66,6 +66,8 @@ class GeneralUngriddedCollocator(Collocator):
 
         metadata = data.metadata
 
+        sample_points = points.get_all_points()
+
         # Convert ungridded data to a list of points if kernel needs it.
         # Special case checks for kernels that use a cube - this could be done more elegantly.
         if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
@@ -76,7 +78,12 @@ class GeneralUngriddedCollocator(Collocator):
             data_points = data
         else:
             data_points = data.get_non_masked_points()
-            _fix_longitude_range(points.coords(), data_points)
+
+        # First fix the sample points so that they all fall within the same 360 degree longitude range
+        _fix_longitude_range(points.coords(), sample_points)
+        # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
+        _fix_longitude_range(points.coords(), data_points)
+
         log_memory_profile("GeneralUngriddedCollocator after data retrieval")
 
         # Create index if constraint and/or kernel require one.
@@ -86,8 +93,6 @@ class GeneralUngriddedCollocator(Collocator):
         log_memory_profile("GeneralUngriddedCollocator after indexing")
 
         logging.info("--> Collocating...")
-
-        sample_points = points.get_all_points()
 
         # Create output arrays.
         self.var_name = data.name()
@@ -622,7 +627,7 @@ class GriddedCollocator(Collocator):
         self._check_for_valid_kernel(kernel)
 
         # Force the data longitude range to be the same as that of the sample grid.
-        _fix_cube_longitude_range(points.coords(), data)
+        _fix_longitude_range(points.coords(), data)
 
         # Initialise variables used to create an output mask based on the sample data mask.
         sample_coord_lookup = {}  # Maps coordinate in sample data -> location in dimension order
@@ -1108,18 +1113,9 @@ def _find_longitude_range(coords):
 def _fix_longitude_range(coords, data_points):
     """Sets the longitude range of the data points to match that of the sample coordinates.
     :param coords: coordinates for grid on which to collocate
-    :param data_points: HyperPointList of data to fix
+    :param data_points: HyperPointList or GriddedData of data to fix
     """
     range_start = _find_longitude_range(coords)
     if range_start is not None:
         data_points.set_longitude_range(range_start)
 
-
-def _fix_cube_longitude_range(coords, data):
-    """Sets the longitude range of the data cube to match that of the sample coordinates.
-    :param coords: coordinates for grid on which to collocate
-    :param data: cube of data to fix
-    """
-    range_start = _find_longitude_range(coords)
-    if range_start is not None:
-        data.set_longitude_range(range_start)

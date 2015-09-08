@@ -56,15 +56,70 @@ class TestFullAverage(unittest.TestCase):
 class TestNNGridded(unittest.TestCase):
     def test_basic_col_gridded_to_ungridded_in_2d(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
-
         cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube())
+
         sample_points = UngriddedData.from_points_array(
-            [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+            [HyperPoint(lat=1.0, lon=1.0),
+             HyperPoint(lat=4.0, lon=4.0),
+             HyperPoint(lat=-4.0, lon=-4.0)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
-        eq_(new_data.data[0], 8.0)
-        eq_(new_data.data[1], 12.0)
-        eq_(new_data.data[2], 4.0)
+        eq_(new_data.data[0], 8.0)  # float(cube[2,1].data))
+        eq_(new_data.data[1], 12.0)  # float(cube[3,2].data))
+        eq_(new_data.data[2], 4.0)  # float(cube[1,0].data))
+
+    def test_negative_lon_points_dont_matter_with_0_360_grid_in_2d(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
+        # This cube is defined over a 0-360 longitude grid
+        cube = gridded_data.make_from_cube(mock.make_dummy_2d_cube())
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=1.0),
+             HyperPoint(lat=19.0, lon=44.0),
+             HyperPoint(lat=-4.0, lon=-14.0),
+             HyperPoint(lat=-4.0, lon=-44.0)])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
+        eq_(new_data.data[0], 325.0)  # float(cube[9,0].data)
+        eq_(new_data.data[1], 365.0)  # float(cube[10,4].data))
+        eq_(new_data.data[2], 324.0)  # float(cube[8,35].data))
+        eq_(new_data.data[3], 321.0)  # float(cube[8,32].data))
+
+    def test_guessing_the_bounds_on_a_cube_doesnt_matter_for_negative_lon_points_on_a_0_360_grid_in_2d(self):
+        """This should be identical to above but there was an issue in iris where this caused a problem"""
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
+        # This cube is defined over a 0-360 longitude grid
+        cube = gridded_data.make_from_cube(mock.make_dummy_2d_cube())
+        cube.coord(standard_name='longitude').guess_bounds()
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=1.0),
+             HyperPoint(lat=19.0, lon=44.0),
+             HyperPoint(lat=-4.0, lon=-14.0),
+             HyperPoint(lat=-4.0, lon=-44.0)])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
+        eq_(new_data.data[0], 325.0)  # float(cube[9,0].data)
+        eq_(new_data.data[1], 365.0)  # float(cube[10,4].data))
+        eq_(new_data.data[2], 324.0)  # float(cube[8,35].data))
+        eq_(new_data.data[3], 321.0)  # float(cube[8,32].data))
+
+    def test_lon_points_over_360_dont_matter_with_0_360_grid_in_2d(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
+        # This cube is defined over a 0-360 longitude grid
+        cube = gridded_data.make_from_cube(mock.make_dummy_2d_cube())
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=0.0),
+             HyperPoint(lat=1.0, lon=20.0),
+             HyperPoint(lat=1.0, lon=361.0),
+             HyperPoint(lat=1.0, lon=381.0)])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
+        eq_(new_data.data[0], 325.0)  # float(cube[9,0].data))
+        eq_(new_data.data[1], 327.0)  # float(cube[9,0].data))
+        eq_(new_data.data[2], 325.0)  # float(cube[9,0].data))
+        eq_(new_data.data[3], 327.0)  # float(cube[9,2].data))
 
     def test_already_collocated_in_col_gridded_to_ungridded_in_2d(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
@@ -91,9 +146,58 @@ class TestNNGridded(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
-        eq_(new_data.data[0], float(cube[2,1,1,0].data))
-        eq_(new_data.data[1], float(cube[3,2,1,4].data))
-        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+        eq_(new_data.data[0], 221.0)  # float(cube[2,1,1,0].data))
+        eq_(new_data.data[1], 345.0)  # float(cube[3,2,1,4].data))
+        eq_(new_data.data[2], 100.0)  # float(cube[1,0,0,9].data))
+
+    def test_negative_lon_points_on_hybrid_altitude_coordinates_dont_matter(self):
+        """This should give the same results as above"""
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            # This point actually lies outside the lower bounds for altitude at this point in space
+            [HyperPoint(lat=1.0, lon=1.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies in the middle of the altitude bounds at this point
+             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28, 8, 34))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
+        eq_(new_data.data[0], 221.0)  # float(cube[2,1,1,0].data))
+        eq_(new_data.data[1], 345.0)  # float(cube[3,2,1,4].data))
+
+    def test_colocation_of_alt_points_on_hybrid_altitude_coordinates_on_0_360_grid(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
+                                                               lon_range=(0.,350.)))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=111.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             HyperPoint(lat=4.0, lon=141.0, alt=12000.0, t=dt.datetime(1984, 8, 28, 8, 34))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
+        eq_(new_data.data[0], 2501.0)  # float(cube[2,11,1,0].data))
+        eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
+
+    def test_negative_lon_points_on_hybrid_altitude_coordinates_with_0_360_grid(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
+                                                               lon_range=(0.,350.)))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=111.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             HyperPoint(lat=4.0, lon=141.0, alt=12000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             HyperPoint(lat=-4.0, lon=-14.0, alt=10000.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
+        eq_(new_data.data[0], 2501.0)  # float(cube[2,11,1,0].data))
+        eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
+        eq_(new_data.data[2], 2139.0)  # float(cube[1,35,0,8].data))
 
     def test_colocation_of_pres_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
@@ -130,22 +234,6 @@ class TestNNGridded(unittest.TestCase):
         eq_(new_data.data[0], float(cube[2,1,1,0].data))
         eq_(new_data.data[1], float(cube[3,2,1,4].data))
         eq_(new_data.data[2], float(cube[1,0,0,9].data))
-
-    def test_negative_lon_points_on_hybrid_altitude_coordinates_dont_matter(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
-        import datetime as dt
-
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
-
-        sample_points = UngriddedData.from_points_array(
-            # This point actually lies outside the lower bounds for altitude at this point in space
-            [HyperPoint(lat=1.0, lon=1.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
-             # This point lies in the middle of the altitude bounds at this point
-             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28, 8, 34))])
-        col = GeneralUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
-        eq_(new_data.data[0], float(cube[2,1,1,0].data))
-        eq_(new_data.data[1], float(cube[3,2,1,4].data))
 
     def test_colocation_of_pres_points_on_hybrid_pressure_coordinates_and_altitude_coordinates(self):
         """
