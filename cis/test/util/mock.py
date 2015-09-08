@@ -13,7 +13,7 @@ from cis.data_io.hyperpoint import HyperPointList
 from cis.time_util import convert_obj_to_standard_date_array
 
 
-def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
+def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
                    hybrid_ht_len=0, hybrid_pr_len=0, dim_order=None, mask=False):
     """
@@ -51,6 +51,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
     DIM_NAMES = ['lat', 'lon', 'alt', 'pres', 'time', 'hybrid_ht', 'hybrid_pr']
     dim_lengths = [lat_dim_length, lon_dim_length, alt_dim_length, pres_dim_length, time_dim_length, hybrid_ht_len,
                    hybrid_pr_len]
+    lon_range = lon_range or (-5., 5.)
 
     if dim_order is None:
         dim_order = list(DIM_NAMES)
@@ -73,7 +74,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, alt_dim_length=0, pres_di
         data_size *= lat_dim_length
 
     if lon_dim_length:
-        coord_list[coord_map['lon']] = (DimCoord(np.linspace(-5., 5., lon_dim_length) + horizontal_offset,
+        coord_list[coord_map['lon']] = (DimCoord(np.linspace(lon_range[0], lon_range[1], lon_dim_length) + horizontal_offset,
                                         standard_name='longitude', units='degrees'), coord_map['lon'])
         data_size *= lon_dim_length
 
@@ -169,7 +170,7 @@ def make_dummy_2d_cube():
     
     latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
     longitude = DimCoord(range(0, 360, 10), standard_name='longitude', units='degrees')
-    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    cube = Cube(numpy.reshape(numpy.arange(19*36)+1.0,(19,36)), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
     
     return cube
 
@@ -275,8 +276,8 @@ def make_square_5x3_2d_cube():
     from iris.cube import Cube
     from iris.coords import DimCoord
     
-    latitude = DimCoord(np.arange(-10, 11, 5), var_name='lat', standard_name='latitude', units='degrees')
-    longitude = DimCoord(np.arange(-5, 6, 5), var_name='lon', standard_name='longitude', units='degrees')
+    latitude = DimCoord(np.arange(-10., 11., 5), var_name='lat', standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5., 6., 5), var_name='lon', standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(15)+1.0,(5,3))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)], var_name='dummy')
     
