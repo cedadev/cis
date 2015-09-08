@@ -182,24 +182,41 @@ class GriddedData(iris.cube.Cube, CommonData):
             return
         lon_coord = lon_coord[0]
         lon_idx = self.dim_coords.index(lon_coord)
+        roll_bounds = (lon_coord.bounds is not None) and (lon_coord.bounds.size != 0)
         idx1 = np.searchsorted(lon_coord.points, range_start)
         idx2 = np.searchsorted(lon_coord.points, range_start + 360.)
         shift = 0
         new_lon_points = None
+        new_lon_bounds = None
         if 0 < idx1 < len(lon_coord.points):
             shift = -idx1
             lon_min = lon_coord.points[idx1]
             new_lon_points = np.roll(lon_coord.points, shift, 0)
-            new_lon_points[new_lon_points < lon_min] += 360.0
+            indices_to_shift_value_of = new_lon_points < lon_min
+            new_lon_points[indices_to_shift_value_of] += 360.0
+            if roll_bounds:
+                new_lon_bounds = np.roll(lon_coord.bounds, shift, 0)
+                new_lon_bounds[indices_to_shift_value_of] += 360.0
         elif 0 < idx2 < len(lon_coord.points):
             shift = len(lon_coord.points) - idx2
             lon_max = lon_coord.points[idx2]
             new_lon_points = np.roll(lon_coord.points, shift, 0)
-            new_lon_points[new_lon_points >= lon_max] -= 360.0
+            indices_to_shift_value_of = new_lon_points >= lon_max
+            new_lon_points[indices_to_shift_value_of] -= 360.0
+            if roll_bounds:
+                new_lon_bounds = np.roll(lon_coord.bounds, shift, 0)
+                new_lon_bounds[indices_to_shift_value_of] -= 360.0
         if shift != 0:
+            for aux_coord in self.aux_coords:
+                dims = self.coord_dims(aux_coord)
+                if lon_idx in dims:
+                    new_points = np.roll(aux_coord.points, shift, lon_idx)
+                    aux_coord.points = new_points
             new_data = np.roll(self.data, shift, lon_idx)
             self.data = new_data
             self.dim_coords[lon_idx].points = new_lon_points
+            if roll_bounds:
+                self.dim_coords[lon_idx].bounds = new_lon_bounds
 
     def add_attributes(self, attributes):
         """
