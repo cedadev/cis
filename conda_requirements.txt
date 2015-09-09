@@ -23,7 +23,7 @@ zlib
 nose
 mock
 psutil
-
+pyhamcrest
 
 
 
