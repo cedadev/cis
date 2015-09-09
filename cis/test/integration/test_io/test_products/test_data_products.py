@@ -14,7 +14,7 @@ from iris.exceptions import TranslationError
 from cis.data_io.products import *
 from cis.exceptions import InvalidVariableError
 from cis.test.integration_test_data import non_netcdf_file, cis_test_files
-from data_io.products import CloudSat
+from cis.data_io.products import CloudSat
 
 
 def check_regex_matching(cls_name, filename):
