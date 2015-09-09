@@ -23,7 +23,7 @@ install:
   - conda config --set show_channel_urls True
   - conda update --quiet conda
   - ENV_NAME='test-environment'
-  - conda create --quiet -n $ENV_NAME python=$TRAVIS_PYTHON_VERSION
+  - conda create --quiet -n $ENV_NAME python=2.7
   - source activate $ENV_NAME
 
   # Customise the testing environment
