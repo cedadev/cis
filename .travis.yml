@@ -5,18 +5,17 @@ sudo: false
 
 env:
   - TEST_TARGET=unit
-#  - TEST_TARGET=integration
+  - TEST_TARGET=integration
+
+os:
+  - linux
+  - osx
 
 install:
 
   # Install miniconda
   # -----------------
-  - export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda
-  - if [[ "$TRAVIS_PYTHON_VERSION" == 2* ]]; then
-      wget ${CONDA_BASE}-3.7.0-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget ${CONDA_BASE}3-3.7.0-Linux-x86_64.sh -O miniconda.sh;
-    fi
+  - wget http://repo.continuum.io/miniconda/Miniconda-3.7.0-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
 
@@ -49,7 +48,7 @@ script:
     fi
   # Get test data, then run the integration tests
   - if [[ $TEST_TARGET == 'integration' ]]; then
-      wget -O cis_repo_test_files.tar.gz "http://gws\-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz"
+      wget "http://gws\-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz"
       tar -xzvf cis_repo_test_files.tar.gz
       export CIS_DATA_HOME="$(pwd)/test-data"
       python setup.py test -i -p 0;
