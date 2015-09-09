@@ -182,6 +182,7 @@ class GriddedData(iris.cube.Cube, CommonData):
             return
         lon_coord = lon_coord[0]
         lon_idx = self.dim_coords.index(lon_coord)
+        # Check if there are bounds which we will need to wrap as well
         roll_bounds = (lon_coord.bounds is not None) and (lon_coord.bounds.size != 0)
         idx1 = np.searchsorted(lon_coord.points, range_start)
         idx2 = np.searchsorted(lon_coord.points, range_start + 360.)
@@ -192,10 +193,17 @@ class GriddedData(iris.cube.Cube, CommonData):
             shift = -idx1
             lon_min = lon_coord.points[idx1]
             new_lon_points = np.roll(lon_coord.points, shift, 0)
+            # Calculate which indices need 360 adding to them...
             indices_to_shift_value_of = new_lon_points < lon_min
+            # ... then, add 360 to all those longitude values
             new_lon_points[indices_to_shift_value_of] += 360.0
             if roll_bounds:
+                # If the coordinate has bounds then roll those as well
                 new_lon_bounds = np.roll(lon_coord.bounds, shift, 0)
+                # And shift all of the bounds (upper and lower) for those points which we had to shift. We can't do the
+                # check independantly because there may be cases where an upper or lower bound falls outside of the
+                # 360 range, we leave those as they are to preserve monotinicity. See e.g.
+                # test_set_longitude_bounds_wrap_at_360
                 new_lon_bounds[indices_to_shift_value_of] += 360.0
         elif 0 < idx2 < len(lon_coord.points):
             shift = len(lon_coord.points) - idx2
@@ -205,15 +213,23 @@ class GriddedData(iris.cube.Cube, CommonData):
             new_lon_points[indices_to_shift_value_of] -= 360.0
             if roll_bounds:
                 new_lon_bounds = np.roll(lon_coord.bounds, shift, 0)
+                # See comment above re preserving monotinicity.
                 new_lon_bounds[indices_to_shift_value_of] -= 360.0
         if shift != 0:
+            # Ensure we also roll any auxilliary coordinates
             for aux_coord in self.aux_coords:
+                # Find all of the data dimensions which the auxilliary coordinate spans...
                 dims = self.coord_dims(aux_coord)
+                # .. and check if longitude is one of those dimensions
                 if lon_idx in dims:
-                    new_points = np.roll(aux_coord.points, shift, lon_idx)
+                    # Now roll the axis of the auxilliary coordinate which is associated with the longitude data
+                    # dimension: dims.index(lon_idx)
+                    new_points = np.roll(aux_coord.points, shift, dims.index(lon_idx))
                     aux_coord.points = new_points
+            # Now roll the data itself
             new_data = np.roll(self.data, shift, lon_idx)
             self.data = new_data
+            # Put the new coordinates back in their relevant places
             self.dim_coords[lon_idx].points = new_lon_points
             if roll_bounds:
                 self.dim_coords[lon_idx].bounds = new_lon_bounds
