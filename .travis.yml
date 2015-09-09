@@ -1,6 +1,4 @@
-language: python
-python:
-  - 2.7
+language: c
 sudo: false
 
 env:
@@ -8,8 +6,8 @@ env:
   - TEST_TARGET=integration
 
 os:
-  - osx
   - linux
+  - osx
 
 install:
 
@@ -48,8 +46,8 @@ script:
     fi
   # Get test data, then run the integration tests
   - if [[ $TEST_TARGET == 'integration' ]]; then
-      wget http://gws-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz
-      tar -xzvf cis_repo_test_files.tar.gz
-      export CIS_DATA_HOME="$(pwd)/test-data"
+      wget http://gws-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz;
+      tar -xzvf cis_repo_test_files.tar.gz;
+      export CIS_DATA_HOME="$(pwd)/test-data";
       python setup.py test -i -p 0;
     fi
