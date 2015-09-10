@@ -49,7 +49,7 @@ script:
       python setup.py test;
     fi
   # Get test data, then run the integration tests
-  - if [[ $TEST_TARGET == 'integration' ] && [ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  - if [[ $TEST_TARGET == 'integration' ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       mkdir test_files;
       wget http://gws-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz;
       tar -xzvf cis_repo_test_files.tar.gz -C test_files;
