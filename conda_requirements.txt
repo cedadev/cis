@@ -3,11 +3,10 @@
 
 # Python dependencies
 matplotlib
-basemap
-# Numpy isn't tied to a version in the recipe - but it is because we only build a numpy 1.8 version of cis
-numpy=1.8.1
-iris
-scipy
+basemap=1.0.7
+numpy
+iris=1.8.0
+scipy=0.14.0
 
 # IO Dependencies
 hdf4
