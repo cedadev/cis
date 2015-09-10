@@ -54,5 +54,5 @@ script:
       wget http://gws-access.ceda.ac.uk/public/cis/cis_repo_test_files.tar.gz;
       tar -xzvf cis_repo_test_files.tar.gz -C test_files;
       export CIS_DATA_HOME="$(pwd)/test_files";
-      python setup.py test -i -p 0;
+      python setup.py test -i -p 0 -d;
     fi
