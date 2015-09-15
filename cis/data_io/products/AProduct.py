@@ -24,11 +24,11 @@ class AProduct(object):
     @abstractmethod
     def create_data_object(self, filenames, variable):
         """
-        Create an ungridded data object for a given variable from many files
+        Create and return an :class:`.CommonData` object for a given variable from one or more files.
 
-        :param filenames: List of filenames of files to read
-        :param variable: Variable to read from the files
-        :return: An UngriddedData object for the specified variable
+        :param list filenames: List of filenames of files to read
+        :param str variable: Variable to read from the files
+        :return: An :class:`.CommonData` object representing the specified variable
 
         :raise FileIOError: Unable to read a file
         :raise InvalidVariableError: Variable not present in file
@@ -37,32 +37,47 @@ class AProduct(object):
     @abstractmethod
     def create_coords(self, filenames):
         """
-        Reads the coordinates from multiple files
+        Reads the coordinates from one or more files. Note that this method may have to make certain assumptions about
+        the file in order to return a single coordinate set. The user should be warned through the logger if this is the
+        case.
 
-        :param filenames: List of filenames to read coordinates from
-        :return: :class:`CoordList` object
+        :param list filenames: List of filenames to read coordinates from
+        :return: :class:`.CommonData` object
         """
 
     @abstractmethod
     def get_file_signature(self):
         """
-        :return: a list of regex to match the product's file naming convention.
+        This method should return a list of regular expressions, which CIS uses to decide which data
+        product to use for a given file. If more than one regular expression is provided in the list then the file can
+        match `any` of the expressions. The first product with a signature that matches the filename will be used.
+        The order in which the products are searched is determined by the priority property, highest value first;
+        internal products generally have a priority of 10.
 
-        Example::
-            ``return [r'.*CODE*.nc']``
+        For example, this would match all files with a name containing the string 'CODE' and with the 'nc' extension.::
 
-        This will match all files with a name containing the string 'CODE' and with the 'nc' extension.
+            return [r'.*CODE*.nc']
 
         .. note::
 
-            If the signature has matched the framework will call get_file_type_error(filename), this gives the product a
-            chance to open the file and check the contents. If this returns None then the match is complete otherwise
-            the error may be printed for the user
+            If the signature has matched the framework will call :meth:`.AProduct.get_file_type_error`, this gives the
+            product a chance to open the file and check the contents.
+
+        :return: A list of regex to match the product's file naming convention.
+        :rtype: list
         """
 
     def get_variable_names(self, filenames, data_type=None):
         """
-        Get a list of available variable names. This can be overridden in specific products to improve on this.
+        Get a list of available variable names from the filenames list passed in. This general implementation can be
+        overridden in specific products to include/exclude variables which may or may not be relevant.
+        The data_type parameter can be used to specify extra information.
+
+        :param list filenames: List of string filenames of files to be read from
+        :param str data_type: 'SD' or 'VD' to specify only return SD or VD variables from HDF files. This may take on
+         other values in specific product implementations.
+        :return: A set of variable names as strings
+        :rtype: str
         """
         variables = []
         for filename in filenames:
@@ -82,31 +97,50 @@ class AProduct(object):
 
     def get_file_format(self, filename):
         """
-        Returns a file format hierarchy separated by slashes, of the form TopLevelFormat/SubFormat/SubFormat/Version.
-        E.g. NetCDF/GASSP/1.0, ASCII/ASCIIHyperpoint or HDF4/CloudSat. This is mainly used within the ceda_di
+        Returns a file format hierarchy separated by slashes, of the form ``TopLevelFormat/SubFormat/SubFormat/Version``.
+        E.g. ``NetCDF/GASSP/1.0``, ``ASCII/ASCIIHyperpoint`` or ``HDF4/CloudSat``. This is mainly used within the ceda_di
         indexing tool. If not set it will default to the products name.
 
         A filename of an example file can be provided to enable the determination of, for example, a dataset version number.
 
         :param str filename: Filename of file to be inspected
-        :returns: File format, of the form "[parent/]format/specific instance/version", or the class name
+        :returns: File format, of the form ``[parent/]format/specific instance/version``, or the class name
         :rtype: str
         :raises: FileFormatError if there is an error
         """
         return self.__class__.__name__
 
+    def get_file_type_error(self, filename):
+        """
+        Check a single file to see if it is of the correct type, and if not return
+        a list of errors. If the return is None then there are no errors and
+        this is the correct data product to use for this file.
+
+        This method gives a mechanism for a data product to identify itself as the
+        correct product when a specific enough file signature cannot be provided. For
+        example GASSP is a type of NetCDF file and so filenames end with .nc but
+        so do other NetCDF files, so the data product opens the file and looks
+        for the GASSP version attribute, and if it doesn't find it returns an
+        error.
+
+        :param str filename: The filename for the file
+        :return: List of errors, or None
+        :rtype: list or None
+        """
+        return None
+
 
 def __get_class(filename, product=None):
     """
-    Identify the subclass of :class:`AProduct` to a given product name if specified.
+    Identify the subclass of :class:`.AProduct` to a given product name if specified.
     If the product name is not specified, the routine uses the signature (regex)
-    given by :func:`get_file_signature()` to infer the product class from the filename.
+    given by :meth:`get_file_signature` to infer the product class from the filename.
 
     Note, only the first filename of the list is use here.
 
     :param filename: A single filename
     :param product: name of the product
-    :return: a subclass of :class:`AProduct`
+    :return: a subclass of :class:`.AProduct`
     """
     import re
     import os
@@ -129,14 +163,11 @@ def __get_class(filename, product=None):
                 # Match the pattern - re.I allows for case insensitive matches
                 if re.match(pattern, basename, re.I) is not None:
                     logging.debug("Found product class " + cls.__name__ + " matching regex pattern " + pattern)
-                    try:
-                        errors = class_instance.get_file_type_error(filename)
-                        if errors is None:
-                            return cls
-                        else:
-                            logging.info("Product class {} is not right because {}".format(cls.__name__, errors))
-                    except AttributeError:
+                    errors = class_instance.get_file_type_error(filename)
+                    if errors is None:
                         return cls
+                    else:
+                        logging.info("Product class {} is not right because {}".format(cls.__name__, errors))
         else:
             # product specified directly
             if product == cls.__name__:
@@ -150,13 +181,13 @@ def __get_class(filename, product=None):
 
 def get_data(filenames, variable, product=None):
     """
-    Top level routine for calling the correct product's :func:`create_data_object` routine.
+    Top level routine for calling the correct product's :meth:`create_data_object` routine.
 
     :param list filenames: A list of filenames to read data from
-    :param str variable: The variable to create the CommonData object from
+    :param str variable: The variable to create the :class:`.CommonData` object from
     :param str product: The product to read data with - this should be a string which matches the name of one of the
-     subclasses of :class:`AProduct`. If none is supplied it is guessed from the filename signature.
-    :return: A :class:`CommonData` variable
+     subclasses of :class:`.AProduct`. If none is supplied it is guessed from the filename signature.
+    :return: A :class:`.CommonData` variable
     """
     product_cls = __get_class(filenames[0], product)
 
@@ -173,7 +204,7 @@ def get_data(filenames, variable, product=None):
 
 def get_coordinates(filenames, product=None):
     """
-    Top level routine for calling the correct product's :func:`create_coords` routine.
+    Top level routine for calling the correct product's :meth:`create_coords` routine.
 
     :param list filenames: A list of filenames to read data from
     :param str product: The product to read data with - this should be a string which matches the name of one of the
@@ -195,7 +226,7 @@ def get_coordinates(filenames, product=None):
 
 def get_variables(filenames, product=None, data_type=None):
     """
-    Top level routine for calling the correct product's :func:`get_variable_names` routine.
+    Top level routine for calling the correct product's :meth:`get_variable_names` routine.
 
     :param list filenames: A list of filenames to read the variables from
     :param str product: The product to read data with - this should be a string which matches the name of one of the
