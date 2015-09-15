@@ -155,11 +155,5 @@ class CloudSat(AProduct):
 
         return UngriddedData(var,metadata,coords)
 
-    def get_file_format(self, filenames):
-        """
-        Get the file format
-        :param filenames:
-        :return:
-        """
-
+    def get_file_format(self, filename):
         return "HDF4/CloudSat"

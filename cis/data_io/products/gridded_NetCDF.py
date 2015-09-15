@@ -235,8 +235,5 @@ class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
             pass
         return cube
 
-    def get_file_format(self, filenames):
-        """
-        Returns the file format
-        """
+    def get_file_format(self, filename):
         return "NetCDF/Gridded"

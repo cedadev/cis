@@ -496,14 +496,13 @@ class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
         selector = self._load_data_definition(filenames)
         return selector.get_variable_names_with_same_dimensions_as_time_coord()
 
-    def get_file_format(self, filenames):
+    def get_file_format(self, filename):
         """
         Return the file format, in general this string is parent format/specific instance/version
         e.g. NetCDF/GASSP/1.0
-        :param filenames: filenames of files that make up the dataset
-        :returns: file format, of the form parent format/specific instance/version,
-        if there is not a specific fileformat
-        for the data product returns the data product name
+        :param str filename: Filename of a an example file from the dataset
+        :returns: File format, of the form parent format/specific instance/version
+        :rtype: str
         :raises: FileFormatError if files type is not determinable
         """
-        return self._get_file_format(filenames)
+        return self._get_file_format(filename)

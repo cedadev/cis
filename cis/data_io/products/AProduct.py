@@ -80,16 +80,19 @@ class AProduct(object):
             variables.extend(file_variables)
         return set(variables)
 
-    def get_file_format(self, filenames):
+    def get_file_format(self, filename):
         """
-        Return the file format, in general this string is parent format/specific instance/version
-        e.g. NetCDF/GASSP/1.0
+        Returns a file format hierarchy separated by slashes, of the form TopLevelFormat/SubFormat/SubFormat/Version.
+        E.g. NetCDF/GASSP/1.0, ASCII/ASCIIHyperpoint or HDF4/CloudSat. This is mainly used within the ceda_di
+        indexing tool. If not set it will default to the products name.
 
-        :param filenames: Filenames of files that make up the dataset
-        :returns: File format, of the form "[parent/]format/specific instance/version". If there is not a specific
-         fileformat for the data product returns the data product name.
+        A filename of an example file can be provided to enable the determination of, for example, a dataset version number.
+
+        :param str filename: Filename of file to be inspected
+        :returns: File format, of the form "[parent/]format/specific instance/version", or the class name
+        :rtype: str
+        :raises: FileFormatError if there is an error
         """
-
         return self.__class__.__name__
 
 

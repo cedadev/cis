@@ -93,11 +93,5 @@ class Aerosol_CCI(AProduct):
 
         return UngriddedData(data[variable], metadata, coords)
 
-    def get_file_format(self, filenames):
-        """
-        Get the file format
-        :param filenames: the filenames of the file
-        :return: file format
-        """
-
+    def get_file_format(self, filename):
         return "NetCDF/Aerosol_CCI"

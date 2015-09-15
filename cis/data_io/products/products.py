@@ -46,13 +46,7 @@ class cis(AProduct):
     def create_data_object(self, filenames, variable):
         return self.create_coords(filenames, variable)
 
-    def get_file_format(self, filenames):
-        """
-        Get the file format
-        :param filenames:
-        :return:
-        """
-
+    def get_file_format(self, filename):
         return "NetCDF/CIS"
 
 

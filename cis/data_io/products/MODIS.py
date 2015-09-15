@@ -132,13 +132,7 @@ class MODIS_L3(AProduct):
         data = UngriddedData(var, metadata, coords)
         return data
 
-    def get_file_format(self, filenames):
-        """
-        Get the file format
-        :param filenames: the filesnames of the file
-        :return: file format
-        """
-
+    def get_file_format(self, filename):
         return "HDF4/ModisL3"
 
 

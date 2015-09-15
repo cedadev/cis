@@ -223,13 +223,7 @@ class Caliop_L2(abstract_Caliop):
 
         return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
-    def get_file_format(self, filenames):
-        """
-        Get the file format
-        :param filenames: the filenames of the file
-        :return: file format
-        """
-
+    def get_file_format(self, filename):
         return "HDF4/CaliopL2"
 
 
@@ -257,11 +251,5 @@ class Caliop_L1(abstract_Caliop):
 
         return UngriddedData(var, metadata, coords, self.get_calipso_data)
 
-    def get_file_format(self, filenames):
-        """
-        Get the file format
-        :param filenames: the filenames of the file
-        :return: file format
-        """
-
+    def get_file_format(self, filename):
         return "HDF4/CaliopL1"
