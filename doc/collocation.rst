@@ -176,42 +176,10 @@ Each collocated output variable has a history attributed created (or appended to
   double difference(pixel_number) ;
       ...
 
-Basic collocation design
-========================
-
-The diagram below demonstrates the basic design of the collocation system, and the roles of each of the components. In the simple case of the default collocator (which returns only one value) the Collocator loops over each of the sample points, calls the relevant constraint to reduce the number of data points, and then the kernel which returns a single value which the collocator stores.
-
-.. image:: img/CollocationDiagram.png
-   :width: 600px
-
-It is useful to understand that when a sample variable is specified that contains masked values (those with a fill_value) this is not taken into account when creating the list of sample points. E.g. the full list of coordinates is used from the file, regardless of the values of the sample variable.
-
-On the contrary when a data variable is read in (which is to be collocated onto the sample) any masked values are ignored. That is, any value in the data variable which is equal to the fill_value is not considered for collocation, as it is treated as an empty value.
-
-On their own each of these statements seem sensible, but together may lead to unexpected results if, for example, a variable from a file is collocated onto itself using the DefaultCollocator. In this situation, the sampling from the file is used to determine the sample points regardless of fill_value, and the variable is collocated on to this (ignoring any fill_values). This results in an output file where the masked (or missing) values are 'filled-in' by the collocator using whichever kernel was specified - see Figure 2a below. Using the DummyCollocator simply returns the original masked values as no filling in is done (see 2b), and similarly for the difference collocator when collocated onto itself the difference variable retains the mask as a non-value minus any other number is still a non-value (see 2c).
-
-.. figure:: img/default.png
-   :width: 400px
-
-   Figure 2a
-
-.. figure:: img/dummy.png
-   :width: 400px
-
-   Figure 2b
-
-
-.. figure:: img/diff.png
-   :width: 400px
-
-   Figure 2c
-
 
 Writing your own plugins
 ========================
 
 The collocation framework was designed to make it easy to write your own plugins. Plugins can be written to create
-new kernels, new constraint methods and even whole collocation methods. See :ref:`Collocation Design <collocation_design>`
-for more details
-
-.. todo:: link to Design wiki
+new kernels, new constraint methods and even whole collocation methods. See the
+:ref:`analysis plugin development <analysis_plugin_development>` section for more details.

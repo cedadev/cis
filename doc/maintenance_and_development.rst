@@ -45,90 +45,91 @@ the Sphinx autodoc `package <http://sphinx-doc.org/ext/autodoc.html>`__. Build t
 This will output the documentation in html under the directory ``doc/_build/html``.
 
 
-.. _collocation_design:
+.. _analysis_plugin_development:
 
 Analysis plugin development
 ===========================
 
 Users can write their own plugins for performing the collocation of two data sets.
-There are three different types of plugin available for collocation and each will be described briefly below.
+There are three different types of plugin available for collocation, first we will describe the overall design and how
+these different components interact, then each will be described in more detail.
+
+Basic collocation design
+------------------------
+
+The diagram below demonstrates the basic design of the collocation system, and the roles of each of the components.
+In the simple case of the default collocator (which returns only one value) the :ref:`Collocator <collocator_description>`
+loops over each of the sample points, calls the relevant :ref:`Constraint <constraint_description>` to reduce the
+number of data points, and then the :ref:`Kernel <kernel_description>` which returns a single value, which the
+collocator stores.
+
+.. image:: img/CollocationDiagram.png
+   :width: 600px
+
+.. _kernel_description:
 
 Kernel
 ------
 
 A kernel is used to convert the constrained points into values in the output. There are two sorts of kernel one
-which act on the final point location and a set of data points (these derive from Kernel) and the more specific kernels
-which act upon just an array of data (these derive from AbstractDataOnlyKernel, which in turn derives from Kernel).
-The data only kernels are less flexible but should execute faster. To create a new kernel inherit from ``Kernel`` and
-implement the abstract method ``get_value(self, point, data)``. To make a data only kernel inherit from AbstractDataOnlyKernel
-and implement ``get_value_for_data_only(self, values)`` and optionally overload ``get_value(self, point, data)``.
+which act on the final point location and a set of data points (these derive from :class:`.Kernel`) and the more specific kernels
+which act upon just an array of data (these derive from :class:`.AbstractDataOnlyKernel`, which in turn derives from :class:`.Kernel`).
+The data only kernels are less flexible but should execute faster. To create a new kernel inherit from :class:`.Kernel` and
+implement the abstract method :meth:`.Kernel.get_value`. To make a data only kernel inherit from :class:`.AbstractDataOnlyKernel`
+and implement :meth:`.AbstractDataOnlyKernel.get_value_for_data_only` and optionally overload :meth:`.AbstractDataOnlyKernel.get_value`.
+These methods are outlined below.
 
-``get_value(self, point, data)``
+.. automethod:: cis.collocation.col_framework.Kernel.get_value
+    :noindex:
 
-  This method should return a single value (if ``Kernel.return_size`` is 1) or a list of n values (if ``Kernel.return_size`` is n)
-  based on some calculation on the data given a single point.
-  The data is deliberately left unspecified in the interface as it may be any type of data, however it is expected that
-  each implementation will only work with a specific type of data (gridded, ungridded etc.) Note that this method will
-  be called for every sample point and so could become a bottleneck for calculations, it is advisable to make it as
-  quick as is practical. If this method is unable to provide a value (for example if no data points were given)
-  a ValueError should be thrown.
+.. automethod:: cis.collocation.col_framework.AbstractDataOnlyKernel.get_value_for_data_only
+    :noindex:
 
-``get_value_for_data_only(self, values)``
-
-  This method should return a single value (if ``Kernel.return_size`` is 1) or a list of n values (if ``Kernel.return_size`` is n)
-  based on some calculation on the values (a numpy array).
-  Note that this method will
-  be called for every sample point in which data can be placed and so could become a bottleneck for calculations,
-  it is advisable to make it as quick as is practical. If this method is unable to provide a value
-  (for example if no data points were given) a ValueError should be thrown. This method will not be called if there is no
-  values to be used for calculations.
+.. _constraint_description:
 
 Constraint
 ----------
 
 The constraint limits the data points for a given sample point.
-The user can also add a new constraint method by subclassing Constraint and providing an implementation for
-``constrain_points``. If more control is needed over the iteration sequence then the method
-``get_iterator`` can be
-overloaded in additional to constrain_points, this may not be respected by all collocators who may still iterate over all
-sample data points. To enable a constraint to use a AbstractDataOnlyKernel the method
-``get_iterator_for_data_only`` should be implemented (again this may be ignored by a collocator).
+The user can also add a new constraint mechanism by subclassing :class:`.Constraint` and providing an implementation for
+:meth:`.Constraint.constrain_points`. If more control is needed over the iteration sequence then the
+:meth:`.Constraint.get_iterator` method can also be
+overloaded. Note however that this may not be respected by all collocators, who may still iterate over all
+sample data points. It is possible to write your own collocator (or extend an existing one) to ensure the correct
+iterator is used - see the next section. Both these methods, and their signatures, are outlined below.
 
-``constrain_points(self, ref_point, data)``
+.. automethod:: cis.collocation.col_framework.Constraint.constrain_points
+    :noindex:
 
- This method should return a subset of the data given a single reference point.
- It is expected that the data returned should be of the same type as that given - but this isn't mandatory. It is
- possible that this function will return zero points, or no data. The collocation class is responsible for providing a
- fill_value.
+.. automethod:: cis.collocation.col_framework.Constraint.get_iterator
+    :noindex:
 
-``get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data)``
+To enable a constraint to use a :class:`.AbstractDataOnlyKernel`, the method
+:meth:`get_iterator_for_data_only` should be implemented (again though, this may be ignored by a collocator). An
+example of this is the :meth:`.BinnedCubeCellOnlyConstraint.get_iterator_for_data_only` implementation.
 
- The method should return an iterator over the output indices, hyper point for the output and data points for that output
- hyper point. This may not be called by all collocators who may choose to iterate over all sample points instead.
- The arguments are:
- * ``missing_data_for_missing_sample`` if True the iterator should not iterate over any points in the sample points which are missing.
- * ``coord_map`` is a list of tuples of indexes of sample points coords, data coords and output coords
- * ``coords`` are the coords that the data should be mapped on
- * ``data_points`` are the non-masked data points
- * ``shape`` is the final shape of the data
- * ``points`` is the original sample points object
- * ``output_data`` is the output data
-
-``get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values)``
-
- The method should return an iterator over the output indices and a numpy array of the data values.
- This may not be called by all collocators who may choose to iterate over all sample points instead. The parameters are
- the same as ``get_iterator``.
+.. _collocator_description:
 
 Collocator
 ----------
 
-Another plugin which is available is the collocation method itself. A new one can be created by subclassing Collocator and
-providing an implementation for ``collocate(self, points, data, constraint, kernel)``. This method takes a number of
+Another plugin which is available is the collocation method itself. A new one can be created by subclassing :class:`.Collocator` and
+providing an implementation for :meth:`.Collocator.collocate`. This method takes a number of sample
 points and applies the given constraint and kernel methods on the data for each of those points. It is responsible for
 returning the new data object to be written to the output file. As such, the user could create a collocation routine
 capable of handling multiple return values from the kernel, and hence creating multiple data objects, by creating a
 new collocation method.
+
+.. note::
+
+    The collocator is also responsible for dealing with any missing values in sample points. (Some sets of sample points may
+    include values which may or may not be masked.) Sometimes the user may wish to mask the output for such points, the
+    :attr:`missing_data_for_missing_sample` attribute is used to determine the expected behaviour.
+
+The interface is detailed here:
+
+.. automethod:: cis.collocation.col_framework.Collocator.collocate
+    :noindex:
 
 Implementation
 --------------

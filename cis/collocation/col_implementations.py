@@ -1003,9 +1003,9 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
 class BinnedCubeCellOnlyConstraint(Constraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell. With an iterator which only
-    travels over those cells with a value in
+    travels over those cells with a value in.
 
-    Uses the index_data method to bin all the points
+    Uses the index_data method to bin all the points.
     """
     def __init__(self):
         super(BinnedCubeCellOnlyConstraint, self).__init__()
@@ -1034,7 +1034,20 @@ class BinnedCubeCellOnlyConstraint(Constraint):
                 yield out_indices, hp, con_points
 
     def get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+        """
+        The method returns an iterator over the output indices and a numpy array slice of the data values. This may not
+        be called by all collocators who may choose to iterate over all sample points instead.
 
+        :param missing_data_for_missing_sample: If true anywhere there is missing data on the sample then final point is
+         missing; otherwise just use the sample
+        :param coord_map: Not needed for the data only kernel
+        :param coords: Not needed for the data only kernel
+        :param data_points: The (non-masked) data points
+        :param shape: Not needed
+        :param points: The original points object, these are the points to collocate
+        :param values: Not needed
+        :return: Iterator which iterates through (sample indices and data slice) to be placed in these points
+        """
         data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
         if missing_data_for_missing_sample:
             for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():

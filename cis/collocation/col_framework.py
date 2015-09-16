@@ -1,76 +1,109 @@
 from abc import ABCMeta, abstractmethod
-
-import numpy as np
-
 from cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
 
 
 class Collocator(object):
-    '''
+    """
     Class which provides a method for performing collocation. This just defines the interface which
     the subclasses must implement.
-    '''
+    """
     __metaclass__ = ABCMeta
 
-    def __init__(self):
-        self.fill_value = np.Infinity
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
+                 missing_data_for_missing_sample=False):
+        """
+        Initialise the fill_value, missing data flag and variable attributes.
+
+        :param fill_value: The value to use when the kernel is unable to return a value. The default is inf.
+        :param var_name: The name of the variable to use when creating the output data object
+        :param var_long_name: The long name of the variable to use when creating the output data object
+        :param var_units: The units of the variable to use when creating the output data object
+        :param missing_data_for_missing_sample: If True then sample points which have a missing value will result in
+         data points with a missing value - regardless of the collocation result. The default is False.
+        :return:
+        """
+        import numpy as np
+        self.fill_value = float(fill_value) if fill_value is not None else np.inf
+        self.var_name = var_name
+        self.var_long_name = var_long_name
+        self.var_units = var_units
+        self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
     @abstractmethod
     def collocate(self, points, data, constraint, kernel):
-        '''
+        """
+        The method is responsible for setting up and running the collocation. It should take a set of data and map that
+        onto the given (sample) points using the constraint and kernel provided.
 
-        :param points: A set of points onto which we will collocate some other 'data'
+        :param points: A set of sample points onto which we will collocate some other 'data'
         :param data: Some other data to be collocated onto the 'points'
-        :param constraint: A Constraint instance which provides a fill_value and constrain method
-        :param kernel: A Kernel instance which provides a kernel method
-        :return: One or more LazyData objects whose coordinates lie on the points defined above
-
-        '''
+        :param constraint: A :class:`.Constraint` instance which provides a :meth:`.Constraint.constrain_points` method,
+         and optionally an :meth:`.Constraint.get_iterator` method
+        :param kernel: A :class:`.Kernel` instance which provides a :meth:`.Kernel.get_value` method
+        :return: One or more :class:`.CommonData` (or subclasses of) objects whose coordinates lie on the points
+         defined above.
+        """
 
 
 class Kernel(object):
-    '''
+    """
     Class which provides a method for taking a number of points and returning one value. For example a nearest
     neighbour algorithm or sort algorithm or mean. This just defines the interface which the subclasses must implement.
-    '''
+    """
     __metaclass__ = ABCMeta
+
+    #: The number of values the :meth:`.Kernel.get_value` should be expected to return
+    #: (i.e. the length of the return list).
     return_size = 1
 
     @abstractmethod
     def get_value(self, point, data):
         """
+        This method should return a single value (if :attr:`.Kernel.return_size` is 1) or a list of n values (if :attr:`.Kernel.return_size` is n)
+        based on some calculation on the data given a single point.
+
+        The data is deliberately left unspecified in the interface as it may be any type of data, however it is expected that
+        each implementation will only work with a specific type of data (gridded, ungridded etc.) Note that this method will
+        be called for every sample point and so could become a bottleneck for calculations, it is advisable to make it as
+        quick as is practical. If this method is unable to provide a value (for example if no data points were given)
+        a ValueError should be thrown.
+
         :param point: A single HyperPoint
         :param data: A set of data points to reduce to a single value
-        :return: For return_size=1 a single value (number) otherwise a list of reutrns values, which represents some
+        :return: For return_size=1 a single value (number) otherwise a list of return values, which represents some
             operation on the points provided
-
+        :raises ValueError: When the method is unable to return a value
         """
 
     def get_variable_details(self, var_name, var_long_name, var_standard_name, var_units):
-        """Returns details of extra variables to be created for outputs of kernel.
-        :param var_name: base variable name
-        :param var_long_name: base variable long name
-        :param var_standard_name: base variable standard_name
-        :param var_units: base variable units
-        :return: tuple of tuples each containing (variable name, variable long name, variable units)
+        """Returns the details of all variables to be created from the outputs of a kernel.
+
+        :param str var_name: Base variable name
+        :param str var_long_name: Base variable long name
+        :param str var_standard_name: Base variable standard_name
+        :param str var_units: Base variable units
+        :return: Tuple of tuples, each containing (variable name, variable long name, variable units)
         """
-        return ((var_name, var_long_name, var_standard_name, var_units),)
+        return ((var_name, var_long_name, var_standard_name, var_units), )
 
 
 class AbstractDataOnlyKernel(Kernel):
     """
-    A Kernel that can work on data only, e.g. mean nly requires the data value to calculate the mean
+    A Kernel that can work on data only, e.g. mean only requires the data values to calculate the mean, not the sampling
+    point.
     """
 
     __metaclass__ = ABCMeta
 
     def get_value(self, point, data):
         """
+        This method is redundant in the AbstractDataOnlyKernel and only serves as an interface to
+        :meth:`.AbstractDataOnlyKernel`, removing the unnecessary point and checking for one or more data points.
+
         :param point: A single HyperPoint
         :param data: A set of data points to reduce to a single value
-        :return: For return_size=1 a single value (number) otherwise a list of reutrns values, which represents some
+        :return: For return_size=1 a single value (number) otherwise a list of returns values, which represents some
             operation on the points provided
-
         """
         values = data.vals
         if len(values) == 0:
@@ -80,45 +113,57 @@ class AbstractDataOnlyKernel(Kernel):
     @abstractmethod
     def get_value_for_data_only(self, values):
         """
-        Return a value or values base on the data
-        :param values: a numpy array of values (can not be none or empty)
-        :return: single data item if return_size is 1 or a list of items containing return size items
-        :throws ValueError: if there are any problems creating a value
+        This method should return a single value (if :attr:`.Kernel.return_size` is 1) or a list of n values (if :attr:`.Kernel.return_size` is n)
+        based on some calculation on the the values (a numpy array).
+
+        Note that this method will be called for every sample point in which data can be placed and so could become a
+        bottleneck for calculations, it is advisable to make it as quick as is practical. If this method is unable to
+        provide a value (for example if no data points were given) a ValueError should be thrown. This method will not
+        be called if there are no values to be used for calculations.
+
+        :param values: A numpy array of values (can not be none or empty)
+        :return: A single data item if return_size is 1 or a list of items containing :attr:`.Kernel.return_size` items
+        :raises ValueError: If there are any problems creating a value
         """
 
 
 class Constraint(object):
-    '''
+    """
     Class which provides a method for constraining a set of points. A single HyperPoint is given as a reference
     but the data points to be reduced ultimately may be of any type. This just defines the interface which the
     subclasses must implement.
-    '''
+    """
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def constrain_points(self, point, data):
-        '''
+        """
+        This method should return a subset of the data given a single reference point.
+        It is expected that the data returned should be of the same type as that given - but this isn't mandatory. It is
+        possible that this function will return zero points (no data), the collocation class is responsible for
+        providing a fill_value.
 
-        :param point: A single HyperPoint
+        :param HyperPoint point: A single HyperPoint
         :param data: A set of data points to be reduced
         :return: A reduced set of data points
-
-        '''
+        """
 
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
         """
-        Iterator to iterate through the points needed to be calculated
-        The default iterator, iterates through all the sample points calling constrain_points for each one
-        :param missing_data_for_missing_sample: if true anywhere there is missing data on the sample then final point is
-        missing; otherwise just use the sample
-        :param coord_map: coordinate map - list of tuples of indexes of hyperpoint coord, data coords and output coords
-        :param coords: the coordinates to map to
-        :param data_points: the data points (without masked values)
-        :param shape: shape of the final values
-        :param points: the original points object, these are the points to collocate
-        :param output_data: output data set
-        :return: iterator which iterates through sample indices, hyper point and constrained points to be placed in
-        these points
+        Iterator to iterate through the points needed to be calculated.
+        The default iterator, iterates through all the sample points calling :meth:`.Constraint.constrain_points` for
+        each one.
+
+        :param missing_data_for_missing_sample: If true anywhere there is missing data on the sample then final point is
+         missing; otherwise just use the sample
+        :param coord_map: Coordinate map - list of tuples of indexes of hyperpoint coord, data coords and output coords
+        :param coords: The coordinates to map the data onto
+        :param data_points: The (non-masked) data points
+        :param shape: Shape of the final data values
+        :param points: The original points object, these are the points to collocate
+        :param output_data: Output data set
+        :return: Iterator which iterates through (sample indices, hyper point and constrained points) to be placed in
+         these points
         """
         from cis.collocation.col_implementations import HyperPoint
         if missing_data_for_missing_sample:
