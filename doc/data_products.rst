@@ -59,12 +59,8 @@ easily by being specified at the command line.
 
 This is of course far from being an exhaustive list of what's out there. To cope with this, a "plugin" architecture has
 been designed so that the user can readily use their own data product reading routines, without even having to change
-the code - see Design Maintenance Guide for more information.
-
-.. todo:: [CommunityIntercomparisonSuite/Design Maintenance Guide]
-
-the plugins are always read first, so one can also overwrite default behaviour if the built-in products listed above
-do not achieve a very specific purpose.
+the code - see the :doc:`plugin development <plugin_development>` page for more information. There are also mechanisms
+to allow you to overwrite default behaviour if the built-in products listed above do not achieve the desired results.
 
 .. _datagroups:
 
@@ -112,7 +108,7 @@ For example::
     Cloud_Fraction_*:MOD*,MODIS_dir/:product=MODIS_L2
 
 
-Some file paths or variable names might contain colons (:), these need to be escaped so that CIS can tell the difference between it and the colons used to separate Datagroup elements. Simply use a backslash (\) to escape these characters. For example:
+Some file paths or variable names might contain colons (:), these need to be escaped so that CIS can tell the difference between it and the colons used to separate Datagroup elements. Simply use a backslash (\) to escape these characters. For example::
 
     "TOTAL RAINFALL RATE\: LS+CONV KG/M2/S:C\:\My files\MODIS_dir:product=MODIS_L2"
 

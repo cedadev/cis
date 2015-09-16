@@ -233,7 +233,7 @@ For example, to plot a heatmap and a contour plot the following options can be u
 
 Note that the first file specified is treated in a special way, from this the default plot dimensions are deduced, and the colorbar displayed will be for this datagroup only.
 
-.. todo:: [CommunityIntercomparisonSuite/OverlayPlotExamples Overlay Plot Examples]
+Many more examples are available in the :doc:`overlay examples <overlay_examples>` page.
 
 .. _scatteroverlay-plots:
 
