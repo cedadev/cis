@@ -35,10 +35,15 @@ Data Objects
 ------------
 
 Each of the above methods return either :class:`~GriddedData` or :class:`~UngriddedData` objects. These objects are the main
-data handling objects used within CIS, and although they share a common interface (defined by the :class:`CommonData`
-class) there are some differences. The methods on each of these types are documented in the
-:doc:`data modules <cis.data_io_objects>` section. The most useful methods on these objects are probably
-:attr:`summary()` and :attr:`save()`.
+data handling objects used within CIS, and the methods on each of these types are documented in the
+:doc:`data modules <cis.data_io_objects>` section. These classes do however share a common interface, defined by the :class:`CommonData`
+class, which is detailed below. For technical reasons some methods which are common to both :class:`~GriddedData` and :class:`~UngriddedData`
+are not defined in the :class:`CommonData` interface. The most useful of these methods are probably :meth:`summary` and :meth:`save_data`.
+
+.. autoclass:: cis.data_io.common_data.CommonData
+    :noindex:
+    :inherited-members:
+
 
 Unsupported API
 ===============

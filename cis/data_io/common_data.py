@@ -15,8 +15,10 @@ class CommonData(object):
     @abstractmethod
     def history(self):
         """
-        Return the associated history
-        :return:
+        Return the associated history of the object
+
+        :return: The history
+        :rtype: str
         """
         return None
 
@@ -25,7 +27,9 @@ class CommonData(object):
         """
         Return an alias for the variable name. This is an alternative name by which this data object may be identified
         if, for example, the actual variable name is not valid for some use (such as performing a python evaluation).
-        :return:
+
+        :return: The alias
+        :rtype: str
         """
         if self._alias is not None:
             return self._alias
@@ -37,8 +41,8 @@ class CommonData(object):
         """
         Set this data objects alias - this is an alternative name by which this data object may be identified
         if, for example, the actual variable name is not valid for some use (such as performing a python evaluation).
-        :param alias:
-        :return:
+
+        :param str alias: The alias to use
         """
         self._alias = alias
 
@@ -47,7 +51,8 @@ class CommonData(object):
     def var_name(self):
         """
         Return the variable name associated with this data object
-        :return: variable name
+
+        :return: The ariable name
         """
         return None
 
@@ -55,6 +60,7 @@ class CommonData(object):
     def get_coordinates_points(self):
         """Returns a list-like object allowing access to the coordinates of all points as HyperPoints.
         The object should allow iteration over points and access to individual points.
+
         :return: list-like object of data points
         """
         pass
@@ -63,6 +69,7 @@ class CommonData(object):
     def get_all_points(self):
         """Returns a list-like object allowing access to all points as HyperPoints.
         The object should allow iteration over points and access to individual points.
+
         :return: list-like object of data points
         """
         pass
@@ -71,6 +78,7 @@ class CommonData(object):
     def get_non_masked_points(self):
         """Returns a list-like object allowing access to all points as HyperPoints.
         The object should allow iteration over non-masked points and access to individual points.
+
         :return: list-like object of data points
         """
         pass
