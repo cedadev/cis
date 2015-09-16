@@ -25,6 +25,7 @@ Contents:
    evaluation
    statistics
    overlay_examples
+   plugin_development
    maintenance_and_development
    CIS as a Python library (API) <api/cis>
 

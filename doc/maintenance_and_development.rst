@@ -44,22 +44,17 @@ the Sphinx autodoc `package <http://sphinx-doc.org/ext/autodoc.html>`__. Build t
 
 This will output the documentation in html under the directory ``doc/_build/html``.
 
-Plugin development
-==================
-
-.. toctree::
-    plugin_development
 
 .. _collocation_design:
 
-Collocation
------------
+Analysis plugin development
+===========================
 
 Users can write their own plugins for performing the collocation of two data sets.
 There are three different types of plugin available for collocation and each will be described briefly below.
 
 Kernel
-""""""
+------
 
 A kernel is used to convert the constrained points into values in the output. There are two sorts of kernel one
 which act on the final point location and a set of data points (these derive from Kernel) and the more specific kernels
@@ -89,7 +84,7 @@ and implement ``get_value_for_data_only(self, values)`` and optionally overload 
   values to be used for calculations.
 
 Constraint
-""""""""""
+----------
 
 The constraint limits the data points for a given sample point.
 The user can also add a new constraint method by subclassing Constraint and providing an implementation for
@@ -126,7 +121,7 @@ sample data points. To enable a constraint to use a AbstractDataOnlyKernel the m
  the same as ``get_iterator``.
 
 Collocator
-""""""""""
+----------
 
 Another plugin which is available is the collocation method itself. A new one can be created by subclassing Collocator and
 providing an implementation for ``collocate(self, points, data, constraint, kernel)``. This method takes a number of
@@ -135,8 +130,8 @@ returning the new data object to be written to the output file. As such, the use
 capable of handling multiple return values from the kernel, and hence creating multiple data objects, by creating a
 new collocation method.
 
-Plugins
-"""""""
+Implementation
+--------------
 
 For all of these plugins any new variables, such as limits, constraint values or averaging parameters,
 are automatically set as attributes in the relevant object. For example, if the user wanted to write a new
