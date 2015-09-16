@@ -77,6 +77,14 @@ To upload the package to the cistools channel on Anaconda.org use::
 
     $ binstar upload <package_location> -u cistools
 
+Alternatively, when creating release candidates you may wish to upload the package to the 'beta' channel. This gives an
+opportunity to test the packaging and installation process on a number of machines. To do so, use::
+
+    $ binstar upload <package_location> -u cistools --channel beta
+
+To install cis from the beta channel use::
+
+    $ conda install -c https://conda.binstar.org/cistools/channel/beta -c cistools -c scitools cis
 
 Documentation
 =============

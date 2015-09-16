@@ -15,7 +15,7 @@ If you don't already have conda, you must first download and install it. Anacond
 To check that CIS is installed correctly, simply type ``cis version`` to display the version number, for example::
 
     $ cis version
-    Using CIS version: V1R1M0 (Stable)
+    Using CIS version: V1R2M0 (Stable)
 
 In order to upgrade CIS to the latest version use::
 
@@ -24,7 +24,7 @@ In order to upgrade CIS to the latest version use::
 Dependencies
 ============
 
-Use the following command to check the dependencies that CIS requries to run::
+If you choose to install the dependencies yourself, use the following command to check the required dependencies are present::
 
     $ python setup.py checkdep
 
