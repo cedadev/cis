@@ -223,8 +223,8 @@ Gridded aggregation
 
 Aggregating 3D model data over time and longitude to produce an averaged measure of variation with latitude::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,x
-  $ cis plot rsutcs:/home/users/matken/agg-out.nc --xaxis latitude --yaxis rsutcs
+  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,x -o agg-out.nc
+  $ cis plot rsutcs:agg-out.nc --xaxis latitude --yaxis rsutcs -o gridded_collapse.png
 
 .. figure:: img/aggregation/gridded_collapse.png
    :width: 400px
@@ -232,5 +232,5 @@ Aggregating 3D model data over time and longitude to produce an averaged measure
 
 This file can be found in::
 
-  /group_workspaces/jasmin/cis/gridded-test-data/cmip5.output1.MOHC.HadGEM2-ES.rcp45.day.atmos.day.r1i1p1.v20111128
+  /group_workspaces/jasmin/cis/data/CMIP5
 
