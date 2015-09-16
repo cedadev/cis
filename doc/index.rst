@@ -26,6 +26,7 @@ Contents:
    statistics
    overlay_examples
    plugin_development
+   analysis_plugin_development
    maintenance_and_development
    CIS as a Python library (API) <api/cis>
 
