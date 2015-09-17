@@ -55,7 +55,7 @@ To carry out intermediate releases follow this procedure:
 4. Install this onto the release virtual environment: this is at ``/group_workspaces/jasmin/cis/cis_dev_venv``. So activate
    the venv, upload the tarball somewhere on the GWS and then do ``pip install <LOCATION_OF_TARBALL>``.
 
-5. Create an anaconda build  - see below.
+5. Create an anaconda build on each platform (OS X, Linux and Windows) - see below.
 
 6. Request Phil Kershaw upload the tarball to PyPi. (Optional)
 
