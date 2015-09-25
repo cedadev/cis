@@ -47,14 +47,11 @@ class Comparative_Scatter(Generic_Plot):
         elif axis == "y":
             axis_index = 1
 
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis,
-                                                                                                          self.unpacked_data_items[
-                                                                                                              axis_index][
-                                                                                                              "data"])
+        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[axis_index]["data"])
 
         valrange = {}
-        valrange[axis + "min"] = calculated_min if min_val is None else min_val
-        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "min"] = c_min if min_val is None else min_val
+        valrange[axis + "max"] = c_max if max_val is None else max_val
         valrange[axis + "step"] = step
 
         return valrange

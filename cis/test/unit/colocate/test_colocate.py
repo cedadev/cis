@@ -26,8 +26,8 @@ class TestCollocate(unittest.TestCase):
         mock_kernel = MagicMock()
         mock_collocator_factory = CollocatorFactory()
         mock_collocator_factory.get_collocator_instances_for_method = MagicMock(return_value=(mock_collocator,
-                                                                                            mock_constraint,
-                                                                                            mock_kernel))
+                                                                                              mock_constraint,
+                                                                                              mock_kernel))
         col = Collocate(sample, out_name, collocator_factory=mock_collocator_factory)
         data = mock.make_regular_2d_ungridded_data()
         output = col.collocate(data, col_name, col_options)
@@ -64,8 +64,8 @@ class TestCollocate(unittest.TestCase):
         mock_kernel = MagicMock()
         mock_collocator_factory = CollocatorFactory()
         mock_collocator_factory.get_collocator_instances_for_method = MagicMock(return_value=(mock_collocator,
-                                                                                            mock_constraint,
-                                                                                            mock_kernel))
+                                                                                              mock_constraint,
+                                                                                              mock_kernel))
         col = Collocate(sample, out_name, collocator_factory=mock_collocator_factory)
         data = UngriddedDataList(2*[mock.make_regular_2d_ungridded_data()])
         output = col.collocate(data, col_name, col_options)
@@ -102,8 +102,8 @@ class TestCollocate(unittest.TestCase):
         mock_kernel = MagicMock()
         mock_collocator_factory = CollocatorFactory()
         mock_collocator_factory.get_collocator_instances_for_method = MagicMock(return_value=(mock_collocator,
-                                                                                            mock_constraint,
-                                                                                            mock_kernel))
+                                                                                              mock_constraint,
+                                                                                              mock_kernel))
         col = Collocate(sample, out_name, collocator_factory=mock_collocator_factory)
         data = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube())
         output = col.collocate(data, col_name, col_options)
@@ -140,8 +140,8 @@ class TestCollocate(unittest.TestCase):
         mock_kernel = MagicMock()
         mock_collocator_factory = CollocatorFactory()
         mock_collocator_factory.get_collocator_instances_for_method = MagicMock(return_value=(mock_collocator,
-                                                                                            mock_constraint,
-                                                                                            mock_kernel))
+                                                                                              mock_constraint,
+                                                                                              mock_kernel))
         col = Collocate(sample, out_name, collocator_factory=mock_collocator_factory)
         data = GriddedDataList(2*[gridded_data.make_from_cube(mock.make_square_5x3_2d_cube())])
         output = col.collocate(data, col_name, col_options)

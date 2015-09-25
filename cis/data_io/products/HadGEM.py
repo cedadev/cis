@@ -40,8 +40,8 @@ class HadGEM_CONVSH(NetCDF_Gridded):
         variable_constraint = variable
         if isinstance(variable, basestring):
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
-                                                               c.standard_name == variable or
-                                                               c.long_name == variable), display=variable)
+                                                                         c.standard_name == variable or
+                                                                         c.long_name == variable), display=variable)
         if len(filenames) == 1:
             callback_function = self.load_single_file_callback
         else:
@@ -53,7 +53,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
             if variable is None:
                 message = "File contains more than one cube variable name must be specified"
             elif e.message == "no cubes found":
-                message = "Variable not found: {} \nTo see a list of variables run: cis info {}"\
+                message = "Variable not found: {} \nTo see a list of variables run: cis info {}" \
                     .format(str(variable), filenames[0])
             else:
                 message = e.message
@@ -69,7 +69,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
             pass
 
         try:
-            cube.coord(long_name='t').standard_name='time'
+            cube.coord(long_name='t').standard_name = 'time'
         except CoordinateNotFoundError as e:
             pass
 

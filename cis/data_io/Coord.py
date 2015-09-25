@@ -6,7 +6,6 @@ from cis.utils import fix_longitude_range
 
 
 class Coord(LazyData):
-
     @classmethod
     def from_many_coordinates(cls, coords):
         """
@@ -49,7 +48,8 @@ class Coord(LazyData):
 
     def convert_julian_to_std_time(self, calender='standard'):
         from cis.time_util import convert_julian_date_to_std_time_array, cis_standard_time_unit
-        #if not self.units.startswith("Julian Date"): raise ValueError("Time units must be Julian Date for conversion to an Object")
+        # if not self.units.startswith("Julian Date"):
+        #     raise ValueError("Time units must be Julian Date for conversion to an Object")
         self._data = convert_julian_date_to_std_time_array(self.data, calender)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
@@ -128,7 +128,7 @@ class CoordList(list):
         :raises DuplicateCoordinateError: If the coordinate is not unique in the list
         """
         from cis.exceptions import DuplicateCoordinateError
-        if any([ other == item for item in self ]):
+        if any([other == item for item in self]):
             raise DuplicateCoordinateError()
         super(CoordList, self).append(other)
 
@@ -145,10 +145,10 @@ class CoordList(list):
         :type standard_name: string or None
         :param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
         :type long_name: string or None
-        :param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes.
+        :param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes
         :type attributes: dict or None
-        :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for axis.
-         Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
+        :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for
+         axis. Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
         :type axis: string or None
 
         :return: A :class:`CoordList` of coordinates fitting the given criteria
@@ -171,8 +171,10 @@ class CoordList(list):
 
         if attributes is not None:
             if not isinstance(attributes, Mapping):
-                raise ValueError('The attributes keyword was expecting a dictionary type, but got a %s instead.' % type(attributes))
-            filter_func = lambda coord_: all(k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems())
+                raise ValueError(
+                    'The attributes keyword was expecting a dictionary type, but got a %s instead.' % type(attributes))
+            filter_func = lambda coord_: all(
+                k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems())
             coords = filter(filter_func, coords)
 
         return coords
@@ -190,10 +192,10 @@ class CoordList(list):
         :type standard_name: string or None
         :param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
         :type long_name: string or None
-        :param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes.
+        :param attributes: A dictionary of attributes desired on the coordinates. If None, does not check for attributes
         :type attributes: dict or None
-        :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for axis.
-         Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
+        :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for
+         axis. Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
         :type axis: string or None
 
         :raises CoordinateNotFoundError: If the arguments given do not result in precisely
@@ -202,12 +204,13 @@ class CoordList(list):
 
         """
         from cis.exceptions import CoordinateNotFoundError
-        coords = self.get_coords(name=name, standard_name=standard_name, long_name=long_name, attributes=attributes, axis=axis)
+        coords = self.get_coords(name=name, standard_name=standard_name, long_name=long_name, attributes=attributes,
+                                 axis=axis)
         if len(coords) == 0:  # If we found none by name, try with standard name only
             coords = self.get_coords(standard_name=name)
 
         if len(coords) > 1:
-            msg = 'Expected to find exactly 1 coordinate, but found %s. They were: %s.'\
+            msg = 'Expected to find exactly 1 coordinate, but found %s. They were: %s.' \
                   % (len(coords), ', '.join(coord.name() for coord in coords))
             raise CoordinateNotFoundError(msg)
         elif len(coords) == 0:
@@ -268,7 +271,8 @@ class CoordList(list):
     def copy(self):
         """
         Create a copy of this CoordList object with new data so that that they can
-        be modified without held references being affected. This will call any lazy loading methods in the coordinate data
+        be modified without held references being affected. This will call any lazy loading methods in the coordinate
+        data
 
         :return: Copied :class:`CoordList`
         """

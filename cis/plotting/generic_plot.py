@@ -78,7 +78,7 @@ class Generic_Plot(object):
             #  it for lon_0.
             if -180 < data_max < 900.0:
                 max_found = max(data_max, max_found)
-            self.basemap = Basemap(lon_0=(max_found-180.0))
+            self.basemap = Basemap(lon_0=(max_found - 180.0))
             return self.basemap
         else:
             return self.matplotlib
@@ -93,8 +93,9 @@ class Generic_Plot(object):
     def unpack_data_items(self):
         def __get_data(axis):
             variable = self.plot_args[axis + "_variable"]
-            if variable == "default" or variable == self.packed_data_items[0].name() or \
-               variable == self.packed_data_items[0].standard_name or variable == self.packed_data_items[0].long_name:
+            if variable == "default" or variable == self.packed_data_items[0].name() \
+                    or variable == self.packed_data_items[0].standard_name\
+                    or variable == self.packed_data_items[0].long_name:
                 return self.packed_data_items[0].data
             else:
                 if variable.startswith("search"):
@@ -108,13 +109,13 @@ class Generic_Plot(object):
         def __set_variable_as_data(axis):
             old_variable = self.plot_args[axis + "_variable"]
             self.plot_args[axis + "_variable"] = self.packed_data_items[0].name()
-            logging.info("Plotting " + self.plot_args[axis + "_variable"] + " on the " + axis + " axis as " + old_variable + " has length 1")
+            logging.info("Plotting " + self.plot_args[
+                axis + "_variable"] + " on the " + axis + " axis as " + old_variable + " has length 1")
 
         def __swap_x_and_y_variables():
-            temp =  self.plot_args["x_variable"]
+            temp = self.plot_args["x_variable"]
             self.plot_args["x_variable"] = self.plot_args["y_variable"]
             self.plot_args["y_variable"] = temp
-
 
         from cis.utils import unpack_data_object
         from iris.cube import Cube
@@ -139,7 +140,7 @@ class Generic_Plot(object):
                                    self.x_wrap_start) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
-        return [{"data" : packed_data_item.data} for packed_data_item in self.packed_data_items]
+        return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]
 
     def plot(self):
         """
@@ -173,7 +174,7 @@ class Generic_Plot(object):
             else:
                 legend_titles.append(item.long_name)
         legend = self.matplotlib.legend(legend_titles, loc="best")
-        legend.draggable(state = True)
+        legend.draggable(state=True)
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         """
@@ -181,10 +182,12 @@ class Generic_Plot(object):
         :param axis: The axis for the limits to be calculated
         :return: A dictionary containing the min and max values of an array along a given axis
         """
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][axis])
+        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis,
+                                                                                                          self.unpacked_data_items[
+                                                                                                              0][axis])
         valrange = {}
-        valrange[axis + "min"] = calculated_min if min_val is None else min_val
-        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "min"] = c_min if min_val is None else min_val
+        valrange[axis + "max"] = c_max if max_val is None else max_val
         valrange[axis + "step"] = step
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
@@ -199,7 +202,8 @@ class Generic_Plot(object):
         :param valrange    A dictionary containing xmin, xmax or ymin, ymax
         :param axis        The axis to apply the limits to
         """
-        valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None), valrange.get(axis + "step", None))
+        valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None),
+                                              valrange.get(axis + "step", None))
 
         if axis == "x":
             step = valrange.pop("xstep", None)
@@ -281,7 +285,7 @@ class Generic_Plot(object):
             else:
                 max_val = self.plot_args[axis + "range"][axis + "max"]
 
-            ticks = arange(min_val, max_val+step, step)
+            ticks = arange(min_val, max_val + step, step)
 
             tick_method(ticks, rotation=angle, ha=ha)
         else:
@@ -332,9 +336,9 @@ class Generic_Plot(object):
             height = width * (3.0 / 4.0)
 
         if height is not None and width is not None:
-            self.matplotlib.figure(figsize = (width, height))
+            self.matplotlib.figure(figsize=(width, height))
 
-    def calculate_min_and_max_values_of_array_including_case_of_log(self, axis, array):
+    def calc_min_and_max_vals_of_array_incl_log(self, axis, array):
         """
         Calculates the min and max values of a given array.
         If a log scale is being used on the given axis, only positive values are taken into account
@@ -346,12 +350,12 @@ class Generic_Plot(object):
 
         if log_axis:
             import numpy.ma as ma
-            positive_array = ma.array(array, mask=array<=0)
+            positive_array = ma.array(array, mask=array <= 0)
             min_val = positive_array.min()
             max_val = positive_array.max()
         else:
-            min_val =  array.min()
-            max_val =  array.max()
+            min_val = array.min()
+            max_val = array.max()
         return min_val, max_val
 
     def set_x_axis_as_time(self):
@@ -359,6 +363,7 @@ class Generic_Plot(object):
         from cis.time_util import convert_std_time_to_datetime
 
         ax = self.matplotlib.gca()
+
         def format_date(x, pos=None):
             return convert_std_time_to_datetime(x).strftime('%Y-%m-%d')
 
@@ -386,7 +391,7 @@ class Generic_Plot(object):
         # Give extra spacing at bottom of plot due to rotated labels
         self.matplotlib.gcf().subplots_adjust(bottom=0.3)
 
-        #ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
+        # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
     def set_font_size(self):
         """
@@ -395,7 +400,7 @@ class Generic_Plot(object):
         """
         if self.plot_args.get("fontsize", None) is not None:
             if not isinstance(self.plot_args.get("fontsize", None), dict):
-                self.plot_args["fontsize"] = { "font.size" : float(self.plot_args["fontsize"]) }
+                self.plot_args["fontsize"] = {"font.size": float(self.plot_args["fontsize"])}
         else:
             self.plot_args.pop("fontsize", None)
 
@@ -433,10 +438,12 @@ class Generic_Plot(object):
         vmax = self.plot_args["valrange"].get("vmax", -maxint - 1)
 
         if vmin == maxint:
-            vmin = min(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"]<=mask_val).min() for unpacked_data_item in self.unpacked_data_items)
+            vmin = min(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"] <= mask_val).min() for
+                       unpacked_data_item in self.unpacked_data_items)
 
         if vmax == -maxint - 1:
-            vmax = max(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"]<=mask_val).max() for unpacked_data_item in self.unpacked_data_items)
+            vmax = max(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"] <= mask_val).max() for
+                       unpacked_data_item in self.unpacked_data_items)
 
         self.mplkwargs["vmin"] = float(vmin)
         self.mplkwargs["vmax"] = float(vmax)
@@ -465,7 +472,7 @@ class Generic_Plot(object):
         vmax = self.mplkwargs.pop("vmax")
 
         if self.plot_args["valrange"].get("vstep", None) is None and \
-                self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
+                        self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
             nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
         elif self.plot_args["valrange"].get("vstep", None) is None:
             nconts = self.plot_args['datagroups'][self.datagroup]['contnlevels']
@@ -532,7 +539,7 @@ class Generic_Plot(object):
             self.set_log_scale(logx, logy)
         else:
             try:
-                self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+                self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
             except AttributeError:
                 logging.warning("Couldn't apply scientific notation to axes")
 
@@ -563,7 +570,7 @@ class Generic_Plot(object):
             self.basemap.bluemarble()
         else:
             colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
-            self.basemap.drawcoastlines(color = colour)
+            self.basemap.drawcoastlines(color=colour)
 
     def format_3d_plot(self):
         """
@@ -594,7 +601,7 @@ class Generic_Plot(object):
         if self.plot_args["title"] is None: self.plot_args["title"] = self.packed_data_items[0].long_name
 
         for key in plot_options.keys():
-        # Call the method associated with the option
+            # Call the method associated with the option
             if key in self.plot_args.keys():
                 plot_options[key](self.plot_args[key])
 
@@ -660,7 +667,8 @@ class Generic_Plot(object):
         if x_variable == y_variable:
             specified_axis = "x" if self.plot_args["x_variable"] is not None else "y"
             not_specified_axis = "y" if specified_axis == "x" else "y"
-            raise NotEnoughAxesSpecifiedError("--" + not_specified_axis + "axis must also be specified if assigning the current " + not_specified_axis + " axis coordinate to the " + specified_axis + " axis")
+            raise NotEnoughAxesSpecifiedError(
+                "--" + not_specified_axis + "axis must also be specified if assigning the current " + not_specified_axis + " axis coordinate to the " + specified_axis + " axis")
 
         if "search" in x_variable:
             logging.info("Plotting unknown on the x axis")
@@ -739,7 +747,7 @@ class Generic_Plot(object):
         # the maximum number of bins.
         if x_variable.startswith('lon') and y_variable.startswith('lat'):
             max_y_bins = 7  # as plots are wider rather than taller
-            if (ymax - ymin) > 2.2 * (xmax-xmin):
+            if (ymax - ymin) > 2.2 * (xmax - xmin):
                 max_x_bins = 4
                 max_y_bins = 11
             elif (xmax - xmin) > 2.2 * (ymax - ymin):

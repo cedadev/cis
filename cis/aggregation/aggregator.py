@@ -95,7 +95,7 @@ class Aggregator(object):
             raise CoordinateNotFoundError('No coordinate found that matches {}. Please check the coordinate '
                                           'name.'.format(self._grid.keys()))
 
-        dummy_data = numpy.reshape(numpy.arange(int(numpy.prod(new_cube_shape)))+1.0, tuple(new_cube_shape))
+        dummy_data = numpy.reshape(numpy.arange(int(numpy.prod(new_cube_shape))) + 1.0, tuple(new_cube_shape))
         aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
 
         collocator = GeneralGriddedCollocator()
@@ -208,14 +208,13 @@ class Aggregator(object):
 
 
 def add_year_midpoint(dt_object, years):
-
     if not isinstance(years, int):
         raise TypeError
     if not isinstance(dt_object, datetime.datetime):
         raise TypeError
 
     new_month = dt_object.month + 6 * (years % 2)
-    new_year = dt_object.year + years//2
+    new_year = dt_object.year + years // 2
     if new_month > 12:
         new_month, new_year = month_past_end_of_year(new_month, new_year)
 
@@ -223,13 +222,12 @@ def add_year_midpoint(dt_object, years):
 
 
 def add_month_midpoint(dt_object, months):
-
     if not isinstance(months, int):
         raise TypeError
     if not isinstance(dt_object, datetime.datetime):
         raise TypeError
 
-    new_month = dt_object.month + months//2
+    new_month = dt_object.month + months // 2
     new_year = dt_object.year
     if new_month > 12:
         new_month, new_year = month_past_end_of_year(new_month, new_year)
@@ -244,7 +242,7 @@ def add_month_midpoint(dt_object, months):
 
 
 def month_past_end_of_year(month, year):
-    year += month//12
+    year += month // 12
     month %= 12
     if month == 0:
         month = 12
@@ -268,7 +266,7 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
         dt = datetime.timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
                                 minutes=delta.minute, hours=delta.hour, weeks=0)
 
-        start_dt += dt/2
+        start_dt += dt / 2
 
         new_time_grid = []
         new_time = start_dt
@@ -280,7 +278,7 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
             new_month = new_time.month + delta.month
             if new_month > 12:
                 new_month, new_year = month_past_end_of_year(new_month, new_year)
-            #TODO this is a slightly inelegant fix for the problem of something like 30th Jan +1 month
+            # TODO this is a slightly inelegant fix for the problem of something like 30th Jan +1 month
             # Need to work out what correct behaviour should be in this case.
             try:
                 new_time = new_time.replace(year=new_year, month=new_month)
@@ -293,7 +291,7 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
 
         return new_time_grid
     else:
-        new_grid = numpy.arange(start+delta/2, end+delta/2, delta)
+        new_grid = numpy.arange(start + delta / 2, end + delta / 2, delta)
 
         return new_grid
 
@@ -305,7 +303,7 @@ def find_nearest(array, value):
     :param value: A single value
     :return: A single value from the array
     """
-    idx = (numpy.abs(array-value)).argmin()
+    idx = (numpy.abs(array - value)).argmin()
     return array[idx]
 
 

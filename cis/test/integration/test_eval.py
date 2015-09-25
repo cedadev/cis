@@ -65,9 +65,11 @@ class TestEval(BaseIntegrationTest):
         col_var1 = ds.variables[valid_echamham_variable_1][:]
         col_var2 = ds.variables[valid_echamham_variable_2][:]
         # A hand calculated selection of values
-        expected_col1 = numpy.ma.masked_invalid([float('Nan'), float('Nan'), float('Nan'), 0.0815568640828, 0.0815568640828])
+        expected_col1 = numpy.ma.masked_invalid(
+            [float('Nan'), float('Nan'), float('Nan'), 0.0815568640828, 0.0815568640828])
         compare_masked_arrays(expected_col1, col_var1[:][0:5])
-        expected_col2 = numpy.ma.masked_invalid([float('Nan'), float('Nan'), float('Nan'), 0.0605319179595, 0.0605319179595])
+        expected_col2 = numpy.ma.masked_invalid(
+            [float('Nan'), float('Nan'), float('Nan'), 0.0605319179595, 0.0605319179595])
         compare_masked_arrays(expected_col2, col_var2[:][0:5])
 
         # Then do an evaluation using the collocated data:

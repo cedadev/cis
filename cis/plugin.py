@@ -22,7 +22,8 @@ def get_all_subclasses(parent_class, mod):
 
 def find_plugins(plugin_dir, parent_class_name, verbose):
     import logging
-    import os, sys
+    import os
+    import sys
 
     # if plugin_dir is None, there is no plugin to import, so return an empty list
     if plugin_dir is None:
@@ -34,7 +35,8 @@ def find_plugins(plugin_dir, parent_class_name, verbose):
     plugin_files = []
     for f in os.listdir(plugin_dir):
 
-        if f.lower().endswith(('.pyc', '__init__.py')): continue
+        if f.lower().endswith(('.pyc', '__init__.py')):
+            continue
 
         if f.endswith(".py"):
             plugin_files.append(f[:-3])
@@ -51,7 +53,7 @@ def find_plugins(plugin_dir, parent_class_name, verbose):
     for plugin in plugin_files:
         module = __import__(plugin)
         classes = [getattr(module, x) for x in dir(module) if isinstance(getattr(module, x), type)]
-        product_classes = [ cls for cls in classes if parent_class_name in str(cls.__bases__[0])]
+        product_classes = [cls for cls in classes if parent_class_name in str(cls.__bases__[0])]
 
     return product_classes
 
@@ -74,6 +76,6 @@ def find_plugin_classes(parent_class, built_in_module, verbose=True):
     all_classes = sorted(all_classes, key=lambda subclass: subclass.__name__)
 
     if verbose:
-        logging.debug(parent_class.__name__+" subclasses are: " + str(all_classes))
+        logging.debug(parent_class.__name__ + " subclasses are: " + str(all_classes))
 
     return all_classes

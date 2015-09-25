@@ -40,7 +40,8 @@ def minkowski_distance_p(x, y, p=2):
 
     Examples
 
-    >>> minkowski_distance_p([[0,0],[0,0]], [[1,1],[0,1]])
+    >>> minkowski_distance_p([[0, 0], [0, 0]], [[1, 1], [0, 1]])
+
     array([2, 1])
 
     """
@@ -68,7 +69,8 @@ def minkowski_distance(x, y, p=2):
 
     Examples
 
-    >>> minkowski_distance([[0,0],[0,0]], [[1,1],[0,1]])
+    >>> minkowski_distance([[0, 0], [0, 0]], [[1, 1],[0, 1]])
+
     array([ 1.41421356,  1.        ])
 
     """
@@ -700,6 +702,7 @@ class KDTree(object):
                [4, 7]])
         >>> pts = np.array([[0, 0], [2.1, 2.9]])
         >>> tree.query(pts)
+
         (array([ 2.        ,  0.14142136]), array([ 0, 13]))
 
         """
@@ -724,8 +727,8 @@ class KDTree(object):
                 ii = np.empty(retshape, dtype=np.int)
                 ii.fill(self.n)
             else:
-                raise ValueError(
-                    "Requested %s nearest neighbors; acceptable numbers are integers greater than or equal to one, or None")
+                raise ValueError("Requested %s nearest neighbors; acceptable numbers are integers greater than or equal"
+                                 " to one, or None")
             for c in np.ndindex(retshape):
                 hits = self._query(x[c], k=k, eps=eps, p=p, distance_upper_bound=distance_upper_bound)
                 if k is None:
@@ -759,8 +762,8 @@ class KDTree(object):
                     dd[j], ii[j] = hits[j]
                 return dd, ii
             else:
-                raise ValueError(
-                    "Requested %s nearest neighbors; acceptable numbers are integers greater than or equal to one, or None")
+                raise ValueError("Requested %s nearest neighbors; acceptable numbers are integers greater than or "
+                                 "equal to one, or None")
 
     def _query_ball_point(self, x, r, p=2., eps=0):
         R = Rectangle(self.maxes, self.mins)
@@ -1281,7 +1284,7 @@ def distance_matrix(x, y, p=2, threshold=1000000):
 
     Examples
 
-    >>> distance_matrix([[0,0],[0,1]], [[1,0],[1,1]])
+    >>> distance_matrix([[0, 0], [0, 1]], [[1, 0], [1, 1]])
     array([[ 1.        ,  1.41421356],
            [ 1.41421356,  1.        ]])
 

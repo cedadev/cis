@@ -6,6 +6,7 @@ class StddevKernel(iris.analysis.Aggregator):
     """
     Custom standard deviation kernel (to allow calculation of standard deviation with appropriate metadata).
     """
+
     def __init__(self):
         super(StddevKernel, self).__init__('standard_deviation', ma.std, ddof=1)
 
@@ -28,6 +29,7 @@ class CountKernel(iris.analysis.Aggregator):
     Custom counting kernel (to allow calculation of the number of points used in an aggregation cell,
     with appropriate metadata).
     """
+
     def __init__(self):
         super(CountKernel, self).__init__('count', self.count_kernel_func)
 
@@ -55,6 +57,7 @@ class MultiKernel(object):
     """
     Represents a set of kernels to be applied each in turn
     """
+
     def __init__(self, cell_method, sub_kernels):
         """
         Create a new MultiKernel

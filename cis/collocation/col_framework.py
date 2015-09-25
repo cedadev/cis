@@ -59,14 +59,14 @@ class Kernel(object):
     @abstractmethod
     def get_value(self, point, data):
         """
-        This method should return a single value (if :attr:`.Kernel.return_size` is 1) or a list of n values (if :attr:`.Kernel.return_size` is n)
-        based on some calculation on the data given a single point.
+        This method should return a single value (if :attr:`.Kernel.return_size` is 1) or a list of n values (if
+        :attr:`.Kernel.return_size` is n) based on some calculation on the data given a single point.
 
-        The data is deliberately left unspecified in the interface as it may be any type of data, however it is expected that
-        each implementation will only work with a specific type of data (gridded, ungridded etc.) Note that this method will
-        be called for every sample point and so could become a bottleneck for calculations, it is advisable to make it as
-        quick as is practical. If this method is unable to provide a value (for example if no data points were given)
-        a ValueError should be thrown.
+        The data is deliberately left unspecified in the interface as it may be any type of data, however it is expected
+        that each implementation will only work with a specific type of data (gridded, ungridded etc.) Note that this
+        method will be called for every sample point and so could become a bottleneck for calculations, it is advisable
+        to make it as quick as is practical. If this method is unable to provide a value (for example if no data points
+        were given) a ValueError should be thrown.
 
         :param point: A single HyperPoint
         :param data: A set of data points to reduce to a single value
@@ -113,8 +113,8 @@ class AbstractDataOnlyKernel(Kernel):
     @abstractmethod
     def get_value_for_data_only(self, values):
         """
-        This method should return a single value (if :attr:`.Kernel.return_size` is 1) or a list of n values (if :attr:`.Kernel.return_size` is n)
-        based on some calculation on the the values (a numpy array).
+        This method should return a single value (if :attr:`.Kernel.return_size` is 1) or a list of n values
+        (if :attr:`.Kernel.return_size` is n) based on some calculation on the the values (a numpy array).
 
         Note that this method will be called for every sample point in which data can be placed and so could become a
         bottleneck for calculations, it is advisable to make it as quick as is practical. If this method is unable to

@@ -40,7 +40,8 @@ class Plotter(object):
 
         :param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
         :param plot_type: The plot type to be used, as a string
-        :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be used, with png being the default
+        :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be
+         used, with png being the default
         :param mplargs: Any other arguments received from the parser
         :param mplkwargs: Any other keyword arguments received from the plotter
         """

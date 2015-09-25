@@ -8,7 +8,6 @@ import cis.utils as utils
 
 
 class CloudSat(AProduct):
-
     def get_file_signature(self):
         return [r'.*_CS_.*GRANULE.*\.hdf']
 
@@ -47,10 +46,10 @@ class CloudSat(AProduct):
         import datetime as dt
         from cis.time_util import convert_sec_since_to_std_time_array
 
-        Cloudsat_start_time = dt.datetime(1993,1,1,0,0,0)
+        Cloudsat_start_time = dt.datetime(1993, 1, 1, 0, 0, 0)
 
         arrays = []
-        for i,j in zip(vdata['Profile_time'],vdata['TAI_start']):
+        for i, j in zip(vdata['Profile_time'], vdata['TAI_start']):
             time = hdf_vd.get_data(i)
             start = hdf_vd.get_data(j)
             time += start
@@ -89,7 +88,7 @@ class CloudSat(AProduct):
         lat_data = hdf.read_data(lat, "VD")
         if height_data is not None:
             lat_data = utils.expand_1d_to_2d_array(lat_data, len(height_data[0]), axis=1)
-        lat_metadata = hdf.read_metadata(lat,"VD")
+        lat_metadata = hdf.read_metadata(lat, "VD")
         lat_metadata.shape = lat_data.shape
         lat_coord = Coord(lat_data, lat_metadata)
 
@@ -106,9 +105,9 @@ class CloudSat(AProduct):
         time_data = self._generate_time_array(vdata)
         if height_data is not None:
             time_data = utils.expand_1d_to_2d_array(time_data, len(height_data[0]), axis=1)
-        time_coord = Coord(time_data,Metadata(name='Profile_time', standard_name='time', shape=time_data.shape,
-                                              units=str(cis_standard_time_unit),
-                                              calendar=cis_standard_time_unit.calendar),"X")
+        time_coord = Coord(time_data, Metadata(name='Profile_time', standard_name='time', shape=time_data.shape,
+                                               units=str(cis_standard_time_unit),
+                                               calendar=cis_standard_time_unit.calendar), "X")
 
 
         # create object containing list of coordinates
@@ -134,8 +133,8 @@ class CloudSat(AProduct):
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
 
-        #missing values
-        missing_values = [0,-9999,-4444,-3333]
+        # missing values
+        missing_values = [0, -9999, -4444, -3333]
 
         # retrieve data + its metadata
         if variable in vdata:
@@ -146,14 +145,14 @@ class CloudSat(AProduct):
                                                   height_length, axis=1)
             except CoordinateNotFoundError:
                 var = hdf.read_data(vdata[variable], "VD", missing_values)
-            metadata = hdf.read_metadata(vdata[variable],"VD")
+            metadata = hdf.read_metadata(vdata[variable], "VD")
         elif variable in sdata:
-            var = hdf.read_data(sdata[variable], "SD",missing_values)
-            metadata = hdf.read_metadata(sdata[variable],"SD")
+            var = hdf.read_data(sdata[variable], "SD", missing_values)
+            metadata = hdf.read_metadata(sdata[variable], "SD")
         else:
             raise ValueError("variable not found")
 
-        return UngriddedData(var,metadata,coords)
+        return UngriddedData(var, metadata, coords)
 
     def get_file_format(self, filename):
         return "HDF4/CloudSat"

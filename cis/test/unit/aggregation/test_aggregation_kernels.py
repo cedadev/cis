@@ -89,7 +89,8 @@ class TestMomentsKernel(unittest.TestCase):
         assert_that(stddev.standard_name, is_(None))
         assert_that(num.standard_name, is_(None))
         assert_that(mean.long_name, is_('TOTAL RAINFALL RATE: LS+CONV KG/M2/S'))
-        assert_that(stddev.long_name, is_('Corrected sample standard deviation of TOTAL RAINFALL RATE: LS+CONV KG/M2/S'))
+        assert_that(stddev.long_name,
+                    is_('Corrected sample standard deviation of TOTAL RAINFALL RATE: LS+CONV KG/M2/S'))
         assert_that(num.long_name, is_('Number of points used to calculate the mean of '
                                        'TOTAL RAINFALL RATE: LS+CONV KG/M2/S'))
         assert_that(mean.var_name, is_('rain'))

@@ -48,6 +48,7 @@ def test_can_add_history():
     gd.add_history(new_history)
     assert(gd.attributes['history'].find(new_history) >= 0)
 
+
 @istest
 def test_can_set_longitude_wrap_at_180():
     gd = gridded_data.make_from_cube(mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
@@ -71,6 +72,7 @@ def test_can_set_longitude_wrap_at_180():
     assert(gd.data[4, 5] == 37.0)
     assert(gd.data[0, 8] == 4.0)
     assert(gd.data[4, 8] == 40.0)
+
 
 @istest
 def test_can_set_longitude_wrap_at_180_2():

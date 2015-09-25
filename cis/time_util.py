@@ -20,7 +20,7 @@ def calculate_mid_time(t1, t2):
 
 def convert_time_since_to_std_time(time_array, units):
     # Strip out any extra colons and commas
-    old_time = Unit(units.replace("since:", "since").replace(",",""))
+    old_time = Unit(units.replace("since:", "since").replace(",", ""))
     dt = old_time.num2date(time_array)
     return cis_standard_time_unit.date2num(dt)
 

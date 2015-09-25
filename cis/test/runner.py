@@ -4,7 +4,8 @@ import multiprocessing
 
 def run(test_set='cis/test/unit', n_processors=1, stop=False, debug=False):
     import nose
-    import logging, sys
+    import logging
+    import sys
 
     if debug:
         logging.basicConfig(level=logging.DEBUG,
@@ -23,7 +24,7 @@ class nose_test(TestCommand):
     """
     Command to run unit tests
     """
-    description = "Run CIS tests. By default this will run all of the unit tests. Optionally the integration tests can" \
+    description = "Run CIS tests. By default this will run all of the unit tests. Optionally the integration tests can"\
                   " be run instead."
     user_options = [('integration-tests', 'i', 'Run the integration tests.'),
                     ('stop', 'x', 'Stop running tests after the first error or failure.'),

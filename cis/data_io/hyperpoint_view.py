@@ -77,7 +77,7 @@ class UngriddedHyperPointView(HyperPointView):
     def __getitem__(self, item):
         if isinstance(item, slice):
             # Cannot handle slicing.
-            #TODO Should return a new UngriddedHyperPointView.
+            # TODO Should return a new UngriddedHyperPointView.
             raise NotImplementedError
         if item < 0 or item >= self.length:
             raise IndexError("list index out of range")

@@ -40,7 +40,7 @@ class TestAProduct(TestCase):
                  product='Product_Not_Yet_Implemented')
 
     @raises(ClassNotFoundError)
-    def test_given_class_which_implements_file_test_as_false_WHEN_call_get_data_for_product_THEN_class_no_found_error(self):
+    def test_given_cls_which_implements_file_test_as_false_WHEN_call_get_data_for_product_THEN_cls_no_found_error(self):
         from cis.data_io.products.AProduct import AProduct
 
         class MyTestProduct(AProduct):
@@ -77,7 +77,7 @@ class TestAProduct(TestCase):
                 pass
 
             def get_file_signature(self):
-                 return [r'.*\.endingtrue']
+                return [r'.*\.endingtrue']
 
             def get_file_type_error(self, filesname):
                 global check

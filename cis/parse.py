@@ -64,8 +64,9 @@ def add_plot_parser_arguments(parser):
                         help="The angle (in degrees) of the ticks on the y axis")
 
     parser.add_argument("--title", metavar="Chart title", nargs="?", help="The title for the chart")
-    parser.add_argument("--itemwidth", metavar="Item width", nargs="?", help="The width of an item. Unit are points in "
-                                                                             "the case of a line, and point^2 in the case of a scatter point.")
+    parser.add_argument("--itemwidth", metavar="Item width", nargs="?",
+                        help="The width of an item. Unit are points in the case of a line, and point^2 in the case of a"
+                             " scatter point.")
     parser.add_argument("--fontsize", metavar="Font size", nargs="?", help="The size of the font in points")
     parser.add_argument("--cmap", metavar="Colour map", nargs="?", help="The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar="Plot height", nargs="?", help="The height of the plot in inches")

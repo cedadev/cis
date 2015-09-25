@@ -8,7 +8,6 @@ import cis.utils as utils
 
 
 class abstract_Caliop(AProduct):
-
     def get_file_signature(self):
         '''
         To be implemented by subclcass
@@ -48,7 +47,7 @@ class abstract_Caliop(AProduct):
         import datetime as dt
         from cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
 
-        variables = ['Latitude','Longitude', "Profile_Time", "Pressure"]
+        variables = ['Latitude', 'Longitude', "Profile_Time", "Pressure"]
         logging.info("Listing coordinates: " + str(variables))
 
         # reading data from files
@@ -71,22 +70,22 @@ class abstract_Caliop(AProduct):
         #       If this is not the case, then the following line will need to be changed
         #       to concatenate the data from all the files and not just arbitrarily pick
         #       the altitudes from the first file.
-        alt_data = get_data(VDS(filenames[0],"Lidar_Data_Altitudes"), True)
+        alt_data = get_data(VDS(filenames[0], "Lidar_Data_Altitudes"), True)
         alt_data *= 1000.0  # Convert to m
         len_x = alt_data.shape[0]
 
-        lat_data = hdf.read_data(sdata['Latitude'],"SD")
+        lat_data = hdf.read_data(sdata['Latitude'], "SD")
         len_y = lat_data.shape[0]
 
         new_shape = (len_x, len_y)
 
         # altitude
-        alt_data = utils.expand_1d_to_2d_array(alt_data,len_y,axis=0)
+        alt_data = utils.expand_1d_to_2d_array(alt_data, len_y, axis=0)
         alt_metadata = Metadata(name=alt_name, standard_name=alt_name, shape=new_shape)
-        alt_coord = Coord(alt_data,alt_metadata)
+        alt_coord = Coord(alt_data, alt_metadata)
 
         # pressure
-        pres_data = hdf.read_data(sdata['Pressure'],"SD")
+        pres_data = hdf.read_data(sdata['Pressure'], "SD")
         pres_metadata = hdf.read_metadata(sdata['Pressure'], "SD")
         # Fix badly formatted units which aren't CF compliant and will break if they are aggregated
         if pres_metadata.units == "hPA": pres_metadata.units = "hPa"
@@ -94,27 +93,27 @@ class abstract_Caliop(AProduct):
         pres_coord = Coord(pres_data, pres_metadata, 'P')
 
         # latitude
-        lat_data = utils.expand_1d_to_2d_array(lat_data[:,index_offset],len_x,axis=1)
+        lat_data = utils.expand_1d_to_2d_array(lat_data[:, index_offset], len_x, axis=1)
         lat_metadata = hdf.read_metadata(sdata['Latitude'], "SD")
         lat_metadata.shape = new_shape
         lat_coord = Coord(lat_data, lat_metadata, 'Y')
 
         # longitude
         lon = sdata['Longitude']
-        lon_data = hdf.read_data(lon,"SD")
-        lon_data = utils.expand_1d_to_2d_array(lon_data[:,index_offset],len_x,axis=1)
+        lon_data = hdf.read_data(lon, "SD")
+        lon_data = utils.expand_1d_to_2d_array(lon_data[:, index_offset], len_x, axis=1)
         lon_metadata = hdf.read_metadata(lon, "SD")
         lon_metadata.shape = new_shape
         lon_coord = Coord(lon_data, lon_metadata, 'X')
 
-        #profile time, x
+        # profile time, x
         time = sdata['Profile_Time']
-        time_data = hdf.read_data(time,"SD")
+        time_data = hdf.read_data(time, "SD")
         time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993, 1, 1, 0, 0, 0))
         time_data = utils.expand_1d_to_2d_array(time_data[:, index_offset], len_x, axis=1)
-        time_coord = Coord(time_data,Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
-                                              units=str(cis_standard_time_unit),
-                                              calendar=cis_standard_time_unit.calendar),"T")
+        time_coord = Coord(time_data, Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
+                                               units=str(cis_standard_time_unit),
+                                               calendar=cis_standard_time_unit.calendar), "T")
 
         # create the object containing all coordinates
         coords = CoordList()
@@ -156,16 +155,16 @@ class abstract_Caliop(AProduct):
         """
         from cis.utils import create_masked_array_for_missing_data
 
-        calipso_fill_values = {'Float_32' : -9999.0,
-                               #'Int_8' : 'See SDS description',
-                               'Int_16' : -9999,
-                               'Int_32' : -9999,
-                               'UInt_8' : -127,
-                               #'UInt_16' : 'See SDS description',
-                               #'UInt_32' : 'See SDS description',
-                               'ExtinctionQC Fill Value' : 32768,
-                               'FeatureFinderQC No Features Found' : 32767,
-                               'FeatureFinderQC Fill Value' : 65535}
+        calipso_fill_values = {'Float_32': -9999.0,
+                               # 'Int_8' : 'See SDS description',
+                               'Int_16': -9999,
+                               'Int_32': -9999,
+                               'UInt_8': -127,
+                               # 'UInt_16' : 'See SDS description',
+                               # 'UInt_32' : 'See SDS description',
+                               'ExtinctionQC Fill Value': 32768,
+                               'FeatureFinderQC No Features Found': 32767,
+                               'FeatureFinderQC Fill Value': 65535}
 
         data = sds.get()
         attributes = sds.attributes()
@@ -182,13 +181,13 @@ class abstract_Caliop(AProduct):
         data = create_masked_array_for_missing_data(data, missing_val)
 
         # Offsets and scaling.
-        offset  = attributes.get('add_offset', 0)
+        offset = attributes.get('add_offset', 0)
         scale_factor = attributes.get('scale_factor', 1)
         data = self.apply_scaling_factor_CALIPSO(data, scale_factor, offset)
 
         return data
 
-    def apply_scaling_factor_CALIPSO(self,data, scale_factor, offset):
+    def apply_scaling_factor_CALIPSO(self, data, scale_factor, offset):
         '''
         Apply scaling factor Calipso data
         :param data:
@@ -196,11 +195,10 @@ class abstract_Caliop(AProduct):
         :param offset:
         :return:
         '''
-        return (data/scale_factor) + offset
+        return (data / scale_factor) + offset
 
 
 class Caliop_L2(abstract_Caliop):
-
     def get_file_signature(self):
         return [r'CAL_LID_L2_05kmAPro-Prov-V3.*hdf']
 
@@ -228,7 +226,6 @@ class Caliop_L2(abstract_Caliop):
 
 
 class Caliop_L1(abstract_Caliop):
-
     def get_file_signature(self):
         return [r'CAL_LID_L1-ValStage1-V3.*hdf']
 

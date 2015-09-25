@@ -21,7 +21,7 @@ class Cloud_CCI(AProduct):
 
         coords = CoordList()
         coords.append(Coord(var_data['lat'], get_metadata(var_data['lat'][0]), 'Y'))
-        coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0]),'X'))
+        coords.append(Coord(var_data['lon'], get_metadata(var_data['lon'][0]), 'X'))
         time_coord = Coord(var_data['time'], get_metadata(var_data['time'][0]))
 
         # TODO: Is this really julian?
@@ -66,7 +66,7 @@ class Aerosol_CCI(AProduct):
         from cis.data_io.Coord import Coord
         import datetime
 
-        #!FIXME: when reading an existing file variables might be "latitude", "longitude"
+        # FIXME: when reading an existing file variables might be "latitude", "longitude"
         variables = ["lat", "lon", "time"]
         logging.info("Listing coordinates: " + str(variables))
 
@@ -76,7 +76,7 @@ class Aerosol_CCI(AProduct):
         coords.append(Coord(data["lon"], get_metadata(data["lon"]), "X"))
         coords.append(Coord(data["lat"], get_metadata(data["lat"]), "Y"))
         time_coord = Coord(data["time"], get_metadata(data["time"]), "T")
-        time_coord.convert_TAI_time_to_std_time(datetime.datetime(1970,1,1))
+        time_coord.convert_TAI_time_to_std_time(datetime.datetime(1970, 1, 1))
         coords.append(time_coord)
 
         return coords

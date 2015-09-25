@@ -40,7 +40,7 @@ class GridCellBinIndexInSlices(object):
                           coords to be iterated over
         """
 
-        #create bounds in correct order
+        # create bounds in correct order
         hp_coords = []
         coord_descreasing = [False] * len(coords)
         coord_lengths = [0] * len(coords)

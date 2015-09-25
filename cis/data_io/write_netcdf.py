@@ -81,7 +81,7 @@ def __create_index(nc_file, length):
     import numpy as np
 
     dimension = nc_file.createDimension(index_name, length)
-    dimensions = ( index_name, )
+    dimensions = (index_name, )
     var = nc_file.createVariable(index_name, np.int32, dimensions)
 
     var.valid_range = (0, length)

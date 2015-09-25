@@ -106,14 +106,11 @@ class Histogram_2D(Generic_Plot):
             coord_axis = "x"
         elif axis == "y":
             coord_axis = "data"
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis,
-                                                                                                          self.unpacked_data_items[
-                                                                                                              0][
-                                                                                                              coord_axis])
+        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0][coord_axis])
 
         valrange = {}
-        valrange[axis + "min"] = calculated_min if min_val is None else min_val
-        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "min"] = c_min if min_val is None else min_val
+        valrange[axis + "max"] = c_max if max_val is None else max_val
         valrange[axis + "step"] = step
 
         return valrange

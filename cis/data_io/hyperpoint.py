@@ -27,10 +27,10 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
         if val is None or val == []:
             val = []
         else:
-            val = [ val ]
+            val = [val]
 
         # If t was given as a datetime we need to convert it into our standard time
-        if isinstance(t,datetime.datetime):
+        if isinstance(t, datetime.datetime):
             t = convert_datetime_to_std_time(t)
 
         point = super(HyperPoint, cls).__new__(cls, lat, lon, alt, pres, t, val)
@@ -76,63 +76,65 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
         return self.time == other.time
 
     def same_point_in_space(self, other):
-        return ( self.latitude == other.latitude and self.longitude == other.longitude and
-                 self.altitude == other.altitude and self.air_pressure == other.air_pressure )
+        return (self.latitude == other.latitude and self.longitude == other.longitude and
+                self.altitude == other.altitude and self.air_pressure == other.air_pressure)
 
     def same_point_in_space_and_time(self, other):
-        return ( self.same_point_in_space(other) and self.same_point_in_time(other) )
+        return (self.same_point_in_space(other) and self.same_point_in_time(other))
 
     def get_coord_tuple(self):
-        # This returns a sorted tuple of coordinate names and values. It is sorted to fix an iris bug when doing
-        #  linear interpolation. It's linear interpolation routine calls itself recursively and recreates the cube each time,
-        #  but it doesn't seem to repopulate derived dimensions. Hence the altitude dimension (which is usually the derived one)
-        #  needs to be first in the list of coordinates to interpolate over.
-        return sorted([ (x, y) for x, y in self._asdict().items() if y is not None and x != 'val' ])
+        """
+        This returns a sorted tuple of coordinate names and values. It is sorted to fix an iris bug when doing
+         linear interpolation. It's linear interpolation routine calls itself recursively and recreates the cube each
+         time, but it doesn't seem to repopulate derived dimensions. Hence the altitude dimension (which is usually the
+         derived one) needs to be first in the list of coordinates to interpolate over.
+        """
+        return sorted([(x, y) for x, y in self._asdict().items() if y is not None and x != 'val'])
 
-    def compdist(self,p1,p2):
+    def compdist(self, p1, p2):
         """
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
         """
         return (self.haversine_dist(p1) > self.haversine_dist(p2))
 
-    def compalt(self,p1,p2):
+    def compalt(self, p1, p2):
         """
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
         """
         return (self.alt_sep(p1) > self.alt_sep(p2))
 
-    def comppres(self,p1,p2):
+    def comppres(self, p1, p2):
         """
             Compares the pressure from this point to p1 and p2. Returns True if p2 is closer to self than p1
         """
         return (self.pres_sep(p1) > self.pres_sep(p2))
 
-    def comptime(self,p1,p2):
+    def comptime(self, p1, p2):
         """
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
         """
         return (self.time_sep(p1) > self.time_sep(p2))
 
-    def haversine_dist(self,point2):
+    def haversine_dist(self, point2):
         """
             Computes the Haversine distance between two points
         """
         from cis.utils import haversine
         return haversine(self.latitude, self.longitude, point2.latitude, point2.longitude)
 
-    def time_sep(self,point2):
+    def time_sep(self, point2):
         """
             Computes the time seperation between two points
         """
         return abs(self.time - point2.time)
 
-    def alt_sep(self,point2):
+    def alt_sep(self, point2):
         """
             Computes the height seperation between two points
         """
         return abs(self.altitude - point2.altitude)
 
-    def pres_sep(self,point2):
+    def pres_sep(self, point2):
         """
             Computes the pressure ratio between two points, this is always >= 1.
         """
@@ -169,7 +171,7 @@ class HyperPointList(list):
         # Check that all items in the incoming list are HyperPoints. Note that this checking
         # does not guarantee that a HyperPointList instance *always* has just HyperPoints in its list as
         # the append & __getitem__ methods have not been overridden.
-        #TODO In fact it doesn't even check here because the list is not initialised yet. Override __init__ for
+        # TODO In fact it doesn't even check here because the list is not initialised yet. Override __init__ for
         # mutable objects.
         if not all([isinstance(point, HyperPoint) for point in point_list]):
             raise ValueError('All items in list_of_coords must be Coord instances.')

@@ -18,7 +18,7 @@ class CollocatorFactory(object):
     """
 
     def get_collocator_instances_for_method(self, method_name, kernel_name, collocator_params, kernel_params,
-                                           sample_gridded, data_gridded):
+                                            sample_gridded, data_gridded):
         """
         Get instances of the correct classes for collocation
         :param method_name: Collocation method name (e.g. 'lin', 'nn')
@@ -31,7 +31,7 @@ class CollocatorFactory(object):
         """
         import cis.collocation.col_implementations as ci
         col_cls, constraint_cls, kernel_cls = self._get_collocator_classes_for_method(method_name, kernel_name,
-                                                                                     sample_gridded, data_gridded)
+                                                                                      sample_gridded, data_gridded)
         # We aren't able to pass any arguments to the li kernel when using the lin collocator so we pop them off here...
         if kernel_cls is ci.li:
             kernel_params = {k: collocator_params.get(k, None) for k in ('nn_vertical', 'extrapolate')}

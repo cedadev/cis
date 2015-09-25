@@ -26,7 +26,7 @@ invalid_variable = "im_an_invalid_variable"
 invalid_filename = "im_an_invalid_file"
 invalid_format = non_netcdf_file
 
-test_file = os.path.join(mkdtemp('cis_test_dir'),'test_out.nc')
+test_file = os.path.join(mkdtemp('cis_test_dir'), 'test_out.nc')
 
 
 def remove_test_file():

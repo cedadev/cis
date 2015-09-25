@@ -9,7 +9,8 @@ from cis.utils import listify
 
 def expand_filelist(filelist):
     """
-    :param filelist: A single element, or list, or comma seperated string of filenames, wildcarded filenames or directories
+    :param filelist: A single element, or list, or comma seperated string of filenames, wildcarded filenames or
+     directories
     :return: A flat list of files which exist - with no duplicates
     :raises ValueError: if any of the files in the list do not exist.
     """

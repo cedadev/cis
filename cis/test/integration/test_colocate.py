@@ -7,7 +7,6 @@ from cis.test.integration_test_data import *
 
 
 class TestUngriddedGriddedCollocate(BaseIntegrationTest):
-
     def test_GIVEN_single_variable_WHEN_collocate_THEN_successful_collocation(self):
         variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
         filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
@@ -190,8 +189,8 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
-        out_vars = [valid_cloudsat_PRECIP_variable, valid_cloudsat_PRECIP_variable+'_std_dev',
-                    valid_cloudsat_PRECIP_variable+'_num_points']
+        out_vars = [valid_cloudsat_PRECIP_variable, valid_cloudsat_PRECIP_variable + '_std_dev',
+                    valid_cloudsat_PRECIP_variable + '_num_points']
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
@@ -383,7 +382,6 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
 
 
 class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
-
     @unittest.skip("Very resource intensive")
     def test_GASSP_onto_CALIOP_L1(self):
         # Ran for 14hr, not finished. (with no h_sep)
@@ -479,7 +477,6 @@ class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
 
 
 class TestGriddedUngriddedCollocate(BaseIntegrationTest):
-
     def test_NetCDF_Gridded_onto_ASCII_with_variable(self):
         # Takes 4s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
@@ -714,7 +711,6 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
-
     def test_NetCDF_Gridded_onto_MODIS_L3(self):
         # Takes 47s
         vars = valid_hadgem_variable,
@@ -864,6 +860,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
 
 if __name__ == '__main__':
     unittest.main()

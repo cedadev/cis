@@ -28,11 +28,13 @@ def __error_occurred(e):
 
 def __check_variable_is_valid(main_arguments, data, axis):
     """
-    Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to assign
-    the variable to the specified axis
+    Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to
+    assign the variable to the specified axis
+
     :param main_arguments: The arguments received from the parser
     :param data: A list of packed data objects
-    :param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it will be plotted on.
+    :param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it
+     will be plotted on.
     :param axis: The axis on which to plot the variable on
     """
     from cis.exceptions import InvalidVariableError
@@ -40,7 +42,11 @@ def __check_variable_is_valid(main_arguments, data, axis):
     user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
-        if len(data_item.coords(name=user_specified_variable)) == 0 and len(data_item.coords(standard_name=user_specified_variable)) == 0 and data_item.name() != user_specified_variable and data_item.standard_name != user_specified_variable and data_item.long_name != user_specified_variable:
+        if len(data_item.coords(name=user_specified_variable)) == 0 \
+                and len(data_item.coords(standard_name=user_specified_variable)) == 0 \
+                and data_item.name() != user_specified_variable \
+                and data_item.standard_name != user_specified_variable \
+                and data_item.long_name != user_specified_variable:
             raise InvalidVariableError("{} is not a valid variable".format(user_specified_variable))
 
     return user_specified_variable
@@ -58,17 +64,18 @@ def plot_cmd(main_arguments):
     import cis.exceptions as ex
     from iris.exceptions import IrisError
 
-    # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various files
+    # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various
+    # files
     data = []
     try:
         data = DataReader().read_datagroups(main_arguments.datagroups)
     except MemoryError:
-     __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
-                      "of data to be plotted, increase the swap space available on your machine or use a machine "
-                      "with more memory (for example the JASMIN facility).")
+        __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
+                         "of data to be plotted, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
 
     main_arguments = vars(main_arguments)
-    main_arguments.pop('command') # Remove the command argument now it is not needed
+    main_arguments.pop('command')  # Remove the command argument now it is not needed
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 

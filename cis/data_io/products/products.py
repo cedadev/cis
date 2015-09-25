@@ -7,7 +7,6 @@ from cis.data_io.products.gridded_NetCDF import NetCDF_Gridded
 
 
 class cis(AProduct):
-
     # If a file matches the CIS product signature as well as another signature (e.g. because we aggregated from another
     # data product) we need to prioritise the CIS data product
     priority = 100
@@ -27,8 +26,8 @@ class cis(AProduct):
         coords = CoordList()
         for variable in variables:
             try:
-                var_data = read_many_files_individually(filenames,variable[0])[variable[0]]
-                coords.append(Coord(var_data, get_metadata(var_data[0]),axis=variable[1]))
+                var_data = read_many_files_individually(filenames, variable[0])[variable[0]]
+                coords.append(Coord(var_data, get_metadata(var_data[0]), axis=variable[1]))
             except InvalidVariableError:
                 pass
 
@@ -38,7 +37,7 @@ class cis(AProduct):
         if usr_variable is None:
             res = UngriddedCoordinates(coords)
         else:
-            usr_var_data = read_many_files_individually(filenames,usr_variable)[usr_variable]
+            usr_var_data = read_many_files_individually(filenames, usr_variable)[usr_variable]
             res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
 
         return res
@@ -51,7 +50,6 @@ class cis(AProduct):
 
 
 class Aeronet(AProduct):
-
     def get_file_signature(self):
         return [r'.*\.lev20']
 
@@ -95,7 +93,6 @@ class Aeronet(AProduct):
 
 
 class ASCII_Hyperpoints(AProduct):
-
     def get_file_signature(self):
         return [r'.*\.txt']
 
@@ -116,23 +113,28 @@ class ASCII_Hyperpoints(AProduct):
                                              names=['latitude', 'longitude', 'altitude', 'time', 'value'],
                                              delimiter=',', missing_values='', usemask=True, invalid_raise=True))
             except:
-                raise IOError('Unable to read file '+filename)
+                raise IOError('Unable to read file ' + filename)
 
         data_array = utils.concatenate(array_list)
         n_elements = len(data_array['latitude'])
 
         coords = CoordList()
-        coords.append(Coord(data_array["latitude"], Metadata(standard_name="latitude", shape=(n_elements,), units="degrees_north")))
-        coords.append(Coord(data_array["longitude"], Metadata(standard_name="longitude", shape=(n_elements,), units="degrees_east")))
-        coords.append(Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
+        coords.append(Coord(data_array["latitude"],
+                            Metadata(standard_name="latitude", shape=(n_elements,), units="degrees_north")))
+        coords.append(Coord(data_array["longitude"],
+                            Metadata(standard_name="longitude", shape=(n_elements,), units="degrees_east")))
+        coords.append(
+            Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
 
         time_arr = parse_datetimestr_to_std_time_array(data_array["time"])
-        time = Coord(time_arr, Metadata(standard_name="time", shape=(n_elements,), units="days since 1600-01-01 00:00:00"))
+        time = Coord(time_arr,
+                     Metadata(standard_name="time", shape=(n_elements,), units="days since 1600-01-01 00:00:00"))
         coords.append(time)
 
         if variable:
             try:
-                data = UngriddedData(data_array['value'], Metadata(name="value", shape=(n_elements,), units="unknown"), coords)
+                data = UngriddedData(data_array['value'], Metadata(name="value", shape=(n_elements,), units="unknown"),
+                                     coords)
             except:
                 InvalidVariableError("Value column does not exist in file " + filenames)
             return data

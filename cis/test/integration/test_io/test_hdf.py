@@ -17,14 +17,14 @@ def test_read_hdf4():
     sds, vds = __read_hdf4(filename, ['Solution_Ocean', 'Path_Radiance_Land', 'Mean_Reflectance_Land'])
 
     # VD variable are listed in the VD part of the tuple, but not in the SD part
-    eq_(True, vds.has_key('Solution_Ocean'))
-    eq_(False, sds.has_key('Solution_Ocean'))
+    eq_(True, 'Solution_Ocean' in vds)
+    eq_(False, 'Solution_Ocean' in sds)
 
     # SD variable are listed in the SD part of the tuple, but not in the VD part
-    eq_(True, sds.has_key('Path_Radiance_Land'))
-    eq_(False, vds.has_key('Path_Radiance_Land'))
-    eq_(True, sds.has_key('Mean_Reflectance_Land'))
-    eq_(False, vds.has_key('Mean_Reflectance_Land'))
+    eq_(True, 'Path_Radiance_Land' in sds)
+    eq_(False, 'Path_Radiance_Land' in vds)
+    eq_(True, 'Mean_Reflectance_Land' in sds)
+    eq_(False, 'Mean_Reflectance_Land' in vds)
 
 
 @istest

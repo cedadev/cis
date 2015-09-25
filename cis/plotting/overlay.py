@@ -39,10 +39,10 @@ class Overlay(Generic_Plot):
                 p = Heatmap([self.packed_data_items[i]], self.plot_args, x_wrap_start, *self.mplargs, **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contour':
                 p = Contour_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
-                             **self.mplkwargs)
+                                 **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contourf':
                 p = Contourf_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
-                              **self.mplkwargs)
+                                  **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'scatter':
                 p = Scatter_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                                  **self.mplkwargs)

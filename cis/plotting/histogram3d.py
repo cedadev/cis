@@ -26,7 +26,6 @@ class Histogram_3D(Generic_Plot):
             # All bins that have count more than cmax will not be displayed
             cmax = self.plot_args["valrange"].get("vmax", None)
 
-
             # Add y=x line
             min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
             max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
@@ -101,14 +100,11 @@ class Histogram_3D(Generic_Plot):
             coord_axis = 0
         elif axis == "y":
             coord_axis = 1
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis,
-                                                                                                          self.unpacked_data_items[
-                                                                                                              coord_axis][
-                                                                                                              "data"])
+        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[coord_axis]["data"])
 
         valrange = {}
-        valrange[axis + "min"] = calculated_min if min_val is None else min_val
-        valrange[axis + "max"] = calculated_max if max_val is None else max_val
+        valrange[axis + "min"] = c_min if min_val is None else min_val
+        valrange[axis + "max"] = c_max if max_val is None else max_val
         valrange[axis + "step"] = step
 
         return valrange

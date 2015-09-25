@@ -16,7 +16,6 @@ from cis.utils import listify
 
 
 class Metadata(object):
-
     @classmethod
     def from_CubeMetadata(cls, cube_meta):
         return cls(name=cube_meta.var_name, standard_name=cube_meta.standard_name, long_name=cube_meta.long_name,
@@ -62,7 +61,7 @@ class Metadata(object):
         if self.misc:
             string += u'{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
             for k, v in self.misc.iteritems():
-                string += u'{pad:{width}}{att} = {val}\n'.format(pad=' ', width=offset+2, att=k.title(), val=v)
+                string += u'{pad:{width}}{att} = {val}\n'.format(pad=' ', width=offset + 2, att=k.title(), val=v)
         return string
 
     def __str__(self):
@@ -108,6 +107,7 @@ static_mappings = {"SDS": hdf_sd_get_data,
                    "VDS": hdf_vd_get_data,
                    "Variable": netcdf_get_data,
                    "_Variable": netcdf_get_data}
+
 
 class LazyData(object):
     """
@@ -254,7 +254,7 @@ class LazyData(object):
         self._coords = other_data.coords()
         self.metadata = other_data._metadata
 
-        #def __getitem__(self, item): pass
+        # def __getitem__(self, item): pass
         # This method can be overridden to provide the ability to ask for slices of data e.g. UngridedDataObject[012:32.4:5]
         # Actually implementing it would be very tricky as you have to keep track of the data and the coordinates without
         #  necessarily actually reading them
@@ -353,7 +353,7 @@ class UngriddedData(LazyData, CommonData):
         else:
             raise ValueError("Invalid Coords type")
 
-        #TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
+        # TODO Find a cleaner workaround for this, for some reason UDUNITS can not parse 'per kilometer per steradian'
         if str(metadata.units) == 'per kilometer per steradian':
             metadata.units = 'kilometer^-1 steradian^-1'
 
@@ -381,8 +381,9 @@ class UngriddedData(LazyData, CommonData):
                 if coord.data.dtype != 'object': combined_mask |= numpy.isnan(coord.data).flatten()
             if combined_mask.any():
                 n_points = numpy.count_nonzero(combined_mask)
-                logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
-                                "these points have been removed from the data.".format(n_points=n_points))
+                logging.warning(
+                    "Identified {n_points} point(s) which were missing values for some or all coordinates - "
+                    "these points have been removed from the data.".format(n_points=n_points))
                 for coord in self._coords:
                     coord.data = numpy.ma.masked_array(coord.data.flatten(), mask=combined_mask).compressed()
                 if numpy.ma.is_masked(self._data):
@@ -581,6 +582,7 @@ class UngriddedData(LazyData, CommonData):
     def __unicode__(self):
         return self.summary()
 
+
 class UngriddedCoordinates(CommonData):
     """
     Wrapper (adaptor) class for the different types of possible ungridded data.
@@ -701,6 +703,7 @@ class UngriddedDataList(CommonDataList):
     """
     Class which represents multiple UngriddedData objects (e.g. from reading multiple variables)
     """
+
     def __str__(self):
         "<UngriddedDataList: %s>" % super(UngriddedDataList, self).__str__()
 
