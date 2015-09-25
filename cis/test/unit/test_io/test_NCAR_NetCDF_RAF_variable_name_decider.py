@@ -6,7 +6,6 @@ from cis.exceptions import InvalidVariableError
 
 
 class TestDataReader(TestCase):
-
     class MockVar(object):
         def __init__(self, dimensions=('Time',)):
             self.dimensions = dimensions
@@ -107,7 +106,8 @@ class TestDataReader(TestCase):
 
         assert_that(decider.altitude, is_([expected_alt]))
 
-    def test_GIVEN_time_coordinate_station_lat_and_lon_variable_and_alt_in_different_case_WHEN_construct_THEN_values_are_correct(self):
+    def test_GIVEN_time_coordinate_station_lat_and_lon_variable_and_alt_in_different_case_WHEN_construct_THEN_values_are_correct(
+            self):
         expected_time_var = "time_var"
         expected_station_latitude = "27.1"
         expected_station_longitude = "10"
@@ -126,7 +126,8 @@ class TestDataReader(TestCase):
         assert_that(decider.station_longitude, is_([expected_station_longitude]))
         assert_that(decider.altitude, is_([expected_alt]))
 
-    def test_GIVEN_time_coordinate_variable_lat_but_lat_variable_does_not_exist_WHEN_construct_THEN_throw_exception(self):
+    def test_GIVEN_time_coordinate_variable_lat_but_lat_variable_does_not_exist_WHEN_construct_THEN_throw_exception(
+            self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
         variables = [{expected_time_var: self.MockVar(), "not LON": self.MockVar()}]
@@ -152,7 +153,8 @@ class TestDataReader(TestCase):
         assert_that(cm.exception.message, is_("No attributes indicating longitude variable name, "
                                               "expecting 'Longitude_Coordinate'"))
 
-    def test_GIVEN_time_coordinate_variable_lat_lon_but_lon_variable_does_not_exist_WHEN_construct_THEN_throw_exception(self):
+    def test_GIVEN_time_coordinate_variable_lat_lon_but_lon_variable_does_not_exist_WHEN_construct_THEN_throw_exception(
+            self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
@@ -186,7 +188,8 @@ class TestDataReader(TestCase):
         assert_that(selector.altitude, is_([0]), "altitude is fixed at zero")
         assert_that(selector.pressure_variable_name, is_(None), "pressure variable name")
 
-    def test_GIVEN_time_coordinate_variable_lat_lon_alt_but_alt_variable_does_not_exist_WHEN_construct_THEN_throw_exception(self):
+    def test_GIVEN_time_coordinate_variable_lat_lon_alt_but_alt_variable_does_not_exist_WHEN_construct_THEN_throw_exception(
+            self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
@@ -201,7 +204,8 @@ class TestDataReader(TestCase):
         with self.assertRaises(InvalidVariableError) as cm:
             NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(cm.exception.message, is_("There is no variable for the vertical co-ordinate '{}'".format(expected_alt_var)))
+        assert_that(cm.exception.message,
+                    is_("There is no variable for the vertical co-ordinate '{}'".format(expected_alt_var)))
 
     def test_GIVEN_time_coordinate_variable_lat_lon_alt_WHEN_construct_THEN_values_are_set(self):
         expected_time_var = "time_var"
@@ -250,7 +254,8 @@ class TestDataReader(TestCase):
 
         assert_that(selector.pressure_variable_name, is_(expected_pressure_var), "pressure variable name")
 
-    def test_GIVEN_time_coordinate_variable_lat_lon_with_PRE_and_PSXC_WHEN_construct_THEN_pressure_name_is_set_to_PSXC(self):
+    def test_GIVEN_time_coordinate_variable_lat_lon_with_PRE_and_PSXC_WHEN_construct_THEN_pressure_name_is_set_to_PSXC(
+            self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
         expected_lon_var = "LON"
@@ -372,8 +377,8 @@ class TestDataReader(TestCase):
 
         assert_that(vars, all(variables), "File should be for station")
 
-    def test_GIVEN_valid_file_with_one_variables_same_shape_others_not_WHEN_get_vars_THEN_only_same_shape_is_returned(self):
-
+    def test_GIVEN_valid_file_with_one_variables_same_shape_others_not_WHEN_get_vars_THEN_only_same_shape_is_returned(
+            self):
         time_dims = ["Time"]
         time_var = "time_var"
         expected_var = "good_shape"
@@ -396,9 +401,8 @@ class TestDataReader(TestCase):
 
         assert_that(vars, is_(set([expected_var, time_var])), "variables should be ones with same dim as time")
 
-
-    def test_GIVEN_valid_file_with_one_variables_same_shape_others_not_and_time_is_multid_WHEN_get_vars_THEN_only_same_shape_is_returned(self):
-
+    def test_GIVEN_valid_file_with_one_variables_same_shape_others_not_and_time_is_multid_WHEN_get_vars_THEN_only_same_shape_is_returned(
+            self):
         time_dims = ["Time", "time2"]
         time_var = "time_var"
         expected_var = "good_shape"

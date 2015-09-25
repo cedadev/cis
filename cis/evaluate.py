@@ -52,7 +52,7 @@ class Calculator(object):
         except ValueError as ex:
             raise EvaluationError("An error occurred evaluating your expression - check that it's correct and that "
                                   "the variables are compatible shapes. Error is: %s" % ex.message)
-        return self._post_process(data_list, result, expr, output_var,  units, attributes)
+        return self._post_process(data_list, result, expr, output_var, units, attributes)
 
     def _post_process(self, data_list, result_array, expr, output_var, units, attributes):
         """

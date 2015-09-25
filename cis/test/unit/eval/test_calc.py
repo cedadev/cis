@@ -11,7 +11,6 @@ from cis import __version__
 
 
 class TestCalculator(unittest.TestCase):
-
     def setUp(self):
         self.calc = Calculator()
         self.data = GriddedDataList([make_from_cube(mock.make_mock_cube())])
@@ -71,7 +70,7 @@ class TestCalculator(unittest.TestCase):
         expr = 'var1 + (var2 - var1) * (600 - 550) / (670 - 550)'
 
         res = self.calc.evaluate(self.data, expr)
-        expected = numpy.array([[5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16], [17, 18, 19]]) + 1.0/6
+        expected = numpy.array([[5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16], [17, 18, 19]]) + 1.0 / 6
 
         assert_that(numpy.allclose(res.data, expected))
 

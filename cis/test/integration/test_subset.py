@@ -12,7 +12,6 @@ from cis.time_util import convert_time_since_to_std_time
 
 
 class TestSubsetIntegration(BaseIntegrationTest):
-
     def test_GIVEN_single_variable_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_aerosol_cci_variable
         filename = valid_aerosol_cci_filename
@@ -97,7 +96,6 @@ class TestSubsetIntegration(BaseIntegrationTest):
 
 
 class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
-
     def do_subset(self, filename, time_min, time_max, variable):
         arguments = ['subset', variable + ':' + filename, 't=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
@@ -293,7 +291,6 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
 
 
 class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
-
     def do_subset(self, filename, lat_max, lat_min, lon_max, lon_min, variable):
         arguments = ['subset', variable + ':' + filename,
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
@@ -385,7 +382,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_CloudSatPRECIP(self):
-        #Takes 100s
+        # Takes 100s
         variable = '*'
         filename = valid_cloudsat_PRECIP_file
         lon_min, lon_max = -10, 10
@@ -412,7 +409,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_CloudSatRVOD(self):
-        #257s exit code 137
+        # 257s exit code 137
         variable = '*'  # Gets killed by Jenkins
         variable = "RVOD_liq_water_content,RVOD_ice_water_path"
         filename = valid_cloudsat_RVOD_file
@@ -422,7 +419,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_GASP(self):
-        #257s exit code 137
+        # 257s exit code 137
         variable = '*'
         filename = valid_GASSP_aeroplane_filename
         lon_min, lon_max = -94, 95

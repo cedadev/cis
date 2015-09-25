@@ -124,21 +124,21 @@ def expand_1d_to_2d_array(array_1d, length, axis=0):
     by duplicating the data along a given 'axis' (default is 0)
     of size 'length'.
 
-    **Examples**
+    Examples::
 
-    >>> a = np.array([1,2,3,4])
-    >>> expand_1d_to_2d_array(a, 4, axis=0)
-    [[1 2 3 4]
-     [1 2 3 4]
-     [1 2 3 4]
-     [1 2 3 4]]
+        >>> a = np.array([1, 2, 3, 4])
+        >>> expand_1d_to_2d_array(a, 4, axis=0)
+        [[1 2 3 4]
+         [1 2 3 4]
+         [1 2 3 4]
+         [1 2 3 4]]
 
-    >>> a = np.array([1,2,3,4])
-    >>> expand_1d_to_2d_array(a, 4, axis=1)
-    [[1 1 1 1]
-     [2 2 2 2]
-     [3 3 3 3]
-     [4 4 4 4]]
+        >>> a = np.array([1, 2, 3, 4])
+        >>> expand_1d_to_2d_array(a, 4, axis=1)
+        [[1 1 1 1]
+         [2 2 2 2]
+         [3 3 3 3]
+         [4 4 4 4]]
 
     :param array_1d:
     :param length:

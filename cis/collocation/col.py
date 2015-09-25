@@ -177,12 +177,12 @@ class Collocate(object):
         # Find collocator, constraint and kernel to use
         col_params['missing_data_for_missing_sample'] = self.missing_data_for_missing_sample
         col, con, kernel = self.collocator_factory.get_collocator_instances_for_method(col_name, kern, col_params,
-                                                                                     kern_params,
-                                                                                     self.sample_points.is_gridded,
-                                                                                     data.is_gridded)
+                                                                                       kern_params,
+                                                                                       self.sample_points.is_gridded,
+                                                                                       data.is_gridded)
 
         col_name = self.collocator_factory.get_default_collocator_name(col_name, self.sample_points.is_gridded,
-                                                                     data.is_gridded)
+                                                                       data.is_gridded)
         logging.info("Collocator: " + str(col_name))
         if kern is None:
             kernel_name = kernel.__class__.__name__
@@ -211,7 +211,7 @@ class Collocate(object):
 
         for data in new_data:
             history = "Collocated onto sampling from: " + str(self.sample_points.filenames) + " " \
-                      "\nusing CIS version " + __version__ + " " + \
+                                                                                              "\nusing CIS version " + __version__ + " " + \
                       "\nvariables: " + str(variables) + " " + \
                       "\nwith files: " + str(filenames) + " " + \
                       "\nusing collocator: " + str(col_name) + " " + \

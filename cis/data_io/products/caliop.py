@@ -88,7 +88,8 @@ class abstract_Caliop(AProduct):
         pres_data = hdf.read_data(sdata['Pressure'], "SD")
         pres_metadata = hdf.read_metadata(sdata['Pressure'], "SD")
         # Fix badly formatted units which aren't CF compliant and will break if they are aggregated
-        if pres_metadata.units == "hPA": pres_metadata.units = "hPa"
+        if pres_metadata.units == "hPA":
+            pres_metadata.units = "hPa"
         pres_metadata.shape = new_shape
         pres_coord = Coord(pres_data, pres_metadata, 'P')
 

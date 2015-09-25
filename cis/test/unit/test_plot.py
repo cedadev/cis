@@ -17,7 +17,6 @@ from cis.plotting.heatmap import make_color_mesh_cells, Heatmap
 
 
 class TestPlotting(unittest.TestCase):
-
     plot_args = {'x_variable': 'longitude',
                  'y_variable': 'latitude',
                  'valrange': {'vmin': 0, 'vmax': 2},
@@ -26,7 +25,7 @@ class TestPlotting(unittest.TestCase):
 
     class TestGenericPlot(Generic_Plot):
         def plot(self):
-                pass
+            pass
 
     def test_should_raise_io_error_with_invalid_filename(self):
         with self.assertRaises(IOError):
@@ -35,7 +34,6 @@ class TestPlotting(unittest.TestCase):
 
 
 class TestHeatMap(unittest.TestCase):
-
     plot_args = {'x_variable': 'longitude',
                  'y_variable': 'latitude',
                  'valrange': {},

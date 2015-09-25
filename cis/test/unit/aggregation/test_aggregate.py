@@ -11,7 +11,6 @@ from cis.test.util.mock import make_square_5x3_2d_cube
 
 
 class TestAggregate(unittest.TestCase):
-
     def test_GIVEN_single_variable_WHEN_aggregate_THEN_DataReader_called_correctly(self):
         variables = 'var_name'
         filenames = 'filename'
@@ -42,7 +41,7 @@ class TestAggregate(unittest.TestCase):
         output_file = 'output.hdf'
         kernel = 'mean'
         grid = None
-        input_data = GriddedDataList(2*[make_from_cube(make_square_5x3_2d_cube())])
+        input_data = GriddedDataList(2 * [make_from_cube(make_square_5x3_2d_cube())])
         output_data = input_data
 
         mock_data_reader = DataReader()
@@ -66,7 +65,7 @@ class TestAggregate(unittest.TestCase):
         output_file = 'output.hdf'
         kernel = 'mean'
         grid = 'grid'
-        input_data = GriddedDataList(2*[make_from_cube(make_square_5x3_2d_cube())])
+        input_data = GriddedDataList(2 * [make_from_cube(make_square_5x3_2d_cube())])
         output_data = input_data
 
         mock_data_reader = DataReader()
@@ -115,8 +114,8 @@ class TestAggregate(unittest.TestCase):
         output_file = 'output.hdf'
         kernel = 'mean'
         grid = 'grid'
-        input_data = GriddedDataList(2*[make_from_cube(make_square_5x3_2d_cube())])
-        output_data = GriddedDataList(2*[make_from_cube(make_square_5x3_2d_cube()) + 1])
+        input_data = GriddedDataList(2 * [make_from_cube(make_square_5x3_2d_cube())])
+        output_data = GriddedDataList(2 * [make_from_cube(make_square_5x3_2d_cube()) + 1])
 
         mock_data_reader = DataReader()
         mock_data_reader.read_data_list = MagicMock(return_value=input_data)

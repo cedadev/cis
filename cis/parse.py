@@ -133,13 +133,13 @@ def add_info_parser_arguments(parser):
 
 
 def add_col_parser_arguments(parser):
-    parser.add_argument("datagroups", metavar="DataGroups", nargs="+", help="Variables and files to collocate, "
-                                                                            "which needs to be entered in the format variables:filename[:product=], with multiple files to "
-                                                                            "collocate separated by spaces.")
-    parser.add_argument("samplegroup", metavar="SampleGroup", help="A filename with the points to collocate onto. "
-                                                                   "Additional parameters are variable, collocator, kernel and product, entered as "
-                                                                   "keyword=value. Collocator must always be specified. For example "
-                                                                   "filename:variable=var1,collocator=box[h_sep=10km].")
+    parser.add_argument("datagroups", metavar="DataGroups", nargs="+",
+                        help="Variables and files to collocate, which needs to be entered in the format "
+                             "variables:filename[:product=], with multiple files to collocate separated by spaces.")
+    parser.add_argument("samplegroup", metavar="SampleGroup",
+                        help="A filename with the points to collocate onto. Additional parameters are variable, "
+                             "collocator, kernel and product, entered as keyword=value. Collocator must always be "
+                             "specified. For example filename:variable=var1,collocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file containing the collocated data. The name specified will"
                              " be suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and "
@@ -495,7 +495,8 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
     """
     :param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
     :param parser:    The parser used to raise an error if one occurs
-    :param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
+    :param options:   The possible options that each input can take. If no value is assigned to a particular option,
+     then it is assigned None
     :param compulsory_args:   The exact number of compulsory arguments (colon separated)
     :return: A list of dictionaries containing the parsed arguments
     """
@@ -889,10 +890,12 @@ def validate_col_args(arguments, parser):
     Assigns default method/variable to datagroups with unspecified method/variable if default is specified
     Checks that the product is valid if specified
     """
-    # Note: Sample group is put into a list as parse_colonic_arguments expects a list. Samplegroup will only ever be one argument though
+    # Note: Sample group is put into a list as parse_colonic_arguments expects a list.
+    # Samplegroup will only ever be one argument though
     arguments.samplegroup = get_col_samplegroup([arguments.samplegroup], parser)
 
-    # Take the three parts out of the 0th samplegroup. Note: Due to the reason stated above, there will only ever be one samplegroup
+    # Take the three parts out of the 0th samplegroup.
+    # Note: Due to the reason stated above, there will only ever be one samplegroup
     arguments.samplefiles = arguments.samplegroup["filenames"]
     arguments.samplevariable = arguments.samplegroup["variable"] if arguments.samplegroup[
                                                                         "variable"] is not "" else None

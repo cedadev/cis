@@ -97,11 +97,13 @@ class AProduct(object):
 
     def get_file_format(self, filename):
         """
-        Returns a file format hierarchy separated by slashes, of the form ``TopLevelFormat/SubFormat/SubFormat/Version``.
-        E.g. ``NetCDF/GASSP/1.0``, ``ASCII/ASCIIHyperpoint`` or ``HDF4/CloudSat``. This is mainly used within the ceda_di
-        indexing tool. If not set it will default to the products name.
+        Returns a file format hierarchy separated by slashes, of the form
+        ``TopLevelFormat/SubFormat/SubFormat/Version``.
+        E.g. ``NetCDF/GASSP/1.0``, ``ASCII/ASCIIHyperpoint`` or ``HDF4/CloudSat``. This is mainly used within the
+        ceda_di indexing tool. If not set it will default to the products name.
 
-        A filename of an example file can be provided to enable the determination of, for example, a dataset version number.
+        A filename of an example file can be provided to enable the determination of, for example, a dataset version
+        number.
 
         :param str filename: Filename of file to be inspected
         :returns: File format, of the form ``[parent/]format/specific instance/version``, or the class name
@@ -262,9 +264,10 @@ def get_file_format(filenames, product=None):
         file_format = product_cls().get_file_format(filenames[0])
     except Exception as e:
         logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
-        raise ProductPluginException("An error occurred retrieving the file format using the product %s. Check that this "
-                                     "is the correct product plugin for your chosen data. Exception was %s: %s."
-                                     % (product_cls.__name__, type(e).__name__, e.message), e)
+        raise ProductPluginException(
+            "An error occurred retrieving the file format using the product %s. Check that this "
+            "is the correct product plugin for your chosen data. Exception was %s: %s."
+            % (product_cls.__name__, type(e).__name__, e.message), e)
 
     try:
         product_cls().create_coords(filenames)

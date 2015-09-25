@@ -109,7 +109,6 @@ class CloudSat(AProduct):
                                                units=str(cis_standard_time_unit),
                                                calendar=cis_standard_time_unit.calendar), "X")
 
-
         # create object containing list of coordinates
         coords = CoordList()
         coords.append(lat_coord)

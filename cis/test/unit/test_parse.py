@@ -135,10 +135,9 @@ class TestParse(ParseTestFiles):
 
     def test_duplicate_files_are_not_returned_from_expand_file_list(self):
         parser = argparse.ArgumentParser()
-        files = expand_file_list(
-            os.path.join(self.test_directory, 'test_file_for_parser_1') + ',' + os.path.join(self.test_directory,
-                                                                                             'test_file_for_parser_[0-9]'),
-            parser)
+        part_1 = os.path.join(self.test_directory, 'test_file_for_parser_1')
+        part_2 = os.path.join(self.test_directory, 'test_file_for_parser_[0-9]')
+        files = expand_file_list(','.join([part_1, part_2]), parser)
         eq_(files, self.test_directory_files)
 
     def test_can_specify_one_valid_filename(self):

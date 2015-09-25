@@ -836,7 +836,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
         single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel)
 
-    def test_single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time_binned_only_fast_mean(
+    def test_single_point_results_in_single_val_in_cell_with_time_on_boundary_with_cube_with_time_binned_only_fast_mean(
             self):
         con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
@@ -853,7 +853,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         kernel = SlowMean()
         single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel)
 
-    def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude_binned_only_fast_mean(
+    def test_single_point_results_in_single_val_in_cell_with_altitude_with_cube_with_no_altitude_binned_only_fast_mean(
             self):
         con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
@@ -871,7 +871,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
         single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(con, kernel)
 
-    def test_single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude_binned_only_fast_mean(
+    def test_single_point_results_in_single_val_in_cell_with_no_altitude_with_cube_with_altitude_binned_only_fast_mean(
             self):
         con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
@@ -909,7 +909,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
         single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(con, kernel)
 
-    def test_single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure_binned_only_fast_mean(
+    def test_single_point_results_in_single_val_in_cell_with_no_pressure_with_cube_with_pressure_binned_only_fast_mean(
             self):
         con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()

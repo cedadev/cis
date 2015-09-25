@@ -5,7 +5,6 @@ from cis.data_io.products import abstract_NetCDF_CF
 
 
 class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
-
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF model data yet...
         return []
@@ -33,12 +32,12 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
             for dim in cube.dim_coords:
                 units = dim.units
                 if dim.points.size > 1 and \
-                    not units.is_time() and \
-                    not units.is_time_reference() and \
-                    not units.is_vertical() and \
+                        not units.is_time() and \
+                        not units.is_time_reference() and \
+                        not units.is_vertical() and \
                         not units.is_convertible(unit.Unit('degrees')):
-                            is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
-                            break
+                    is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
+                    break
             if is_time_lat_lon_pressure_altitude_or_has_only_1_point:
                 if cube.var_name:
                     variables.append(cube.var_name)
@@ -94,8 +93,8 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         variable_constraint = variable
         if isinstance(variable, basestring):
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
-                                                               c.standard_name == variable or
-                                                               c.long_name == variable), display=variable)
+                                                                         c.standard_name == variable or
+                                                                         c.long_name == variable), display=variable)
         if len(filenames) == 1:
             callback_function = self.load_single_file_callback
         else:
@@ -107,7 +106,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
             if variable is None:
                 message = "File contains more than one cube variable name must be specified"
             elif e.message == "no cubes found":
-                message = "Variable not found: {} \nTo see a list of variables run: cis info {}"\
+                message = "Variable not found: {} \nTo see a list of variables run: cis info {}" \
                     .format(str(variable), filenames[0])
             else:
                 message = e.message
@@ -177,6 +176,7 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
 class DisplayConstraint(iris.Constraint):
     """Variant of iris.Constraint with a string value that can be displayed.
     """
+
     def __init__(self, *args, **kwargs):
         sc_kwargs = kwargs.copy()
         self.display = str(sc_kwargs.get('display', None))
@@ -194,6 +194,7 @@ class DisplayConstraint(iris.Constraint):
 class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
     """Reads gridded netCDF identifying variable by variable name.
     """
+
     def get_file_signature(self):
         # Generic product class so no signature.
         return []

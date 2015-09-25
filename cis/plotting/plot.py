@@ -116,7 +116,8 @@ class Plotter(object):
     def output_to_file_or_screen(self, out_filename=None):
         """
         Outputs to screen unless a filename is given
-        :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
+        :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with
+         png being the default
         """
         import logging
         import matplotlib.pyplot as plt

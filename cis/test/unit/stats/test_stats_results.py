@@ -6,7 +6,6 @@ from cis.stats import *
 
 
 class TestNumPoints(unittest.TestCase):
-
     def setUp(self):
         num_points = PointsCount(123)
         self.output_string = num_points.pprint()
@@ -25,7 +24,6 @@ class TestNumPoints(unittest.TestCase):
 
 
 class TestDatasetMean(unittest.TestCase):
-
     def setUp(self):
         mean = DatasetMean(100, 'dataset1.nc', 1)
         self.output_string = mean.pprint()
@@ -44,7 +42,6 @@ class TestDatasetMean(unittest.TestCase):
 
 
 class TestDatasetStddev(unittest.TestCase):
-
     def setUp(self):
         stddev = DatasetStddev(1.4123134512, 'dataset1.nc', 1)
         self.output_string = stddev.pprint()
@@ -63,7 +60,6 @@ class TestDatasetStddev(unittest.TestCase):
 
 
 class TestAbsoluteMean(unittest.TestCase):
-
     def setUp(self):
         mean = AbsoluteMean(97.5)
         self.output_string = mean.pprint()
@@ -82,7 +78,6 @@ class TestAbsoluteMean(unittest.TestCase):
 
 
 class TestAbsoluteStddev(unittest.TestCase):
-
     def setUp(self):
         stddev = AbsoluteStddev(14.4)
         self.output_string = stddev.pprint()
@@ -100,9 +95,8 @@ class TestAbsoluteStddev(unittest.TestCase):
         assert_that(self.output_cube.long_name,
                     is_("Corrected sample standard deviation of the absolute difference (data2 - data1)"))
 
-              
-class TestRelativeMean(unittest.TestCase):
 
+class TestRelativeMean(unittest.TestCase):
     def setUp(self):
         mean = RelativeMean(0.88)
         self.output_string = mean.pprint()
@@ -121,7 +115,6 @@ class TestRelativeMean(unittest.TestCase):
 
 
 class TestRelativeStddev(unittest.TestCase):
-
     def setUp(self):
         stddev = RelativeStddev(0.17)
         self.output_string = stddev.pprint()
@@ -141,7 +134,6 @@ class TestRelativeStddev(unittest.TestCase):
 
 
 class TestSpearmansRank(unittest.TestCase):
-
     def setUp(self):
         spearmans = SpearmansRank(0.87)
         self.output_string = spearmans.pprint()
@@ -160,7 +152,6 @@ class TestSpearmansRank(unittest.TestCase):
 
 
 class TestLinearRegressionGradient(unittest.TestCase):
-
     def setUp(self):
         regression = LinearRegressionGradient(1.1)
         self.output_string = regression.pprint()
@@ -179,7 +170,6 @@ class TestLinearRegressionGradient(unittest.TestCase):
 
 
 class TestLinearRegressionIntercept(unittest.TestCase):
-
     def setUp(self):
         regression = LinearRegressionIntercept(0.5)
         self.output_string = regression.pprint()
@@ -198,7 +188,6 @@ class TestLinearRegressionIntercept(unittest.TestCase):
 
 
 class TestLinearRegressionRValue(unittest.TestCase):
-
     def setUp(self):
         regression = LinearRegressionRValue(0.99)
         self.output_string = regression.pprint()
@@ -218,7 +207,6 @@ class TestLinearRegressionRValue(unittest.TestCase):
 
 
 class TestLinearRegressionStderr(unittest.TestCase):
-
     def setUp(self):
         regression = LinearRegressionStderr(1.0)
         self.output_string = regression.pprint()

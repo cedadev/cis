@@ -96,7 +96,7 @@ class GridCellBinIndexInSlices(object):
         # if the coordinate was decreasing then correct the indices for this cell
         for indices_slice, decreasing, coord_length in zip(xrange(indices.shape[0]), coord_descreasing, coord_lengths):
             if decreasing:
-                #indices[indices_slice] += (coord_length - 1) - indices[indices_slice]
+                # indices[indices_slice] += (coord_length - 1) - indices[indices_slice]
                 indices[indices_slice] *= -1
                 indices[indices_slice] += (coord_length - 1)
 
@@ -139,9 +139,9 @@ class GridCellBinIndexInSlices(object):
         # cell_numbers[first:last+1] is the slice of all the elements of each
         # of the L unique values.
 
-        #if some of the points are not in the grid skip these
+        # if some of the points are not in the grid skip these
         if self.cell_numbers[0] == -1:
-            #if there are no points in the grid (all -1s)
+            # if there are no points in the grid (all -1s)
             if indexes_of_first_element_in_slice.size == 0:
                 self.cell_slices_indices = []
             else:
@@ -152,14 +152,14 @@ class GridCellBinIndexInSlices(object):
                     [len(self.cell_numbers)]
                 )).reshape(2, -1).T
         else:
-            #create list of start stop indexes starting at 0
+            # create list of start stop indexes starting at 0
             self.cell_slices_indices = np.concatenate((
                 [0],  # start at first element
                 np.tile(indexes_of_first_element_in_slice, 2),
                 [len(self.cell_numbers)]  # last at first element
             )).reshape(2, -1).T  # reshape so that it is list of start-end indices
 
-        #iterate around slices
+        # iterate around slices
         for cell_slice_indices in self.cell_slices_indices:
             out_indices = tuple(self._indices[:, cell_slice_indices[0]])
             yield out_indices, cell_slice_indices

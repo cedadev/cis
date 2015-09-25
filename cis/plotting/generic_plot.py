@@ -94,14 +94,15 @@ class Generic_Plot(object):
         def __get_data(axis):
             variable = self.plot_args[axis + "_variable"]
             if variable == "default" or variable == self.packed_data_items[0].name() \
-                    or variable == self.packed_data_items[0].standard_name\
+                    or variable == self.packed_data_items[0].standard_name \
                     or variable == self.packed_data_items[0].long_name:
                 return self.packed_data_items[0].data
             else:
                 if variable.startswith("search"):
                     number_of_points = float(variable.split(":")[1])
                     for coord in self.packed_data_items[0].coords():
-                        if coord.shape[0] == number_of_points: break
+                        if coord.shape[0] == number_of_points:
+                            break
                 else:
                     coord = self.packed_data_items[0].coord(variable)
                 return coord.points if isinstance(self.packed_data_items[0], Cube) else coord.data
@@ -183,8 +184,8 @@ class Generic_Plot(object):
         :return: A dictionary containing the min and max values of an array along a given axis
         """
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis,
-                                                                                                          self.unpacked_data_items[
-                                                                                                              0][axis])
+                                                                    self.unpacked_data_items[
+                                                                        0][axis])
         valrange = {}
         valrange[axis + "min"] = c_min if min_val is None else min_val
         valrange[axis + "max"] = c_max if max_val is None else max_val

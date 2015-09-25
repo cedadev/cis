@@ -260,28 +260,29 @@ class TestUtils(unittest.TestCase):
 
     def test_GIVEN_list_of_arrays_to_concatenate_WHEN_all_are_masked_THEN_returns_masked_array_with_correct_mask(self):
         arrays = []
-        for i in range(0,3):
+        for i in range(0, 3):
             arrays.append(numpy.ma.array([0, 90, 180], mask=[False, True, False]))
         conc = concatenate(arrays)
         assert numpy.ma.count_masked(conc) == 3
 
     def test_GIVEN_list_of_arrays_to_concatenate_WHEN_none_are_masked_THEN_returns_numpy_array(self):
         arrays = []
-        for i in range(0,3):
+        for i in range(0, 3):
             arrays.append(numpy.array([0, 90, 180]))
         conc = concatenate(arrays)
         assert isinstance(conc, numpy.ndarray)
 
-    def test_GIVEN_list_of_arrays_to_concatenate_WHEN_some_are_masked_but_not_first_THEN_returns_masked_array_with_correct_mask(self):
+    def test_GIVEN_list_of_arrays_to_concatenate_WHEN_some_are_masked_but_not_first_THEN_returns_masked_array_with_correct_mask(
+            self):
         arrays = [numpy.array([0, 90, 180])]
-        for i in range(1,3):
+        for i in range(1, 3):
             arrays.append(numpy.ma.array([0, 90, 180], mask=[False, True, False]))
         conc = concatenate(arrays)
         assert numpy.ma.count_masked(conc) == 2
 
     def test_GIVEN_list_of_arrays_to_concatenate_WHEN_some_are_masked_THEN_returns_masked_array(self):
-        arrays = [numpy.ma.array([0, 90, 180], mask = [False, True, False])]
-        for i in range(0,3):
+        arrays = [numpy.ma.array([0, 90, 180], mask=[False, True, False])]
+        for i in range(0, 3):
             arrays.append(numpy.array([0, 90, 180]))
         conc = concatenate(arrays)
         assert numpy.ma.count_masked(conc) == 1

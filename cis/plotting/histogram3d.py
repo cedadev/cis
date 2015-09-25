@@ -114,11 +114,13 @@ class Histogram_3D(Generic_Plot):
             if axis == "x":
                 step = valrange.pop("xstep", None)
                 self.matplotlib.xlim(**valrange)
-                if step is not None: valrange["xstep"] = step
+                if step is not None:
+                    valrange["xstep"] = step
             elif axis == "y":
                 step = valrange.pop("ystep", None)
                 self.matplotlib.ylim(**valrange)
-                if step is not None: valrange["ystep"] = step
+                if step is not None:
+                    valrange["ystep"] = step
 
     def create_legend(self):
         """

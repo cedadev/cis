@@ -38,11 +38,10 @@ def minkowski_distance_p(x, y, p=2):
     :param p: float, 1 <= p <= infinity
         Which Minkowski p-norm to use.
 
-    Examples
+    Examples::
 
-    >>> minkowski_distance_p([[0, 0], [0, 0]], [[1, 1], [0, 1]])
-
-    array([2, 1])
+        >>> minkowski_distance_p([[0, 0], [0, 0]], [[1, 1], [0, 1]])
+        array([2, 1])
 
     """
     x = np.asarray(x)
@@ -67,11 +66,10 @@ def minkowski_distance(x, y, p=2):
         Which Minkowski p-norm to use.
     :return:
 
-    Examples
+    Examples::
 
-    >>> minkowski_distance([[0, 0], [0, 0]], [[1, 1],[0, 1]])
-
-    array([ 1.41421356,  1.        ])
+        >>> minkowski_distance([[0, 0], [0, 0]], [[1, 1], [0, 1]])
+        array([ 1.41421356,  1.        ])
 
     """
     x = np.asarray(x)
@@ -1251,8 +1249,7 @@ class HaversineDistanceKDTree(KDTree):
                 return node.idx[haversine_distance(d, x) <= r].tolist()
             else:
                 less, greater = rect.split(node.split_dim, node.split)
-                return traverse_checking(node.less, less) + \
-                       traverse_checking(node.greater, greater)
+                return traverse_checking(node.less, less) + traverse_checking(node.greater, greater)
 
         def traverse_no_checking(node):
             if isinstance(node, KDTree.leafnode):
@@ -1285,6 +1282,7 @@ def distance_matrix(x, y, p=2, threshold=1000000):
     Examples
 
     >>> distance_matrix([[0, 0], [0, 1]], [[1, 0], [1, 1]])
+
     array([[ 1.        ,  1.41421356],
            [ 1.41421356,  1.        ]])
 

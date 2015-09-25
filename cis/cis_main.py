@@ -133,8 +133,10 @@ def col_cmd(main_arguments):
     except IOError as e:
         __error_occurred("There was an error reading one of the files: \n" + str(e))
 
-    col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup['collocator'] is not None else None
-    col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup['collocator'] is not None else {}
+    col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup[
+                                                                  'collocator'] is not None else None
+    col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup[
+                                                                     'collocator'] is not None else {}
     kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
     kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
 
@@ -174,7 +176,7 @@ def subset_cmd(main_arguments):
     try:
         subset.subset(variables, filenames, product)
     except (NoDataInSubsetError, CISError) as exc:
-         __error_occurred(exc)
+        __error_occurred(exc)
 
 
 def aggregate_cmd(main_arguments):
@@ -248,7 +250,7 @@ def stats_cmd(main_arguments):
 
 
 def version_cmd(_main_arguments):
-    print "Using CIS version:", __version__, "("+__status__+")"
+    print "Using CIS version:", __version__, "(" + __status__ + ")"
 
 
 commands = {'plot': plot_cmd,

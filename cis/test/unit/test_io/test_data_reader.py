@@ -9,7 +9,6 @@ from cis.test.util.mock import make_square_5x3_2d_cube, make_regular_2d_ungridde
 
 
 class TestDataReader(TestCase):
-
     def test_GIVEN_single_variable_gridded_WHEN_read_data_THEN_GriddedData_returned(self):
         variables = 'var1'
         filenames = 'filename1'

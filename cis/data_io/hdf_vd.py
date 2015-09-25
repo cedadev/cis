@@ -176,7 +176,6 @@ def get_metadata(vds):
 
 
 def __get_attribute_value(vd, name):
-
     val = vd.attrinfo().get(name, None)
     # if the attribute is not present
     if val is None:
