@@ -1,12 +1,12 @@
 from cis.plotting.generic_plot import Generic_Plot
 
-class Scatter_Plot(Generic_Plot):
 
+class Scatter_Plot(Generic_Plot):
     def plot(self):
-        '''
+        """
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
-        '''
+        """
         self.plots = []
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
@@ -20,7 +20,7 @@ class Scatter_Plot(Generic_Plot):
 
             self.mplkwargs["c"] = datafile.get("color", None)
             if self.mplkwargs["c"] is None:
-                if unpacked_data_item.get("y", None) is not None: # i.e. the scatter plot is 3D
+                if unpacked_data_item.get("y", None) is not None:  # i.e. the scatter plot is 3D
                     self.mplkwargs["c"] = unpacked_data_item["data"]
                 else:
                     self.mplkwargs.pop("c", None)
@@ -33,25 +33,26 @@ class Scatter_Plot(Generic_Plot):
             x_coords = unpacked_data_item["x"]
 
             if unpacked_data_item.get("y", None) is not None:
-                #3D
+                # 3D
                 self.scatter_type = "3D"
                 y_coords = unpacked_data_item["y"]
             else:
-                #2D
+                # 2D
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
 
-
-            self.plots.append(self.plotting_library.scatter(x_coords, y_coords, s = scatter_size, edgecolors = edge_color, *self.mplargs, **self.mplkwargs))
+            self.plots.append(
+                self.plotting_library.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
+                                              **self.mplkwargs))
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
-        '''
+        """
         :param axis: The axis to calculate the limits for
         :param min_val: The user specified minimum value for the axis
         :param max_val: The user specified maximum value for the axis
         :param step: The distance between each tick on the axis
         :return: A dictionary containing the min and max values for the axis, and the step between each tick
-        '''
+        """
         if axis == "x":
             coord_axis = "x"
         elif axis == "y":
@@ -59,7 +60,10 @@ class Scatter_Plot(Generic_Plot):
                 coord_axis = "data"
             elif self.scatter_type == "3D":
                 coord_axis = "y"
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis,
+                                                                                                          self.unpacked_data_items[
+                                                                                                              0][
+                                                                                                              coord_axis])
 
         valrange = {}
         valrange[axis + "min"] = calculated_min if min_val is None else min_val
@@ -114,5 +118,5 @@ class Scatter_Plot(Generic_Plot):
             else:
                 legend_titles.append(item.long_name)
         handles = self.plots
-        legend = self.matplotlib.legend(handles, legend_titles, loc="best", scatterpoints = 1, markerscale = 0.5)
-        legend.draggable(state = True)
+        legend = self.matplotlib.legend(handles, legend_titles, loc="best", scatterpoints=1, markerscale=0.5)
+        legend.draggable(state=True)

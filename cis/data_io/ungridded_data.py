@@ -1,6 +1,6 @@
-'''
+"""
     Module for the UngriddedData class
-'''
+"""
 import logging
 from time import gmtime, strftime
 import numpy
@@ -110,17 +110,17 @@ static_mappings = {"SDS": hdf_sd_get_data,
                    "_Variable": netcdf_get_data}
 
 class LazyData(object):
-    '''
+    """
         Wrapper (adaptor) class for the different types of possible ungridded data.
-    '''
+    """
 
     def __init__(self, data, metadata, data_retrieval_callback=None):
-        '''
+        """
         :param data:    The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data
                         This can be a list of data handlers, or a single data handler
         :param metadata: Any associated metadata
         :param data_retrieval_callback: An, optional, method for retrieving data when needed
-        '''
+        """
         from cis.exceptions import InvalidDataTypeError
         from iris.cube import CubeMetadata
         import numpy as np
@@ -207,10 +207,10 @@ class LazyData(object):
 
     @property
     def data(self):
-        '''
+        """
         This is a getter for the data property. It caches the raw data if it has not already been read.
         Throws a MemoryError when reading for the first time if the data is too large.
-        '''
+        """
         import numpy.ma as ma
         if self._data is None:
             try:
@@ -240,17 +240,17 @@ class LazyData(object):
 
     @property
     def data_flattened(self):
-        '''Returns a 1D flattened view (or copy, if necessary) of the data.
-        '''
+        """Returns a 1D flattened view (or copy, if necessary) of the data.
+        """
         if self._data_flattened is None:
             data = self.data
             self._data_flattened = data.ravel()
         return self._data_flattened
 
     def copy_metadata_from(self, other_data):
-        '''
+        """
         Method to copy the metadata from one UngriddedData/Cube object to another
-        '''
+        """
         self._coords = other_data.coords()
         self.metadata = other_data._metadata
 
@@ -328,12 +328,12 @@ class LazyData(object):
 
 
 class UngriddedData(LazyData, CommonData):
-    '''
+    """
         Wrapper (adaptor) class for the different types of possible ungridded data.
-    '''
+    """
 
     def __init__(self, data, metadata, coords, data_retrieval_callback=None):
-        '''
+        """
         Constructor
 
         :param data: The data handler (e.g. SDS instance) for the specific data type, or a numpy array of data.
@@ -341,7 +341,7 @@ class UngriddedData(LazyData, CommonData):
         :param metadata: Any associated metadata
         :param coords: A list of the associated Coord objects
         :param data_retrieval_callback: A method for retrieving data when needed
-        '''
+        """
         from cis.data_io.Coord import CoordList, Coord
 
         if isinstance(coords, list):
@@ -582,16 +582,16 @@ class UngriddedData(LazyData, CommonData):
         return self.summary()
 
 class UngriddedCoordinates(CommonData):
-    '''
+    """
     Wrapper (adaptor) class for the different types of possible ungridded data.
-    '''
+    """
 
     def __init__(self, coords):
-        '''
+        """
         Constructor
 
         :param coords: A list of the associated Coord objects
-        '''
+        """
         from cis.data_io.Coord import CoordList, Coord
 
         if isinstance(coords, list):

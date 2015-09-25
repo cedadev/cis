@@ -1,6 +1,6 @@
-'''
+"""
 Module for writing data to NetCDF files
-'''
+"""
 from netCDF4 import Dataset
 import logging
 

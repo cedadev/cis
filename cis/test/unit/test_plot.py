@@ -1,7 +1,7 @@
-'''
+"""
 Module to test the one-dimensional plotting of NetCDF files
 More tests can be found in the manual_integration_tests package
-'''
+"""
 import unittest
 
 import iris

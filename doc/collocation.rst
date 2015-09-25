@@ -132,7 +132,7 @@ A full example would be::
 
 .. warning:: When collocating two data sets with different spatio-temporal domains, the sampling points should be
     within the spatio-temporal domain of the source data. Otherwise, depending on the collocation options selected,
-    strange artefacts can occur, particularly with linear interpolation. Spatio-temporal domains can be reducded in
+    strange artifacts can occur, particularly with linear interpolation. Spatio-temporal domains can be reduced in
     CIS with :ref:`Aggregation <aggregation>` or :ref:`Subsetting <subsetting>`.
 
 

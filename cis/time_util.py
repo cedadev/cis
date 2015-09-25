@@ -8,13 +8,13 @@ cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00', calendar='gregor
 
 
 def calculate_mid_time(t1, t2):
-    '''
+    """
         Find the mid time between two times expressed as floats
 
     :param t1: a time represented as a float
     :param t2: a time in the same representation as t1
     :return: a float representing the time between t1 and t2
-    '''
+    """
     return t1 + (t2 - t1)/2.0
 
 

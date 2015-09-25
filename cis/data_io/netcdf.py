@@ -196,12 +196,12 @@ def read(filename, usr_variables):
 
 
 def get_metadata(var):
-    '''
+    """
     Retrieves all metadata
 
     :param var: the Variable to read metadata from
     :return: A metadata object
-    '''
+    """
     from cis.data_io.ungridded_data import Metadata
 
     standard_name = getattr(var, 'standard_name', "")

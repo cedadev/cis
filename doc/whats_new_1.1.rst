@@ -20,7 +20,7 @@ Bugs fixed
  * Compatibility fixes for Numpy versions >1.8 and Python-NetCDF versions >1.1.
  * Fix Caliop pressure units which were stored as hPA, but need to be hPa to conform to CF.
  * The integration test data has been moved completely out of the repository - making the download quicker and less bloated. It's location can be specified by setting the CIS_DATA_HOME environment variable.
- * A test runner has been created to allow easy runnning of the unit and integration test.
+ * A test runner has been created to allow easy running of the unit and integration test.
 
 
 What's new in CIS 1.1.1
@@ -34,4 +34,4 @@ Bugs fixed
  * JASCIS-181 - Updated eval documentation
  * JASCIS-239 - Documented the requirement of PyHamCrest for running tests
  * JASCIS-249 - CIS will now accept variables and filenames (such as Windows paths) which include a colon as long as they are escaped with a backslash. E.g. ``cis plot my_var:C\:\my_file.nc``.
- * Occaisonly HDF will exit when reading an invalid HDF file without throwing any exceptions. To protect against this the HDF reader will now insist on an .hdf extension for any files it reads.
+ * Occasionally HDF will exit when reading an invalid HDF file without throwing any exceptions. To protect against this the HDF reader will now insist on an .hdf extension for any files it reads.

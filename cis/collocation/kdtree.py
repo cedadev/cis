@@ -47,11 +47,12 @@ def minkowski_distance_p(x, y, p=2):
     x = np.asarray(x)
     y = np.asarray(y)
     if p == np.inf:
-        return np.amax(np.abs(y-x), axis=-1)
+        return np.amax(np.abs(y - x), axis=-1)
     elif p == 1:
-        return np.sum(np.abs(y-x), axis=-1)
+        return np.sum(np.abs(y - x), axis=-1)
     else:
-        return np.sum(np.abs(y-x)**p, axis=-1)
+        return np.sum(np.abs(y - x) ** p, axis=-1)
+
 
 def minkowski_distance(x, y, p=2):
     """
@@ -76,7 +77,7 @@ def minkowski_distance(x, y, p=2):
     if p == np.inf or p == 1:
         return minkowski_distance_p(x, y, p)
     else:
-        return minkowski_distance_p(x, y, p)**(1./p)
+        return minkowski_distance_p(x, y, p) ** (1. / p)
 
 
 def haversine_distance(x, y):
@@ -180,10 +181,11 @@ class RectangleBase(object):
 
     Represents a Cartesian product of intervals.
     """
+
     def __init__(self, maxes, mins):
         """Construct a hyperrectangle."""
-        self.maxes = np.maximum(maxes,mins).astype(np.float)
-        self.mins = np.minimum(maxes,mins).astype(np.float)
+        self.maxes = np.maximum(maxes, mins).astype(np.float)
+        self.mins = np.minimum(maxes, mins).astype(np.float)
         self.m, = self.maxes.shape
 
     def __repr__(self):
@@ -191,7 +193,7 @@ class RectangleBase(object):
 
     def volume(self):
         """Total volume."""
-        return np.prod(self.maxes-self.mins)
+        return np.prod(self.maxes - self.mins)
 
     def split(self, d, split):
         """
@@ -219,6 +221,7 @@ class RectangleBase(object):
 class Rectangle(RectangleBase):
     """Rectangle using Euclidean metric.
     """
+
     def min_distance_point(self, x, p=2.):
         """
         Return the minimum distance between input and points in the hyperrectangle.
@@ -233,7 +236,7 @@ class Rectangle(RectangleBase):
         # b = x - self.maxes
         # c = np.maximum(a, b)
         # d = np.maximum(0, c)
-        return minkowski_distance(0, np.maximum(0,np.maximum(self.mins-x,x-self.maxes)),p)
+        return minkowski_distance(0, np.maximum(0, np.maximum(self.mins - x, x - self.maxes)), p)
 
     def max_distance_point(self, x, p=2.):
         """
@@ -245,7 +248,7 @@ class Rectangle(RectangleBase):
             Input.
 
         """
-        return minkowski_distance(0, np.maximum(self.maxes-x,x-self.mins),p)
+        return minkowski_distance(0, np.maximum(self.maxes - x, x - self.mins), p)
 
     def min_distance_rectangle(self, other, p=2.):
         """
@@ -257,7 +260,7 @@ class Rectangle(RectangleBase):
             Input.
 
         """
-        return minkowski_distance(0, np.maximum(0,np.maximum(self.mins-other.maxes,other.mins-self.maxes)),p)
+        return minkowski_distance(0, np.maximum(0, np.maximum(self.mins - other.maxes, other.mins - self.maxes)), p)
 
     def max_distance_rectangle(self, other, p=2.):
         """
@@ -269,12 +272,13 @@ class Rectangle(RectangleBase):
             Input.
 
         """
-        return minkowski_distance(0, np.maximum(self.maxes-other.mins,other.maxes-self.mins),p)
+        return minkowski_distance(0, np.maximum(self.maxes - other.mins, other.maxes - self.mins), p)
 
 
 class RectangleHaversine(RectangleBase):
     """Rectangular region in latitude/longitude coordinates on a sphere.
     """
+
     def min_distance_point(self, x, p=2.):
         """Find the distance to the point in the rectangle closest to x.
         :param x: point as array of latitude, longitude in degrees
@@ -326,7 +330,7 @@ class RectangleHaversine(RectangleBase):
             # Determine which side of the rectangle the point is nearer to allowing for longitude circularity.
             lon_mid = (rect_lon_min + rect_lon_max) / 2.0
             if ((lon0 < lon_mid and lon_mid - lon0 < PI)
-                    or (lon0 > lon_mid and lon0 - lon_mid > PI)):
+                or (lon0 > lon_mid and lon0 - lon_mid > PI)):
                 # Point is nearest to left side of rectangle.
                 lon1 = rect_lon_min
                 lon_diff = rect_lon_min - lon0
@@ -444,23 +448,28 @@ class KDTree(object):
     sort of calculation.
 
     """
+
     def __init__(self, data, leafsize=10):
         self.data = np.asarray(data)
         self.n, self.m = np.shape(self.data)
         self.leafsize = int(leafsize)
-        if self.leafsize<1:
+        if self.leafsize < 1:
             raise ValueError("leafsize must be at least 1")
-        self.maxes = np.amax(self.data,axis=0)
-        self.mins = np.amin(self.data,axis=0)
+        self.maxes = np.amax(self.data, axis=0)
+        self.mins = np.amin(self.data, axis=0)
 
         self.tree = self._build(np.arange(self.n), self.maxes, self.mins)
 
     class node(object):
         if sys.version_info[0] >= 3:
             def __lt__(self, other): id(self) < id(other)
+
             def __gt__(self, other): id(self) > id(other)
+
             def __le__(self, other): id(self) <= id(other)
+
             def __ge__(self, other): id(self) >= id(other)
+
             def __eq__(self, other): id(self) == id(other)
 
     class leafnode(node):
@@ -474,7 +483,7 @@ class KDTree(object):
             self.split = split
             self.less = less
             self.greater = greater
-            self.children = less.children+greater.children
+            self.children = less.children + greater.children
 
     def _build(self, idx, maxes, mins):
         """
@@ -490,11 +499,11 @@ class KDTree(object):
             data = self.data[idx]
             # I suspect these are commented out because calculating the max takes a long time and for reasonably
             # distributed data does not speed up the algorithm
-            #maxes = np.amax(data,axis=0)
-            #mins = np.amin(data,axis=0)
+            # maxes = np.amax(data,axis=0)
+            # mins = np.amin(data,axis=0)
 
             # Fins the dimension with the biggest difference (is it lat or lon)
-            d = np.argmax(maxes-mins)
+            d = np.argmax(maxes - mins)
             maxval = maxes[d]
             minval = mins[d]
 
@@ -508,7 +517,7 @@ class KDTree(object):
             # sliding midpoint rule; see Maneewongvatana and Mount 1999
             # for arguments that this is a good idea. (I am not sure this is implemented correctly
             # because we are not sliding the min or max)
-            split = (maxval+minval)/2
+            split = (maxval + minval) / 2
             less_idx = np.nonzero(data <= split)[0]
             greater_idx = np.nonzero(data > split)[0]
             if len(less_idx) == 0:
@@ -537,9 +546,9 @@ class KDTree(object):
 
     def _query(self, x, k=1, eps=0, p=2, distance_upper_bound=np.inf):
 
-        side_distances = np.maximum(0,np.maximum(x-self.maxes,self.mins-x))
-        if p!=np.inf:
-            side_distances**=p
+        side_distances = np.maximum(0, np.maximum(x - self.maxes, self.mins - x))
+        if p != np.inf:
+            side_distances **= p
             min_distance = np.sum(side_distances)
         else:
             min_distance = np.amax(side_distances)
@@ -557,65 +566,65 @@ class KDTree(object):
         # entries are (-distance**p, i)
         neighbors = []
 
-        if eps==0:
-            epsfac=1
-        elif p==np.inf:
-            epsfac = 1/(1+eps)
+        if eps == 0:
+            epsfac = 1
+        elif p == np.inf:
+            epsfac = 1 / (1 + eps)
         else:
-            epsfac = 1/(1+eps)**p
+            epsfac = 1 / (1 + eps) ** p
 
-        if p!=np.inf and distance_upper_bound!=np.inf:
-            distance_upper_bound = distance_upper_bound**p
+        if p != np.inf and distance_upper_bound != np.inf:
+            distance_upper_bound = distance_upper_bound ** p
 
         while q:
             min_distance, side_distances, node = heappop(q)
             if isinstance(node, KDTree.leafnode):
                 # brute-force
                 data = self.data[node.idx]
-                ds = minkowski_distance_p(data,x[np.newaxis,:],p)
+                ds = minkowski_distance_p(data, x[np.newaxis, :], p)
                 for i in range(len(ds)):
-                    if ds[i]<distance_upper_bound:
-                        if len(neighbors)==k:
+                    if ds[i] < distance_upper_bound:
+                        if len(neighbors) == k:
                             heappop(neighbors)
                         heappush(neighbors, (-ds[i], node.idx[i]))
-                        if len(neighbors)==k:
+                        if len(neighbors) == k:
                             distance_upper_bound = -neighbors[0][0]
             else:
                 # we don't push cells that are too far onto the queue at all,
                 # but since the distance_upper_bound decreases, we might get
                 # here even if the cell's too far
-                if min_distance>distance_upper_bound*epsfac:
+                if min_distance > distance_upper_bound * epsfac:
                     # since this is the nearest cell, we're done, bail out
                     break
                 # compute minimum distances to the children and push them on
-                if x[node.split_dim]<node.split:
+                if x[node.split_dim] < node.split:
                     near, far = node.less, node.greater
                 else:
                     near, far = node.greater, node.less
 
                 # near child is at the same distance as the current node
-                heappush(q,(min_distance, side_distances, near))
+                heappush(q, (min_distance, side_distances, near))
 
                 # far child is further by an amount depending only
                 # on the split value
                 sd = list(side_distances)
                 if p == np.inf:
-                    min_distance = max(min_distance, abs(node.split-x[node.split_dim]))
+                    min_distance = max(min_distance, abs(node.split - x[node.split_dim]))
                 elif p == 1:
-                    sd[node.split_dim] = np.abs(node.split-x[node.split_dim])
+                    sd[node.split_dim] = np.abs(node.split - x[node.split_dim])
                     min_distance = min_distance - side_distances[node.split_dim] + sd[node.split_dim]
                 else:
-                    sd[node.split_dim] = np.abs(node.split-x[node.split_dim])**p
+                    sd[node.split_dim] = np.abs(node.split - x[node.split_dim]) ** p
                     min_distance = min_distance - side_distances[node.split_dim] + sd[node.split_dim]
 
                 # far child might be too far, if so, don't bother pushing it
-                if min_distance<=distance_upper_bound*epsfac:
-                    heappush(q,(min_distance, tuple(sd), far))
+                if min_distance <= distance_upper_bound * epsfac:
+                    heappush(q, (min_distance, tuple(sd), far))
 
-        if p==np.inf:
-            return sorted([(-d,i) for (d,i) in neighbors])
+        if p == np.inf:
+            return sorted([(-d, i) for (d, i) in neighbors])
         else:
-            return sorted([((-d)**(1./p),i) for (d,i) in neighbors])
+            return sorted([((-d) ** (1. / p), i) for (d, i) in neighbors])
 
     def query(self, x, k=1, eps=0, p=2, distance_upper_bound=np.inf):
         """
@@ -697,35 +706,36 @@ class KDTree(object):
         x = np.asarray(x)
         if np.shape(x)[-1] != self.m:
             raise ValueError("x must consist of vectors of length %d but has shape %s" % (self.m, np.shape(x)))
-        if p<1:
+        if p < 1:
             raise ValueError("Only p-norms with 1<=p<=infinity permitted")
         retshape = np.shape(x)[:-1]
-        if retshape!=():
+        if retshape != ():
             if k is None:
-                dd = np.empty(retshape,dtype=np.object)
-                ii = np.empty(retshape,dtype=np.object)
-            elif k>1:
-                dd = np.empty(retshape+(k,),dtype=np.float)
+                dd = np.empty(retshape, dtype=np.object)
+                ii = np.empty(retshape, dtype=np.object)
+            elif k > 1:
+                dd = np.empty(retshape + (k,), dtype=np.float)
                 dd.fill(np.inf)
-                ii = np.empty(retshape+(k,),dtype=np.int)
+                ii = np.empty(retshape + (k,), dtype=np.int)
                 ii.fill(self.n)
-            elif k==1:
-                dd = np.empty(retshape,dtype=np.float)
+            elif k == 1:
+                dd = np.empty(retshape, dtype=np.float)
                 dd.fill(np.inf)
-                ii = np.empty(retshape,dtype=np.int)
+                ii = np.empty(retshape, dtype=np.int)
                 ii.fill(self.n)
             else:
-                raise ValueError("Requested %s nearest neighbors; acceptable numbers are integers greater than or equal to one, or None")
+                raise ValueError(
+                    "Requested %s nearest neighbors; acceptable numbers are integers greater than or equal to one, or None")
             for c in np.ndindex(retshape):
                 hits = self._query(x[c], k=k, eps=eps, p=p, distance_upper_bound=distance_upper_bound)
                 if k is None:
-                    dd[c] = [d for (d,i) in hits]
-                    ii[c] = [i for (d,i) in hits]
-                elif k>1:
+                    dd[c] = [d for (d, i) in hits]
+                    ii[c] = [i for (d, i) in hits]
+                elif k > 1:
                     for j in range(len(hits)):
-                        dd[c+(j,)], ii[c+(j,)] = hits[j]
-                elif k==1:
-                    if len(hits)>0:
+                        dd[c + (j,)], ii[c + (j,)] = hits[j]
+                elif k == 1:
+                    if len(hits) > 0:
                         dd[c], ii[c] = hits[0]
                     else:
                         dd[c] = np.inf
@@ -734,23 +744,23 @@ class KDTree(object):
         else:
             hits = self._query(x, k=k, eps=eps, p=p, distance_upper_bound=distance_upper_bound)
             if k is None:
-                return [d for (d,i) in hits], [i for (d,i) in hits]
-            elif k==1:
-                if len(hits)>0:
+                return [d for (d, i) in hits], [i for (d, i) in hits]
+            elif k == 1:
+                if len(hits) > 0:
                     return hits[0]
                 else:
                     return np.inf, self.n
-            elif k>1:
-                dd = np.empty(k,dtype=np.float)
+            elif k > 1:
+                dd = np.empty(k, dtype=np.float)
                 dd.fill(np.inf)
-                ii = np.empty(k,dtype=np.int)
+                ii = np.empty(k, dtype=np.int)
                 ii.fill(self.n)
                 for j in range(len(hits)):
                     dd[j], ii[j] = hits[j]
                 return dd, ii
             else:
-                raise ValueError("Requested %s nearest neighbors; acceptable numbers are integers greater than or equal to one, or None")
-
+                raise ValueError(
+                    "Requested %s nearest neighbors; acceptable numbers are integers greater than or equal to one, or None")
 
     def _query_ball_point(self, x, r, p=2., eps=0):
         R = Rectangle(self.maxes, self.mins)
@@ -848,31 +858,32 @@ class KDTree(object):
 
         """
         results = [[] for i in range(self.n)]
+
         def traverse_checking(node1, rect1, node2, rect2):
-            if rect1.min_distance_rectangle(rect2, p)>r/(1.+eps):
+            if rect1.min_distance_rectangle(rect2, p) > r / (1. + eps):
                 return
-            elif rect1.max_distance_rectangle(rect2, p)<r*(1.+eps):
+            elif rect1.max_distance_rectangle(rect2, p) < r * (1. + eps):
                 traverse_no_checking(node1, node2)
             elif isinstance(node1, KDTree.leafnode):
                 if isinstance(node2, KDTree.leafnode):
                     d = other.data[node2.idx]
                     for i in node1.idx:
-                        results[i] += node2.idx[minkowski_distance(d,self.data[i],p)<=r].tolist()
+                        results[i] += node2.idx[minkowski_distance(d, self.data[i], p) <= r].tolist()
                 else:
                     less, greater = rect2.split(node2.split_dim, node2.split)
-                    traverse_checking(node1,rect1,node2.less,less)
-                    traverse_checking(node1,rect1,node2.greater,greater)
+                    traverse_checking(node1, rect1, node2.less, less)
+                    traverse_checking(node1, rect1, node2.greater, greater)
             elif isinstance(node2, KDTree.leafnode):
                 less, greater = rect1.split(node1.split_dim, node1.split)
-                traverse_checking(node1.less,less,node2,rect2)
-                traverse_checking(node1.greater,greater,node2,rect2)
+                traverse_checking(node1.less, less, node2, rect2)
+                traverse_checking(node1.greater, greater, node2, rect2)
             else:
                 less1, greater1 = rect1.split(node1.split_dim, node1.split)
                 less2, greater2 = rect2.split(node2.split_dim, node2.split)
-                traverse_checking(node1.less,less1,node2.less,less2)
-                traverse_checking(node1.less,less1,node2.greater,greater2)
-                traverse_checking(node1.greater,greater1,node2.less,less2)
-                traverse_checking(node1.greater,greater1,node2.greater,greater2)
+                traverse_checking(node1.less, less1, node2.less, less2)
+                traverse_checking(node1.less, less1, node2.greater, greater2)
+                traverse_checking(node1.greater, greater1, node2.less, less2)
+                traverse_checking(node1.greater, greater1, node2.greater, greater2)
 
         def traverse_no_checking(node1, node2):
             if isinstance(node1, KDTree.leafnode):
@@ -911,10 +922,11 @@ class KDTree(object):
 
         """
         results = set()
+
         def traverse_checking(node1, rect1, node2, rect2):
-            if rect1.min_distance_rectangle(rect2, p)>r/(1.+eps):
+            if rect1.min_distance_rectangle(rect2, p) > r / (1. + eps):
                 return
-            elif rect1.max_distance_rectangle(rect2, p)<r*(1.+eps):
+            elif rect1.max_distance_rectangle(rect2, p) < r * (1. + eps):
                 traverse_no_checking(node1, node2)
             elif isinstance(node1, KDTree.leafnode):
                 if isinstance(node2, KDTree.leafnode):
@@ -922,39 +934,39 @@ class KDTree(object):
                     if id(node1) == id(node2):
                         d = self.data[node2.idx]
                         for i in node1.idx:
-                            for j in node2.idx[minkowski_distance(d,self.data[i],p)<=r]:
-                                if i<j:
-                                    results.add((i,j))
+                            for j in node2.idx[minkowski_distance(d, self.data[i], p) <= r]:
+                                if i < j:
+                                    results.add((i, j))
                     else:
                         d = self.data[node2.idx]
                         for i in node1.idx:
-                            for j in node2.idx[minkowski_distance(d,self.data[i],p)<=r]:
-                                if i<j:
-                                    results.add((i,j))
-                                elif j<i:
-                                    results.add((j,i))
+                            for j in node2.idx[minkowski_distance(d, self.data[i], p) <= r]:
+                                if i < j:
+                                    results.add((i, j))
+                                elif j < i:
+                                    results.add((j, i))
                 else:
                     less, greater = rect2.split(node2.split_dim, node2.split)
-                    traverse_checking(node1,rect1,node2.less,less)
-                    traverse_checking(node1,rect1,node2.greater,greater)
+                    traverse_checking(node1, rect1, node2.less, less)
+                    traverse_checking(node1, rect1, node2.greater, greater)
             elif isinstance(node2, KDTree.leafnode):
                 less, greater = rect1.split(node1.split_dim, node1.split)
-                traverse_checking(node1.less,less,node2,rect2)
-                traverse_checking(node1.greater,greater,node2,rect2)
+                traverse_checking(node1.less, less, node2, rect2)
+                traverse_checking(node1.greater, greater, node2, rect2)
             else:
                 less1, greater1 = rect1.split(node1.split_dim, node1.split)
                 less2, greater2 = rect2.split(node2.split_dim, node2.split)
-                traverse_checking(node1.less,less1,node2.less,less2)
-                traverse_checking(node1.less,less1,node2.greater,greater2)
+                traverse_checking(node1.less, less1, node2.less, less2)
+                traverse_checking(node1.less, less1, node2.greater, greater2)
 
                 # Avoid traversing (node1.less, node2.greater) and
                 # (node1.greater, node2.less) (it's the same node pair twice
                 # over, which is the source of the complication in the
                 # original KDTree.query_pairs)
                 if id(node1) != id(node2):
-                    traverse_checking(node1.greater,greater1,node2.less,less2)
+                    traverse_checking(node1.greater, greater1, node2.less, less2)
 
-                traverse_checking(node1.greater,greater1,node2.greater,greater2)
+                traverse_checking(node1.greater, greater1, node2.greater, greater2)
 
         def traverse_no_checking(node1, node2):
             if isinstance(node1, KDTree.leafnode):
@@ -963,15 +975,15 @@ class KDTree(object):
                     if id(node1) == id(node2):
                         for i in node1.idx:
                             for j in node2.idx:
-                                if i<j:
-                                    results.add((i,j))
+                                if i < j:
+                                    results.add((i, j))
                     else:
                         for i in node1.idx:
                             for j in node2.idx:
-                                if i<j:
-                                    results.add((i,j))
-                                elif j<i:
-                                    results.add((j,i))
+                                if i < j:
+                                    results.add((i, j))
+                                elif j < i:
+                                    results.add((j, i))
                 else:
                     traverse_no_checking(node1, node2.less)
                     traverse_no_checking(node1, node2.greater)
@@ -991,7 +1003,6 @@ class KDTree(object):
         traverse_checking(self.tree, Rectangle(self.maxes, self.mins),
                           self.tree, Rectangle(self.maxes, self.mins))
         return results
-
 
     def count_neighbors(self, other, r, p=2.):
         """
@@ -1017,50 +1028,51 @@ class KDTree(object):
             int, and so may overflow if very large (2e9).
 
         """
+
         def traverse(node1, rect1, node2, rect2, idx):
-            min_r = rect1.min_distance_rectangle(rect2,p)
-            max_r = rect1.max_distance_rectangle(rect2,p)
-            c_greater = r[idx]>max_r
-            result[idx[c_greater]] += node1.children*node2.children
-            idx = idx[(min_r<=r[idx]) & (r[idx]<=max_r)]
-            if len(idx)==0:
+            min_r = rect1.min_distance_rectangle(rect2, p)
+            max_r = rect1.max_distance_rectangle(rect2, p)
+            c_greater = r[idx] > max_r
+            result[idx[c_greater]] += node1.children * node2.children
+            idx = idx[(min_r <= r[idx]) & (r[idx] <= max_r)]
+            if len(idx) == 0:
                 return
 
-            if isinstance(node1,KDTree.leafnode):
-                if isinstance(node2,KDTree.leafnode):
-                    ds = minkowski_distance(self.data[node1.idx][:,np.newaxis,:],
-                                  other.data[node2.idx][np.newaxis,:,:],
-                                  p).ravel()
+            if isinstance(node1, KDTree.leafnode):
+                if isinstance(node2, KDTree.leafnode):
+                    ds = minkowski_distance(self.data[node1.idx][:, np.newaxis, :],
+                                            other.data[node2.idx][np.newaxis, :, :],
+                                            p).ravel()
                     ds.sort()
-                    result[idx] += np.searchsorted(ds,r[idx],side='right')
+                    result[idx] += np.searchsorted(ds, r[idx], side='right')
                 else:
                     less, greater = rect2.split(node2.split_dim, node2.split)
                     traverse(node1, rect1, node2.less, less, idx)
                     traverse(node1, rect1, node2.greater, greater, idx)
             else:
-                if isinstance(node2,KDTree.leafnode):
+                if isinstance(node2, KDTree.leafnode):
                     less, greater = rect1.split(node1.split_dim, node1.split)
                     traverse(node1.less, less, node2, rect2, idx)
                     traverse(node1.greater, greater, node2, rect2, idx)
                 else:
                     less1, greater1 = rect1.split(node1.split_dim, node1.split)
                     less2, greater2 = rect2.split(node2.split_dim, node2.split)
-                    traverse(node1.less,less1,node2.less,less2,idx)
-                    traverse(node1.less,less1,node2.greater,greater2,idx)
-                    traverse(node1.greater,greater1,node2.less,less2,idx)
-                    traverse(node1.greater,greater1,node2.greater,greater2,idx)
+                    traverse(node1.less, less1, node2.less, less2, idx)
+                    traverse(node1.less, less1, node2.greater, greater2, idx)
+                    traverse(node1.greater, greater1, node2.less, less2, idx)
+                    traverse(node1.greater, greater1, node2.greater, greater2, idx)
 
         R1 = Rectangle(self.maxes, self.mins)
         R2 = Rectangle(other.maxes, other.mins)
         if np.shape(r) == ():
             r = np.array([r])
-            result = np.zeros(1,dtype=int)
+            result = np.zeros(1, dtype=int)
             traverse(self.tree, R1, other.tree, R2, np.arange(1))
             return result[0]
-        elif len(np.shape(r))==1:
+        elif len(np.shape(r)) == 1:
             r = np.asarray(r)
             n, = r.shape
-            result = np.zeros(n,dtype=int)
+            result = np.zeros(n, dtype=int)
             traverse(self.tree, R1, other.tree, R2, np.arange(n))
             return result
         else:
@@ -1083,33 +1095,34 @@ class KDTree(object):
             Sparse matrix representing the results in "dictionary of keys" format.
 
         """
-        result = scipy.sparse.dok_matrix((self.n,other.n))
+        result = scipy.sparse.dok_matrix((self.n, other.n))
 
         def traverse(node1, rect1, node2, rect2):
-            if rect1.min_distance_rectangle(rect2, p)>max_distance:
+            if rect1.min_distance_rectangle(rect2, p) > max_distance:
                 return
             elif isinstance(node1, KDTree.leafnode):
                 if isinstance(node2, KDTree.leafnode):
                     for i in node1.idx:
                         for j in node2.idx:
-                            d = minkowski_distance(self.data[i],other.data[j],p)
-                            if d<=max_distance:
-                                result[i,j] = d
+                            d = minkowski_distance(self.data[i], other.data[j], p)
+                            if d <= max_distance:
+                                result[i, j] = d
                 else:
                     less, greater = rect2.split(node2.split_dim, node2.split)
-                    traverse(node1,rect1,node2.less,less)
-                    traverse(node1,rect1,node2.greater,greater)
+                    traverse(node1, rect1, node2.less, less)
+                    traverse(node1, rect1, node2.greater, greater)
             elif isinstance(node2, KDTree.leafnode):
                 less, greater = rect1.split(node1.split_dim, node1.split)
-                traverse(node1.less,less,node2,rect2)
-                traverse(node1.greater,greater,node2,rect2)
+                traverse(node1.less, less, node2, rect2)
+                traverse(node1.greater, greater, node2, rect2)
             else:
                 less1, greater1 = rect1.split(node1.split_dim, node1.split)
                 less2, greater2 = rect2.split(node2.split_dim, node2.split)
-                traverse(node1.less,less1,node2.less,less2)
-                traverse(node1.less,less1,node2.greater,greater2)
-                traverse(node1.greater,greater1,node2.less,less2)
-                traverse(node1.greater,greater1,node2.greater,greater2)
+                traverse(node1.less, less1, node2.less, less2)
+                traverse(node1.less, less1, node2.greater, greater2)
+                traverse(node1.greater, greater1, node2.less, less2)
+                traverse(node1.greater, greater1, node2.greater, greater2)
+
         traverse(self.tree, Rectangle(self.maxes, self.mins),
                  other.tree, Rectangle(other.maxes, other.mins))
 
@@ -1120,13 +1133,14 @@ class HaversineDistanceKDTree(KDTree):
     """Modification of the scipy.spatial.KDTree class to allow querying for
     nearest neighbours measured by distance along the Earth's surface.
     """
+
     def __init__(self, data, leafsize=10, mask=None):
         self.data = np.ma.asarray(data)
         if mask is not None:
             self.data.mask = np.column_stack([mask] * data.shape[1])
         self.n, self.m = np.shape(self.data)
         self.leafsize = int(leafsize)
-        if self.leafsize<1:
+        if self.leafsize < 1:
             raise ValueError("leafsize must be at least 1")
         self.maxes = np.amax(self.data, axis=0)
         self.mins = np.amin(self.data, axis=0)
@@ -1141,9 +1155,9 @@ class HaversineDistanceKDTree(KDTree):
 
         metric = np.array([1.0] * x.size)
         metric[1] = math.cos(x[1] * math.pi / 180.0)
-        side_distances = np.maximum(0,np.maximum(x-self.maxes,self.mins-x)) * metric
-        if p!=np.inf:
-            side_distances**=p
+        side_distances = np.maximum(0, np.maximum(x - self.maxes, self.mins - x)) * metric
+        if p != np.inf:
+            side_distances **= p
             min_distance = np.sum(side_distances)
         else:
             min_distance = np.amax(side_distances)
@@ -1161,65 +1175,65 @@ class HaversineDistanceKDTree(KDTree):
         # entries are (-distance**p, i)
         neighbors = []
 
-        if eps==0:
-            epsfac=1
-        elif p==np.inf:
-            epsfac = 1/(1+eps)
+        if eps == 0:
+            epsfac = 1
+        elif p == np.inf:
+            epsfac = 1 / (1 + eps)
         else:
-            epsfac = 1/(1+eps)**p
+            epsfac = 1 / (1 + eps) ** p
 
-        if p!=np.inf and distance_upper_bound!=np.inf:
-            distance_upper_bound = distance_upper_bound**p
+        if p != np.inf and distance_upper_bound != np.inf:
+            distance_upper_bound = distance_upper_bound ** p
 
         while q:
             min_distance, side_distances, node = heappop(q)
             if isinstance(node, HaversineDistanceKDTree.leafnode):
                 # brute-force
                 data = self.data[node.idx]
-                ds = haversine_distance(data,x[np.newaxis,:])
+                ds = haversine_distance(data, x[np.newaxis, :])
                 for i in range(len(ds)):
-                    if ds[i]<distance_upper_bound:
-                        if len(neighbors)==k:
+                    if ds[i] < distance_upper_bound:
+                        if len(neighbors) == k:
                             heappop(neighbors)
                         heappush(neighbors, (-ds[i], node.idx[i]))
-                        if len(neighbors)==k:
+                        if len(neighbors) == k:
                             distance_upper_bound = -neighbors[0][0]
             else:
                 # we don't push cells that are too far onto the queue at all,
                 # but since the distance_upper_bound decreases, we might get
                 # here even if the cell's too far
-                if min_distance>distance_upper_bound*epsfac:
+                if min_distance > distance_upper_bound * epsfac:
                     # since this is the nearest cell, we're done, bail out
                     break
                 # compute minimum distances to the children and push them on
-                if x[node.split_dim]<node.split:
+                if x[node.split_dim] < node.split:
                     near, far = node.less, node.greater
                 else:
                     near, far = node.greater, node.less
 
                 # near child is at the same distance as the current node
-                heappush(q,(min_distance, side_distances, near))
+                heappush(q, (min_distance, side_distances, near))
 
                 # far child is further by an amount depending only
                 # on the split value
                 sd = list(side_distances)
                 if p == np.inf:
-                    min_distance = max(min_distance, abs(node.split-x[node.split_dim]))
+                    min_distance = max(min_distance, abs(node.split - x[node.split_dim]))
                 elif p == 1:
-                    sd[node.split_dim] = np.abs(node.split-x[node.split_dim])
+                    sd[node.split_dim] = np.abs(node.split - x[node.split_dim])
                     min_distance = min_distance - side_distances[node.split_dim] + sd[node.split_dim]
                 else:
-                    sd[node.split_dim] = np.abs(node.split-x[node.split_dim])**p
+                    sd[node.split_dim] = np.abs(node.split - x[node.split_dim]) ** p
                     min_distance = min_distance - side_distances[node.split_dim] + sd[node.split_dim]
 
                 # far child might be too far, if so, don't bother pushing it
-                if min_distance<=distance_upper_bound*epsfac:
-                    heappush(q,(min_distance, tuple(sd), far))
+                if min_distance <= distance_upper_bound * epsfac:
+                    heappush(q, (min_distance, tuple(sd), far))
 
-        if p==np.inf:
-            return sorted([(-d,i) for (d,i) in neighbors])
+        if p == np.inf:
+            return sorted([(-d, i) for (d, i) in neighbors])
         else:
-            return sorted([((-d)**(1./p),i) for (d,i) in neighbors])
+            return sorted([((-d) ** (1. / p), i) for (d, i) in neighbors])
 
     def _query_ball_point(self, x, r, p=2., eps=0):
         R = RectangleHaversine(self.maxes, self.mins)
@@ -1247,7 +1261,7 @@ class HaversineDistanceKDTree(KDTree):
         return traverse_checking(self.tree, R)
 
 
-def distance_matrix(x,y,p=2,threshold=1000000):
+def distance_matrix(x, y, p=2, threshold=1000000):
     """
     Compute the distance matrix.
 
@@ -1281,14 +1295,14 @@ def distance_matrix(x,y,p=2,threshold=1000000):
     if k != kk:
         raise ValueError("x contains %d-dimensional vectors but y contains %d-dimensional vectors" % (k, kk))
 
-    if m*n*k <= threshold:
-        return minkowski_distance(x[:,np.newaxis,:],y[np.newaxis,:,:],p)
+    if m * n * k <= threshold:
+        return minkowski_distance(x[:, np.newaxis, :], y[np.newaxis, :, :], p)
     else:
-        result = np.empty((m,n),dtype=np.float) #FIXME: figure out the best dtype
-        if m<n:
+        result = np.empty((m, n), dtype=np.float)  # FIXME: figure out the best dtype
+        if m < n:
             for i in range(m):
-                result[i,:] = minkowski_distance(x[i],y,p)
+                result[i, :] = minkowski_distance(x[i], y, p)
         else:
             for j in range(n):
-                result[:,j] = minkowski_distance(x,y[j],p)
+                result[:, j] = minkowski_distance(x, y[j], p)
         return result

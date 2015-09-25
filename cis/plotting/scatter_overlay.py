@@ -2,17 +2,19 @@ from cis.plotting.generic_plot import Generic_Plot
 from cis.plotting.heatmap import Heatmap
 from cis.plotting.scatter_plot import Scatter_Plot
 
+
 class Scatter_Overlay(Generic_Plot):
     def plot(self):
-        '''
+        """
         Plots a heatmap overlayed with one or more scatter plots
-        '''
+        """
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) > 1:
             Heatmap([self.packed_data_items[0]], self.plot_args, *self.mplargs, **self.mplkwargs)
             scatter_plot_args = self.plot_args
             scatter_plot_args["datagroups"] = self.plot_args["datagroups"][1:]
-            self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], scatter_plot_args, calculate_min_and_max_values = False, *self.mplargs, **self.mplkwargs)
+            self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], scatter_plot_args,
+                                              calculate_min_and_max_values=False, *self.mplargs, **self.mplkwargs)
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Scatter overlay requires two or more datagroups")
 

@@ -71,13 +71,14 @@ def concatenate(arrays, axis=0):
 
 
 def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = False):
-    '''
+    """
     :param data: A numpy array
     :param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
-    :param user_range: A dictionary containing the min and max values for the edges specified by the user. The data min and max is used if the user did not specify
+    :param user_range: A dictionary containing the min and max values for the edges specified by the user. The data min
+     and max is used if the user did not specify
     :param step: The distance between each bin edge/the width of each bin
     :return: An array containing a list of bin edges (i.e. when each bin starts and ends)
-    '''
+    """
     from decimal import Decimal
     from numpy import array, append, logspace, log10
     import logging
@@ -168,7 +169,7 @@ def create_masked_array_for_missing_values(data, missing_values):
 
 
 def apply_mask_to_numpy_array(in_array, mask):
-    """Elementwise ORs the mask with the mask of the array.
+    """Element-wise ORs the mask with the mask of the array.
     If the mask masks no elements, no change is made. If the array is not masked, it is converted to a masked array.
 
     :param in_array: input array
@@ -190,7 +191,7 @@ def array_equal_including_nan(array1, array2):
     """
     :param array1: A numpy array
     :param array2: Another numpy array (can be of a different shape)
-    :return: True or false if the arrays are equal, inclduing NaNs.
+    :return: True or false if the arrays are equal, including NaNs.
     """
     import numpy
 
@@ -236,10 +237,10 @@ def get_coord(data_object, variable, data):
 
 
 def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
-    '''
+    """
     :param data_object    A cube or an UngriddedData object
     :return: A dictionary containing x, y and data as numpy arrays
-    '''
+    """
     from iris.cube import Cube
     import iris.plot as iplt
     import iris
@@ -263,7 +264,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     if hasattr(y, 'points'):
         y = y.points
     # Must use special function to check equality of array here, so NaNs are returned as equal and False is returned if
-    # arrays have a diffent shape
+    # arrays have a different shape
     if array_equal_including_nan(y, data) or array_equal_including_nan(y, x):
         y = None
 
@@ -278,14 +279,14 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
             x = x.T
             y = y.T
 
-        # Check for auxillary coordinates.
+        # Check for auxiliary coordinates.
         aux_coords = False
         for coord in data_object[0].coords(dim_coords=False):
             aux_coords = True
 
         if no_of_dims == 2:
-            # If we have found some auxillary coordinates in the data and the shape of x data or y data is the same as
-            # data assume wehave a hybrid coordinate (which is two dimensional b nature. Perhaps need a more robust
+            # If we have found some auxiliary coordinates in the data and the shape of x data or y data is the same as
+            # data assume we have a hybrid coordinate (which is two dimensional b nature. Perhaps need a more robust
             # method for detecting this.
             if aux_coords and (data.shape == x.shape or data.shape == y.shape):
                 # Work out which set of data needs expanding to match the coordinates of the others. Note there can only
@@ -392,13 +393,13 @@ def wrap_longitude_coordinate_values(x_min, x_max):
 
 
 def copy_attributes(source, dest):
-    '''
+    """
     Copy all attributes from one object to another
 
     :param source: Object to copy attributes from
     :param dest: Object to copy attributes to
     :return: None
-    '''
+    """
     if source:
         if isinstance(source, dict):
             dest.__dict__.update(source)
@@ -407,13 +408,13 @@ def copy_attributes(source, dest):
 
 
 def add_file_prefix(prefix, filepath):
-    '''
+    """
     Add a prefix to a filename taking into account any path that might be present before that actual filename
 
     :param prefix: A string to prefix the filename with
     :param filepath: Filename, optionally including path
     :return: A string with the full path to the prefixed file
-    '''
+    """
     import os.path
     filename = os.path.basename(filepath)
     path = os.path.dirname(filepath)
@@ -425,8 +426,8 @@ def remove_file_prefix(prefix, filepath):
     Remove a prefix from a filename, taking into account any path that might be present before that actual filename
 
     :param prefix: The prefix to remove
-    :param filepath: Filename, optionall including path
-    :return: A sring with the full path to the unprefixed file
+    :param filepath: Filename, optional including path
+    :return: A string with the full path to the un-prefixed file
     """
     import os.path
 
@@ -440,7 +441,7 @@ def remove_file_prefix(prefix, filepath):
 
 def parse_key_val_string(arguments, separator):
     """
-    Takes a (comma) seperated list of keyword value pairs (seperated by =) and returns a dictionary with those keys and
+    Takes a (comma) separated list of keyword value pairs (separated by =) and returns a dictionary with those keys and
     values
 
     :param arguments: A string which is a separated list of keyword value pairs
@@ -470,9 +471,9 @@ def parse_key_val_list(input_list):
 
 
 def haversine(lat, lon, lat2, lon2):
-    '''
+    """
     Computes the Haversine distance between two points
-    '''
+    """
     import math
     R_E = 6378 # Radius of the earth in km
     lat1 = math.radians(lat)
@@ -483,9 +484,9 @@ def haversine(lat, lon, lat2, lon2):
     return arclen*R_E
 
 class OrderedSet(collections.MutableSet):
-    '''
+    """
     From http://code.activestate.com/recipes/576694/
-    '''
+    """
 
     def __init__(self, iterable=None):
         self.end = end = []

@@ -1,7 +1,7 @@
 #!/bin/env python2.7
-'''
+"""
 Command line interface for the Climate Intercomparison Suite (CIS)
-'''
+"""
 import sys
 import traceback
 import logging
@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 def __error_occurred(e):
-    '''
+    """
     Wrapper method used to print error messages and exit the program.
 
     :param e: An error object or any string
-    '''
+    """
     sys.stderr.write(str(e) + "\n")
     logging.debug(str(e) + "\n")
     logging.debug(traceback.format_exc())
@@ -27,14 +27,14 @@ def __error_occurred(e):
 
 
 def __check_variable_is_valid(main_arguments, data, axis):
-    '''
+    """
     Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to assign
     the variable to the specified axis
     :param main_arguments: The arguments received from the parser
     :param data: A list of packed data objects
     :param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it will be plotted on.
     :param axis: The axis on which to plot the variable on
-    '''
+    """
     from cis.exceptions import InvalidVariableError
 
     user_specified_variable = main_arguments.pop(axis + "axis")
@@ -47,12 +47,12 @@ def __check_variable_is_valid(main_arguments, data, axis):
 
 
 def plot_cmd(main_arguments):
-    '''
+    """
     Main routine for handling calls to the 'plot' command.
     Reads in the data files specified and passes the rest of the arguments to the plot function.
 
     :param main_arguments:    The command line arguments
-    '''
+    """
     from plotting.plot import Plotter
     from cis.data_io.data_reader import DataReader
     import cis.exceptions as ex
@@ -86,14 +86,14 @@ def plot_cmd(main_arguments):
 
 
 def info_cmd(main_arguments):
-    '''
+    """
     Main routine for handling calls to the 'info' command.
     Reads in the variables from the data files specified and lists them to stdout if no
     particular variable was specified, otherwise prints detailed information about each
     variable specified
 
     :param main_arguments:    The command line arguments (minus the info command)
-    '''
+    """
     from cis.info import info
 
     try:
@@ -103,11 +103,11 @@ def info_cmd(main_arguments):
 
 
 def col_cmd(main_arguments):
-    '''
+    """
     Main routine for handling calls to the collocate ('col') command.
 
     :param main_arguments:    The command line arguments (minus the col command)
-    '''
+    """
     from cis.exceptions import ClassNotFoundError, CISError
     from cis.collocation.col import Collocate
 
@@ -148,11 +148,11 @@ def col_cmd(main_arguments):
 
 
 def subset_cmd(main_arguments):
-    '''
+    """
     Main routine for handling calls to the subset command.
 
     :param main_arguments:    The command line arguments (minus the subset command)
-    '''
+    """
     from cis.subsetting.subset import Subset
 
     if len(main_arguments.datagroups) > 1:

@@ -1,6 +1,6 @@
-'''
+"""
 module to test the NetCDF module
-'''
+"""
 import unittest
 from netCDF4 import Variable
 

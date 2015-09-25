@@ -1,6 +1,6 @@
-'''
+"""
 Module for creating mock, dummies and fakes
-'''
+"""
 from nose.tools import raises
 import numpy as np
 import numpy.ma as ma
@@ -161,9 +161,9 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     return return_cube
 
 def make_dummy_2d_cube():
-    '''
+    """
         Makes a dummy cube filled with random datapoints of shape 19x36
-    '''
+    """
     import numpy
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -176,9 +176,9 @@ def make_dummy_2d_cube():
 
 
 def make_dummy_2d_cube_with_small_offset_in_lat():
-    '''
+    """
         Makes a dummy cube filled with random datapoints of shape 19x36
-    '''
+    """
     import numpy
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -191,9 +191,9 @@ def make_dummy_2d_cube_with_small_offset_in_lat():
 
 
 def make_dummy_2d_cube_with_small_offset_in_lon():
-    '''
+    """
         Makes a dummy cube filled with random datapoints of shape 19x36
-    '''
+    """
     import numpy
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -206,9 +206,9 @@ def make_dummy_2d_cube_with_small_offset_in_lon():
 
 
 def make_dummy_2d_cube_with_small_offset_in_lat_and_lon():
-    '''
+    """
         Makes a dummy cube filled with random datapoints of shape 19x36
-    '''
+    """
     import numpy
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -257,7 +257,7 @@ def make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres():
 
 
 def make_square_5x3_2d_cube():
-    '''
+    """
         Makes a well defined cube of shape 5x3 with data as follows
         array([[1,2,3],
                [4,5,6],
@@ -268,10 +268,10 @@ def make_square_5x3_2d_cube():
             array([ -10, -5, 0, 5, 10 ])
         longitude:
             array([ -5, 0, 5 ])
-            
+
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
-    '''
+    """
     import numpy as np
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -284,7 +284,7 @@ def make_square_5x3_2d_cube():
     return cube
 
 def make_square_5x3_2d_cube_with_extra_dim():
-    '''
+    """
         Makes a well defined cube of shape 5x3 with data as follows
         array([[1,2,3],
                [4,5,6],
@@ -300,7 +300,7 @@ def make_square_5x3_2d_cube_with_extra_dim():
 
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
-    '''
+    """
     import numpy as np
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -314,7 +314,7 @@ def make_square_5x3_2d_cube_with_extra_dim():
     return cube
 
 def make_square_5x3_2d_cube_with_missing_data():
-    '''
+    """
         Makes a well defined cube of shape 5x3 with data as follows
         array([[1,2,3],
                [4,M,6],
@@ -328,7 +328,7 @@ def make_square_5x3_2d_cube_with_missing_data():
 
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
-    '''
+    """
     import numpy as np
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -406,7 +406,7 @@ def make_square_5x3_2d_cube_with_decreasing_latitude():
 
 
 def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
-    '''
+    """
         Makes a well defined cube of shape 5x3 with data as follows
         arr([[[   1.    2.    3.    4.    5.    6.    7.]
               [   8.    9.   10.   11.   12.   13.   14.]
@@ -436,7 +436,7 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
 
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
-    '''
+    """
     import numpy as np
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -459,7 +459,7 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
 def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count=5,
                                       start_lon=-5, end_lon=5, lon_point_count=3,
                                       time_offset=0):
-    '''
+    """
         Makes a well defined cube of shape 5x3 with data as follows
         arr([[[   1.    2.    3.    4.    5.    6.    7.]
               [   8.    9.   10.   11.   12.   13.   14.]
@@ -489,7 +489,7 @@ def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count
 
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
-    '''
+    """
     import numpy as np
     from iris.cube import Cube
     from iris.coords import DimCoord
@@ -611,37 +611,37 @@ def make_dummy_1d_cube():
 
 
 def get_random_1d_point():
-    '''
+    """
         Creates a hyper point at some random point along the Grenwich meridian (lon = 0.0)
-    '''
+    """
     from cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat())
 
 def get_random_2d_point():
-    '''
+    """
         Creates a random point on the surface of the globe
-    '''
+    """
     from cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat(), gen_random_lon())
 
 def get_random_3d_point():
-    '''
+    """
         Creates a random point in 3d space upto 100km above the surface of the globe
-    '''
+    """
     import random
     from cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat(), gen_random_lon(), random.randrange(0.0, 100.0))
 
 def make_dummy_1d_points_list(num):
-    '''
+    """
         Create a list of 1d points 'num' long
-    '''
+    """
     return [ get_random_1d_point() for i in xrange(0,num) ]
 
 def make_dummy_2d_points_list(num):
-    '''
+    """
         Create a list of 2d points 'num' long
-    '''
+    """
     return [ get_random_2d_point() for i in xrange(0,num) ]
 
 
@@ -778,7 +778,7 @@ def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lo
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 def make_regular_2d_ungridded_data_with_missing_values():
-    '''
+    """
         Makes a well defined ungridded data object of shape 5x3 with data as follows, in which M denotes a missing
         value:
         array([[1,2,3],
@@ -801,7 +801,7 @@ def make_regular_2d_ungridded_data_with_missing_values():
 
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
-    '''
+    """
     import numpy as np
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
@@ -827,7 +827,7 @@ def make_regular_2d_ungridded_data_with_missing_values():
 
 
 def make_regular_2d_with_time_ungridded_data():
-    '''
+    """
         Makes a well defined ungridded data object of shape 5x3 with data as follows
         array([[1,2,3],
                [4,5,6],
@@ -849,7 +849,7 @@ def make_regular_2d_with_time_ungridded_data():
         time: np.array( [ 15 day increments from 27th August 1984 ] )
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
-    '''
+    """
     import numpy as np
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
@@ -873,10 +873,10 @@ def make_regular_2d_with_time_ungridded_data():
 
 
 def make_MODIS_time_steps():
-    '''
+    """
         Useful for debugging MODIS collocation
     :return:
-    '''
+    """
     import numpy as np
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
@@ -894,7 +894,7 @@ def make_MODIS_time_steps():
 
 
 def make_regular_4d_ungridded_data():
-    '''
+    """
         Makes a well defined ungridded data object of shape 10x5 with data as follows
 
         data:
@@ -970,7 +970,7 @@ def make_regular_4d_ungridded_data():
          [1984-08-27 1984-08-28 1984-08-29 1984-08-30 1984-08-31]]
 
         They are shaped to represent a typical lidar type satelite data set.
-    '''
+    """
     import numpy as np
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata

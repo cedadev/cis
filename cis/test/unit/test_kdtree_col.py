@@ -10,7 +10,7 @@ from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import UngriddedData
 from cis.test.util import mock
 from cis.collocation.col_implementations import (GeneralUngriddedCollocator, nn_horizontal_kdtree, DummyConstraint,
-                                            SepConstraintKdtree, make_coord_map)
+                                                 SepConstraintKdtree, make_coord_map)
 from cis.collocation.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 
 
@@ -29,7 +29,6 @@ def is_collocated(data1, data2):
 
 
 class Test_nn_horizontal_kdtree(object):
-
     @istest
     def test_basic_col_in_2d(self):
         # lat: -10 to 10 step 5; lon -5 to 5 step 5
@@ -110,7 +109,7 @@ class TestSepConstraint(object):
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(np.equal(ref_vals, new_vals).all())
+        assert (np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_horizontal_constraint_in_2d_with_missing_values(self):
@@ -136,7 +135,7 @@ class TestSepConstraint(object):
                 ref_vals = np.array([sample_point.val])
 
             eq_(ref_vals.size, new_vals.size)
-            assert(np.equal(ref_vals, new_vals).all())
+            assert (np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_horizontal_constraint_in_4d(self):
@@ -154,13 +153,13 @@ class TestSepConstraint(object):
         constraint.haversine_distance_kd_tree_index = index
 
         # This should leave us with 30 points
-        ref_vals = np.reshape(np.arange(50)+1.0, (10, 5))[:, 1:4].flatten()
+        ref_vals = np.reshape(np.arange(50) + 1.0, (10, 5))[:, 1:4].flatten()
 
         new_points = constraint.constrain_points(sample_point, ug_data_points)
         new_vals = np.sort(new_points.vals)
 
         eq_(ref_vals.size, new_vals.size)
-        assert(np.equal(ref_vals, new_vals).all())
+        assert (np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_all_constraints_in_4d(self):
@@ -193,7 +192,7 @@ class TestSepConstraint(object):
         new_vals = np.sort(new_points.vals)
 
         eq_(ref_vals.size, new_vals.size)
-        assert(np.equal(ref_vals, new_vals).all())
+        assert (np.equal(ref_vals, new_vals).all())
 
     def get_max_depth(self, node, depth):
         if isinstance(node, KDTree.leafnode):
@@ -224,6 +223,7 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
     """Tests that SepConstraintKdtree behaves as an unoptimized constraint for non-spatial separations
     if the spatial separation parameter is not specified.
     """
+
     @istest
     def test_alt_constraint_in_4d(self):
         from cis.collocation.col_implementations import SepConstraintKdtree
@@ -232,7 +232,7 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984,8,29))
+        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
 
         # 15m altitude separation
         a_sep = 15
@@ -244,11 +244,11 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
         #                                       [ 31.  32.  33.  34.  35.]
         ref_vals = np.array([21., 22., 23., 24., 25., 26., 27., 28., 29., 30., 31., 32., 33., 34., 35.])
 
-        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_points = constraint.constrain_points(sample_point, ug_data_points)
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(np.equal(ref_vals, new_vals).all())
+        assert (np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_time_constraint_in_4d(self):
@@ -258,20 +258,19 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984,8,29))
+        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
 
         # 1 day (and a little bit) time seperation
         constraint = SepConstraintKdtree(t_sep='P1dT1M')
 
         # This should leave us with 30 points
-        ref_vals = np.reshape(np.arange(50)+1.0,(10,5))[:,1:4].flatten()
+        ref_vals = np.reshape(np.arange(50) + 1.0, (10, 5))[:, 1:4].flatten()
 
-        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_points = constraint.constrain_points(sample_point, ug_data_points)
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(np.equal(ref_vals, new_vals).all())
-
+        assert (np.equal(ref_vals, new_vals).all())
 
     @istest
     def test_pressure_constraint_in_4d(self):
@@ -281,7 +280,7 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0, 24.0, dt.datetime(1984,8,29))
+        sample_point = HyperPoint(0.0, 0.0, 50.0, 24.0, dt.datetime(1984, 8, 29))
 
         constraint = SepConstraintKdtree(p_sep=2)
 
@@ -292,11 +291,11 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
         ref_vals = np.array([6., 7., 8., 9., 10., 11., 12., 13., 14., 15., 16., 17., 18., 19., 20., 21., 22., 23.,
                              24., 25.])
 
-        new_points = constraint.constrain_points(sample_point,ug_data_points)
+        new_points = constraint.constrain_points(sample_point, ug_data_points)
         new_vals = new_points.vals
 
         eq_(ref_vals.size, new_vals.size)
-        assert(np.equal(ref_vals, new_vals).all())
+        assert (np.equal(ref_vals, new_vals).all())
 
 
 class TestSepConstraintWithGriddedData(object):
@@ -320,9 +319,8 @@ class TestSepConstraintWithGriddedData(object):
 
         for idx, sample_point in enumerate(sample_points):
             out_points = constraint.constrain_points(sample_point, data_points)
-            assert(len(out_points) == 1)
-            assert(out_points[0].val[0] == data_points[idx].val[0])
-
+            assert (len(out_points) == 1)
+            assert (out_points[0].val[0] == data_points[idx].val[0])
 
     @istest
     def test_horizontal_constraint_for_same_3d_grids_returns_original_data(self):
@@ -347,8 +345,8 @@ class TestSepConstraintWithGriddedData(object):
         for idx, sample_point in enumerate(sample_points):
             out_points = constraint.constrain_points(sample_point, data_points)
             # Two times for each spatial position.
-            assert(len(out_points) == 2)
-            assert(data_points[idx].val[0] in [p.val[0] for p in out_points])
+            assert (len(out_points) == 2)
+            assert (data_points[idx].val[0] in [p.val[0] for p in out_points])
 
     @istest
     def test_horizontal_constraint_in_2d_with_missing_values(self):
@@ -371,12 +369,13 @@ class TestSepConstraintWithGriddedData(object):
         for idx, sample_point in enumerate(sample_points):
             out_points = constraint.constrain_points(sample_point, data_points)
             if data_points[idx].val[0] is np.ma.masked:
-                assert(len(out_points) == 0)
+                assert (len(out_points) == 0)
             else:
-                assert(len(out_points) == 1)
-                assert(out_points[0].val[0] == data_points[idx].val[0])
+                assert (len(out_points) == 1)
+                assert (out_points[0].val[0] == data_points[idx].val[0])
 
 
 if __name__ == '__main__':
     import nose
+
     nose.runmodule()

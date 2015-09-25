@@ -10,13 +10,13 @@ class StddevKernel(iris.analysis.Aggregator):
         super(StddevKernel, self).__init__('standard_deviation', ma.std, ddof=1)
 
     def update_metadata(self, cube, coords, **kwargs):
-        '''
+        """
         Update cube metadata after aggregation
         :param cube:
         :param coords:
         :param kwargs:
         :return:
-        '''
+        """
         super(StddevKernel, self).update_metadata(cube, coords, **kwargs)
         cube.standard_name = None
         cube.long_name = 'Corrected sample standard deviation of {long_name}'.format(long_name=cube.long_name)

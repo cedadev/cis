@@ -4,8 +4,8 @@
 Medium
 ------
 
-For this example we will look at the Aeronet data reading plugin.
-Aeronet is a ground based sun-photometer network that produces
+For this example we will look at the AERONET data reading plugin.
+AERONET is a ground based sun-photometer network that produces
 time-series data for each groundstation in a csv based text file. There
 is some information about the ground station in the header of the file,
 and then a table of data with a time column, and a column for each of
@@ -22,17 +22,17 @@ will explain shortly::
 .. note::
 
     In python there is not really such a thing as a 'private’ method as
-    there is in Java and C#, but we can signify that a method shouldn’t be
+    there is in Java and C#, but we can signify that a method shouldn't be
     accessed externally by starting its name with one or two underscores.
 
-In this method we import an Aeronet data reading routine::
+In this method we import an AERONET data reading routine::
 
     def _create_coord_list(self, filenames, data=None):
         from cis.data_io.ungridded_data import Metadata
         from cis.data_io.aeronet import load_multiple_aeronet
 
 This data reading routine actually performs much of the hard work in
-reading the aeronet file::
+reading the AERONET file::
 
     if data is None:
         data = load_multiple_aeronet(filenames)
@@ -84,7 +84,7 @@ import statements::
         from cis.data_io.aeronet import load_multiple_aeronet
         from cis.exceptions import InvalidVariableError
 
-We can pass the job of reading the data to our Aeronet reading routine –
+We can pass the job of reading the data to our AERONET reading routine –
 catching any errors which occur because the variable doesn’t exist.
 
 ::
@@ -165,3 +165,4 @@ Here’s the plugin in full::
             return UngriddedData(data_obj[variable],
                                  Metadata(name=variable, long_name=variable, shape=(len(data_obj),), missing_value=-999.0),
                                  coords)
+

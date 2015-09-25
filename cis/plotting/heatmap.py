@@ -14,9 +14,9 @@ class Heatmap(Generic_Plot):
         super(Heatmap, self).__init__(packed_data_items, plot_args, *mplargs, **mplkwargs)
 
     def plot(self):
-        '''
+        """
         Plots a heatmap
-        '''
+        """
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) != 1:
             raise InvalidNumberOfDatagroupsSpecifiedError("Invalid number of datagroups specified. Only one datagroup "

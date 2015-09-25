@@ -1,6 +1,6 @@
-'''
+"""
 module to test the hdf4 utility function of hdf_vd.py
-'''
+"""
 from nose.tools import istest, eq_
 
 import cis.data_io.hdf_vd as hdf_vd

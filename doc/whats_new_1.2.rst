@@ -10,7 +10,7 @@ CIS 1.2 features
 ================
 
  * All new ``cis info`` command provides much more detailed information about ungridded data variables and enables multiple variables to be output at a time.
- * Updated a number of routines to take advantage of Iris 1.8 features. In particular gridded-gridded collocation using the nearest neaighbout kernel should be significantly faster. Iris 1.8 is now the minimum version required for CIS.
+ * Updated a number of routines to take advantage of Iris 1.8 features. In particular gridded-gridded collocation using the nearest neighbour kernel should be significantly faster. Iris 1.8 is now the minimum version required for CIS.
  * Gridded-ungridded collocation now supports collocation from cubes with hybrid height or hybrid pressure coordinates for both nearest neighbour and linear interpolation kernels.
  * Built-in support for reading multiple HadGEM .pp files directly.
 

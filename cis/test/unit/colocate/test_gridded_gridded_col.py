@@ -25,7 +25,6 @@ def does_coord_exist_in_cube(cube, coord):
 
 
 class GriddedGriddedCollocatorTests(object):
-
     def setUp(self):
         self.collocator = None
 
@@ -78,10 +77,10 @@ class GriddedGriddedCollocatorTests(object):
         out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
         result = numpy.array([[1, 3, 6],
-                             [13, 15, 18],
-                             [25, 27, 30],
-                             [43, 45, 48],
-                             [55, 57, 60]])
+                              [13, 15, 18],
+                              [25, 27, 30],
+                              [43, 45, 48],
+                              [55, 57, 60]])
 
         assert numpy.array_equal(out_cube.data, result)
 
@@ -170,11 +169,11 @@ class GriddedGriddedCollocatorTests(object):
 
         out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        result = numpy.array([[1., 3.5,   6.],
-                              [14.5,  17., 19.5],
-                              [28., 30.5,  33.],
-                              [41.5, 44.,   46.5],
-                              [55., 57.5,  60.]])
+        result = numpy.array([[1., 3.5, 6.],
+                              [14.5, 17., 19.5],
+                              [28., 30.5, 33.],
+                              [41.5, 44., 46.5],
+                              [55., 57.5, 60.]])
 
         assert numpy.allclose(out_cube.data, result)
 
@@ -284,8 +283,8 @@ class GriddedGriddedCollocatorTests(object):
 
         out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        result = numpy.array([[[0.44,  1.44,  2.44,  3.44,  4.44,  5.44,  6.44],
-                               [7.44,  8.44,  9.44, 10.44, 11.44, 12.44, 13.44],
+        result = numpy.array([[[0.44, 1.44, 2.44, 3.44, 4.44, 5.44, 6.44],
+                               [7.44, 8.44, 9.44, 10.44, 11.44, 12.44, 13.44],
                                [14.44, 15.44, 16.44, 17.44, 18.44, 19.44, 20.44]],
 
                               [[21.44, 22.44, 23.44, 24.44, 25.44, 26.44, 27.44],
@@ -456,8 +455,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         data_cube = gridded_data.make_from_cube(make_mock_cube())
 
         data_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
-                                                       standard_name='time',
-                                                       units='days since 1600-01-01 00:00:00'))
+                                                     standard_name='time',
+                                                     units='days since 1600-01-01 00:00:00'))
 
         col = self.collocator
 
@@ -482,11 +481,13 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
         out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_nn())[0]
 
-        expected = np.array([[[ 1.,  1.,  1.,  1.,  1.,  1.,  1.],  [ 2.,  2.,  2.,  2.,  2.,  2.,  2.],  [ 3.,  3.,  3.,  3.,  3.,  3.,  3.]],
-                    [[ 4.,  4.,  4.,  4.,  4.,  4.,  4.],  [ 5.,  5.,  5.,  5.,  5.,  5.,  5.],  [ 6.,  6.,  6.,  6.,  6.,  6.,  6.]],
-                    [[ 7.,  7.,  7.,  7.,  7.,  7.,  7.],  [ 8.,  8.,  8.,  8.,  8.,  8.,  8.],  [ 9.,  9.,  9.,  9.,  9.,  9.,  9.]],
-                    [[ 10.,  10.,  10.,  10.,  10.,  10.,  10.],  [ 11.,  11.,  11.,  11.,  11.,  11.,  11.],  [ 12.,  12.,  12.,  12.,  12.,  12.,  12.]],
-                    [[ 13., 13.,  13.,  13.,  13.,  13.,  13.],  [ 14.,  14.,  14.,  14.,  14.,  14.,  14.],  [ 15.,  15.,  15.,  15.,  15.,  15.,  15.]]])
+        expected = np.array([[[1., 1., 1., 1., 1., 1., 1.], [2., 2., 2., 2., 2., 2., 2.], [3., 3., 3., 3., 3., 3., 3.]],
+                             [[4., 4., 4., 4., 4., 4., 4.], [5., 5., 5., 5., 5., 5., 5.], [6., 6., 6., 6., 6., 6., 6.]],
+                             [[7., 7., 7., 7., 7., 7., 7.], [8., 8., 8., 8., 8., 8., 8.], [9., 9., 9., 9., 9., 9., 9.]],
+                             [[10., 10., 10., 10., 10., 10., 10.], [11., 11., 11., 11., 11., 11., 11.],
+                              [12., 12., 12., 12., 12., 12., 12.]],
+                             [[13., 13., 13., 13., 13., 13., 13.], [14., 14., 14., 14., 14., 14., 14.],
+                              [15., 15., 15., 15., 15., 15., 15.]]])
 
         assert numpy.array_equal(expected, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -532,17 +533,18 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
         out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
-        expected = np.array([[[ 1.,  1.,  1.,  1.,  1.,  1.,  1.],  [ 2.,  2.,  2.,  2.,  2.,  2.,  2.],  [ 3.,  3.,  3.,  3.,  3.,  3.,  3.]],
-                    [[ 4.,  4.,  4.,  4.,  4.,  4.,  4.],  [ 5.,  5.,  5.,  5.,  5.,  5.,  5.],  [ 6.,  6.,  6.,  6.,  6.,  6.,  6.]],
-                    [[ 7.,  7.,  7.,  7.,  7.,  7.,  7.],  [ 8.,  8.,  8.,  8.,  8.,  8.,  8.],  [ 9.,  9.,  9.,  9.,  9.,  9.,  9.]],
-                    [[ 10.,  10.,  10.,  10.,  10.,  10.,  10.],  [ 11.,  11.,  11.,  11.,  11.,  11.,  11.],  [ 12.,  12.,  12.,  12.,  12.,  12.,  12.]],
-                    [[ 13., 13.,  13.,  13.,  13.,  13.,  13.],  [ 14.,  14.,  14.,  14.,  14.,  14.,  14.],  [ 15.,  15.,  15.,  15.,  15.,  15.,  15.]]])
+        expected = np.array([[[1., 1., 1., 1., 1., 1., 1.], [2., 2., 2., 2., 2., 2., 2.], [3., 3., 3., 3., 3., 3., 3.]],
+                             [[4., 4., 4., 4., 4., 4., 4.], [5., 5., 5., 5., 5., 5., 5.], [6., 6., 6., 6., 6., 6., 6.]],
+                             [[7., 7., 7., 7., 7., 7., 7.], [8., 8., 8., 8., 8., 8., 8.], [9., 9., 9., 9., 9., 9., 9.]],
+                             [[10., 10., 10., 10., 10., 10., 10.], [11., 11., 11., 11., 11., 11., 11.],
+                              [12., 12., 12., 12., 12., 12., 12.]],
+                             [[13., 13., 13., 13., 13., 13., 13.], [14., 14., 14., 14., 14., 14., 14.],
+                              [15., 15., 15., 15., 15., 15., 15.]]])
 
         assert numpy.array_equal(expected, out_cube.data)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
         assert numpy.array_equal(sample_cube.coord('longitude').points, out_cube.coord('longitude').points)
         assert numpy.array_equal(sample_cube.coord('time').points, out_cube.coord('time').points)
-
 
     @istest
     def test_gridded_gridded_li_with_sample_grid_containing_scalar_time(self):
@@ -581,8 +583,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         data_cube = gridded_data.make_from_cube(make_mock_cube())
 
         data_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
-                                                       standard_name='time',
-                                                       units='days since 1600-01-01 00:00:00'))
+                                                     standard_name='time',
+                                                     units='days since 1600-01-01 00:00:00'))
 
         col = self.collocator
 
@@ -624,7 +626,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
                               [[64., 64., 64., 65., 66., 67., 68.],
                                [64., 64., 64., 65., 66., 67., 68.],
-                               [71., 71., 71., 72,  73., 74., 75.]]])
+                               [71., 71., 71., 72, 73., 74., 75.]]])
 
         assert numpy.array_equal(out_cube.data, result)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -719,7 +721,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
                               [[50.74, 51.74, 52.74, 53.74, 54.74, 55.74, 56.74],
                                [113.74, 114.74, 115.74, 116.74, 117.74, 118.74, 119.74],
-                               [176.74, 177.74,  178.74,  179.74,  180.74,  181.74, 182.74]],
+                               [176.74, 177.74, 178.74, 179.74, 180.74, 181.74, 182.74]],
 
                               [[225.74, 226.74, 227.74, 228.74, 229.74, 230.74, 231.74],
                                [288.74, 289.74, 290.74, 291.74, 292.74, 293.74, 294.74],
@@ -730,8 +732,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
                                [526.74, 527.74, 528.74, 529.74, 530.74, 531.74, 532.74]],
 
                               [[575.74, 576.74, 577.74, 578.74, 579.74, 580.74, 581.74],
-                               [638.74,  639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
-                               [701.74,  702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
+                               [638.74, 639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
+                               [701.74, 702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
 
         assert numpy.allclose(out_cube.data, result)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -743,7 +745,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         sample_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=4,
                                                                  time_dim_length=3, data_offset=1.0))
         data_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=4, time_dim_length=3,
-                                                horizontal_offset=0.1, altitude_offset=0.1, time_offset=0.1))
+                                                               horizontal_offset=0.1, altitude_offset=0.1,
+                                                               time_offset=0.1))
 
         col = self.collocator
 
@@ -791,7 +794,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
                                [[42.37714286, 43.37714286, 44.37714286],
                                 [45.37714286, 46.37714286, 47.37714286]],
 
-                               [[48.37714286, 49.37714286,  50.37714286],
+                               [[48.37714286, 49.37714286, 50.37714286],
                                 [51.37714286, 52.37714286, 53.37714286]]],
 
                               [[[54.37714286, 55.37714286, 56.37714286],
@@ -835,7 +838,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
                               [[50.74, 51.74, 52.74, 53.74, 54.74, 55.74, 56.74],
                                [113.74, 114.74, 115.74, 116.74, 117.74, 118.74, 119.74],
-                               [176.74, 177.74,  178.74,  179.74,  180.74,  181.74, 182.74]],
+                               [176.74, 177.74, 178.74, 179.74, 180.74, 181.74, 182.74]],
 
                               [[225.74, 226.74, 227.74, 228.74, 229.74, 230.74, 231.74],
                                [288.74, 289.74, 290.74, 291.74, 292.74, 293.74, 294.74],
@@ -846,8 +849,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
                                [526.74, 527.74, 528.74, 529.74, 530.74, 531.74, 532.74]],
 
                               [[575.74, 576.74, 577.74, 578.74, 579.74, 580.74, 581.74],
-                               [638.74,  639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
-                               [701.74,  702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
+                               [638.74, 639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
+                               [701.74, 702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
 
         assert numpy.allclose(out_cube.data, result)
         assert numpy.array_equal(sample_cube.coord('latitude').points, out_cube.coord('latitude').points)
@@ -1003,7 +1006,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         result = numpy.array([[[[-5.7, -4.7, -3.7, -2.7, -1.7, -0.7, 0.3],
-                                [-3.7, -2.7, -1.7, -0.7,  0.3, 1.3, 2.3]],
+                                [-3.7, -2.7, -1.7, -0.7, 0.3, 1.3, 2.3]],
 
                                [[-1.7, -0.7, 0.3, 1.3, 2.3, 3.3, 4.3],
                                 [0.3, 1.3, 2.3, 3.3, 4.3, 5.3, 6.3]],
@@ -1101,7 +1104,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     @istest
     def test_gridded_gridded_nn_with_different_grids_and_missing_sample_values_in_2d(self):
         mask = [[False, False, False, False, False],
-                [False, True,  False, True,  False],
+                [False, True, False, True, False],
                 [False, False, True, False, False]]
         sample_cube = gridded_data.make_from_cube(make_mock_cube(
             lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask))
@@ -1141,7 +1144,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
                  [False, False, False, False, False],
                  [False, False, False, False, False],
                  [False, False, False, False, False]],
-                [[False, True,  False, True,  False],
+                [[False, True, False, True, False],
                  [False, False, False, False, False],
                  [False, False, False, False, False],
                  [False, False, False, False, False]],
@@ -1175,7 +1178,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     @istest
     def test_gridded_gridded_li_with_different_grids_and_missing_sample_values_1(self):
         mask = [[False, False, False, False, False],
-                [False, True,  False, True,  False],
+                [False, True, False, True, False],
                 [False, False, False, False, False]]
         sample_cube = gridded_data.make_from_cube(make_mock_cube(
             lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask))
@@ -1206,7 +1209,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     @istest
     def test_gridded_gridded_li_with_different_grids_and_missing_sample_values_2(self):
         mask = [[False, False, False, False, False],
-                [False, True,  False, True,  False],
+                [False, True, False, True, False],
                 [False, False, False, False, False]]
         sample_cube = gridded_data.make_from_cube(make_mock_cube(
             lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask))
@@ -1253,7 +1256,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=gridded_gridded_li())[0]
 
         assert out_cube.data.shape == (5, 3, 2, 4)
-        assert out_cube.data[3, 2, 0,  0] is numpy.ma.masked
+        assert out_cube.data[3, 2, 0, 0] is numpy.ma.masked
         assert out_cube.data[3, 2, 0, 1] is numpy.ma.masked
         assert out_cube.data[3, 2, 0, 2] is numpy.ma.masked
         assert out_cube.data[3, 2, 0, 3] is numpy.ma.masked
@@ -1284,24 +1287,24 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         out_cube = col.collocate(points=sample_cube, data=data_list, constraint=None, kernel=gridded_gridded_li())
 
         result1 = numpy.array([[[-124.26, -123.26, -122.26, -121.26, -120.26, -119.26, -118.26],
-                               [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
-                               [1.74, 2.74, 3.74, 4.74, 5.74, 6.74, 7.74]],
+                                [-61.26, -60.26, -59.26, -58.26, -57.26, -56.26, -55.26],
+                                [1.74, 2.74, 3.74, 4.74, 5.74, 6.74, 7.74]],
 
-                              [[50.74, 51.74, 52.74, 53.74, 54.74, 55.74, 56.74],
-                               [113.74, 114.74, 115.74, 116.74, 117.74, 118.74, 119.74],
-                               [176.74, 177.74,  178.74,  179.74,  180.74,  181.74, 182.74]],
+                               [[50.74, 51.74, 52.74, 53.74, 54.74, 55.74, 56.74],
+                                [113.74, 114.74, 115.74, 116.74, 117.74, 118.74, 119.74],
+                                [176.74, 177.74, 178.74, 179.74, 180.74, 181.74, 182.74]],
 
-                              [[225.74, 226.74, 227.74, 228.74, 229.74, 230.74, 231.74],
-                               [288.74, 289.74, 290.74, 291.74, 292.74, 293.74, 294.74],
-                               [351.74, 352.74, 353.74, 354.74, 355.74, 356.74, 357.74]],
+                               [[225.74, 226.74, 227.74, 228.74, 229.74, 230.74, 231.74],
+                                [288.74, 289.74, 290.74, 291.74, 292.74, 293.74, 294.74],
+                                [351.74, 352.74, 353.74, 354.74, 355.74, 356.74, 357.74]],
 
-                              [[400.74, 401.74, 402.74, 403.74, 404.74, 405.74, 406.74],
-                               [463.74, 464.74, 465.74, 466.74, 467.74, 468.74, 469.74],
-                               [526.74, 527.74, 528.74, 529.74, 530.74, 531.74, 532.74]],
+                               [[400.74, 401.74, 402.74, 403.74, 404.74, 405.74, 406.74],
+                                [463.74, 464.74, 465.74, 466.74, 467.74, 468.74, 469.74],
+                                [526.74, 527.74, 528.74, 529.74, 530.74, 531.74, 532.74]],
 
-                              [[575.74, 576.74, 577.74, 578.74, 579.74, 580.74, 581.74],
-                               [638.74,  639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
-                               [701.74,  702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
+                               [[575.74, 576.74, 577.74, 578.74, 579.74, 580.74, 581.74],
+                                [638.74, 639.74, 640.74, 641.74, 642.74, 643.74, 644.74],
+                                [701.74, 702.74, 703.74, 704.74, 705.74, 706.74, 707.74]]])
 
         result2 = result1 + 3
 
@@ -1348,7 +1351,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
                               [[64., 64., 64., 65., 66., 67., 68.],
                                [64., 64., 64., 65., 66., 67., 68.],
-                               [71., 71., 71., 72,  73., 74., 75.]]])
+                               [71., 71., 71., 72, 73., 74., 75.]]])
 
         assert numpy.allclose(out_cube[0].data, result)
         assert numpy.allclose(out_cube[1].data, result + 3)

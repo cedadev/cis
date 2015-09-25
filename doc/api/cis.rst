@@ -7,7 +7,7 @@ CIS as a Python library (API)
 Main API
 ========
 
-As a commmand line tool, CIS has not been designed with a python API in mind. There are however some utility functions
+As a command line tool, CIS has not been designed with a python API in mind. There are however some utility functions
 that may provide a useful start for those who wish to use CIS as a python library. For example, the functions in the
 base cis module provide a straightforward way to load your data. They can be easily import using, for example: :code:`from cis import read_data`.
 One of the advantages of using CIS as a Python library is that you are able to perform multiple operations in one go,
@@ -18,7 +18,7 @@ that is without writing to disk in between. In certain cases this may provide a 
     are many helpful Python guides and tutorials available around the web if you wish to learn more.
 
 The :func:`read_data` function is a simple way to read a single gridded or ungridded data object (e.g. a NetCDF
-variable) from one or more files. CIS will determine the best way to interperet the datafile by comparing the file
+variable) from one or more files. CIS will determine the best way to interpret the datafile by comparing the file
 signature with the built-in data reading plugins and any user defined plugins. Specifying a particular ``product``
 allows the user to override this automatic detection.
 

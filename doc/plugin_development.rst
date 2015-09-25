@@ -16,7 +16,7 @@ however assumed.
 .. note::
 
     Any technical details that may be useful to experienced Python
-    programmers will be highlighted in this style - they aren’t necessary
+    programmers will be highlighted in this style - they aren't necessary
     for completing the tutorial.
 
 Here we describe the process of creating and sharing a plugin. A CIS

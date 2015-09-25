@@ -1,7 +1,8 @@
 from cis.plotting.generic_plot import Generic_Plot
 
+
 class Contour_Plot(Generic_Plot):
-    #'contour' : PlotType(1, 2, plot_contour),
+    # 'contour' : PlotType(1, 2, plot_contour),
     def plot(self):
         """
         Plots a contour plot

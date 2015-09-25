@@ -9,7 +9,7 @@ import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
 
 from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
-                                      IndexedConstraint, Kernel, AbstractDataOnlyKernel)
+                                           IndexedConstraint, Kernel, AbstractDataOnlyKernel)
 import cis.exceptions
 from cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
@@ -157,7 +157,6 @@ class GeneralUngriddedCollocator(Collocator):
 
 
 class DummyCollocator(Collocator):
-
     def collocate(self, points, data, constraint, kernel):
         """
             This collocator does no collocation at all - it just returns the original data values. This might be useful
@@ -178,14 +177,12 @@ class DummyCollocator(Collocator):
 
 
 class DummyConstraint(Constraint):
-
     def constrain_points(self, point, data):
         # This is a null constraint - all of the points just get passed back
         return data
 
 
 class SepConstraint(PointConstraint):
-
     def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
         from cis.exceptions import InvalidCommandLineOptionError
 
@@ -238,6 +235,7 @@ class SepConstraintKdtree(PointConstraint):
     If no horizontal separation parameter is supplied, this reduces to an exhaustive
     search using the other parameter(s).
     """
+
     def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
         from cis.exceptions import InvalidCommandLineOptionError
 
@@ -350,7 +348,6 @@ class min(AbstractDataOnlyKernel):
 
 # noinspection PyPep8Naming,PyShadowingBuiltins
 class max(AbstractDataOnlyKernel):
-
     """
     Calculate the maximum value
     """
@@ -400,12 +397,11 @@ class moments(AbstractDataOnlyKernel):
 
 
 class nn_horizontal(Kernel):
-
     def get_value(self, point, data):
-        '''
+        """
             Collocation using nearest neighbours along the face of the earth where both points and
               data are a list of HyperPoints. The default point is the first point.
-        '''
+        """
         iterator = data.__iter__()
         try:
             nearest_point = iterator.next()
@@ -436,12 +432,11 @@ class nn_horizontal_kdtree(Kernel):
 
 
 class nn_altitude(Kernel):
-
     def get_value(self, point, data):
-        '''
+        """
             Collocation using nearest neighbours in altitude, where both points and
               data are a list of HyperPoints. The default point is the first point.
-        '''
+        """
         iterator = data.__iter__()
         try:
             nearest_point = iterator.next()
@@ -455,12 +450,11 @@ class nn_altitude(Kernel):
 
 
 class nn_pressure(Kernel):
-
     def get_value(self, point, data):
-        '''
+        """
             Collocation using nearest neighbours in pressure, where both points and
               data are a list of HyperPoints. The default point is the first point.
-        '''
+        """
         iterator = data.__iter__()
         try:
             nearest_point = iterator.next()
@@ -474,12 +468,11 @@ class nn_pressure(Kernel):
 
 
 class nn_time(Kernel):
-
     def get_value(self, point, data):
-        '''
+        """
             Collocation using nearest neighbours in time, where both points and
               data are a list of HyperPoints. The default point is the first point.
-        '''
+        """
         iterator = data.__iter__()
         try:
             nearest_point = iterator.next()
@@ -518,7 +511,6 @@ class nn_t(nn_time):
 
 
 class nn_gridded(Kernel):
-
     def __init__(self):
         self.coord_names = []
         self.hybrid_coord = ''
@@ -596,7 +588,6 @@ class li(Kernel):
 
 
 class GriddedCollocator(Collocator):
-
     def __init__(self, var_name='', var_long_name='', var_units='', missing_data_for_missing_sample=False):
         super(Collocator, self).__init__()
         self.var_name = var_name
@@ -611,7 +602,7 @@ class GriddedCollocator(Collocator):
         if not (isinstance(kernel, gridded_gridded_nn) or isinstance(kernel, gridded_gridded_li)):
             raise ClassNotFoundError("Expected kernel of one of classes {}; found one of class {}".format(
                 str([cis.utils.get_class_name(gridded_gridded_nn),
-                    cis.utils.get_class_name(gridded_gridded_li)]),
+                     cis.utils.get_class_name(gridded_gridded_li)]),
                 cis.utils.get_class_name(type(kernel))))
 
     def collocate(self, points, data, constraint, kernel):
@@ -669,7 +660,7 @@ class GriddedCollocator(Collocator):
         # returned from the Iris interpolater method will have dimensions of these missing coordinates, which needs
         # to be the final dimensions in the numpy array, as the iterator will give the position of the other dimensions.
         coord_names_and_sizes_for_output_grid = coord_names_and_sizes_for_sample_grid + \
-            coord_names_and_sizes_for_output_grid
+                                                coord_names_and_sizes_for_output_grid
 
         # An array for the collocated data, with the correct shape
         output_shape = tuple(i[1] for i in coord_names_and_sizes_for_output_grid)
@@ -698,8 +689,8 @@ class GriddedCollocator(Collocator):
         points = iris.cube.Cube(new_points_array, dim_coords_and_dims=new_dim_coord_list)
 
         output_cube = self._iris_interpolate(coord_names_and_sizes_for_output_grid,
-                                              coord_names_and_sizes_for_sample_grid, data,
-                                              kernel, output_mask, points)
+                                             coord_names_and_sizes_for_sample_grid, data,
+                                             kernel, output_mask, points)
 
         if not isinstance(output_cube, list):
             return GriddedDataList([output_cube])
@@ -732,7 +723,7 @@ class GriddedCollocator(Collocator):
 
     @staticmethod
     def _iris_interpolate(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
-                           output_mask, points):
+                          output_mask, points):
         """ Collocates using iris.analysis.interpolate
         """
         coordinate_point_pairs = []
@@ -768,8 +759,8 @@ class gridded_gridded_nn(Kernel):
         self.interpolater = iris.analysis.Nearest
 
     def get_value(self, point, data):
-        '''Not needed for gridded/gridded collocation.
-        '''
+        """Not needed for gridded/gridded collocation.
+        """
         raise ValueError("gridded_gridded_nn kernel selected for use with collocator other than GriddedCollocator")
 
 
@@ -779,8 +770,8 @@ class gridded_gridded_li(Kernel):
         self.interpolater = iris.analysis.Linear
 
     def get_value(self, point, data):
-        '''Not needed for gridded/gridded collocation.
-        '''
+        """Not needed for gridded/gridded collocation.
+        """
         raise ValueError("gridded_gridded_li kernel selected for use with collocator other than GriddedCollocator")
 
 
@@ -946,7 +937,7 @@ class GeneralGriddedCollocator(Collocator):
                            var_name=src_data.var_name,
                            units=src_data.units,
                            dim_coords_and_dims=dim_coords_and_dims)
-        #TODO Check if any other keyword arguments should be set:
+        # TODO Check if any other keyword arguments should be set:
         # cube = iris.cube.Cube(data, standard_name=None, long_name=None, var_name=None, units=None,
         #                       attributes=None, cell_methods=None, dim_coords_and_dims=None, aux_coords_and_dims=None,
         #                       aux_factories=None, data_manager=None)
@@ -956,6 +947,7 @@ class GeneralGriddedCollocator(Collocator):
 class CubeCellConstraint(CellConstraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
     """
+
     def constrain_points(self, sample_point, data):
         """Returns HyperPoints lying within a cell.
         :param sample_point: HyperPoint of cells defining sample region
@@ -980,6 +972,7 @@ class BinningCubeCellConstraint(IndexedConstraint):
 
     Uses the index_data method to bin all the points
     """
+
     def __init__(self):
         super(BinningCubeCellConstraint, self).__init__()
         self.grid_cell_bin_index = None
@@ -1007,6 +1000,7 @@ class BinnedCubeCellOnlyConstraint(Constraint):
 
     Uses the index_data method to bin all the points.
     """
+
     def __init__(self):
         super(BinnedCubeCellOnlyConstraint, self).__init__()
         self.grid_cell_bin_index_slices = None
@@ -1033,7 +1027,8 @@ class BinnedCubeCellOnlyConstraint(Constraint):
 
                 yield out_indices, hp, con_points
 
-    def get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, values):
+    def get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points,
+                                   values):
         """
         The method returns an iterator over the output indices and a numpy array slice of the data values. This may not
         be called by all collocators who may choose to iterate over all sample points instead.
@@ -1131,4 +1126,3 @@ def _fix_longitude_range(coords, data_points):
     range_start = _find_longitude_range(coords)
     if range_start is not None:
         data_points.set_longitude_range(range_start)
-

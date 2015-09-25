@@ -42,7 +42,7 @@ def get_hdf4_file_metadata(filename):
 
 
 def __read_hdf4(filename, variables):
-    '''
+    """
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
          for each VD and SD data types.
 
@@ -50,7 +50,7 @@ def __read_hdf4(filename, variables):
         :param variables:    List of variables to read from the files
 
         :return: (sds_dict, vds_dict) A tuple of dictionaries, one for sds objects and another for vds
-    '''
+    """
     from cis.exceptions import InvalidVariableError
     from pyhdf.error import HDF4Error
 

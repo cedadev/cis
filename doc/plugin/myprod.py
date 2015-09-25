@@ -5,8 +5,8 @@ from cis.data_io.ungridded_data import Metadata
 
 import logging
 
-class MyProd(AProduct):
 
+class MyProd(AProduct):
     def get_file_signature(self):
         return [r'.*something*']
 
@@ -23,11 +23,11 @@ class MyProd(AProduct):
         metadata2 = Metadata()
         metadata3 = Metadata()
 
-        coord1 = Coord(data1,metadata1,'X') # this coordinate will be used as the 'X' axis when plotting
-        coord2 = Coord(data2,metadata2,'Y') # this coordinate will be used as the 'Y' axis when plotting
-        coord3 = Coord(data3,metadata3)
+        coord1 = Coord(data1, metadata1, 'X')  # this coordinate will be used as the 'X' axis when plotting
+        coord2 = Coord(data2, metadata2, 'Y')  # this coordinate will be used as the 'Y' axis when plotting
+        coord3 = Coord(data3, metadata3)
 
-        return CoordList([coord1,coord2,coord3])
+        return CoordList([coord1, coord2, coord3])
 
     def create_data_object(self, filenames, variable):
 
@@ -39,5 +39,4 @@ class MyProd(AProduct):
         metadata = Metadata()
 
         coords = self.create_coords(filenames)
-        return UngriddedData(data,metadata,coords)
-
+        return UngriddedData(data, metadata, coords)

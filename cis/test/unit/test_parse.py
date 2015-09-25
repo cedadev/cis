@@ -20,19 +20,19 @@ def escape_colons(string):
 class ParseTestFiles(TestCase):
 
     def setUp(self):
-        '''
+        """
             Create the temporary files necassary for testing
         :return:
-        '''
+        """
         from tempfile import mkdtemp
         import os
 
         def _make_file(file):
-            '''
+            """
                 Creates an empty file and then closes it (similar to 'touch' on linux)
             :param file:
             :return:
-            '''
+            """
             open(file, 'w').close()
 
         # Create a temporary directory to put our test files in
@@ -68,10 +68,10 @@ class ParseTestFiles(TestCase):
 
 
     def tearDown(self):
-        '''
+        """
             Remove the test directory and everything below it.
         :return:
-        '''
+        """
         from shutil import rmtree
         rmtree(self.data_directory)
 

@@ -1,6 +1,6 @@
-'''
+"""
 module to test the hdf4 utility function of hdf_sd.py
-'''
+"""
 from nose.tools import istest, eq_
 
 from cis.test.integration_test_data import valid_hdf_sd_file

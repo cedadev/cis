@@ -11,12 +11,12 @@ except ImportError:
 
 
 def get_hdf_SD_file_variables(filename):
-    '''
+    """
     Get all the variables from an HDF SD file
 
     :param str filename: The filename of the file to get the variables from
     :returns: An OrderedDict containing the variables from the file
-    '''
+    """
     if not SD:
         raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
 
@@ -238,7 +238,7 @@ def get_metadata(sds):
 
 
 def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
-    '''
+    """
     Apply scaling factor (applicable to Calipso data) of the form:
     ``data = (data/scale_factor) + offset``
 
@@ -246,14 +246,14 @@ def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
     :param scale_factor:
     :param offset:
     :return: Scaled data
-    '''
+    """
 
     data = (data/scale_factor) + offset
     return data
 
 
 def __apply_scaling_factor_MODIS(data, scale_factor, offset):
-    '''
+    """
     Apply scaling factor (applicable to MODIS data) of the form:
     ``data = (data - offset) * scale_factor``
 
@@ -261,6 +261,6 @@ def __apply_scaling_factor_MODIS(data, scale_factor, offset):
     :param scale_factor:
     :param offset:
     :return: Scaled data
-    '''
+    """
     data = (data - offset) * scale_factor
     return data

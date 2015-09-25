@@ -281,7 +281,7 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
             if new_month > 12:
                 new_month, new_year = month_past_end_of_year(new_month, new_year)
             #TODO this is a slightly inelegant fix for the problem of something like 30th Jan +1 month
-            # Need to work out what correct behaivour should be in this case.
+            # Need to work out what correct behaviour should be in this case.
             try:
                 new_time = new_time.replace(year=new_year, month=new_month)
             except ValueError:

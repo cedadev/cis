@@ -1,13 +1,15 @@
 from cis.plotting.generic_plot import Generic_Plot
 
+
 class Line_Plot(Generic_Plot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
 
     def plot(self):
-        '''
+        """
         Plots one or many line graphs
-        '''
-        self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
+        """
+        self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth",
+                                                                                               1) is not None else 1
 
         self.mplkwargs.pop("vmax", None)
         self.mplkwargs.pop("vmin", None)
@@ -19,7 +21,9 @@ class Line_Plot(Generic_Plot):
                     self.mplkwargs["linestyle"] = datafile["itemstyle"]
                 else:
                     from cis.exceptions import InvalidLineStyleError
-                    raise InvalidLineStyleError("'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(self.line_styles))
+                    raise InvalidLineStyleError(
+                        "'" + datafile["itemstyle"] + "' is not a valid line style, please use one of: " + str(
+                            self.line_styles))
             else:
                 self.mplkwargs.pop("linestyle", None)
 
@@ -28,7 +32,7 @@ class Line_Plot(Generic_Plot):
             else:
                 self.mplkwargs.pop("color", None)
 
-            self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs )
+            self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs)
 
     def format_plot(self):
         self.format_time_axis()
@@ -62,7 +66,10 @@ class Line_Plot(Generic_Plot):
             coord_axis = "x"
         elif axis == "y":
             coord_axis = "data"
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[0][coord_axis])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis,
+                                                                                                          self.unpacked_data_items[
+                                                                                                              0][
+                                                                                                              coord_axis])
 
         valrange = {}
         valrange[axis + "min"] = calculated_min if min_val is None else min_val

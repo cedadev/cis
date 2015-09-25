@@ -131,7 +131,7 @@ class TestNNGridded(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
         eq_(new_data.data[0], 8.0)
 
-    def test_colocation_of_alt_points_on_hybrid_altitude_coordinates(self):
+    def test_collocation_of_alt_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
@@ -167,7 +167,7 @@ class TestNNGridded(unittest.TestCase):
         eq_(new_data.data[0], 221.0)  # float(cube[2,1,1,0].data))
         eq_(new_data.data[1], 345.0)  # float(cube[3,2,1,4].data))
 
-    def test_colocation_of_alt_points_on_hybrid_altitude_coordinates_on_0_360_grid(self):
+    def test_collocation_of_alt_points_on_hybrid_altitude_coordinates_on_0_360_grid(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
@@ -199,7 +199,7 @@ class TestNNGridded(unittest.TestCase):
         eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
         eq_(new_data.data[2], 2139.0)  # float(cube[1,35,0,8].data))
 
-    def test_colocation_of_pres_points_on_hybrid_altitude_coordinates(self):
+    def test_collocation_of_pres_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
@@ -213,7 +213,7 @@ class TestNNGridded(unittest.TestCase):
         # There is no pressure coordinate on the cube so no single value could be returned by the kernel
         eq_(new_data.data[0], np.inf)
 
-    def test_colocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
+    def test_collocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
         """
         Redundant pressure coordinates should be ignored by the kernel
         """
@@ -235,7 +235,7 @@ class TestNNGridded(unittest.TestCase):
         eq_(new_data.data[1], float(cube[3,2,1,4].data))
         eq_(new_data.data[2], float(cube[1,0,0,9].data))
 
-    def test_colocation_of_pres_points_on_hybrid_pressure_coordinates_and_altitude_coordinates(self):
+    def test_collocation_of_pres_points_on_hybrid_pressure_coordinates_and_altitude_coordinates(self):
         """
             When only pressure coordinate is present this should be used for the collocation
         """
@@ -257,7 +257,7 @@ class TestNNGridded(unittest.TestCase):
         eq_(new_data.data[1], float(cube[3,2,1,4].data))
         eq_(new_data.data[2], float(cube[1,0,0,9].data))
 
-    def test_colocation_of_alt_pres_points_on_hybrid_pressure_and_altitude_coordinates(self):
+    def test_collocation_of_alt_pres_points_on_hybrid_pressure_and_altitude_coordinates(self):
         """
             When altitude and pressure coordinates are present only the altitude coordinates should be used for the
             collocation
@@ -280,7 +280,7 @@ class TestNNGridded(unittest.TestCase):
         eq_(new_data.data[1], float(cube[3,2,1,4].data))
         eq_(new_data.data[2], float(cube[1,0,0,9].data))
 
-    def test_colocation_of_alt_points_on_hybrid_pressure_and_altitude_coordinates(self):
+    def test_collocation_of_alt_points_on_hybrid_pressure_and_altitude_coordinates(self):
         """
             Kernel should use the auxilliary altitude dimension when altitude is present in the coordinates
         """
@@ -303,12 +303,12 @@ class TestNNGridded(unittest.TestCase):
         eq_(new_data.data[2], float(cube[1,0,0,9].data))
 
     def test_coordinates_exactly_between_points_in_col_gridded_to_ungridded_in_2d(self):
-        '''
+        """
             This works out the edge case where the points are exactly in the middle or two or more datapoints.
                 Iris seems to count a point as 'belonging' to a datapoint if it is greater than a datapoint cell's lower
                 bound and less than or equal to it's upper bound. Where a cell is an imaginary boundary around a
                 datapoint which divides the grid.
-        '''
+        """
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
 
         cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube())
@@ -376,14 +376,14 @@ class TestNNHorizontal(unittest.TestCase):
         eq_(new_data.data[0], 8.0)
 
     def test_coordinates_exactly_between_points_in_col_ungridded_to_ungridded_in_2d(self):
-        '''
+        """
             This works out the edge case where the points are exactly in the middle or two or more datapoints.
                 The nn_horizontal algorithm will start with the first point as the nearest and iterates through the
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same  you would expect the first point to be chosen. This doesn't seem to always be the case but is
                 probably down to floating points errors in the haversine calculation as these test points are pretty
                 close together. This test is only really for documenting the behaviour for equidistant points.
-        '''
+        """
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, DummyConstraint
 
         ug_data = mock.make_regular_2d_ungridded_data()
@@ -475,12 +475,12 @@ class TestNNTime(unittest.TestCase):
         assert (np.equal(new_data.data, np.arange(15) + 1.0).all())
 
     def test_coordinates_exactly_between_points_in_col_ungridded_to_ungridded_in_2d(self):
-        '''
+        """
             This works out the edge case where the points are exactly in the middle or two or more datapoints.
                 The nn_time algorithm will start with the first point as the nearest and iterates through the
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
-        '''
+        """
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_time, DummyConstraint
         import datetime as dt
 
@@ -550,12 +550,12 @@ class TestNNAltitude(unittest.TestCase):
         eq_(new_data.data[0], 41.0)
 
     def test_coordinates_exactly_between_points_in_col_ungridded_to_ungridded_in_2d(self):
-        '''
+        """
             This works out the edge case where the points are exactly in the middle or two or more datapoints.
                 The nn_time algorithm will start with the first point as the nearest and iterates through the
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
-        '''
+        """
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_altitude, DummyConstraint
         import datetime as dt
 
@@ -625,12 +625,12 @@ class TestNNPressure(unittest.TestCase):
         eq_(new_data.data[0], 41.0)
 
     def test_coordinates_exactly_between_points_in_col_ungridded_to_ungridded_in_2d(self):
-        '''
+        """
             This works out the edge case where the points are exactly in the middle or two or more datapoints.
                 The nn_pressure algorithm will start with the first point as the nearest and iterates through the
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
-        '''
+        """
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_pressure, DummyConstraint
         import datetime as dt
 
@@ -704,7 +704,7 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)
 
-    def test_colocation_of_points_on_hybrid_altitude_coordinates(self):
+    def test_collocation_of_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
 
@@ -741,7 +741,7 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 321.0467626, decimal=7)
         assert_almost_equal(new_data.data[1], 222.4814815, decimal=7)
 
-    def test_colocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
+    def test_collocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
 
@@ -759,7 +759,7 @@ class TestLi(unittest.TestCase):
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
         assert_equal(new_data.data[2], np.NAN)
 
-    def test_colocation_of_pres_points_on_hybrid_altitude_coordinates(self):
+    def test_collocation_of_pres_points_on_hybrid_altitude_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
 
@@ -803,7 +803,7 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 124.0, decimal=7)
         assert_almost_equal(new_data.data[1], 115.0, decimal=7)
 
-    def test_colocation_of_pres_points_on_hybrid_pressure_coordinates(self):
+    def test_collocation_of_pres_points_on_hybrid_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
 
@@ -857,7 +857,7 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 330)
         assert_almost_equal(new_data.data[2], 124.0)
 
-    def test_extapolation_of_pres_points_on_hybrid_pressure_coordinates(self):
+    def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
 
@@ -870,7 +870,7 @@ class TestLi(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, None, li(extrapolate=True))[0]
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
-    def test_colocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
+    def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
         import datetime as dt
 
@@ -887,7 +887,7 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
         assert_almost_equal(new_data.data[1], 346.5, decimal=7)
 
-    def test_colocation_of_alt_pres_points_on_hybrid_altitude_and_pressure_coordinates(self):
+    def test_collocation_of_alt_pres_points_on_hybrid_altitude_and_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
         import datetime as dt
 

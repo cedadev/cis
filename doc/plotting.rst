@@ -41,7 +41,7 @@ This will attempt to locate the variable ``variable`` in all of the specified ``
 ``scatteroverlay``
   a heatmap overlayed with a scatter plot, see :ref:`scatter-overlay plots <scatteroverlay-plots>`
 
-Note that ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma seperated list of the following possibilities:
+Note that ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
 
   #. A single filename - this should be the full path to the file
   #. A single directory - all files in this directory will be read

@@ -241,7 +241,7 @@ class IndexedConstraint(Constraint):
 
 
 def __get_class(parent_class, name=None):
-    '''
+    """
     Identify the subclass of parent_class to a given name, if specified.
     If the name is not specified, the routine picks a default.
 
@@ -250,7 +250,7 @@ def __get_class(parent_class, name=None):
     :param parent_class: A base class
     :param name: name of the class to find
     :return: a subclass of the parent_class
-    '''
+    """
     from cis.plugin import find_plugin_classes
     from cis.exceptions import ClassNotFoundError
     import logging
@@ -271,34 +271,34 @@ def __get_class(parent_class, name=None):
 
 
 def get_constraint(method=None):
-    '''
+    """
     Top level routine for finding the correct Constraint object. This doesn't instantiate the constraint class as it
     may need variables passed to the constructor
     :param method: The constraint method to find - this should be a string which matches the name of one
     of the subclasses of Constraint
     :return: One of Constraint's subclasses
-    '''
+    """
     constraint_cls = __get_class(Constraint, method)
     return constraint_cls
 
 
 def get_kernel(method=None):
-    '''
+    """
     Top level routine for finding the correct Kernel object.
     :param method: The kernel method to find - this should be a string which matches the name of one
     of the subclasses of Kernel
     :return: One of Kernel's subclasses
-    '''
+    """
     kernel_cls = __get_class(Kernel, method)
     return kernel_cls
 
 
 def get_collocator(method=None):
-    '''
+    """
     Top level routine for finding the correct Collocator object.
     :param method: The collocate method to find - this should be a string which matches the name of one
     of the subclasses of Collocator
     :return: One of Collocator's subclasses
-    '''
+    """
     collocate_cls = __get_class(Collocator, method)
     return collocate_cls

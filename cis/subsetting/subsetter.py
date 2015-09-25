@@ -1,5 +1,6 @@
 from cis.subsetting.subset_framework import SubsetterInterface
 
+
 class Subsetter(SubsetterInterface):
     def subset(self, data, constraint):
         """Subsets the supplied data using the supplied constraint.

@@ -1,5 +1,6 @@
 from cis.plotting.generic_plot import Generic_Plot
 
+
 class Comparative_Scatter(Generic_Plot):
     def plot(self):
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
@@ -8,15 +9,17 @@ class Comparative_Scatter(Generic_Plot):
             ax = self.matplotlib.gca()
             if self.plot_args.get("logx", False) and self.plot_args.get("logy", False):
                 import numpy.ma as ma
-                positive_item0 = ma.array(self.unpacked_data_items[0]["data"], mask=self.unpacked_data_items[0]["data"]<=0)
-                positive_item1 = ma.array(self.unpacked_data_items[1]["data"], mask=self.unpacked_data_items[1]["data"]<=0)
+                positive_item0 = ma.array(self.unpacked_data_items[0]["data"],
+                                          mask=self.unpacked_data_items[0]["data"] <= 0)
+                positive_item1 = ma.array(self.unpacked_data_items[1]["data"],
+                                          mask=self.unpacked_data_items[1]["data"] <= 0)
                 min_val = min(positive_item0.min(), positive_item1.min())
                 max_val = max(positive_item0.max(), positive_item1.max())
             else:
                 min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
                 max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
             y_equals_x_array = [min_val, max_val]
-            ax.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
+            ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
             scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
             datagroup = self.plot_args["datagroups"][0]
@@ -30,7 +33,8 @@ class Comparative_Scatter(Generic_Plot):
             else:
                 self.mplkwargs.pop("color", None)
 
-            ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], s=scatter_size, edgecolors = "none", *self.mplargs, **self.mplkwargs)
+            ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], s=scatter_size,
+                       edgecolors="none", *self.mplargs, **self.mplkwargs)
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 
@@ -43,7 +47,10 @@ class Comparative_Scatter(Generic_Plot):
         elif axis == "y":
             axis_index = 1
 
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[axis_index]["data"])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis,
+                                                                                                          self.unpacked_data_items[
+                                                                                                              axis_index][
+                                                                                                              "data"])
 
         valrange = {}
         valrange[axis + "min"] = calculated_min if min_val is None else min_val

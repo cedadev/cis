@@ -201,8 +201,8 @@ class GriddedData(iris.cube.Cube, CommonData):
                 # If the coordinate has bounds then roll those as well
                 new_lon_bounds = np.roll(lon_coord.bounds, shift, 0)
                 # And shift all of the bounds (upper and lower) for those points which we had to shift. We can't do the
-                # check independantly because there may be cases where an upper or lower bound falls outside of the
-                # 360 range, we leave those as they are to preserve monotinicity. See e.g.
+                # check independently because there may be cases where an upper or lower bound falls outside of the
+                # 360 range, we leave those as they are to preserve monotonicity. See e.g.
                 # test_set_longitude_bounds_wrap_at_360
                 new_lon_bounds[indices_to_shift_value_of] += 360.0
         elif 0 < idx2 < len(lon_coord.points):
@@ -218,11 +218,11 @@ class GriddedData(iris.cube.Cube, CommonData):
         if shift != 0:
             # Ensure we also roll any auxilliary coordinates
             for aux_coord in self.aux_coords:
-                # Find all of the data dimensions which the auxilliary coordinate spans...
+                # Find all of the data dimensions which the auxiliary coordinate spans...
                 dims = self.coord_dims(aux_coord)
                 # .. and check if longitude is one of those dimensions
                 if lon_idx in dims:
-                    # Now roll the axis of the auxilliary coordinate which is associated with the longitude data
+                    # Now roll the axis of the auxiliary coordinate which is associated with the longitude data
                     # dimension: dims.index(lon_idx)
                     new_points = np.roll(aux_coord.points, shift, dims.index(lon_idx))
                     aux_coord.points = new_points

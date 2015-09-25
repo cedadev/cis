@@ -4,10 +4,10 @@ from cis.time_util import convert_datetime_to_std_time
 
 
 class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 'air_pressure', 'time', 'val'])):
-    '''
+    """
      Data type representing a point in space and time. It can contain multiple values which are stored in a list.
       We don't specify a reference time yet but when we do it should probably be here
-    '''
+    """
     standard_names = ['latitude', 'longitude', 'altitude', 'air_pressure', 'time']
     number_standard_names = len(standard_names)
     LATITUDE = 0
@@ -18,10 +18,10 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
     VAL = 5
 
     def __new__(cls, lat=None, lon=None, alt=None, pres=None, t=None, val=None):
-        '''
+        """
             Small constructor for the HyperPoint named tuple to allow optional arguments
              and set-up value list.
-        '''
+        """
 
         # If no value was specified create an empty list, otherwise create a list with one entry
         if val is None or val == []:
@@ -90,61 +90,61 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
         return sorted([ (x, y) for x, y in self._asdict().items() if y is not None and x != 'val' ])
 
     def compdist(self,p1,p2):
-        '''
+        """
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
-        '''
+        """
         return (self.haversine_dist(p1) > self.haversine_dist(p2))
 
     def compalt(self,p1,p2):
-        '''
+        """
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
-        '''
+        """
         return (self.alt_sep(p1) > self.alt_sep(p2))
 
     def comppres(self,p1,p2):
-        '''
+        """
             Compares the pressure from this point to p1 and p2. Returns True if p2 is closer to self than p1
-        '''
+        """
         return (self.pres_sep(p1) > self.pres_sep(p2))
 
     def comptime(self,p1,p2):
-        '''
+        """
             Compares the distance from this point to p1 and p2. Returns True if p2 is closer to self than p1
-        '''
+        """
         return (self.time_sep(p1) > self.time_sep(p2))
 
     def haversine_dist(self,point2):
-        '''
+        """
             Computes the Haversine distance between two points
-        '''
+        """
         from cis.utils import haversine
         return haversine(self.latitude, self.longitude, point2.latitude, point2.longitude)
 
     def time_sep(self,point2):
-        '''
+        """
             Computes the time seperation between two points
-        '''
+        """
         return abs(self.time - point2.time)
 
     def alt_sep(self,point2):
-        '''
+        """
             Computes the height seperation between two points
-        '''
+        """
         return abs(self.altitude - point2.altitude)
 
     def pres_sep(self,point2):
-        '''
+        """
             Computes the pressure ratio between two points, this is always >= 1.
-        '''
+        """
         if self.air_pressure > point2.air_pressure:
             return self.air_pressure / point2.air_pressure
         else:
             return point2.air_pressure / self.air_pressure
 
     def furthest_point_from(self):
-        '''
+        """
             Return a point on the opposite side of the globe from this point
-        '''
+        """
         furthest_lat = -self.latitude
         if self.longitude > 180:
             furthest_lon = self.longitude - 180.0

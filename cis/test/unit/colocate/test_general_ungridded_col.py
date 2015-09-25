@@ -1,6 +1,6 @@
-'''
+"""
  Module to test the collocation routines
-'''
+"""
 import unittest
 import datetime as dt
 

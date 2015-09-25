@@ -136,7 +136,7 @@ class CoordList(list):
         """
         Return a list of coordinates in this :class:`CoordList` fitting the given criteria. This is deliberately very
         similar to :func:`Cube.coords()` to maintain a similar interface and because the functionality is similar. There
-        is no distinction between dimension coordinates and auxilliary coordinates here though.
+        is no distinction between dimension coordinates and auxiliary coordinates here though.
 
         :param name:  The standard name or long name or default name of the desired coordinate.
          If None, does not check for name. Also see, :attr:`Cube.name`.

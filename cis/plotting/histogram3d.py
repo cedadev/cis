@@ -1,15 +1,16 @@
 from cis.plotting.generic_plot import Generic_Plot
 import numpy
 
+
 class Histogram_3D(Generic_Plot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
 
     def plot(self):
-        '''
+        """
         Plots a 3d histogram.
         Requires two data items.
         The first data item is plotted on the x axis, and the second on the y axis
-        '''
+        """
         from numpy.ma import MaskedArray
         from cis.utils import apply_intersection_mask_to_two_arrays
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
@@ -30,12 +31,14 @@ class Histogram_3D(Generic_Plot):
             min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
             max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
             y_equals_x_array = [min_val, max_val]
-            self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color = "black", linestyle = "dashed")
+            self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
             # Just in case data has different shapes, reshape here
-            self.unpacked_data_items[0]["data"] = numpy.reshape(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"].shape)
+            self.unpacked_data_items[0]["data"] = numpy.reshape(self.unpacked_data_items[0]["data"],
+                                                                self.unpacked_data_items[1]["data"].shape)
 
-            first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
+            first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(
+                self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
 
             first_data_item = first_data_item.compressed()
             second_data_item = second_data_item.compressed()
@@ -58,19 +61,20 @@ class Histogram_3D(Generic_Plot):
         pass
 
     def calculate_bin_edges(self, axis):
-        '''
+        """
         Calculates the number of bins for a given axis.
         Uses 10 as the default
         :param axis: The axis to calculate the number of bins for
         :return: The number of bins for the given axis
-        '''
+        """
         from cis.utils import calculate_histogram_bin_edges
         if axis == "x":
             data = self.unpacked_data_items[0]["data"]
         elif axis == "y":
             data = self.unpacked_data_items[1]["data"]
 
-        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "range"], self.plot_args[axis + "binwidth"], self.plot_args["log" + axis])
+        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "range"],
+                                                  self.plot_args[axis + "binwidth"], self.plot_args["log" + axis])
 
         self.plot_args[axis + "range"][axis + "min"] = bin_edges.min()
         self.plot_args[axis + "range"][axis + "max"] = bin_edges.max()
@@ -79,25 +83,28 @@ class Histogram_3D(Generic_Plot):
 
     def format_plot(self):
         # We don't format the time axis here as we're only plotting data against data
-        self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3,3), axis='both')
+        self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
         self.format_3d_plot()
 
     def set_default_axis_label(self, axis):
         self.set_default_axis_label_for_comparative_plot(axis)
 
     def calculate_axis_limits(self, axis, min_val, max_val, step):
-        '''
+        """
         Calculates the limits for a given axis.
         If the axis is "x" then looks at the data of the first data item
         If the axis is "y" then looks at the data of the second data item
         :param axis: The axis to calculate the limits for
         :return: A dictionary containing the min and max values for the given axis
-        '''
+        """
         if axis == "x":
             coord_axis = 0
         elif axis == "y":
             coord_axis = 1
-        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis, self.unpacked_data_items[coord_axis]["data"])
+        calculated_min, calculated_max = self.calculate_min_and_max_values_of_array_including_case_of_log(axis,
+                                                                                                          self.unpacked_data_items[
+                                                                                                              coord_axis][
+                                                                                                              "data"])
 
         valrange = {}
         valrange[axis + "min"] = calculated_min if min_val is None else min_val
@@ -118,22 +125,22 @@ class Histogram_3D(Generic_Plot):
                 if step is not None: valrange["ystep"] = step
 
     def create_legend(self):
-        '''
+        """
         Overides the create legend method of the Generic Plot as a 3d histogram doesn't need a legend
-        '''
+        """
         pass
 
     def add_color_bar(self):
-        '''
+        """
         Adds a color bar to the plot and labels it as "Frequency"
-        '''
+        """
         step = self.plot_args["valrange"].get("vstep", None)
         if step is None:
             ticks = None
         else:
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
-        cbar = self.matplotlib.colorbar(orientation = self.plot_args["cbarorient"], ticks = ticks)
+        cbar = self.matplotlib.colorbar(orientation=self.plot_args["cbarorient"], ticks=ticks)
 
         if self.plot_args["cbarlabel"] is None:
             label = "Frequency"
@@ -170,7 +177,7 @@ class Histogram_3D(Generic_Plot):
             else:
                 max_val = self.plot_args[axis + "range"][axis + "max"]
 
-            ticks = arange(min_val, max_val+step, step)
+            ticks = arange(min_val, max_val + step, step)
 
             tick_method(ticks, rotation=angle)
         else:

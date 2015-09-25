@@ -2,6 +2,7 @@
 Custom CIS exceptions
 """
 
+
 class CISError(Exception):
     pass
 
@@ -93,6 +94,7 @@ class UserPrintableException(CISError):
     """
     This exception is thrown if the program has failed for a known reason. This message is printed without a stack trace
     """
+
     def __init__(self, message):
         """
         Constructor

@@ -1,6 +1,6 @@
-'''
+"""
 Module used for parsing
-'''
+"""
 import argparse
 import re
 import sys
@@ -13,9 +13,9 @@ from utils import add_file_prefix
 
 
 def initialise_top_parser():
-    '''
+    """
     The parser to which all arguments are initially passed
-    '''
+    """
     parser = argparse.ArgumentParser("cis")
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help="Create plots")
@@ -188,12 +188,12 @@ def add_stats_parser_arguments(parser):
 
 
 def expand_file_list(filenames, parser):
-    '''
+    """
 
     :param filenames: A string which is a comma seperated list of filenames, wildcarded filenames or directories
     :param parser: A reference parser for raising errors on
     :return: A flat list of files which exist - with no duplicate
-    '''
+    """
     from cis.data_io.data_reader import expand_filelist
 
     if not filenames:
@@ -219,14 +219,14 @@ def check_file_exists(filename, parser):
 
 
 def parse_float(arg, name, parser):
-    '''
+    """
     Tries to parse a string as a float.
 
     :param arg:    The arg to parse as a float
     :param name:   A description of the argument used for error messages
     :param parser: The parser used to report an error message
     :return: The parsed float if succeeds or the original argument if fails
-    '''
+    """
     if arg:
         try:
             arg = float(arg)
@@ -241,14 +241,14 @@ def check_float(arg, parser):
 
 
 def parse_int(arg, name, parser):
-    '''
+    """
     Tries to parse a string as an integer.
 
     :param arg:    The arg to parse as an integer
     :param name:   A description of the argument used for error messages
     :param parser: The parser used to report an error message
     :return: The parsed integer if succeeds or None if fails
-    '''
+    """
     if arg:
         try:
             arg = int(arg)
@@ -290,11 +290,11 @@ def check_aggregate_kernel(arg, parser):
 
 
 def get_plot_datagroups(datagroups, parser):
-    '''
+    """
     :param datagroups:    A list of datagroups (possibly containing colons)
     :param parser:       The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
-    '''
+    """
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "color", "edgecolor", "itemstyle",
@@ -305,15 +305,15 @@ def get_plot_datagroups(datagroups, parser):
                                          check_nothing, check_product, check_plot_type, check_float, check_nothing,
                                          check_float, check_float, check_int, convert_to_list_of_floats, check_boolean,
                                          check_float, check_float)
-    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsory_args=2)
 
 
 def get_col_samplegroup(samplegroup, parser):
-    '''
+    """
     :param samplegroups:    A list of datagroups (possibly containing colons)
     :param parser:       The parser used to report errors
     :return: The parsed samplegroups as a list of dictionaries
-    '''
+    """
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('SamplegroupOptions',
@@ -321,22 +321,22 @@ def get_col_samplegroup(samplegroup, parser):
     samplegroup_options = DatagroupOptions(expand_file_list, check_nothing, extract_method_and_args,
                                            extract_method_and_args, extract_method_and_args, check_product)
 
-    return parse_colon_and_comma_separated_arguments(samplegroup, parser, samplegroup_options, compulsary_args=1)[0]
+    return parse_colon_and_comma_separated_arguments(samplegroup, parser, samplegroup_options, compulsory_args=1)[0]
 
 
 def get_aggregate_datagroups(datagroups, parser):
-    '''
+    """
     :param datagroups:    A list of datagroups (possibly containing colons)
     :param parser:       The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
-    '''
+    """
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product", "kernel"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product,
                                          check_aggregate_kernel)
 
-    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsory_args=2)
 
 
 def get_eval_datagroups(datagroups, parser):
@@ -345,7 +345,7 @@ def get_eval_datagroups(datagroups, parser):
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
-    datagroups = parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+    datagroups = parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsory_args=2)
 
     # Evaluate allows aliases in variable names so we need to process them here.
     _set_aliases_for_datagroups(datagroups, parser)
@@ -353,11 +353,11 @@ def get_eval_datagroups(datagroups, parser):
 
 
 def get_aggregate_grid(aggregategrid, parser):
-    '''
-    :param aggregategrid: List of aggregate grid specifications 
+    """
+    :param aggregategrid: List of aggregate grid specifications
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
-    '''
+    """
     from cis.parse_datetime import parse_datetime, parse_datetime_delta, parse_as_number_or_datetime
     from cis.aggregation.aggregation_grid import AggregationGrid
 
@@ -419,26 +419,26 @@ def get_aggregate_grid(aggregategrid, parser):
 
 
 def get_basic_datagroups(datagroups, parser):
-    '''
+    """
     Get datagroups containing only variables:filenames:product
     :param datagroups:    A list of datagroups (possibly containing colons)
     :param parser:       The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
-    '''
+    """
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "product"])
     datagroup_options = DatagroupOptions(check_is_not_empty_and_comma_split, expand_file_list, check_product)
 
-    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsary_args=2)
+    return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsory_args=2)
 
 
 def get_subset_limits(subsetlimits, parser):
-    '''
+    """
     :param subsetlimits:  List of subset limit strings
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
-    '''
+    """
     from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
     from cis.subsetting.subset_limits import SubsetLimits
 
@@ -490,39 +490,39 @@ def get_subset_limits(subsetlimits, parser):
     return limit_dict
 
 
-def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsary_args):
-    '''
+def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsory_args):
+    """
     :param inputs:    A list of strings, each in the format a:b:c:......:n where a,b,c,...,n are arguments
     :param parser:    The parser used to raise an error if one occurs
     :param options:   The possible options that each input can take. If no value is assigned to a particular option, then it is assigned None
-    :param compulsary_args:   The exact number of compulsary arguments (colon separated)
+    :param compulsory_args:   The exact number of compulsory arguments (colon separated)
     :return: A list of dictionaries containing the parsed arguments
-    '''
+    """
     input_dicts = []
 
     for input_string in inputs:
         split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', input_string)]
-        if len(split_input) < compulsary_args:
+        if len(split_input) < compulsory_args:
             parser.error("A mandatory option is missing")
-        elif len(split_input) > compulsary_args + 1:
+        elif len(split_input) > compulsory_args + 1:
             parser.error("Too many mandatory options")
 
         input_dict = {}
 
         option = options._asdict().keys()
 
-        # First deal with the comma separated compulsary arguments
-        for i in range(0, compulsary_args):
+        # First deal with the comma separated compulsory arguments
+        for i in range(0, compulsory_args):
             try:
                 current_option = split_input[i]
                 input_dict[option[0]] = options[i](current_option, parser)
-                option.pop(0)  # Compulsary arguments always the first in the list
+                option.pop(0)  # Compulsory arguments always the first in the list
             except IndexError:
                 input_dict[option[i]] = None
 
-        # Now deal with optional arugments, if they exist. For each option loop through the list of arguments to see if
+        # Now deal with optional augments, if they exist. For each option loop through the list of arguments to see if
         # it exists, if so check and add to the dictionary.
-        if len(split_input) == compulsary_args + 1:
+        if len(split_input) == compulsory_args + 1:
             split_input_comma = split_outside_brackets(split_input[-1])
         else:
             split_input_comma = []  # need to loop over options to set optional arguments to None
@@ -552,7 +552,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsar
                 # Split the input, [0] will be the key and [1] the value in the list
                 split_input_variable = split_outside_brackets(j, '=')
                 if split_input_variable[0] == option:
-                    input_dict[option] = options[i + compulsary_args](split_input_variable[1], parser)
+                    input_dict[option] = options[i + compulsory_args](split_input_variable[1], parser)
                     split_input_comma.remove(j)
 
         if len(split_input_comma) != 0:
@@ -688,9 +688,9 @@ def convert_to_list_of_floats(arg, parser):
 
 
 def check_plot_type(plot_type, parser):
-    '''
+    """
     Checks plot type is valid option for number of variables if specified
-    '''
+    """
 
     if plot_type is not None:
         if plot_type not in Plotter.plot_types.keys():
@@ -720,9 +720,9 @@ def check_colour_bar_orientation(orientation, parser):
 
 
 def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
-    '''
+    """
     If a val range was specified, checks that they are valid numbers and the min is less than the max
-    '''
+    """
     from cis.parse_datetime import parse_as_number_or_datetime, parse_as_float_or_time_delta, \
         parse_datetimestr_to_std_time
     from cis.time_util import convert_datetime_to_std_time
@@ -882,11 +882,11 @@ def validate_info_args(arguments, parser):
 
 
 def validate_col_args(arguments, parser):
-    '''
+    """
     Checks that the filenames are valid and that variables and methods have been specified.
     Assigns default method/variable to datagroups with unspecified method/variable if default is specified
     Checks that the product is valid if specified
-    '''
+    """
     # Note: Sample group is put into a list as parse_colonic_arguments expects a list. Samplegroup will only ever be one argument though
     arguments.samplegroup = get_col_samplegroup([arguments.samplegroup], parser)
 
@@ -950,10 +950,10 @@ validators = {'plot': validate_plot_args,
 
 
 def parse_args(arguments=None):
-    '''
+    """
     Parse the arguments given. If no arguments are given, then used the command line arguments.
     Returns a dictionary contains the parsed arguments
-    '''
+    """
     parser = initialise_top_parser()
     if arguments is None:
         # sys.argv[0] is the name of the script itself

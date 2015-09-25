@@ -1,8 +1,8 @@
-'''
+"""
 Class for plotting graphs.
 Also contains a dictionary for the valid plot types.
 All plot types need to be imported and added to the plot_types dictionary in order to be used.
-'''
+"""
 from cis.plotting.contour_plot import Contour_Plot
 from cis.plotting.contourf_plot import Contourf_Plot
 from cis.plotting.heatmap import Heatmap
@@ -36,7 +36,7 @@ class Plotter(object):
                   "histogram3d" : Histogram_3D}
 
     def __init__(self, packed_data_items, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
-        '''
+        """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
         :param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
@@ -44,7 +44,7 @@ class Plotter(object):
         :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be used, with png being the default
         :param mplargs: Any other arguments received from the parser
         :param mplkwargs: Any other keyword arguments received from the plotter
-        '''
+        """
         mplkwargs.pop("xmin", None)
         mplkwargs.pop("xmax", None)
         mplkwargs.pop("xstep", None)
@@ -114,10 +114,10 @@ class Plotter(object):
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename = None):
-        '''
+        """
         Outputs to screen unless a filename is given
         :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
-        '''
+        """
         import logging
         import matplotlib.pyplot as plt
         if out_filename is None:
@@ -129,19 +129,19 @@ class Plotter(object):
             plt.savefig(out_filename, bbox_inches='tight', pad_inches=0.05 * width)  # Will overwrite if file already exists
 
     def remove_unassigned_arguments(self):
-        '''
+        """
         Removes arguments from the mplkwargs if they are equal to None
-        '''
+        """
         for key in self.mplkwargs.keys():
             if self.mplkwargs[key] is None:
                 self.mplkwargs.pop(key)
 
     def set_default_plot_type(self, data):
-        '''
+        """
         Sets the default plot type based on the number of dimensions of the data
         :param data: A list of packed data items
         :return: The default plot type as a string
-        '''
+        """
         from cis.exceptions import InvalidPlotTypeError
         from iris.cube import Cube
         import logging
