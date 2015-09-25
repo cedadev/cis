@@ -172,7 +172,7 @@ class TestNNGridded(unittest.TestCase):
         import datetime as dt
 
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
-                                                               lon_range=(0.,350.)))
+                                                               lon_range=(0., 350.)))
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=111.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
@@ -187,7 +187,7 @@ class TestNNGridded(unittest.TestCase):
         import datetime as dt
 
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
-                                                               lon_range=(0.,350.)))
+                                                               lon_range=(0., 350.)))
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=111.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
@@ -231,9 +231,9 @@ class TestNNGridded(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, pres=10000.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
-        eq_(new_data.data[0], float(cube[2,1,1,0].data))
-        eq_(new_data.data[1], float(cube[3,2,1,4].data))
-        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+        eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
+        eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
+        eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
 
     def test_collocation_of_pres_points_on_hybrid_pressure_coordinates_and_altitude_coordinates(self):
         """
@@ -253,9 +253,9 @@ class TestNNGridded(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-4.0, pres=63100049.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
-        eq_(new_data.data[0], float(cube[2,1,1,0].data))
-        eq_(new_data.data[1], float(cube[3,2,1,4].data))
-        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+        eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
+        eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
+        eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
 
     def test_collocation_of_alt_pres_points_on_hybrid_pressure_and_altitude_coordinates(self):
         """
@@ -276,9 +276,9 @@ class TestNNGridded(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-4.0, alt=1000, pres=63100049.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
-        eq_(new_data.data[0], float(cube[2,1,1,0].data))
-        eq_(new_data.data[1], float(cube[3,2,1,4].data))
-        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+        eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
+        eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
+        eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
 
     def test_collocation_of_alt_points_on_hybrid_pressure_and_altitude_coordinates(self):
         """
@@ -298,9 +298,9 @@ class TestNNGridded(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-4.0, alt=1000, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, nn_gridded())[0]
-        eq_(new_data.data[0], float(cube[2,1,1,0].data))
-        eq_(new_data.data[1], float(cube[3,2,1,4].data))
-        eq_(new_data.data[2], float(cube[1,0,0,9].data))
+        eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
+        eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
+        eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
 
     def test_coordinates_exactly_between_points_in_col_gridded_to_ungridded_in_2d(self):
         """
@@ -510,7 +510,6 @@ class TestNNTime(unittest.TestCase):
 
 
 class TestNNAltitude(unittest.TestCase):
-
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_altitude, DummyConstraint
 
@@ -585,7 +584,6 @@ class TestNNAltitude(unittest.TestCase):
 
 
 class TestNNPressure(unittest.TestCase):
-
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_pressure, DummyConstraint
 
@@ -660,7 +658,6 @@ class TestNNPressure(unittest.TestCase):
 
 
 class TestMean(unittest.TestCase):
-
     def test_basic_col_in_4d(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, mean, DummyConstraint
         import datetime as dt
@@ -676,7 +673,6 @@ class TestMean(unittest.TestCase):
 
 
 class TestLi(unittest.TestCase):
-
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
 
@@ -733,7 +729,7 @@ class TestLi(unittest.TestCase):
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
 
         sample_points = UngriddedData.from_points_array(
-             [HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28)),
+            [HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28)),
              HyperPoint(lat=0.0, lon=0.0, alt=5550.0, t=dt.datetime(1984, 8, 28))])
 
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
@@ -766,7 +762,7 @@ class TestLi(unittest.TestCase):
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
 
         sample_points = UngriddedData.from_points_array(
-             [HyperPoint(lat=-4.0, lon=-4.0, pres=100.0, t=dt.datetime(1984, 8, 27))])
+            [HyperPoint(lat=-4.0, lon=-4.0, pres=100.0, t=dt.datetime(1984, 8, 27))])
 
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, li())[0]
@@ -810,9 +806,9 @@ class TestLi(unittest.TestCase):
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
 
         sample_points = UngriddedData.from_points_array(
-             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0 ,0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, t=dt.datetime(1984, 8, 27))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, li())[0]
@@ -832,8 +828,8 @@ class TestLi(unittest.TestCase):
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
 
         sample_points = UngriddedData.from_points_array(
-             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0 ,0))])
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, li())[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
@@ -848,8 +844,8 @@ class TestLi(unittest.TestCase):
         cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
 
         sample_points = UngriddedData.from_points_array(
-             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0 ,0)),
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, li(nn_vertical=True))[0]
@@ -879,7 +875,7 @@ class TestLi(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
             #  present in the data cube)
-            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, t=dt.datetime(1984, 8, 28,0,0,0)),
+            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=5.0, lon=5.0, alt=355.5, t=dt.datetime(1984, 8, 28, 0, 0))])
 
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
@@ -896,11 +892,12 @@ class TestLi(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
             #  present in the data cube)
-            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, pres=1000, t=dt.datetime(1984, 8, 28,0,0,0))])
+            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, pres=1000, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
 
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, li())[0]
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
+
 
 if __name__ == '__main__':
     unittest.main()

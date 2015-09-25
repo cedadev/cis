@@ -16,26 +16,25 @@ from cis.plotting.histogram3d import Histogram_3D
 from cis.utils import wrap_longitude_coordinate_values, listify
 import matplotlib.pyplot as mpl
 
-plot_options = { 'title' : mpl.title,
-                 'xlabel' : mpl.xlabel,
-                 'ylabel' : mpl.ylabel,
-                 'fontsize' : mpl.rcParams.update }
+plot_options = {'title': mpl.title,
+                'xlabel': mpl.xlabel,
+                'ylabel': mpl.ylabel,
+                'fontsize': mpl.rcParams.update}
 
 
 class Plotter(object):
-
-    plot_types = {"contour" : Contour_Plot,
-                  "contourf" : Contourf_Plot,
-                  "heatmap" : Heatmap,
+    plot_types = {"contour": Contour_Plot,
+                  "contourf": Contourf_Plot,
+                  "heatmap": Heatmap,
                   "line": Line_Plot,
-                  "scatteroverlay" : Scatter_Overlay,
-                  "scatter" : Scatter_Plot,
-                  "comparativescatter" : Comparative_Scatter,
-                  "overlay" : Overlay,
-                  "histogram2d" : Histogram_2D,
-                  "histogram3d" : Histogram_3D}
+                  "scatteroverlay": Scatter_Overlay,
+                  "scatter": Scatter_Plot,
+                  "comparativescatter": Comparative_Scatter,
+                  "overlay": Overlay,
+                  "histogram2d": Histogram_2D,
+                  "histogram3d": Histogram_3D}
 
-    def __init__(self, packed_data_items, plot_type = None, out_filename = None, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, plot_type=None, out_filename=None, *mplargs, **mplkwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
@@ -58,33 +57,33 @@ class Plotter(object):
         mplkwargs.pop("vstep", None)
 
         # Remove arguments from mplkwargs that cannot be passed directly into the plotting methods
-        plot_args = {"datagroups" : mplkwargs.pop("datagroups", None),
-                     "nocolourbar" : mplkwargs.pop("nocolourbar", False),
-                     "logx" : mplkwargs.pop("logx", False),
-                     "logy" : mplkwargs.pop("logy", False),
-                     "logv" : mplkwargs.pop("logv", False),
-                     "xrange" : mplkwargs.pop("xrange", {}),
-                     "yrange" : mplkwargs.pop("yrange", {}),
-                     "valrange" : mplkwargs.pop("valrange", {}),
-                     "cbarorient" : mplkwargs.pop("cbarorient", "horizontal"),
-                     "grid" : mplkwargs.pop("grid", False),
-                     "xlabel" : mplkwargs.pop("xlabel", None),
-                     "ylabel" : mplkwargs.pop("ylabel", None),
-                     "cbarlabel" : mplkwargs.pop("cbarlabel", None),
-                     "title" : mplkwargs.pop("title", None),
-                     "fontsize" : mplkwargs.pop("fontsize", None),
-                     "itemwidth" : mplkwargs.pop("itemwidth", 1),
-                     "xtickangle" : mplkwargs.pop("xtickangle", None),
-                     "ytickangle" : mplkwargs.pop("ytickangle", None),
-                     "xbinwidth" : mplkwargs.pop("xbinwidth", None),
-                     "ybinwidth" : mplkwargs.pop("ybinwidth", None),
-                     "coastlinescolour" : mplkwargs.pop("coastlinescolour", "k"),
-                     "nasabluemarble" : mplkwargs.pop("nasabluemarble", False),
-                     "x_variable" : mplkwargs.pop("x_variable"),
-                     "y_variable" : mplkwargs.pop("y_variable"),
-                     "plotwidth" : mplkwargs.pop("plotwidth"),
-                     "plotheight" : mplkwargs.pop("plotheight"),
-                     "cbarscale" : mplkwargs.pop("cbarscale") }
+        plot_args = {"datagroups": mplkwargs.pop("datagroups", None),
+                     "nocolourbar": mplkwargs.pop("nocolourbar", False),
+                     "logx": mplkwargs.pop("logx", False),
+                     "logy": mplkwargs.pop("logy", False),
+                     "logv": mplkwargs.pop("logv", False),
+                     "xrange": mplkwargs.pop("xrange", {}),
+                     "yrange": mplkwargs.pop("yrange", {}),
+                     "valrange": mplkwargs.pop("valrange", {}),
+                     "cbarorient": mplkwargs.pop("cbarorient", "horizontal"),
+                     "grid": mplkwargs.pop("grid", False),
+                     "xlabel": mplkwargs.pop("xlabel", None),
+                     "ylabel": mplkwargs.pop("ylabel", None),
+                     "cbarlabel": mplkwargs.pop("cbarlabel", None),
+                     "title": mplkwargs.pop("title", None),
+                     "fontsize": mplkwargs.pop("fontsize", None),
+                     "itemwidth": mplkwargs.pop("itemwidth", 1),
+                     "xtickangle": mplkwargs.pop("xtickangle", None),
+                     "ytickangle": mplkwargs.pop("ytickangle", None),
+                     "xbinwidth": mplkwargs.pop("xbinwidth", None),
+                     "ybinwidth": mplkwargs.pop("ybinwidth", None),
+                     "coastlinescolour": mplkwargs.pop("coastlinescolour", "k"),
+                     "nasabluemarble": mplkwargs.pop("nasabluemarble", False),
+                     "x_variable": mplkwargs.pop("x_variable"),
+                     "y_variable": mplkwargs.pop("y_variable"),
+                     "plotwidth": mplkwargs.pop("plotwidth"),
+                     "plotheight": mplkwargs.pop("plotheight"),
+                     "cbarscale": mplkwargs.pop("cbarscale")}
 
         packed_data_items = self._remove_length_one_dimensions(packed_data_items)
         self.mplkwargs = mplkwargs
@@ -113,7 +112,7 @@ class Plotter(object):
         plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
-    def output_to_file_or_screen(self, out_filename = None):
+    def output_to_file_or_screen(self, out_filename=None):
         """
         Outputs to screen unless a filename is given
         :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with png being the default
@@ -126,7 +125,8 @@ class Plotter(object):
             logging.info("saving plot to file: " + out_filename)
             f = plt.gcf()
             width = f.get_figwidth()
-            plt.savefig(out_filename, bbox_inches='tight', pad_inches=0.05 * width)  # Will overwrite if file already exists
+            plt.savefig(out_filename, bbox_inches='tight',
+                        pad_inches=0.05 * width)  # Will overwrite if file already exists
 
     def remove_unassigned_arguments(self):
         """

@@ -10,11 +10,11 @@ from cis.collocation.col import CollocatorFactory
 
 
 class TestCollocateFactory(unittest.TestCase):
-
     def setUp(self):
         self.factory = CollocatorFactory()
 
-    def test_GIVEN_Factory_WHEN_request_ungridded_ungridded_box_mean_with_con_options_THEN_correct_objects_returned(self):
+    def test_GIVEN_Factory_WHEN_request_ungridded_ungridded_box_mean_with_con_options_THEN_correct_objects_returned(
+            self):
         collocator, constraint, kernel = self.factory.get_collocator_instances_for_method(
             "box", "mean", {'missing_data_for_missing_sample': "false", "h_sep": "10"}, {}, False, False)
         assert_that(collocator, instance_of(GeneralUngriddedCollocator), "Collocator's class")

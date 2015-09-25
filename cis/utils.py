@@ -14,7 +14,7 @@ BYTES_IN_A_MB = 1048576.0
 def convert_masked_array_type(masked_array, new_type, operation, *args, **kwargs):
     from numpy.ma import getmaskarray
     converted_arr = np.ma.array(np.zeros(masked_array.shape, dtype=new_type),
-                                 mask=masked_array.mask)
+                                mask=masked_array.mask)
 
     masks = getmaskarray(masked_array)
     for i, val in np.ndenumerate(masked_array):
@@ -38,7 +38,7 @@ def convert_numpy_array(array, new_type, operation, *args, **kwargs):
     return new_array
 
 
-def add_element_to_list_in_dict(my_dict,key,value):
+def add_element_to_list_in_dict(my_dict, key, value):
     try:
         my_dict[key].append(value)
     except KeyError:
@@ -65,12 +65,12 @@ def concatenate(arrays, axis=0):
 
     if len(arrays) > 1:
         for array in arrays[1:]:
-            res = concatenate((res,array),axis)
+            res = concatenate((res, array), axis)
 
     return res
 
 
-def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = False):
+def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale=False):
     """
     :param data: A numpy array
     :param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
@@ -97,7 +97,7 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = Fals
 
     x = float(Decimal(str(val_range)) % Decimal(str(step)))
 
-    stop = max_val + step if  x < 1.e-7 else max_val # 1.e-7 is very close to 0
+    stop = max_val + step if x < 1.e-7 else max_val  # 1.e-7 is very close to 0
 
     bin_edges = array([])
     i = min_val
@@ -118,7 +118,7 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale = Fals
     return bin_edges
 
 
-def expand_1d_to_2d_array(array_1d,length,axis=0):
+def expand_1d_to_2d_array(array_1d, length, axis=0):
     """
     General utility routine to 'extend a 1D array into a 2D array
     by duplicating the data along a given 'axis' (default is 0)
@@ -147,23 +147,25 @@ def expand_1d_to_2d_array(array_1d,length,axis=0):
     """
     import numpy as np
 
-    if axis==0:
-        array_2d = np.repeat(array_1d[np.newaxis,:],length,0)
+    if axis == 0:
+        array_2d = np.repeat(array_1d[np.newaxis, :], length, 0)
     else:
-        array_2d = np.repeat(array_1d[:,np.newaxis],length,1)
+        array_2d = np.repeat(array_1d[:, np.newaxis], length, 1)
 
     return array_2d
 
+
 def create_masked_array_for_missing_data(data, missing_val):
     import numpy.ma as ma
-    return ma.array(data, mask=data==missing_val, fill_value=missing_val)
+    return ma.array(data, mask=data == missing_val, fill_value=missing_val)
+
 
 def create_masked_array_for_missing_values(data, missing_values):
     import numpy.ma as ma
 
     mdata = data
     for missing_value in missing_values:
-        mdata = ma.masked_where(missing_value==mdata,mdata)
+        mdata = ma.masked_where(missing_value == mdata, mdata)
 
     return mdata
 
@@ -220,7 +222,7 @@ def get_coord(data_object, variable, data):
     :return:
     """
     if variable == data_object.name() or variable == "default" or variable == data_object.standard_name or \
-       variable == data_object.long_name:
+                    variable == data_object.long_name:
         return data
     else:
         if variable.startswith("search:"):
@@ -249,7 +251,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
 
     no_of_dims = len(data_object.shape)
 
-    data = data_object.data #ndarray
+    data = data_object.data  # ndarray
 
     x = get_coord(data_object, x_variable, data)
     if hasattr(x, 'points'):
@@ -273,7 +275,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
         y = None
 
     if isinstance(data_object, Cube):
-        plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims = no_of_dims)
+        plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims=no_of_dims)
         if plot_defn.transpose:
             data = data.T
             x = x.T
@@ -310,7 +312,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                     y, x = np.meshgrid(y, x)
 
     if x_axis_name == 'X' and x_wrap_start is not None:
-        #x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
+        # x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
         if isnan(x_wrap_start):
             raise InvalidCommandLineOptionError('Overall range for longitude axis must be within 0 - 360 degrees.')
         x = fix_longitude_range(x, x_wrap_start)
@@ -319,7 +321,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     if y is not None: logging.debug("Shape of y: " + str(y.shape))
     logging.debug("Shape of data: " + str(data.shape))
 
-    return { "data": data, "x" : x, "y" : y }
+    return {"data": data, "x": x, "y": y}
 
 
 def fix_longitude_range(lons, range_start):
@@ -418,7 +420,7 @@ def add_file_prefix(prefix, filepath):
     import os.path
     filename = os.path.basename(filepath)
     path = os.path.dirname(filepath)
-    return os.path.join(path,prefix+filename)
+    return os.path.join(path, prefix + filename)
 
 
 def remove_file_prefix(prefix, filepath):
@@ -475,13 +477,15 @@ def haversine(lat, lon, lat2, lon2):
     Computes the Haversine distance between two points
     """
     import math
-    R_E = 6378 # Radius of the earth in km
+    R_E = 6378  # Radius of the earth in km
     lat1 = math.radians(lat)
     lat2 = math.radians(lat2)
     lon1 = math.radians(lon)
     lon2 = math.radians(lon2)
-    arclen = 2*math.asin(math.sqrt((math.sin((lat2-lat1)/2))**2 + math.cos(lat1) * math.cos(lat2) * (math.sin((lon2-lon1)/2))**2))
-    return arclen*R_E
+    arclen = 2 * math.asin(math.sqrt(
+        (math.sin((lat2 - lat1) / 2)) ** 2 + math.cos(lat1) * math.cos(lat2) * (math.sin((lon2 - lon1) / 2)) ** 2))
+    return arclen * R_E
+
 
 class OrderedSet(collections.MutableSet):
     """
@@ -490,8 +494,8 @@ class OrderedSet(collections.MutableSet):
 
     def __init__(self, iterable=None):
         self.end = end = []
-        end += [None, end, end]         # sentinel node for doubly linked list
-        self.map = {}                   # key --> [key, prev, next]
+        end += [None, end, end]  # sentinel node for doubly linked list
+        self.map = {}  # key --> [key, prev, next]
         if iterable is not None:
             self |= iterable
 
@@ -596,11 +600,12 @@ def index_iterator_nditer(shape, points):
             cell_total += 1
             number_cells_processed = cell_total * 10000
             logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
-                             int(number_cells_processed * 100 / num_cells))
+                         int(number_cells_processed * 100 / num_cells))
             cell_count = 0
         cell_count += 1
 
         it.iternext()
+
 
 def index_iterator(shape):
     """Iterates over the indexes of a multi-dimensional array of a specified shape.
@@ -654,10 +659,9 @@ def index_iterator_for_non_masked_data(shape, points):
             cell_total += 1
             number_cells_processed = cell_total * 10000
             logging.info("    Processed %d points of %d (%d%%)", number_cells_processed, num_cells,
-                             int(number_cells_processed * 100 / num_cells))
+                         int(number_cells_processed * 100 / num_cells))
             cell_count = 0
         cell_count += 1
-
 
 
 def parse_distance_with_units_to_float_km(distance):
@@ -688,7 +692,7 @@ def parse_distance_with_units_to_float_m(distance):
     if measurement['units'] is None:
         return measurement['value']
     else:
-        return parse_distance_with_units_to_float_km(distance)*1000.0
+        return parse_distance_with_units_to_float_km(distance) * 1000.0
 
 
 def split_into_float_and_units(measurement):
@@ -744,7 +748,7 @@ def guess_coord_axis(coord):
 
     This is intended to be similar to iris.util.guess_coord_axis.
     """
-    #TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
+    # TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
     standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
                       'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
                       'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
@@ -806,15 +810,17 @@ def deprecated(func):
 
     Taken from http://code.activestate.com/recipes/391367-deprecated/
     """
-    def newFunc(*args, **kwargs):
 
+    def newFunc(*args, **kwargs):
         def log_warning(message, category, filename, lineno, file=None):
             logging.warning('%s:%s %s:%s' % (category.__name__, message, filename, lineno))
+
         warnings.showwarning = log_warning
         warnings.simplefilter('once', DeprecationWarning)  # turn off filter
         warnings.warn("Call to deprecated function %s." % func.__name__,
                       category=DeprecationWarning, stacklevel=2)
         return func(*args, **kwargs)
+
     newFunc.__name__ = func.__name__
     newFunc.__doc__ = func.__doc__
     newFunc.__dict__.update(func.__dict__)

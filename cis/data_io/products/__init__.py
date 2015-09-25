@@ -13,7 +13,7 @@ from caliop import abstract_Caliop, Caliop_L1, Caliop_L2
 from CCI import Aerosol_CCI, Cloud_CCI
 from HadGEM import HadGEM_PP, HadGEM_CONVSH
 
-#list of all data products
+# list of all data products
 __all__ = [
     "AProduct",
     "NCAR_NetCDF_RAF",
@@ -31,4 +31,3 @@ __all__ = [
     "cis",
     "HadGEM_CONVSH",
     "HadGEM_PP"]
-

@@ -65,7 +65,7 @@ def add_plot_parser_arguments(parser):
 
     parser.add_argument("--title", metavar="Chart title", nargs="?", help="The title for the chart")
     parser.add_argument("--itemwidth", metavar="Item width", nargs="?", help="The width of an item. Unit are points in "
-                        "the case of a line, and point^2 in the case of a scatter point.")
+                                                                             "the case of a line, and point^2 in the case of a scatter point.")
     parser.add_argument("--fontsize", metavar="Font size", nargs="?", help="The size of the font in points")
     parser.add_argument("--cmap", metavar="Colour map", nargs="?", help="The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar="Plot height", nargs="?", help="The height of the plot in inches")
@@ -133,12 +133,12 @@ def add_info_parser_arguments(parser):
 
 def add_col_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroups", nargs="+", help="Variables and files to collocate, "
-                        "which needs to be entered in the format variables:filename[:product=], with multiple files to "
-                        "collocate separated by spaces.")
+                                                                            "which needs to be entered in the format variables:filename[:product=], with multiple files to "
+                                                                            "collocate separated by spaces.")
     parser.add_argument("samplegroup", metavar="SampleGroup", help="A filename with the points to collocate onto. "
-                        "Additional parameters are variable, collocator, kernel and product, entered as "
-                        "keyword=value. Collocator must always be specified. For example "
-                       "filename:variable=var1,collocator=box[h_sep=10km].")
+                                                                   "Additional parameters are variable, collocator, kernel and product, entered as "
+                                                                   "keyword=value. Collocator must always be specified. For example "
+                                                                   "filename:variable=var1,collocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file containing the collocated data. The name specified will"
                              " be suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and "
@@ -606,7 +606,7 @@ def extract_method_and_args(arguments, parser):
         elements = multi_split(arguments, ['[', ',', ']'])
         method_name = elements[0]
         args = elements[1:] if len(elements) > 1 else []
-        method_and_args = ( method_name, parse_key_val_list(args) )
+        method_and_args = (method_name, parse_key_val_list(args))
     return method_and_args
 
 
@@ -656,6 +656,7 @@ def _set_aliases_for_datagroups(datagroups, parser):
     def _alias_error(var_and_alias):
         parser.error("Invalid variable name or aliasing: expected string of form '<variablename>=<alias>', "
                      "but got: '%s'" % var_and_alias)
+
     all_aliases = []
     for datagroup in datagroups:
         variables = []

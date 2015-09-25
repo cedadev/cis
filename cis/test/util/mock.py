@@ -13,7 +13,8 @@ from cis.data_io.hyperpoint import HyperPointList
 from cis.time_util import convert_obj_to_standard_date_array
 
 
-def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0, time_dim_length=0,
+def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
+                   time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
                    hybrid_ht_len=0, hybrid_pr_len=0, dim_order=None, mask=False):
     """
@@ -70,27 +71,28 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
 
     if lat_dim_length:
         coord_list[coord_map['lat']] = (DimCoord(np.linspace(-10., 10., lat_dim_length) + horizontal_offset,
-                                        standard_name='latitude', units='degrees'), coord_map['lat'])
+                                                 standard_name='latitude', units='degrees'), coord_map['lat'])
         data_size *= lat_dim_length
 
     if lon_dim_length:
-        coord_list[coord_map['lon']] = (DimCoord(np.linspace(lon_range[0], lon_range[1], lon_dim_length) + horizontal_offset,
-                                        standard_name='longitude', units='degrees'), coord_map['lon'])
+        coord_list[coord_map['lon']] = (
+            DimCoord(np.linspace(lon_range[0], lon_range[1], lon_dim_length) + horizontal_offset,
+                     standard_name='longitude', units='degrees'), coord_map['lon'])
         data_size *= lon_dim_length
 
     if alt_dim_length:
         coord_list[coord_map['alt']] = (DimCoord(np.linspace(0., 7., alt_dim_length) + altitude_offset,
-                                        standard_name='altitude', units='metres'), coord_map['alt'])
+                                                 standard_name='altitude', units='metres'), coord_map['alt'])
         data_size *= alt_dim_length
 
     if pres_dim_length:
         coord_list[coord_map['pres']] = (DimCoord(np.linspace(0., 7., pres_dim_length) + pressure_offset,
-                                         standard_name='air_pressure', units='hPa'), coord_map['pres'])
+                                                  standard_name='air_pressure', units='hPa'), coord_map['pres'])
         data_size *= pres_dim_length
 
     if time_dim_length:
         t0 = datetime.datetime(1984, 8, 27)
-        times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(time_dim_length)])
+        times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(time_dim_length)])
         time_nums = convert_obj_to_standard_date_array(times)
         time_bounds = None
         if time_dim_length == 1:
@@ -102,8 +104,8 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
         data_size *= time_dim_length
 
     if hybrid_ht_len:
-        coord_list[coord_map['hybrid_ht']] = (DimCoord(np.arange(hybrid_ht_len, dtype='i8')+10,
-                                        "model_level_number", units="1"), coord_map['hybrid_ht'])
+        coord_list[coord_map['hybrid_ht']] = (DimCoord(np.arange(hybrid_ht_len, dtype='i8') + 10,
+                                                       "model_level_number", units="1"), coord_map['hybrid_ht'])
         data_size *= hybrid_ht_len
 
     if hybrid_pr_len:
@@ -121,44 +123,49 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     return_cube = Cube(data, dim_coords_and_dims=coord_list)
 
     if hybrid_ht_len:
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8')+40,
-                                                long_name="level_height",
-                                                units="m"), coord_map['hybrid_ht'])
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8')+50,
-                                                long_name="sigma", units="1"), coord_map['hybrid_ht'])
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(lat_dim_length*lon_dim_length, dtype='i8').reshape(lat_dim_length, lon_dim_length)+100,
-                                                long_name="surface_altitude",
-                                                units="m"), [coord_map['lat'], coord_map['lon']])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 40,
+                                                       long_name="level_height",
+                                                       units="m"), coord_map['hybrid_ht'])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 50,
+                                                       long_name="sigma", units="1"), coord_map['hybrid_ht'])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(
+            np.arange(lat_dim_length * lon_dim_length, dtype='i8').reshape(lat_dim_length, lon_dim_length) + 100,
+            long_name="surface_altitude",
+            units="m"), [coord_map['lat'], coord_map['lon']])
 
         return_cube.add_aux_factory(HybridHeightFactory(
-                                        delta=return_cube.coord("level_height"),
-                                        sigma=return_cube.coord("sigma"),
-                                        orography=return_cube.coord("surface_altitude")))
+            delta=return_cube.coord("level_height"),
+            sigma=return_cube.coord("sigma"),
+            orography=return_cube.coord("surface_altitude")))
     elif hybrid_pr_len:
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='i8')+40,
-                                                long_name="hybrid A coefficient at layer midpoints",
-                                                units="Pa"), coord_map['hybrid_pr'])
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='f8')+50,
-                                                long_name="hybrid B coefficient at layer midpoints", units="1"), coord_map['hybrid_pr'])
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(lat_dim_length*lon_dim_length*time_dim_length, dtype='i8')
-                                                       .reshape(lat_dim_length, lon_dim_length, time_dim_length)*100000,
-                                                       "surface_air_pressure", units="Pa"),
-                                  [coord_map['lat'], coord_map['lon'], coord_map['time']])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='i8') + 40,
+                                                       long_name="hybrid A coefficient at layer midpoints",
+                                                       units="Pa"), coord_map['hybrid_pr'])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='f8') + 50,
+                                                       long_name="hybrid B coefficient at layer midpoints", units="1"),
+                                  coord_map['hybrid_pr'])
+        return_cube.add_aux_coord(
+            iris.coords.AuxCoord(np.arange(lat_dim_length * lon_dim_length * time_dim_length, dtype='i8')
+                                 .reshape(lat_dim_length, lon_dim_length, time_dim_length) * 100000,
+                                 "surface_air_pressure", units="Pa"),
+            [coord_map['lat'], coord_map['lon'], coord_map['time']])
 
-        return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(lat_dim_length*lon_dim_length*time_dim_length*hybrid_pr_len, dtype='i8')
-                                                       .reshape(lat_dim_length, lon_dim_length, time_dim_length, hybrid_pr_len)+10,
-                                                       "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
-                                  [coord_map['lat'], coord_map['lon'], coord_map['time'], coord_map['hybrid_pr']])
+        return_cube.add_aux_coord(iris.coords.AuxCoord(
+            np.arange(lat_dim_length * lon_dim_length * time_dim_length * hybrid_pr_len, dtype='i8')
+            .reshape(lat_dim_length, lon_dim_length, time_dim_length, hybrid_pr_len) + 10,
+            "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
+            [coord_map['lat'], coord_map['lon'], coord_map['time'], coord_map['hybrid_pr']])
 
         return_cube.add_aux_factory(HybridPressureFactory(
-                                        delta=return_cube.coord("hybrid A coefficient at layer midpoints"),
-                                        sigma=return_cube.coord("hybrid B coefficient at layer midpoints"),
-                                        surface_air_pressure=return_cube.coord("surface_air_pressure")))
+            delta=return_cube.coord("hybrid A coefficient at layer midpoints"),
+            sigma=return_cube.coord("hybrid B coefficient at layer midpoints"),
+            surface_air_pressure=return_cube.coord("surface_air_pressure")))
 
     for coord in return_cube.coords(dim_coords=True):
         if coord.bounds is None: coord.guess_bounds()
 
     return return_cube
+
 
 def make_dummy_2d_cube():
     """
@@ -167,11 +174,12 @@ def make_dummy_2d_cube():
     import numpy
     from iris.cube import Cube
     from iris.coords import DimCoord
-    
+
     latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
     longitude = DimCoord(range(0, 360, 10), standard_name='longitude', units='degrees')
-    cube = Cube(numpy.reshape(numpy.arange(19*36)+1.0,(19,36)), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
-    
+    cube = Cube(numpy.reshape(numpy.arange(19 * 36) + 1.0, (19, 36)),
+                dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
     return cube
 
 
@@ -246,7 +254,7 @@ def make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres():
 
     for i in range(0, 5):
         for j in range(0, 5):
-            if (i+j)%2 == 1:
+            if (i + j) % 2 == 1:
                 checkerboard[i, j] = 1
 
     latitude = DimCoord(numpy.arange(1, 11, 2), standard_name='latitude', units='degrees')
@@ -275,13 +283,14 @@ def make_square_5x3_2d_cube():
     import numpy as np
     from iris.cube import Cube
     from iris.coords import DimCoord
-    
+
     latitude = DimCoord(np.arange(-10., 11., 5), var_name='lat', standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5., 6., 5), var_name='lon', standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(15)+1.0,(5,3))
+    data = np.reshape(np.arange(15) + 1.0, (5, 3))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)], var_name='dummy')
-    
+
     return cube
+
 
 def make_square_5x3_2d_cube_with_extra_dim():
     """
@@ -312,6 +321,7 @@ def make_square_5x3_2d_cube_with_extra_dim():
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 2), (level, 1)], var_name='dummy')
 
     return cube
+
 
 def make_square_5x3_2d_cube_with_missing_data():
     """
@@ -443,18 +453,19 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     import datetime
     from cis.time_util import convert_obj_to_standard_date_array
 
-    t0 = datetime.datetime(1984,8,27)
-    times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(7)])
+    t0 = datetime.datetime(1984, 8, 27)
+    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
 
     time_nums = convert_obj_to_standard_date_array(times)
 
     time = DimCoord(time_nums, standard_name='time')
-    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
-    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    latitude = DimCoord(np.arange(-10 + offset, 11 + offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5 + offset, 6 + offset, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(105) + 1.0, (5, 3, 7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
 
     return cube
+
 
 def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count=5,
                                       start_lon=-5, end_lon=5, lon_point_count=3,
@@ -497,17 +508,18 @@ def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count
     from cis.time_util import convert_obj_to_standard_date_array
 
     t0 = datetime.datetime(1984, 8, 27)
-    times = np.array([t0 + datetime.timedelta(days=d+time_offset) for d in xrange(7)])
+    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
 
     time_nums = convert_obj_to_standard_date_array(times)
 
     time = DimCoord(time_nums, standard_name='time')
     latitude = DimCoord(np.linspace(start_lat, end_lat, lat_point_count), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.linspace(start_lon, end_lon, lon_point_count), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(lat_point_count * lon_point_count * 7)+1.0, (lat_point_count, lon_point_count, 7))
+    data = np.reshape(np.arange(lat_point_count * lon_point_count * 7) + 1.0, (lat_point_count, lon_point_count, 7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
 
     return cube
+
 
 def make_square_5x3_2d_cube_with_altitude(offset=0, altitude_offset=0):
     """
@@ -545,10 +557,10 @@ def make_square_5x3_2d_cube_with_altitude(offset=0, altitude_offset=0):
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    altitude = DimCoord(np.arange(0, 7, 1)+altitude_offset, standard_name='altitude', units='metres')
-    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
-    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    altitude = DimCoord(np.arange(0, 7, 1) + altitude_offset, standard_name='altitude', units='metres')
+    latitude = DimCoord(np.arange(-10 + offset, 11 + offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5 + offset, 6 + offset, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(105) + 1.0, (5, 3, 7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (altitude, 2)])
 
     return cube
@@ -591,9 +603,9 @@ def make_square_5x3_2d_cube_with_pressure(offset=0):
     from iris.coords import DimCoord
 
     pressure = DimCoord(np.arange(0, 7, 1), standard_name='air_pressure', units='hPa')
-    latitude = DimCoord(np.arange(-10+offset, 11+offset, 5), standard_name='latitude', units='degrees')
-    longitude = DimCoord(np.arange(-5+offset, 6+offset, 5), standard_name='longitude', units='degrees')
-    data = np.reshape(np.arange(105)+1.0,(5,3,7))
+    latitude = DimCoord(np.arange(-10 + offset, 11 + offset, 5), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5 + offset, 6 + offset, 5), standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(105) + 1.0, (5, 3, 7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (pressure, 2)])
 
     return cube
@@ -603,10 +615,10 @@ def make_dummy_1d_cube():
     import numpy
     from iris.cube import Cube
     from iris.coords import DimCoord
-    
+
     latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
     cube = Cube(numpy.random.rand(19), dim_coords_and_dims=[(latitude, 0)])
-    
+
     return cube
 
 
@@ -617,12 +629,14 @@ def get_random_1d_point():
     from cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat())
 
+
 def get_random_2d_point():
     """
         Creates a random point on the surface of the globe
     """
     from cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat(), gen_random_lon())
+
 
 def get_random_3d_point():
     """
@@ -632,20 +646,23 @@ def get_random_3d_point():
     from cis.data_io.hyperpoint import HyperPoint
     return HyperPoint(gen_random_lat(), gen_random_lon(), random.randrange(0.0, 100.0))
 
+
 def make_dummy_1d_points_list(num):
     """
         Create a list of 1d points 'num' long
     """
-    return [ get_random_1d_point() for i in xrange(0,num) ]
+    return [get_random_1d_point() for i in xrange(0, num)]
+
 
 def make_dummy_2d_points_list(num):
     """
         Create a list of 2d points 'num' long
     """
-    return [ get_random_2d_point() for i in xrange(0,num) ]
+    return [get_random_2d_point() for i in xrange(0, num)]
 
 
-def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None, mask=None):
+def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None,
+                                           mask=None):
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
@@ -694,7 +711,7 @@ def make_dummy_1d_ungridded_data():
 
     x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
     coords = CoordList([x])
-    data = gen_random_data_array((5,),4.0,1.0)
+    data = gen_random_data_array((5,), 4.0, 1.0)
     return UngriddedData(data, Metadata(name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
@@ -705,7 +722,7 @@ def make_dummy_1d_ungridded_data_with_invalid_standard_name():
 
     x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
     coords = CoordList([x])
-    data = gen_random_data_array((5,),4.0,1.0)
+    data = gen_random_data_array((5,), 4.0, 1.0)
     return UngriddedData(data, Metadata(name='rain', standard_name='notavalidname',
                                         long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
@@ -715,11 +732,12 @@ def make_dummy_2d_ungridded_data():
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
-    x = Coord(gen_random_lat_array((5,5)), Metadata('latitude'),'x')
-    y = Coord(gen_random_lon_array((5,5)), Metadata('longitude'),'y')
+    x = Coord(gen_random_lat_array((5, 5)), Metadata('latitude'), 'x')
+    y = Coord(gen_random_lon_array((5, 5)), Metadata('longitude'), 'y')
     coords = CoordList([x, y])
-    data = gen_random_data_array((5,5),4.0,1.0)
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    data = gen_random_data_array((5, 5), 4.0, 1.0)
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
 
 
 def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lon_dim_length=3, lon_min=-5, lon_max=5,
@@ -776,6 +794,7 @@ def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lo
     return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_rate',
                                         long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
+
 
 def make_regular_2d_ungridded_data_with_missing_values():
     """
@@ -857,19 +876,20 @@ def make_regular_2d_with_time_ungridded_data():
 
     x_points = np.arange(-10, 11, 5)
     y_points = np.arange(-5, 6, 5)
-    y, x = np.meshgrid(y_points,x_points)
+    y, x = np.meshgrid(y_points, x_points)
 
-    t0 = datetime.datetime(1984,8,27)
-    times = np.reshape(np.array([t0+datetime.timedelta(days=d) for d in xrange(15)]),(5,3))
+    t0 = datetime.datetime(1984, 8, 27)
+    times = np.reshape(np.array([t0 + datetime.timedelta(days=d) for d in xrange(15)]), (5, 3))
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
     t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
 
-    data = np.reshape(np.arange(15)+1.0,(5,3))
+    data = np.reshape(np.arange(15) + 1.0, (5, 3))
 
     coords = CoordList([x, y, t])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
 
 
 def make_MODIS_time_steps():
@@ -882,7 +902,7 @@ def make_MODIS_time_steps():
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
     x = np.zeros(4)
-    times = np.array([149754,149762,149770,149778])
+    times = np.array([149754, 149762, 149770, 149778])
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
@@ -890,7 +910,8 @@ def make_MODIS_time_steps():
     data = np.arange(4.0)
 
     coords = CoordList([x, t])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
 
 
 def make_regular_4d_ungridded_data():
@@ -977,14 +998,14 @@ def make_regular_4d_ungridded_data():
     import datetime
     from cis.time_util import convert_obj_to_standard_date_array
 
-    x_points = np.linspace(-10,10,5)
+    x_points = np.linspace(-10, 10, 5)
     y_points = np.linspace(-5, 5, 5)
-    t0 = datetime.datetime(1984,8,27)
-    times = convert_obj_to_standard_date_array(np.array([t0+datetime.timedelta(days=d) for d in xrange(5)]))
+    t0 = datetime.datetime(1984, 8, 27)
+    times = convert_obj_to_standard_date_array(np.array([t0 + datetime.timedelta(days=d) for d in xrange(5)]))
 
-    alt = np.linspace(0,90,10)
+    alt = np.linspace(0, 90, 10)
 
-    data = np.reshape(np.arange(50)+1.0,(10,5))
+    data = np.reshape(np.arange(50) + 1.0, (10, 5))
     # print np.mean(data[:,1:3])
     # print np.mean(data[4:6,:])
     # print np.mean(data[:,2])
@@ -992,12 +1013,12 @@ def make_regular_4d_ungridded_data():
     # print np.mean(data)
     # print len(data.flat)
 
-    y, a = np.meshgrid(y_points,alt)
-    x, a = np.meshgrid(x_points,alt)
-    t, a = np.meshgrid(times,alt)
+    y, a = np.meshgrid(y_points, alt)
+    x, a = np.meshgrid(x_points, alt)
+    t, a = np.meshgrid(times, alt)
     p = a
-    p[0,:] = 4
-    p[1,:] = 16
+    p[0, :] = 4
+    p[1, :] = 16
 
     a = Coord(a, Metadata(standard_name='altitude', units='meters'))
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
@@ -1006,7 +1027,8 @@ def make_regular_4d_ungridded_data():
     t = Coord(t, Metadata(standard_name='time', units='DateTime Object'))
 
     coords = CoordList([x, y, a, p, t])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1", missing_value=-999), coords)
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), coords)
 
 
 class ScatterData(object):
@@ -1016,7 +1038,7 @@ class ScatterData(object):
         self.data = data
         self.shape = shape
         self.long_name = long_name
-        
+
     def __getitem__(self, name):
         if name == "x":
             return self.x
@@ -1027,32 +1049,39 @@ class ScatterData(object):
         else:
             raise Exception("Unknown item")
 
+
 def gen_random_lon():
     return gen_random_lon_array((1,))
+
 
 def gen_random_lat():
     return gen_random_lat_array((1,))
 
+
 def gen_random_data():
     return gen_random_data_array((1,), 0.000225, 0.0001)
+
 
 def gen_random_lon_array(shape):
     from numpy.random import rand
     return 360.0 * rand(*shape) - 180.0
 
+
 def gen_random_lat_array(shape):
     from numpy.random import rand
     return 180.0 * rand(*shape) - 90.0
 
+
 def gen_random_data_array(shape, mean=0.0, var=1.0):
     from numpy.random import randn
-    return var*randn(*shape) + mean
+    return var * randn(*shape) + mean
 
 
 class MockUngriddedData(CommonData):
     """
     Fake UngriddedData that uses data in a HyperPointList.
     """
+
     def __init__(self, hyperpointlist):
         if isinstance(hyperpointlist, HyperPointList):
             self.hyperpointlist = hyperpointlist
