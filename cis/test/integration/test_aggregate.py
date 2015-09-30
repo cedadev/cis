@@ -117,8 +117,8 @@ class TestAggregation(BaseAggregationTest):
         # Takes 14s
         variable = 'AOD550,AOD870'
         filename = valid_aerosol_cci_filename
-        t_start, t_end, t_delta = dt.datetime(2008, 6, 12, 10, 15, 0), dt.datetime(2008, 6, 12, 10, 35, 0), \
-                                  dt.timedelta(minutes=1)
+        t_start, t_end = dt.datetime(2008, 6, 12, 10, 15, 0), dt.datetime(2008, 6, 12, 10, 35, 0)
+        t_delta = dt.timedelta(minutes=1)
         str_delta = 'PT1M'
         self.do_temporal_aggregate(variable, filename, t_start, t_end, str_delta)
         self.check_temporal_aggregation(t_start, t_end, t_delta)
@@ -347,8 +347,9 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 826s
         variable = 'time,lon,lat,satellite_zenith_view_no1,solar_zenith_view_no1'
         filename = valid_cloud_cci_filename
-        time_min, time_max, time_delta = dt.datetime(2008, 7, 1, ), dt.datetime(2008, 8, 1), \
-                                         dt.timedelta(days=5)
+        time_min, time_max = dt.datetime(2008, 7, 1, ), dt.datetime(2008, 8, 1)
+
+        time_delta = dt.timedelta(days=5)
         str_delta = 'P5D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
@@ -357,8 +358,9 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
     def test_aggregate_Cloud_CCI(self):
         variable = 'solar_zenith_view_no1'
         filename = valid_cloud_cci_filename
-        time_min, time_max, time_delta = dt.datetime(2008, 7, 1, ), dt.datetime(2008, 8, 1), \
-                                         dt.timedelta(days=5)
+        time_min, time_max = dt.datetime(2008, 7, 1, ), dt.datetime(2008, 8, 1)
+
+        time_delta = dt.timedelta(days=5)
         str_delta = 'P5D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
@@ -368,8 +370,9 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 28s
         variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
         filename = valid_NCAR_NetCDF_RAF_filename
-        time_min, time_max, time_delta = dt.datetime(2009, 1, 14, 20, 15), dt.datetime(2009, 1, 15, 2, 45), \
-                                         dt.timedelta(minutes=30)
+        time_min, time_max = dt.datetime(2009, 1, 14, 20, 15), dt.datetime(2009, 1, 15, 2, 45)
+
+        time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
@@ -378,8 +381,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
     def test_aggregate_GASSP(self):
         variable = ",".join(valid_GASSP_aeroplane_vars)
         filename = valid_GASSP_aeroplane_filename
-        time_min, time_max, time_delta = dt.datetime(2006, 9, 27, 20, 15), dt.datetime(2006, 9, 27, 22, 45), \
-                                         dt.timedelta(minutes=30)
+        time_min, time_max = dt.datetime(2006, 9, 27, 20, 15), dt.datetime(2006, 9, 27, 22, 45)
+        time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
@@ -396,8 +399,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
                    'Solar_Zenith_Angle'
         variable = 'Solar_Zenith_Angle'
         filename = valid_aeronet_filename
-        time_min, time_max, time_delta = dt.datetime(2003, 9, 24, 7, 0, 0), dt.datetime(2003, 11, 04, 7, 0, 0), \
-                                         dt.timedelta(days=1)
+        time_min, time_max = dt.datetime(2003, 9, 24, 7, 0, 0), dt.datetime(2003, 11, 04, 7, 0, 0)
+        time_delta = dt.timedelta(days=1)
         str_delta = 'P1D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
@@ -425,8 +428,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 2s
         variable = 'AOD550,AOD870,latitude,time'
         filename = valid_cis_ungridded_output_filename
-        time_min, time_max, time_delta = dt.datetime(2008, 6, 12, 10, 18, 37), dt.datetime(2008, 6, 12, 10, 19, 47), \
-                                         dt.timedelta(seconds=1)
+        time_min, time_max = dt.datetime(2008, 6, 12, 10, 18, 37), dt.datetime(2008, 6, 12, 10, 19, 47)
+        time_delta = dt.timedelta(seconds=1)
         str_delta = 'PT1S'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta)
@@ -436,8 +439,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 20 mins
         variable = 'Solar_Zenith,Latitude,Sensor_Azimuth,Longitude'
         filename = valid_modis_l2_filename
-        time_min, time_max, time_delta = dt.datetime(2010, 1, 1, 22, 55, 19), dt.datetime(2010, 1, 1, 22, 58, 44), \
-                                         dt.timedelta(minutes=1)
+        time_min, time_max = dt.datetime(2010, 1, 1, 22, 55, 19), dt.datetime(2010, 1, 1, 22, 58, 44)
+        time_delta = dt.timedelta(minutes=1)
         str_delta = 'PT1M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Scan_Start_Time')
@@ -449,8 +452,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
                    'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
                    'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
         filename = valid_modis_l3_filename
-        time_min, time_max, time_delta = dt.datetime(2010, 1, 13, 0, 0, 1), dt.datetime(2010, 1, 13, 0, 1, 44), \
-                                         dt.timedelta(seconds=20)
+        time_min, time_max = dt.datetime(2010, 1, 13, 0, 0, 1), dt.datetime(2010, 1, 13, 0, 1, 44)
+        time_delta = dt.timedelta(seconds=20)
         str_delta = 'PT20S'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
@@ -461,8 +464,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # RuntimeError: NetCDF: String match to name in use
         variable = 'Profile_time,Latitude,Longitude,DEM_elevation,Data_quality'
         filename = valid_cloudsat_PRECIP_file
-        time_min, time_max, time_delta = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36), \
-                                         dt.timedelta(minutes=30)
+        time_min, time_max = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36)
+        time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
@@ -472,8 +475,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
     def test_aggregate_CloudSatPRECIP(self):
         variable = valid_cloudsat_PRECIP_variable
         filename = valid_cloudsat_PRECIP_file
-        time_min, time_max, time_delta = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36), \
-                                         dt.timedelta(minutes=30)
+        time_min, time_max = dt.datetime(2008, 2, 14, 0, 57, 36), dt.datetime(2008, 2, 14, 2, 9, 36)
+        time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
@@ -483,8 +486,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 41s
         variable = 'RVOD_liq_water_content,RVOD_ice_water_path'
         filename = valid_cloudsat_RVOD_file
-        time_min, time_max, time_delta = dt.datetime(2007, 6, 29, 13, 12, 0), dt.datetime(2007, 6, 29, 14, 29, 0), \
-                                         dt.timedelta(minutes=23)
+        time_min, time_max = dt.datetime(2007, 6, 29, 13, 12, 0), dt.datetime(2007, 6, 29, 14, 29, 0)
+        time_delta = dt.timedelta(minutes=23)
         str_delta = 'PT23M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
@@ -495,8 +498,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # This takes a long time to run (we've never seen it complete, even on sci-1).
         variable = 'Perpendicular_Attenuated_Backscatter_532'
         filename = valid_caliop_l1_filename
-        time_min, time_max, time_delta = dt.datetime(2009, 12, 31, 23, 40, 0), dt.datetime(2010, 1, 1, 0, 17, 17), \
-                                         dt.timedelta(minutes=15)
+        time_min, time_max = dt.datetime(2009, 12, 31, 23, 40, 0), dt.datetime(2010, 1, 1, 0, 17, 17)
+        time_delta = dt.timedelta(minutes=15)
         str_delta = 'PT15M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_Time')
@@ -507,8 +510,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         variable = 'Perpendicular_Backscatter_Coefficient_532,' \
                    'Perpendicular_Backscatter_Coefficient_Uncertainty_532,Pressure'
         filename = valid_caliop_l2_filename
-        time_min, time_max, time_delta = dt.datetime(2009, 12, 31, 23, 40, 0), dt.datetime(2010, 1, 1, 0, 17, 17), \
-                                         dt.timedelta(minutes=15)
+        time_min, time_max = dt.datetime(2009, 12, 31, 23, 40, 0), dt.datetime(2010, 1, 1, 0, 17, 17)
+        time_delta = dt.timedelta(minutes=15)
         str_delta = 'PT15M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_Time')
@@ -518,8 +521,8 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 1s
         variable = 'value'
         filename = valid_ascii_filename
-        time_min, time_max, time_delta = dt.datetime(2012, 8, 23, 15, 0, 0), dt.datetime(2012, 8, 28), \
-                                         dt.timedelta(days=1)
+        time_min, time_max = dt.datetime(2012, 8, 23, 15, 0, 0), dt.datetime(2012, 8, 28)
+        time_delta = dt.timedelta(days=1)
         str_delta = 'P1D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta)

@@ -287,12 +287,11 @@ class TestUngriddedAggregation(TestCase):
                                  [7.0, 8.0, 9.0],
                                  [10.0, 11.0, 12.0],
                                  [13.0, 14.0, 15.0]],
-
-                           mask=[[0, 0, 0],
-                                 [0, 1, 0],
-                                 [0, 0, 1],
-                                 [0, 0, 0],
-                                 [1, 0, 0]], fill_value=float('inf'))
+                                mask=[[0, 0, 0],
+                                      [0, 1, 0],
+                                      [0, 0, 1],
+                                      [0, 0, 0],
+                                      [1, 0, 0]], fill_value=float('inf'))
 
         assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
@@ -308,9 +307,8 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[2.5, 2.0, 4.5],
                                  [8.5, 11.0, 13.5]],
-
-                           mask=[[0, 0, 0],
-                                 [0, 0, 0]], fill_value=float('inf'))
+                                mask=[[0, 0, 0],
+                                      [0, 0, 0]], fill_value=float('inf'))
 
         assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
@@ -328,9 +326,8 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[4.0, 2.0, 6.0],
                                  [10.0, 14.0, 15.0]],
-
-                           mask=[[0, 0, 0],
-                                 [0, 0, 0]], fill_value=float('inf'))
+                                mask=[[0, 0, 0],
+                                      [0, 0, 0]], fill_value=float('inf'))
 
         assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
@@ -348,9 +345,8 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[1.0, 2.0, 3.0],
                                  [7.0, 8.0, 12.0]],
-
-                           mask=[[0, 0, 0],
-                                 [0, 0, 0]], fill_value=float('inf'))
+                                mask=[[0, 0, 0],
+                                      [0, 0, 0]], fill_value=float('inf'))
 
         assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
@@ -368,9 +364,8 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[numpy.sqrt(4.5), float('NaN'), numpy.sqrt(4.5)],
                                  [numpy.sqrt(4.5), 3.0, numpy.sqrt(4.5)]],
-
-                           mask=[[0, 1, 0],
-                                 [0, 0, 0]], fill_value=float('inf'))
+                                mask=[[0, 1, 0],
+                                      [0, 0, 0]], fill_value=float('inf'))
 
         assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
@@ -465,6 +460,7 @@ class TestUngriddedAggregation(TestCase):
         lon = output.coord('longitude')
         assert_arrays_equal(lon.bounds, [[-180, 180]])
 
+
 class TestUngriddedListAggregation(TestCase):
 
     def setUp(self):
@@ -486,12 +482,11 @@ class TestUngriddedListAggregation(TestCase):
                                  [7.0, 8.0, 9.0],
                                  [10.0, 11.0, 12.0],
                                  [13.0, 14.0, 15.0]],
-
-                           mask=[[0, 0, 0],
-                                 [0, 1, 0],
-                                 [0, 0, 1],
-                                 [0, 0, 0],
-                                 [1, 0, 0]], fill_value=float('inf'))
+                                mask=[[0, 0, 0],
+                                      [0, 1, 0],
+                                      [0, 0, 1],
+                                      [0, 0, 0],
+                                      [1, 0, 0]], fill_value=float('inf'))
 
         print cube_out[0].data.fill_value
         assert len(cube_out) == 2

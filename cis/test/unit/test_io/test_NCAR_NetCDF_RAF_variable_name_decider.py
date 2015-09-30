@@ -106,7 +106,7 @@ class TestDataReader(TestCase):
 
         assert_that(decider.altitude, is_([expected_alt]))
 
-    def test_GIVEN_time_coordinate_station_lat_and_lon_variable_and_alt_in_different_case_WHEN_construct_THEN_values_are_correct(
+    def test_GIVEN_station_coords_in_different_cases_WHEN_construct_THEN_values_are_correct(
             self):
         expected_time_var = "time_var"
         expected_station_latitude = "27.1"
@@ -188,7 +188,7 @@ class TestDataReader(TestCase):
         assert_that(selector.altitude, is_([0]), "altitude is fixed at zero")
         assert_that(selector.pressure_variable_name, is_(None), "pressure variable name")
 
-    def test_GIVEN_time_coordinate_variable_lat_lon_alt_but_alt_variable_does_not_exist_WHEN_construct_THEN_throw_exception(
+    def test_GIVEN_time_coordinate_var_lat_lon_alt_but_alt_variable_does_not_exist_WHEN_construct_THEN_throw_exception(
             self):
         expected_time_var = "time_var"
         expected_lat_var = "LAT"
@@ -401,7 +401,7 @@ class TestDataReader(TestCase):
 
         assert_that(vars, is_(set([expected_var, time_var])), "variables should be ones with same dim as time")
 
-    def test_GIVEN_valid_file_with_one_variables_same_shape_others_not_and_time_is_multid_WHEN_get_vars_THEN_only_same_shape_is_returned(
+    def test_GIVEN_valid_file_w_1_var_same_shape_others_not_and_t_is_multid_WHEN_get_vars_THEN_only_same_shape_returned(
             self):
         time_dims = ["Time", "time2"]
         time_var = "time_var"

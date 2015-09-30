@@ -93,8 +93,8 @@ class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
         variable_constraint = variable
         if isinstance(variable, basestring):
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
-                                                                         c.standard_name == variable or
-                                                                         c.long_name == variable), display=variable)
+                                                               c.standard_name == variable or
+                                                               c.long_name == variable), display=variable)
         if len(filenames) == 1:
             callback_function = self.load_single_file_callback
         else:

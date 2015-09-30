@@ -603,8 +603,8 @@ class TestParseCollocate(ParseTestFiles):
         eq_(["variable3"], args.datagroups[2]['variables'])
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_with_internal_options(self):
-        args = ["col", "var1:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0]
-                + ":variable=var2,constraint=SepConstraint[h_sep=1500,v_sep=22000,t_sep=5000],kernel=nn,collocator=bin"]
+        args = ["col", "var1:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0] +
+                ":variable=var2,constraint=SepConstraint[h_sep=1500,v_sep=22000,t_sep=5000],kernel=nn,collocator=bin"]
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.datagroups[0]['filenames'])
         eq_(["var1"], args.datagroups[0]['variables'])

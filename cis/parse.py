@@ -183,7 +183,8 @@ def add_eval_parser_arguments(parser):
 
 def add_stats_parser_arguments(parser):
     parser.add_argument("datagroups", metavar="DataGroup", nargs='+',
-                        help="Variables to perform statistical comparison on and optional product separated by colon(s)")
+                        help="Variables to perform statistical comparison on and optional product separated by "
+                             "colon(s)")
     parser.add_argument("-o", "--output", metavar="Output filename", nargs="?",
                         help="The filename of the output file (if outputting to file")
 

@@ -191,12 +191,12 @@ class MODIS_L2(AProduct):
         output[int(factor / 2)::factor, int(factor / 2)::factor] = data
         for i in range(1, factor + 1):
             output[(int(factor / 2) + i):(-1 * factor / 2 + 1):factor, :] = i * (
-                (output[int(factor / 2) + factor::factor, :] - output[int(factor / 2):(-1 * factor):factor, :])
-                / float(factor)) + output[int(factor / 2):(-1 * factor):factor, :]
+                (output[int(factor / 2) + factor::factor, :] - output[int(factor / 2):(-1 * factor):factor, :]) /
+                float(factor)) + output[int(factor / 2):(-1 * factor):factor, :]
         for i in range(1, factor + 1):
             output[:, (int(factor / 2) + i):(-1 * factor / 2 + 1):factor] = i * (
-                (output[:, int(factor / 2) + factor::factor] - output[:, int(factor / 2):(-1 * factor):factor])
-                / float(factor)) + output[:, int(factor / 2):(-1 * factor):factor]
+                (output[:, int(factor / 2) + factor::factor] - output[:, int(factor / 2):(-1 * factor):factor]) /
+                float(factor)) + output[:, int(factor / 2):(-1 * factor):factor]
         return output
 
     def _create_coord_list(self, filenames, variable=None):

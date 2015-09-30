@@ -221,8 +221,7 @@ def get_coord(data_object, variable, data):
     :param data:
     :return:
     """
-    if variable == data_object.name() or variable == "default" or variable == data_object.standard_name or \
-                    variable == data_object.long_name:
+    if variable in [data_object.name(), data_object.standard_name, data_object.long_name, 'default']:
         return data
     else:
         if variable.startswith("search:"):
@@ -318,7 +317,8 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
         x = fix_longitude_range(x, x_wrap_start)
 
     logging.debug("Shape of x: " + str(x.shape))
-    if y is not None: logging.debug("Shape of y: " + str(y.shape))
+    if y is not None:
+        logging.debug("Shape of y: " + str(y.shape))
     logging.debug("Shape of data: " + str(data.shape))
 
     return {"data": data, "x": x, "y": y}
@@ -636,7 +636,6 @@ def index_iterator_for_non_masked_data(shape, points):
     :param shape: sequence of array dimensions
     :return: yields tuples of array indexes
     """
-
 
     # dim = len(shape)
     # idx = [0] * dim

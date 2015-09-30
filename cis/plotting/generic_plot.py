@@ -209,11 +209,13 @@ class Generic_Plot(object):
         if axis == "x":
             step = valrange.pop("xstep", None)
             self.matplotlib.xlim(**valrange)
-            if step is not None: valrange["xstep"] = step
+            if step is not None:
+                valrange["xstep"] = step
         elif axis == "y":
             step = valrange.pop("ystep", None)
             self.matplotlib.ylim(**valrange)
-            if step is not None: valrange["ystep"] = step
+            if step is not None:
+                valrange["ystep"] = step
 
     def add_color_bar(self):
         """
@@ -473,7 +475,7 @@ class Generic_Plot(object):
         vmax = self.mplkwargs.pop("vmax")
 
         if self.plot_args["valrange"].get("vstep", None) is None and \
-                        self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
+                self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
             nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
         elif self.plot_args["valrange"].get("vstep", None) is None:
             nconts = self.plot_args['datagroups'][self.datagroup]['contnlevels']
@@ -520,8 +522,10 @@ class Generic_Plot(object):
         :param logx: A boolean specifying whether or not to apply a log scale to the x axis
         :param logy: A boolean specifying whether or not to apply a log scale to the y axis
         """
-        if logx: self.matplotlib.xscale("log")
-        if logy: self.matplotlib.yscale("log")
+        if logx:
+            self.matplotlib.xscale("log")
+        if logy:
+            self.matplotlib.yscale("log")
 
     def set_axes_ticks(self, no_of_dims):
         self.set_axis_ticks("x", no_of_dims)
@@ -545,7 +549,8 @@ class Generic_Plot(object):
                 logging.warning("Couldn't apply scientific notation to axes")
 
         draw_grid = self.plot_args.pop("grid", False)
-        if draw_grid: self.matplotlib.grid(True, which="both")
+        if draw_grid:
+            self.matplotlib.grid(True, which="both")
 
         self.set_axes_ticks(2)
 
@@ -555,16 +560,20 @@ class Generic_Plot(object):
         self.set_default_axis_label("X")
         self.set_default_axis_label("Y")
 
-        if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
-        if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
-        if self.plot_args["title"] is None: self.plot_args["title"] = ""
+        if self.plot_args["xlabel"] is None:
+            self.plot_args["xlabel"] = ""
+        if self.plot_args["ylabel"] is None:
+            self.plot_args["ylabel"] = ""
+        if self.plot_args["title"] is None:
+            self.plot_args["title"] = ""
 
         for key in plot_options.keys():
             # Call the method associated with the option
             if key in self.plot_args.keys():
                 plot_options[key](self.plot_args[key])
 
-        if len(self.packed_data_items) > 1: self.create_legend()
+        if len(self.packed_data_items) > 1:
+            self.create_legend()
 
     def drawcoastlines(self):
         if self.plot_args["nasabluemarble"] is not False:
@@ -586,9 +595,11 @@ class Generic_Plot(object):
             self.set_log_scale(logx, logy)
 
         draw_grid = self.plot_args.get("grid")
-        if draw_grid: self.matplotlib.grid(True, which="both")
+        if draw_grid:
+            self.matplotlib.grid(True, which="both")
 
-        if self.is_map(): self.drawcoastlines()
+        if self.is_map():
+            self.drawcoastlines()
 
         self.set_axes_ticks(3)
 
@@ -597,16 +608,20 @@ class Generic_Plot(object):
         self.set_default_axis_label("X")
         self.set_default_axis_label("Y")
 
-        if self.plot_args["xlabel"] is None: self.plot_args["xlabel"] = ""
-        if self.plot_args["ylabel"] is None: self.plot_args["ylabel"] = ""
-        if self.plot_args["title"] is None: self.plot_args["title"] = self.packed_data_items[0].long_name
+        if self.plot_args["xlabel"] is None:
+            self.plot_args["xlabel"] = ""
+        if self.plot_args["ylabel"] is None:
+            self.plot_args["ylabel"] = ""
+        if self.plot_args["title"] is None:
+            self.plot_args["title"] = self.packed_data_items[0].long_name
 
         for key in plot_options.keys():
             # Call the method associated with the option
             if key in self.plot_args.keys():
                 plot_options[key](self.plot_args[key])
 
-        if not self.plot_args["nocolourbar"]: self.add_color_bar()
+        if not self.plot_args["nocolourbar"]:
+            self.add_color_bar()
 
         if len(self.packed_data_items) > 1 and not isinstance(self, cis.plotting.overlay.Overlay):
             self.create_legend()
@@ -668,8 +683,8 @@ class Generic_Plot(object):
         if x_variable == y_variable:
             specified_axis = "x" if self.plot_args["x_variable"] is not None else "y"
             not_specified_axis = "y" if specified_axis == "x" else "y"
-            raise NotEnoughAxesSpecifiedError(
-                "--" + not_specified_axis + "axis must also be specified if assigning the current " + not_specified_axis + " axis coordinate to the " + specified_axis + " axis")
+            raise NotEnoughAxesSpecifiedError("-- {0} axis must also be specified if assigning the current {0} axis "
+                                              "coordinate to the {1} axis".format(not_specified_axis, specified_axis))
 
         if "search" in x_variable:
             logging.info("Plotting unknown on the x axis")

@@ -162,7 +162,8 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
             surface_air_pressure=return_cube.coord("surface_air_pressure")))
 
     for coord in return_cube.coords(dim_coords=True):
-        if coord.bounds is None: coord.guess_bounds()
+        if coord.bounds is None:
+            coord.guess_bounds()
 
     return return_cube
 

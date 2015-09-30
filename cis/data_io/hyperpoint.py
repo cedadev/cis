@@ -162,8 +162,8 @@ class HyperPointList(list):
         """
         Given a `list` of HyperPoints, return a HyperPointList instance. This checks that all of the items in the list
          are HyperPoint instances but no other checks. Specifically each Hyper point should have the same shape, that is
-         if any point has a coordinate as None, then no other points should have a value for that coordinate. This is not
-         imposed here because of the potential overhead but it is assumed by other functions in CIS.
+         if any point has a coordinate as None, then no other points should have a value for that coordinate. This is
+         not imposed here because of the potential overhead but it is assumed by other functions in CIS.
 
         """
         point_list = list.__new__(cls, list_of_points)

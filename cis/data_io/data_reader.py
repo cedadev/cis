@@ -137,7 +137,7 @@ class DataReader(object):
 
          1. All variables in a datagroup are present in all the files in that datagroup
          2. The shape of the data returned from each variable must be the same in each file, so that they may be
-          concatenated
+            concatenated
          3. They should all be openable by the same CIS data product
          4. They should be dictionaries of the following format::
 

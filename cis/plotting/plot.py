@@ -116,6 +116,7 @@ class Plotter(object):
     def output_to_file_or_screen(self, out_filename=None):
         """
         Outputs to screen unless a filename is given
+
         :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with
          png being the default
         """
@@ -164,7 +165,7 @@ class Plotter(object):
             coord_shape = None
             all_coords_are_of_same_shape = False
             for coord in data[0].coords():
-                if coord_shape == None:
+                if coord_shape is None:
                     coord_shape = coord.shape
                     all_coords_are_of_same_shape = True
                 elif coord_shape != coord.shape:

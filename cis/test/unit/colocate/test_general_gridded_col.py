@@ -276,8 +276,7 @@ def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_tim
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_and_mising_samples_THEN_error(con,
-                                                                                                                kernel):
+def single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
     col = GeneralGriddedCollocator(fill_value=-999.9, missing_data_for_missing_sample=True)
@@ -573,7 +572,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         kernel = SlowMean()
         single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
 
-    def test_single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true_binned_only(
+    def test_single_point_gives_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true_binned_only(
             self):
         from cis.collocation.col_implementations import max
         con = BinnedCubeCellOnlyConstraint()
@@ -581,7 +580,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
         single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(con, kernel)
 
-    def test_single_point_results_in_single_value_in_masked_cell_using_fast_kernel_and_con_missing_for_masked_true_binned_only(
+    def test_single_point_gives_single_val_in_masked_cell_using_fast_kernel_and_con_missing_for_masked_true_binned_only(
             self):
         con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
@@ -798,13 +797,12 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
         single_point_on_grid_corner_is_counted_once(con, kernel)
 
-    def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_and_mising_samples_THEN_error(
+    def test_single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(
             self):
         con = BinningCubeCellConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_and_mising_samples_THEN_error(con,
-                                                                                                                    kernel)
+        single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(con, kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(self):
         con = BinningCubeCellConstraint()

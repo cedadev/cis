@@ -109,8 +109,8 @@ def haversine(x, y):
     lat2 = lat2 * math.pi / 180
     lon1 = lon1 * math.pi / 180
     lon2 = lon2 * math.pi / 180
-    arclen = 2 * np.arcsin(np.sqrt((np.sin((lat2 - lat1) / 2)) ** 2
-                                   + np.cos(lat1) * np.cos(lat2) * (np.sin((lon2 - lon1) / 2)) ** 2))
+    arclen = 2 * np.arcsin(np.sqrt((np.sin((lat2 - lat1) / 2)) ** 2 +
+                                   np.cos(lat1) * np.cos(lat2) * (np.sin((lon2 - lon1) / 2)) ** 2))
     return arclen * RADIUS_EARTH
 
 
@@ -122,8 +122,8 @@ def haversine_distance_from_radians(x, y):
     """
     lat1, lon1 = x[0], x[1]
     lat2, lon2 = y[0], y[1]
-    arclen = 2 * np.arcsin(np.sqrt((np.sin((lat2 - lat1) / 2)) ** 2
-                                   + np.cos(lat1) * np.cos(lat2) * (np.sin((lon2 - lon1) / 2)) ** 2))
+    arclen = 2 * np.arcsin(np.sqrt((np.sin((lat2 - lat1) / 2)) ** 2 +
+                                   np.cos(lat1) * np.cos(lat2) * (np.sin((lon2 - lon1) / 2)) ** 2))
     return arclen * RADIUS_EARTH
 
 
@@ -329,8 +329,7 @@ class RectangleHaversine(RectangleBase):
         else:
             # Determine which side of the rectangle the point is nearer to allowing for longitude circularity.
             lon_mid = (rect_lon_min + rect_lon_max) / 2.0
-            if ((lon0 < lon_mid and lon_mid - lon0 < PI)
-                or (lon0 > lon_mid and lon0 - lon_mid > PI)):
+            if (lon0 < lon_mid and lon_mid - lon0 < PI) or (lon0 > lon_mid and lon0 - lon_mid > PI):
                 # Point is nearest to left side of rectangle.
                 lon1 = rect_lon_min
                 lon_diff = rect_lon_min - lon0
@@ -776,8 +775,7 @@ class KDTree(object):
                 return node.idx[minkowski_distance(d, x, p) <= r].tolist()
             else:
                 less, greater = rect.split(node.split_dim, node.split)
-                return traverse_checking(node.less, less) + \
-                       traverse_checking(node.greater, greater)
+                return traverse_checking(node.less, less) + traverse_checking(node.greater, greater)
 
         def traverse_no_checking(node):
             if isinstance(node, KDTree.leafnode):
@@ -826,7 +824,7 @@ class KDTree(object):
         """
         x = np.asarray(x)
         if x.shape[-1] != self.m:
-            raise ValueError("Searching for a %d-dimensional point in a " \
+            raise ValueError("Searching for a %d-dimensional point in a "
                              "%d-dimensional KDTree" % (x.shape[-1], self.m))
         if len(x.shape) == 1:
             return self._query_ball_point(x, r, p, eps)

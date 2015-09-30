@@ -272,7 +272,7 @@ class TestUtils(unittest.TestCase):
         conc = concatenate(arrays)
         assert isinstance(conc, numpy.ndarray)
 
-    def test_GIVEN_list_of_arrays_to_concatenate_WHEN_some_are_masked_but_not_first_THEN_returns_masked_array_with_correct_mask(
+    def test_GIVEN_list_of_arrays_to_concat_WHEN_some_masked_but_not_first_THEN_returns_masked_array_with_correct_mask(
             self):
         arrays = [numpy.array([0, 90, 180])]
         for i in range(1, 3):

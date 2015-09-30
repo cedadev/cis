@@ -173,9 +173,9 @@ class CoordList(list):
             if not isinstance(attributes, Mapping):
                 raise ValueError(
                     'The attributes keyword was expecting a dictionary type, but got a %s instead.' % type(attributes))
-            filter_func = lambda coord_: all(
-                k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems())
-            coords = filter(filter_func, coords)
+            coords = filter(lambda coord_: all(
+                            k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems()),
+                            coords)
 
         return coords
 

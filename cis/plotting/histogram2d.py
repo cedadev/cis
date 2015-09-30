@@ -140,11 +140,13 @@ class Histogram_2D(Generic_Plot):
             if axis == "x":
                 step = valrange.pop("xstep", None)
                 self.matplotlib.xlim(**valrange)
-                if step is not None: valrange["xstep"] = step
+                if step is not None:
+                    valrange["xstep"] = step
             elif axis == "y":
                 step = valrange.pop("ystep", None)
                 self.matplotlib.ylim(**valrange)
-                if step is not None: valrange["ystep"] = step
+                if step is not None:
+                    valrange["ystep"] = step
         elif axis == "y":
             # Need to ensure that frequency starts from 0
             self.matplotlib.ylim(ymin=0)

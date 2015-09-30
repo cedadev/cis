@@ -210,8 +210,8 @@ class Collocate(object):
             pass  # It's not critical if we can't get the history.
 
         for data in new_data:
-            history = "Collocated onto sampling from: " + str(self.sample_points.filenames) + " " \
-                                                                                              "\nusing CIS version " + __version__ + " " + \
+            history = "Collocated onto sampling from: " + str(self.sample_points.filenames) + " " + \
+                      "\nusing CIS version " + __version__ + " " + \
                       "\nvariables: " + str(variables) + " " + \
                       "\nwith files: " + str(filenames) + " " + \
                       "\nusing collocator: " + str(col_name) + " " + \

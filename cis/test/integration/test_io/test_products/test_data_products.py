@@ -315,7 +315,6 @@ class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
         pass
 
 
-
 class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
     def setUp(self):
         from cis.test.integration_test_data import valid_1d_filename, valid_1d_variable

@@ -255,9 +255,8 @@ class LazyData(object):
         self.metadata = other_data._metadata
 
         # def __getitem__(self, item): pass
-        # This method can be overridden to provide the ability to ask for slices of data e.g. UngridedDataObject[012:32.4:5]
-        # Actually implementing it would be very tricky as you have to keep track of the data and the coordinates without
-        #  necessarily actually reading them
+        # This method could be overridden to provide the ability to ask for slices of data
+        #  e.g. UngridedDataObject[012:32.4:5]
 
     def add_history(self, new_history):
         """Appends to, or creates, the metadata history attribute using the supplied history string.
@@ -378,7 +377,8 @@ class UngriddedData(LazyData, CommonData):
             combined_mask = numpy.zeros(self._data.shape, dtype=bool).flatten()
             for coord in self._coords:
                 combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
-                if coord.data.dtype != 'object': combined_mask |= numpy.isnan(coord.data).flatten()
+                if coord.data.dtype != 'object':
+                    combined_mask |= numpy.isnan(coord.data).flatten()
             if combined_mask.any():
                 n_points = numpy.count_nonzero(combined_mask)
                 logging.warning(
@@ -618,7 +618,8 @@ class UngriddedCoordinates(CommonData):
         combined_mask = numpy.zeros(self._coords[0].data_flattened.shape, dtype=bool)
         for coord in self._coords:
             combined_mask |= numpy.ma.getmaskarray(coord.data_flattened)
-            if coord.data.dtype != 'object': combined_mask |= numpy.isnan(coord.data).flatten()
+            if coord.data.dtype != 'object':
+                combined_mask |= numpy.isnan(coord.data).flatten()
         if combined_mask.any():
             n_points = numpy.count_nonzero(combined_mask)
             logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
