@@ -13,6 +13,7 @@ CIS 1.2 features
  * Updated a number of routines to take advantage of Iris 1.8 features. In particular gridded-gridded collocation using the nearest neighbour kernel should be significantly faster. Iris 1.8 is now the minimum version required for CIS.
  * Gridded-ungridded collocation now supports collocation from cubes with hybrid height or hybrid pressure coordinates for both nearest neighbour and linear interpolation kernels.
  * Built-in support for reading multiple HadGEM .pp files directly.
+ * All new API and plugin development documentation, including a number of tutorials
 
 Bugs fixed
 ==========
@@ -24,3 +25,5 @@ Bugs fixed
  * Speed improvement to the ungridded-gridded collocation using linear interpolation
  * Several bug fixes for reading multiple GASSP ship files
  * Renamed and restructured the collocation modules for consistency
+ * Many documentation spelling and formatting updates
+ * Many code formatting updates for PEP8 compliance
