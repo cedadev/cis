@@ -1,3 +1,6 @@
+"""
+Kernels used for the aggregation of GRIDDED data only. (Ungridded aggregation uses the standard collocation kernels.)
+"""
 import iris.analysis
 from numpy import ma, zeros
 

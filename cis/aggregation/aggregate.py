@@ -11,7 +11,7 @@ from cis.aggregation.aggregator import Aggregator
 from cis.collocation.col_framework import get_kernel
 from cis.exceptions import CISError, InvalidVariableError
 from cis import __version__
-from cis.aggregation.aggregation_kernels import aggregation_kernels
+from cis.aggregation.aggregation_kernels import aggregation_kernels as cube_aggregation_kernels
 
 
 class Aggregate(object):
@@ -59,7 +59,7 @@ class Aggregate(object):
         aggregator = self._create_aggregator(data, self._grid)
 
         if isinstance(data, iris.cube.CubeList):
-            kernel_inst = aggregation_kernels[kernel_name]
+            kernel_inst = cube_aggregation_kernels[kernel_name]
             data = aggregator.aggregate_gridded(kernel_inst)
         else:
             kernel_class = get_kernel(kernel_name)
