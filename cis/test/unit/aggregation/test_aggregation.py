@@ -273,6 +273,62 @@ class TestUngriddedAggregation(TestCase):
         assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
+    def test_aggregating_single_point_in_one_dimension_lower_bound_edge_case(self):
+        """
+        Test to document the behaviour of aggregation when a point on a cell's lower bound is taken to be in that cell
+          or out of it. If the point is on the lower bound it is taken to be part of that cell.
+        """
+        grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
+
+        data = make_dummy_ungridded_data_single_point(lat=-2.50000)
+
+        agg = Aggregator(data, grid)
+        cube_out = agg.aggregate_ungridded(self.kernel)
+
+        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
+
+        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+
+    @istest
+    def test_aggregating_single_point_in_one_dimension_upper_bound_edge_case(self):
+        """
+        Test to document the behaviour of aggregation when a point on a cell's upper bound is taken to be in that cell
+          or out of it. If the point is on the upper bound it is NOT taken to be part of that cell.
+        """
+        grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
+
+        data = make_dummy_ungridded_data_single_point(lat=2.50000)
+
+        agg = Aggregator(data, grid)
+        cube_out = agg.aggregate_ungridded(self.kernel)
+
+        result = numpy.ma.array([[0], [0], [0.0], [1.0], [0]], mask=[[1], [1], [1], [0], [1]], fill_value=float('inf'))
+
+        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+
+    @istest
+    def test_aggregating_edge_cases(self):
+        """
+        Further tests to reinforce the above edge case tests in two dimensions. Note that the upper edges of the
+        ungridded data points array are removed from the aggregate because they fall on the respective cells' upper
+        bounds.
+        """
+        grid = {'x': AggregationGrid(-5, 5, 5, False), 'y': AggregationGrid(-10, 10, 5, False)}
+
+        data = make_regular_2d_ungridded_data()
+
+        agg = Aggregator(data, grid)
+        cube_out = agg.aggregate_ungridded(self.kernel)
+
+        result = numpy.array([[1.0, 2.0],  # 3.0],
+                              [4.0, 5.0],  # 6.0],
+                              [7.0, 8.0],  # 9.0],
+                              [10.0, 11.0]])  # 12.0],
+                            # [13.0, 14.0, 15.0]],
+
+        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+
+    @istest
     def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
 
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
