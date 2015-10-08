@@ -119,6 +119,40 @@ class TestGriddedSubsetConstraint(TestCase):
         subset = constraint.constrain(data)
         assert (subset.data.tolist() == [[5, 6], [8, 9], [11, 12]])
 
+    def test_edge_cases_with_no_bounds_for_2d_gridded_data_subset_by_longitude_latitude(self):
+        """
+        This test defines the behaviour for constraints set just away from cell centers when no bounds have been
+        assigned to the coordinates: Namely the cell centers are treated as points with no bounds.
+
+        This test constrains the subsetting algorithm as defined in the CIS paper so be very careful about changing it!
+        """
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
+        long_coord = data.coord('longitude')
+        lat_coord = data.coord('latitude')
+        constraint = subset_constraint.GriddedSubsetConstraint()
+        constraint.set_limit(long_coord, 0.0, 4.5)
+        constraint.set_limit(lat_coord, -5.5, 5.5)
+        subset = constraint.constrain(data)
+        assert (subset.data.tolist() == [[5,], [8,], [11,]])
+
+    def test_edge_cases_with_bounds_for_2d_gridded_data_subset_by_longitude_latitude(self):
+        """
+        Complementary to the test above, if bounds are assigned to the coordinates then the cells can match the
+        constraint if the matching points are within - or equal to the bounds.
+
+        This test constrains the subsetting algorithm as defined in the CIS paper so be very careful about changing it!
+        """
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
+        for c in data.coords():
+            c.guess_bounds()
+        long_coord = data.coord('longitude')
+        lat_coord = data.coord('latitude')
+        constraint = subset_constraint.GriddedSubsetConstraint()
+        constraint.set_limit(long_coord, 0.0, 4.5)
+        constraint.set_limit(lat_coord, -2.50, 2.50)
+        subset = constraint.constrain(data)
+        assert (subset.data.tolist() == [[5, 6], [8, 9], [11, 12]])
+
     def test_empty_longitude_subset_of_gridded_data_list_returns_no_data(self):
         """
         Checks that the convention of returning None if subsetting results in an empty subset.
