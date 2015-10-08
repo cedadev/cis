@@ -148,8 +148,10 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, ["value"])
 
     def test_cloud_cci_onto_NetCDF_Gridded(self):
-        # Takes 460 s
-        vars = [valid_cloud_cci_variable, valid_cloud_cci_8_bit_variable]
+        """
+        Takes ~80s on aopposxlap18. This test mirrors the test_aggregate_Cloud_CCI_for_comparison_with_collocation
+        test in test_aggregate.py.
+        """
         filename = valid_cloud_cci_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable

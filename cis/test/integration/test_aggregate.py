@@ -184,6 +184,23 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_aggregate_Cloud_CCI_for_comparison_with_collocation(self):
+        """
+        Takes ~80s on aopposxlap18. This test is primarily to compare the speed of ungridded->gridded collocation and
+        aggregation, which should in principle be just as quick as each other. This test mirrors the
+        test_cloud_cci_onto_NetCDF_Gridded test in test_colocate.py.
+        """
+        variable = ','.join([valid_cloud_cci_variable, valid_cloud_cci_8_bit_variable])
+        filename = valid_cloud_cci_filename
+        grid = 'x=[0, 358.125, 1.875],y=[-90, 90, 1.25],t=[2007-06-01,2007-06-30,PT3H]'
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+
+        # This check can't deal with the combined temporal and spatial aggregation so skip it
+        #self.check_grid_aggregation(0, 358.125, 1.875, -90, 90, 1.25)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
     def test_aggregate_NCAR_RAF(self):
         # Takes 513s
         variable = '*'
