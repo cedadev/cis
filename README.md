@@ -3,6 +3,7 @@ CIS
 
 [![Build Status](https://travis-ci.org/cedadev/cis.svg)](https://travis-ci.org/cedadev/cis)
 [![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
+[![Downloads](https://anaconda.org/cistools/cis/badges/downloads.svg)](https://anaconda.org/CISTools/cis/files)
 
 CIS is an open source command-line tool for easy collocation, visualization, analysis, and comparison of
 diverse gridded and ungridded datasets used in the atmospheric sciences. Visit our homepage at www.cistools.net.
@@ -15,7 +16,7 @@ A pre-packaged version of CIS is available for installation using conda for 64-b
 
 Once conda is installed, you can easily install CIS with the following command:
 
-    conda install -c cistools –c scitools cis
+    conda install -c cistools -c scitools cis
 
 If you don’t already have conda, you must first download and install it.
 Anaconda is a free conda package that includes Python and many common scientific and data analysis libraries, and is available here: http://continuum.io/downloads.
