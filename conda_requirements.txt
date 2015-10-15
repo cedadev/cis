@@ -16,6 +16,7 @@ libnetcdf
 netcdf4
 zlib
 
+geos=3.3.3
 
 # jpeg=8d=0
 
