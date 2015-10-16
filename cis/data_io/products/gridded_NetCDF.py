@@ -1,10 +1,10 @@
 import logging
 import iris
 from cis.data_io import gridded_data as gridded_data
-from cis.data_io.products import abstract_NetCDF_CF
+from cis.data_io.products import AProduct
 
 
-class abstract_NetCDF_CF_Gridded(abstract_NetCDF_CF):
+class abstract_NetCDF_CF_Gridded(AProduct):
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF model data yet...
         return []

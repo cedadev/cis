@@ -3,7 +3,6 @@ Module with standard cis Data Products in it
 """
 
 from AProduct import AProduct
-from abstract_NetCDF_CF import abstract_NetCDF_CF
 from products import NetCDF_Gridded, Aeronet, ASCII_Hyperpoints, cis, default_NetCDF
 from cloudsat import CloudSat
 from gridded_NetCDF import abstract_NetCDF_CF_Gridded, NetCDF_Gridded
@@ -24,7 +23,6 @@ __all__ = [
     "CCI",
     "Cloud_CCI",
     "Aerosol_CCI",
-    "abstract_NetCDF_CF",
     "default_NetCDF",
     "Aeronet",
     "ASCII_Hyperpoints",

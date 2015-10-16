@@ -5,7 +5,7 @@ import numpy as np
 
 from cis.data_io.Coord import CoordList
 from cis.exceptions import InvalidVariableError, FileFormatError
-from cis.data_io.products.abstract_NetCDF_CF import abstract_NetCDF_CF
+from cis.data_io.products import AProduct
 from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
 from cis.utils import add_to_list_if_not_none, dimensions_equal, listify
 from cis.data_io.netcdf import get_metadata, get_netcdf_file_attributes, read_many_files_individually, \
@@ -236,7 +236,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         return set(variables)
 
 
-class NCAR_NetCDF_RAF(abstract_NetCDF_CF):
+class NCAR_NetCDF_RAF(AProduct):
     """
     Data product for NCAR-RAF NetCDF files. This includes the subset of GASSP (which is its major use case)
     """
