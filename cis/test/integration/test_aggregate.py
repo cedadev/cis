@@ -190,16 +190,16 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         aggregation, which should in principle be just as quick as each other. This test mirrors the
         test_cloud_cci_onto_NetCDF_Gridded test in test_colocate.py.
         """
-        variable = ','.join([valid_cloud_cci_variable, valid_cloud_cci_8_bit_variable])
+        variables = ','.join([valid_cloud_cci_variable, valid_cloud_cci_8_bit_variable])
         filename = valid_cloud_cci_filename
         grid = 'x=[0, 358.125, 1.875],y=[-90, 90, 1.25],t=[2007-06-01,2007-06-30,PT3H]'
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_NAME]
+        arguments = ['aggregate', variables + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
         # This check can't deal with the combined temporal and spatial aggregation so skip it
         #self.check_grid_aggregation(0, 358.125, 1.875, -90, 90, 1.25)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variables.split(','))
 
     def test_aggregate_NCAR_RAF(self):
         # Takes 513s
