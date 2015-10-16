@@ -81,6 +81,10 @@ cis_test_files["modis_L2"] = TestFileTestData(
     data_variable_properties={}
 )
 
+modis_myd06_l2_filenames = [make_pathname("MYD06_L2.A2011100.1720.051.2011102130126.hdf"),
+                            make_pathname("MYD06_L2.A2011100.1725.051.2011102123922.hdf")]
+modis_myd06_l2_variable = "Surface_Temperature"
+
 valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
 valid_modis_l3_variable = "Solar_Zenith_Std_Deviation_Mean"
 cis_test_files["modis_L3"] = TestFileTestData(
