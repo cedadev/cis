@@ -68,6 +68,8 @@ class TestAggregation(BaseAggregationTest):
     """
 
     def test_aggregation_over_latlon(self):
+        import numpy.ma as ma
+        from cis import read_data_list
         # Takes 20s
         variable = 'AOD550,AOD870'
         filename = valid_aerosol_cci_filename
@@ -81,37 +83,37 @@ class TestAggregation(BaseAggregationTest):
         # against the original data and found to 'look about right' and therefore used as a baseline. If these values
         # change we should consider being concerned.
         i = float('inf')
-        arr_550 = np.array([[0.1096153093624289, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.03419682030959262, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.06063271913586593, 0.08715646206228822, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.09970282124016773, 0.1629985723514454, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.19553465147813162, 0.40563457332879743, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.7052307901349156, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.5859629385860146, 0.4436802918665714, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.29588747474573723, 0.2914036842614198, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.13670555069561927, 0.1756245641523532, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, i, 0.1524867860807313, 0.15664356061755572, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, i, i, 0.3850824283435941, 0.929232015972957, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, i, i, i, 0.18689890454212824, i, i, i, i, i, i, i, i, i, i, 0.17285842509710625]])
-        arr_870 = np.array([[0.0869540874214068, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.0184880101156111, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.0363671136111385, 0.0521519258756329, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.0626557093240659, 0.0976959701925822, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [0.110700003802776, 0.239833255113166, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.639897634027878, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.533210717307752, 0.386442222587703, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.226935877285485, 0.228134018585045, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, 0.0762777089351608, 0.106399147962141, i, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, i, 0.087257672391004, 0.0883575717452914, i, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, i, i, 0.189694136753678, 0.680416197050363, i, i, i, i, i, i, i, i, i, i, i],
-                            [i, i, i, i, 0.127948367761241, i, i, i, i, i, i, i, i, i, i, 0.0958142693422429]])
+        arr_550 = np.array([[[0.1096153093624289, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.03419682030959262, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.06063271913586593, 0.08715646206228822, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.09970282124016773, 0.1629985723514454, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.19553465147813162, 0.40563457332879743, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.7052307901349156, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.5859629385860146, 0.4436802918665714, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.29588747474573723, 0.2914036842614198, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.13670555069561927, 0.1756245641523532, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, i, 0.1524867860807313, 0.15664356061755572, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, i, i, 0.3850824283435941, 0.929232015972957, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, i, i, i, 0.18689890454212824, i, i, i, i, i, i, i, i, i, i, 0.17285842509710625]]])
+        arr_870 = np.array([[[0.0869540874214068, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.0184880101156111, i, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.0363671136111385, 0.0521519258756329, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.0626557093240659, 0.0976959701925822, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [0.110700003802776, 0.239833255113166, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.639897634027878, i, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.533210717307752, 0.386442222587703, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.226935877285485, 0.228134018585045, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, 0.0762777089351608, 0.106399147962141, i, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, i, 0.087257672391004, 0.0883575717452914, i, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, i, i, 0.189694136753678, 0.680416197050363, i, i, i, i, i, i, i, i, i, i, i],
+                             [i, i, i, i, 0.127948367761241, i, i, i, i, i, i, i, i, i, i, 0.0958142693422429]]])
+        arr_550 = ma.masked_invalid(arr_550)
+        arr_870 = ma.masked_invalid(arr_870)
         ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         data_550 = ds.variables['AOD550']
-        arr_550 = np.transpose(arr_550).reshape((16, 12, 1))
-        arr_870 = np.transpose(arr_870).reshape((16, 12, 1))
-        assert_arrays_almost_equal(data_550[:], arr_550)
+        assert_arrays_almost_equal(data_550[:], arr_550.reshape((12, 16, 1)))
         data_870 = ds.variables['AOD870']
-        assert_arrays_almost_equal(data_870[:], arr_870)
+        assert_arrays_almost_equal(data_870[:], arr_870.reshape((12, 16, 1)))
 
     def test_aggregation_over_time(self):
         # Takes 14s
