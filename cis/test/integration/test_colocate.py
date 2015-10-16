@@ -152,17 +152,18 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         Takes ~80s on aopposxlap18. This test mirrors the test_aggregate_Cloud_CCI_for_comparison_with_collocation
         test in test_aggregate.py.
         """
+        variables = [valid_cloud_cci_variable, valid_cloud_cci_8_bit_variable]
         filename = valid_cloud_cci_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
         collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
-        arguments = ['col', ",".join(vars) + ':' + filename,
+        arguments = ['col', ",".join(variables) + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variables)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, variables)
 
     def test_cloudsat_PRECIP_onto_NetCDF_Gridded(self):
         # Takes 15s
