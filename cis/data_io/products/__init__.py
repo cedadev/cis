@@ -3,9 +3,9 @@ Module with standard cis Data Products in it
 """
 
 from AProduct import AProduct
-from products import NetCDF_Gridded, Aeronet, ASCII_Hyperpoints, cis, default_NetCDF
+from products import Aeronet, ASCII_Hyperpoints, cis
 from cloudsat import CloudSat
-from gridded_NetCDF import abstract_NetCDF_CF_Gridded, NetCDF_Gridded
+from gridded_NetCDF import NetCDF_Gridded
 from NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
 from MODIS import MODIS_L2, MODIS_L3
 from caliop import abstract_Caliop, Caliop_L1, Caliop_L2
@@ -16,6 +16,7 @@ from HadGEM import HadGEM_PP, HadGEM_CONVSH
 __all__ = [
     "AProduct",
     "NCAR_NetCDF_RAF",
+    "NetCDF_Gridded",
     "MODIS_L2",
     "MODIS_L3",
     "Caliop_L1",
@@ -23,7 +24,6 @@ __all__ = [
     "CCI",
     "Cloud_CCI",
     "Aerosol_CCI",
-    "default_NetCDF",
     "Aeronet",
     "ASCII_Hyperpoints",
     "cis",

@@ -4,10 +4,10 @@ from cis.data_io import gridded_data as gridded_data
 from cis.data_io.products import AProduct
 
 
-class abstract_NetCDF_CF_Gridded(AProduct):
+class NetCDF_Gridded(AProduct):
     def get_file_signature(self):
         # We don't know of any 'standard' netCDF CF model data yet...
-        return []
+        return [r'.*\.nc']
 
     @staticmethod
     def load_multiple_files_callback(cube, field, filename):
@@ -50,31 +50,41 @@ class abstract_NetCDF_CF_Gridded(AProduct):
         """Reads the coordinates on which a variable depends.
         Note: This calls create_data_object because the coordinates are returned as a Cube.
         :param filenames: list of names of files from which to read coordinates
-        :param variable: name of variable for which the coordinates are required (if file contains more than one use
-        the first varible)
+        :param variable: name of variable for which the coordinates are required
+        (optional if file contains only one cube)
         :return: iris.cube.Cube
         """
 
         if variable is None:
-
             variable_names = self.get_variable_names(filenames)
             if len(variable_names) > 1:
                 variable_name = str(variable_names.pop())
+                logging.debug("Reading an IRIS Cube for the coordinates based on the variable %s" % variable_names)
             else:
                 variable_name = None
         else:
             variable_name = variable
-        return self._create_cube(filenames, variable_name)
+
+        return self.create_data_object(filenames, variable_name)
 
     def create_data_object(self, filenames, variable):
+        """Reads the data for a variable.
+        :param filenames: list of names of files from which to read data
+        :param variable: (optional) name of variable; if None, the file(s) must contain data for only one cube
+        :return: iris.cube.Cube
         """
+        from cis.time_util import convert_cube_time_coord_to_standard_time
 
-        :param filenames: List of filenames to read coordinates from
-        :param variable: Optional variable to read while we're reading the coordinates, can be a string or a
-        VariableConstraint object
-        :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
-        """
-        return self._create_cube(filenames, variable)
+        cube = self._create_cube(filenames, variable)
+
+        try:
+            cube = convert_cube_time_coord_to_standard_time(cube)
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+        return cube
+
+    def get_file_format(self, filename):
+        return "NetCDF/Gridded"
 
     def _create_cube(self, filenames, variable):
         """Creates a cube for the specified variable.
@@ -189,52 +199,3 @@ class DisplayConstraint(iris.Constraint):
             return self.display
         else:
             return super(DisplayConstraint, self).__str__()
-
-
-class NetCDF_Gridded(abstract_NetCDF_CF_Gridded):
-    """Reads gridded netCDF identifying variable by variable name.
-    """
-
-    def get_file_signature(self):
-        # Generic product class so no signature.
-        return []
-
-    def create_coords(self, filenames, variable=None):
-        """Reads the coordinates on which a variable depends.
-        Note: This calls create_data_object because the coordinates are returned as a Cube.
-        :param filenames: list of names of files from which to read coordinates
-        :param variable: name of variable for which the coordinates are required
-        (optional if file contains only one cube)
-        :return: iris.cube.Cube
-        """
-
-        if variable is None:
-            variable_names = self.get_variable_names(filenames)
-            if len(variable_names) > 1:
-                variable_name = str(variable_names.pop())
-                logging.debug("Reading an IRIS Cube for the coordinates based on the variable %s" % variable_names)
-            else:
-                variable_name = None
-        else:
-            variable_name = variable
-
-        return self.create_data_object(filenames, variable_name)
-
-    def create_data_object(self, filenames, variable):
-        """Reads the data for a variable.
-        :param filenames: list of names of files from which to read data
-        :param variable: (optional) name of variable; if None, the file(s) must contain data for only one cube
-        :return: iris.cube.Cube
-        """
-        from cis.time_util import convert_cube_time_coord_to_standard_time
-
-        cube = super(NetCDF_Gridded, self).create_data_object(filenames, variable)
-
-        try:
-            cube = convert_cube_time_coord_to_standard_time(cube)
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
-        return cube
-
-    def get_file_format(self, filename):
-        return "NetCDF/Gridded"

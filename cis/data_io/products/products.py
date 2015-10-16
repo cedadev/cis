@@ -3,7 +3,6 @@ from cis.data_io.Coord import Coord, CoordList
 from cis.data_io.products.AProduct import AProduct
 from cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedCoordinates
 import cis.utils as utils
-from cis.data_io.products.gridded_NetCDF import NetCDF_Gridded
 
 
 class cis(AProduct):
@@ -150,13 +149,3 @@ class ASCII_Hyperpoints(AProduct):
         """
         return "ASCII/ASCIIHyperpoints"
 
-
-class default_NetCDF(NetCDF_Gridded):
-    """
-    This class should always be the last in the sorted list (last alphabetically) - and hence the default for *.nc
-    files which have not otherwise been matched.
-    """
-    priority = 1
-
-    def get_file_signature(self):
-        return [r'.*\.nc']

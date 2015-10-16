@@ -296,7 +296,7 @@ class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
 
         self.filename = valid_xenida_filename
         self.valid_variable = valid_xenida_variable
-        self.product = default_NetCDF
+        self.product = NetCDF_Gridded
         self.file_format = "NetCDF/Gridded"
 
     @nottest
@@ -321,7 +321,7 @@ class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
 
         self.filename = valid_1d_filename
         self.valid_variable = valid_1d_variable
-        self.product = default_NetCDF
+        self.product = NetCDF_Gridded
         self.file_format = "NetCDF/Gridded"
 
     @nottest
@@ -346,7 +346,7 @@ class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
 
         self.filename = valid_hadgem_filename
         self.valid_variable = valid_hadgem_variable
-        self.product = default_NetCDF
+        self.product = NetCDF_Gridded
         self.vars = ['od550aer']
         self.file_format = "NetCDF/Gridded"
 
