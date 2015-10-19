@@ -257,8 +257,7 @@ class TestPlotVisual(VisualTest):
 
     def test_other_contourf(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        #! TODO: Pretty sure this should be a contourf:
-        opts = "--type contour --xlabel overiddenxlabel --itemwidth 4 --fontsize 15 --height 10 --ymin 0 --ymax 10000" \
+        opts = "--type contourf --xlabel overiddenxlabel --itemwidth 4 --fontsize 15 --height 10 --ymin 0 --ymax 10000" \
                " --vmin 0 --vstep 300 --cbarorient horizontal --grid --xaxis Latitude --yaxis Height".split()
         arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file + ":cmap=RdBu"]
 
