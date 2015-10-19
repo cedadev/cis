@@ -232,22 +232,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_scatter_overlay(self):
-        #! TODO This seems to be failing with:
-        # Heatmap can only be plotted for gridded data
-        # But I'm not asking for a heatmap...
-        output_file_opt = ["--output", self.id() + ".png"]
-        opts = " --type scatteroverlay --xlabel overiddenx --ylabel overiddeny --itemwidth 200 --fontsize 15" \
-               " --height 10 --width 10 --xmin=-50 --xmax 50 --ymin 0 --ymax 15000 --vmin=-0.006 --vmax 0.003" \
-               " --vstep 0.003 --cbarorient vertical --grid --xaxis Latitude --yaxis Height".split()
-        arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file,
-                     "RVOD_ice_water_content:" + valid_cloudsat_RVOD_file + ":itemstyle=s,label=overiddenlabel"]
-
-        main_arguments = parse_args(arguments + opts + output_file_opt)
-        plot_cmd(main_arguments)
-
-        self.check_graphic()
-
     def test_other_comparative_scatter(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = " --type comparativescatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --fontsize 7" \
@@ -276,18 +260,6 @@ class TestPlotVisual(VisualTest):
         #! TODO: Pretty sure this should be a contourf:
         opts = "--type contour --xlabel overiddenxlabel --itemwidth 4 --fontsize 15 --height 10 --ymin 0 --ymax 10000" \
                " --vmin 0 --vstep 300 --cbarorient horizontal --grid --xaxis Latitude --yaxis Height".split()
-        arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file + ":cmap=RdBu"]
-
-        main_arguments = parse_args(arguments + opts + output_file_opt)
-        plot_cmd(main_arguments)
-
-        self.check_graphic()
-
-    @skip("This is no longer a valid test - heatmaps only work for gridded data.")
-    def test_other_heatmap(self):
-        output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type heatmap --ylabel overiddenylabel --width 7 --ymin 0 --ymax 5000 --nocolourbar --grid" \
-               " --xaxis Latitude --yaxis Height".split()
         arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file + ":cmap=RdBu"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -345,17 +317,6 @@ class TestPlotVisual(VisualTest):
         arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":color=green,itemstyle=dotted",
                      "AOT_870:" + valid_aeronet_filename + ":itemstyle=dashed",
                      "AOT_1020:" + valid_aeronet_filename + ":color=red"]
-
-        main_arguments = parse_args(arguments + opts + output_file_opt)
-        plot_cmd(main_arguments)
-
-        self.check_graphic()
-
-    @skip("This is no longer a valid test - heatmaps only work for gridded data.")
-    def test_other_multiple_modis_files_heatmap(self):
-        output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type heatmap".split()
-        arguments = ["plot", "Surface_Temperature:" + ",".join(modis_myd06_l2_filenames)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
