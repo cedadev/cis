@@ -27,9 +27,12 @@ directory, however, means the archive can be easily unpacked, without creating a
 To make the integration tests run this needs to be copied to the local machine and decompressed. Then set the
 environment variable ``CIS_DATA_HOME`` to the location of the data sets, and run ``nosetests cis/test/integration``.
 
-There are also a number of plot tests available under the ``test/plot_tests`` directory which can be run using
-the ``run_all.sh`` script. These perform a diff of some standard plots against reference plots, however small changes
-in the platform libraries and fonts can break these tests so they shouldn't be relied on.
+There are also a number of plot tests available under the ``test/plot_tests`` directory in
+the ``test_plotting.py`` script. These integration tests use matplotlib to perform a byte-wise comparision of the output
+against reference plots, using a pre-defined tolerance. Any tests which fail can be evaluated using the ``idiff.py``
+tool in the same directory. Running this will present a graphical interface showing the reference plot, the test output,
+and the difference between them. You can either choose to accept the difference which will move the test output to the
+reference directory, or reject it.
 
 
 Dependencies

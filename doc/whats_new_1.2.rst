@@ -27,3 +27,7 @@ Bugs fixed
  * Renamed and restructured the collocation modules for consistency
  * Many documentation spelling and formatting updates
  * Many code formatting updates for PEP8 compliance
+
+CIS 1.2.1 features
+==================
+ * Updated CCI plugin to support Aerosol CCI v3 files.
