@@ -246,7 +246,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     import iris.plot as iplt
     import iris
     import logging
-    from mpl_toolkits.basemap import addcyclic
+    from cartopy.util import add_cyclic_point
 
     no_of_dims = len(data_object.shape)
 
@@ -304,10 +304,10 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                         y, _x = np.meshgrid(y, x[:, 0])
             else:
                 try:
-                    data, x = addcyclic(data, x)
+                    data, x = add_cyclic_point(data, x)
                     x, y = np.meshgrid(x, y)
                 except:
-                    data, y = addcyclic(data, y)
+                    data, y = add_cyclic_point(data, y)
                     y, x = np.meshgrid(y, x)
 
     if x_axis_name == 'X' and x_wrap_start is not None:
