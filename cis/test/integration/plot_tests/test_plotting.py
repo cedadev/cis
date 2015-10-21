@@ -138,7 +138,19 @@ class TestPlotVisual(VisualTest):
     def test_iris_heatmap(self):
         arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "heatmap",
                      "--ylabel", "Overidden Y", "--title", "OveriddenTitle",
-                    "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output", self.id() + ".png"]
+                     "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output",
+                     self.id() + ".png"]
+
+        main_arguments = parse_args(arguments)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_iris_heatmap_force_minus_180_to_180(self):
+        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "heatmap",
+                     "--ylabel", "Overidden Y", "--title", "OveriddenTitle", "--xmin", "-180", "--xmax", "180",
+                     "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output",
+                     self.id() + ".png"]
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
