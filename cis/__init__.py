@@ -42,12 +42,9 @@ def read_data(filenames, variable, product=None):
     :param str product:  The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
     :return:  The specified data as either a :class:`GriddedData` or :class:`UngriddedData` object.
     """
-    from cis.exceptions import InvalidVariableError
     data_list = read_data_list(filenames, variable, product)
     if len(data_list) > 1:
-        raise InvalidVariableError("More than one {} variable found".format(variable))
-    elif len(data_list) == 0:
-        raise InvalidVariableError("No variables found matching: {}".format(variable))
+        raise ValueError("More than one {} variable found".format(variable))
     return data_list[0]
 
 
@@ -64,8 +61,14 @@ def read_data_list(filenames, variables, product=None, aliases=None):
     :param str product: The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
     :param aliases: List of aliases to put on each variable's data object as an alternative means of identifying them.
     :type aliases: string or list
-    :return:  A list of the data read out (either a :class:`GriddedDataList` or :class:`UngriddedDataList` depending on the
-     type of data contained in the files)
+    :return:  A list of the data read out (either a :class:`GriddedDataList` or :class:`UngriddedDataList` depending on
+     the type of data contained in the files)
     """
     from cis.data_io.data_reader import DataReader, expand_filelist
+    try:
+        file_set = expand_filelist(filenames)
+    except ValueError as e:
+        raise IOError(e)
+    if len(file_set) == 0:
+        raise IOError("No files found which match: {}".format(filenames))
     return DataReader().read_data_list(expand_filelist(filenames), variables, product, aliases)
