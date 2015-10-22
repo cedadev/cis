@@ -60,9 +60,8 @@ class TestHeatMap(unittest.TestCase):
         expected_y = np.array([[50, 50, 50],
                                [51, 51, 51],
                                [52, 52, 52]])
-        expected_v = np.array([[1, 2, 0],
-                               [3, 4, 0],
-                               [0, 0, 0]])
+        expected_v = np.array([[1, 2],
+                               [3, 4]])
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
         assert_arrays_equal(out_values, expected_v)
@@ -85,9 +84,8 @@ class TestHeatMap(unittest.TestCase):
         expected_y = np.array([[50, 50, 50],
                                [51, 51, 51],
                                [52, 52, 52]])
-        expected_v = np.array([[1, 2, 0],
-                               [3, 4, 0],
-                               [0, 0, 0]])
+        expected_v = np.array([[1, 2],
+                               [3, 4]])
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
         assert_arrays_equal(out_values, expected_v)
@@ -110,9 +108,8 @@ class TestHeatMap(unittest.TestCase):
         expected_y = np.array([[52, 52, 52],
                                [51, 51, 51],
                                [50, 50, 50]])
-        expected_v = np.array([[1, 2, 0],
-                               [3, 4, 0],
-                               [0, 0, 0]])
+        expected_v = np.array([[1, 2],
+                               [3, 4]])
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
         assert_arrays_equal(out_values, expected_v)
