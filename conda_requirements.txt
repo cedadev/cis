@@ -3,10 +3,9 @@
 
 # Python dependencies
 matplotlib
-basemap=1.0.7
 numpy=1.8.2
-iris=1.8.0
-scipy=0.14.0
+iris
+scipy
 
 # IO Dependencies
 hdf4
@@ -15,8 +14,6 @@ pyhdf
 libnetcdf
 netcdf4
 zlib
-
-geos=3.3.3
 
 # jpeg=8d=0
 

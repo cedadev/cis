@@ -6,7 +6,6 @@ digraph cis {
 	cis -> psutil;
 	cis -> numpy;
 	cis -> matplotlib;
-	cis -> basemap;
 	cis -> pyhamcrest;
 	cis -> mock;
 	cis -> scipy;
@@ -20,11 +19,7 @@ digraph cis {
     iris -> matplotlib;
     iris -> cartopy;
     iris -> PythonImagingLibrary;
-    iris -> basemap;
     iris -> shapely;
-
-    basemap -> "proj.4";
-    basemap -> geos;
 
     cartopy -> cython;
     cartopy -> "proj.4";

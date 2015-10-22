@@ -45,6 +45,9 @@ class Scatter_Plot(Generic_Plot):
                 self.plotting_library.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
                                               **self.mplkwargs))
 
+        # Use the first plot for the color scale
+        self.color_axis = self.plots[0]
+
     def calculate_axis_limits(self, axis, min_val, max_val, step):
         """
         :param axis: The axis to calculate the limits for

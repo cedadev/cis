@@ -22,8 +22,7 @@ else:
                     "numpy",
                     "scipy",
                     "iris>=1.8.0",
-                    'psutil>=2.0.0',
-                    'basemap>=1.0.7']
+                    'psutil>=2.0.0']
 
     optional_dependencies = {"HDF": ["pyhdf"]}
 

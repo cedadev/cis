@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-from mpl_toolkits.basemap import Basemap
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 import matplotlib.pyplot as plt
 
@@ -48,9 +47,9 @@ class Generic_Plot(object):
 
         self.matplotlib = plt
 
-        self.plotting_library = self.set_plotting_library()
-
         self.set_width_and_height()
+
+        self.plotting_library = self.set_plotting_library()
 
         if self.is_map():
             self.check_data_is_2d()
@@ -68,6 +67,9 @@ class Generic_Plot(object):
         return x_wrap_start
 
     def set_plotting_library(self):
+        import cartopy.crs as ccrs
+        import matplotlib.pyplot as plt
+
         if self.is_map():
             max_found = 180
             x_range_dict = self.plot_args.get('xrange')
@@ -78,10 +80,8 @@ class Generic_Plot(object):
             #  it for lon_0.
             if -180 < data_max < 900.0:
                 max_found = max(data_max, max_found)
-            self.basemap = Basemap(lon_0=(max_found - 180.0))
-            return self.basemap
-        else:
-            return self.matplotlib
+            self.cartopy_axis = self.matplotlib.axes(projection=ccrs.PlateCarree(central_longitude=(max_found - 180.0)))
+        return self.matplotlib
 
     def get_data_items_max(self):
         import numpy as np
@@ -243,7 +243,7 @@ class Generic_Plot(object):
         else:
             scale = float(scale)
 
-        cbar = self.matplotlib.colorbar(orientation=self.plot_args["cbarorient"], ticks=ticks,
+        cbar = self.matplotlib.colorbar(self.color_axis, orientation=self.plot_args["cbarorient"], ticks=ticks,
                                         shrink=scale, format=formatter)
 
         if not self.plot_args["logv"]:
@@ -263,17 +263,29 @@ class Generic_Plot(object):
 
         if axis == "x":
             coord_axis = "x"
-            tick_method = self.matplotlib.xticks
+            if self.is_map():
+                tick_method = self.cartopy_axis.set_xticks
+            else:
+                tick_method = self.matplotlib.xticks
         elif axis == "y":
             coord_axis = "data" if no_of_dims == 2 else "y"
-            tick_method = self.matplotlib.yticks
+            if self.is_map():
+                tick_method = self.cartopy_axis.set_yticks
+            else:
+                tick_method = self.matplotlib.yticks
 
-        if self.plot_args.get(axis + "tickangle", None) is None:
-            angle = None
-            ha = "center" if axis == "x" else "right"
+        angle_kwargs = {}
+        if not self.is_map():
+            if self.plot_args.get(axis + "tickangle", None) is None:
+                angle = None
+                angle_kwargs['ha'] = "center" if axis == "x" else "right"
+            else:
+                angle_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
+                angle_kwargs['ha'] = "right"
         else:
-            angle = self.plot_args[axis + "tickangle"]
-            ha = "right"
+            #! TODO: This is a nasty hack to make give the map axis a default tick spacing, as cartopy won't work it
+            # out for itself. This needs more thought.
+            self.plot_args[axis + "range"][axis + "step"] = 30
 
         if self.plot_args[axis + "range"].get(axis + "step") is not None:
             step = self.plot_args[axis + "range"][axis + "step"]
@@ -290,9 +302,9 @@ class Generic_Plot(object):
 
             ticks = arange(min_val, max_val + step, step)
 
-            tick_method(ticks, rotation=angle, ha=ha)
+            tick_method(ticks, **angle_kwargs)
         else:
-            tick_method(rotation=angle, ha=ha)
+            tick_method(**angle_kwargs)
 
     def format_time_axis(self):
         from cis.time_util import cis_standard_time_unit
@@ -462,8 +474,8 @@ class Generic_Plot(object):
         self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
         self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
         self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
-        self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
 
+        self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
         if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
             self.plot_args["valrange"]["vmin"] = self.plot_args['datagroups'][self.datagroup]['cmin']
         if self.plot_args['datagroups'][self.datagroup]['cmax'] is not None:
@@ -499,16 +511,12 @@ class Generic_Plot(object):
             # This fails for an unknown reason on one dimensional data
             self.mplkwargs["latlon"] = True
 
-        # If data (and x, y) is one dimensional, "tri" is set to true to tell Basemap the data is unstructured
-        if self.unpacked_data_items[0]["data"].ndim == 1:
-            self.mplkwargs["tri"] = True
-
-        cs = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
+        self.color_axis = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
                           self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
         if self.mplkwargs["contlabel"] and not filled:
-            plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
+            plt.clabel(self.color_axis, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
         elif self.mplkwargs["contlabel"] and filled:
-            plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
+            plt.clabel(self.color_axis, fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
 
         self.mplkwargs.pop("latlon", None)
         self.mplkwargs.pop("tri", None)
@@ -577,10 +585,10 @@ class Generic_Plot(object):
 
     def drawcoastlines(self):
         if self.plot_args["nasabluemarble"] is not False:
-            self.basemap.bluemarble()
+            self.cartopy_axis.bluemarble()
         else:
-            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
-            self.basemap.drawcoastlines(color=colour)
+            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
+            self.cartopy_axis.coastlines(color=colour)
 
     def format_3d_plot(self):
         """

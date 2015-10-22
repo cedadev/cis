@@ -10,7 +10,7 @@ class Scatter_Overlay(Generic_Plot):
         """
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) > 1:
-            Heatmap([self.packed_data_items[0]], self.plot_args, *self.mplargs, **self.mplkwargs)
+            self.color_axis = Heatmap([self.packed_data_items[0]], self.plot_args, *self.mplargs, **self.mplkwargs)
             scatter_plot_args = self.plot_args
             scatter_plot_args["datagroups"] = self.plot_args["datagroups"][1:]
             self.scatter_plots = Scatter_Plot(self.packed_data_items[1:], scatter_plot_args,
