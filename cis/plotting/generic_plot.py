@@ -285,9 +285,6 @@ class Generic_Plot(object):
             else:
                 angle_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
                 angle_kwargs['ha'] = "right"
-        else:
-            pass
-            # self.plot_args[axis + "range"][axis + "step"] = 30
 
         if self.plot_args[axis + "range"].get(axis + "step") is not None:
             step = self.plot_args[axis + "range"][axis + "step"]
@@ -781,8 +778,6 @@ class Generic_Plot(object):
                 max_y_bins = 4
 
         lat_or_lon = 'lat', 'lon'
-
-        axis = self.cartopy_axis if self.is_map() else self.matplotlib.axes()
 
         if xsteps is None and self.plot_args['logx'] is None:
             if self.plot_args['x_variable'].lower().startswith(lat_or_lon):
