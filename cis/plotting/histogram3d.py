@@ -53,10 +53,10 @@ class Histogram_3D(Generic_Plot):
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
 
-    def unpack_data_items(self):
+    def unpack_data_items(self, x_offset):
         return self.unpack_comparative_data()
 
-    def set_plotting_library(self):
+    def setup_map(self):
         pass
 
     def calculate_bin_edges(self, axis):

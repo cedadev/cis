@@ -42,7 +42,7 @@ class Scatter_Plot(Generic_Plot):
                 y_coords = unpacked_data_item["data"]
 
             self.plots.append(
-                self.plotting_library.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
+                self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
                                               **self.mplkwargs))
 
         # Use the first plot for the color scale

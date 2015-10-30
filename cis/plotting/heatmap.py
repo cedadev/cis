@@ -38,7 +38,7 @@ class Heatmap(Generic_Plot):
 
         x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.plot_args)
 
-        self.color_axis = self.plotting_library.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs)
+        self.color_axis = self.matplotlib.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs)
 
     def get_data_items_max(self):
         # Take into account the bounds

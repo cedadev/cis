@@ -39,8 +39,8 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        self.x_wrap_start = self.set_x_wrap_start(x_wrap_start)
-        self.unpacked_data_items = self.unpack_data_items()
+        x_offset = self.set_x_wrap_start(x_wrap_start)
+        self.unpacked_data_items = self.unpack_data_items(x_offset)
 
         if calculate_min_and_max_values:
             self.calculate_min_and_max_values()
@@ -49,9 +49,8 @@ class Generic_Plot(object):
 
         self.set_width_and_height()
 
-        self.plotting_library = self.set_plotting_library()
-
         if self.is_map():
+            self.setup_map()
             self.check_data_is_2d()
 
         self.plot()
@@ -60,31 +59,31 @@ class Generic_Plot(object):
         if len(self.packed_data_items[0].shape) > 2:
             raise CISError("Data is not 1D or 2D - can't plot it on a map.")
 
-    def set_x_wrap_start(self, x_wrap_start):
-        if x_wrap_start is None:
-            x_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.plot_args.get('xrange'),
-                                                     self.packed_data_items)
-        return x_wrap_start
+    def set_x_wrap_start(self, user_xmin):
 
-    def set_plotting_library(self):
+        # FIND THE WRAP START OF THE DATA
+        data_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.packed_data_items)
+
+        # NOW find the wrap start of the user specified range
+        if user_xmin is not None:
+            self.x_wrap_start = -180 if user_xmin < 0 else 0
+        else:
+            self.x_wrap_start = data_wrap_start
+
+        # Now work out if those two wrap starts are different...
+        if self.x_wrap_start is not None:
+            offset = self.x_wrap_start - data_wrap_start
+        else:
+            offset = 0
+
+        return offset
+
+    def setup_map(self):
         import cartopy.crs as ccrs
-        import matplotlib.pyplot as plt
 
-        if self.is_map():
-            # max_found = 180
-            # x_range_dict = self.plot_args.get('xrange')
-            # x_max_requested = x_range_dict.get('xmax')
-            # max_found = max([max_found, x_max_requested])
-            # data_max = self.get_data_items_max()
-            # # lon_0 must be between -360 and 720 so if the max longitude in the data is outside this then don't consider
-            # #  it for lon_0.
-            # if -180 < data_max < 900.0:
-            #     max_found = max(data_max, max_found)
-            # self.projection = ccrs.PlateCarree(central_longitude=(self.x_wrap_start + 180.0))
-            self.projection = ccrs.PlateCarree()
-            self.cartopy_axis = self.matplotlib.axes(projection=self.projection)
-            # self.cartopy_axis = self.matplotlib.axes(projection=ccrs.PlateCarree())
-        return self.matplotlib
+        self.projection = ccrs.PlateCarree(central_longitude=(self.x_wrap_start + 180.0))
+        self.cartopy_axis = self.matplotlib.axes(projection=self.projection)
+
 
     def get_data_items_max(self):
         import numpy as np
@@ -93,7 +92,7 @@ class Generic_Plot(object):
             data_max = max([np.nanmax(i["x"]), data_max])
         return data_max
 
-    def unpack_data_items(self):
+    def unpack_data_items(self, x_offset):
         def __get_data(axis):
             variable = self.plot_args[axis + "_variable"]
             if variable == "default" or variable == self.packed_data_items[0].name() \
@@ -141,7 +140,7 @@ class Generic_Plot(object):
                         __swap_x_and_y_variables()
 
         return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"],
-                                   self.x_wrap_start) for packed_data_item in self.packed_data_items]
+                                   self.x_wrap_start, x_offset=x_offset) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]
@@ -502,9 +501,9 @@ class Generic_Plot(object):
             contour_level_list = self.plot_args['datagroups'][self.datagroup]['contlevels']
 
         if filled:
-            contour_type = self.plotting_library.contourf
+            contour_type = self.matplotlib.contourf
         else:
-            contour_type = self.plotting_library.contour
+            contour_type = self.matplotlib.contour
 
         if self.is_map() and self.unpacked_data_items[0]["data"].ndim == 2:
             # This fails for an unknown reason on one dimensional data

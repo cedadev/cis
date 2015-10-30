@@ -8,12 +8,14 @@ import iris
 from iris.coords import DimCoord
 from iris.cube import Cube
 import numpy as np
+from nose.tools import eq_
 
 from cis.data_io.gridded_data import make_from_cube
 from cis.plotting.plot import Plotter
 from cis.plotting.generic_plot import Generic_Plot
 from cis.test.utils_for_testing import assert_arrays_equal
 from cis.plotting.heatmap import make_color_mesh_cells, Heatmap
+from cis.plotting.scatter_plot import Scatter_Plot
 
 
 class TestPlotting(unittest.TestCase):
@@ -31,6 +33,102 @@ class TestPlotting(unittest.TestCase):
         with self.assertRaises(IOError):
             cube = iris.load_cube("/")
             Plotter([cube], "line", "/")
+
+
+class TestGenericPlot(unittest.TestCase):
+
+    def setUp(self):
+        from mock import MagicMock
+
+        """
+        We have to patch the sys.modules dictionary to use our mocked versions of the pyhdf library to test it not
+        being installed. This creates the appropriate mocks and imports them into the namespace.
+        """
+
+        self.plot = MagicMock(Scatter_Plot)
+        self.plot.plot_args = {'x_variable': 'longitude',
+                               'y_variable': 'latitude',
+                               'valrange': {},
+                               'xrange': {'xmin': None, 'xmax': None},
+                               'datagroups': {0: {'cmap': None,
+                                                  'cmin': None,
+                                                  'cmax': None,
+                                                  'itemstyle': None,
+                                                  'edgecolor': None}},
+                               'nasabluemarble': False,
+                               'coastlinescolour': None,
+                               }
+        self.plot.set_x_wrap_start = Scatter_Plot.set_x_wrap_start
+
+    def test_GIVEN_data_range_minus_180_to_180_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+
+        self.plot.packed_data_items = [data]
+
+        eq_(self.plot.set_x_wrap_start(self.plot, -180), 0)
+        eq_(self.plot.x_wrap_start, -180)
+
+    def test_GIVEN_range_0_to_360_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+
+        self.plot.packed_data_items = [data]
+
+        eq_(self.plot.set_x_wrap_start(self.plot, 0), 180)
+        eq_(self.plot.x_wrap_start, 0)
+
+    def test_GIVEN_NO_range_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+
+        self.plot.packed_data_items = [data]
+
+        eq_(self.plot.set_x_wrap_start(self.plot, None), 0)
+        eq_(self.plot.x_wrap_start, -180)
+
+    def test_GIVEN_NO_range_WHEN_data_is_minus_0_to_360_THEN_returns_0(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5, lon_max=345.)
+
+        self.plot.packed_data_items = [data]
+
+        eq_(self.plot.set_x_wrap_start(self.plot, None), 0)
+        eq_(self.plot.x_wrap_start, 0)
+
+    def test_GIVEN_range_minus_180_to_180_WHEN_data_is_0_to_360_THEN_returns_minus_180(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
+
+        self.plot.packed_data_items = [data]
+
+        eq_(self.plot.set_x_wrap_start(self.plot, -180), -180)
+        eq_(self.plot.x_wrap_start, -180)
+
+    def test_GIVEN_range_15_to_45_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+
+        self.plot.packed_data_items = [data]
+
+        eq_(self.plot.set_x_wrap_start(self.plot, 15), 180)
+        eq_(self.plot.x_wrap_start, 0)
+
+    def test_GIVEN_range_15_to_45_WHEN_data_is_0_to_360_THEN_returns_0(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
+
+        self.plot.packed_data_items = [data]
+
+        eq_(self.plot.set_x_wrap_start(self.plot, 15), 0)
+        eq_(self.plot.x_wrap_start, 0)
 
 
 class TestHeatMap(unittest.TestCase):
