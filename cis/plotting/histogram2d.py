@@ -135,8 +135,7 @@ class Histogram_2D(Generic_Plot):
         """
         # Need to ensure that frequency starts from 0
         if 'yrange' in self.plot_args:
-            self.plot_args['yrange']['ymin'] = 0
-        else:
-            self.plot_args['yrange'] = {0, None}
+            ymin = self.plot_args['yrange'].get('ymin', 0)
+            self.plot_args['yrange']['ymin'] = 0 if ymin < 0 else ymin
 
         super(Histogram_2D, self).apply_axis_limits()
