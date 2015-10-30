@@ -88,27 +88,6 @@ class Histogram_3D(Generic_Plot):
     def set_default_axis_label(self, axis):
         self.set_default_axis_label_for_comparative_plot(axis)
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
-        """
-        Calculates the limits for a given axis.
-        If the axis is "x" then looks at the data of the first data item
-        If the axis is "y" then looks at the data of the second data item
-        :param axis: The axis to calculate the limits for
-        :return: A dictionary containing the min and max values for the given axis
-        """
-        if axis == "x":
-            coord_axis = 0
-        elif axis == "y":
-            coord_axis = 1
-        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[coord_axis]["data"])
-
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
-
-        return valrange
-
     def apply_axis_limits(self, valrange, axis):
         if len(valrange) != 0:
             if axis == "x":
