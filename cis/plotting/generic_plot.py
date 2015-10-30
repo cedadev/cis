@@ -286,9 +286,8 @@ class Generic_Plot(object):
                 angle_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
                 angle_kwargs['ha'] = "right"
         else:
-            #! TODO: This is a nasty hack to make give the map axis a default tick spacing, as cartopy won't work it
-            # out for itself. This needs more thought.
-            self.plot_args[axis + "range"][axis + "step"] = 30
+            pass
+            # self.plot_args[axis + "range"][axis + "step"] = 30
 
         if self.plot_args[axis + "range"].get(axis + "step") is not None:
             step = self.plot_args[axis + "range"][axis + "step"]
@@ -306,7 +305,7 @@ class Generic_Plot(object):
             ticks = arange(min_val, max_val + step, step)
 
             tick_method(ticks, **angle_kwargs)
-        else:
+        elif not self.is_map():
             tick_method(**angle_kwargs)
 
     def format_time_axis(self):
@@ -783,20 +782,32 @@ class Generic_Plot(object):
 
         lat_or_lon = 'lat', 'lon'
 
+        axis = self.cartopy_axis if self.is_map() else self.matplotlib.axes()
+
         if xsteps is None and self.plot_args['logx'] is None:
             if self.plot_args['x_variable'].lower().startswith(lat_or_lon):
-                self.matplotlib.axes().xaxis.set_major_locator(MaxNLocator(nbins=max_x_bins, steps=lon_steps))
+                lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
+                if self.is_map():
+                    self.cartopy_axis.set_xticks(lon_locator.tick_values(xmin, xmax), crs=self.projection)
+                else:
+                    self.matplotlib.axes().xaxis.set_major_locator(lon_locator)
             else:
                 self.matplotlib.axes().xaxis.set_major_locator(MaxNLocator(nbins=max_x_bins, steps=variable_step))
 
-            self.matplotlib.axes().xaxis.set_minor_locator(AutoMinorLocator())
-            self.matplotlib.axes().xaxis.grid(False, which='minor')
+            if not self.is_map():
+                self.matplotlib.axes().xaxis.set_minor_locator(AutoMinorLocator())
+                self.matplotlib.axes().xaxis.grid(False, which='minor')
 
         if ysteps is None and self.plot_args['logy'] is None:
             if y_variable.startswith(lat_or_lon):
-                self.matplotlib.axes().yaxis.set_major_locator(MaxNLocator(nbins=max_y_bins, steps=lat_steps))
+                lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
+                if self.is_map():
+                    self.cartopy_axis.set_yticks(lat_locator.tick_values(ymin, ymax), crs=self.projection)
+                else:
+                    self.matplotlib.axes().yaxis.set_major_locator(lat_locator)
             else:
                 self.matplotlib.axes().yaxis.set_major_locator(MaxNLocator(nbins=max_y_bins, steps=variable_step))
 
-            self.matplotlib.axes().yaxis.set_minor_locator(AutoMinorLocator())
-            self.matplotlib.axes().yaxis.grid(False, which='minor')
+            if not self.is_map():
+                self.matplotlib.axes().yaxis.set_minor_locator(AutoMinorLocator())
+                self.matplotlib.axes().yaxis.grid(False, which='minor')
