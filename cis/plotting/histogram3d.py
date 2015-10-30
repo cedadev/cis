@@ -88,19 +88,6 @@ class Histogram_3D(Generic_Plot):
     def set_default_axis_label(self, axis):
         self.set_default_axis_label_for_comparative_plot(axis)
 
-    def apply_axis_limits(self, valrange, axis):
-        if len(valrange) != 0:
-            if axis == "x":
-                step = valrange.pop("xstep", None)
-                self.matplotlib.xlim(**valrange)
-                if step is not None:
-                    valrange["xstep"] = step
-            elif axis == "y":
-                step = valrange.pop("ystep", None)
-                self.matplotlib.ylim(**valrange)
-                if step is not None:
-                    valrange["ystep"] = step
-
     def create_legend(self):
         """
         Overides the create legend method of the Generic Plot as a 3d histogram doesn't need a legend
