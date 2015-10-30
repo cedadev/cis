@@ -41,7 +41,7 @@ class Comparative_Scatter(Generic_Plot):
     def unpack_data_items(self):
         return self.unpack_comparative_data()
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+    def calculate_axis_limits(self, axis, min_val, max_val):
         if axis == "x":
             axis_index = 0
         elif axis == "y":
@@ -49,12 +49,10 @@ class Comparative_Scatter(Generic_Plot):
 
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[axis_index]["data"])
 
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
-        return valrange
+        return new_min, new_max
 
     def format_plot(self):
         # We don't format the time axis here as we're only plotting data against data

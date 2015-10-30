@@ -95,6 +95,7 @@ class Plotter(object):
 
         # Do wrapping
         x_range = plot_args.get('xrange', None)
+
         if x_range is not None:
             x_min = x_range.get('xmin', None)
             x_max = x_range.get('xmax', None)
@@ -108,8 +109,7 @@ class Plotter(object):
         f.set_figheight(plot_args["plotheight"])
         plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
         plot.format_plot()
-        plot.apply_axis_limits(plot_args["xrange"], "x")
-        plot.apply_axis_limits(plot_args["yrange"], "y")
+        plot.apply_axis_limits()
         plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 

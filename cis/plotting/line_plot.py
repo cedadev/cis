@@ -61,20 +61,18 @@ class Line_Plot(Generic_Plot):
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
                 self.plot_args[axislabel] = self.format_units(units)
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+    def calculate_axis_limits(self, axis, min_val, max_val):
         if axis == "x":
             coord_axis = "x"
         elif axis == "y":
             coord_axis = "data"
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0][coord_axis])
 
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
         if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
-            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
+            new_min, new_max = new_max, new_min
 
-        return valrange
+        return new_min, new_max

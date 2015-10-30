@@ -95,7 +95,7 @@ class Histogram_2D(Generic_Plot):
             elif axis == "y":
                 self.plot_args[axislabel] = "Frequency"
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+    def calculate_axis_limits(self, axis, min_val, max_val):
         """
         Calculates the limits for a given axis.
         If the axis is "y" then looks at the "data" as this is where the values are stored
@@ -103,17 +103,14 @@ class Histogram_2D(Generic_Plot):
         :return: A dictionary containing the min and max values for the given axis
         """
         if axis == "x":
-            coord_axis = "x"
+            c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0]['data'])
         elif axis == "y":
-            coord_axis = "data"
-        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0][coord_axis])
+            c_min, c_max = None, None
 
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
-        return valrange
+        return new_min, new_max
 
     def set_axis_ticks(self, axis, no_of_dims):
 
@@ -129,24 +126,17 @@ class Histogram_2D(Generic_Plot):
 
         tick_method(rotation=angle)
 
-    def apply_axis_limits(self, valrange, axis):
+    def apply_axis_limits(self):
         """
         Applies the limits (if given) to the specified axis.
         Sets the "y" axis as having a minimum value of 0 as can never have a negative frequency
         :param valrange: A dictionary containing the min and/or max values for the axis
         :param axis: The axis to apply the limits to
         """
-        if len(valrange) != 0:
-            if axis == "x":
-                step = valrange.pop("xstep", None)
-                self.matplotlib.xlim(**valrange)
-                if step is not None:
-                    valrange["xstep"] = step
-            elif axis == "y":
-                step = valrange.pop("ystep", None)
-                self.matplotlib.ylim(**valrange)
-                if step is not None:
-                    valrange["ystep"] = step
-        elif axis == "y":
-            # Need to ensure that frequency starts from 0
-            self.matplotlib.ylim(ymin=0)
+        # Need to ensure that frequency starts from 0
+        if 'yrange' in self.plot_args:
+            self.plot_args['yrange']['ymin'] = 0
+        else:
+            self.plot_args['yrange'] = {0, None}
+
+        super(Histogram_2D, self).apply_axis_limits()

@@ -48,7 +48,7 @@ class Scatter_Plot(Generic_Plot):
         # Use the first plot for the color scale
         self.color_axis = self.plots[0]
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+    def calculate_axis_limits(self, axis, min_val, max_val):
         """
         :param axis: The axis to calculate the limits for
         :param min_val: The user specified minimum value for the axis
@@ -65,16 +65,14 @@ class Scatter_Plot(Generic_Plot):
                 coord_axis = "y"
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0][coord_axis])
 
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
         if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
-            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
+            new_min, new_max = new_max, new_min
 
-        return valrange
+        return new_min, new_max
 
     def format_plot(self):
         self.format_time_axis()

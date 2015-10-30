@@ -71,16 +71,19 @@ class Generic_Plot(object):
         import matplotlib.pyplot as plt
 
         if self.is_map():
-            max_found = 180
-            x_range_dict = self.plot_args.get('xrange')
-            x_max_requested = x_range_dict.get('xmax')
-            max_found = max([max_found, x_max_requested])
-            data_max = self.get_data_items_max()
-            # lon_0 must be between -360 and 720 so if the max longitude in the data is outside this then don't consider
-            #  it for lon_0.
-            if -180 < data_max < 900.0:
-                max_found = max(data_max, max_found)
-            self.cartopy_axis = self.matplotlib.axes(projection=ccrs.PlateCarree(central_longitude=(max_found - 180.0)))
+            # max_found = 180
+            # x_range_dict = self.plot_args.get('xrange')
+            # x_max_requested = x_range_dict.get('xmax')
+            # max_found = max([max_found, x_max_requested])
+            # data_max = self.get_data_items_max()
+            # # lon_0 must be between -360 and 720 so if the max longitude in the data is outside this then don't consider
+            # #  it for lon_0.
+            # if -180 < data_max < 900.0:
+            #     max_found = max(data_max, max_found)
+            # self.projection = ccrs.PlateCarree(central_longitude=(self.x_wrap_start + 180.0))
+            self.projection = ccrs.PlateCarree()
+            self.cartopy_axis = self.matplotlib.axes(projection=self.projection)
+            # self.cartopy_axis = self.matplotlib.axes(projection=ccrs.PlateCarree())
         return self.matplotlib
 
     def get_data_items_max(self):
@@ -177,7 +180,7 @@ class Generic_Plot(object):
         legend = self.matplotlib.legend(legend_titles, loc="best")
         legend.draggable(state=True)
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+    def calculate_axis_limits(self, axis, min_val, max_val):
         """
         Calculates the axis limits for a given axis
         :param axis: The axis for the limits to be calculated
@@ -186,36 +189,36 @@ class Generic_Plot(object):
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis,
                                                                     self.unpacked_data_items[
                                                                         0][axis])
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
         if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
-            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
+            new_min, new_max = new_max, new_min
 
-        return valrange
+        return new_min, new_max
 
-    def apply_axis_limits(self, valrange, axis):
+    def apply_axis_limits(self):
         """
         Applies the limits to the specified axis if given, or calculates them otherwise
-        :param valrange    A dictionary containing xmin, xmax or ymin, ymax
-        :param axis        The axis to apply the limits to
         """
-        valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None),
-                                              valrange.get(axis + "step", None))
+        x_range_dict = self.plot_args.get('xrange', None)
+        x_range_vals = None if x_range_dict is None else x_range_dict.get('xmin', None), \
+                       None if x_range_dict is None else x_range_dict.get('xmax', None)
 
-        if axis == "x":
-            step = valrange.pop("xstep", None)
-            self.matplotlib.xlim(**valrange)
-            if step is not None:
-                valrange["xstep"] = step
-        elif axis == "y":
-            step = valrange.pop("ystep", None)
-            self.matplotlib.ylim(**valrange)
-            if step is not None:
-                valrange["ystep"] = step
+        y_range_dict = self.plot_args.get('yrange', None)
+        y_range_vals = None if y_range_dict is None else y_range_dict.get('ymin', None),\
+                       None if y_range_dict is None else y_range_dict.get('ymax', None)
+
+        xmin, xmax = self.calculate_axis_limits('x', *x_range_vals)
+        ymin, ymax = self.calculate_axis_limits('y', *y_range_vals)
+
+        if self.is_map():
+            self.cartopy_axis.set_extent([xmin, xmax, ymin, ymax], self.projection)
+        else:
+            self.matplotlib.xlim(xmin=xmin, xmax=xmax)
+            self.matplotlib.ylim(ymin=ymin, ymax=ymax)
 
     def add_color_bar(self):
         """
