@@ -427,7 +427,83 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_bluemarble_minus_180_180(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.plotting import Plotter
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+
+        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
+
+    def test_bluemarble_0_360(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        from cis.plotting import Plotter
+
+        data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
+
+        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
+
+    def test_coastline_color(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        from cis.plotting import Plotter
+
+        data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
+
+        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, coastlinescolour='red',
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
+
+    def test_other_longitude_wrapping_multiple_ranges_forced_0_to_360(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.plotting import Plotter
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
+                 make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
+
+        Plotter(datas, x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':0,'xmax':360},
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
+
+    def test_other_longitude_wrapping_multiple_ranges_forced_minus_180_to_180(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.plotting import Plotter
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
+                 make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
+
+        Plotter([datas], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':-180,'xmax':180},
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
 
     def test_other_overlay_plots(self):
-        # There should be lots of these...
+        # TODO: There should be lots of these...
         pass
