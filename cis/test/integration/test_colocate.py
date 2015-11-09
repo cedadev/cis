@@ -383,6 +383,23 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (192, 145))
 
+    def test_ECHAMHAM_onto_HadGem_box(self):
+        # Sampling ECHAMHAM (lower dimensionality) with HadGEM (higher dimensionality) results in a lower dimensional
+        #  dataset
+        # Takes 1224s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_hadgem_filename
+        sample_var = valid_hadgem_variable
+        collocator_and_opts = 'box[h_sep=500],variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars, (192, 145))
+
 
 class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
     @unittest.skip("Very resource intensive")
