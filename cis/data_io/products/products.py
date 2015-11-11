@@ -100,7 +100,7 @@ class ASCII_Hyperpoints(AProduct):
 
     def create_coords(self, filenames, variable=None):
         from cis.data_io.ungridded_data import Metadata
-        from numpy import genfromtxt
+        from numpy import genfromtxt, NaN
         from cis.exceptions import InvalidVariableError
         from cis.parse_datetime import parse_datetimestr_to_std_time_array
 
@@ -132,8 +132,8 @@ class ASCII_Hyperpoints(AProduct):
 
         if variable:
             try:
-                data = UngriddedData(data_array['value'], Metadata(name="value", shape=(n_elements,), units="unknown"),
-                                     coords)
+                data = UngriddedData(data_array['value'], Metadata(name="value", shape=(n_elements,), units="unknown",
+                                                                   missing_value=NaN), coords)
             except:
                 InvalidVariableError("Value column does not exist in file " + filenames)
             return data
