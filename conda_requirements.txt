@@ -4,9 +4,9 @@
 # Python dependencies
 matplotlib
 basemap=1.0.7
-numpy=1.8.2
+numpy=1.10.1
 iris=1.8.1
-scipy=0.14.0
+scipy=0.16.0
 
 # IO Dependencies
 hdf4
