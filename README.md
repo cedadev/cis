@@ -50,3 +50,6 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with CIS.  If not, see <http://www.gnu.org/licenses/>.
+
+A gratefully use a number of NASA Visible Earth 'Blue Marble' raster 
+images in this repository.
