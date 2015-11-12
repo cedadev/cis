@@ -1,7 +1,7 @@
 from netCDF4 import Dataset
 import sys
 
-from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to
+from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to, raises
 from mock import MagicMock
 
 from cis.cis_main import subset_cmd
@@ -9,7 +9,7 @@ from cis.parse import parse_args
 from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.time_util import convert_time_since_to_std_time
-
+from cis.exceptions import InvalidOperationError, NoDataInSubsetError
 
 class TestSubsetIntegration(BaseIntegrationTest):
     def test_GIVEN_single_variable_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
@@ -380,6 +380,135 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lat_min, lat_max = -30, 30
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_CloudSatPRECIP(self):
+        # Takes 100s
+        variable = '*'
+        filename = valid_cloudsat_PRECIP_file
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_cis_gridded(self):
+        # Takes 1s
+        variable = '*'
+        filename = valid_cis_gridded_output_filename
+        lon_min, lon_max = 0, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+
+    def test_subset_cis_ungridded(self):
+        # Takes 1s
+        variable = '*'
+        filename = valid_cis_ungridded_output_filename
+        lon_min, lon_max = 1, 3
+        lat_min, lat_max = 41, 42
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_CloudSatRVOD(self):
+        # 257s exit code 137
+        variable = '*'  # Gets killed by Jenkins
+        variable = "RVOD_liq_water_content,RVOD_ice_water_path"
+        filename = valid_cloudsat_RVOD_file
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_GASP(self):
+        # 257s exit code 137
+        variable = '*'
+        filename = valid_GASSP_aeroplane_filename
+        lon_min, lon_max = -94, 95
+        lat_min, lat_max = 30, 31
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+    def test_subset_ASCII(self):
+        variable = '*'
+        filename = valid_ascii_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 1, 6
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+
+
+class TestEmptySubsets(BaseIntegrationTest):
+
+    @raises(NoDataInSubsetError)
+    def test_empty_subset_ungridded_vertical(self):
+        # Takes 170s
+        variable = '*'
+        filename = valid_NCAR_NetCDF_RAF_filename
+        alt_min, alt_max = 1000, 2000
+        self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
+        self.check_alt_subsetting(alt_max, alt_min, False)
+
+    #More...
+
+
+class TestVerticalSubsetAllProducts(BaseIntegrationTest):
+    def do_subset(self, filename, variable, alt_bounds='', pres_bounds=''):
+        # Join the bounds with a comma if they are both specified
+        joint_bounds = ','.join([alt_bounds, pres_bounds]) if alt_bounds and pres_bounds else alt_bounds or pres_bounds
+        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+
+    def test_subset_NCAR_RAF_alt(self):
+        # Takes 170s
+        variable = '*'
+        filename = valid_NCAR_NetCDF_RAF_filename
+        alt_min, alt_max = 1000, 2000
+        self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
+        self.check_alt_subsetting(alt_max, alt_min, False)
+
+    def test_subset_NCAR_RAF_pres(self):
+        # Takes 170s
+        variable = '*'
+        filename = valid_NCAR_NetCDF_RAF_filename
+        pres_min, pres_max = 1000, 2000
+        self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_min, pres_max))
+        self.check_pres_subsetting(pres_max, pres_min, False)
+
+    def test_subset_Caliop_L1(self):
+        # Takes 473s
+        variable = ','.join(valid_caliop_l1_variables)
+        filename = valid_caliop_l1_filename
+        alt_min, alt_max = 1000, 2000
+        self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
+        self.check_alt_subsetting(alt_max, alt_min, False)
+
+    @raises(InvalidOperationError)
+    def test_subset_hybrid_height_model_field(self):
+        # Takes 1s
+        variable = valid_hybrid_height_variable
+        filename = valid_hybrid_height_filename
+        alt_min, alt_max = 1000, 2000
+        self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
+        self.check_alt_subsetting(alt_max, alt_min, True)
+
+    @raises(InvalidOperationError)
+    def test_subset_hybrid_pressure_model_field(self):
+        # Takes 1s
+        variable = valid_hybrid_pressure_variable
+        filename = valid_hybrid_pressure_filename
+        pres_min, pres_max = 1000, 2000
+        self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_min, pres_max))
+        self.check_pres_subsetting(pres_max, pres_min, True)
+
+    def test_subset_Caliop_L2(self):
+        # Takes 40s
+        variable = ','.join(valid_caliop_l2_variables)
+        filename = valid_caliop_l2_filename
+        alt_min, alt_max = 1000, 2000
+        self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
+        self.check_alt_subsetting(alt_max, alt_min, False)
+
+# Done to here:
 
     def test_subset_CloudSatPRECIP(self):
         # Takes 100s
