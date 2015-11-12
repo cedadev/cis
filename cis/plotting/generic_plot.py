@@ -584,12 +584,12 @@ class Generic_Plot(object):
     def drawcoastlines(self):
         if self.plot_args["nasabluemarble"] is not False:
             from matplotlib.image import imread
-            fname = 'raster/world.topo.bathy.200407.3x1350x675.png'
-#            fname = 'raster/blue_marble_2000_1000.jpg'
-            img_origin = 'lower'
-            img = imread(fname)
-            # img = img[::-1]
-            self.cartopy_axis.imshow(img, origin=img_origin, transform=self.projection)
+            import os.path as path
+            low_res = 'raster/world.topo.bathy.200407.3x1350x675.png'
+            medium_res = 'raster/world.topo.bathy.200407.3x2700x1350.png'
+            high_res = 'raster/world.topo.bathy.200407.3x5400x2700.png'
+            img = imread(path.join(path.dirname(path.realpath(__file__)), high_res))
+            self.cartopy_axis.imshow(img, origin='upper', transform=self.projection, extent=[-180, 180, -90, 90])
         else:
             colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
             self.cartopy_axis.coastlines(color=colour)
