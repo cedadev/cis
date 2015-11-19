@@ -509,3 +509,7 @@ class TestPlotVisual(VisualTest):
     def test_other_overlay_plots(self):
         # TODO: There should be lots of these...
         pass
+
+    def test_various_combinations_of_axis_steps(self):
+        # TODO: There should be lots of these...
+        pass

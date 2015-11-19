@@ -81,8 +81,12 @@ class Generic_Plot(object):
     def setup_map(self):
         import cartopy.crs as ccrs
 
+        # The projection of the data gets offset
         self.projection = ccrs.PlateCarree(central_longitude=(self.x_wrap_start + 180.0))
+        # But not the transform...
+        self.transform = ccrs.PlateCarree()
         self.cartopy_axis = self.matplotlib.axes(projection=self.projection)
+        self.mplkwargs['transform'] = self.transform
 
 
     def get_data_items_max(self):
@@ -210,13 +214,13 @@ class Generic_Plot(object):
         y_range_vals = None if y_range_dict is None else y_range_dict.get('ymin', None),\
                        None if y_range_dict is None else y_range_dict.get('ymax', None)
 
-        xmin, xmax = self.calculate_axis_limits('x', *x_range_vals)
+        self.xmin, self.xmax = self.calculate_axis_limits('x', *x_range_vals)
         ymin, ymax = self.calculate_axis_limits('y', *y_range_vals)
 
         if self.is_map():
-            self.cartopy_axis.set_extent([xmin, xmax, ymin, ymax], self.projection)
+            self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax])
         else:
-            self.matplotlib.xlim(xmin=xmin, xmax=xmax)
+            self.matplotlib.xlim(xmin=self.xmin, xmax=self.xmax)
             self.matplotlib.ylim(ymin=ymin, ymax=ymax)
 
     def add_color_bar(self):
@@ -589,7 +593,7 @@ class Generic_Plot(object):
             medium_res = 'raster/world.topo.bathy.200407.3x2700x1350.png'
             high_res = 'raster/world.topo.bathy.200407.3x5400x2700.png'
             img = imread(path.join(path.dirname(path.realpath(__file__)), high_res))
-            self.cartopy_axis.imshow(img, origin='upper', transform=self.projection, extent=[-180, 180, -90, 90])
+            self.cartopy_axis.imshow(img, origin='upper', transform=self.transform, extent=[-180, 180, -90, 90])
         else:
             colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
             self.cartopy_axis.coastlines(color=colour)
@@ -748,12 +752,16 @@ class Generic_Plot(object):
         Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
         vs longitude plots the ticks can come out overlapped, so an exception is included to deal with this.
         """
+        from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
         y_variable = self.plot_args['y_variable'].lower()
         x_variable = self.plot_args['x_variable'].lower()
 
         ymin, ymax = self.matplotlib.ylim()
-        xmin, xmax = self.matplotlib.xlim()
+
+        # Matplotlib xlim doesn't work with cartopy plots
+        xmin, xmax = self.xmin, self.xmax
+        # xmin, xmax = self.matplotlib.xlim()
 
         max_x_bins = 9
         max_y_bins = 9
@@ -784,11 +792,12 @@ class Generic_Plot(object):
 
         lat_or_lon = 'lat', 'lon'
 
-        if xsteps is None and self.plot_args['logx'] is None:
+        if xsteps is None and not self.plot_args['logx']:
             if self.plot_args['x_variable'].lower().startswith(lat_or_lon):
                 lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
                 if self.is_map():
-                    self.cartopy_axis.set_xticks(lon_locator.tick_values(xmin, xmax), crs=self.projection)
+                    self.cartopy_axis.set_xticks(lon_locator.tick_values(xmin, xmax), crs=self.transform)
+                    self.cartopy_axis.xaxis.set_major_formatter(LongitudeFormatter())
                 else:
                     self.matplotlib.axes().xaxis.set_major_locator(lon_locator)
             else:
@@ -798,11 +807,12 @@ class Generic_Plot(object):
                 self.matplotlib.axes().xaxis.set_minor_locator(AutoMinorLocator())
                 self.matplotlib.axes().xaxis.grid(False, which='minor')
 
-        if ysteps is None and self.plot_args['logy'] is None:
+        if ysteps is None and not self.plot_args['logy']:
             if y_variable.startswith(lat_or_lon):
                 lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
                 if self.is_map():
-                    self.cartopy_axis.set_yticks(lat_locator.tick_values(ymin, ymax), crs=self.projection)
+                    self.cartopy_axis.set_yticks(lat_locator.tick_values(ymin, ymax), crs=self.transform)
+                    self.cartopy_axis.yaxis.set_major_formatter(LatitudeFormatter())
                 else:
                     self.matplotlib.axes().yaxis.set_major_locator(lat_locator)
             else:

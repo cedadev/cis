@@ -311,7 +311,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start, x_offs
                     y, x = np.meshgrid(y, x)
 
     if x_axis_name == 'X' and x_wrap_start is not None:
-        x = fix_longitude_range(x + x_offset, x_wrap_start)
+        x = fix_longitude_range(x, x_wrap_start)
 
     logging.debug("Shape of x: " + str(x.shape))
     if y is not None:
