@@ -42,7 +42,7 @@ class Histogram_2D(Generic_Plot):
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
-    def unpack_data_items(self, x_offset):
+    def unpack_data_items(self):
         return self.unpack_comparative_data()
 
     def setup_map(self):

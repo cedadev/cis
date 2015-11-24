@@ -12,7 +12,7 @@ from cis.plotting.formatter import LogFormatterMathtextSpecial
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, plot_args, x_wrap_start=None, calculate_min_and_max_values=True, datagroup=0,
+    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0,
                  *mplargs, **mplkwargs):
         """
         Constructor for Generic_Plot.
@@ -39,8 +39,9 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        x_offset = self.set_x_wrap_start(x_wrap_start)
-        self.unpacked_data_items = self.unpack_data_items(x_offset)
+        self.set_x_wrap_start(None if self.plot_args.get('xrange', None) is None else
+                              self.plot_args['xrange'].get('xmin', None))
+        self.unpacked_data_items = self.unpack_data_items()
 
         if calculate_min_and_max_values:
             self.calculate_min_and_max_values()
@@ -70,14 +71,6 @@ class Generic_Plot(object):
         else:
             self.x_wrap_start = data_wrap_start
 
-        # Now work out if those two wrap starts are different...
-        if self.x_wrap_start is not None:
-            offset = self.x_wrap_start - data_wrap_start
-        else:
-            offset = 0
-
-        return offset
-
     def setup_map(self):
         import cartopy.crs as ccrs
 
@@ -96,7 +89,7 @@ class Generic_Plot(object):
             data_max = max([np.nanmax(i["x"]), data_max])
         return data_max
 
-    def unpack_data_items(self, x_offset):
+    def unpack_data_items(self):
         def __get_data(axis):
             variable = self.plot_args[axis + "_variable"]
             if variable == "default" or variable == self.packed_data_items[0].name() \
@@ -144,7 +137,7 @@ class Generic_Plot(object):
                         __swap_x_and_y_variables()
 
         return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"],
-                                   self.x_wrap_start, x_offset=x_offset) for packed_data_item in self.packed_data_items]
+                                   self.x_wrap_start) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]
@@ -218,7 +211,7 @@ class Generic_Plot(object):
         ymin, ymax = self.calculate_axis_limits('y', *y_range_vals)
 
         if self.is_map():
-            self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax])
+            self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.projection)
         else:
             self.matplotlib.xlim(xmin=self.xmin, xmax=self.xmax)
             self.matplotlib.ylim(ymin=ymin, ymax=ymax)
@@ -589,6 +582,7 @@ class Generic_Plot(object):
         if self.plot_args["nasabluemarble"] is not False:
             from matplotlib.image import imread
             import os.path as path
+            # TODO: This should choose the right resolution using either keyords or asking mpl for the current DPI...
             low_res = 'raster/world.topo.bathy.200407.3x1350x675.png'
             medium_res = 'raster/world.topo.bathy.200407.3x2700x1350.png'
             high_res = 'raster/world.topo.bathy.200407.3x5400x2700.png'

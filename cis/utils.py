@@ -237,7 +237,7 @@ def get_coord(data_object, variable, data):
         return coord
 
 
-def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start, x_offset):
+def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     """
     :param data_object    A cube or an UngriddedData object
     :return: A dictionary containing x, y and data as numpy arrays
