@@ -211,8 +211,10 @@ class Generic_Plot(object):
         ymin, ymax = self.calculate_axis_limits('y', *y_range_vals)
 
         if self.is_map():
-            crs = self.transform if self.offset_longitude else self.projection
-            self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=crs)
+            try:
+                self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.transform)
+            except ValueError:
+                self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.projection)
         else:
             self.matplotlib.xlim(xmin=self.xmin, xmax=self.xmax)
             self.matplotlib.ylim(ymin=ymin, ymax=ymax)
