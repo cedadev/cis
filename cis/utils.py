@@ -273,6 +273,9 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
         data = y
         y = None
 
+    if x_axis_name == 'X' and x_wrap_start is not None:
+        x = fix_longitude_range(x, x_wrap_start)
+
     if isinstance(data_object, Cube):
         plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims=no_of_dims)
         if plot_defn.transpose:
@@ -309,9 +312,6 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                 except:
                     data, y = add_cyclic_point(data, y)
                     y, x = np.meshgrid(y, x)
-
-    if x_axis_name == 'X' and x_wrap_start is not None:
-        x = fix_longitude_range(x, x_wrap_start)
 
     logging.debug("Shape of x: " + str(x.shape))
     if y is not None:
