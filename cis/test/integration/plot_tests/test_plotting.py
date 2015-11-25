@@ -513,3 +513,7 @@ class TestPlotVisual(VisualTest):
     def test_various_combinations_of_axis_steps(self):
         # TODO: There should be lots of these...
         pass
+
+    def test_small_plot_regions(self):
+        # TODO: These are needed to check the extent works for small regions, but also for high-res backgrounds
+        pass

@@ -39,8 +39,9 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        self.set_x_wrap_start(None if self.plot_args.get('xrange', None) is None else
-                              self.plot_args['xrange'].get('xmin', None))
+        user_x_min = None if self.plot_args.get('xrange', None) is None else self.plot_args['xrange'].get('xmin', None)
+        self.set_x_wrap_start(user_x_min)
+        self.offset_longitude = user_x_min != self.x_wrap_start
         self.unpacked_data_items = self.unpack_data_items()
 
         if calculate_min_and_max_values:
@@ -80,7 +81,6 @@ class Generic_Plot(object):
         self.transform = ccrs.PlateCarree()
         self.cartopy_axis = self.matplotlib.axes(projection=self.projection)
         self.mplkwargs['transform'] = self.transform
-
 
     def get_data_items_max(self):
         import numpy as np
@@ -204,14 +204,15 @@ class Generic_Plot(object):
                        None if x_range_dict is None else x_range_dict.get('xmax', None)
 
         y_range_dict = self.plot_args.get('yrange', None)
-        y_range_vals = None if y_range_dict is None else y_range_dict.get('ymin', None),\
+        y_range_vals = None if y_range_dict is None else y_range_dict.get('ymin', None), \
                        None if y_range_dict is None else y_range_dict.get('ymax', None)
 
         self.xmin, self.xmax = self.calculate_axis_limits('x', *x_range_vals)
         ymin, ymax = self.calculate_axis_limits('y', *y_range_vals)
 
         if self.is_map():
-            self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.projection)
+            crs = self.transform if self.offset_longitude else self.projection
+            self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=crs)
         else:
             self.matplotlib.xlim(xmin=self.xmin, xmax=self.xmax)
             self.matplotlib.ylim(ymin=ymin, ymax=ymax)
@@ -482,7 +483,7 @@ class Generic_Plot(object):
         vmax = self.mplkwargs.pop("vmax")
 
         if self.plot_args["valrange"].get("vstep", None) is None and \
-                self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
+                        self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
             nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
         elif self.plot_args["valrange"].get("vstep", None) is None:
             nconts = self.plot_args['datagroups'][self.datagroup]['contnlevels']
@@ -507,7 +508,7 @@ class Generic_Plot(object):
             self.mplkwargs["latlon"] = True
 
         self.color_axis = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
-                          self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
+                                       self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
         if self.mplkwargs["contlabel"] and not filled:
             plt.clabel(self.color_axis, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
         elif self.mplkwargs["contlabel"] and filled:
