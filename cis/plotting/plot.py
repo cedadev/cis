@@ -108,8 +108,8 @@ class Plotter(object):
         f.set_figwidth(plot_args["plotwidth"])
         f.set_figheight(plot_args["plotheight"])
         plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
-        plot.format_plot()
         plot.apply_axis_limits()
+        plot.format_plot()
         plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 

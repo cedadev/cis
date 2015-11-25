@@ -259,29 +259,36 @@ class Generic_Plot(object):
         cbar.set_label(label)
 
     def set_axis_ticks(self, axis, no_of_dims):
+        from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
         from numpy import arange
 
-        if axis == "x":
-            coord_axis = "x"
-            if self.is_map():
+        tick_kwargs = {}
+
+        if self.is_map():
+            if axis == "x":
+                coord_axis = "x"
                 tick_method = self.cartopy_axis.set_xticks
-            else:
-                tick_method = self.matplotlib.xticks
-        elif axis == "y":
-            coord_axis = "data" if no_of_dims == 2 else "y"
-            if self.is_map():
+                self.cartopy_axis.xaxis.set_major_formatter(LongitudeFormatter())
+            elif axis == "y":
+                coord_axis = "data" if no_of_dims == 2 else "y"
                 tick_method = self.cartopy_axis.set_yticks
-            else:
+                self.cartopy_axis.yaxis.set_major_formatter(LatitudeFormatter())
+
+            tick_kwargs['crs'] = self.transform
+        else:
+            if axis == "x":
+                coord_axis = "x"
+                tick_method = self.matplotlib.xticks
+            elif axis == "y":
+                coord_axis = "data" if no_of_dims == 2 else "y"
                 tick_method = self.matplotlib.yticks
 
-        angle_kwargs = {}
-        if not self.is_map():
             if self.plot_args.get(axis + "tickangle", None) is None:
                 angle = None
-                angle_kwargs['ha'] = "center" if axis == "x" else "right"
+                tick_kwargs['ha'] = "center" if axis == "x" else "right"
             else:
-                angle_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
-                angle_kwargs['ha'] = "right"
+                tick_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
+                tick_kwargs['ha'] = "right"
 
         if self.plot_args[axis + "range"].get(axis + "step") is not None:
             step = self.plot_args[axis + "range"][axis + "step"]
@@ -298,9 +305,9 @@ class Generic_Plot(object):
 
             ticks = arange(min_val, max_val + step, step)
 
-            tick_method(ticks, **angle_kwargs)
+            tick_method(ticks, **tick_kwargs)
         elif not self.is_map():
-            tick_method(**angle_kwargs)
+            tick_method(**tick_kwargs)
 
     def format_time_axis(self):
         from cis.time_util import cis_standard_time_unit
