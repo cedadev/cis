@@ -38,12 +38,10 @@ class TestPlotting(unittest.TestCase):
 class TestGenericPlot(unittest.TestCase):
 
     def setUp(self):
+        """
+        Create a mock scatter plot object
+        """
         from mock import MagicMock
-
-        """
-        We have to patch the sys.modules dictionary to use our mocked versions of the pyhdf library to test it not
-        being installed. This creates the appropriate mocks and imports them into the namespace.
-        """
 
         self.plot = MagicMock(Scatter_Plot)
         self.plot.plot_args = {'x_variable': 'longitude',
@@ -66,8 +64,8 @@ class TestGenericPlot(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         self.plot.packed_data_items = [data]
+        self.plot.set_x_wrap_start(self.plot, -180)
 
-        eq_(self.plot.set_x_wrap_start(self.plot, -180), 0)
         eq_(self.plot.x_wrap_start, -180)
 
     def test_GIVEN_range_0_to_360_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
@@ -76,8 +74,8 @@ class TestGenericPlot(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         self.plot.packed_data_items = [data]
+        self.plot.set_x_wrap_start(self.plot, 0)
 
-        eq_(self.plot.set_x_wrap_start(self.plot, 0), 180)
         eq_(self.plot.x_wrap_start, 0)
 
     def test_GIVEN_NO_range_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
@@ -86,8 +84,8 @@ class TestGenericPlot(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         self.plot.packed_data_items = [data]
+        self.plot.set_x_wrap_start(self.plot, None)
 
-        eq_(self.plot.set_x_wrap_start(self.plot, None), 0)
         eq_(self.plot.x_wrap_start, -180)
 
     def test_GIVEN_NO_range_WHEN_data_is_minus_0_to_360_THEN_returns_0(self):
@@ -96,8 +94,8 @@ class TestGenericPlot(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5, lon_max=345.)
 
         self.plot.packed_data_items = [data]
+        self.plot.set_x_wrap_start(self.plot, None)
 
-        eq_(self.plot.set_x_wrap_start(self.plot, None), 0)
         eq_(self.plot.x_wrap_start, 0)
 
     def test_GIVEN_range_minus_180_to_180_WHEN_data_is_0_to_360_THEN_returns_minus_180(self):
@@ -106,8 +104,8 @@ class TestGenericPlot(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
 
         self.plot.packed_data_items = [data]
+        self.plot.set_x_wrap_start(self.plot, -180)
 
-        eq_(self.plot.set_x_wrap_start(self.plot, -180), -180)
         eq_(self.plot.x_wrap_start, -180)
 
     def test_GIVEN_range_15_to_45_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
@@ -116,8 +114,8 @@ class TestGenericPlot(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         self.plot.packed_data_items = [data]
+        self.plot.set_x_wrap_start(self.plot, 15)
 
-        eq_(self.plot.set_x_wrap_start(self.plot, 15), 180)
         eq_(self.plot.x_wrap_start, 0)
 
     def test_GIVEN_range_15_to_45_WHEN_data_is_0_to_360_THEN_returns_0(self):
@@ -126,8 +124,8 @@ class TestGenericPlot(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
 
         self.plot.packed_data_items = [data]
+        self.plot.set_x_wrap_start(self.plot, 15)
 
-        eq_(self.plot.set_x_wrap_start(self.plot, 15), 0)
         eq_(self.plot.x_wrap_start, 0)
 
 
