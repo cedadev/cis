@@ -172,13 +172,12 @@ def make_dummy_2d_cube():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36
     """
-    import numpy
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(0, 360, 10), standard_name='longitude', units='degrees')
-    cube = Cube(numpy.reshape(numpy.arange(19 * 36) + 1.0, (19, 36)),
+    latitude = DimCoord(np.arange(-85., 105., 10.), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(0., 360., 10.), standard_name='longitude', units='degrees')
+    cube = Cube(np.reshape(np.arange(19 * 36) + 1.0, (19, 36)),
                 dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube

@@ -194,21 +194,21 @@ class TestStatsAnalyser(unittest.TestCase):
     def test_GIVEN_no_missing_vals_WHEN_lin_regression_THEN_regression_correct(self):
         stats = StatsAnalyzer(self.data1, self.data2)
         res = stats.linear_regression()
-        expected_res = [0.9912730184, 0.1345076061, 0.997485722,  0.248895076302]
+        expected_res = [0.9912730184, 0.1345076061, 0.997485722,  0.0248994694107]
         actual_res = res[0].grad, res[1].intercept, res[2].r, res[3].stderr
         assert_that(np.allclose(actual_res, expected_res))
 
     def test_GIVEN_missing_vals_WHEN_lin_regression_THEN_regression_correct(self):
         stats = StatsAnalyzer(self.missing1, self.missing2)
         res = stats.linear_regression()
-        expected_res = [1.1920369653, -0.6908343017, 0.999845219, 0.813981263802]
+        expected_res = [1.1920369653, -0.6908343017, 0.999845219, 0.0104877890357]
         actual_res = res[0].grad, res[1].intercept, res[2].r, res[3].stderr
         assert_that(np.allclose(actual_res, expected_res))
 
     def test_GIVEN_one_masked_one_nparray_WHEN_lin_regression_THEN_regression_correct(self):
         stats = StatsAnalyzer(self.data1, self.missing2)
         res = stats.linear_regression()
-        expected_res = [-5.1404761905, 12.3595238095, -0.4079085869, 39.8577461979]
+        expected_res = [-5.1404761905, 12.3595238095, -0.4079085869, 5.14561290806]
         actual_res = res[0].grad, res[1].intercept, res[2].r, res[3].stderr
         assert_that(np.allclose(actual_res, expected_res))
 
