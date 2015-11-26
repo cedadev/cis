@@ -507,8 +507,6 @@ class TestPlotVisual(VisualTest):
         self.check_graphic()
 
     def test_iris_contour_over_heatmap(self):
-        # TODO: There should be lots of these...
-        # Remove the scatter overlay entirely?
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
 
@@ -525,8 +523,6 @@ class TestPlotVisual(VisualTest):
         self.check_graphic()
 
     def test_iris_contour_over_heatmap_binary_cmap(self):
-        # TODO: There should be lots of these...
-        # Remove the scatter overlay entirely?
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
 
@@ -541,6 +537,32 @@ class TestPlotVisual(VisualTest):
         plot_cmd(main_arguments)
 
         self.check_graphic()
+
+    def test_transparent_contour_over_bluemarble(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5" \
+               " --nasabluemarble".split()
+
+        path = os.environ.get("CIS_DATA_HOME") + "/../"
+        filename_1 = path + "HadGEM_od550aer-subset.nc"
+
+        arguments = ["plot", "od550aer:" + filename_1 + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.15"]
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    # def test_iris_scatter_overlay(self):
+    #     output_file_opt = ["--output", self.id() + ".png"]
+    #     opts = "--type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
+    #            " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split()
+    #     arguments = ["plot", "rain:" + valid_2d_filename ,
+    #                  "snow:" + valid_2d_filename + ":itemstyle=^,label=snowlabel"]
+    #
+    #     main_arguments = parse_args(arguments + opts + output_file_opt)
+    #     plot_cmd(main_arguments)
+    #
+    #     self.check_graphic()
 
 
     def test_various_combinations_of_axis_steps(self):
