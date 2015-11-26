@@ -145,18 +145,14 @@ class DataReader(object):
                    'variables': ['variable1', 'variable2'],
                    'product' : 'Aerosol_CCI'}
 
-        :return: A list of data (either a GriddedDataList or an UngriddedDataList, depending on the data format)
+        :return: A list of CommonData objects (either GriddedData or UngriddedData, *or a combination*)
         """
-        data_list = None
+        data_list = []
         for datagroup in datagroups:
             aliases = datagroup.get('aliases', None)
             data = self.read_data_list(datagroup['filenames'], datagroup['variables'],
                                        datagroup['product'], aliases)
-            if data_list is None:
-                # This ensures the list is the right type (i.e. GriddedDataList or UngriddedDataList)
-                data_list = data
-            else:
-                data_list.extend(data)
+            data_list.extend(data)
         return data_list
 
     def read_coordinates(self, filenames, product=None):

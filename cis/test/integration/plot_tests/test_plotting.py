@@ -547,10 +547,30 @@ class TestPlotVisual(VisualTest):
         filename_1 = path + "HadGEM_od550aer-subset.nc"
 
         arguments = ["plot", "od550aer:" + filename_1 + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.15"]
+
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
 
         self.check_graphic()
+
+    def test_filled_contour_over_scatter(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
+               " --ymin 0 --ymax 90 --itemwidth 20".split()
+
+        path = os.environ.get("CIS_DATA_HOME") + "/../"
+        filename_1 = path + "HadGEM_od550aer-subset.nc"
+        filename_2 = path + "HadGEM_rsutcs-subset.nc"
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
+                     "rsutcs:" + filename_2 + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
+                                              "contlabel=true,contfontsize=18"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
 
     # def test_iris_scatter_overlay(self):
     #     output_file_opt = ["--output", self.id() + ".png"]
