@@ -29,6 +29,8 @@ class Generic_Plot(object):
         self.mplkwargs = mplkwargs
         self.datagroup = datagroup
 
+        self.color_axis = []
+
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
@@ -639,9 +641,6 @@ class Generic_Plot(object):
             # Call the method associated with the option
             if key in self.plot_args.keys():
                 plot_options[key](self.plot_args[key])
-
-        if not self.plot_args["nocolourbar"]:
-            self.add_color_bar()
 
         if len(self.packed_data_items) > 1 and not isinstance(self, cis.plotting.overlay.Overlay):
             self.create_legend()
