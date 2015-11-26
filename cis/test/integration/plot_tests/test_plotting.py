@@ -506,12 +506,26 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_overlay_plots(self):
+    def test_iris_contour_over_heatmap(self):
         # TODO: There should be lots of these...
-        pass
+        # Remove the scatter overlay entirely?
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
+
+        path = os.environ.get("CIS_DATA_HOME") + "/../"
+        filename_1 = path + "HadGEM_od550aer-subset.nc"
+        filename_2 = path + "HadGEM_rsutcs-subset.nc"
+
+        arguments = ["plot", "od550aer:" + filename_1 + ":type=heatmap",
+                     "rsutcs:" + filename_2 + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
 
     def test_various_combinations_of_axis_steps(self):
-        # TODO: There should be lots of these...
+        # TODO: This is tested a little, but could probably be tested more thoroughly
         pass
 
     def test_small_plot_regions(self):

@@ -9,13 +9,6 @@ import numpy
 
 class Overlay(Generic_Plot):
 
-    def set_x_wrap_start(self, x_wrap_start):
-        x_range = self.plot_args.get('xrange')
-        if x_range is not None:
-            x_min = x_range.get('xmin')
-            x_wrap_start = x_min
-        return x_wrap_start
-
     def get_data_items_max(self):
         return self.unpacked_data_items[0]['x'].max()
 
@@ -53,9 +46,9 @@ class Overlay(Generic_Plot):
                                            "'{}'.".format(self.plot_args['datagroups'][i]['type']))
 
             if i == 0:
+                self.color_axis = p.color_axis
                 self.format_time_axis()
                 self.format_3d_plot()
-                x_wrap_start = p.x_wrap_start
 
     def format_plot(self):
         pass
