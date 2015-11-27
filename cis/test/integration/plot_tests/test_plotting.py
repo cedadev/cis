@@ -498,12 +498,8 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
 
-        path = os.environ.get("CIS_DATA_HOME") + "/../"
-        filename_1 = path + "HadGEM_od550aer-subset.nc"
-        filename_2 = path + "HadGEM_rsutcs-subset.nc"
-
-        arguments = ["plot", "od550aer:" + filename_1 + ":type=heatmap",
-                     "rsutcs:" + filename_2 + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap",
+                     "solarupclear:" + valid_2d_filename + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -514,12 +510,8 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
 
-        path = os.environ.get("CIS_DATA_HOME") + "/../"
-        filename_1 = path + "HadGEM_od550aer-subset.nc"
-        filename_2 = path + "HadGEM_rsutcs-subset.nc"
-
-        arguments = ["plot", "od550aer:" + filename_1 + ":type=heatmap,cmap=binary",
-                     "rsutcs:" + filename_2 + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap,cmap=binary",
+                     "solarupclear:" + valid_2d_filename + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -531,10 +523,7 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5" \
                " --nasabluemarble".split()
 
-        path = os.environ.get("CIS_DATA_HOME") + "/../"
-        filename_1 = path + "HadGEM_od550aer-subset.nc"
-
-        arguments = ["plot", "od550aer:" + filename_1 + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.15"]
+        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.000075"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -546,11 +535,8 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
                " --ymin 0 --ymax 90 --itemwidth 20".split()
 
-        path = os.environ.get("CIS_DATA_HOME") + "/../"
-        filename_2 = path + "HadGEM_rsutcs-subset.nc"
-
         arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
-                     "rsutcs:" + filename_2 + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
+                     "solarupclear:" + valid_2d_filename + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
                                               "contlabel=true,contfontsize=18"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -563,11 +549,8 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180" \
                " --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 --nasabluemarble".split()
 
-        path = os.environ.get("CIS_DATA_HOME") + "/../"
-        filename_2 = path + "HadGEM_rsutcs-subset.nc"
-
         arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
-                     "rsutcs:" + filename_2 + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
+                     "solarupclear:" + valid_2d_filename + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
                                               "contfontsize=18,cmap=Reds"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
