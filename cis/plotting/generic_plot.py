@@ -247,7 +247,7 @@ class Generic_Plot(object):
         else:
             scale = float(scale)
 
-        cbar = self.matplotlib.colorbar(self.color_axis, orientation=self.plot_args["cbarorient"], ticks=ticks,
+        cbar = self.matplotlib.colorbar(self.color_axis[0], orientation=self.plot_args["cbarorient"], ticks=ticks,
                                         shrink=scale, format=formatter)
 
         if not self.plot_args["logv"]:
@@ -518,12 +518,12 @@ class Generic_Plot(object):
             # This fails for an unknown reason on one dimensional data
             self.mplkwargs["latlon"] = True
 
-        self.color_axis = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
-                                       self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
+        self.color_axis.append(contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
+                                       self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs))
         if self.mplkwargs["contlabel"] and not filled:
-            plt.clabel(self.color_axis, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
+            plt.clabel(self.color_axis[0], fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
         elif self.mplkwargs["contlabel"] and filled:
-            plt.clabel(self.color_axis, fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
+            plt.clabel(self.color_axis[0], fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
 
         self.mplkwargs.pop("latlon", None)
         self.mplkwargs.pop("tri", None)
@@ -641,6 +641,9 @@ class Generic_Plot(object):
             # Call the method associated with the option
             if key in self.plot_args.keys():
                 plot_options[key](self.plot_args[key])
+
+        if not self.plot_args["nocolourbar"]:
+            self.add_color_bar()
 
         if len(self.packed_data_items) > 1 and not isinstance(self, cis.plotting.overlay.Overlay):
             self.create_legend()

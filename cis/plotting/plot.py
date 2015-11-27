@@ -108,8 +108,6 @@ class Plotter(object):
         plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
         plot.apply_axis_limits()
         plot.format_plot()
-        if not plot_args["nocolourbar"]:
-            plot.add_color_bar()
 
         plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)

@@ -7,7 +7,6 @@ class Scatter_Plot(Generic_Plot):
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
-        self.plots = []
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
             datafile = self.plot_args["datagroups"][self.datagroup]
@@ -41,12 +40,10 @@ class Scatter_Plot(Generic_Plot):
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
 
-            self.plots.append(
+            self.color_axis.append(
                 self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
                                               **self.mplkwargs))
 
-        # Use the first plot for the color scale
-        self.color_axis = self.plots[0]
 
     def calculate_axis_limits(self, axis, min_val, max_val):
         """
@@ -115,6 +112,5 @@ class Scatter_Plot(Generic_Plot):
                 legend_titles.append(datagroups[i]["label"])
             else:
                 legend_titles.append(item.long_name)
-        handles = self.plots
-        legend = self.matplotlib.legend(handles, legend_titles, loc="best", scatterpoints=1, markerscale=0.5)
+        legend = self.matplotlib.legend(self.color_axis, legend_titles, loc="best", scatterpoints=1, markerscale=0.5)
         legend.draggable(state=True)

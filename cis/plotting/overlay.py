@@ -49,14 +49,15 @@ class Overlay(Generic_Plot):
                                            "'temperature:my_data.nc:type=contourf'. Requested option was "
                                            "'{}'.".format(self.plot_args['datagroups'][i]['type']))
 
-            self.color_axis.append(p.color_axis)
+            self.color_axis.extend(p.color_axis)
 
             if i == 0:
                 self.format_time_axis()
                 self.format_3d_plot()
 
     def format_plot(self):
-        pass
+        self.matplotlib.gcf().delaxes(self.matplotlib.gcf().axes[-1])
+        self.add_color_bar()
 
     def set_default_axis_label(self, axis):
         self.set_3daxis_label(axis)
