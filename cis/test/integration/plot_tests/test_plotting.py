@@ -559,7 +559,6 @@ class TestPlotVisual(VisualTest):
                " --ymin 0 --ymax 90 --itemwidth 20".split()
 
         path = os.environ.get("CIS_DATA_HOME") + "/../"
-        filename_1 = path + "HadGEM_od550aer-subset.nc"
         filename_2 = path + "HadGEM_rsutcs-subset.nc"
 
         arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
@@ -571,6 +570,25 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_filled_contour_over_scatter_with_cmin(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180" \
+               " --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 --nasabluemarble".split()
+
+        path = os.environ.get("CIS_DATA_HOME") + "/../"
+        filename_2 = path + "HadGEM_rsutcs-subset.nc"
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
+                     "rsutcs:" + filename_2 + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
+                                              "contfontsize=18,cmap=Reds"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+
+    # --type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 --nasabluemarble -o overlay5.png
 
     # def test_iris_scatter_overlay(self):
     #     output_file_opt = ["--output", self.id() + ".png"]
