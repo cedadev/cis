@@ -588,6 +588,62 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_small_plot_regions(self):
-        # TODO: These are needed to check the extent works for small regions, but also for high-res backgrounds
-        pass
+    def test_medium_plot_region(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+               " --ymin 50 --ymax 70 --itemwidth 10".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_small_plot_region(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+               " --ymin 59 --ymax 61 --itemwidth 10".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_very_small_plot_region(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -151.5 --xmax -151.2" \
+               " --ymin 60.4 --ymax 60.8 --itemwidth 10".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_medium_plot_region_bluemarble(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+               " --ymin 50 --ymax 70 --itemwidth 10 --nasabluemarble".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_small_plot_region_bluemarble(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+               " --ymin 59 --ymax 61 --itemwidth 10 --nasabluemarble".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()

@@ -590,19 +590,47 @@ class Generic_Plot(object):
         if len(self.packed_data_items) > 1:
             self.create_legend()
 
+    def __get_extent(self):
+        """
+         Calculates the diagonal extent of plot area in Km
+        :return: The diagonal size of the plot in Km
+        """
+        from cis.utils import haversine
+        x0, x1, y0, y1 = self.cartopy_axis.get_extent()
+        return haversine(y0, x0, y1, x1)
+
     def drawcoastlines(self):
+        """
+        Adds coastlines or nasa blue marble back ground to a plot (no coastlines are plotted over nasa blue marble).
+        There are three levels of resolution used based on the spatial scale of the plot. These are determined using
+        values determined by eye for bluemarble and the coastlines independently.
+        """
+        from matplotlib.image import imread
+        import os.path as path
+        bluemarble_scales =[(0, 'raster/world.topo.bathy.200407.3x1350x675.png'),
+                            (5000, 'raster/world.topo.bathy.200407.3x2700x1350.png'),
+                            (2500, 'raster/world.topo.bathy.200407.3x5400x2700.png')]
+
+        coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
+
+        ext = self.__get_extent()
+
         if self.plot_args["nasabluemarble"] is not False:
-            from matplotlib.image import imread
-            import os.path as path
-            # TODO: This should choose the right resolution using either keyords or asking mpl for the current DPI...
-            low_res = 'raster/world.topo.bathy.200407.3x1350x675.png'
-            medium_res = 'raster/world.topo.bathy.200407.3x2700x1350.png'
-            high_res = 'raster/world.topo.bathy.200407.3x5400x2700.png'
-            img = imread(path.join(path.dirname(path.realpath(__file__)), high_res))
+            bluemarble_res = bluemarble_scales[0][1]
+            for scale, res in bluemarble_scales[1:]:
+                if scale > ext:
+                    bluemarble_res = res
+
+            img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
             self.cartopy_axis.imshow(img, origin='upper', transform=self.transform, extent=[-180, 180, -90, 90])
         else:
+            coastline_res = coastline_scales[0][1]
+            for scale, res in coastline_scales[1:]:
+                if scale > ext:
+                    coastline_res = res
+
             colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
-            self.cartopy_axis.coastlines(color=colour)
+            self.cartopy_axis.coastlines(color=colour, resolution=coastline_res)
 
     def format_3d_plot(self):
         """
