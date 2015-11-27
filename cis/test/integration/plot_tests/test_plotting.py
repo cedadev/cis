@@ -232,18 +232,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_iris_scatter_overlay(self):
-        output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
-               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split()
-        arguments = ["plot", "rain:" + valid_2d_filename ,
-                     "snow:" + valid_2d_filename + ":itemstyle=^,label=snowlabel"]
-
-        main_arguments = parse_args(arguments + opts + output_file_opt)
-        plot_cmd(main_arguments)
-
-        self.check_graphic()
-
     def test_other_comparative_scatter(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = " --type comparativescatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --fontsize 7" \
@@ -587,21 +575,17 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_iris_scatter_overlay(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
+               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split()
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap" ,
+                     "snow:" + valid_2d_filename + ":type=scatter,itemstyle=^,label=snowlabel"]
 
-    # --type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 --nasabluemarble -o overlay5.png
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
 
-    # def test_iris_scatter_overlay(self):
-    #     output_file_opt = ["--output", self.id() + ".png"]
-    #     opts = "--type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
-    #            " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split()
-    #     arguments = ["plot", "rain:" + valid_2d_filename ,
-    #                  "snow:" + valid_2d_filename + ":itemstyle=^,label=snowlabel"]
-    #
-    #     main_arguments = parse_args(arguments + opts + output_file_opt)
-    #     plot_cmd(main_arguments)
-    #
-    #     self.check_graphic()
-
+        self.check_graphic()
 
     def test_various_combinations_of_axis_steps(self):
         # TODO: This is tested a little, but could probably be tested more thoroughly
