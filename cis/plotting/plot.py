@@ -7,7 +7,6 @@ from cis.plotting.contour_plot import Contour_Plot
 from cis.plotting.contourf_plot import Contourf_Plot
 from cis.plotting.heatmap import Heatmap
 from cis.plotting.line_plot import Line_Plot
-from cis.plotting.scatter_overlay import Scatter_Overlay
 from cis.plotting.scatter_plot import Scatter_Plot
 from cis.plotting.comparative_scatter import Comparative_Scatter
 from cis.plotting.overlay import Overlay
@@ -27,7 +26,6 @@ class Plotter(object):
                   "contourf": Contourf_Plot,
                   "heatmap": Heatmap,
                   "line": Line_Plot,
-                  "scatteroverlay": Scatter_Overlay,
                   "scatter": Scatter_Plot,
                   "comparativescatter": Comparative_Scatter,
                   "overlay": Overlay,

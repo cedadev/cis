@@ -68,7 +68,6 @@ class Overlay(Generic_Plot):
         """
         from cis.plotting.formatter import LogFormatterMathtextSpecial
 
-        # TODO: This should come from the cmin/cmax of the datagroup iteslf
         step = self.plot_args["valrange"].get("vstep", None)
         if step is None:
             ticks = None
@@ -89,7 +88,7 @@ class Overlay(Generic_Plot):
         else:
             scale = float(scale)
 
-        for color_axis in self.color_axis:
+        for i, color_axis in enumerate(self.color_axis):
             cbar = self.matplotlib.colorbar(color_axis, orientation=self.plot_args["cbarorient"], ticks=ticks,
                                             shrink=scale, format=formatter)
 
@@ -98,10 +97,6 @@ class Overlay(Generic_Plot):
                 cbar.formatter.set_powerlimits((-3, 3))
                 cbar.update_ticks()
 
-            # TODO: This should come from the datagroup, not sure if there is a relavant keyword already?
-            if self.plot_args["cbarlabel"] is None:
-                label = self.format_units(self.packed_data_items[0].units)
-            else:
-                label = self.plot_args["cbarlabel"]
+            label = self.packed_data_items[i].long_name
 
             cbar.set_label(label)

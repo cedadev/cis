@@ -578,7 +578,8 @@ class TestPlotVisual(VisualTest):
     def test_iris_scatter_overlay(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
-               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split()
+               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --itemwidth=3".split() + \
+               ["--title=Overlay test"]
         arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap" ,
                      "snow:" + valid_2d_filename + ":type=scatter,itemstyle=^,label=snowlabel"]
 

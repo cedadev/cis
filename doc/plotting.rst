@@ -33,8 +33,6 @@ This will attempt to locate the variable ``variable`` in all of the specified ``
 ``overlay``
   a collection of plots overlaid on one another, see :ref:`overlay plots <overlay-plots>`
 
-``scatteroverlay``
-  a heatmap overlayed with a scatter plot, see :ref:`scatter-overlay plots <scatteroverlay-plots>`
 
 Note that ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
 
@@ -220,44 +218,21 @@ To plot using a log scale:
 Overlaying Multiple Plots
 =========================
 
-Using ``--type overlay`` allows multiple files to be specified on the command line to be plotted, each with its own type, which is specified as e.g. ``type=heatmap``, along with the other datagroup options. Currently supported plot types are ``heatmap``, ``contour``, ``contourf`` and ``scatter``. An additional datagroup option available is ``transparency``, which allows the transparency for a layer to be set. ``transparency`` take a value between 0 and 1, where 0 is completely opaque and 1 fully transparent.
-
-For example, to plot a heatmap and a contour plot the following options can be used::
-
-  cis plot var1:file1:type=heatmap var2:file2:type=contour,color=white --type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5 -o overlay.png
-
-Note that the first file specified is treated in a special way, from this the default plot dimensions are deduced, and the colorbar displayed will be for this datagroup only.
-
-Many more examples are available in the :doc:`overlay examples <overlay_examples>` page.
-
-.. _scatteroverlay-plots:
-
-Scatter Overlay Plots
-=====================
-
-.. note::
-
-   Note that scatteroverlay is to be depreciated, as the overlay option will allow a more general method for overlaying multiple datasets
-
-Three types of plot overlay are currently available:
-
-  * Overlaying several line graphs
-  * Overlaying several scatter plots
-  * Overlaying a heatmap with several scatter graphs
-
-To overlay several line graphs or scatter plots, simply use the plot command as before, but simply specify multiple files and variables, e.g.::
+Overlaying multiple line graphs or scatter plots is straightforward, simply use the plot command as before but specify multiple files and variables, e.g.::
 
   $ cis plot $var1:$filename1:edgecolor=black $var2:$filename2:edgecolor=red
 
 To plot two variables from the same file, simply use the above command with `$filename1` in place of `$filename2`.
 
-To overlay a heatmap with several scatter graphs, use the following command::
+However, using ``--type overlay`` allows multiple files to be specified on the command line to be plotted each with its own type, which is specified as e.g. ``type=heatmap``, along with the other datagroup options. Currently supported plot types are ``heatmap``, ``contour``, ``contourf`` and ``scatter``. An additional datagroup option available is ``transparency``, which allows the transparency for a layer to be set. ``transparency`` take a value between 0 and 1, where 0 is completely opaque and 1 fully transparent.
 
-  $ cis plot $var1:$filename1:label=label1 $var2:$filename2:color=colour2,itemstyle=style2,label=label2 $var3:$filename3:color=colour3,itemstyle=style3,label=label3 --type scatteroverlay
+For example, to plot a heatmap and a contour plot the following options can be used::
 
-Where `` $filename1 `` refers to the file containing the heatmap data and the other two filenames refer to the files containing the scatter data.
+  cis plot var1:file1:type=heatmap var2:file2:type=contour,color=white --type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5 -o overlay.png
 
-If the scatter data is 3 dimensional, then the colour argument can be omitted and the data will be plotted using the same colour map as the heatmap. This can be overridden by explicitly including the colour argument.
+Note that the default plot dimensions are deduced from the first datagroup specified.
+
+Many more examples are available in the :doc:`overlay examples <overlay_examples>` page.
 
 
 .. _colours-and-markers:
