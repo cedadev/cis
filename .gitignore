@@ -10,3 +10,5 @@ cis.egg-info/
 *~
 doc/_build
 cis/*.png
+
+cis/test/integration/plot_tests/result_image_comparison

@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-from mpl_toolkits.basemap import Basemap
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 import matplotlib.pyplot as plt
 
@@ -13,7 +12,7 @@ from cis.plotting.formatter import LogFormatterMathtextSpecial
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    def __init__(self, packed_data_items, plot_args, x_wrap_start=None, calculate_min_and_max_values=True, datagroup=0,
+    def __init__(self, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0,
                  *mplargs, **mplkwargs):
         """
         Constructor for Generic_Plot.
@@ -30,6 +29,8 @@ class Generic_Plot(object):
         self.mplkwargs = mplkwargs
         self.datagroup = datagroup
 
+        self.color_axis = []
+
         if plot_args.get("logv", False):
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
@@ -40,7 +41,9 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        self.x_wrap_start = self.set_x_wrap_start(x_wrap_start)
+        user_x_min = None if self.plot_args.get('xrange', None) is None else self.plot_args['xrange'].get('xmin', None)
+        self.set_x_wrap_start(user_x_min)
+        self.offset_longitude = user_x_min != self.x_wrap_start
         self.unpacked_data_items = self.unpack_data_items()
 
         if calculate_min_and_max_values:
@@ -48,11 +51,10 @@ class Generic_Plot(object):
 
         self.matplotlib = plt
 
-        self.plotting_library = self.set_plotting_library()
-
         self.set_width_and_height()
 
         if self.is_map():
+            self.setup_map()
             self.check_data_is_2d()
 
         self.plot()
@@ -61,27 +63,26 @@ class Generic_Plot(object):
         if len(self.packed_data_items[0].shape) > 2:
             raise CISError("Data is not 1D or 2D - can't plot it on a map.")
 
-    def set_x_wrap_start(self, x_wrap_start):
-        if x_wrap_start is None:
-            x_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.plot_args.get('xrange'),
-                                                     self.packed_data_items)
-        return x_wrap_start
+    def set_x_wrap_start(self, user_xmin):
 
-    def set_plotting_library(self):
-        if self.is_map():
-            max_found = 180
-            x_range_dict = self.plot_args.get('xrange')
-            x_max_requested = x_range_dict.get('xmax')
-            max_found = max([max_found, x_max_requested])
-            data_max = self.get_data_items_max()
-            # lon_0 must be between -360 and 720 so if the max longitude in the data is outside this then don't consider
-            #  it for lon_0.
-            if -180 < data_max < 900.0:
-                max_found = max(data_max, max_found)
-            self.basemap = Basemap(lon_0=(max_found - 180.0))
-            return self.basemap
+        # FIND THE WRAP START OF THE DATA
+        data_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.packed_data_items)
+
+        # NOW find the wrap start of the user specified range
+        if user_xmin is not None:
+            self.x_wrap_start = -180 if user_xmin < 0 else 0
         else:
-            return self.matplotlib
+            self.x_wrap_start = data_wrap_start
+
+    def setup_map(self):
+        import cartopy.crs as ccrs
+
+        # The projection of the data gets offset
+        self.projection = ccrs.PlateCarree(central_longitude=(self.x_wrap_start + 180.0))
+        # But not the transform...
+        self.transform = ccrs.PlateCarree()
+        self.cartopy_axis = self.matplotlib.axes(projection=self.projection)
+        self.mplkwargs['transform'] = self.transform
 
     def get_data_items_max(self):
         import numpy as np
@@ -177,7 +178,7 @@ class Generic_Plot(object):
         legend = self.matplotlib.legend(legend_titles, loc="best")
         legend.draggable(state=True)
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+    def calculate_axis_limits(self, axis, min_val, max_val):
         """
         Calculates the axis limits for a given axis
         :param axis: The axis for the limits to be calculated
@@ -186,36 +187,39 @@ class Generic_Plot(object):
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis,
                                                                     self.unpacked_data_items[
                                                                         0][axis])
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
         if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
-            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
+            new_min, new_max = new_max, new_min
 
-        return valrange
+        return new_min, new_max
 
-    def apply_axis_limits(self, valrange, axis):
+    def apply_axis_limits(self):
         """
         Applies the limits to the specified axis if given, or calculates them otherwise
-        :param valrange    A dictionary containing xmin, xmax or ymin, ymax
-        :param axis        The axis to apply the limits to
         """
-        valrange = self.calculate_axis_limits(axis, valrange.get(axis + "min", None), valrange.get(axis + "max", None),
-                                              valrange.get(axis + "step", None))
+        x_range_dict = self.plot_args.get('xrange', None)
+        x_range_vals = None if x_range_dict is None else x_range_dict.get('xmin', None), \
+                       None if x_range_dict is None else x_range_dict.get('xmax', None)
 
-        if axis == "x":
-            step = valrange.pop("xstep", None)
-            self.matplotlib.xlim(**valrange)
-            if step is not None:
-                valrange["xstep"] = step
-        elif axis == "y":
-            step = valrange.pop("ystep", None)
-            self.matplotlib.ylim(**valrange)
-            if step is not None:
-                valrange["ystep"] = step
+        y_range_dict = self.plot_args.get('yrange', None)
+        y_range_vals = None if y_range_dict is None else y_range_dict.get('ymin', None), \
+                       None if y_range_dict is None else y_range_dict.get('ymax', None)
+
+        self.xmin, self.xmax = self.calculate_axis_limits('x', *x_range_vals)
+        ymin, ymax = self.calculate_axis_limits('y', *y_range_vals)
+
+        if self.is_map():
+            try:
+                self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.transform)
+            except ValueError:
+                self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.projection)
+        else:
+            self.matplotlib.xlim(xmin=self.xmin, xmax=self.xmax)
+            self.matplotlib.ylim(ymin=ymin, ymax=ymax)
 
     def add_color_bar(self):
         """
@@ -243,7 +247,7 @@ class Generic_Plot(object):
         else:
             scale = float(scale)
 
-        cbar = self.matplotlib.colorbar(orientation=self.plot_args["cbarorient"], ticks=ticks,
+        cbar = self.matplotlib.colorbar(self.color_axis[0], orientation=self.plot_args["cbarorient"], ticks=ticks,
                                         shrink=scale, format=formatter)
 
         if not self.plot_args["logv"]:
@@ -259,21 +263,36 @@ class Generic_Plot(object):
         cbar.set_label(label)
 
     def set_axis_ticks(self, axis, no_of_dims):
+        from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
         from numpy import arange
 
-        if axis == "x":
-            coord_axis = "x"
-            tick_method = self.matplotlib.xticks
-        elif axis == "y":
-            coord_axis = "data" if no_of_dims == 2 else "y"
-            tick_method = self.matplotlib.yticks
+        tick_kwargs = {}
 
-        if self.plot_args.get(axis + "tickangle", None) is None:
-            angle = None
-            ha = "center" if axis == "x" else "right"
+        if self.is_map():
+            if axis == "x":
+                coord_axis = "x"
+                tick_method = self.cartopy_axis.set_xticks
+                self.cartopy_axis.xaxis.set_major_formatter(LongitudeFormatter())
+            elif axis == "y":
+                coord_axis = "data" if no_of_dims == 2 else "y"
+                tick_method = self.cartopy_axis.set_yticks
+                self.cartopy_axis.yaxis.set_major_formatter(LatitudeFormatter())
+
+            tick_kwargs['crs'] = self.transform
         else:
-            angle = self.plot_args[axis + "tickangle"]
-            ha = "right"
+            if axis == "x":
+                coord_axis = "x"
+                tick_method = self.matplotlib.xticks
+            elif axis == "y":
+                coord_axis = "data" if no_of_dims == 2 else "y"
+                tick_method = self.matplotlib.yticks
+
+            if self.plot_args.get(axis + "tickangle", None) is None:
+                angle = None
+                tick_kwargs['ha'] = "center" if axis == "x" else "right"
+            else:
+                tick_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
+                tick_kwargs['ha'] = "right"
 
         if self.plot_args[axis + "range"].get(axis + "step") is not None:
             step = self.plot_args[axis + "range"][axis + "step"]
@@ -290,9 +309,9 @@ class Generic_Plot(object):
 
             ticks = arange(min_val, max_val + step, step)
 
-            tick_method(ticks, rotation=angle, ha=ha)
-        else:
-            tick_method(rotation=angle, ha=ha)
+            tick_method(ticks, **tick_kwargs)
+        elif not self.is_map():
+            tick_method(**tick_kwargs)
 
     def format_time_axis(self):
         from cis.time_util import cis_standard_time_unit
@@ -462,8 +481,8 @@ class Generic_Plot(object):
         self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
         self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
         self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
-        self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
 
+        self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
         if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
             self.plot_args["valrange"]["vmin"] = self.plot_args['datagroups'][self.datagroup]['cmin']
         if self.plot_args['datagroups'][self.datagroup]['cmax'] is not None:
@@ -475,7 +494,7 @@ class Generic_Plot(object):
         vmax = self.mplkwargs.pop("vmax")
 
         if self.plot_args["valrange"].get("vstep", None) is None and \
-                self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
+                        self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
             nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
         elif self.plot_args["valrange"].get("vstep", None) is None:
             nconts = self.plot_args['datagroups'][self.datagroup]['contnlevels']
@@ -491,24 +510,20 @@ class Generic_Plot(object):
             contour_level_list = self.plot_args['datagroups'][self.datagroup]['contlevels']
 
         if filled:
-            contour_type = self.plotting_library.contourf
+            contour_type = self.matplotlib.contourf
         else:
-            contour_type = self.plotting_library.contour
+            contour_type = self.matplotlib.contour
 
         if self.is_map() and self.unpacked_data_items[0]["data"].ndim == 2:
             # This fails for an unknown reason on one dimensional data
             self.mplkwargs["latlon"] = True
 
-        # If data (and x, y) is one dimensional, "tri" is set to true to tell Basemap the data is unstructured
-        if self.unpacked_data_items[0]["data"].ndim == 1:
-            self.mplkwargs["tri"] = True
-
-        cs = contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
-                          self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs)
+        self.color_axis.append(contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
+                                       self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs))
         if self.mplkwargs["contlabel"] and not filled:
-            plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
+            plt.clabel(self.color_axis[0], fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
         elif self.mplkwargs["contlabel"] and filled:
-            plt.clabel(cs, fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
+            plt.clabel(self.color_axis[0], fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
 
         self.mplkwargs.pop("latlon", None)
         self.mplkwargs.pop("tri", None)
@@ -575,12 +590,47 @@ class Generic_Plot(object):
         if len(self.packed_data_items) > 1:
             self.create_legend()
 
+    def __get_extent(self):
+        """
+         Calculates the diagonal extent of plot area in Km
+        :return: The diagonal size of the plot in Km
+        """
+        from cis.utils import haversine
+        x0, x1, y0, y1 = self.cartopy_axis.get_extent()
+        return haversine(y0, x0, y1, x1)
+
     def drawcoastlines(self):
+        """
+        Adds coastlines or nasa blue marble back ground to a plot (no coastlines are plotted over nasa blue marble).
+        There are three levels of resolution used based on the spatial scale of the plot. These are determined using
+        values determined by eye for bluemarble and the coastlines independently.
+        """
+        from matplotlib.image import imread
+        import os.path as path
+        bluemarble_scales =[(0, 'raster/world.topo.bathy.200407.3x1350x675.png'),
+                            (5000, 'raster/world.topo.bathy.200407.3x2700x1350.png'),
+                            (2500, 'raster/world.topo.bathy.200407.3x5400x2700.png')]
+
+        coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
+
+        ext = self.__get_extent()
+
         if self.plot_args["nasabluemarble"] is not False:
-            self.basemap.bluemarble()
+            bluemarble_res = bluemarble_scales[0][1]
+            for scale, res in bluemarble_scales[1:]:
+                if scale > ext:
+                    bluemarble_res = res
+
+            img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
+            self.cartopy_axis.imshow(img, origin='upper', transform=self.transform, extent=[-180, 180, -90, 90])
         else:
-            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "k"
-            self.basemap.drawcoastlines(color=colour)
+            coastline_res = coastline_scales[0][1]
+            for scale, res in coastline_scales[1:]:
+                if scale > ext:
+                    coastline_res = res
+
+            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
+            self.cartopy_axis.coastlines(color=colour, resolution=coastline_res)
 
     def format_3d_plot(self):
         """
@@ -736,12 +786,16 @@ class Generic_Plot(object):
         Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
         vs longitude plots the ticks can come out overlapped, so an exception is included to deal with this.
         """
+        from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
         y_variable = self.plot_args['y_variable'].lower()
         x_variable = self.plot_args['x_variable'].lower()
 
         ymin, ymax = self.matplotlib.ylim()
-        xmin, xmax = self.matplotlib.xlim()
+
+        # Matplotlib xlim doesn't work with cartopy plots
+        xmin, xmax = self.xmin, self.xmax
+        # xmin, xmax = self.matplotlib.xlim()
 
         max_x_bins = 9
         max_y_bins = 9
@@ -772,20 +826,32 @@ class Generic_Plot(object):
 
         lat_or_lon = 'lat', 'lon'
 
-        if xsteps is None and self.plot_args['logx'] is None:
+        if xsteps is None and not self.plot_args['logx']:
             if self.plot_args['x_variable'].lower().startswith(lat_or_lon):
-                self.matplotlib.axes().xaxis.set_major_locator(MaxNLocator(nbins=max_x_bins, steps=lon_steps))
+                lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
+                if self.is_map():
+                    self.cartopy_axis.set_xticks(lon_locator.tick_values(xmin, xmax), crs=self.transform)
+                    self.cartopy_axis.xaxis.set_major_formatter(LongitudeFormatter())
+                else:
+                    self.matplotlib.axes().xaxis.set_major_locator(lon_locator)
             else:
                 self.matplotlib.axes().xaxis.set_major_locator(MaxNLocator(nbins=max_x_bins, steps=variable_step))
 
-            self.matplotlib.axes().xaxis.set_minor_locator(AutoMinorLocator())
-            self.matplotlib.axes().xaxis.grid(False, which='minor')
+            if not self.is_map():
+                self.matplotlib.axes().xaxis.set_minor_locator(AutoMinorLocator())
+                self.matplotlib.axes().xaxis.grid(False, which='minor')
 
-        if ysteps is None and self.plot_args['logy'] is None:
+        if ysteps is None and not self.plot_args['logy']:
             if y_variable.startswith(lat_or_lon):
-                self.matplotlib.axes().yaxis.set_major_locator(MaxNLocator(nbins=max_y_bins, steps=lat_steps))
+                lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
+                if self.is_map():
+                    self.cartopy_axis.set_yticks(lat_locator.tick_values(ymin, ymax), crs=self.transform)
+                    self.cartopy_axis.yaxis.set_major_formatter(LatitudeFormatter())
+                else:
+                    self.matplotlib.axes().yaxis.set_major_locator(lat_locator)
             else:
                 self.matplotlib.axes().yaxis.set_major_locator(MaxNLocator(nbins=max_y_bins, steps=variable_step))
 
-            self.matplotlib.axes().yaxis.set_minor_locator(AutoMinorLocator())
-            self.matplotlib.axes().yaxis.grid(False, which='minor')
+            if not self.is_map():
+                self.matplotlib.axes().yaxis.set_minor_locator(AutoMinorLocator())
+                self.matplotlib.axes().yaxis.grid(False, which='minor')

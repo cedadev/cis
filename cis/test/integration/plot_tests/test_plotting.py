@@ -138,7 +138,19 @@ class TestPlotVisual(VisualTest):
     def test_iris_heatmap(self):
         arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "heatmap",
                      "--ylabel", "Overidden Y", "--title", "OveriddenTitle",
-                    "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output", self.id() + ".png"]
+                     "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output",
+                     self.id() + ".png"]
+
+        main_arguments = parse_args(arguments)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_iris_heatmap_force_minus_180_to_180(self):
+        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "heatmap",
+                     "--ylabel", "Overidden Y", "--title", "OveriddenTitle", "--xmin", "-180", "--xmax", "180",
+                     "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output",
+                     self.id() + ".png"]
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
@@ -214,18 +226,6 @@ class TestPlotVisual(VisualTest):
                " --cbarorient vertical".split()
         arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu",
                      "snow:" + valid_2d_filename + ":label=snowlabel,cmap=RdBu"]
-
-        main_arguments = parse_args(arguments + opts + output_file_opt)
-        plot_cmd(main_arguments)
-
-        self.check_graphic()
-
-    def test_iris_scatter_overlay(self):
-        output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatteroverlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
-               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split()
-        arguments = ["plot", "rain:" + valid_2d_filename ,
-                     "snow:" + valid_2d_filename + ":itemstyle=^,label=snowlabel"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -415,7 +415,218 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_bluemarble_minus_180_180(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.plotting import Plotter
+        from cis.test.util.mock import make_regular_2d_ungridded_data
 
-    def test_other_overlay_plots(self):
-        # There should be lots of these...
-        pass
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+
+        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
+
+    def test_bluemarble_0_360(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        from cis.plotting import Plotter
+
+        data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
+
+        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
+
+    def test_coastline_color(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        from cis.plotting import Plotter
+
+        data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
+
+        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, coastlinescolour='red',
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+
+        self.check_graphic()
+
+    def test_other_longitude_wrapping_multiple_ranges_forced_0_to_360(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.plotting import Plotter
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
+                 make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
+
+        Plotter(datas, x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':0,'xmax':360},
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '-180to180'},
+                            {'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '0to360'}])
+
+        self.check_graphic()
+
+    def test_other_longitude_wrapping_multiple_ranges_forced_minus_180_to_180(self):
+        """
+        Test that ungridded data which crosses the dateline gets plotted correctly
+        """
+        from cis.plotting import Plotter
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
+                 make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
+
+        Plotter(datas, x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':-180,'xmax':180},
+                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '-180to180'},
+                            {'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '0to360'}])
+
+        self.check_graphic()
+
+    def test_iris_contour_over_heatmap(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
+
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap",
+                     "solarupclear:" + valid_2d_filename + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_iris_contour_over_heatmap_binary_cmap(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
+
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap,cmap=binary",
+                     "solarupclear:" + valid_2d_filename + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_transparent_contour_over_bluemarble(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5" \
+               " --nasabluemarble".split()
+
+        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.000075"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_filled_contour_over_scatter(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
+               " --ymin 0 --ymax 90 --itemwidth 20".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
+                     "solarupclear:" + valid_2d_filename + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
+                                              "contlabel=true,contfontsize=18"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_filled_contour_over_scatter_with_cmin(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180" \
+               " --xmax -90 --ymin 0 --ymax 90 --itemwidth 20 --nasabluemarble".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
+                     "solarupclear:" + valid_2d_filename + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
+                                              "contfontsize=18,cmap=Reds"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_iris_scatter_overlay(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
+               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --itemwidth=3".split() + \
+               ["--title=Overlay test"]
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap" ,
+                     "snow:" + valid_2d_filename + ":type=scatter,itemstyle=^,label=snowlabel"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_medium_plot_region(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+               " --ymin 50 --ymax 70 --itemwidth 10".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_small_plot_region(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+               " --ymin 59 --ymax 61 --itemwidth 10".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_very_small_plot_region(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -151.5 --xmax -151.2" \
+               " --ymin 60.4 --ymax 60.8 --itemwidth 10".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_medium_plot_region_bluemarble(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+               " --ymin 50 --ymax 70 --itemwidth 10 --nasabluemarble".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_small_plot_region_bluemarble(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+               " --ymin 59 --ymax 61 --itemwidth 10 --nasabluemarble".split()
+
+        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()

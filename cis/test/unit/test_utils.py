@@ -286,3 +286,21 @@ class TestUtils(unittest.TestCase):
             arrays.append(numpy.array([0, 90, 180]))
         conc = concatenate(arrays)
         assert numpy.ma.count_masked(conc) == 1
+
+
+class TestFindLongitudeWrapStart(unittest.TestCase):
+
+    def test_GIVEN_data_is_minus_180_to_180_THEN_returns_minus_180(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+
+        eq_(find_longitude_wrap_start('longitude', [data]), -180)
+
+
+    def test_GIVEN_data_is_minus_0_to_360_THEN_returns_0(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5, lon_max=345.)
+
+        eq_(find_longitude_wrap_start('longitude', [data]), 0)

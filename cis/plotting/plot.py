@@ -7,7 +7,6 @@ from cis.plotting.contour_plot import Contour_Plot
 from cis.plotting.contourf_plot import Contourf_Plot
 from cis.plotting.heatmap import Heatmap
 from cis.plotting.line_plot import Line_Plot
-from cis.plotting.scatter_overlay import Scatter_Overlay
 from cis.plotting.scatter_plot import Scatter_Plot
 from cis.plotting.comparative_scatter import Comparative_Scatter
 from cis.plotting.overlay import Overlay
@@ -27,7 +26,6 @@ class Plotter(object):
                   "contourf": Contourf_Plot,
                   "heatmap": Heatmap,
                   "line": Line_Plot,
-                  "scatteroverlay": Scatter_Overlay,
                   "scatter": Scatter_Plot,
                   "comparativescatter": Comparative_Scatter,
                   "overlay": Overlay,
@@ -95,6 +93,7 @@ class Plotter(object):
 
         # Do wrapping
         x_range = plot_args.get('xrange', None)
+
         if x_range is not None:
             x_min = x_range.get('xmin', None)
             x_max = x_range.get('xmax', None)
@@ -107,9 +106,9 @@ class Plotter(object):
         f.set_figwidth(plot_args["plotwidth"])
         f.set_figheight(plot_args["plotheight"])
         plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
+        plot.apply_axis_limits()
         plot.format_plot()
-        plot.apply_axis_limits(plot_args["xrange"], "x")
-        plot.apply_axis_limits(plot_args["yrange"], "y")
+
         plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 

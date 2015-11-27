@@ -62,11 +62,7 @@ def plot_cmd(main_arguments):
     from plotting.plot import Plotter
     from cis.data_io.data_reader import DataReader
     import cis.exceptions as ex
-    from iris.exceptions import IrisError
 
-    # create a list of data object (ungridded or gridded(in that case, a Iris cube)), concatenating data from various
-    # files
-    data = []
     try:
         data = DataReader().read_datagroups(main_arguments.datagroups)
     except MemoryError:

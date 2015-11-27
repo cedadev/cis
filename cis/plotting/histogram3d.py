@@ -56,7 +56,7 @@ class Histogram_3D(Generic_Plot):
     def unpack_data_items(self):
         return self.unpack_comparative_data()
 
-    def set_plotting_library(self):
+    def setup_map(self):
         pass
 
     def calculate_bin_edges(self, axis):
@@ -88,7 +88,7 @@ class Histogram_3D(Generic_Plot):
     def set_default_axis_label(self, axis):
         self.set_default_axis_label_for_comparative_plot(axis)
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+    def calculate_axis_limits(self, axis, min_val, max_val):
         """
         Calculates the limits for a given axis.
         If the axis is "x" then looks at the data of the first data item
@@ -102,25 +102,10 @@ class Histogram_3D(Generic_Plot):
             coord_axis = 1
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[coord_axis]["data"])
 
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
-        return valrange
-
-    def apply_axis_limits(self, valrange, axis):
-        if len(valrange) != 0:
-            if axis == "x":
-                step = valrange.pop("xstep", None)
-                self.matplotlib.xlim(**valrange)
-                if step is not None:
-                    valrange["xstep"] = step
-            elif axis == "y":
-                step = valrange.pop("ystep", None)
-                self.matplotlib.ylim(**valrange)
-                if step is not None:
-                    valrange["ystep"] = step
+        return new_min, new_max
 
     def create_legend(self):
         """

@@ -16,11 +16,11 @@ import mock
 import sys
 import os
 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib.pyplot', 'scipy', 'basemap', 'iris', 'netCDF4', 'nose',
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib.pyplot', 'scipy', 'iris', 'netCDF4', 'nose',
                 'psutil', 'pyhdf', 'iris.cube', 'iris.exceptions', 'iris.unit', 'scipy.stats',
                 'iris.analysis', 'iris.std_names', 'iris.coords', 'scipy.stats.mstats', 'iris.coord_categorisation',
                 'iris.analysis.interpolate', 'iris.analysis.cartography', 'numpy.ma', 'scipy.sparse', 'iris.util',
-                'matplotlib.cbook', 'matplotlib.ticker', 'matplotlib', 'mpl_toolkits.basemap']
+                'matplotlib.cbook', 'matplotlib.ticker', 'matplotlib']
 
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()

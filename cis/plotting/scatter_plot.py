@@ -7,7 +7,6 @@ class Scatter_Plot(Generic_Plot):
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
-        self.plots = []
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
             datafile = self.plot_args["datagroups"][self.datagroup]
@@ -41,11 +40,12 @@ class Scatter_Plot(Generic_Plot):
                 self.scatter_type = "2D"
                 y_coords = unpacked_data_item["data"]
 
-            self.plots.append(
-                self.plotting_library.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
+            self.color_axis.append(
+                self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
                                               **self.mplkwargs))
 
-    def calculate_axis_limits(self, axis, min_val, max_val, step):
+
+    def calculate_axis_limits(self, axis, min_val, max_val):
         """
         :param axis: The axis to calculate the limits for
         :param min_val: The user specified minimum value for the axis
@@ -62,16 +62,14 @@ class Scatter_Plot(Generic_Plot):
                 coord_axis = "y"
         c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0][coord_axis])
 
-        valrange = {}
-        valrange[axis + "min"] = c_min if min_val is None else min_val
-        valrange[axis + "max"] = c_max if max_val is None else max_val
-        valrange[axis + "step"] = step
+        new_min = c_min if min_val is None else min_val
+        new_max = c_max if max_val is None else max_val
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
         if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
-            valrange[axis + "min"], valrange[axis + "max"] = valrange[axis + "max"], valrange[axis + "min"]
+            new_min, new_max = new_max, new_min
 
-        return valrange
+        return new_min, new_max
 
     def format_plot(self):
         self.format_time_axis()
@@ -114,6 +112,5 @@ class Scatter_Plot(Generic_Plot):
                 legend_titles.append(datagroups[i]["label"])
             else:
                 legend_titles.append(item.long_name)
-        handles = self.plots
-        legend = self.matplotlib.legend(handles, legend_titles, loc="best", scatterpoints=1, markerscale=0.5)
+        legend = self.matplotlib.legend(self.color_axis, legend_titles, loc="best", scatterpoints=1, markerscale=0.5)
         legend.draggable(state=True)

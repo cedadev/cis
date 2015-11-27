@@ -174,7 +174,6 @@ class TestDataReader(TestCase):
                                                         'filename2.nc': ['var3']}[f])
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         data = reader.read_datagroups([datagroup_1, datagroup_2])
-        assert_that(isinstance(data, UngriddedDataList))
         assert_that(len(data), is_(3))
         assert_that(data[0], is_(var1))
         assert_that(data[1], is_(var2))
@@ -195,13 +194,12 @@ class TestDataReader(TestCase):
                                                         'filename2.nc': ['var3']}[f])
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         data = reader.read_datagroups([datagroup_1, datagroup_2])
-        assert_that(isinstance(data, GriddedDataList))
         assert_that(len(data), is_(3))
         assert_that(data[0], is_(var1))
         assert_that(data[1], is_(var2))
         assert_that(data[2], is_(var3))
 
-    def test_GIVEN_gridded_and_ungridded_datagroups_WHEN_read_datagroups_THEN_raises_TypeError(self):
+    def test_GIVEN_gridded_and_ungridded_datagroups_WHEN_read_datagroups_THEN_NO_TypeError(self):
         datagroup_1 = {'variables': ['var1'],
                        'filenames': ['filename1.nc'],
                        'product': None}
@@ -214,8 +212,8 @@ class TestDataReader(TestCase):
         get_var_func = MagicMock(side_effect=lambda f: {'filename1.nc': ['var1'],
                                                         'filename2.nc': ['var3']}[f])
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
-        with self.assertRaises(TypeError):
-            reader.read_datagroups([datagroup_1, datagroup_2])
+        data = reader.read_datagroups([datagroup_1, datagroup_2])
+        assert_that(data, is_(list))
 
     def test_GIVEN_aliases_None_WHEN_read_datagroups_THEN_read_OK_aliases_default_to_var_names(self):
         datagroup = {'variables': ['var1'],

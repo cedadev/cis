@@ -246,7 +246,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     import iris.plot as iplt
     import iris
     import logging
-    from mpl_toolkits.basemap import addcyclic
+    from cartopy.util import add_cyclic_point
 
     no_of_dims = len(data_object.shape)
 
@@ -304,16 +304,12 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                         y, _x = np.meshgrid(y, x[:, 0])
             else:
                 try:
-                    data, x = addcyclic(data, x)
+                    data, x = add_cyclic_point(data, x)
                     x, y = np.meshgrid(x, y)
-                except:
-                    data, y = addcyclic(data, y)
+                except ValueError as e:
+                    data, y = add_cyclic_point(data, y)
                     y, x = np.meshgrid(y, x)
-
-    if x_axis_name == 'X' and x_wrap_start is not None:
-        # x = iris.analysis.cartography.wrap_lons(x, x_wrap_start, 360)
-        if isnan(x_wrap_start):
-            raise InvalidCommandLineOptionError('Overall range for longitude axis must be within 0 - 360 degrees.')
+    elif x_axis_name == 'X' and x_wrap_start is not None:
         x = fix_longitude_range(x, x_wrap_start)
 
     logging.debug("Shape of x: " + str(x.shape))
@@ -332,23 +328,17 @@ def fix_longitude_range(lons, range_start):
     :param range_start: longitude at start of 360 degree range into which values are required to fit
     :return: array of fixed longitudes
     """
-    range_end = range_start + 360
-    fixed_lons = np.ma.array(lons, copy=True)
-
-    fixed_lons[fixed_lons < range_start] += 360
-    fixed_lons[fixed_lons >= range_end] -= 360
-
-    return fixed_lons
+    return iris.analysis.cartography.wrap_lons(lons, range_start, 360)
 
 
-def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
-    if x_range is not None:
-        x_min = x_range.get('xmin')
-        x_max = x_range.get('xmax')
-    else:
-        x_min = None
-        x_max = None
-
+def find_longitude_wrap_start(x_variable, packed_data_items):
+    """
+    ONLY WORK OUT THE WRAP START OF THE DATA
+    :param x_variable:
+    :param x_range:
+    :param packed_data_items:
+    :return:
+    """
     x_wrap_start = None
     x_points_mins = []
     x_points_maxs = []
@@ -366,21 +356,8 @@ def find_longitude_wrap_start(x_variable, x_range, packed_data_items):
         x_points_min = min(x_points_mins)
         x_points_max = max(x_points_maxs)
 
-        x_wrap_start = x_points_min
-        if x_min is not None or x_max is not None:
-            if x_min is not None and x_max is not None:
-                if abs(x_max - x_min) > 360:
-                    return float('NaN')
-            elif x_min is None and x_max < x_points_min:
-                raise InvalidCommandLineOptionError(
-                    'If specifying xmin only it must be within the original coordinate range. Please specify xmax too.')
-            elif x_max is None and x_min > x_points_max:
-                raise InvalidCommandLineOptionError(
-                    'If specifying xmax only it must be within the original coordinate range. Please specify xmin too.')
-            if x_min is not None and x_min < x_points_min:
-                x_wrap_start = x_min
-            elif x_max is not None and x_max > x_points_max:
-                x_wrap_start = x_max - 360
+        x_wrap_start = -180 if x_points_min < 0 else 0
+
     return x_wrap_start
 
 

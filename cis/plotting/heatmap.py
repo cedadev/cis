@@ -33,25 +33,12 @@ class Heatmap(Generic_Plot):
         if self.plot_args['datagroups'][self.datagroup]['cmax'] is not None:
             self.plot_args["valrange"]["vmax"] = self.plot_args['datagroups'][self.datagroup]['cmax']
 
-        if self.is_map():
-            self.mplkwargs["latlon"] = True
+        # if self.is_map():
+        #     self.mplkwargs["latlon"] = True
 
         x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.plot_args)
 
-        from mpl_toolkits import basemap
-        if isinstance(self.plotting_library, basemap.Basemap):
-            try:
-                version_tuple = tuple(int(s) for s in basemap.__version__.split("."))
-                if version_tuple <= (1, 0, 7):
-                    logging.warning("Basemap version %s has known issues when plotting heatmaps, particularly when "
-                                    "using '--xmin' or '--xmax' options. Use a newer version if available, otherwise "
-                                    "check your output for validity, especially around the meridians."
-                                    % basemap.__version__)
-            except ValueError:
-                # We don't want an error if this doesn't work for some reason
-                pass
-
-        self.plotting_library.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs)
+        self.color_axis.append(self.matplotlib.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs))
 
     def get_data_items_max(self):
         # Take into account the bounds
@@ -98,10 +85,4 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     else:
         yv, xv = numpy.meshgrid(y_vals, x_vals)
 
-    # The data needs to have an empty column and row appended to pass through Basemap's longitude shifting routine.
-    # This is a bug in Basemap really, since the underlying pcolormesh() method recommends that the data be smaller
-    # than the x and y arrays.
-    wider_data = numpy.ma.zeros(xv.shape)
-    for index, v in numpy.ndenumerate(data):
-        wider_data[index] = data[index]
-    return xv, yv, wider_data
+    return xv, yv, data
