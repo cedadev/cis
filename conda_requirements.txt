@@ -3,7 +3,7 @@
 
 # Python dependencies
 matplotlib
-numpy=1.8.2
+numpy
 iris=1.8.1
 scipy=0.16.0
 
