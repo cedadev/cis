@@ -8,7 +8,6 @@ import logging
 
 from cis.data_io.data_reader import DataReader
 from cis.data_io.data_writer import DataWriter
-from cis.exceptions import CISError, NoDataInSubsetError
 from cis import __version__, __status__
 
 logger = logging.getLogger(__name__)
@@ -23,6 +22,7 @@ def __error_occurred(e):
     sys.stderr.write(str(e) + "\n")
     logging.debug(str(e) + "\n")
     logging.debug(traceback.format_exc())
+    logging.error(str(e) + " - check cis.log for details\n")
     exit(1)
 
 
@@ -80,8 +80,6 @@ def plot_cmd(main_arguments):
 
     try:
         Plotter(data, plot_type, output, **main_arguments)
-    except (ex.CISError) as e:
-        __error_occurred(e)
     except MemoryError:
         __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
                          "of data to be plotted, increase the swap space available on your machine or use a machine "
@@ -99,10 +97,7 @@ def info_cmd(main_arguments):
     """
     from cis.info import info
 
-    try:
-        info(main_arguments.filenames, main_arguments.variables, main_arguments.product, main_arguments.type)
-    except CISError as e:
-        __error_occurred(e)
+    info(main_arguments.filenames, main_arguments.variables, main_arguments.product, main_arguments.type)
 
 
 def col_cmd(main_arguments):
@@ -148,8 +143,6 @@ def col_cmd(main_arguments):
             data_writer.write_data(output, output_file)
         except ClassNotFoundError as e:
             __error_occurred(str(e) + "\nInvalid collocation option.")
-        except (CISError, IOError) as e:
-            __error_occurred(e)
 
 
 def subset_cmd(main_arguments):
@@ -169,10 +162,7 @@ def subset_cmd(main_arguments):
     product = input_group["product"] if input_group["product"] is not None else None
 
     subset = Subset(main_arguments.limits, main_arguments.output)
-    try:
-        subset.subset(variables, filenames, product)
-    except (NoDataInSubsetError, CISError) as exc:
-        __error_occurred(exc)
+    subset.subset(variables, filenames, product)
 
 
 def aggregate_cmd(main_arguments):
@@ -288,7 +278,6 @@ def main():
     import os
     import logging
     from logging import config
-    import traceback
 
     # configure logging
     try:
@@ -302,9 +291,7 @@ def main():
     try:
         parse_and_run_arguments()
     except Exception as e:
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        logging.error(e.message + " - check cis.log for details")
+        __error_occurred(e)
 
 
 if __name__ == '__main__':
