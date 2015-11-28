@@ -82,38 +82,40 @@ class Subset(object):
 
     def _set_constraint_limits(self, data, subset_constraint):
         """
-        Identify and set the constraint limits by:
-        * parsing anything that needs parsing (datetimes)
-        * ordering them always
+        Identify and set the constraint limits on the subset_constraint object using the coordinates from the data
+        object
 
-        :param data:
-        :param subset_constraint:
-        :return:
+        :param data: The data object containing the coordinates to subset
+        :param subset_constraint: The constraint object on to which to apply the limits
         """
-        for coord in data.coords():
-            # Match user-specified limits with dimensions found in data.
-            guessed_axis = guess_coord_axis(coord)
-            limit = None
-            if coord.name() in self._limits:
-                limit = self._limits[coord.name()]
-            elif guessed_axis is not None:
-                if guessed_axis in self._limits:
-                    limit = self._limits[guessed_axis]
-                elif guessed_axis.lower() in self._limits:
-                    limit = self._limits[guessed_axis.lower()]
+        from cis.exceptions import InvalidOperationError
+        from utils import standard_axes
 
-            if limit is not None:
-                wrapped = False
-                if limit.is_time or guessed_axis == 'T':
-                    # Ensure that the limits are date/times.
-                    dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
-                    limit_start = self._convert_datetime_to_coord_unit(coord, dt)
-                    dt = parse_datetime.convert_datetime_components_to_datetime(limit.end, False)
-                    limit_end = self._convert_datetime_to_coord_unit(coord, dt)
-                else:
-                    # Assume to be a non-time axis.
-                    (limit_start, limit_end) = self._fix_non_circular_limits(float(limit.start), float(limit.end))
-                subset_constraint.set_limit(coord, limit_start, limit_end)
+        for axis, limit in self._limits.iteritems():
+            # Find the coordinate matching either the axis, or name, or guessed standard name
+            # We use a set to remove any duplicates which might occur if we match for both axis and standard name.
+            coords = set(data.coords(axis=axis) +
+                         data.coords(name=axis) +
+                         data.coords(standard_name=standard_axes[axis.upper()]))
+
+            # Take out the single coordinate
+            try:
+                coord = coords.pop()
+            except KeyError:
+                raise (InvalidOperationError("Could not find a coordinate matching: " + axis))
+
+            # Parse the limits
+            if limit.is_time or axis == 'T':
+                # Ensure that the limits are date/times.
+                dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
+                limit_start = self._convert_datetime_to_coord_unit(coord, dt)
+                dt = parse_datetime.convert_datetime_components_to_datetime(limit.end, False)
+                limit_end = self._convert_datetime_to_coord_unit(coord, dt)
+            else:
+                # Assume to be a non-time axis.
+                (limit_start, limit_end) = self._fix_non_circular_limits(float(limit.start), float(limit.end))
+            # Apply the limit to the constraint object
+            subset_constraint.set_limit(coord, limit_start, limit_end)
 
     @staticmethod
     def _convert_datetime_to_coord_unit(coord, dt):

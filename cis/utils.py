@@ -716,6 +716,14 @@ def get_class_name(cls):
 def isnan(number):
     return number != number
 
+standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
+                  'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
+                  'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
+
+# The standard axes lookup is just the inverse of the standard names with the less likely options removed to preserve
+# a one to one mapping
+standard_axes = {'X': 'longitude', 'Y': 'latitude', 'Z': 'altitude', 'T': 'time', 'P': 'air_pressure'}
+
 
 def guess_coord_axis(coord):
     """Returns X, Y, Z or T corresponding to longitude, latitude,
@@ -725,9 +733,6 @@ def guess_coord_axis(coord):
     This is intended to be similar to iris.util.guess_coord_axis.
     """
     # TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
-    standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
-                      'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
-                      'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
     if isinstance(coord, iris.coords.Coord):
         guessed_axis = iris.util.guess_coord_axis(coord)
     else:
