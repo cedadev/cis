@@ -83,6 +83,12 @@ class Metadata(object):
             logging.info("Changing standard name for dataset from '{}' to '{}'"
                          .format(self.standard_name, new_standard_name))
         self.standard_name = new_standard_name
+
+        if self._name is not None \
+                and self._name.strip() is not "" \
+                and self._name != new_standard_name:
+            logging.info("Changing variable name for dataset from '{}' to '{}'"
+                         .format(self._name, new_standard_name))
         self._name = new_standard_name
 
     @staticmethod
