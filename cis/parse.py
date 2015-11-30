@@ -362,6 +362,7 @@ def get_aggregate_grid(aggregategrid, parser):
     """
     from cis.parse_datetime import parse_datetime, parse_datetime_delta, parse_as_number_or_datetime
     from cis.aggregation.aggregation_grid import AggregationGrid
+    from datetime import datetime
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(aggregategrid)
@@ -415,6 +416,7 @@ def get_aggregate_grid(aggregategrid, parser):
                 start_parsed = parse_as_number_or_datetime(start, 'aggregation grid start coordinate', parser)
                 end_parsed = parse_as_number_or_datetime(end, 'aggregation grid end coordinate', parser)
                 delta_parsed = parse_as_number_or_datetime(delta, 'aggregation grid delta coordinate', parser)
+                is_time = hasattr(delta_parsed, 'year')
             grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed, is_time)
 
     return grid_dict

@@ -26,7 +26,11 @@ where:
 ``<limits>``
   is a comma separated sequence of one or more coordinate range assignments of the form ``variable=[start,end]`` or ``variable=[value]`` in which
 
-    * ``variable`` is the name of the variable to be subsetted, or one of x, y, z or t, which refer to longitude, latitude, altitude or time, respectively.
+    * ``variable`` is the name of the variable to be subsetted, this can be the variable name (as it is in the data file) or it's CF standard name.
+    It is also possible to use axes name shorthands such as x, y, z or t - which *usually* refer to longitude, latitude, altitude or time, respectively.
+    However this approach can lead to confusion as these shorthands can be overridden by the files themselves, or the data readers, and may not always behave as expected.
+    For example when specifying 'z' for a gridded hybrid height file, this may well refer to model level number rather than altitude. For this reason it is often
+    safer to use variable names explicitly.
     * ``start`` is the value at the start of the coordinate range to be included
     * ``end`` is the value at the end of the coordinate range to be included
     * ``value`` is taken as the start and end value.
@@ -53,7 +57,7 @@ where:
 
 A full example would be::
 
-  $ cis subset solar_3:xglnwa.pm.k8dec-k9nov.col.tm.nc x=[0,180],y=[0,90] -o Xglnwa-solar_3
+  $ cis subset solar_3:xglnwa.pm.k8dec-k9nov.col.tm.nc longitude=[0,180],latitude=[0,90] -o Xglnwa-solar_3
 
 Gridded netCDF data is output as gridded data, while ungridded and non-netCDF gridded data is output as ungridded data.
 
@@ -62,7 +66,7 @@ Examples
 
 Below are examples of subsetting using each of the supported products (together with a command to plot the output)::
 
-  $ cis subset AO2CO2:RF04.20090114.192600_035100.PNI.nc t=[2009-01-14:19:26:00,2009-01-14:19:36:00] -o RF04-AO2CO2-out
+  $ cis subset AO2CO2:RF04.20090114.192600_035100.PNI.nc time=[2009-01-14:19:26:00,2009-01-14:19:36:00] -o RF04-AO2CO2-out
   $ cis plot AO2CO2:cis-RF04-AO2CO2-out.nc
 
   $ cis subset IO_RVOD_ice_water_content:2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf t=[2007-06-29:13:00,2007-06-29:13:30] -o CloudSAT-out

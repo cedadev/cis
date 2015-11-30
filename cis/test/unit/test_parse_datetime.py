@@ -141,7 +141,7 @@ def parse_as_number_or_datetime_can_parse_date_as_datetime():
     from cis.time_util import cis_standard_time_unit
     parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01', 'date/time arg', parser)
-    assert (dt == cis_standard_time_unit.date2num(datetime(2010, 7, 1)))
+    assert (datetime(*dt) == datetime(2010, 7, 1))
 
 
 @istest

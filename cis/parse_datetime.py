@@ -188,10 +188,13 @@ def parse_as_number_or_datetime(in_string, name, parser):
             ret = float(in_string)
         except ValueError:
             try:
-                ret = cis_standard_time_unit.date2num(du.parse(in_string))
+                ret = _parse_datetime(in_string)
             except ValueError:
-                parser.error("'" + in_string + "' is not a valid " + name)
-                ret = None
+                try:
+                    ret = _parse_datetime_delta(in_string)
+                except ValueError:
+                    parser.error("'" + in_string + "' is not a valid " + name)
+                    ret = None
     return ret
 
 

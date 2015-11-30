@@ -172,7 +172,17 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_NCAR_NetCDF_RAF_filename
         variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
         time_min, time_max = '2009-01-14T20:15:00', '2009-01-15T02:45:00'
-        self.do_subset(filename, time_min, time_max, variable)
+        self.check_temporal_subsetting(time_min, time_max, False)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+    def test_subset_NCAR_RAF_with_named_time_variable(self):
+        # Takes 13s
+        filename = valid_NCAR_NetCDF_RAF_filename
+        variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
+        time_min, time_max = '2009-01-14T20:15:00', '2009-01-15T02:45:00'
+        arguments = ['subset', variable + ':' + filename, 'time=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
         self.check_temporal_subsetting(time_min, time_max, False)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 

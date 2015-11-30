@@ -397,6 +397,23 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_aggregate_NCAR_RAF_with_named_time_variable_standard_name(self):
+        # Takes 28s
+        variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
+        filename = valid_NCAR_NetCDF_RAF_filename
+        time_min, time_max = dt.datetime(2009, 1, 14, 20, 15), dt.datetime(2009, 1, 15, 2, 45)
+
+        time_delta = dt.timedelta(minutes=30)
+        str_delta = 'PT30M'
+
+        grid = 'time=[%s,%s,%s]' % (time_min.isoformat(), time_max.isoformat(), str_delta)
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
     def test_aggregate_GASSP(self):
         variable = ",".join(valid_GASSP_aeroplane_vars)
         filename = valid_GASSP_aeroplane_filename
