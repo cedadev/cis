@@ -10,8 +10,9 @@ from cis.parse import parse_args
 from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.time_util import convert_time_since_to_std_time
-from cis.exceptions import InvalidOperationError, NoDataInSubsetError
+from cis.exceptions import CoordinateNotFoundError, NoDataInSubsetError
 from iris.exceptions import CoordinateMultiDimError
+
 
 class TestSubsetIntegration(BaseIntegrationTest):
     def test_GIVEN_single_variable_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
@@ -26,6 +27,18 @@ class TestSubsetIntegration(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, [variable])
 
+    def test_GIVEN_single_variable_as_var_name_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
+        variable = valid_aerosol_cci_variable
+        filename = valid_aerosol_cci_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        arguments = ['subset', variable + ':' + filename,
+                     'lon=[%s,%s],lat=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, [variable])
+
     def test_GIVEN_single_variable_in_gridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_hadgem_variable
         filename = valid_hadgem_filename
@@ -33,6 +46,18 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable + ':' + filename,
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable])
+
+    def test_GIVEN_single_variable_as_var_name_in_gridded_file_WHEN_subset_THEN_subsetted_correctly(self):
+        variable = valid_hadgem_variable
+        filename = valid_hadgem_filename
+        lon_min, lon_max = 0, 10
+        lat_min, lat_max = 40, 60
+        arguments = ['subset', variable + ':' + filename,
+                     'longitude=[%s,%s],latitude=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
@@ -124,20 +149,14 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
             assert_that(datetime_value, greater_than_or_equal_to(datetime_min))
             assert_that(datetime_value, less_than_or_equal_to(datetime_max))
 
+    @raises(NoDataInSubsetError)
     def test_subset_Cloud_CCI(self):
         # Takes 312 s
         variable = 'time,lon,lat,satellite_zenith_view_no1,solar_zenith_view_no1'
         filename = valid_cloud_cci_filename
         time_min, time_max = '2008-07', '2008-08'
         # This is a single timestamp so the best we can do is exclude it and confirm no data is returned.
-        try:
-            sys.stderr = MagicMock()
-            self.do_subset(filename, time_min, time_max, variable)
-            assert False
-        except SystemExit as e:
-            assert e.code == 1
-            msg = sys.stderr.write.call_args_list[0][0][0].strip()
-            assert msg == 'No output created - constraints exclude all data'
+        self.do_subset(filename, time_min, time_max, variable)
 
     def test_subset_Aerosol_CCI(self):
         # Takes 26s
@@ -211,6 +230,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_temporal_subsetting(time_min, time_max, False)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @raises(NoDataInSubsetError)
     def test_subset_MODIS_L3(self):
         # Takes 5s
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
@@ -219,14 +239,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_modis_l3_filename
         time_min, time_max = '2010-01-13T00:00:01', '2010-01-13T00:01:44'
         # This is a single timestamp so the best we can do is exclude it and confirm no data is returned.
-        try:
-            sys.stderr = MagicMock()
-            self.do_subset(filename, time_min, time_max, variable)
-            assert False
-        except SystemExit as e:
-            assert e.code == 1
-            msg = sys.stderr.write.call_args_list[0][0][0].strip()
-            assert msg == 'No output created - constraints exclude all data'
+        self.do_subset(filename, time_min, time_max, variable)
 
     def test_subset_CloudSatPRECIP(self):
         # Takes 17s
@@ -440,12 +453,19 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
 
 class TestEmptySubsets(BaseIntegrationTest):
 
+    def do_subset(self, filename, variable, alt_bounds='', pres_bounds=''):
+        # Join the bounds with a comma if they are both specified
+        joint_bounds = ','.join([alt_bounds, pres_bounds]) if alt_bounds and pres_bounds else alt_bounds or pres_bounds
+        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+
     @raises(NoDataInSubsetError)
     def test_empty_subset_ungridded_vertical(self):
         # Takes 170s
         variable = '*'
         filename = valid_NCAR_NetCDF_RAF_filename
-        alt_min, alt_max = 1000, 2000
+        alt_min, alt_max = 15000, 20000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
         self.check_alt_subsetting(alt_max, alt_min, False)
 
@@ -492,22 +512,29 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
         self.check_alt_subsetting(alt_max, alt_min, False)
 
-    @raises(CoordinateMultiDimError)
-    def test_subset_hybrid_height_model_field(self):
-        # Takes 1s
-        variable = valid_hybrid_height_variable
-        filename = valid_hybrid_height_filename
-        alt_min, alt_max = 1000, 2000
-        self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, True)
-
-    @raises(CoordinateMultiDimError)
     def test_subset_hybrid_pressure_model_field(self):
+        """
+        In the case of subsetting hybrid height/pressure fields using the axis name CIS (iris) will choose the vertical
+        *dimension* coordinate, whether that is model level number, hybrid sigma, or something else
+        """
+        # Takes 1s
+        variable = valid_hybrid_pressure_variable
+        filename = valid_hybrid_pressure_filename
+        pres_min, pres_max = 0.95, 0.96
+        self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(pres_min, pres_max))
+        self.check_pres_subsetting(pres_max, pres_min, True, pres_name='lev')
+
+    @raises(CoordinateNotFoundError)
+    def test_subset_hybrid_pressure_model_field_by_variable(self):
+        """
+        In the case of hybrid height/pressure fields specifying the hybrid variable directly will result in a coordinate
+          not found error
+        """
         # Takes 1s
         variable = valid_hybrid_pressure_variable
         filename = valid_hybrid_pressure_filename
         pres_min, pres_max = 1000, 2000
-        self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_min, pres_max))
+        self.do_subset(filename, variable, alt_bounds='air_pressure=[{},{}]'.format(pres_min, pres_max))
         self.check_pres_subsetting(pres_max, pres_min, True)
 
     def test_subset_Caliop_L2(self):
@@ -526,15 +553,6 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
         self.check_alt_subsetting(alt_max, alt_min, False)
 
-    @raises(InvalidOperationError)
-    def test_subset_CloudSatRVOD_pres(self):
-        # 257s exit code 137
-        variable = '*'  # Gets killed by Jenkins
-        variable = "RVOD_liq_water_content,RVOD_ice_water_path"
-        filename = valid_cloudsat_RVOD_file
-        pres_min, pres_max = 1000, 2000
-        self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_min, pres_max))
-
     def test_subset_GASSP(self):
         # 257s exit code 137
         variable = '*'
@@ -543,7 +561,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
         self.check_alt_subsetting(alt_max, alt_min, False)
 
-    @raises(InvalidOperationError)
+    @raises(CoordinateNotFoundError)
     def test_subset_GASSP_pres(self):
         # 257s exit code 137
         variable = '*'

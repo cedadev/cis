@@ -182,6 +182,29 @@ class TestSubsetOnUngriddedData(TestCase):
         assert_that(written_data[0].data_flattened.tolist(), written_data[1].data_flattened.tolist())
         assert_that(written_filename, is_(output_file))
 
+    def test_GIVEN_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
+        variable = 'var_name'
+        filename = 'filename'
+        output_file = 'output.nc'
+        xmin, xmax = -10, 10
+        ymin, ymax = 40, 60
+        limits = {'lon': SubsetLimits(xmin, xmax, False),
+                  'lat': SubsetLimits(ymin, ymax, False)}
+
+        mock_data_reader = DataReader()
+        mock_data_reader.read_data_list = MagicMock(return_value=make_regular_2d_ungridded_data())
+        mock_data_writer = DataWriter()
+        mock_data_writer.write_data = Mock()
+        mock_subsetter = Subsetter()
+        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
+
+        subset = Subset(limits, output_file, subsetter=mock_subsetter,
+                        data_reader=mock_data_reader, data_writer=mock_data_writer)
+        subset.subset(variable, filename, product=None)
+        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
+        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)
+
 
 class TestSubsetOnGriddedData(TestCase):
     def test_GIVEN_single_variable_WHEN_subset_THEN_DataReader_called_correctly(self):
@@ -349,3 +372,49 @@ class TestSubsetOnGriddedData(TestCase):
         assert_that(written_data[0].data.tolist(), is_([[2, 3, 4], [5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16]]))
         assert_that(written_data[0].data.tolist(), written_data[1].data.tolist())
         assert_that(written_filename, is_(output_file))
+
+    def test_GIVEN_standard_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
+        variable = 'var_name'
+        filename = 'filename'
+        output_file = 'output.hdf'
+        xmin, xmax = 0, 5
+        ymin, ymax = -5, 5
+        limits = {'latitude': SubsetLimits(xmin, xmax, False),
+                  'longitude': SubsetLimits(ymin, ymax, False)}
+
+        mock_data_reader = DataReader()
+        mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
+        mock_data_writer = DataWriter()
+        mock_data_writer.write_data = Mock()
+        mock_subsetter = Subsetter()
+        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
+
+        subset = Subset(limits, output_file, subsetter=mock_subsetter,
+                        data_reader=mock_data_reader, data_writer=mock_data_writer)
+        subset.subset(variable, filename, product=None)
+        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
+        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)
+
+    def test_GIVEN_var_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
+        variable = 'var_name'
+        filename = 'filename'
+        output_file = 'output.hdf'
+        xmin, xmax = 0, 5
+        ymin, ymax = -5, 5
+        limits = {'lat': SubsetLimits(xmin, xmax, False),
+                  'lon': SubsetLimits(ymin, ymax, False)}
+
+        mock_data_reader = DataReader()
+        mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
+        mock_data_writer = DataWriter()
+        mock_data_writer.write_data = Mock()
+        mock_subsetter = Subsetter()
+        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
+
+        subset = Subset(limits, output_file, subsetter=mock_subsetter,
+                        data_reader=mock_data_reader, data_writer=mock_data_writer)
+        subset.subset(variable, filename, product=None)
+        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
+        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)

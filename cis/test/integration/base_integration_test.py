@@ -70,17 +70,16 @@ class BaseIntegrationTest(unittest.TestCase):
         assert_that(min(alt), greater_than_or_equal_to(alt_min))
         assert_that(max(alt), less_than_or_equal_to(alt_max))
 
-    def check_pres_subsetting(self, pres_max, pres_min, gridded):
+    def check_pres_subsetting(self, pres_max, pres_min, gridded, pres_name='air_pressure'):
+        import numpy as np
         if gridded:
-            pres_name = 'ps'
             output_path = self.GRIDDED_OUTPUT_FILENAME
         else:
-            pres_name = 'air_pressure'
             output_path = self.UNGRIDDED_OUTPUT_FILENAME
         ds = Dataset(output_path)
         pres = ds.variables[pres_name][:]
-        assert_that(min(pres), greater_than_or_equal_to(pres_min))
-        assert_that(max(pres), less_than_or_equal_to(pres_max))
+        assert_that(np.min(pres), greater_than_or_equal_to(pres_min))
+        assert_that(np.max(pres), less_than_or_equal_to(pres_max))
 
     def check_output_col_grid(self, sample_file, sample_var, output_file, output_vars, expected_shape=None):
         """
