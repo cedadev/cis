@@ -71,23 +71,26 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
 
     if lat_dim_length:
         coord_list[coord_map['lat']] = (DimCoord(np.linspace(-10., 10., lat_dim_length) + horizontal_offset,
-                                                 standard_name='latitude', units='degrees'), coord_map['lat'])
+                                                 standard_name='latitude', units='degrees', var_name='lat'),
+                                        coord_map['lat'])
         data_size *= lat_dim_length
 
     if lon_dim_length:
         coord_list[coord_map['lon']] = (
             DimCoord(np.linspace(lon_range[0], lon_range[1], lon_dim_length) + horizontal_offset,
-                     standard_name='longitude', units='degrees'), coord_map['lon'])
+                     standard_name='longitude', units='degrees', var_name='lon'), coord_map['lon'])
         data_size *= lon_dim_length
 
     if alt_dim_length:
         coord_list[coord_map['alt']] = (DimCoord(np.linspace(0., 7., alt_dim_length) + altitude_offset,
-                                                 standard_name='altitude', units='metres'), coord_map['alt'])
+                                                 standard_name='altitude', units='metres', var_name='alt'),
+                                        coord_map['alt'])
         data_size *= alt_dim_length
 
     if pres_dim_length:
         coord_list[coord_map['pres']] = (DimCoord(np.linspace(0., 7., pres_dim_length) + pressure_offset,
-                                                  standard_name='air_pressure', units='hPa'), coord_map['pres'])
+                                                  standard_name='air_pressure', units='hPa', var_name='pres'),
+                                         coord_map['pres'])
         data_size *= pres_dim_length
 
     if time_dim_length:
@@ -99,7 +102,8 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
             time_bounds = convert_obj_to_standard_date_array(np.array([times[0] - datetime.timedelta(days=0.5),
                                                                        times[0] + datetime.timedelta(days=0.5)]))
         coord_list[coord_map['time']] = (DimCoord(time_nums, standard_name='time',
-                                                  units='days since 1600-01-01 00:00:00', bounds=time_bounds),
+                                                  units='days since 1600-01-01 00:00:00', var_name='time',
+                                                  bounds=time_bounds),
                                          coord_map['time'])
         data_size *= time_dim_length
 
@@ -125,9 +129,10 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     if hybrid_ht_len:
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 40,
                                                        long_name="level_height",
-                                                       units="m"), coord_map['hybrid_ht'])
+                                                       units="m", var_name='hybrid_ht'), coord_map['hybrid_ht'])
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 50,
-                                                       long_name="sigma", units="1"), coord_map['hybrid_ht'])
+                                                       long_name="sigma", units="1", var_name='sigma'),
+                                  coord_map['hybrid_ht'])
         return_cube.add_aux_coord(iris.coords.AuxCoord(
             np.arange(lat_dim_length * lon_dim_length, dtype='i8').reshape(lat_dim_length, lon_dim_length) + 100,
             long_name="surface_altitude",
@@ -140,9 +145,10 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     elif hybrid_pr_len:
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='i8') + 40,
                                                        long_name="hybrid A coefficient at layer midpoints",
-                                                       units="Pa"), coord_map['hybrid_pr'])
+                                                       units="Pa", var_name='a'), coord_map['hybrid_pr'])
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='f8') + 50,
-                                                       long_name="hybrid B coefficient at layer midpoints", units="1"),
+                                                       long_name="hybrid B coefficient at layer midpoints", units="1",
+                                                       var_name='b'),
                                   coord_map['hybrid_pr'])
         return_cube.add_aux_coord(
             iris.coords.AuxCoord(np.arange(lat_dim_length * lon_dim_length * time_dim_length, dtype='i8')
