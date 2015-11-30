@@ -26,11 +26,7 @@ where:
 ``<limits>``
   is a comma separated sequence of one or more coordinate range assignments of the form ``variable=[start,end]`` or ``variable=[value]`` in which
 
-    * ``variable`` is the name of the variable to be subsetted, this can be the variable name (as it is in the data file) or it's CF standard name.
-    It is also possible to use axes name shorthands such as ``x``, ``y``, ``t``,  ``z`` and ``p`` - which *usually* refer to longitude, latitude, time, altitude and pressure respectively.
-    However this approach can lead to confusion as these shorthands can be overridden by the files themselves, or the data readers, and may not always behave as expected.
-    For example when specifying 'z' for a gridded hybrid pressure file, this may well refer to sigma levels rather than altitude, and 'p' may not be found at all (it isn't possible to subset over hybrid coordinates).
-    For this reason it is often safer to use variable names explicitly.
+    * ``variable`` is the name of the variable to be subsetted, this can be the variable name (as it is in the data file) or it's CF standard name. It is also possible to use axes name shorthands such as ``x``, ``y``, ``t``,  ``z`` and ``p`` - which *usually* refer to longitude, latitude, time, altitude and pressure respectively. However this approach can lead to confusion as these shorthands can be overridden by the files themselves, or the data readers, and may not always behave as expected. For example when specifying 'z' for a gridded hybrid pressure file, this may well refer to sigma levels rather than altitude, and 'p' may not be found at all (it isn't possible to subset over hybrid coordinates). For this reason it is often safer to use variable names explicitly.
     * ``start`` is the value at the start of the coordinate range to be included
     * ``end`` is the value at the end of the coordinate range to be included
     * ``value`` is taken as the start and end value.
