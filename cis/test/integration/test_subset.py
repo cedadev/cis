@@ -1,9 +1,7 @@
 from netCDF4 import Dataset
-import sys
 
 from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to
 from nose.tools import raises
-from mock import MagicMock
 
 from cis.cis_main import subset_cmd
 from cis.parse import parse_args
@@ -11,7 +9,6 @@ from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.time_util import convert_time_since_to_std_time
 from cis.exceptions import CoordinateNotFoundError, NoDataInSubsetError
-from iris.exceptions import CoordinateMultiDimError
 
 
 class TestSubsetIntegration(BaseIntegrationTest):
