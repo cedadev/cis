@@ -9,11 +9,6 @@ def parse_datetimestr_to_std_time(s):
     return cis_standard_time_unit.date2num(du.parse(s))
 
 
-def parse_datetimestr_to_std_time_array(string_time_array):
-    from utils import convert_numpy_array
-    return convert_numpy_array(string_time_array, 'float64', parse_datetimestr_to_std_time)
-
-
 def _parse_datetime(dt_string):
     """Parse a date/time string.
 

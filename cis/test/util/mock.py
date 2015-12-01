@@ -10,7 +10,7 @@ import datetime
 
 from cis.data_io.common_data import CommonData
 from cis.data_io.hyperpoint import HyperPointList
-from cis.time_util import convert_obj_to_standard_date_array
+from cis.time_util import convert_datetime_to_std_time
 
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
@@ -96,10 +96,10 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     if time_dim_length:
         t0 = datetime.datetime(1984, 8, 27)
         times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(time_dim_length)])
-        time_nums = convert_obj_to_standard_date_array(times)
+        time_nums = convert_datetime_to_std_time(times)
         time_bounds = None
         if time_dim_length == 1:
-            time_bounds = convert_obj_to_standard_date_array(np.array([times[0] - datetime.timedelta(days=0.5),
+            time_bounds = convert_datetime_to_std_time(np.array([times[0] - datetime.timedelta(days=0.5),
                                                                        times[0] + datetime.timedelta(days=0.5)]))
         coord_list[coord_map['time']] = (DimCoord(time_nums, standard_name='time',
                                                   units='days since 1600-01-01 00:00:00', var_name='time',
@@ -457,12 +457,11 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     from iris.cube import Cube
     from iris.coords import DimCoord
     import datetime
-    from cis.time_util import convert_obj_to_standard_date_array
 
     t0 = datetime.datetime(1984, 8, 27)
     times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
 
-    time_nums = convert_obj_to_standard_date_array(times)
+    time_nums = convert_datetime_to_std_time(times)
 
     time = DimCoord(time_nums, standard_name='time')
     latitude = DimCoord(np.arange(-10 + offset, 11 + offset, 5), standard_name='latitude', units='degrees')
@@ -511,12 +510,11 @@ def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count
     from iris.cube import Cube
     from iris.coords import DimCoord
     import datetime
-    from cis.time_util import convert_obj_to_standard_date_array
 
     t0 = datetime.datetime(1984, 8, 27)
     times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
 
-    time_nums = convert_obj_to_standard_date_array(times)
+    time_nums = convert_datetime_to_std_time(times)
 
     time = DimCoord(time_nums, standard_name='time')
     latitude = DimCoord(np.linspace(start_lat, end_lat, lat_point_count), standard_name='latitude', units='degrees')
@@ -1002,12 +1000,11 @@ def make_regular_4d_ungridded_data():
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
-    from cis.time_util import convert_obj_to_standard_date_array
 
     x_points = np.linspace(-10, 10, 5)
     y_points = np.linspace(-5, 5, 5)
     t0 = datetime.datetime(1984, 8, 27)
-    times = convert_obj_to_standard_date_array(np.array([t0 + datetime.timedelta(days=d) for d in xrange(5)]))
+    times = convert_datetime_to_std_time(np.array([t0 + datetime.timedelta(days=d) for d in xrange(5)]))
 
     alt = np.linspace(0, 90, 10)
 

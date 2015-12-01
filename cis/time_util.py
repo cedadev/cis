@@ -1,7 +1,6 @@
 """
 Utilities for converting time units
 """
-from utils import convert_numpy_array
 from iris.unit import Unit
 
 cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00', calendar='gregorian')
@@ -82,10 +81,6 @@ def convert_julian_date_to_std_time(days_since):
     from iris.unit import date2julian_day
     offset = date2julian_day(cis_standard_time_unit.num2date(0), 'standard')
     return days_since - offset
-
-
-def convert_obj_to_standard_date_array(time_array):
-    return convert_numpy_array(time_array, 'float64', convert_datetime_to_std_time)
 
 
 def convert_cube_time_coord_to_standard_time(cube):

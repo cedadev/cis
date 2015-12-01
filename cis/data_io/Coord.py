@@ -82,8 +82,8 @@ class Coord(LazyData):
         self.metadata.calendar = cis_standard_time_unit.calendar
 
     def convert_datetime_to_standard_time(self):
-        from cis.time_util import convert_obj_to_standard_date_array, cis_standard_time_unit
-        self._data = convert_obj_to_standard_date_array(self.data)
+        from cis.time_util import convert_datetime_to_std_time, cis_standard_time_unit
+        self._data = convert_datetime_to_std_time(self.data)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 

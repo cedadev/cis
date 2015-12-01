@@ -101,15 +101,17 @@ class ASCII_Hyperpoints(AProduct):
         from cis.data_io.ungridded_data import Metadata
         from numpy import genfromtxt, NaN
         from cis.exceptions import InvalidVariableError
-        from cis.parse_datetime import parse_datetimestr_to_std_time_array
+        from cis.time_util import convert_datetime_to_std_time
+        import dateutil.parser as du
 
         array_list = []
 
         for filename in filenames:
             try:
-                array_list.append(genfromtxt(filename, dtype="f8,f8,f8,S20,f8",
+                array_list.append(genfromtxt(filename, dtype="f8,f8,f8,O,f8",
                                              names=['latitude', 'longitude', 'altitude', 'time', 'value'],
-                                             delimiter=',', missing_values='', usemask=True, invalid_raise=True))
+                                             delimiter=',', missing_values='', usemask=True, invalid_raise=True,
+                                             converters={"time": du.parse}))
             except:
                 raise IOError('Unable to read file ' + filename)
 
@@ -124,7 +126,7 @@ class ASCII_Hyperpoints(AProduct):
         coords.append(
             Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
 
-        time_arr = parse_datetimestr_to_std_time_array(data_array["time"])
+        time_arr = convert_datetime_to_std_time(data_array["time"])
         time = Coord(time_arr,
                      Metadata(standard_name="time", shape=(n_elements,), units="days since 1600-01-01 00:00:00"))
         coords.append(time)
