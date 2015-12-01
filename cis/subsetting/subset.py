@@ -1,6 +1,5 @@
 import logging
 
-from iris import coords
 from iris.exceptions import IrisError
 import iris.unit
 import iris.util
@@ -9,7 +8,6 @@ from cis.data_io.data_reader import DataReader
 from cis.data_io.data_writer import DataWriter
 import cis.exceptions as ex
 import cis.parse_datetime as parse_datetime
-from cis.subsetting.subsetter import Subsetter
 from cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
 from cis import __version__
 from cis.utils import guess_coord_axis
@@ -20,19 +18,17 @@ class Subset(object):
     Class for subsetting Ungridded or Gridded data either temporally, or spatially or both.
     """
 
-    def __init__(self, limits, output_file, subsetter=Subsetter(), data_reader=DataReader(), data_writer=DataWriter()):
+    def __init__(self, limits, output_file, data_reader=DataReader(), data_writer=DataWriter()):
         """
         Constructor
 
         :param dict limits: A dictionary of dimension_name:SubsetLimits key value pairs.
         :param output_file: The filename to output the result to
-        :param subsetter: Optional :class:`Subsetter` configuration object
         :param data_reader: Optional :class:`DataReader` configuration object
         :param data_writer: Optional :class:`DataWriter` configuration object
         """
         self._limits = limits
         self._output_file = output_file
-        self._subsetter = subsetter
         self._data_reader = data_reader
         self._data_writer = data_writer
 
@@ -74,7 +70,7 @@ class Subset(object):
             raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
                                           "coordinate name.".format("' or '".join(self._limits.keys())))
 
-        subset = self._subsetter.subset(data, subset_constraint)
+        subset = subset_constraint.constrain(data)
 
         if subset is None:
             # Constraints exclude all data.

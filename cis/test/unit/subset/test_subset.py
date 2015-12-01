@@ -1,6 +1,12 @@
+"""
+Unit tests for the top-level subsetting routines.
+Note that the set_limit mocks are setup for each test using the start/stop methods in setup
+ and teardown respectively, but that the constrain methods are patched out on a per-test basis, this is just
+ because some tests rely on the constrain call having different side effects.
+"""
 from unittest import TestCase
-from hamcrest import assert_that, is_, instance_of
-from mock import MagicMock, Mock
+from hamcrest import assert_that, is_
+from mock import MagicMock, Mock, patch
 
 from cis.data_io.data_reader import DataReader
 from cis.data_io.data_writer import DataWriter
@@ -8,413 +14,340 @@ from cis.data_io.ungridded_data import UngriddedDataList
 from cis.data_io.gridded_data import GriddedDataList, make_from_cube
 from cis.subsetting.subset import Subset
 from cis.subsetting.subset_limits import SubsetLimits
-from cis.subsetting.subsetter import Subsetter
 from cis.test.util.mock import make_regular_2d_ungridded_data, make_square_5x3_2d_cube
-from cis.subsetting.subset_constraint import UngriddedSubsetConstraint, GriddedSubsetConstraint
 
 
 class TestSubsetOnUngriddedData(TestCase):
+
+    def setUp(self):
+        """
+        Setup the test harnesses, the various mocks and variables are set here, but some may be overriden by the
+        individual tests.
+        :return:
+        """
+        self.variable = 'var_name'
+        self.filename = 'filename'
+        self.output_file = 'output.hdf'
+        self.xmin, self.xmax = -10, 10
+        self.ymin, self.ymax = 40, 60
+        self.limits = {'x': SubsetLimits(self.xmin, self.xmax, False),
+                       'y': SubsetLimits(self.ymin, self.ymax, False)}
+
+        self.mock_data_reader = DataReader()
+        self.mock_data_reader.read_data_list = MagicMock(return_value=make_regular_2d_ungridded_data())
+        self.mock_data_writer = DataWriter()
+        self.mock_data_writer.write_data = Mock()
+
+        # Patch out the set_limit methods so that we can check they've been called correctly
+        self.limit_patch = patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.set_limit')
+        self.set_limit = self.limit_patch.start()
+
+    def tearDown(self):
+        """
+        Make sure we clean-up the patch
+        """
+        self.limit_patch.stop()
+
     def test_GIVEN_single_variable_WHEN_subset_THEN_DataReader_called_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        output_file = 'output.hdf'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_regular_2d_ungridded_data())
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
-
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
-        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
-        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
+        subset.subset(self.variable, self.filename, product=None)
+        assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filename)
+        assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variable)
 
     def test_GIVEN_single_variable_WHEN_subset_THEN_Subsetter_called_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_regular_2d_ungridded_data())
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = MagicMock(side_effect=lambda *args: args[0])  # Return the data array unmodified
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
-        assert_that(mock_subsetter.subset.call_count, is_(1))
-        called_data = mock_subsetter.subset.call_args[0][0]
-        called_constraint = mock_subsetter.subset.call_args[0][1]
-        assert_that(called_data.data_flattened.tolist(),
-                    is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
-        assert_that(called_constraint, instance_of(UngriddedSubsetConstraint))
-        assert_that(called_constraint._limits['lat'][1:3], is_((ymin, ymax)))
-        assert_that(called_constraint._limits['lon'][1:3], is_((xmin, xmax)))
+        # Patch out the constrain method, in this case it just sends all the data back
+        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
+                             side_effect=lambda *args: args[0]) as constrain:
+            subset.subset(self.variable, self.filename, product=None)
+
+            assert_that(constrain.call_count, is_(1))
+            called_data = constrain.call_args[0][0]
+            called_limits = self.set_limit.call_args_list
+            assert_that(called_data.data_flattened.tolist(),
+                        is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
+            assert_that(called_limits[0][0][0].name(), is_('lat'))
+            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
+            assert_that(called_limits[1][0][0].name(), is_('lon'))
+            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
 
     def test_GIVEN_single_variable_WHEN_subset_THEN_DataWriter_called_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
 
-        def _mock_subset(data, constraint):
+        def _mock_subset(data):
             data.data += 1  # Modify the data slightly so we can be sure it's passed in correctly
             return data
 
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = _mock_subset
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_regular_2d_ungridded_data())
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = MagicMock()
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
+        # Patch out the constrain method, in this case it modifies the data slightly so we can test the writing
+        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
+                             side_effect=_mock_subset) as constrain:
+            subset.subset(self.variable, self.filename, product=None)
 
-        assert_that(mock_data_writer.write_data.call_count, is_(1))
-        written_data = mock_data_writer.write_data.call_args[0][0]
-        written_filename = mock_data_writer.write_data.call_args[0][1]
-        assert_that(written_data.data_flattened.tolist(), is_([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]))
-        assert_that(written_filename, is_(output_file))
+            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
+            written_data = self.mock_data_writer.write_data.call_args[0][0]
+            written_filename = self.mock_data_writer.write_data.call_args[0][1]
+            assert_that(written_data.data_flattened.tolist(), is_([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]))
+            assert_that(written_filename, is_(self.output_file))
 
     def test_GIVEN_multiple_variables_and_filenames_WHEN_subset_THEN_DataReader_called_correctly(self):
-        variables = ['var_name1', 'var_name2']
-        filenames = ['filename1', 'filename2']
-        output_file = 'output.hdf'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
+        self.variables = ['var_name1', 'var_name2']
+        self.filenames = ['filename1', 'filename2']
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(
+        self.mock_data_reader.read_data_list = MagicMock(
             return_value=UngriddedDataList(2 * [make_regular_2d_ungridded_data()]))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variables, filenames, product=None)
-        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(mock_data_reader.read_data_list.call_args[0][0], filenames)
-        assert_that(mock_data_reader.read_data_list.call_args[0][1], variables)
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
+        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
+                             side_effect=lambda *args: args[0]) as constrain:
+
+            subset.subset(self.variables, self.filenames, product=None)
+
+            assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
+            assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filenames)
+            assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variables)
 
     def test_GIVEN_multiple_variables_WHEN_subset_THEN_Subsetter_called_correctly(self):
-        variables = ['var_name1', 'var_name2']
-        filename = 'filename'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
+        self.variables = ['var_name1', 'var_name2']
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(
+        self.mock_data_reader.read_data_list = MagicMock(
             return_value=UngriddedDataList(2 * [make_regular_2d_ungridded_data()]))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = MagicMock(side_effect=lambda *args: args[0])  # Return the data list unmodified
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variables, filename, product=None)
-        assert_that(mock_subsetter.subset.call_count, is_(1))
-        called_data = mock_subsetter.subset.call_args[0][0]
-        called_constraint = mock_subsetter.subset.call_args[0][1]
-        assert_that(called_data[0].data_flattened.tolist(), is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
-        assert_that(called_data[1].data_flattened.tolist(), is_(called_data[0].data_flattened.tolist()))
-        assert_that(called_constraint, instance_of(UngriddedSubsetConstraint))
-        assert_that(called_constraint._limits['lat'][1:3], is_((ymin, ymax)))
-        assert_that(called_constraint._limits['lon'][1:3], is_((xmin, xmax)))
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
+        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
+                             side_effect=lambda *args: args[0]) as constrain:
+            subset.subset(self.variables, self.filename, product=None)
+
+            assert_that(constrain.call_count, is_(1))
+            called_data = constrain.call_args[0][0]
+            called_limits = self.set_limit.call_args_list
+
+            assert_that(called_data[0].data_flattened.tolist(), is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
+            assert_that(called_data[1].data_flattened.tolist(), is_(called_data[0].data_flattened.tolist()))
+            assert_that(called_limits[0][0][0].name(), is_('lat'))
+            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
+            assert_that(called_limits[1][0][0].name(), is_('lon'))
+            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
 
     def test_GIVEN_multiple_variables_WHEN_subset_THEN_DataWriter_called_correctly(self):
-        variables = ['var_name1', 'var_name2']
-        filename = 'filename'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
+        self.variables = ['var_name1', 'var_name2']
 
-        def _mock_subset(data, constraint):
+        def _mock_subset(data):
             # Modify the data slightly so we can be sure it's passed in correctly
             for var in data:
                 var.data += 1
             return data
 
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = _mock_subset
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=UngriddedDataList([make_regular_2d_ungridded_data(),
+        self.mock_data_reader.read_data_list = MagicMock(return_value=UngriddedDataList([make_regular_2d_ungridded_data(),
                                                                                     make_regular_2d_ungridded_data()]))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = MagicMock()
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variables, filename, product=None)
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
+        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
+                                side_effect=_mock_subset) as constrain:
+            subset.subset(self.variables, self.filename, product=None)
 
-        assert_that(mock_data_writer.write_data.call_count, is_(1))
-        written_data = mock_data_writer.write_data.call_args[0][0]
-        written_filename = mock_data_writer.write_data.call_args[0][1]
-        assert_that(written_data[0].data_flattened.tolist(), is_([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]))
-        assert_that(written_data[0].data_flattened.tolist(), written_data[1].data_flattened.tolist())
-        assert_that(written_filename, is_(output_file))
+            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
+            written_data = self.mock_data_writer.write_data.call_args[0][0]
+            written_filename = self.mock_data_writer.write_data.call_args[0][1]
+            assert_that(written_data[0].data_flattened.tolist(), is_([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]))
+            assert_that(written_data[0].data_flattened.tolist(), written_data[1].data_flattened.tolist())
+            assert_that(written_filename, is_(self.output_file))
 
     def test_GIVEN_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        output_file = 'output.nc'
-        xmin, xmax = -10, 10
-        ymin, ymax = 40, 60
-        limits = {'lon': SubsetLimits(xmin, xmax, False),
-                  'lat': SubsetLimits(ymin, ymax, False)}
+        self.limits = {'lon': SubsetLimits(self.xmin, self.xmax, False),
+                       'lat': SubsetLimits(self.ymin, self.ymax, False)}
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_regular_2d_ungridded_data())
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
-        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
-        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)
+        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
+                             side_effect=lambda *args: args[0]) as constrain:
+            subset.subset(self.variable, self.filename, product=None)
+            called_limits = self.set_limit.call_args_list
+            assert_that(called_limits[0][0][0].name(), is_('lat'))
+            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
+            assert_that(called_limits[1][0][0].name(), is_('lon'))
+            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
 
 
 class TestSubsetOnGriddedData(TestCase):
+
+    def _mock_data(self, data):
+        return data
+
+    def setUp(self):
+        self.variable = 'var_name'
+        self.filename = 'filename'
+        self.output_file = 'output.hdf'
+        self.xmin, self.xmax = 0, 5
+        self.ymin, self.ymax = -5, 5
+        self.limits = {'x': SubsetLimits(self.xmin, self.xmax, False),
+                       'y': SubsetLimits(self.ymin, self.ymax, False)}
+
+        self.mock_data_reader = DataReader()
+        self.mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
+        self.mock_data_writer = DataWriter()
+        self.mock_data_writer.write_data = Mock()
+
+        self.limit_patch = patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.set_limit')
+        self.set_limit = self.limit_patch.start()
+
+    def tearDown(self):
+        self.limit_patch.stop()
+
     def test_GIVEN_single_variable_WHEN_subset_THEN_DataReader_called_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        output_file = 'output.hdf'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
-
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
-        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
-        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
+        subset.subset(self.variable, self.filename, product=None)
+        assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filename)
+        assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variable)
 
     def test_GIVEN_single_variable_WHEN_subset_THEN_Subsetter_called_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = MagicMock(side_effect=lambda *args: args[0])  # Return the data array unmodified
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
-        assert_that(mock_subsetter.subset.call_count, is_(1))
-        called_data = mock_subsetter.subset.call_args[0][0]
-        called_constraint = mock_subsetter.subset.call_args[0][1]
-        assert_that(called_data.data.tolist(),
-                    is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
-        assert_that(called_constraint, instance_of(GriddedSubsetConstraint))
-        assert_that(called_constraint._limits['latitude'][1:3], is_((ymin, ymax)))
-        assert_that(called_constraint._limits['longitude'][1:3], is_((xmin, xmax)))
+        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
+                                     side_effect=lambda *args: args[0]) as constrain:
+            subset.subset(self.variable, self.filename, product=None)
+
+            assert_that(constrain.call_count, is_(1))
+            called_data = constrain.call_args[0][0]
+            called_limits = self.set_limit.call_args_list
+            assert_that(called_data.data.tolist(),
+                        is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
+            assert_that(called_limits[0][0][0].name(), is_('latitude'))
+            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
+            assert_that(called_limits[1][0][0].name(), is_('longitude'))
+            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
 
     def test_GIVEN_single_variable_WHEN_subset_THEN_DataWriter_called_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
 
-        def _mock_subset(data, constraint):
+        def _mock_subset(data):
             data.data += 1  # Modify the data slightly so we can be sure it's passed in correctly
             return data
 
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = _mock_subset
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = MagicMock()
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
+        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
+                                     side_effect=_mock_subset) as constrain:
+            subset.subset(self.variable, self.filename, product=None)
 
-        assert_that(mock_data_writer.write_data.call_count, is_(1))
-        written_data = mock_data_writer.write_data.call_args[0][0]
-        written_filename = mock_data_writer.write_data.call_args[0][1]
-        assert_that(written_data.data.tolist(), is_([[2, 3, 4], [5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16]]))
-        assert_that(written_filename, is_(output_file))
+            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
+            written_data = self.mock_data_writer.write_data.call_args[0][0]
+            written_filename = self.mock_data_writer.write_data.call_args[0][1]
+            assert_that(written_data.data.tolist(), is_([[2, 3, 4], [5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16]]))
+            assert_that(written_filename, is_(self.output_file))
 
     def test_GIVEN_multiple_variables_and_filenames_WHEN_subset_THEN_DataReader_called_correctly(self):
-        variables = ['var_name1', 'var_name2']
-        filenames = ['filename1', 'filename2']
-        output_file = 'output.hdf'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
+        self.variables = ['var_name1', 'var_name2']
+        self.filenames = ['filename1', 'filename2']
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=GriddedDataList(2 * [make_square_5x3_2d_cube()]))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
-
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variables, filenames, product=None)
-        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(mock_data_reader.read_data_list.call_args[0][0], filenames)
-        assert_that(mock_data_reader.read_data_list.call_args[0][1], variables)
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
+        subset.subset(self.variables, self.filenames, product=None)
+        assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
+        assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filenames)
+        assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variables)
 
     def test_GIVEN_multiple_variables_WHEN_subset_THEN_Subsetter_called_correctly(self):
-        variables = ['var_name1', 'var_name2']
-        filename = 'filename'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
+        self.variables = ['var_name1', 'var_name2']
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=GriddedDataList(2 * [make_square_5x3_2d_cube()]))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = MagicMock(side_effect=lambda *args: args[0])  # Return the data list unmodified
+        self.mock_data_reader.read_data_list = MagicMock(return_value=GriddedDataList([make_square_5x3_2d_cube(),
+                                                                                  make_square_5x3_2d_cube()]))
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variables, filename, product=None)
-        assert_that(mock_subsetter.subset.call_count, is_(1))
-        called_data = mock_subsetter.subset.call_args[0][0]
-        called_constraint = mock_subsetter.subset.call_args[0][1]
-        assert_that(called_data[0].data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
-        assert_that(called_data[1].data.tolist(), is_(called_data[0].data.tolist()))
-        assert_that(called_constraint, instance_of(GriddedSubsetConstraint))
-        assert_that(called_constraint._limits['latitude'][1:3], is_((ymin, ymax)))
-        assert_that(called_constraint._limits['longitude'][1:3], is_((xmin, xmax)))
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
+
+        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
+                             side_effect=lambda *args: args[0]) as constrain:
+            subset.subset(self.variables, self.filename, product=None)
+
+            assert_that(constrain.call_count, is_(1))
+            called_data = constrain.call_args[0][0]
+            called_limits = self.set_limit.call_args_list
+            assert_that(called_data[0].data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
+            assert_that(called_data[1].data.tolist(), is_(called_data[0].data.tolist()))
+            assert_that(called_limits[0][0][0].name(), is_('latitude'))
+            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
+            assert_that(called_limits[1][0][0].name(), is_('longitude'))
+            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
 
     def test_GIVEN_multiple_variables_WHEN_subset_THEN_DataWriter_called_correctly(self):
-        variables = ['var_name1', 'var_name2']
-        filename = 'filename'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'x': SubsetLimits(xmin, xmax, False),
-                  'y': SubsetLimits(ymin, ymax, False)}
-        output_file = 'output.hdf'
+        self.variables = ['var_name1', 'var_name2']
 
-        def _mock_subset(data, constraint):
+        def _mock_subset(data):
             # Modify the data slightly so we can be sure it's passed in correctly
             for var in data:
                 var.data += 1
             return data
 
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = _mock_subset
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=GriddedDataList([make_square_5x3_2d_cube(),
+        self.mock_data_reader.read_data_list = MagicMock(return_value=GriddedDataList([make_square_5x3_2d_cube(),
                                                                                   make_square_5x3_2d_cube()]))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = MagicMock()
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variables, filename, product=None)
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        assert_that(mock_data_writer.write_data.call_count, is_(1))
-        written_data = mock_data_writer.write_data.call_args[0][0]
-        written_filename = mock_data_writer.write_data.call_args[0][1]
-        assert_that(written_data[0].data.tolist(), is_([[2, 3, 4], [5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16]]))
-        assert_that(written_data[0].data.tolist(), written_data[1].data.tolist())
-        assert_that(written_filename, is_(output_file))
+        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
+                                     side_effect=_mock_subset) as constrain:
+            subset.subset(self.variables, self.filename, product=None)
+
+            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
+            written_data = self.mock_data_writer.write_data.call_args[0][0]
+            written_filename = self.mock_data_writer.write_data.call_args[0][1]
+            assert_that(written_data[0].data.tolist(), is_([[2, 3, 4], [5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16]]))
+            assert_that(written_data[0].data.tolist(), written_data[1].data.tolist())
+            assert_that(written_filename, is_(self.output_file))
 
     def test_GIVEN_standard_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        output_file = 'output.hdf'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'latitude': SubsetLimits(xmin, xmax, False),
-                  'longitude': SubsetLimits(ymin, ymax, False)}
+        self.limits = {'longitude': SubsetLimits(self.xmin, self.xmax, False),
+                       'latitude': SubsetLimits(self.ymin, self.ymax, False)}
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
-        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
-        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)
+        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
+                                     side_effect=lambda *args: args[0]) as constrain:
+            subset.subset(self.variable, self.filename, product=None)
+
+            assert_that(constrain.call_count, is_(1))
+            called_data = constrain.call_args[0][0]
+            called_limits = self.set_limit.call_args_list
+            assert_that(called_data.data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
+            assert_that(called_limits[0][0][0].name(), is_('latitude'))
+            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
+            assert_that(called_limits[1][0][0].name(), is_('longitude'))
+            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
 
     def test_GIVEN_var_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
-        variable = 'var_name'
-        filename = 'filename'
-        output_file = 'output.hdf'
-        xmin, xmax = 0, 5
-        ymin, ymax = -5, 5
-        limits = {'lat': SubsetLimits(xmin, xmax, False),
-                  'lon': SubsetLimits(ymin, ymax, False)}
+        self.limits = {'lon': SubsetLimits(self.xmin, self.xmax, False),
+                       'lat': SubsetLimits(self.ymin, self.ymax, False)}
 
-        mock_data_reader = DataReader()
-        mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
-        mock_data_writer = DataWriter()
-        mock_data_writer.write_data = Mock()
-        mock_subsetter = Subsetter()
-        mock_subsetter.subset = lambda *args: args[0]  # Return the data array unmodified
+        subset = Subset(self.limits, self.output_file,
+                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
 
-        subset = Subset(limits, output_file, subsetter=mock_subsetter,
-                        data_reader=mock_data_reader, data_writer=mock_data_writer)
-        subset.subset(variable, filename, product=None)
-        assert_that(mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(mock_data_reader.read_data_list.call_args[0][0], filename)
-        assert_that(mock_data_reader.read_data_list.call_args[0][1], variable)
+        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
+                                     side_effect=lambda *args: args[0]) as constrain:
+            subset.subset(self.variable, self.filename, product=None)
+
+            assert_that(constrain.call_count, is_(1))
+            called_data = constrain.call_args[0][0]
+            called_limits = self.set_limit.call_args_list
+            assert_that(called_data.data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
+            assert_that(called_limits[0][0][0].name(), is_('latitude'))
+            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
+            assert_that(called_limits[1][0][0].name(), is_('longitude'))
+            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
