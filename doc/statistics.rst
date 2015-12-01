@@ -13,8 +13,8 @@ The 'stats' command will calculate:
 #. The mean and standard deviation of each dataset (separately).
 #. The mean and standard deviation of the absolute difference (var2 - var1).
 #. The mean and standard deviation of the relative difference ((var2 - var1) / var1).
-#. The `Linear Pearson http://docs.scipy.org/doc/scipy-0.16.0/reference/generated/scipy.stats.pearsonr.html`_ correlation coefficient.
-#. The `Spearman Rank http://docs.scipy.org/doc/scipy-0.16.0/reference/generated/scipy.stats.spearmanr.html`_ correlation coefficient.
+#. The `Linear Pearson <http://docs.scipy.org/doc/scipy-0.16.0/reference/generated/scipy.stats.pearsonr.html>`_ correlation coefficient.
+#. The `Spearman Rank <http://docs.scipy.org/doc/scipy-0.16.0/reference/generated/scipy.stats.spearmanr.html>`_ correlation coefficient.
 #. The coefficients of linear regression (i.e. var2 = a var1 + b ), r-value, and standard error of the estimate.
 
 These values will be displayed on screen and can optionally be save as NetCDF output.

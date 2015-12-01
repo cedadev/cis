@@ -32,12 +32,3 @@ cis.subsetting.subset_limits module
     :members:
     :undoc-members:
     :show-inheritance:
-
-cis.subsetting.subsetter module
--------------------------------
-
-.. automodule:: cis.subsetting.subsetter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
