@@ -55,8 +55,8 @@ class Coord(LazyData):
         self.metadata.calendar = cis_standard_time_unit.calendar
 
     def convert_TAI_time_to_std_time(self, ref):
-        from cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
-        self._data = convert_sec_since_to_std_time_array(self.data, ref)
+        from cis.time_util import convert_sec_since_to_std_time, cis_standard_time_unit
+        self._data = convert_sec_since_to_std_time(self.data, ref)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 

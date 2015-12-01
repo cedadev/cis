@@ -45,7 +45,7 @@ class abstract_Caliop(AProduct):
         from pyhdf.error import HDF4Error
         from cis.data_io import hdf_sd
         import datetime as dt
-        from cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
+        from cis.time_util import convert_sec_since_to_std_time, cis_standard_time_unit
 
         variables = ['Latitude', 'Longitude', "Profile_Time", "Pressure"]
         logging.info("Listing coordinates: " + str(variables))
@@ -110,7 +110,7 @@ class abstract_Caliop(AProduct):
         # profile time, x
         time = sdata['Profile_Time']
         time_data = hdf.read_data(time, "SD")
-        time_data = convert_sec_since_to_std_time_array(time_data, dt.datetime(1993, 1, 1, 0, 0, 0))
+        time_data = convert_sec_since_to_std_time(time_data, dt.datetime(1993, 1, 1, 0, 0, 0))
         time_data = utils.expand_1d_to_2d_array(time_data[:, index_offset], len_x, axis=1)
         time_coord = Coord(time_data, Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
                                                units=str(cis_standard_time_unit),

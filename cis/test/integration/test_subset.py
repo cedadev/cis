@@ -156,7 +156,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.do_subset(filename, time_min, time_max, variable)
 
     def test_subset_Aerosol_CCI(self):
-        # Takes 26s
+        # Takes 2s
         variable = 'lat,lon,time,AOD550,AOD870,pixel_number'
         filename = valid_aerosol_cci_filename
         time_min, time_max = '2008-06-12T10:15:00', '2008-06-12T10:35:00'
@@ -165,15 +165,16 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_NCAR_RAF(self):
-        # Takes 13s
+        # Takes 4s
         filename = valid_NCAR_NetCDF_RAF_filename
         variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
         time_min, time_max = '2009-01-14T20:15:00', '2009-01-15T02:45:00'
+        self.do_subset(filename, time_min, time_max, variable)
         self.check_temporal_subsetting(time_min, time_max, False)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_NCAR_RAF_with_named_time_variable(self):
-        # Takes 13s
+        # Takes 4s
         filename = valid_NCAR_NetCDF_RAF_filename
         variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
         time_min, time_max = '2009-01-14T20:15:00', '2009-01-15T02:45:00'
@@ -184,7 +185,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_GASSP(self):
-        # Takes 13s
+        # Takes 1.3s
         filename = valid_GASSP_aeroplane_filename
         variable = ",".join(valid_GASSP_aeroplane_vars)
         time_min, time_max = '2006-09-27T19:15:00', '2006-09-27T20:45:00'
@@ -258,7 +259,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_Caliop_L2(self):
-        # Takes 56s
+        # Takes 25s
         variable = 'Perpendicular_Backscatter_Coefficient_532,' \
                    'Perpendicular_Backscatter_Coefficient_Uncertainty_532,Pressure'
         filename = valid_caliop_l2_filename
@@ -330,7 +331,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
 
     def test_subset_Aerosol_CCI(self):
-        # Takes 135s
+        # Takes 97s
         variable = '*'
         filename = valid_aerosol_cci_filename
         lon_min, lon_max = -15, 5
