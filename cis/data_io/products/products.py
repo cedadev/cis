@@ -55,6 +55,7 @@ class Aeronet(AProduct):
     def _create_coord_list(self, filenames, data=None):
         from cis.data_io.ungridded_data import Metadata
         from cis.data_io.aeronet import load_multiple_aeronet
+        from cis.time_util import cis_standard_time_unit as ct
 
         if data is None:
             data = load_multiple_aeronet(filenames)
@@ -65,10 +66,8 @@ class Aeronet(AProduct):
         coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),),
                                                        units="degrees_north", range=(-90, 90))))
         coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters")))
-        time_coord = Coord(data["datetime"], Metadata(name="DateTime", standard_name='time', shape=(len(data),),
-                                                      units="DateTime Object"), "X")
-        time_coord.convert_datetime_to_standard_time()
-        coords.append(time_coord)
+        coords.append(Coord(data["datetime"], Metadata(name="DateTime", standard_name='time', shape=(len(data),),
+                                                       units=str(ct)), "X"))
 
         return coords
 

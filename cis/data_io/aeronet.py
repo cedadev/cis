@@ -51,8 +51,9 @@ def load_aeronet(fname, variables=None):
     import numpy as np
     from numpy import ma
     from datetime import datetime, timedelta
+    from cis.time_util import cis_standard_time_unit
 
-    std_day = datetime(1900, 1, 1, 0, 0, 0)
+    std_day = cis_standard_time_unit.num2date(0)
 
     def date2daynum(datestr):
         try:
@@ -61,12 +62,10 @@ def load_aeronet(fname, variables=None):
             the_day = datetime.strptime(datestr, '%d/%m/%Y')
         return float((the_day - std_day).days)
 
-    def time2seconds(timestr):
+    def time2fractionalday(timestr):
         h, m, s = [int(t) for t in timestr.split(':')]
-        return float(h * 3600 + m * 60 + s)
-
-    def daynum_seconds2datetime(daynum, seconds):
-        return std_day + timedelta(days=int(daynum), seconds=int(seconds))
+        td = timedelta(hours=h, minutes=m, seconds=s)
+        return td.total_seconds()/(24.0*60.0*60.0)
 
     def convert_datatypes_to_floats(column):
         """
@@ -84,15 +83,15 @@ def load_aeronet(fname, variables=None):
 
     try:
         rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, deletechars=defaultdeletechars,
-                             converters={0: date2daynum, 1: time2seconds, 'Last_Processing_Date': date2daynum},
+                             converters={0: date2daynum, 1: time2fractionalday, 'Last_Processing_Date': date2daynum},
                              dtype=None, missing_values='N/A', usemask=True)
     except (StopIteration, IndexError) as e:
         raise IOError(e)
 
     lend = len(rawd)
-    dates = np.zeros(lend, dtype='O')
-    for i in xrange(lend):
-        dates[i] = daynum_seconds2datetime(rawd['Date(dd-mm-yy)'][i], rawd['Time(hh:mm:ss)'][i])
+    # The date and time column are already in days since cis standard time, and fractional days respectively, so we can 
+    # just add them together
+    datetimes = rawd['Date(dd-mm-yy)'] + rawd['Time(hh:mm:ss)']
 
     metadata = get_file_metadata(fname)
     lon = np.zeros(lend) + float(metadata.misc[2][1].split("=")[1])
@@ -104,7 +103,7 @@ def load_aeronet(fname, variables=None):
         for key in variables:
             data_dict[key] = convert_datatypes_to_floats(rawd[key])
 
-    data_dict["datetime"] = ma.array(dates)
+    data_dict["datetime"] = ma.array(datetimes, dtype=np.float64)
     data_dict["longitude"] = ma.array(lon)
     data_dict["latitude"] = ma.array(lat)
     data_dict["altitude"] = ma.array(alt)
