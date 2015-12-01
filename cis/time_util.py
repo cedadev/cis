@@ -45,7 +45,7 @@ def convert_time_using_time_stamp_info_to_std_time(time_array, units, time_stamp
 def convert_sec_since_to_std_time(seconds, ref):
     """
     Convert a number of seconds since a given reference datetime to a number of days since our standard time. The given
-    reference DateTime should be on the Gregorian calendar.
+    reference DateTime must be on the Gregorian calendar.
 
     :param seconds: Array of seconds (since the reference time provided)
     :type: ndarray
@@ -69,13 +69,19 @@ def convert_datetime_to_std_time(dt):
     return cis_standard_time_unit.date2num(dt)
 
 
-def convert_julian_date_to_std_time_array(julian_time_array, calender='standard'):
-    return convert_numpy_array(julian_time_array, 'float64', convert_julian_date_to_std_time, calender)
+def convert_julian_date_to_std_time(days_since):
+    """
+    Convert an array of julian days to cis standard time
 
+    ..note:
+        Array should have units like: Julian Date, days elapsed since 12:00 January 1, 4713 BC
 
-def convert_julian_date_to_std_time(julian_date, calender='standard'):
-    from iris.unit import julian_day2date
-    return cis_standard_time_unit.date2num(julian_day2date(julian_date, calender))
+    :param days_since: numpy array of fractional days since 12:00 January 1, 4713 BC
+    :return: fractional days since cis standard time
+    """
+    from iris.unit import date2julian_day
+    offset = date2julian_day(cis_standard_time_unit.num2date(0), 'standard')
+    return days_since - offset
 
 
 def convert_obj_to_standard_date_array(time_array):

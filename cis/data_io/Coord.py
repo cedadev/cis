@@ -46,11 +46,11 @@ class Coord(LazyData):
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
-    def convert_julian_to_std_time(self, calender='standard'):
-        from cis.time_util import convert_julian_date_to_std_time_array, cis_standard_time_unit
+    def convert_julian_to_std_time(self):
+        from cis.time_util import convert_julian_date_to_std_time, cis_standard_time_unit
         # if not self.units.startswith("Julian Date"):
         #     raise ValueError("Time units must be Julian Date for conversion to an Object")
-        self._data = convert_julian_date_to_std_time_array(self.data, calender)
+        self._data = convert_julian_date_to_std_time(self.data)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 

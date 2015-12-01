@@ -148,7 +148,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
 
     @raises(NoDataInSubsetError)
     def test_subset_Cloud_CCI(self):
-        # Takes 312 s
+        # Takes 4s
         variable = 'time,lon,lat,satellite_zenith_view_no1,solar_zenith_view_no1'
         filename = valid_cloud_cci_filename
         time_min, time_max = '2008-07', '2008-08'
