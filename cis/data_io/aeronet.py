@@ -56,15 +56,11 @@ def load_aeronet(fname, variables=None):
     std_day = cis_standard_time_unit.num2date(0)
 
     def date2daynum(datestr):
-        try:
-            the_day = datetime.strptime(datestr, '%d:%m:%Y')
-        except ValueError:
-            the_day = datetime.strptime(datestr, '%d/%m/%Y')
+        the_day = datetime(int(datestr[-4:]), int(datestr[3:5]), int(datestr[:2]))
         return float((the_day - std_day).days)
 
     def time2fractionalday(timestr):
-        h, m, s = [int(t) for t in timestr.split(':')]
-        td = timedelta(hours=h, minutes=m, seconds=s)
+        td = timedelta(hours=int(timestr[:2]), minutes=int(timestr[3:5]), seconds=int(timestr[6:8]))
         return td.total_seconds()/(24.0*60.0*60.0)
 
     def convert_datatypes_to_floats(column):
