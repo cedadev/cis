@@ -1,7 +1,7 @@
 """
 module to test the time conversion utilities
 """
-from nose.tools import istest, raises, eq_, assert_almost_equal
+from nose.tools import eq_, assert_almost_equal
 import datetime as dt
 from unittest import TestCase
 
@@ -59,7 +59,6 @@ class TestTimeUtils(TestCase):
         assert_almost_equal(b[1][1], days_since_standard_epoch+4*sec)
         assert_almost_equal(b[1][2], days_since_standard_epoch+5*sec)
 
-
     def test_that_can_calculate_mid_point_between_two_datetime(self):
         from cis.time_util import calculate_mid_time
         t1 = convert_datetime_to_std_time(dt.datetime(2010, 02, 05, 0, 0, 0))
@@ -69,26 +68,24 @@ class TestTimeUtils(TestCase):
 
     def test_convert_julian_date_to_std_time(self):
         import numpy as np
-        from cis.time_util import convert_std_time_to_datetime
-        import datetime as dt
+        from cis.time_util import convert_datetime_to_std_time
 
-        a = np.array([2454637.8091, 2454637.8092, 2454637.8097,
-                      2454637.8197, 2454638.8097, 2454657.8097,
-                      2454737.8197, 2456638.8097, 2464657.8097,])
+        julian_days = np.array([2454637.8091, 2454637.8092, 2454637.8097,
+                                2454637.8197, 2454638.8097, 2454657.8097,
+                                2454737.8197, 2456638.8097, 2464657.8097])
 
-        b = convert_julian_date_to_std_time(a)
+        std_days = convert_julian_date_to_std_time(julian_days)
 
-        # Convert back to datetimes for easy (by eye) comparison
-        c = convert_std_time_to_datetime(b)
+        ref = convert_datetime_to_std_time([dt.datetime(2008, 6, 20, 7, 25, 6),
+                                            dt.datetime(2008, 6, 20, 7, 25, 15),
+                                            dt.datetime(2008, 6, 20, 7, 25, 58),
+                                            dt.datetime(2008, 6, 20, 7, 40, 22),
+                                            dt.datetime(2008, 6, 21, 7, 25, 58),
+                                            dt.datetime(2008, 7, 10, 7, 25, 58),
+                                            dt.datetime(2008, 9, 28, 7, 40, 22),
+                                            dt.datetime(2013, 12, 12, 7, 25, 58),
+                                            dt.datetime(2035, 11, 26, 7, 25, 58)])
 
-        eq_(a.shape, b.shape)
-        eq_(c[0], dt.datetime(2008,6,20,7,25,6))
-        eq_(c[1], dt.datetime(2008,6,20,7,25,15))
-        eq_(c[2], dt.datetime(2008,6,20,7,25,58))
-        eq_(c[3], dt.datetime(2008,6,20,7,40,22))
-        eq_(c[4], dt.datetime(2008,6,21,7,25,58))
-        eq_(c[5], dt.datetime(2008,7,10,7,25,58))
-        eq_(c[6], dt.datetime(2008,9,28,7,40,22))
-        eq_(c[7], dt.datetime(2013,12,12,7,25,58))
-        eq_(c[8], dt.datetime(2035,11,26,7,25,58))
+        eq_(julian_days.shape, std_days.shape)
+        assert np.allclose(std_days, ref)
 
