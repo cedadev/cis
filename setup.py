@@ -24,7 +24,7 @@ else:
                     "iris>=1.8.0",
                     'psutil>=2.0.0']
 
-    optional_dependencies = {"HDF": ["pyhdf"]}
+    optional_dependencies = {"HDF": ["pyhdf"], "Pandas": ["pandas"]}
 
     test_dependencies = ["pyhamcrest", "mock", "nose"]
 

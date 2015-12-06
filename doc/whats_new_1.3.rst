@@ -9,10 +9,17 @@ This page documents the new features added, and bugs fixed in CIS since version 
 CIS 1.3 features
 ================
 
+ * Some significant optimisations have been made in reading Caliop, CCI and Aeronet datasets, there have also been speed
+   improvements for ungridded data subsetting
  * Compatibility updates for newer versions of Numpy and SciPy. The minimum require version of SciPy is now 0.16.0
  * Swapped out Basemap plotting routines for Cartopy. This removed a dependancy (as Cartopy was already required by
    Iris), and has given us more flexibility for plotting different projections in the future
- * Plots now automatically try to use the most appropriate resolution background images for plots over coastlines NASA blue marble images.
+ * Plots now automatically try to use the most appropriate resolution background images for plots over coastlines NASA
+   blue marble images.
+ * 'scatter_overlay' plots have been completely removed (they have been deprecated for the last two versions), the same
+   functionality can be achieved through the more generic 'overlay' plots.
+ * New Pandas interface allows the easy creation of DataFrames through the 'as_data_frame' method on Gridded or Ungridded
+   data. Pandas is an extensive python library providing many powerful data analysis algorithms and routines.
 
 Bugs fixed
 ==========
@@ -24,3 +31,5 @@ Bugs fixed
  * JASCIS-211 - Subsetting now accepts variable names (rather than axes shorthands) more consistently, the docs have
    been updated to make the dangers of relying on axes shorthands clear and an error is now thrown if a specific subset
    coordinate is not found.
+ * JASCIS-275 - The ungridded subsetting is now done array-wise rather than element wise giving large performance
+   improvements

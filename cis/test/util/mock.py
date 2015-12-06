@@ -999,6 +999,7 @@ def make_regular_4d_ungridded_data():
     import numpy as np
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
+    from cis.time_util import cis_standard_time_unit
     import datetime
 
     x_points = np.linspace(-10, 10, 5)
@@ -1009,12 +1010,6 @@ def make_regular_4d_ungridded_data():
     alt = np.linspace(0, 90, 10)
 
     data = np.reshape(np.arange(50) + 1.0, (10, 5))
-    # print np.mean(data[:,1:3])
-    # print np.mean(data[4:6,:])
-    # print np.mean(data[:,2])
-    # print np.std(data)
-    # print np.mean(data)
-    # print len(data.flat)
 
     y, a = np.meshgrid(y_points, alt)
     x, a = np.meshgrid(x_points, alt)
@@ -1027,7 +1022,7 @@ def make_regular_4d_ungridded_data():
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
     p = Coord(p, Metadata(standard_name='air_pressure', units='Pa'))
-    t = Coord(t, Metadata(standard_name='time', units='DateTime Object'))
+    t = Coord(t, Metadata(standard_name='time', units=str(cis_standard_time_unit)))
 
     coords = CoordList([x, y, a, p, t])
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",

@@ -465,6 +465,10 @@ class UngriddedData(LazyData, CommonData):
     def lon(self):
         return self.coord(standard_name='longitude')
 
+    @property
+    def time(self):
+        return self.coord(standard_name='time')
+
     def hyper_point(self, index):
         """
         :param index: The index in the array to find the point for
@@ -477,6 +481,22 @@ class UngriddedData(LazyData, CommonData):
                           self.coord(standard_name='time').data.flat[index],
                           self.coord(standard_name='air_pressure').data.flat[index],
                           self.data.flat[index])
+
+    def as_data_frame(self, copy=True):
+        """
+        Convert an UngriddedData object to a Pandas DataFrame.
+
+        :param copy: Create a copy of the data for the new DataFrame? Default is True.
+        :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
+        """
+        df = _coords_as_data_frame(self._coords)
+        try:
+            df[self.name()] = _to_flat_ndarray(self.data, copy)
+        except ValueError:
+            logging.warn("Copy created of MaskedArray for {} when creating Pandas DataFrame".format(self.name()))
+            df[self.name()] = _to_flat_ndarray(self.data, True)
+
+        return df
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
@@ -655,6 +675,10 @@ class UngriddedCoordinates(CommonData):
     def lon(self):
         return self.coord(standard_name='longitude')
 
+    @property
+    def time(self):
+        return self.coord(standard_name='time')
+
     def hyper_point(self, index):
         """
         :param index: The index in the array to find the point for
@@ -667,6 +691,15 @@ class UngriddedCoordinates(CommonData):
                           self.coord(standard_name='time').data.flat[index],
                           self.coord(standard_name='air_pressure').data.flat[index],
                           None)
+
+    def as_data_frame(self, copy=True):
+        """
+        Convert an UngriddedCoordinates object to a Pandas DataFrame.
+
+        :param copy: Create a copy of the data for the new DataFrame? Default is True.
+        :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
+        """
+        return _coords_as_data_frame(self._coords)
 
     def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
@@ -769,3 +802,83 @@ class UngriddedDataList(CommonDataList):
         for variable in self:
             output.append(variable.copy())
         return output
+
+    def as_data_frame(self, copy=True):
+        """
+        Convert an UngriddedDataList object to a Pandas DataFrame. Note that UngriddedDataList objects are expected to
+        share coordinates, so only the coordinates from the first object in the list are used.
+
+        :param copy: Create a copy of the data for the new DataFrame? Default is True.
+        :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
+
+        .. note::
+            This function will copy your data by default.
+            If you have a large array that cannot be copied,
+            make sure it is not masked and use copy=False.
+        """
+        import numpy as np
+
+        df = self[0].as_data_frame(copy=copy)
+
+        for d in self[1:]:
+            try:
+                data = _to_flat_ndarray(d.data, copy)
+            except ValueError:
+                logging.warn("Copy created of MaskedArray for {} when creating Pandas DataFrame".format(d.name()))
+                data = _to_flat_ndarray(d.data, True)
+            df[d.name()] = data
+
+        return df
+
+
+def _coords_as_data_frame(coord_list, copy=True):
+    """
+    Convert a CoordList object to a Pandas DataFrame.
+
+    :param copy: Create a copy of the data for the new DataFrame? Default is True.
+    :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
+    """
+    import pandas as pd
+    from cis.time_util import cis_standard_time_unit
+
+    columns = {}
+    time = None
+
+    for coord in coord_list.get_coords():
+        try:
+            data = _to_flat_ndarray(coord.data, copy)
+        except ValueError:
+            logging.warn("Copy created of MaskedArray for {} when creating Pandas DataFrame".format(coord.name()))
+            data = _to_flat_ndarray(coord.data, True)
+
+        if coord.standard_name == 'time':
+            if coord.units.lower() == 'datetime object':
+                time = data
+            else:
+                time = cis_standard_time_unit.num2date(data)
+        else:
+            columns[coord.name()] = data
+
+    return pd.DataFrame(columns, index=time)
+
+
+def _to_flat_ndarray(data, copy=True):
+    """
+    Convert a (possibly masked) numpy array into its flat equivalent, with or without copying it.
+
+    :param data:
+    :param copy:
+    :return:
+    """
+    import numpy as np
+
+    if isinstance(data, np.ma.MaskedArray):
+        if not copy:
+            raise ValueError("Masked arrays must always be copied.")
+        ndarr = data.astype('f').filled(np.NaN).flatten()
+    elif copy:
+        ndarr = data.flatten()
+    else:
+        ndarr = data.ravel()
+
+    return ndarr
