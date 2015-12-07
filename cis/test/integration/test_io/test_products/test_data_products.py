@@ -16,6 +16,14 @@ from cis.exceptions import InvalidVariableError
 from cis.test.integration_test_data import non_netcdf_file, cis_test_files
 from cis.data_io.products import CloudSat
 
+try:
+    import pandas
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pandas = None
+
+skip_pandas = unittest.skipIf(pandas is None, 'Test(s) require "pandas", which is not available.')
+
 
 def check_regex_matching(cls_name, filename):
     from cis.data_io.products.AProduct import __get_class
@@ -91,6 +99,13 @@ class ProductTests(object):
         from cis.data_io.common_data import CommonData
         data = self.product().create_data_object([self.filename], self.valid_variable)
         assert_is_instance(data, CommonData)
+
+    @skip_pandas
+    def test_create_pandas_object(self):
+        from pandas import DataFrame
+        data = self.product().create_data_object([self.filename], self.valid_variable)
+        df = data.as_data_frame()
+        assert_is_instance(df, DataFrame)
 
     def test_create_coords(self):
         valid_standard_names = ['latitude', 'longitude', 'altitude', 'time', 'air_pressure']
