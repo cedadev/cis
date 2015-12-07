@@ -48,6 +48,9 @@ class Histogram_2D(Generic_Plot):
     def setup_map(self):
         pass
 
+    def is_map(self):
+        return False
+
     def calculate_bin_edges(self):
         """
         Calculates the number of bins for a given axis.
