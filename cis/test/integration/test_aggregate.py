@@ -411,7 +411,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_GASSP(self):
