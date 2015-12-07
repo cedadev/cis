@@ -271,7 +271,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file, local_keys=self._local_attributes)
 
-    def as_data_frame(self, copy):
+    def as_data_frame(self, copy=True):
         """
         Convert a GriddedData object to a Pandas DataFrame.
 
