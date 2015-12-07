@@ -2,12 +2,12 @@
 Module to do integration tests of plots to files. Does not check the graph created is correct, only that a graph is
 created without errors.
 """
-from cis.data_io.products.AProduct import ProductPluginException
+from cis.exceptions import CISError, UserPrintableException
 from cis.cis_main import plot_cmd, subset_cmd, aggregate_cmd
 from cis.parse import parse_args
 from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
-
+from nose.tools import raises
 
 class TestPlotIntegration(BaseIntegrationTest):
 
@@ -99,18 +99,14 @@ class TestPlotIntegration(BaseIntegrationTest):
 
         os.remove(out_name)
 
+    @raises(CISError)
     def test_plot_gridded_3d_exits_with_CISError(self):
         variable = valid_cis_gridded_output_variable
         filename = valid_cis_gridded_output_filename
         out_name = '3d_out.png'
         args = ['plot', variable + ':' + filename, '-o', out_name]
         main_arguments = parse_args(args)
-        try:
-            plot_cmd(main_arguments)
-            assert False
-        except SystemExit as e:
-            if e.code != 1:
-                raise e
+        plot_cmd(main_arguments)
 
     def test_plot_gridded_2d_with_flattened_time(self):
         variable = valid_cis_gridded_output_variable
@@ -123,7 +119,7 @@ class TestPlotIntegration(BaseIntegrationTest):
         main_arguments = parse_args(args)
         plot_cmd(main_arguments)
 
-        os.remove(out_name)
+        # os.remove(out_name)
 
     def test_plot_aggregated_aeronet(self):
         # Aggregated aeronet has multiple length 1 dimensions, so we want to make sure we can plot it OK.
@@ -152,17 +148,13 @@ class TestPlotIntegration(BaseIntegrationTest):
 
         os.remove(out_name)
 
+    @raises(UserPrintableException)
     def test_plot_ungridded_heatmap(self):
         filename = valid_GASSP_station_filename
         variable = valid_GASSP_station_vars[0]
         args = ['plot', variable + ':' + filename, '--type', 'heatmap']
         args = parse_args(args)
-        try:
-            plot_cmd(args)
-            assert False
-        except SystemExit as e:
-            if e.code != 1:
-                raise e
+        plot_cmd(args)
 
     def test_plot_heatmap_horizontal_cbar(self):
         var = valid_echamham_variable_1
