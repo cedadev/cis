@@ -76,12 +76,8 @@ class Aeronet(AProduct):
 
     def create_data_object(self, filenames, variable):
         from cis.data_io.aeronet import load_multiple_aeronet
-        from cis.exceptions import InvalidVariableError
 
-        try:
-            data_obj = load_multiple_aeronet(filenames, [variable])
-        except ValueError:
-            raise InvalidVariableError(variable + " does not exist in " + str(filenames))
+        data_obj = load_multiple_aeronet(filenames, [variable])
 
         coords = self._create_coord_list(filenames, data_obj)
 

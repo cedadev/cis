@@ -52,6 +52,7 @@ def load_aeronet(fname, variables=None):
     from numpy import ma
     from datetime import datetime, timedelta
     from cis.time_util import cis_standard_time_unit
+    from cis.exceptions import InvalidVariableError
 
     std_day = cis_standard_time_unit.num2date(0)
 
@@ -97,7 +98,12 @@ def load_aeronet(fname, variables=None):
     data_dict = {}
     if variables is not None:
         for key in variables:
-            data_dict[key] = convert_datatypes_to_floats(rawd[key])
+            try:
+                var_data = rawd[key]
+            except ValueError:
+                raise InvalidVariableError(key + " does not exist in " + fname)
+
+            data_dict[key] = convert_datatypes_to_floats(var_data)
 
     data_dict["datetime"] = ma.array(datetimes, dtype=np.float64)
     data_dict["longitude"] = ma.array(lon)
