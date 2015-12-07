@@ -276,11 +276,19 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                     elif x[0, :].shape == y.shape:
                         y, _x = np.meshgrid(y, x[:, 0])
             else:
-                try:
-                    data, x = add_cyclic_point(data, x)
+                if len(x) == data.shape[-1]:
+                    try:
+                        data, x = add_cyclic_point(data, x)
+                    except ValueError as e:
+                        logging.warn('Unable to add cyclic data point for {}. Error was: '.format(x_variable)
+                                     + e.message)
                     x, y = np.meshgrid(x, y)
-                except ValueError as e:
-                    data, y = add_cyclic_point(data, y)
+                elif len(y) == data.shape[-1]:
+                    try:
+                        data, y = add_cyclic_point(data, y)
+                    except ValueError as e:
+                        logging.warn('Unable to add cyclic data point for {}. Error was: '.format(y_variable)
+                                     + e.message)
                     y, x = np.meshgrid(y, x)
     elif x_axis_name == 'X' and x_wrap_start is not None:
         x = fix_longitude_range(x, x_wrap_start)
