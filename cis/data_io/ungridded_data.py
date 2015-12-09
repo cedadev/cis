@@ -392,6 +392,8 @@ class UngriddedData(LazyData, CommonData):
                     "these points have been removed from the data.".format(n_points=n_points))
                 for coord in self._coords:
                     coord.data = numpy.ma.masked_array(coord.data.flatten(), mask=combined_mask).compressed()
+                    coord.update_shape()
+                    coord.update_range()
                 if numpy.ma.is_masked(self._data):
                     new_data_mask = numpy.ma.masked_array(self._data.mask.flatten(), mask=combined_mask).compressed()
                     new_data = numpy.ma.masked_array(self._data.data.flatten(), mask=combined_mask).compressed()
