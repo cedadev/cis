@@ -489,7 +489,7 @@ class UngriddedData(LazyData, CommonData):
         :param copy: Create a copy of the data for the new DataFrame? Default is True.
         :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
         """
-        df = _coords_as_data_frame(self._coords)
+        df = _coords_as_data_frame(self.coords())
         try:
             df[self.name()] = _to_flat_ndarray(self.data, copy)
         except ValueError:
