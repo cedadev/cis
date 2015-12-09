@@ -204,7 +204,7 @@ def get_coord(data_object, variable, data):
                     break
         else:
             try:
-                coord = data_object.coord(name=variable)
+                coord = data_object.coord(variable)
             except CoordinateNotFoundError:
                 return None
         return coord
@@ -229,7 +229,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     if hasattr(x, 'points'):
         x = x.points
     try:
-        coord = data_object.coord(name=x_variable)
+        coord = data_object.coord(x_variable)
         x_axis_name = guess_coord_axis(coord)
     except CoordinateNotFoundError:
         x_axis_name = None
@@ -325,7 +325,7 @@ def find_longitude_wrap_start(x_variable, packed_data_items):
     x_points_maxs = []
     for data_object in packed_data_items:
         try:
-            coord = data_object.coord(name=x_variable)
+            coord = data_object.coord(x_variable)
             x_axis_name = guess_coord_axis(coord)
         except CoordinateNotFoundError:
             x_axis_name = None

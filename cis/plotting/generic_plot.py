@@ -318,7 +318,7 @@ class Generic_Plot(object):
 
         coords = self.packed_data_items[0].coords(standard_name=self.plot_args["x_variable"])
         if len(coords) == 0:
-            coords = self.packed_data_items[0].coords(name=self.plot_args["x_variable"])
+            coords = self.packed_data_items[0].coords(name_or_coord=self.plot_args["x_variable"])
         if len(coords) == 0:
             coords = self.packed_data_items[0].coords(long_name=self.plot_args["x_variable"])
 
@@ -433,8 +433,8 @@ class Generic_Plot(object):
         from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
         from cis.exceptions import CoordinateNotFoundError as cisNotFoundError
         try:
-            x = self.packed_data_items[0].coord(name=self.plot_args["x_variable"])
-            y = self.packed_data_items[0].coord(name=self.plot_args["y_variable"])
+            x = self.packed_data_items[0].coord(self.plot_args["x_variable"])
+            y = self.packed_data_items[0].coord(self.plot_args["y_variable"])
         except (cisNotFoundError, irisNotFoundError):
             return False
 
@@ -692,12 +692,12 @@ class Generic_Plot(object):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
+                    name = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
 
                 try:
-                    units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
+                    units = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 

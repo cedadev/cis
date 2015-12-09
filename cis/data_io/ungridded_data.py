@@ -500,19 +500,19 @@ class UngriddedData(LazyData, CommonData):
 
         return df
 
-    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+    def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
         :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
         self._post_process()
-        return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
+        return self._coords.get_coords(name_or_coord, standard_name, long_name, attributes, axis)
 
-    def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
         :raise: CoordinateNotFoundError
-        :return: A single coord given the same arguments as L(coords).
+        :return: A single coord given the same arguments as :method:`coords`.
         """
-        return self.coords().get_coord(name, standard_name, long_name, attributes, axis)
+        return self.coords().get_coord(name_or_coord, standard_name, long_name, attributes, axis)
 
     def get_coordinates_points(self):
         """Returns a HyperPointView of the coordinates of points.
@@ -703,19 +703,19 @@ class UngriddedCoordinates(CommonData):
         """
         return _coords_as_data_frame(self._coords)
 
-    def coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+    def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
         """
         :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
-        return self._coords.get_coords(name, standard_name, long_name, attributes, axis)
+        return self._coords.get_coords(name_or_coord, standard_name, long_name, attributes, axis)
 
-    def coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
         :raise: CoordinateNotFoundError
         :return: A single coord given the same arguments as L(coords).
 
         """
-        return self._coords.get_coord(name, standard_name, long_name, attributes, axis)
+        return self._coords.get_coord(name_or_coord, standard_name, long_name, attributes, axis)
 
     def get_coordinates_points(self):
         return UngriddedHyperPointView(self.coords_flattened, None)

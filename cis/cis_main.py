@@ -42,7 +42,7 @@ def __check_variable_is_valid(main_arguments, data, axis):
     user_specified_variable = main_arguments.pop(axis + "axis")
 
     for data_item in data:
-        if len(data_item.coords(name=user_specified_variable)) == 0 \
+        if len(data_item.coords(user_specified_variable)) == 0 \
                 and len(data_item.coords(standard_name=user_specified_variable)) == 0 \
                 and data_item.name() != user_specified_variable \
                 and data_item.standard_name != user_specified_variable \
