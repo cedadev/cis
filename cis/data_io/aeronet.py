@@ -74,7 +74,8 @@ def load_aeronet(fname, variables=None):
     lend = len(rawd)
     # The date and time column are already in days since cis standard time, and fractional days respectively, so we can 
     # just add them together
-    datetimes = rawd['Date(dd-mm-yy)'] + rawd['Time(hh:mm:ss)']
+    # Find the columns by number rather than name as some older versions of numpy mangle the special characters
+    datetimes = rawd[rawd.dtype.names[0]] + rawd[rawd.dtype.names[1]]
 
     metadata = get_file_metadata(fname)
     lon = np.zeros(lend) + float(metadata.misc[2][1].split("=")[1])
