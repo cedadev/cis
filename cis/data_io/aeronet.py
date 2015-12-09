@@ -1,15 +1,10 @@
 import logging
 
-defaultdeletechars = """~!@#$%^&*=+~\|]}[{'; /?.>,<"""
-
 
 def get_aeronet_file_variables(filename):
     import linecache
 
     vars = linecache.getline(filename, 5).split(",")
-    for i in range(0, len(vars)):
-        for char in defaultdeletechars:
-            vars[i] = vars[i].replace(char, "")
     vars_dict = {}
     for var in vars:
         var = var.strip()
@@ -65,7 +60,7 @@ def load_aeronet(fname, variables=None):
         return td.total_seconds()/(24.0*60.0*60.0)
 
     try:
-        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, deletechars=defaultdeletechars,
+        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=get_aeronet_file_variables(fname).keys(),
                              converters={0: date2daynum, 1: time2fractionalday, 'Last_Processing_Date': date2daynum},
                              dtype=np.float64, missing_values='N/A', usemask=True)
     except (StopIteration, IndexError) as e:
