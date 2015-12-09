@@ -64,24 +64,10 @@ def load_aeronet(fname, variables=None):
         td = timedelta(hours=int(timestr[:2]), minutes=int(timestr[3:5]), seconds=int(timestr[6:8]))
         return td.total_seconds()/(24.0*60.0*60.0)
 
-    def convert_datatypes_to_floats(column):
-        """
-        Numpy.genfromtext() converts missing values 'N/A' to floats when using dtype=None.
-        Also converts dates to objects.
-        Convert them into float64 as they should be.
-        :param column: Column to convert if a boolean.
-        :return:
-        """
-        if column.dtype == np.bool:
-            return column.astype(np.float64)
-        if column.dtype == np.object:
-            return np.array([column], dtype=np.float64)
-        return column
-
     try:
         rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=True, deletechars=defaultdeletechars,
                              converters={0: date2daynum, 1: time2fractionalday, 'Last_Processing_Date': date2daynum},
-                             dtype=None, missing_values='N/A', usemask=True)
+                             dtype=np.float64, missing_values='N/A', usemask=True)
     except (StopIteration, IndexError) as e:
         raise IOError(e)
 
@@ -99,13 +85,11 @@ def load_aeronet(fname, variables=None):
     if variables is not None:
         for key in variables:
             try:
-                var_data = rawd[key]
+                data_dict[key] = rawd[key]
             except ValueError:
                 raise InvalidVariableError(key + " does not exist in " + fname)
 
-            data_dict[key] = convert_datatypes_to_floats(var_data)
-
-    data_dict["datetime"] = ma.array(datetimes, dtype=np.float64)
+    data_dict["datetime"] = ma.array(datetimes)
     data_dict["longitude"] = ma.array(lon)
     data_dict["latitude"] = ma.array(lat)
     data_dict["altitude"] = ma.array(alt)
