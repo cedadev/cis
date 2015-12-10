@@ -60,7 +60,7 @@ def load_aeronet(fname, variables=None):
         return td.total_seconds()/(24.0*60.0*60.0)
 
     try:
-        rawd = np.genfromtxt(fname, skip_header=4, delimiter=',', names=get_aeronet_file_variables(fname).keys(),
+        rawd = np.genfromtxt(fname, skip_header=5, delimiter=',', names=get_aeronet_file_variables(fname).keys(),
                              converters={0: date2daynum, 1: time2fractionalday, 'Last_Processing_Date': date2daynum},
                              dtype=np.float64, missing_values='N/A', usemask=True)
     except (StopIteration, IndexError) as e:
