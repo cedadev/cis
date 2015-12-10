@@ -5,6 +5,7 @@ from cis.data_io.aeronet import load_aeronet
 from nose.tools import assert_almost_equal, raises
 from cis.exceptions import InvalidVariableError
 
+
 class TestAeronet(unittest.TestCase):
 
     def test_aeronet_time_parsing(self):

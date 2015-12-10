@@ -1,15 +1,21 @@
 import logging
 
+defaultdeletechars = """~!@#$%^&*=+~\|]}[{'; /?.>,<"""
+
 
 def get_aeronet_file_variables(filename):
+    """
+    Return a list of valid Aeronet file variables with invalid characters removed. We need to remove invalid characters
+    primarily for writing back out to CF-compliant NetCDF.
+    :param filename: Full path to the file to read
+    :return: A list of Aeronet variable names in the order they appear in the file
+    """
     import linecache
-
     vars = linecache.getline(filename, 5).split(",")
-    vars_dict = {}
-    for var in vars:
-        var = var.strip()
-        vars_dict[var] = var
-    return vars_dict
+    for i in range(0, len(vars)):
+        for char in defaultdeletechars:
+            vars[i] = vars[i].replace(char, "")
+    return [var.strip() for var in vars]
 
 
 def load_multiple_aeronet(fnames, variables=None):
@@ -40,8 +46,8 @@ def load_aeronet(fname, variables=None):
         License: GNU GPL v3
 
     :param fname: data file name
-    :param keep_fields: A list of variables to return
-    :return: A
+    :param variables: A list of variables to return
+    :return: A dictionary of variables names and numpy arrays containing the data for that variable
     """
     import numpy as np
     from numpy import ma
@@ -50,6 +56,8 @@ def load_aeronet(fname, variables=None):
     from cis.exceptions import InvalidVariableError
 
     std_day = cis_standard_time_unit.num2date(0)
+
+    ordered_vars = get_aeronet_file_variables(fname)
 
     def date2daynum(datestr):
         the_day = datetime(int(datestr[-4:]), int(datestr[3:5]), int(datestr[:2]))
@@ -60,7 +68,7 @@ def load_aeronet(fname, variables=None):
         return td.total_seconds()/(24.0*60.0*60.0)
 
     try:
-        rawd = np.genfromtxt(fname, skip_header=5, delimiter=',', names=get_aeronet_file_variables(fname).keys(),
+        rawd = np.genfromtxt(fname, skip_header=5, delimiter=',', names=ordered_vars,
                              converters={0: date2daynum, 1: time2fractionalday, 'Last_Processing_Date': date2daynum},
                              dtype=np.float64, missing_values='N/A', usemask=True)
     except (StopIteration, IndexError) as e:
@@ -81,7 +89,8 @@ def load_aeronet(fname, variables=None):
     if variables is not None:
         for key in variables:
             try:
-                data_dict[key] = rawd[key]
+                # Again, we can't trust the numpy names so we have to use our pre-read names to index the right column
+                data_dict[key] = rawd[rawd.dtype.names[ordered_vars.index(key)]]
             except ValueError:
                 raise InvalidVariableError(key + " does not exist in " + fname)
 
