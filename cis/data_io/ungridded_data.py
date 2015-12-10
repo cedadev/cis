@@ -510,7 +510,7 @@ class UngriddedData(LazyData, CommonData):
     def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
         :raise: CoordinateNotFoundError
-        :return: A single coord given the same arguments as :method:`coords`.
+        :return: A single coord given the same arguments as :meth:`coords`.
         """
         return self.coords().get_coord(name_or_coord, standard_name, long_name, attributes, axis)
 
@@ -712,7 +712,7 @@ class UngriddedCoordinates(CommonData):
     def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
         :raise: CoordinateNotFoundError
-        :return: A single coord given the same arguments as L(coords).
+        :return: A single coord given the same arguments as :meth:`coords`.
 
         """
         return self._coords.get_coord(name_or_coord, standard_name, long_name, attributes, axis)

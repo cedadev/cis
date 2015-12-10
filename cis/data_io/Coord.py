@@ -138,12 +138,9 @@ class CoordList(list):
         similar to :func:`Cube.coords()` to maintain a similar interface and because the functionality is similar. There
         is no distinction between dimension coordinates and auxiliary coordinates here though.
 
-        :param name_or_coord:
-        Either:
-         * The standard name or long name or default name of the desired coordinate.
-         * Or, a :class:`Coord` instance whose metadata should be used for the search criteria (note that currently only the
-           standard name is compared)
-        If None, does not check for name. Also see, :attr:`Cube.name`.
+        :param name_or_coord: This should be either: The standard name or long name or default name of the desired
+         coordinate; Or, a :class:`Coord` instance whose metadata should be used for the search criteria (note that
+         currently only the standard name is compared). If None, does not check for name. Also see, :attr:`Cube.name`.
         :type name: string or None or :class:`Coord`
         :param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
         :type standard_name: string or None
@@ -199,12 +196,9 @@ class CoordList(list):
         similar to :func:`Cube.coord()` method to maintain a similar interface and because the functionality is similar.
         There is no distinction between dimension coordinates and auxilliary coordinates here though.
 
-        :param name_or_coord:
-        Either:
-         * The standard name or long name or default name of the desired coordinate.
-         * Or, a :class:`Coord` instance whose metadata should be used for the search criteria (note that currently only the
-           standard name is compared)
-        If None, does not check for name. Also see, :attr:`Cube.name`.
+        :param name_or_coord: This should be either: The standard name or long name or default name of the desired
+         coordinate; Or, a :class:`Coord` instance whose metadata should be used for the search criteria (note that
+         currently only the standard name is compared). If None, does not check for name. Also see, :attr:`Cube.name`.
         :type name: string or None or :class:`Coord`
         :param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
         :type standard_name: string or None
