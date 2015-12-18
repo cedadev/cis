@@ -652,3 +652,14 @@ class TestPlotVisual(VisualTest):
         plot_cmd(main_arguments)
 
         self.check_graphic()
+
+    def test_aerosol_cci_default_axes(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        arguments = ["plot", valid_aerosol_cci_variable + ":" + valid_aerosol_cci_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()

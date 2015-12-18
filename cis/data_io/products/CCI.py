@@ -19,10 +19,10 @@ class CCI(object):
         from cis.exceptions import InvalidVariableError
 
         try:
-            variables = ["lat", "lon", "time"]
+            variables = ["lon", "lat", "time"]
             data = read_many_files_individually(filenames, variables)
         except InvalidVariableError:
-            variables = ["latitude", "longitude", "time"]
+            variables = ["longitude", "latitude", "time"]
             data = read_many_files_individually(filenames, variables)
 
         logging.info("Listing coordinates: " + str(variables))
