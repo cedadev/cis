@@ -310,6 +310,28 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_other_many_scatter_points(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --ylabel overiddenylabel --itemwidth 20 --ymin 0.1 --ymax 1 --logx --logy".split()
+        arguments = ["plot", "AOT_440:" + valid_aeronet_filename,
+                     "AOT_870:" + valid_aeronet_filename + ":itemstyle=x"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_other_many_scatter_points_given_color(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type scatter --ylabel overiddenylabel --itemwidth 4 --ymin 0.1 --ymax 1 --logx --logy".split()
+        arguments = ["plot", "AOT_440:" + valid_aeronet_filename,
+                     "AOT_870:" + valid_aeronet_filename + ":color=blue,itemstyle=x"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
     def test_other_many_lines(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type line --ylabel overiddenylabel --itemwidth 2 --ymin 0.1 --ymax 1 --logx --logy".split()
