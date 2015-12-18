@@ -63,8 +63,7 @@ class VisualTest(BaseIntegrationTest):
                 else:
                     image_output_directory = os.path.join(
                         os.getcwd(), 'result_image_comparison')
-            result_fname = os.path.join(image_output_directory,
-                                        'result-' + test_id + '.png')
+            result_fname = os.path.join(image_output_directory, test_id + '.png')
 
             if not os.path.isdir(os.path.dirname(result_fname)):
                 # Handle race-condition where the directories are

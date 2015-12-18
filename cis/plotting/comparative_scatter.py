@@ -7,7 +7,7 @@ class Comparative_Scatter(Generic_Plot):
         if len(self.packed_data_items) == 2:
             # Add y=x line
             ax = self.matplotlib.gca()
-            if self.plot_args.get("logx", False) and self.plot_args.get("logy", False):
+            if self.plot_args["logx"] and self.plot_args["logy"]:
                 import numpy.ma as ma
                 positive_item0 = ma.array(self.unpacked_data_items[0]["data"],
                                           mask=self.unpacked_data_items[0]["data"] <= 0)
@@ -21,7 +21,6 @@ class Comparative_Scatter(Generic_Plot):
             y_equals_x_array = [min_val, max_val]
             ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
-            scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
             datagroup = self.plot_args["datagroups"][0]
             if datagroup["itemstyle"]:
                 self.mplkwargs["marker"] = datagroup["itemstyle"]
@@ -33,8 +32,8 @@ class Comparative_Scatter(Generic_Plot):
             else:
                 self.mplkwargs.pop("color", None)
 
-            ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"], s=scatter_size,
-                       edgecolors="none", *self.mplargs, **self.mplkwargs)
+            ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"],
+                       s=self.plot_args["itemwidth"], edgecolors="none", *self.mplargs, **self.mplkwargs)
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 

@@ -13,12 +13,15 @@ from cis.plotting.overlay import Overlay
 from cis.plotting.histogram2d import Histogram_2D
 from cis.plotting.histogram3d import Histogram_3D
 from cis.utils import wrap_longitude_coordinate_values, listify
-import matplotlib.pyplot as mpl
 
-plot_options = {'title': mpl.title,
-                'xlabel': mpl.xlabel,
-                'ylabel': mpl.ylabel,
-                'fontsize': mpl.rcParams.update}
+import matplotlib.pyplot as plt
+
+plot_options = {'title': plt.title,
+                'xlabel': plt.xlabel,
+                'ylabel': plt.ylabel,
+                'fontsize': plt.rcParams.update}
+
+colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 
 class Plotter(object):
@@ -32,7 +35,8 @@ class Plotter(object):
                   "histogram2d": Histogram_2D,
                   "histogram3d": Histogram_3D}
 
-    def __init__(self, packed_data_items, plot_type=None, out_filename=None, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, plot_type=None, out_filename=None, plotheight=None,
+                 plotwidth=None, *mplargs, **mplkwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
@@ -43,69 +47,17 @@ class Plotter(object):
         :param mplargs: Any other arguments received from the parser
         :param mplkwargs: Any other keyword arguments received from the plotter
         """
-        mplkwargs.pop("xmin", None)
-        mplkwargs.pop("xmax", None)
-        mplkwargs.pop("xstep", None)
 
-        mplkwargs.pop("ymin", None)
-        mplkwargs.pop("ymax", None)
-        mplkwargs.pop("ystep", None)
-
-        mplkwargs.pop("vmin", None)
-        mplkwargs.pop("vmax", None)
-        mplkwargs.pop("vstep", None)
-
-        # Remove arguments from mplkwargs that cannot be passed directly into the plotting methods
-        plot_args = {"datagroups": mplkwargs.pop("datagroups", None),
-                     "nocolourbar": mplkwargs.pop("nocolourbar", False),
-                     "logx": mplkwargs.pop("logx", False),
-                     "logy": mplkwargs.pop("logy", False),
-                     "logv": mplkwargs.pop("logv", False),
-                     "xrange": mplkwargs.pop("xrange", {}),
-                     "yrange": mplkwargs.pop("yrange", {}),
-                     "valrange": mplkwargs.pop("valrange", {}),
-                     "cbarorient": mplkwargs.pop("cbarorient", "horizontal"),
-                     "grid": mplkwargs.pop("grid", False),
-                     "xlabel": mplkwargs.pop("xlabel", None),
-                     "ylabel": mplkwargs.pop("ylabel", None),
-                     "cbarlabel": mplkwargs.pop("cbarlabel", None),
-                     "title": mplkwargs.pop("title", None),
-                     "fontsize": mplkwargs.pop("fontsize", None),
-                     "itemwidth": mplkwargs.pop("itemwidth", 1),
-                     "xtickangle": mplkwargs.pop("xtickangle", None),
-                     "ytickangle": mplkwargs.pop("ytickangle", None),
-                     "xbinwidth": mplkwargs.pop("xbinwidth", None),
-                     "ybinwidth": mplkwargs.pop("ybinwidth", None),
-                     "coastlinescolour": mplkwargs.pop("coastlinescolour", "k"),
-                     "nasabluemarble": mplkwargs.pop("nasabluemarble", False),
-                     "x_variable": mplkwargs.pop("x_variable"),
-                     "y_variable": mplkwargs.pop("y_variable"),
-                     "plotwidth": mplkwargs.pop("plotwidth"),
-                     "plotheight": mplkwargs.pop("plotheight"),
-                     "cbarscale": mplkwargs.pop("cbarscale")}
-
-        packed_data_items = self._remove_length_one_dimensions(packed_data_items)
-        self.mplkwargs = mplkwargs
-        self.remove_unassigned_arguments()
+        # packed_data_items = self._remove_length_one_dimensions(packed_data_items)
 
         if plot_type is None:
             plot_type = self.set_default_plot_type(packed_data_items)
 
-        # Do wrapping
-        x_range = plot_args.get('xrange', None)
+        # Create figure and a single axis (we assume for now not more than one 'subplot').
+        self.fig, ax = plt.subplots()
 
-        if x_range is not None:
-            x_min = x_range.get('xmin', None)
-            x_max = x_range.get('xmax', None)
-            if x_min is not None and x_max is not None:
-                plot_args['xrange']['xmin'], plot_args['xrange']['xmax'] = \
-                    wrap_longitude_coordinate_values(x_min, x_max)
-
-        # Do plot
-        f = mpl.gcf()
-        f.set_figwidth(plot_args["plotwidth"])
-        f.set_figheight(plot_args["plotheight"])
-        plot = self.plot_types[plot_type](packed_data_items, plot_args, *mplargs, **mplkwargs)
+        self.set_width_and_height(plotwidth, plotheight)
+        plot = self.plot_types[plot_type](ax, packed_data_items, *mplargs, **mplkwargs)
         plot.apply_axis_limits()
         plot.format_plot()
 
@@ -125,18 +77,28 @@ class Plotter(object):
             plt.show()
         else:
             logging.info("saving plot to file: " + out_filename)
-            f = plt.gcf()
-            width = f.get_figwidth()
+            width = self.fig.get_figwidth()
             plt.savefig(out_filename, bbox_inches='tight',
                         pad_inches=0.05 * width)  # Will overwrite if file already exists
 
-    def remove_unassigned_arguments(self):
+    def set_width_and_height(self, width, height):
         """
-        Removes arguments from the mplkwargs if they are equal to None
+        Sets the width and height of the plot
+        Uses an aspect ratio of 4:3 if only one of width and height are specified
+        If neither width or height are specified it defaults to 8 by 6 inches.
         """
-        for key in self.mplkwargs.keys():
-            if self.mplkwargs[key] is None:
-                self.mplkwargs.pop(key)
+
+        if height is not None:
+            if width is None:
+                width = height * (4.0 / 3.0)
+        elif width is not None:
+            height = width * (3.0 / 4.0)
+        else:
+            height = 6
+            width = 8
+
+        self.fig.set_figheight(height)
+        self.fig.set_figwidth(width)
 
     def set_default_plot_type(self, data):
         """

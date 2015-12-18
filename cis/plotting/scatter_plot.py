@@ -7,27 +7,33 @@ class Scatter_Plot(Generic_Plot):
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
-        scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
+        from cis.plotting.plot import colors
+
+        self.mplkwargs["s"] = self.plot_args["itemwidth"]
+
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            datafile = self.plot_args["datagroups"][self.datagroup]
-            if datafile["itemstyle"]:
-                self.mplkwargs["marker"] = datafile["itemstyle"]
-            else:
-                self.mplkwargs.pop("marker", None)
+            local_kwargs = self.mplkwargs.copy()
+            datafile = self.plot_args["datagroups"][i]
 
-            self.mplkwargs["cmap"] = datafile["cmap"]
+            if "itemstyle" in datafile:
+                local_kwargs["marker"] = datafile["itemstyle"]
 
-            self.mplkwargs["c"] = datafile.get("color", None)
-            if self.mplkwargs["c"] is None:
-                if unpacked_data_item.get("y", None) is not None:  # i.e. the scatter plot is 3D
-                    self.mplkwargs["c"] = unpacked_data_item["data"]
+            if 'cmap' in datafile:
+                local_kwargs["cmap"] = datafile["cmap"]
+
+            # Default to no edgecolour
+            if "edgecolor" in datafile:
+                local_kwargs["edgecolors"] = datafile["edgecolor"]
+            elif 'marker' not in local_kwargs or local_kwargs['marker'] == 'o':
+                local_kwargs["edgecolors"] = 'None'
+
+            if "c" not in local_kwargs:
+                if datafile.get("color", None):
+                    local_kwargs["c"] = datafile["color"]
+                elif unpacked_data_item.get("y", None) is not None:  # i.e. the scatter plot is 3D
+                    local_kwargs["c"] = unpacked_data_item["data"]
                 else:
-                    self.mplkwargs.pop("c", None)
-
-            if datafile["edgecolor"]:
-                edge_color = datafile["edgecolor"]
-            else:
-                edge_color = "None"
+                    local_kwargs["c"] = colors[i % len(colors)]
 
             x_coords = unpacked_data_item["x"]
 
@@ -41,9 +47,7 @@ class Scatter_Plot(Generic_Plot):
                 y_coords = unpacked_data_item["data"]
 
             self.color_axis.append(
-                self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
-                                              **self.mplkwargs))
-
+                self.matplotlib.scatter(x_coords, y_coords, *self.mplargs, **local_kwargs))
 
     def calculate_axis_limits(self, axis, min_val, max_val):
         """
@@ -108,9 +112,9 @@ class Scatter_Plot(Generic_Plot):
         legend_titles = []
         datagroups = self.plot_args["datagroups"]
         for i, item in enumerate(self.packed_data_items):
-            if datagroups is not None and datagroups[i]["label"]:
+            if datagroups is not None and "label" in datagroups[i]:
                 legend_titles.append(datagroups[i]["label"])
             else:
                 legend_titles.append(item.long_name)
-        legend = self.matplotlib.legend(self.color_axis, legend_titles, loc="best", scatterpoints=1, markerscale=0.5)
+        legend = self.matplotlib.legend(self.color_axis, legend_titles, loc="best", scatterpoints=1)
         legend.draggable(state=True)

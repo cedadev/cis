@@ -63,11 +63,11 @@ class Histogram_2D(Generic_Plot):
         min_val = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
         max_val = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
         data = array([min_val, max_val])
-        bin_edges = calculate_histogram_bin_edges(data, "x", self.plot_args["xrange"], self.plot_args["xbinwidth"],
-                                                  self.plot_args["logx"])
+        bin_edges = calculate_histogram_bin_edges(data, "x", self.plot_args["xmin"], self.plot_args["xmax"],
+                                                  self.plot_args["xbinwidth"], self.plot_args["logx"])
 
-        self.plot_args["xrange"]["xmin"] = bin_edges.min()
-        self.plot_args["xrange"]["xmax"] = bin_edges.max()
+        self.plot_args["xmin"] = bin_edges.min()
+        self.plot_args["xmax"] = bin_edges.max()
 
         return bin_edges
 
@@ -122,7 +122,7 @@ class Histogram_2D(Generic_Plot):
         elif axis == "y":
             tick_method = self.matplotlib.yticks
 
-        if self.plot_args.get(axis + "tickangle", None) is None:
+        if self.plot_args[axis + "tickangle"] is None:
             angle = None
         else:
             angle = self.plot_args[axis + "tickangle"]
@@ -137,8 +137,6 @@ class Histogram_2D(Generic_Plot):
         :param axis: The axis to apply the limits to
         """
         # Need to ensure that frequency starts from 0
-        if 'yrange' in self.plot_args:
-            ymin = self.plot_args['yrange'].get('ymin', 0)
-            self.plot_args['yrange']['ymin'] = 0 if ymin < 0 else ymin
+        self.plot_args['ymin'] = 0 if self.plot_args['ymin'] < 0 else self.plot_args['ymin']
 
         super(Histogram_2D, self).apply_axis_limits()

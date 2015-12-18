@@ -7,11 +7,11 @@ from cis.plotting.generic_plot import Generic_Plot
 
 class Heatmap(Generic_Plot):
 
-    def __init__(self, packed_data_items, plot_args, *mplargs, **mplkwargs):
+    def __init__(self, ax, packed_data_items, plot_args, *mplargs, **mplkwargs):
         # Do this here because if this is ungridded data, we won't be able to complete the super() call
         if not packed_data_items[0].is_gridded:
             raise UserPrintableException("Heatmap can only be plotted for gridded data")
-        super(Heatmap, self).__init__(packed_data_items, plot_args, *mplargs, **mplkwargs)
+        super(Heatmap, self).__init__(ax, packed_data_items, plot_args, *mplargs, **mplkwargs)
 
     def plot(self):
         """
@@ -29,9 +29,9 @@ class Heatmap(Generic_Plot):
         self.mplkwargs['cmap'] = self.plot_args['datagroups'][self.datagroup]['cmap']
 
         if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
-            self.plot_args["valrange"]["vmin"] = self.plot_args['datagroups'][self.datagroup]['cmin']
+            self.plot_args["vmin"] = self.plot_args['datagroups'][self.datagroup]['cmin']
         if self.plot_args['datagroups'][self.datagroup]['cmax'] is not None:
-            self.plot_args["valrange"]["vmax"] = self.plot_args['datagroups'][self.datagroup]['cmax']
+            self.plot_args["vmax"] = self.plot_args['datagroups'][self.datagroup]['cmax']
 
         # if self.is_map():
         #     self.mplkwargs["latlon"] = True

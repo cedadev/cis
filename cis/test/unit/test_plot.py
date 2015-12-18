@@ -142,6 +142,10 @@ class TestHeatMap(unittest.TestCase):
                  }
     kwargs = {}
 
+    def setUp(self):
+        import matplotlib.pyplot as plt
+        self.fig, self.ax = plt.subplots()
+
     def test_lat_lon_increasing_no_bounds_over_greenwich(self):
         x = np.array([-0.5, 0.5])
         y = np.array([50.5, 51.5])
@@ -163,7 +167,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.plot_args)
+        map = Heatmap(self.ax, [data], self.plot_args)
         map.plot()
 
     def test_lat_lon_increasing_no_bounds(self):
@@ -187,7 +191,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.plot_args)
+        map = Heatmap(self.ax, [data], self.plot_args)
         map.plot()
 
     def test_lat_lon_decreasing_no_bounds(self):
@@ -211,7 +215,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.plot_args)
+        map = Heatmap(self.ax, [data], self.plot_args)
         map.plot()
 
     def test_wide_longitude(self):
@@ -229,7 +233,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.plot_args)
+        map = Heatmap(self.ax, [data], self.plot_args)
         map.plot()
 
     def test_longitude_0_360(self):
@@ -247,5 +251,5 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.plot_args)
+        map = Heatmap(self.ax, [data], self.plot_args)
         map.plot()

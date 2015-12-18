@@ -61,7 +61,6 @@ def plot_cmd(main_arguments):
     """
     from plotting.plot import Plotter
     from cis.data_io.data_reader import DataReader
-    import cis.exceptions as ex
 
     try:
         data = DataReader().read_datagroups(main_arguments.datagroups)
@@ -74,9 +73,6 @@ def plot_cmd(main_arguments):
     main_arguments.pop('command')  # Remove the command argument now it is not needed
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
-
-    main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
-    main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")
 
     try:
         Plotter(data, plot_type, output, **main_arguments)

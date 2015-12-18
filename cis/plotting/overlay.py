@@ -69,28 +69,28 @@ class Overlay(Generic_Plot):
         """
         from cis.plotting.formatter import LogFormatterMathtextSpecial
 
-        step = self.plot_args["valrange"].get("vstep", None)
+        step = self.plot_args["vstep"]
         if step is None:
             ticks = None
         else:
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
 
-        if self.plot_args.get("logv", False):
+        if self.plot_args["logv"]:
             formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
         else:
             formatter = None
         #
         scale = self.plot_args["cbarscale"]
+        orientation = self.plot_args["cbarorient"]
         if scale is None:
-            orientation = self.plot_args.get("cbarorient", "vertical")
             default_scales = {"horizontal": 1.0, "vertical": 0.55}
             scale = default_scales.get(orientation, 1.0)
         else:
             scale = float(scale)
 
         for i, color_axis in enumerate(self.color_axis):
-            cbar = self.matplotlib.colorbar(color_axis, orientation=self.plot_args["cbarorient"], ticks=ticks,
+            cbar = self.matplotlib.colorbar(color_axis, orientation=orientation, ticks=ticks,
                                             shrink=scale, format=formatter)
 
             if not self.plot_args["logv"]:

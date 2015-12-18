@@ -11,7 +11,6 @@ class Histogram_3D(Generic_Plot):
         Requires two data items.
         The first data item is plotted on the x axis, and the second on the y axis
         """
-        from numpy.ma import MaskedArray
         from cis.utils import apply_intersection_mask_to_two_arrays
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) == 2:
@@ -22,9 +21,9 @@ class Histogram_3D(Generic_Plot):
             ybins = self.calculate_bin_edges("y")
 
             # All bins that have count less than cmin will not be displayed
-            cmin = self.plot_args["valrange"].get("vmin", None)
+            cmin = self.plot_args["vmin"]
             # All bins that have count more than cmax will not be displayed
-            cmax = self.plot_args["valrange"].get("vmax", None)
+            cmax = self.plot_args["vmax"]
 
             # Add y=x line
             min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
@@ -72,11 +71,11 @@ class Histogram_3D(Generic_Plot):
         elif axis == "y":
             data = self.unpacked_data_items[1]["data"]
 
-        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "range"],
+        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "min"], self.plot_args[axis + "max"],
                                                   self.plot_args[axis + "binwidth"], self.plot_args["log" + axis])
 
-        self.plot_args[axis + "range"][axis + "min"] = bin_edges.min()
-        self.plot_args[axis + "range"][axis + "max"] = bin_edges.max()
+        self.plot_args[axis + "min"] = bin_edges.min()
+        self.plot_args[axis + "max"] = bin_edges.max()
 
         return bin_edges
 
@@ -117,7 +116,7 @@ class Histogram_3D(Generic_Plot):
         """
         Adds a color bar to the plot and labels it as "Frequency"
         """
-        step = self.plot_args["valrange"].get("vstep", None)
+        step = self.plot_args["vstep"]
         if step is None:
             ticks = None
         else:
@@ -142,23 +141,23 @@ class Histogram_3D(Generic_Plot):
             tick_method = self.matplotlib.yticks
             item_index = 1
 
-        if self.plot_args.get(axis + "tickangle", None) is None:
+        if self.plot_args[axis + "tickangle"] is None:
             angle = None
         else:
             angle = self.plot_args[axis + "tickangle"]
 
-        if self.plot_args[axis + "range"].get(axis + "step") is not None:
-            step = self.plot_args[axis + "range"][axis + "step"]
+        if self.plot_args[axis + "step"] is not None:
+            step = self.plot_args[axis + "step"]
 
-            if self.plot_args[axis + "range"].get(axis + "min") is None:
+            if self.plot_args[axis + "min"] is None:
                 min_val = self.unpacked_data_items[item_index]["data"].min()
             else:
-                min_val = self.plot_args[axis + "range"][axis + "min"]
+                min_val = self.plot_args[axis + "min"]
 
-            if self.plot_args[axis + "range"].get(axis + "max") is None:
+            if self.plot_args[axis + "max"] is None:
                 max_val = self.unpacked_data_items[item_index]["data"].max()
             else:
-                max_val = self.plot_args[axis + "range"][axis + "max"]
+                max_val = self.plot_args[axis + "max"]
 
             ticks = arange(min_val, max_val + step, step)
 
