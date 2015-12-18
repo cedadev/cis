@@ -96,10 +96,9 @@ class TestUtils(unittest.TestCase):
         from numpy import array
 
         data = array([0.0, 1.0, 2.0, 3.0])
-        val_range = {}
         step = 0.7
 
-        bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
+        bin_edges = calculate_histogram_bin_edges(data, "x", None, None, step)
         eq_(len(bin_edges), 5)
         eq_(bin_edges.min(), data.min())
         assert (bin_edges.max() < data.max())
@@ -108,10 +107,9 @@ class TestUtils(unittest.TestCase):
         from numpy import array
 
         data = array([0.0, 1.0, 2.0, 3.0])
-        val_range = {"xmin": 0.3}
         step = None
 
-        bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
+        bin_edges = calculate_histogram_bin_edges(data, "x", 0.3, None, step)
         eq_(len(bin_edges), 11)  # 11 edges = 10 bins
         eq_(bin_edges.min(), 0.3)
         assert (abs(bin_edges.max() - data.max()) < 1.e-7)  # 1.e-7 is approx 0
@@ -120,10 +118,9 @@ class TestUtils(unittest.TestCase):
         from numpy import array
 
         data = array([0.0, 1.0, 2.0, 3.0])
-        val_range = {"xmax": 2.3}
         step = None
 
-        bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
+        bin_edges = calculate_histogram_bin_edges(data, "x", None, 2.3, step)
         eq_(len(bin_edges), 11)  # 11 edges = 10 bins
         eq_(bin_edges.min(), data.min())
         assert (abs(bin_edges.max() - 2.3) < 1.e-7)  # 1.e-7 is approx 0'''
@@ -132,10 +129,9 @@ class TestUtils(unittest.TestCase):
         from numpy import array
 
         data = array([0.0, 1.0, 2.0, 3.0])
-        val_range = {"xmin": 0.3, "xmax": 2.3}
         step = None
 
-        bin_edges = calculate_histogram_bin_edges(data, "x", val_range, step)
+        bin_edges = calculate_histogram_bin_edges(data, "x", 0.3, 2.3, step)
         eq_(len(bin_edges), 11)  # 11 edges = 10 bins
         assert (abs(bin_edges.min() - 0.3) < 1.e-7)  # 1.e-7 is approx 0
         assert (abs(bin_edges.max() - 2.3) < 1.e-7)  # 1.e-7 is approx 0

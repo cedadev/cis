@@ -8,7 +8,7 @@ from unittest import TestCase
 import os
 
 from hamcrest import is_, assert_that, contains_inanyorder
-from nose.tools import eq_
+from nose.tools import eq_, raises
 
 from cis.parse import parse_args, expand_file_list
 from cis.plotting.plot import Plotter
@@ -166,6 +166,7 @@ class TestParse(ParseTestFiles):
             if e.code != 2:
                 raise e
 
+    @raises(argparse.ArgumentTypeError)
     def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
         dummy_cis_out = 'out.nc'
         args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", dummy_cis_out[:-3]],

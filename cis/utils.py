@@ -43,7 +43,7 @@ def concatenate(arrays, axis=0):
     return res
 
 
-def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale=False):
+def calculate_histogram_bin_edges(data, axis, user_min, user_max, step, log_scale=False):
     """
     :param data: A numpy array
     :param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
@@ -57,8 +57,8 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale=False)
     import logging
     import sys
 
-    min_val = user_range.get(axis + "min", data.min())
-    max_val = user_range.get(axis + "max", data.max())
+    min_val = user_min or data.min()
+    max_val = user_max or data.max()
 
     val_range = float(max_val - min_val)
 

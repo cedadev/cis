@@ -2,7 +2,7 @@ from collections import namedtuple
 import datetime
 import re
 from cis.time_util import cis_standard_time_unit
-
+import argparse
 
 def parse_datetimestr_to_std_time(s):
     import dateutil.parser as du
@@ -43,24 +43,6 @@ def _parse_datetime(dt_string):
     datetime.datetime(*tmp_components)
 
     return dt_components
-
-
-def parse_datetime(dt_string, name, parser):
-    """Parse a date/time string from the command line, reporting parse errors.
-
-    The string should be in an ISO 8601 format except that the date and time
-    parts may be separated by a space or colon instead of T.
-    :param dt_string: String to parse
-    :param name:      A description of the argument used for error messages
-    :param parser:    The parser used to report errors
-    :return: datetime value
-    """
-    try:
-        dt = _parse_datetime(dt_string)
-    except ValueError:
-        parser.error("'" + dt_string + "' is not a valid " + name)
-        dt = None
-    return dt
 
 
 def date_delta_creator(year, month=0, day=0, hour=0, minute=0, second=0):
@@ -130,20 +112,21 @@ def _parse_datetime_delta(dt_string):
     return date_delta_creator(*times)
 
 
-def parse_datetime_delta(dt_string, name, parser):
-    """Parse a date/time delta string from the command line, reporting parse errors.
-
-    :param dt_string: String to parse
-    :param name:      A description of the argument used for error messages
-    :param parser:    The parser used to report errors
-    :return: timedelta value
+def _datetime_delta_to_float_days(delta):
     """
-    try:
-        dt = _parse_datetime_delta(dt_string)
-    except ValueError:
-        parser.error("'" + dt_string + "' is not a valid " + name)
-        dt = None
-    return dt
+    Converts a datetime delta into a fractional day
+    :param delta: the datetime delta to be converted
+    :return: a float representation of a day
+    """
+    from datetime import timedelta
+
+    sec = 1.0/(24.0*60.0*60.0)  # Conversion from sec to day
+
+    days = delta.day + delta.month*365.2425/12.0 + delta.year*365.2425
+
+    td = timedelta(days=days, hours=delta.hour, minutes=delta.minute, seconds=delta.second)
+
+    return td.total_seconds()*sec
 
 
 def parse_datetimestr_delta_to_float_days(string):
@@ -152,62 +135,33 @@ def parse_datetimestr_delta_to_float_days(string):
     :param string: string to be parsed
     :return: a float representation of a day
     """
-    from datetime import timedelta
 
     date_delta = _parse_datetime_delta(string)
-
-    sec = 1.0/(24.0*60.0*60.0)  # Conversion from sec to day
-
-    days = date_delta.day + date_delta.month*365.2425/12.0 + date_delta.year*365.2425
-
-    td = timedelta(days=days, hours=date_delta.hour, minutes=date_delta.minute, seconds=date_delta.second)
-
-    return td.total_seconds()*sec
+    return _datetime_delta_to_float_days(date_delta)
 
 
-def parse_as_number_or_datetime(in_string, name, parser):
+def parse_as_number_or_datetime(string):
     """Parse a string as a number from the command line, or if that fails, as a datetime, reporting parse errors.
 
     The string should be in an ISO 8601 format except that the date and time
     parts may be separated by a space or colon instead of T.
     :param in_string: String to parse
-    :param name:      A description of the argument used for error messages
-    :param parser:    The parser used to report errors
     :return: int, or float value (possibly converted to the standard time from a time string)
     """
-    import dateutil.parser as du
     try:
-        ret = int(in_string)
+        ret = int(string)
     except ValueError:
         try:
-            ret = float(in_string)
+            ret = float(string)
         except ValueError:
             try:
-                ret = _parse_datetime(in_string)
+                ret = _parse_datetime(string)
             except ValueError:
                 try:
-                    ret = _parse_datetime_delta(in_string)
+                    ret = _parse_datetime_delta(string)
                 except ValueError:
-                    parser.error("'" + in_string + "' is not a valid " + name)
-                    ret = None
+                    raise argparse.ArgumentTypeError("'{}' is not a valid value.".format(string))
     return ret
-
-
-def parse_as_float_or_time_delta(arg, name, parser):
-    if arg:
-        try:
-            # First try and parse as a float
-            arg = float(arg)
-        except ValueError:
-            # Then try and parse as a timedelta
-            try:
-                arg = parse_datetimestr_delta_to_float_days(arg)
-            except ValueError:
-                # Otherwise throw an error
-                parser.error("'" + arg + "' is not a valid " + name)
-        return arg
-    else:
-        return None
 
 
 def convert_datetime_components_to_datetime(dt_components, is_lower_limit):
