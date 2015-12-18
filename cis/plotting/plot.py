@@ -20,6 +20,8 @@ plot_options = {'title': mpl.title,
                 'ylabel': mpl.ylabel,
                 'fontsize': mpl.rcParams.update}
 
+colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+
 
 class Plotter(object):
     plot_types = {"contour": Contour_Plot,

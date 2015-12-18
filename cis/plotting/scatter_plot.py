@@ -7,9 +7,11 @@ class Scatter_Plot(Generic_Plot):
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
+        from cis.plotting.plot import colors
+
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            datafile = self.plot_args["datagroups"][self.datagroup]
+            datafile = self.plot_args["datagroups"][i]
             if datafile["itemstyle"]:
                 self.mplkwargs["marker"] = datafile["itemstyle"]
             else:
@@ -22,12 +24,14 @@ class Scatter_Plot(Generic_Plot):
                 if unpacked_data_item.get("y", None) is not None:  # i.e. the scatter plot is 3D
                     self.mplkwargs["c"] = unpacked_data_item["data"]
                 else:
-                    self.mplkwargs.pop("c", None)
+                    self.mplkwargs["c"] = colors[i % len(colors)]
 
             if datafile["edgecolor"]:
-                edge_color = datafile["edgecolor"]
+                self.mplkwargs['edgecolors'] = datafile["edgecolor"]
+            elif 'marker' not in self.mplkwargs or self.mplkwargs['marker'] == 'o':
+                self.mplkwargs['edgecolors'] = "None"
             else:
-                edge_color = "None"
+                self.mplkwargs.pop('edgecolors', None)
 
             x_coords = unpacked_data_item["x"]
 
@@ -41,8 +45,7 @@ class Scatter_Plot(Generic_Plot):
                 y_coords = unpacked_data_item["data"]
 
             self.color_axis.append(
-                self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
-                                              **self.mplkwargs))
+                self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, *self.mplargs, **self.mplkwargs))
 
 
     def calculate_axis_limits(self, axis, min_val, max_val):
