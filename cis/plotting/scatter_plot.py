@@ -8,6 +8,7 @@ class Scatter_Plot(Generic_Plot):
         Stores the plot in a list to be used for when adding the legend
         """
         from cis.plotting.plot import colors
+        from cis.exceptions import InvalidDimensionError
 
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
@@ -22,6 +23,9 @@ class Scatter_Plot(Generic_Plot):
             self.mplkwargs["c"] = datafile.get("color", None)
             if self.mplkwargs["c"] is None:
                 if unpacked_data_item.get("y", None) is not None:  # i.e. the scatter plot is 3D
+                    if unpacked_data_item["y"].size != unpacked_data_item["data"].size:
+                        raise InvalidDimensionError("The plot axes are incompatible, please check and specify at least "
+                                                    "one axis manually.")
                     self.mplkwargs["c"] = unpacked_data_item["data"]
                 else:
                     self.mplkwargs["c"] = colors[i % len(colors)]

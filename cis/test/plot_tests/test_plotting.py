@@ -5,7 +5,9 @@ from cis.cis_main import plot_cmd
 from cis.parse import parse_args
 from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
-from unittest import skip
+from cis.data_io.products.AProduct import ProductPluginException
+from cis.exceptions import InvalidDimensionError
+from nose.tools import raises
 
 import shutil
 import logging
@@ -658,6 +660,88 @@ class TestPlotVisual(VisualTest):
         opts = []
 
         arguments = ["plot", valid_aerosol_cci_variable + ":" + valid_aerosol_cci_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_aeronet_default_axes(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        arguments = ["plot", valid_aeronet_variable + ":" + valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_multiple_time_series_default_axes(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        arguments = ["plot", valid_aeronet_variable + ":" + another_valid_aeronet_filename,
+                     'AOT_440:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc')]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    @raises(InvalidDimensionError)
+    def test_multiple_time_series_incompatible_axes_line(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ['--type=line']
+
+        # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
+        #  correspond to the other aeronet file, so this should be caught and related to the user.
+        arguments = ["plot", 'AOT_440_std_dev:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc'),
+                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    @raises(InvalidDimensionError)
+    def test_multiple_time_series_incompatible_axes_scatter(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ['--type=scatter']
+
+        # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
+        #  correspond to the other aeronet file, so this should be caught and related to the user.
+        arguments = ["plot", 'AOT_440_std_dev:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc'),
+                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_multiple_time_series_default_axes_files_with_named_xaxis(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ['--xaxis=time']
+
+        arguments = ["plot", 'AOT_440_std_dev:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc'),
+                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    @raises(ProductPluginException)
+    def test_aeronet_multiple_variable_plots(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        # Plotting doesn't support multiple variables
+        arguments = ["plot", "AOT_532,AOT_551" + ":" + valid_aeronet_filename]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
