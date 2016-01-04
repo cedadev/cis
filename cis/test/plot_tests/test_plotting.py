@@ -8,6 +8,8 @@ from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.data_io.products.AProduct import ProductPluginException
 from cis.exceptions import InvalidDimensionError
 from nose.tools import raises
+from unittest import skipIf
+from sys import platform
 
 import shutil
 import logging
@@ -21,6 +23,7 @@ _DISPLAY_FIGURES = False
 
 plt.switch_backend('agg')
 
+skip_osx = skipIf(platform == 'darwin', 'Binary install of shapely is creating a number of failing tests on OS X.')
 
 class VisualTest(BaseIntegrationTest):
 
@@ -63,10 +66,8 @@ class VisualTest(BaseIntegrationTest):
                                   'current working directory you have write '
                                   'access to to avoid this issue.')
                 else:
-                    image_output_directory = os.path.join(
-                        os.getcwd(), 'result_image_comparison')
-            result_fname = os.path.join(image_output_directory,
-                                        'result-' + test_id + '.png')
+                    image_output_directory = os.path.join(os.getcwd(), 'result_image_comparison')
+            result_fname = os.path.join(image_output_directory, test_id + '.png')
 
             if not os.path.isdir(os.path.dirname(result_fname)):
                 # Handle race-condition where the directories are
@@ -116,6 +117,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contour(self):
         arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "contour",
                      "--xlabel", "Overidden X Label", "--title", "Overidded Title",
@@ -127,6 +129,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contourf(self):
         arguments = ["plot", "rain:" + valid_2d_filename, "--type", "contourf",
                      "--ylabel", "Overidden Y Label", "--height", "5", "--width", "10", "--ymin", "15", "--ymax", "45",
@@ -518,6 +521,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contour_over_heatmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
@@ -530,6 +534,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contour_over_heatmap_binary_cmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
@@ -542,6 +547,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_transparent_contour_over_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5" \
@@ -554,6 +560,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_filled_contour_over_scatter(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
@@ -568,6 +575,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_filled_contour_over_scatter_with_cmin(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180" \
