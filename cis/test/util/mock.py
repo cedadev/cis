@@ -665,6 +665,28 @@ def make_dummy_2d_points_list(num):
     return [get_random_2d_point() for i in xrange(0, num)]
 
 
+def make_dummy_ungridded_data_time_series(len=10):
+    """
+    Create a time series of ungridded data of length len, with a single lat/lon coordinate (65.2, -12.1)
+    :param len: length of teh time series and associated data
+    :return:
+    """
+    from datetime import datetime, timedelta
+    from cis.data_io.Coord import Coord, CoordList
+    from cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    t0 = datetime(1984, 8, 27)
+    times = np.array([t0 + timedelta(days=d) for d in xrange(len)])
+
+    x = Coord(np.zeros(len) + 65.2, Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(np.zeros(len) - 12.1, Metadata(standard_name='longitude', units='degrees'))
+    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'), axis='x')
+    data = np.arange(len) + 1.0
+
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), CoordList([x, y, t]))
+
+
 def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None,
                                            mask=None):
     from cis.data_io.Coord import CoordList, Coord
