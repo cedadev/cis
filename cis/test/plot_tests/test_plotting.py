@@ -696,8 +696,9 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = []
 
+        # This guesses the axes based on the first datagroup, and then the second one based on the shape.
         arguments = ["plot", valid_aeronet_variable + ":" + another_valid_aeronet_filename,
-                     'AOT_440:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc')]
+                     'AOT_440:' + aggregated_aeronet_filename]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -712,7 +713,7 @@ class TestPlotVisual(VisualTest):
 
         # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
         #  correspond to the other aeronet file, so this should be caught and related to the user.
-        arguments = ["plot", 'AOT_440_std_dev:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc'),
+        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
                      valid_aeronet_variable + ":" + another_valid_aeronet_filename]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -728,7 +729,7 @@ class TestPlotVisual(VisualTest):
 
         # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
         #  correspond to the other aeronet file, so this should be caught and related to the user.
-        arguments = ["plot", 'AOT_440_std_dev:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc'),
+        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
                      valid_aeronet_variable + ":" + another_valid_aeronet_filename]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -741,7 +742,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = ['--xaxis=time']
 
-        arguments = ["plot", 'AOT_440_std_dev:' + os.path.join(data_directory, 'Abracos_Hill_AOT_6_hourly.nc'),
+        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
                      valid_aeronet_variable + ":" + another_valid_aeronet_filename]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
