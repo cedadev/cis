@@ -8,6 +8,9 @@ iris=1.8.1
 scipy=0.16.0
 pandas
 
+# This is a fix for a cartopy incompatibility
+shapely=1.5.12
+
 # IO Dependencies
 hdf4
 hdf5
