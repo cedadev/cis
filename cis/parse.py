@@ -738,15 +738,15 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
 
     if min_val is not None:
         dt = parse_as_number_or_datetime(min_val, range_axis + "min", parser)
-        if isinstance(dt, datetime.datetime):
-            ax_range[range_axis + "min"] = convert_datetime_to_std_time(dt)
+        if isinstance(dt, list):
+            ax_range[range_axis + "min"] = convert_datetime_to_std_time(datetime.datetime(*dt))
         else:
             ax_range[range_axis + "min"] = dt
 
     if max_val is not None:
         dt = parse_as_number_or_datetime(max_val, range_axis + "max", parser)
-        if isinstance(dt, datetime.datetime):
-            ax_range[range_axis + "max"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
+        if isinstance(dt, list):
+            ax_range[range_axis + "max"] = convert_datetime_to_std_time(datetime.datetime(*dt))
         else:
             ax_range[range_axis + "max"] = dt
     if step is not None:

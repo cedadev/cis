@@ -680,6 +680,17 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_setting_xrange_using_datetimes(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ["--xmin=2003-08-01",  "--xmax=2003-12-01T12:30:12"]
+
+        arguments = ["plot", valid_aeronet_variable + ":" + valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
     def test_aeronet_default_axes(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = []
