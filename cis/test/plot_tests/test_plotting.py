@@ -92,7 +92,13 @@ class VisualTest(BaseIntegrationTest):
                 logging.warn('Created image for test %s' % test_id)
                 shutil.copy2(result_fname, expected_fname)
 
-            err = mcompare.compare_images(expected_fname, result_fname, tol=tol)
+            try:
+                err = mcompare.compare_images(expected_fname, result_fname, tol=tol)
+            except ValueError:
+                failed_name = mcompare.make_test_filename(result_fname, 'failed-diff')
+                shutil.copy2(os.path.join(os.path.dirname(__file__),
+                                          'reference', 'kitten.png'), failed_name)
+                err = "Images differ in size and so are not comparable"
 
             if _DISPLAY_FIGURES:
                 if err:
