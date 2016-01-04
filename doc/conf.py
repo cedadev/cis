@@ -17,7 +17,7 @@ import sys
 import os
 
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib.pyplot', 'scipy', 'iris', 'netCDF4', 'nose',
-                'psutil', 'pyhdf', 'iris.cube', 'iris.exceptions', 'iris.unit', 'scipy.stats',
+                'psutil', 'pyhdf', 'iris.cube', 'iris.exceptions', 'cf_units', 'scipy.stats',
                 'iris.analysis', 'iris.std_names', 'iris.coords', 'scipy.stats.mstats', 'iris.coord_categorisation',
                 'iris.analysis.interpolate', 'iris.analysis.cartography', 'numpy.ma', 'scipy.sparse', 'iris.util',
                 'matplotlib.cbook', 'matplotlib.ticker', 'matplotlib']

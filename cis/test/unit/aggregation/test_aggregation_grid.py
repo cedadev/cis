@@ -6,14 +6,14 @@ from nose.tools import assert_equal, with_setup
 import numpy as np
 from cis.aggregation.aggregator import categorise_coord_function
 from cis.parse_datetime import date_delta_creator
-import iris.unit
+from cf_units import Unit, CALENDAR_STANDARD
 import iris.coords
 
 
 class TestCategoriseCoordFunctionForTime:
 
     def __init__(self):
-        self.u = iris.unit.Unit('days since 1600-01-01 00:00:00', calendar=iris.unit.CALENDAR_STANDARD)
+        self.u = Unit('days since 1600-01-01 00:00:00', calendar=CALENDAR_STANDARD)
         self.points = np.arange(1, 5, 1)
         self.coord = iris.coords.DimCoord(self.points, units=self.u)
         self.start = datetime.datetime(2000, 1, 1)
@@ -77,7 +77,7 @@ class TestCategoriseCoordFunctionForTime:
 class TestCategoriseCoordFunctionForSpatial:
 
     def __init__(self):
-        self.u = iris.unit.Unit('hPa')
+        self.u = Unit('hPa')
         self.points = np.arange(1, 5, 1)
         self.coord = iris.coords.DimCoord(self.points, units=self.u)
         self.start = 1

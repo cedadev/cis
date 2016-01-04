@@ -1,7 +1,7 @@
 import logging
 
 from iris.exceptions import IrisError
-import iris.unit
+from cf_units import Unit
 import iris.util
 
 from cis.data_io.data_reader import DataReader
@@ -129,10 +129,10 @@ class Subset(object):
         """Converts a datetime to be in the unit of a specified Coord.
         """
         if isinstance(coord, iris.coords.Coord):
-            # The unit class is then iris.unit.Unit.
+            # The unit class is then cf_units.Unit.
             iris_unit = coord.units
         else:
-            iris_unit = iris.unit.Unit(coord.units)
+            iris_unit = Unit(coord.units)
         return iris_unit.date2num(dt)
 
     @staticmethod
@@ -140,10 +140,10 @@ class Subset(object):
         """Converts a datetime to be in the unit of a specified Coord.
         """
         if isinstance(coord, iris.coords.Coord):
-            # The unit class is then iris.unit.Unit.
+            # The unit class is then cf_units.Unit.
             iris_unit = coord.units
         else:
-            iris_unit = iris.unit.Unit(coord.units)
+            iris_unit = Unit(coord.units)
         return iris_unit.num2date(dt)
 
     @staticmethod
