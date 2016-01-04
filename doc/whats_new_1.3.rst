@@ -36,3 +36,9 @@ Bugs fixed
    coordinate is not found.
  * JASCIS-275 - The ungridded subsetting is now done array-wise rather than element wise giving large performance
    improvements
+
+CIS 1.3.1 fixes
+===============
+ * JASCIS-231 & JASCIS-209 - CIS now better determines the yaxis when the user specifies the xaxis as 'time' so that overlaying multiple    time series is easy
+ * JASCIS-283 - An issue with setting xmin or xmax using datetimes
+ * A minor fix to the AerosolCCI product
