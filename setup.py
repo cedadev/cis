@@ -70,7 +70,7 @@ setup(
         ],
     packages=find_packages(),
     package_data={'': ['logging.conf']},
-    data_files=[('', ['plotting/raster/*.png'])],
+    data_files=[('', ['cis/plotting/raster/*.png'])],
     scripts=['bin/cis', 'bin/cis.lsf'],
     cmdclass={"checkdep": check_dep,
               "test": nose_test},
