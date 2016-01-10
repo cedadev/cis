@@ -46,7 +46,7 @@ class SubsetConstraint(SubsetConstraintInterface):
         if dim_min is not None or dim_max is not None:
             logging.info("Setting limit for dimension '%s' [%s, %s]", coord.name(), str(dim_min), str(dim_max))
             self._limits[coord.name()] = CoordLimits(coord, dim_min, dim_max,
-                                                     lambda x: dim_min <= x <= dim_max)
+                                                     lambda x: dim_min <= x.point <= dim_max)
 
     def __str__(self):
         limit_strs = []
