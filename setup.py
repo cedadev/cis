@@ -69,7 +69,7 @@ setup(
         'Environment :: Console',
         ],
     packages=find_packages(),
-    package_data={'': ['logging.conf']},
+    package_data={'': ['logging.conf'], '': ['plotting/raster/*.png']},
     scripts=['bin/cis', 'bin/cis.lsf'],
     cmdclass={"checkdep": check_dep,
               "test": nose_test},
