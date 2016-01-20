@@ -579,11 +579,12 @@ class li(Kernel):
             self.interpolator = iris.analysis.Linear(self.extrapolation_mode).interpolator(data, self.coord_names)
 
         # Return the data from the result of interpolating over those coordinates which are on the cube.
-        slice = self.interpolator([getattr(point, c) for c in self.coord_names])
         if self.hybrid_coord:
-            val = slice.interpolate([(self.hybrid_coord, getattr(point, self.hybrid_coord))], self.vertical_interp).data
+            slice = self.interpolator([getattr(point, c) for c in self.coord_names])
+            interp = self.vertical_interp.interpolator(slice, [self.hybrid_coord])
+            val = interp._points([getattr(point, self.hybrid_coord)], slice.data)
         else:
-            val = slice.data
+            val = self.interpolator._points([getattr(point, c) for c in self.coord_names], data.data)
         return val
 
 
