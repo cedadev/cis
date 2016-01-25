@@ -596,6 +596,19 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_scatter_over_contour(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
+               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --itemwidth=3".split() + \
+               ["--title=Overlay test"]
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=contour" ,
+                     "snow:" + valid_2d_filename + ":type=scatter,itemstyle=^,label=snowlabel"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
     def test_iris_scatter_overlay(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
@@ -755,6 +768,18 @@ class TestPlotVisual(VisualTest):
 
         arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
                      valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_plotting_heatmap_of_aggregated_ungridded_data(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        # opts = ['--xmin=-0.5', '--xmax=360']
+        opts = []
+
+        arguments = ["plot", 'AOD550:' + make_pathname('aggregated_aerosol_cci.nc')]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
