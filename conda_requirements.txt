@@ -8,9 +8,6 @@ iris
 scipy
 pandas
 
-# This is a fix for a cartopy incompatibility
-# shapely=1.5.12
-
 # IO Dependencies
 hdf4
 hdf5
