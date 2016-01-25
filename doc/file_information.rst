@@ -2,7 +2,7 @@
 Getting file information
 ========================
 
-Running `` ./cis.py info $filenames `` will print a list of the variables available in those files such as::
+Running ``$ cis info <filenames>`` will print a list of the variables available in those files such as::
 
   Trop
   latitude
@@ -16,7 +16,7 @@ Running `` ./cis.py info $filenames `` will print a list of the variables availa
 
 To get more specific information about a given variable, simply run::
 
-  $ ./cis.py info $filenames --variable $var1 $var2 $var3
+  $ cis info <filenames> -v $var1 $var2 $var3
 
 where ``$var1``, ``$var2`` and ``$var3`` are the names of the variables to get the information for.
 

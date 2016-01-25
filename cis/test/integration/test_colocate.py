@@ -542,6 +542,21 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    def test_NetCDF_Gridded_onto_Aeronet_lin(self):
+        # Takes 4s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = valid_aeronet_filename
+        sample_var = valid_aeronet_variable
+        collocator_and_opts = 'lin,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+
     def test_NetCDF_Gridded_onto_GASSP(self):
         # Takes 1s
         vars = valid_echamham_variable_1, valid_echamham_variable_2

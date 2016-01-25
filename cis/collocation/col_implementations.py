@@ -579,11 +579,12 @@ class li(Kernel):
             self.interpolator = iris.analysis.Linear(self.extrapolation_mode).interpolator(data, self.coord_names)
 
         # Return the data from the result of interpolating over those coordinates which are on the cube.
-        slice = self.interpolator([getattr(point, c) for c in self.coord_names])
         if self.hybrid_coord:
-            val = slice.interpolate([(self.hybrid_coord, getattr(point, self.hybrid_coord))], self.vertical_interp).data
+            slice = self.interpolator([getattr(point, c) for c in self.coord_names])
+            interp = self.vertical_interp.interpolator(slice, [self.hybrid_coord])
+            val = interp._points([getattr(point, self.hybrid_coord)], slice.data)
         else:
-            val = slice.data
+            val = self.interpolator._points([getattr(point, c) for c in self.coord_names], data.data)
         return val
 
 
@@ -887,7 +888,7 @@ class GeneralGriddedCollocator(Collocator):
         kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
         output = GriddedDataList([])
         for idx, val in enumerate(values):
-            cube = self._create_collocated_cube(points, data, val, output_coords, self.fill_value)
+            cube = self._create_collocated_cube(data, val, output_coords)
             data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
             data_with_nan_and_inf_removed.set_fill_value(self.fill_value)
             cube.data = data_with_nan_and_inf_removed
@@ -917,30 +918,22 @@ class GeneralGriddedCollocator(Collocator):
     def _set_single_value_kernel(self, kernel_val, values, indices):
         values[0][indices] = kernel_val
 
-    def _create_collocated_cube(self, src_cube, src_data, data, coords, fill_value):
+    def _create_collocated_cube(self, src_data, data, coords):
         """Creates a cube using the metadata from the source cube and supplied data.
 
-        :param src_cube: cube of sample points
         :param src_data: ungridded data that was to be collocated
         :param data: collocated data values
         :param coords: coordinates for output cube
-        :param fill_value: value that has been used as the fill value in data
         :return: cube of collocated data
         """
         dim_coords_and_dims = []
         for idx, coord in enumerate(coords):
             dim_coords_and_dims.append((coord, idx))
-        metadata = src_data.metadata
-        metadata.missing_value = fill_value
         cube = GriddedData(data, standard_name=src_data.standard_name,
                            long_name=src_data.long_name,
                            var_name=src_data.var_name,
                            units=src_data.units,
                            dim_coords_and_dims=dim_coords_and_dims)
-        # TODO Check if any other keyword arguments should be set:
-        # cube = iris.cube.Cube(data, standard_name=None, long_name=None, var_name=None, units=None,
-        #                       attributes=None, cell_methods=None, dim_coords_and_dims=None, aux_coords_and_dims=None,
-        #                       aux_factories=None, data_manager=None)
         return cube
 
 

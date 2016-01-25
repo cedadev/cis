@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from nose.tools import istest
-import iris.unit
 import iris.analysis
 
 from cis.data_io.gridded_data import make_from_cube, GriddedDataList

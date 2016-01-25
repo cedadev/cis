@@ -5,7 +5,11 @@ from cis.cis_main import plot_cmd
 from cis.parse import parse_args
 from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
-from unittest import skip
+from cis.data_io.products.AProduct import ProductPluginException
+from cis.exceptions import InvalidDimensionError
+from nose.tools import raises
+from unittest import skipIf
+from sys import platform
 
 import shutil
 import logging
@@ -19,6 +23,7 @@ _DISPLAY_FIGURES = False
 
 plt.switch_backend('agg')
 
+skip_osx = skipIf(platform == 'darwin', 'Binary install of shapely is creating a number of failing tests on OS X.')
 
 class VisualTest(BaseIntegrationTest):
 
@@ -61,8 +66,7 @@ class VisualTest(BaseIntegrationTest):
                                   'current working directory you have write '
                                   'access to to avoid this issue.')
                 else:
-                    image_output_directory = os.path.join(
-                        os.getcwd(), 'result_image_comparison')
+                    image_output_directory = os.path.join(os.getcwd(), 'result_image_comparison')
             result_fname = os.path.join(image_output_directory, test_id + '.png')
 
             if not os.path.isdir(os.path.dirname(result_fname)):
@@ -88,7 +92,13 @@ class VisualTest(BaseIntegrationTest):
                 logging.warn('Created image for test %s' % test_id)
                 shutil.copy2(result_fname, expected_fname)
 
-            err = mcompare.compare_images(expected_fname, result_fname, tol=tol)
+            try:
+                err = mcompare.compare_images(expected_fname, result_fname, tol=tol)
+            except ValueError:
+                failed_name = mcompare.make_test_filename(result_fname, 'failed-diff')
+                shutil.copy2(os.path.join(os.path.dirname(__file__),
+                                          'reference', 'kitten.png'), failed_name)
+                err = "Images differ in size and so are not comparable"
 
             if _DISPLAY_FIGURES:
                 if err:
@@ -113,6 +123,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contour(self):
         arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "contour",
                      "--xlabel", "Overidden X Label", "--title", "Overidded Title",
@@ -124,6 +135,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contourf(self):
         arguments = ["plot", "rain:" + valid_2d_filename, "--type", "contourf",
                      "--ylabel", "Overidden Y Label", "--height", "5", "--width", "10", "--ymin", "15", "--ymax", "45",
@@ -515,6 +527,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contour_over_heatmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
@@ -527,6 +540,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_iris_contour_over_heatmap_binary_cmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
@@ -539,6 +553,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_transparent_contour_over_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5" \
@@ -551,6 +566,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_filled_contour_over_scatter(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
@@ -565,6 +581,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip_osx
     def test_filled_contour_over_scatter_with_cmin(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180" \
@@ -573,6 +590,19 @@ class TestPlotVisual(VisualTest):
         arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter",
                      "solarupclear:" + valid_2d_filename + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
                                               "contfontsize=18,cmap=Reds"]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_scatter_over_contour(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
+               " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal --itemwidth=3".split() + \
+               ["--title=Overlay test"]
+        arguments = ["plot", "rain:" + valid_2d_filename + ":type=contour" ,
+                     "snow:" + valid_2d_filename + ":type=scatter,itemstyle=^,label=snowlabel"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -646,6 +676,123 @@ class TestPlotVisual(VisualTest):
                " --ymin 59 --ymax 61 --itemwidth 10 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_aerosol_cci_default_axes(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        arguments = ["plot", valid_aerosol_cci_variable + ":" + valid_aerosol_cci_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_setting_xrange_using_datetimes(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ["--xmin=2003-08-01",  "--xmax=2003-12-01T12:30:12"]
+
+        arguments = ["plot", valid_aeronet_variable + ":" + valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_aeronet_default_axes(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        arguments = ["plot", valid_aeronet_variable + ":" + valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_multiple_time_series_default_axes(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        # This guesses the axes based on the first datagroup, and then the second one based on the shape.
+        arguments = ["plot", valid_aeronet_variable + ":" + another_valid_aeronet_filename,
+                     'AOT_440:' + aggregated_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    @raises(InvalidDimensionError)
+    def test_multiple_time_series_incompatible_axes_line(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ['--type=line']
+
+        # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
+        #  correspond to the other aeronet file, so this should be caught and related to the user.
+        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
+                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    @raises(InvalidDimensionError)
+    def test_multiple_time_series_incompatible_axes_scatter(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ['--type=scatter']
+
+        # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
+        #  correspond to the other aeronet file, so this should be caught and related to the user.
+        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
+                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_multiple_time_series_default_axes_files_with_named_xaxis(self):
+        # JASCIS-231
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ['--xaxis=time']
+
+        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
+                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_plotting_heatmap_of_aggregated_ungridded_data(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        # opts = ['--xmin=-0.5', '--xmax=360']
+        opts = []
+
+        arguments = ["plot", 'AOD550:' + make_pathname('aggregated_aerosol_cci.nc')]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    @raises(ProductPluginException)
+    def test_aeronet_multiple_variable_plots(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = []
+
+        # Plotting doesn't support multiple variables
+        arguments = ["plot", "AOT_532,AOT_551" + ":" + valid_aeronet_filename]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)

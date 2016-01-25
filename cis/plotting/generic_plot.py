@@ -724,7 +724,11 @@ class Generic_Plot(object):
         from cis.exceptions import NotEnoughAxesSpecifiedError
 
         x_variable = self.get_variable_name("x")
-        y_variable = self.get_variable_name("y")
+
+        if x_variable.lower().endswith('time') and len(self.packed_data_items) > 1:
+            y_variable = 'default'
+        else:
+            y_variable = self.get_variable_name("y")
 
         if x_variable == y_variable:
             specified_axis = "x" if self.plot_args["x_variable"] is not None else "y"

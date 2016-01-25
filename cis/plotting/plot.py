@@ -23,6 +23,8 @@ plot_options = {'title': plt.title,
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
+colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+
 
 class Plotter(object):
     plot_types = {"contour": Contour_Plot,

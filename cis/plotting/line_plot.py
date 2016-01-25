@@ -8,7 +8,9 @@ class Line_Plot(Generic_Plot):
         """
         Plots one or many line graphs
         """
-        self.mplkwargs["linewidth"] = self.plot_args["itemwidth"]
+        from cis.exceptions import InvalidDimensionError
+        self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth",
+                                                                                               1) is not None else 1
 
         self.mplkwargs.pop("vmax", None)
         self.mplkwargs.pop("vmin", None)
@@ -30,6 +32,10 @@ class Line_Plot(Generic_Plot):
                 self.mplkwargs["color"] = datafile["color"]
             else:
                 self.mplkwargs.pop("color", None)
+
+            if unpacked_data_item["x"].shape[0] != unpacked_data_item["data"].shape[0]:
+                raise InvalidDimensionError("The plot axes are incompatible, please check and specify at least one "
+                                            "axis manually.")
 
             self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs)
 
