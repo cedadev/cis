@@ -249,3 +249,21 @@ class TestHeatMap(unittest.TestCase):
         # Test that a plot doesn't fail.
         map = Heatmap([data], self.plot_args)
         map.plot()
+
+    def test_longitude_0_360_one_degree(self):
+        x = np.arange(0.5, 360.5, 1)
+        y = np.array([50.5, 51.5])
+        values = np.arange(len(y) * len(x)).reshape((len(y), len(x)))
+        latitude = DimCoord(y, standard_name='latitude', units='degrees')
+        longitude = DimCoord(x, standard_name='longitude', units='degrees')
+        data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
+        out_x, out_y, out_values = make_color_mesh_cells(data, self.plot_args)
+        x_bounds = np.arange(0, 361, 1)
+        y_bounds = np.array([50, 51, 52])
+        expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
+        assert_arrays_equal(out_x, expected_x)
+        assert_arrays_equal(out_y, expected_y)
+
+        # Test that a plot doesn't fail.
+        map = Heatmap([data], self.plot_args)
+        map.plot()
