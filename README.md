@@ -5,10 +5,10 @@ CIS
 [![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
 [![Downloads](https://anaconda.org/cistools/cis/badges/downloads.svg)](https://anaconda.org/CISTools/cis/files)
 
-v1.3.0 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.35121.svg)](https://zenodo.org/record/35121)
+v1.3.2 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.44573.svg)](http://dx.doi.org/10.5281/zenodo.44573)
 
-CIS is an open source command-line tool for easy collocation, visualization, analysis, and comparison of
-diverse gridded and ungridded datasets used in the atmospheric sciences. Visit our homepage at www.cistools.net.
+CIS is an open source command-line tool for the easy collocation, visualization, analysis, and comparison of a
+diverse set of gridded and ungridded datasets used across earth sciences. Visit our homepage at www.cistools.net.
 
 
 Installation
