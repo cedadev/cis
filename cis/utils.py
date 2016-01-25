@@ -11,33 +11,6 @@ from cis.exceptions import InvalidCommandLineOptionError
 BYTES_IN_A_MB = 1048576.0
 
 
-def convert_masked_array_type(masked_array, new_type, operation, *args, **kwargs):
-    from numpy.ma import getmaskarray
-    converted_arr = np.ma.array(np.zeros(masked_array.shape, dtype=new_type),
-                                mask=masked_array.mask)
-
-    masks = getmaskarray(masked_array)
-    for i, val in np.ndenumerate(masked_array):
-        if not masks[i]:
-            converted_arr[i] = operation(val, *args, **kwargs)
-    return converted_arr
-
-
-def convert_array_type(array, new_type, operation, *args, **kwargs):
-    converted_arr = np.zeros(array.shape, dtype=new_type)
-    for i, val in np.ndenumerate(array):
-        converted_arr[i] = operation(val, *args, **kwargs)
-    return converted_arr
-
-
-def convert_numpy_array(array, new_type, operation, *args, **kwargs):
-    if isinstance(array, np.ma.MaskedArray):
-        new_array = convert_masked_array_type(array, new_type, operation, *args, **kwargs)
-    else:
-        new_array = convert_array_type(array, new_type, operation, *args, **kwargs)
-    return new_array
-
-
 def add_element_to_list_in_dict(my_dict, key, value):
     try:
         my_dict[key].append(value)
@@ -231,7 +204,7 @@ def get_coord(data_object, variable, data):
                     break
         else:
             try:
-                coord = data_object.coord(name=variable)
+                coord = data_object.coord(variable)
             except CoordinateNotFoundError:
                 return None
         return coord
@@ -256,7 +229,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     if hasattr(x, 'points'):
         x = x.points
     try:
-        coord = data_object.coord(name=x_variable)
+        coord = data_object.coord(x_variable)
         x_axis_name = guess_coord_axis(coord)
     except CoordinateNotFoundError:
         x_axis_name = None
@@ -303,11 +276,19 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                     elif x[0, :].shape == y.shape:
                         y, _x = np.meshgrid(y, x[:, 0])
             else:
-                try:
-                    data, x = add_cyclic_point(data, x)
+                if len(x) == data.shape[-1]:
+                    try:
+                        data, x = add_cyclic_point(data, x)
+                    except ValueError as e:
+                        logging.warn('Unable to add cyclic data point for {}. Error was: '.format(x_variable)
+                                     + e.message)
                     x, y = np.meshgrid(x, y)
-                except ValueError as e:
-                    data, y = add_cyclic_point(data, y)
+                elif len(y) == data.shape[-1]:
+                    try:
+                        data, y = add_cyclic_point(data, y)
+                    except ValueError as e:
+                        logging.warn('Unable to add cyclic data point for {}. Error was: '.format(y_variable)
+                                     + e.message)
                     y, x = np.meshgrid(y, x)
     elif x_axis_name == 'X' and x_wrap_start is not None:
         x = fix_longitude_range(x, x_wrap_start)
@@ -344,7 +325,7 @@ def find_longitude_wrap_start(x_variable, packed_data_items):
     x_points_maxs = []
     for data_object in packed_data_items:
         try:
-            coord = data_object.coord(name=x_variable)
+            coord = data_object.coord(x_variable)
             x_axis_name = guess_coord_axis(coord)
         except CoordinateNotFoundError:
             x_axis_name = None
@@ -716,6 +697,14 @@ def get_class_name(cls):
 def isnan(number):
     return number != number
 
+standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
+                  'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
+                  'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
+
+# The standard axes lookup is just the inverse of the standard names with the less likely options removed to preserve
+# a one to one mapping
+standard_axes = {'X': 'longitude', 'Y': 'latitude', 'Z': 'altitude', 'T': 'time', 'P': 'air_pressure'}
+
 
 def guess_coord_axis(coord):
     """Returns X, Y, Z or T corresponding to longitude, latitude,
@@ -725,9 +714,6 @@ def guess_coord_axis(coord):
     This is intended to be similar to iris.util.guess_coord_axis.
     """
     # TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
-    standard_names = {'longitude': 'X', 'grid_longitude': 'X', 'projection_x_coordinate': 'X',
-                      'latitude': 'Y', 'grid_latitude': 'Y', 'projection_y_coordinate': 'Y',
-                      'altitude': 'Z', 'time': 'T', 'air_pressure': 'P'}
     if isinstance(coord, iris.coords.Coord):
         guessed_axis = iris.util.guess_coord_axis(coord)
     else:

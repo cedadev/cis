@@ -1,8 +1,7 @@
 """
 Utilities for converting time units
 """
-from utils import convert_numpy_array
-from iris.unit import Unit
+from cf_units import Unit
 
 cis_standard_time_unit = Unit('days since 1600-01-01 00:00:00', calendar='gregorian')
 
@@ -42,27 +41,23 @@ def convert_time_using_time_stamp_info_to_std_time(time_array, units, time_stamp
     return convert_time_since_to_std_time(time_array, units_in_since_form)
 
 
-def convert_sec_since_to_std_time_array(tai_time_array, ref):
-    return convert_numpy_array(tai_time_array, 'float64', convert_sec_since_to_std_time, ref)
-
-
 def convert_sec_since_to_std_time(seconds, ref):
     """
-    Convert a number of seconds since a given reference datetime to a number of days since our standard time.
-    This in principle could avoid the intermediate step converting to a datetime object except we don't know which
-    calender the reference is on, e.g. it could be a 360 day calendar
+    Convert a number of seconds since a given reference datetime to a number of days since our standard time. The given
+    reference DateTime must be on the Gregorian calendar.
 
-    :param seconds:
-    :param ref:
-    :return:
+    :param seconds: Array of seconds (since the reference time provided)
+    :type: ndarray
+    :param ref: The reference datetime which the seconds are counted from
+    :type: DateTime
+    :return: A numpy array containing all of the time values (in fractional days since the CIS standard time)
     """
-    from datetime import timedelta
-    return cis_standard_time_unit.date2num(timedelta(seconds=float(seconds)) + ref)
-
-
-def convert_days_since_to_std_time(days, ref):
-    from datetime import timedelta
-    return cis_standard_time_unit.date2num(timedelta(days=float(days)) + ref)
+    import numpy as np
+    # Don't copy the array if this is a standard numpy array, unfortunately masked arrays don't have this option
+    kwargs = {} if isinstance(seconds, np.ma.MaskedArray) else {'copy': False}
+    days_since = seconds.astype('float64', **kwargs) / (3600*24.0)
+    offset = ref - cis_standard_time_unit.num2date(0)
+    return offset.days + days_since
 
 
 def convert_std_time_to_datetime(std_time):
@@ -73,17 +68,19 @@ def convert_datetime_to_std_time(dt):
     return cis_standard_time_unit.date2num(dt)
 
 
-def convert_julian_date_to_std_time_array(julian_time_array, calender='standard'):
-    return convert_numpy_array(julian_time_array, 'float64', convert_julian_date_to_std_time, calender)
+def convert_julian_date_to_std_time(days_since):
+    """
+    Convert an array of julian days to cis standard time
 
+    ..note:
+        Array should have units like: Julian Date, days elapsed since 12:00 January 1, 4713 BC
 
-def convert_julian_date_to_std_time(julian_date, calender='standard'):
-    from iris.unit import julian_day2date
-    return cis_standard_time_unit.date2num(julian_day2date(julian_date, calender))
-
-
-def convert_obj_to_standard_date_array(time_array):
-    return convert_numpy_array(time_array, 'float64', convert_datetime_to_std_time)
+    :param days_since: numpy array of fractional days since 12:00 January 1, 4713 BC
+    :return: fractional days since cis standard time
+    """
+    from cf_units import date2julian_day
+    offset = date2julian_day(cis_standard_time_unit.num2date(0), 'standard')
+    return days_since - offset
 
 
 def convert_cube_time_coord_to_standard_time(cube):
@@ -97,24 +94,6 @@ def convert_cube_time_coord_to_standard_time(cube):
     if len(data_dim) > 0:
         # And remove it from the cube
         cube.remove_coord(t_coord)
-
-        # def convert_date(in_date):
-        #     """Converts a date from its initial unit and calendar to cis_standard_time_unit.
-        #
-        #     This implementation converts between calendars by maintaining the day number within the
-        #     year across the conversion. If the source calendar has fewer days in a year, there are
-        #     dates in the destination calendar that can never be returned. If the source calendar has
-        #     more days, an error can result.
-        #     :param in_date: date as a number from a reference date set by the coordinate unit
-        #     :return: modified date as a number from the reference date for the standard time unit
-        #     """
-        #
-        #     year = dt.year
-        #     unit = 'days since {}-01-01 00:00:00'.format(year)
-        #     day_of_year = Unit(unit)
-        #     day_of_year = netcdftime.date2num(dt, unit, calendar=t_coord.units.calendar)
-        #     start_of_year = cis_standard_time_unit.date2num(netcdftime.datetime(year, 1, 1))
-        #     return start_of_year + day_of_year
 
         dt_points = t_coord.units.num2date(t_coord.points)
         new_datetime_nums = cis_standard_time_unit.date2num(dt_points)
@@ -132,35 +111,5 @@ def convert_cube_time_coord_to_standard_time(cube):
 
         # And add the new coordinate back into the cube
         cube.add_dim_coord(new_time_coord, data_dim)
-
-    return cube
-
-
-def convert_cube_time_coord_to_standard_time_assuming_gregorian_calendar(cube):
-    """Converts the time coordinate from the one in the cube to one based on a standard time unit.
-
-    This approach assumes that source date is valid as a date in the calendar set for the
-    standard time unit (Gregorian) which will not always be true.
-    :param cube: cube to modify
-    :return: the cube
-    """
-    # Get the current time coordinate and it's data dimension
-    t_coord = cube.coord(standard_name='time')
-    data_dim = cube.coord_dims(t_coord)
-
-    # And remove it from the cube
-    cube.remove_coord(t_coord)
-
-    # Convert the raw time numbers to our 'standard' time
-    new_datetimes = convert_numpy_array(t_coord.points, 'O', t_coord.units.num2date)
-    new_datetime_nums = convert_obj_to_standard_date_array(new_datetimes)
-
-    # Create a new time coordinate by copying the old one, but using our new points and units
-    new_time_coord = t_coord
-    new_time_coord.points = new_datetime_nums
-    new_time_coord.units = cis_standard_time_unit
-
-    # And add the new coordinate back into the cube
-    cube.add_dim_coord(new_time_coord, data_dim)
 
     return cube

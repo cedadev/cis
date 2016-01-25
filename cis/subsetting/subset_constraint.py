@@ -25,6 +25,10 @@ class SubsetConstraint(SubsetConstraintInterface):
     """Abstract Constraint for subsetting.
 
     Holds the limits for subsetting in each dimension.
+
+    .. Note:
+        This is not used for the ungridded subsetting which uses fixed numpy comparisons for speed.
+
     """
     __metaclass__ = ABCMeta
 
@@ -42,7 +46,7 @@ class SubsetConstraint(SubsetConstraintInterface):
         if dim_min is not None or dim_max is not None:
             logging.info("Setting limit for dimension '%s' [%s, %s]", coord.name(), str(dim_min), str(dim_max))
             self._limits[coord.name()] = CoordLimits(coord, dim_min, dim_max,
-                                                     lambda x: dim_min <= x <= dim_max)
+                                                     lambda x: dim_min <= x.point <= dim_max)
 
     def __str__(self):
         limit_strs = []
@@ -117,10 +121,9 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         shape = data.coords()[0].data_flattened.shape  # This assumes they are all the same shape
         combined_mask = np.zeros(shape, dtype=bool)
         for limit in self._limits.itervalues():
-            mask = np.zeros(shape, dtype=bool)
-            for idx, val in enumerate(limit.coord.data_flattened):
-                if not limit.constraint_function(val):
-                    mask[idx] = True
+            # Mask out any points which are NOT (<= to the end limit AND >= to the start limit)
+            mask = ~ (np.less_equal(limit.coord.data_flattened, limit.end) &
+                      np.greater_equal(limit.coord.data_flattened, limit.start))
             combined_mask = combined_mask | mask
 
         # Generate the new coordinates here (before we loop)

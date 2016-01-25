@@ -10,7 +10,7 @@ import datetime
 
 from cis.data_io.common_data import CommonData
 from cis.data_io.hyperpoint import HyperPointList
-from cis.time_util import convert_obj_to_standard_date_array
+from cis.time_util import convert_datetime_to_std_time
 
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
@@ -71,35 +71,39 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
 
     if lat_dim_length:
         coord_list[coord_map['lat']] = (DimCoord(np.linspace(-10., 10., lat_dim_length) + horizontal_offset,
-                                                 standard_name='latitude', units='degrees'), coord_map['lat'])
+                                                 standard_name='latitude', units='degrees', var_name='lat'),
+                                        coord_map['lat'])
         data_size *= lat_dim_length
 
     if lon_dim_length:
         coord_list[coord_map['lon']] = (
             DimCoord(np.linspace(lon_range[0], lon_range[1], lon_dim_length) + horizontal_offset,
-                     standard_name='longitude', units='degrees'), coord_map['lon'])
+                     standard_name='longitude', units='degrees', var_name='lon'), coord_map['lon'])
         data_size *= lon_dim_length
 
     if alt_dim_length:
         coord_list[coord_map['alt']] = (DimCoord(np.linspace(0., 7., alt_dim_length) + altitude_offset,
-                                                 standard_name='altitude', units='metres'), coord_map['alt'])
+                                                 standard_name='altitude', units='metres', var_name='alt'),
+                                        coord_map['alt'])
         data_size *= alt_dim_length
 
     if pres_dim_length:
         coord_list[coord_map['pres']] = (DimCoord(np.linspace(0., 7., pres_dim_length) + pressure_offset,
-                                                  standard_name='air_pressure', units='hPa'), coord_map['pres'])
+                                                  standard_name='air_pressure', units='hPa', var_name='pres'),
+                                         coord_map['pres'])
         data_size *= pres_dim_length
 
     if time_dim_length:
         t0 = datetime.datetime(1984, 8, 27)
         times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(time_dim_length)])
-        time_nums = convert_obj_to_standard_date_array(times)
+        time_nums = convert_datetime_to_std_time(times)
         time_bounds = None
         if time_dim_length == 1:
-            time_bounds = convert_obj_to_standard_date_array(np.array([times[0] - datetime.timedelta(days=0.5),
+            time_bounds = convert_datetime_to_std_time(np.array([times[0] - datetime.timedelta(days=0.5),
                                                                        times[0] + datetime.timedelta(days=0.5)]))
         coord_list[coord_map['time']] = (DimCoord(time_nums, standard_name='time',
-                                                  units='days since 1600-01-01 00:00:00', bounds=time_bounds),
+                                                  units='days since 1600-01-01 00:00:00', var_name='time',
+                                                  bounds=time_bounds),
                                          coord_map['time'])
         data_size *= time_dim_length
 
@@ -125,9 +129,10 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     if hybrid_ht_len:
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 40,
                                                        long_name="level_height",
-                                                       units="m"), coord_map['hybrid_ht'])
+                                                       units="m", var_name='hybrid_ht'), coord_map['hybrid_ht'])
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 50,
-                                                       long_name="sigma", units="1"), coord_map['hybrid_ht'])
+                                                       long_name="sigma", units="1", var_name='sigma'),
+                                  coord_map['hybrid_ht'])
         return_cube.add_aux_coord(iris.coords.AuxCoord(
             np.arange(lat_dim_length * lon_dim_length, dtype='i8').reshape(lat_dim_length, lon_dim_length) + 100,
             long_name="surface_altitude",
@@ -140,9 +145,10 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     elif hybrid_pr_len:
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='i8') + 40,
                                                        long_name="hybrid A coefficient at layer midpoints",
-                                                       units="Pa"), coord_map['hybrid_pr'])
+                                                       units="Pa", var_name='a'), coord_map['hybrid_pr'])
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_pr_len, dtype='f8') + 50,
-                                                       long_name="hybrid B coefficient at layer midpoints", units="1"),
+                                                       long_name="hybrid B coefficient at layer midpoints", units="1",
+                                                       var_name='b'),
                                   coord_map['hybrid_pr'])
         return_cube.add_aux_coord(
             iris.coords.AuxCoord(np.arange(lat_dim_length * lon_dim_length * time_dim_length, dtype='i8')
@@ -451,12 +457,11 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     from iris.cube import Cube
     from iris.coords import DimCoord
     import datetime
-    from cis.time_util import convert_obj_to_standard_date_array
 
     t0 = datetime.datetime(1984, 8, 27)
     times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
 
-    time_nums = convert_obj_to_standard_date_array(times)
+    time_nums = convert_datetime_to_std_time(times)
 
     time = DimCoord(time_nums, standard_name='time')
     latitude = DimCoord(np.arange(-10 + offset, 11 + offset, 5), standard_name='latitude', units='degrees')
@@ -505,12 +510,11 @@ def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count
     from iris.cube import Cube
     from iris.coords import DimCoord
     import datetime
-    from cis.time_util import convert_obj_to_standard_date_array
 
     t0 = datetime.datetime(1984, 8, 27)
     times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
 
-    time_nums = convert_obj_to_standard_date_array(times)
+    time_nums = convert_datetime_to_std_time(times)
 
     time = DimCoord(time_nums, standard_name='time')
     latitude = DimCoord(np.linspace(start_lat, end_lat, lat_point_count), standard_name='latitude', units='degrees')
@@ -659,6 +663,28 @@ def make_dummy_2d_points_list(num):
         Create a list of 2d points 'num' long
     """
     return [get_random_2d_point() for i in xrange(0, num)]
+
+
+def make_dummy_ungridded_data_time_series(len=10):
+    """
+    Create a time series of ungridded data of length len, with a single lat/lon coordinate (65.2, -12.1)
+    :param len: length of teh time series and associated data
+    :return:
+    """
+    from datetime import datetime, timedelta
+    from cis.data_io.Coord import Coord, CoordList
+    from cis.data_io.ungridded_data import UngriddedData, Metadata
+
+    t0 = datetime(1984, 8, 27)
+    times = np.array([t0 + timedelta(days=d) for d in xrange(len)])
+
+    x = Coord(np.zeros(len) + 65.2, Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(np.zeros(len) - 12.1, Metadata(standard_name='longitude', units='degrees'))
+    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'), axis='x')
+    data = np.arange(len) + 1.0
+
+    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", missing_value=-999), CoordList([x, y, t]))
 
 
 def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None,
@@ -995,23 +1021,17 @@ def make_regular_4d_ungridded_data():
     import numpy as np
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
+    from cis.time_util import cis_standard_time_unit
     import datetime
-    from cis.time_util import convert_obj_to_standard_date_array
 
     x_points = np.linspace(-10, 10, 5)
     y_points = np.linspace(-5, 5, 5)
     t0 = datetime.datetime(1984, 8, 27)
-    times = convert_obj_to_standard_date_array(np.array([t0 + datetime.timedelta(days=d) for d in xrange(5)]))
+    times = convert_datetime_to_std_time(np.array([t0 + datetime.timedelta(days=d) for d in xrange(5)]))
 
     alt = np.linspace(0, 90, 10)
 
     data = np.reshape(np.arange(50) + 1.0, (10, 5))
-    # print np.mean(data[:,1:3])
-    # print np.mean(data[4:6,:])
-    # print np.mean(data[:,2])
-    # print np.std(data)
-    # print np.mean(data)
-    # print len(data.flat)
 
     y, a = np.meshgrid(y_points, alt)
     x, a = np.meshgrid(x_points, alt)
@@ -1024,7 +1044,7 @@ def make_regular_4d_ungridded_data():
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
     p = Coord(p, Metadata(standard_name='air_pressure', units='Pa'))
-    t = Coord(t, Metadata(standard_name='time', units='DateTime Object'))
+    t = Coord(t, Metadata(standard_name='time', units=str(cis_standard_time_unit)))
 
     coords = CoordList([x, y, a, p, t])
     return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",

@@ -46,17 +46,17 @@ class Coord(LazyData):
     def __eq__(self, other):
         return other.metadata.standard_name == self.metadata.standard_name and self.metadata.standard_name != ''
 
-    def convert_julian_to_std_time(self, calender='standard'):
-        from cis.time_util import convert_julian_date_to_std_time_array, cis_standard_time_unit
+    def convert_julian_to_std_time(self):
+        from cis.time_util import convert_julian_date_to_std_time, cis_standard_time_unit
         # if not self.units.startswith("Julian Date"):
         #     raise ValueError("Time units must be Julian Date for conversion to an Object")
-        self._data = convert_julian_date_to_std_time_array(self.data, calender)
+        self._data = convert_julian_date_to_std_time(self.data)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 
     def convert_TAI_time_to_std_time(self, ref):
-        from cis.time_util import convert_sec_since_to_std_time_array, cis_standard_time_unit
-        self._data = convert_sec_since_to_std_time_array(self.data, ref)
+        from cis.time_util import convert_sec_since_to_std_time, cis_standard_time_unit
+        self._data = convert_sec_since_to_std_time(self.data, ref)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 
@@ -82,8 +82,8 @@ class Coord(LazyData):
         self.metadata.calendar = cis_standard_time_unit.calendar
 
     def convert_datetime_to_standard_time(self):
-        from cis.time_util import convert_obj_to_standard_date_array, cis_standard_time_unit
-        self._data = convert_obj_to_standard_date_array(self.data)
+        from cis.time_util import convert_datetime_to_std_time, cis_standard_time_unit
+        self._data = convert_datetime_to_std_time(self.data)
         self.units = str(cis_standard_time_unit)
         self.metadata.calendar = cis_standard_time_unit.calendar
 
@@ -132,15 +132,16 @@ class CoordList(list):
             raise DuplicateCoordinateError()
         super(CoordList, self).append(other)
 
-    def get_coords(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def get_coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
         Return a list of coordinates in this :class:`CoordList` fitting the given criteria. This is deliberately very
         similar to :func:`Cube.coords()` to maintain a similar interface and because the functionality is similar. There
         is no distinction between dimension coordinates and auxiliary coordinates here though.
 
-        :param name:  The standard name or long name or default name of the desired coordinate.
-         If None, does not check for name. Also see, :attr:`Cube.name`.
-        :type name: string or None
+        :param name_or_coord: This should be either: The standard name or long name or default name of the desired
+         coordinate; Or, a :class:`Coord` instance whose metadata should be used for the search criteria (note that
+         currently only the standard name is compared). If None, does not check for name. Also see, :attr:`Cube.name`.
+        :type name: string or None or :class:`Coord`
         :param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
         :type standard_name: string or None
         :param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
@@ -155,6 +156,13 @@ class CoordList(list):
         """
         from collections import Mapping
         coords = self
+
+        if isinstance(name_or_coord, basestring):
+            name = name_or_coord
+            coord = None
+        else:
+            name = None
+            coord = name_or_coord
 
         if name is not None:
             coords = filter(lambda coord_: coord_.name() == name, coords)
@@ -177,17 +185,21 @@ class CoordList(list):
                             k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems()),
                             coords)
 
+        if coord is not None:
+            coords = filter(lambda coord_: coord_ == coord, coords)
+
         return coords
 
-    def get_coord(self, name=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def get_coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
         """
         Return a single coord fitting the given criteria. This is deliberately very
         similar to :func:`Cube.coord()` method to maintain a similar interface and because the functionality is similar.
         There is no distinction between dimension coordinates and auxilliary coordinates here though.
 
-        :param name:  The standard name or long name or default name of the desired coordinate.
-         If None, does not check for name. Also see, :attr:`Cube.name`.
-        :type name: string or None
+        :param name_or_coord: This should be either: The standard name or long name or default name of the desired
+         coordinate; Or, a :class:`Coord` instance whose metadata should be used for the search criteria (note that
+         currently only the standard name is compared). If None, does not check for name. Also see, :attr:`Cube.name`.
+        :type name: string or None or :class:`Coord`
         :param standard_name: The CF standard name of the desired coordinate. If None, does not check for standard name.
         :type standard_name: string or None
         :param long_name: An unconstrained description of the coordinate. If None, does not check for long_name.
@@ -204,17 +216,17 @@ class CoordList(list):
 
         """
         from cis.exceptions import CoordinateNotFoundError
-        coords = self.get_coords(name=name, standard_name=standard_name, long_name=long_name, attributes=attributes,
-                                 axis=axis)
+        coords = self.get_coords(name_or_coord=name_or_coord, standard_name=standard_name, long_name=long_name,
+                                 attributes=attributes, axis=axis)
         if len(coords) == 0:  # If we found none by name, try with standard name only
-            coords = self.get_coords(standard_name=name)
+            coords = self.get_coords(standard_name=name_or_coord)
 
         if len(coords) > 1:
             msg = 'Expected to find exactly 1 coordinate, but found %s. They were: %s.' \
                   % (len(coords), ', '.join(coord.name() for coord in coords))
             raise CoordinateNotFoundError(msg)
         elif len(coords) == 0:
-            bad_name = name or standard_name or long_name or axis or ''
+            bad_name = str(name_or_coord) or standard_name or long_name or axis or ''
             msg = 'Expected to find exactly 1 %s coordinate, but found none.' % bad_name
             raise CoordinateNotFoundError(msg)
 

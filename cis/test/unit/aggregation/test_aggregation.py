@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from nose.tools import istest
-import iris.unit
 import iris.analysis
 
 from cis.data_io.gridded_data import make_from_cube, GriddedDataList
@@ -58,6 +57,30 @@ class TestGriddedAggregation(TestCase):
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result, cube_out[0].data)
         assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+
+    @istest
+    def test_can_name_variables_by_standard_name(self):
+        grid = {'longitude': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
+                'latitude': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
+
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result = numpy.array(8.0)
+
+        assert numpy.array_equal(result, cube_out[0].data)
+
+    @istest
+    def test_can_name_variables_by_variable_name(self):
+        grid = {'lon': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
+                'lat': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
+
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result = numpy.array(8.0)
+
+        assert numpy.array_equal(result, cube_out[0].data)
 
     @istest
     def test_collapsing_everything_returns_a_single_value(self):
@@ -262,6 +285,22 @@ class TestUngriddedAggregation(TestCase):
     @istest
     def test_aggregating_single_point_in_one_dimension(self):
         grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
+
+        data = make_dummy_ungridded_data_single_point()
+
+        agg = Aggregator(data, grid)
+        cube_out = agg.aggregate_ungridded(self.kernel)
+
+        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
+
+        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+
+    @istest
+    def test_can_name_variables_by_standard_name(self):
+        """
+        Note that this is also the variable name for many ungridded cases
+        """
+        grid = {'latitude': AggregationGrid(-12.5, 12.5, 5, False)}
 
         data = make_dummy_ungridded_data_single_point()
 

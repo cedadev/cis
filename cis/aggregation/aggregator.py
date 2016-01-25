@@ -92,8 +92,8 @@ class Aggregator(object):
             i += 1
 
         if len(self._grid) != 0:
-            raise CoordinateNotFoundError('No coordinate found that matches {}. Please check the coordinate '
-                                          'name.'.format(self._grid.keys()))
+            raise CoordinateNotFoundError("No coordinate found that matches '{}'. Please check the coordinate "
+                                          "name.".format("' or '".join(self._grid.keys())))
 
         dummy_data = numpy.reshape(numpy.arange(int(numpy.prod(new_cube_shape))) + 1.0, tuple(new_cube_shape))
         aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
@@ -194,6 +194,8 @@ class Aggregator(object):
         guessed_axis = guess_coord_axis(coord)
         if coord.name() in self._grid:
             grid = self._grid.pop(coord.name())
+        elif hasattr(coord, 'var_name') and coord.var_name in self._grid:
+            grid = self._grid.pop(coord.var_name)
         elif coord.standard_name in self._grid:
             grid = self._grid.pop(coord.standard_name)
         elif coord.long_name in self._grid:

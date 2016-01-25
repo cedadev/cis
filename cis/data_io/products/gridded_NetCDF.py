@@ -23,7 +23,7 @@ class NetCDF_Gridded(AProduct):
 
     def get_variable_names(self, filenames, data_type=None):
         import iris
-        import iris.unit as unit
+        import cf_units as unit
         variables = []
         cubes = iris.load(filenames)
 

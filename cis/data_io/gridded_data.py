@@ -271,6 +271,16 @@ class GriddedData(iris.cube.Cube, CommonData):
         logging.info('Saving data to %s' % output_file)
         iris.save(self, output_file, local_keys=self._local_attributes)
 
+    def as_data_frame(self, copy=True):
+        """
+        Convert a GriddedData object to a Pandas DataFrame.
+
+        :param copy: Create a copy of the data for the new DataFrame? Default is True.
+        :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
+        """
+        from iris.pandas import as_data_frame
+        return as_data_frame(self, copy=copy)
+
 
 class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """

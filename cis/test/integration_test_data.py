@@ -244,6 +244,11 @@ cis_test_files["aeronet"] = TestFileTestData(
     data_variable_properties={}
 )
 
+# 6 hourly average of the above data
+aggregated_aeronet_filename = make_pathname("Abracos_Hill_AOT_6_hourly.nc")
+aggregated_aeronet_variables = ["AOT_440",
+                                "AOT_440_std_dev"]
+
 valid_caliop_l2_filename = make_pathname("CAL_LID_L2_05kmAPro-Prov-V3-01.2009-12-31T23-36-08ZN.hdf")
 valid_caliop_l2_variable = "Pressure"
 valid_caliop_l2_variables = ['Aerosol_Layer_Fraction',

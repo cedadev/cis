@@ -318,7 +318,7 @@ class Generic_Plot(object):
 
         coords = self.packed_data_items[0].coords(standard_name=self.plot_args["x_variable"])
         if len(coords) == 0:
-            coords = self.packed_data_items[0].coords(name=self.plot_args["x_variable"])
+            coords = self.packed_data_items[0].coords(name_or_coord=self.plot_args["x_variable"])
         if len(coords) == 0:
             coords = self.packed_data_items[0].coords(long_name=self.plot_args["x_variable"])
 
@@ -433,8 +433,8 @@ class Generic_Plot(object):
         from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
         from cis.exceptions import CoordinateNotFoundError as cisNotFoundError
         try:
-            x = self.packed_data_items[0].coord(name=self.plot_args["x_variable"])
-            y = self.packed_data_items[0].coord(name=self.plot_args["y_variable"])
+            x = self.packed_data_items[0].coord(self.plot_args["x_variable"])
+            y = self.packed_data_items[0].coord(self.plot_args["y_variable"])
         except (cisNotFoundError, irisNotFoundError):
             return False
 
@@ -590,7 +590,7 @@ class Generic_Plot(object):
         if len(self.packed_data_items) > 1:
             self.create_legend()
 
-    def __get_extent(self):
+    def _get_extent(self):
         """
          Calculates the diagonal extent of plot area in Km
         :return: The diagonal size of the plot in Km
@@ -598,6 +598,19 @@ class Generic_Plot(object):
         from cis.utils import haversine
         x0, x1, y0, y1 = self.cartopy_axis.get_extent()
         return haversine(y0, x0, y1, x1)
+
+    def _test_natural_earth_available(self):
+        """
+        Test whether we can download the natural earth cartographies.
+        :return: Can we access natural earth?
+        """
+        from cartopy.io.shapereader import natural_earth
+        from urllib2 import HTTPError
+        try:
+            natural_earth_available = natural_earth()
+        except HTTPError:
+            natural_earth_available = False
+        return natural_earth_available
 
     def drawcoastlines(self):
         """
@@ -613,7 +626,7 @@ class Generic_Plot(object):
 
         coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
 
-        ext = self.__get_extent()
+        ext = self._get_extent()
 
         if self.plot_args["nasabluemarble"] is not False:
             bluemarble_res = bluemarble_scales[0][1]
@@ -624,13 +637,17 @@ class Generic_Plot(object):
             img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
             self.cartopy_axis.imshow(img, origin='upper', transform=self.transform, extent=[-180, 180, -90, 90])
         else:
-            coastline_res = coastline_scales[0][1]
-            for scale, res in coastline_scales[1:]:
-                if scale > ext:
-                    coastline_res = res
+            if self._test_natural_earth_available():
+                coastline_res = coastline_scales[0][1]
+                for scale, res in coastline_scales[1:]:
+                    if scale > ext:
+                        coastline_res = res
 
-            colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
-            self.cartopy_axis.coastlines(color=colour, resolution=coastline_res)
+                colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
+                self.cartopy_axis.coastlines(color=colour, resolution=coastline_res)
+            else:
+                logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
+                                'Check internet connectivity and try again')
 
     def format_3d_plot(self):
         """
@@ -692,12 +709,12 @@ class Generic_Plot(object):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
+                    name = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
 
                 try:
-                    units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
+                    units = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 
@@ -728,7 +745,11 @@ class Generic_Plot(object):
         from cis.exceptions import NotEnoughAxesSpecifiedError
 
         x_variable = self.get_variable_name("x")
-        y_variable = self.get_variable_name("y")
+
+        if x_variable.lower().endswith('time') and len(self.packed_data_items) > 1:
+            y_variable = 'default'
+        else:
+            y_variable = self.get_variable_name("y")
 
         if x_variable == y_variable:
             specified_axis = "x" if self.plot_args["x_variable"] is not None else "y"

@@ -362,6 +362,7 @@ def get_aggregate_grid(aggregategrid, parser):
     """
     from cis.parse_datetime import parse_datetime, parse_datetime_delta, parse_as_number_or_datetime
     from cis.aggregation.aggregation_grid import AggregationGrid
+    from datetime import datetime
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(aggregategrid)
@@ -415,6 +416,7 @@ def get_aggregate_grid(aggregategrid, parser):
                 start_parsed = parse_as_number_or_datetime(start, 'aggregation grid start coordinate', parser)
                 end_parsed = parse_as_number_or_datetime(end, 'aggregation grid end coordinate', parser)
                 delta_parsed = parse_as_number_or_datetime(delta, 'aggregation grid delta coordinate', parser)
+                is_time = hasattr(delta_parsed, 'year')
             grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed, is_time)
 
     return grid_dict
@@ -736,15 +738,15 @@ def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
 
     if min_val is not None:
         dt = parse_as_number_or_datetime(min_val, range_axis + "min", parser)
-        if isinstance(dt, datetime.datetime):
-            ax_range[range_axis + "min"] = convert_datetime_to_std_time(dt)
+        if isinstance(dt, list):
+            ax_range[range_axis + "min"] = convert_datetime_to_std_time(datetime.datetime(*dt))
         else:
             ax_range[range_axis + "min"] = dt
 
     if max_val is not None:
         dt = parse_as_number_or_datetime(max_val, range_axis + "max", parser)
-        if isinstance(dt, datetime.datetime):
-            ax_range[range_axis + "max"] = parse_datetimestr_to_std_time(str(datetime.datetime(*dt)))
+        if isinstance(dt, list):
+            ax_range[range_axis + "max"] = convert_datetime_to_std_time(datetime.datetime(*dt))
         else:
             ax_range[range_axis + "max"] = dt
     if step is not None:

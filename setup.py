@@ -24,7 +24,7 @@ else:
                     "iris>=1.8.0",
                     'psutil>=2.0.0']
 
-    optional_dependencies = {"HDF": ["pyhdf"]}
+    optional_dependencies = {"HDF": ["pyhdf"], "Pandas": ["pandas"]}
 
     test_dependencies = ["pyhamcrest", "mock", "nose"]
 
@@ -69,7 +69,7 @@ setup(
         'Environment :: Console',
         ],
     packages=find_packages(),
-    package_data={'': ['logging.conf']},
+    package_data={'': ['logging.conf', 'plotting/raster/*.png']},
     scripts=['bin/cis', 'bin/cis.lsf'],
     cmdclass={"checkdep": check_dep,
               "test": nose_test},

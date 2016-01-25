@@ -53,8 +53,13 @@ where:
 ``<grid>``
   This mandatory argument specifies the coordinates to aggregate over and whether they should be completely collapsed
   or aggregated into bins. Multiple coordinates can be aggregated over, in which case they should be separated by commas.
-  Coordinates may be identified using their variable names (e.g. ``latitude``) or by choosing from ``x``, ``y``, ``t``,
-  ``z``, ``p`` which refer to longitude, latitude, time, altitude and pressure respectively.
+  Coordinates may be identified using their variable names (e.g. ``latitude``), standard names, or using the axes shorthands: ``x``, ``y``, ``t``,
+  ``z`` and ``p`` which refer to longitude, latitude, time, altitude and pressure respectively.
+
+  .. note::
+    The axes shorthands are used throughout the examples here, but should be used with care, as the expected coordinate
+    may not always be chosen. For example when specifying 'z' for a gridded hybrid height file, this may well refer to
+    model level number rather than altitude. For this reason it is often safer to use variable names explicitly.
 
   * *Complete collapse* - To perform a complete collapse of a coordinate, simply provide the name of the coordinate(s)
     as a comma separated list - e.g. ``x,y`` will aggregate data completely over both latitude and longitude. For
@@ -64,7 +69,7 @@ where:
     form ``coordinate=[start,end,step]``. The step may be missed out, in which case the bin will span the whole range
     given. Partial collapse is currently only supported for ungridded data.
 
-  .. note::
+
      Longitude coordinates are considered to be circular, so that -10 is equivalent to 350. The start and end must
      describe a monotonically increasing coordinate range, so ``x=[90,-90,10]`` is invalid, but could be specified
      using ``x=[90,270,10]``. The range between the start and end must not be greater than 360 degrees.

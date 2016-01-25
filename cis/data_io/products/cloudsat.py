@@ -44,7 +44,7 @@ class CloudSat(AProduct):
     def _generate_time_array(self, vdata):
         import cis.data_io.hdf_vd as hdf_vd
         import datetime as dt
-        from cis.time_util import convert_sec_since_to_std_time_array
+        from cis.time_util import convert_sec_since_to_std_time
 
         Cloudsat_start_time = dt.datetime(1993, 1, 1, 0, 0, 0)
 
@@ -54,7 +54,7 @@ class CloudSat(AProduct):
             start = hdf_vd.get_data(j)
             time += start
             # Do the conversion to standard time here before we expand the time array...
-            time = convert_sec_since_to_std_time_array(time, Cloudsat_start_time)
+            time = convert_sec_since_to_std_time(time, Cloudsat_start_time)
             arrays.append(time)
         return utils.concatenate(arrays)
 

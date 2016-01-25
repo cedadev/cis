@@ -9,7 +9,7 @@ import numpy as np
 import numpy.ma as ma
 
 from cis.collocation.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
-from cis.time_util import convert_obj_to_standard_date_array
+from cis.time_util import convert_datetime_to_std_time
 
 
 class GridCellBinIndexInSlices(object):
@@ -62,7 +62,7 @@ class GridCellBinIndexInSlices(object):
 
             hp_coord = hyper_points.coords[hpi]
             if isinstance(hp_coord[0], datetime.datetime):
-                hp_coord = convert_obj_to_standard_date_array(hp_coord)
+                hp_coord = convert_datetime_to_std_time(hp_coord)
 
             hp_coords.append(hp_coord)
 

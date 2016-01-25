@@ -55,6 +55,7 @@ class Aeronet(AProduct):
     def _create_coord_list(self, filenames, data=None):
         from cis.data_io.ungridded_data import Metadata
         from cis.data_io.aeronet import load_multiple_aeronet
+        from cis.time_util import cis_standard_time_unit as ct
 
         if data is None:
             data = load_multiple_aeronet(filenames)
@@ -65,10 +66,8 @@ class Aeronet(AProduct):
         coords.append(Coord(data['latitude'], Metadata(name="Latitude", shape=(len(data),),
                                                        units="degrees_north", range=(-90, 90))))
         coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters")))
-        time_coord = Coord(data["datetime"], Metadata(name="DateTime", standard_name='time', shape=(len(data),),
-                                                      units="DateTime Object"), "X")
-        time_coord.convert_datetime_to_standard_time()
-        coords.append(time_coord)
+        coords.append(Coord(data["datetime"], Metadata(name="DateTime", standard_name='time', shape=(len(data),),
+                                                       units=str(ct)), "X"))
 
         return coords
 
@@ -77,12 +76,8 @@ class Aeronet(AProduct):
 
     def create_data_object(self, filenames, variable):
         from cis.data_io.aeronet import load_multiple_aeronet
-        from cis.exceptions import InvalidVariableError
 
-        try:
-            data_obj = load_multiple_aeronet(filenames, [variable])
-        except ValueError:
-            raise InvalidVariableError(variable + " does not exist in " + str(filenames))
+        data_obj = load_multiple_aeronet(filenames, [variable])
 
         coords = self._create_coord_list(filenames, data_obj)
 
@@ -102,15 +97,17 @@ class ASCII_Hyperpoints(AProduct):
         from cis.data_io.ungridded_data import Metadata
         from numpy import genfromtxt, NaN
         from cis.exceptions import InvalidVariableError
-        from cis.parse_datetime import parse_datetimestr_to_std_time_array
+        from cis.time_util import convert_datetime_to_std_time
+        import dateutil.parser as du
 
         array_list = []
 
         for filename in filenames:
             try:
-                array_list.append(genfromtxt(filename, dtype="f8,f8,f8,S20,f8",
+                array_list.append(genfromtxt(filename, dtype="f8,f8,f8,O,f8",
                                              names=['latitude', 'longitude', 'altitude', 'time', 'value'],
-                                             delimiter=',', missing_values='', usemask=True, invalid_raise=True))
+                                             delimiter=',', missing_values='', usemask=True, invalid_raise=True,
+                                             converters={"time": du.parse}))
             except:
                 raise IOError('Unable to read file ' + filename)
 
@@ -125,7 +122,7 @@ class ASCII_Hyperpoints(AProduct):
         coords.append(
             Coord(data_array["altitude"], Metadata(standard_name="altitude", shape=(n_elements,), units="meters")))
 
-        time_arr = parse_datetimestr_to_std_time_array(data_array["time"])
+        time_arr = convert_datetime_to_std_time(data_array["time"])
         time = Coord(time_arr,
                      Metadata(standard_name="time", shape=(n_elements,), units="days since 1600-01-01 00:00:00"))
         coords.append(time)

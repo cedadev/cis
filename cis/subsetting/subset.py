@@ -1,15 +1,13 @@
 import logging
 
-from iris import coords
 from iris.exceptions import IrisError
-import iris.unit
+from cf_units import Unit
 import iris.util
 
 from cis.data_io.data_reader import DataReader
 from cis.data_io.data_writer import DataWriter
 import cis.exceptions as ex
 import cis.parse_datetime as parse_datetime
-from cis.subsetting.subsetter import Subsetter
 from cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
 from cis import __version__
 from cis.utils import guess_coord_axis
@@ -20,19 +18,17 @@ class Subset(object):
     Class for subsetting Ungridded or Gridded data either temporally, or spatially or both.
     """
 
-    def __init__(self, limits, output_file, subsetter=Subsetter(), data_reader=DataReader(), data_writer=DataWriter()):
+    def __init__(self, limits, output_file, data_reader=DataReader(), data_writer=DataWriter()):
         """
         Constructor
 
         :param dict limits: A dictionary of dimension_name:SubsetLimits key value pairs.
         :param output_file: The filename to output the result to
-        :param subsetter: Optional :class:`Subsetter` configuration object
         :param data_reader: Optional :class:`DataReader` configuration object
         :param data_writer: Optional :class:`DataWriter` configuration object
         """
         self._limits = limits
         self._output_file = output_file
-        self._subsetter = subsetter
         self._data_reader = data_reader
         self._data_writer = data_writer
 
@@ -46,6 +42,8 @@ class Subset(object):
         :type filenames: string or list
         :param str product: Name of data product to use (optional)
         """
+        from cis.exceptions import CoordinateNotFoundError
+
         # Read the input data - the parser limits the number of data groups to one for this command.
         data = None
         try:
@@ -67,7 +65,12 @@ class Subset(object):
             subset_constraint = UngriddedSubsetConstraint()
 
         self._set_constraint_limits(data, subset_constraint)
-        subset = self._subsetter.subset(data, subset_constraint)
+
+        if len(self._limits) != 0:
+            raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
+                                          "coordinate name.".format("' or '".join(self._limits.keys())))
+
+        subset = subset_constraint.constrain(data)
 
         if subset is None:
             # Constraints exclude all data.
@@ -82,25 +85,30 @@ class Subset(object):
 
     def _set_constraint_limits(self, data, subset_constraint):
         """
-        Identify and set the constraint limits by:
-        * parsing anything that needs parsing (datetimes)
-        * ordering them always
+        Identify and set the constraint limits on the subset_constraint object using the coordinates from the data
+        object
 
-        :param data:
-        :param subset_constraint:
-        :return:
+        :param data: The data object containing the coordinates to subset
+        :param subset_constraint: The constraint object on to which to apply the limits
         """
-        for coord in data.coords():
+
+        for coord in data.coords(dim_coords=True):
             # Match user-specified limits with dimensions found in data.
             guessed_axis = guess_coord_axis(coord)
             limit = None
             if coord.name() in self._limits:
-                limit = self._limits[coord.name()]
+                limit = self._limits.pop(coord.name())
+            elif hasattr(coord, 'var_name') and coord.var_name in self._limits:
+                limit = self._limits.pop(coord.var_name)
+            elif coord.standard_name in self._limits:
+                limit = self._limits.pop(coord.standard_name)
+            elif coord.long_name in self._limits:
+                limit = self._limits.pop(coord.long_name)
             elif guessed_axis is not None:
                 if guessed_axis in self._limits:
-                    limit = self._limits[guessed_axis]
+                    limit = self._limits.pop(guessed_axis)
                 elif guessed_axis.lower() in self._limits:
-                    limit = self._limits[guessed_axis.lower()]
+                    limit = self._limits.pop(guessed_axis.lower())
 
             if limit is not None:
                 wrapped = False
@@ -113,6 +121,7 @@ class Subset(object):
                 else:
                     # Assume to be a non-time axis.
                     (limit_start, limit_end) = self._fix_non_circular_limits(float(limit.start), float(limit.end))
+                # Apply the limit to the constraint object
                 subset_constraint.set_limit(coord, limit_start, limit_end)
 
     @staticmethod
@@ -120,10 +129,10 @@ class Subset(object):
         """Converts a datetime to be in the unit of a specified Coord.
         """
         if isinstance(coord, iris.coords.Coord):
-            # The unit class is then iris.unit.Unit.
+            # The unit class is then cf_units.Unit.
             iris_unit = coord.units
         else:
-            iris_unit = iris.unit.Unit(coord.units)
+            iris_unit = Unit(coord.units)
         return iris_unit.date2num(dt)
 
     @staticmethod
@@ -131,10 +140,10 @@ class Subset(object):
         """Converts a datetime to be in the unit of a specified Coord.
         """
         if isinstance(coord, iris.coords.Coord):
-            # The unit class is then iris.unit.Unit.
+            # The unit class is then cf_units.Unit.
             iris_unit = coord.units
         else:
-            iris_unit = iris.unit.Unit(coord.units)
+            iris_unit = Unit(coord.units)
         return iris_unit.num2date(dt)
 
     @staticmethod

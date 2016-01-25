@@ -8,6 +8,7 @@ class Line_Plot(Generic_Plot):
         """
         Plots one or many line graphs
         """
+        from cis.exceptions import InvalidDimensionError
         self.mplkwargs["linewidth"] = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth",
                                                                                                1) is not None else 1
 
@@ -32,6 +33,10 @@ class Line_Plot(Generic_Plot):
             else:
                 self.mplkwargs.pop("color", None)
 
+            if unpacked_data_item["x"].shape[0] != unpacked_data_item["data"].shape[0]:
+                raise InvalidDimensionError("The plot axes are incompatible, please check and specify at least one "
+                                            "axis manually.")
+
             self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs)
 
     def format_plot(self):
@@ -46,13 +51,13 @@ class Line_Plot(Generic_Plot):
 
         if self.plot_args[axislabel] is None:
             try:
-                units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
+                units = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).units
             except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                 units = self.packed_data_items[0].units
 
             if len(self.packed_data_items) == 1:
                 try:
-                    name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
+                    name = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
                 # only 1 data to plot, display

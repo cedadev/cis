@@ -58,6 +58,29 @@ class BaseIntegrationTest(unittest.TestCase):
         assert_that(min(lat), greater_than_or_equal_to(lat_min))
         assert_that(max(lat), less_than_or_equal_to(lat_max))
 
+    def check_alt_subsetting(self, alt_max, alt_min, gridded):
+        if gridded:
+            alt_name = 'alt'
+            output_path = self.GRIDDED_OUTPUT_FILENAME
+        else:
+            alt_name = 'altitude'
+            output_path = self.UNGRIDDED_OUTPUT_FILENAME
+        ds = Dataset(output_path)
+        alt = ds.variables[alt_name][:]
+        assert_that(min(alt), greater_than_or_equal_to(alt_min))
+        assert_that(max(alt), less_than_or_equal_to(alt_max))
+
+    def check_pres_subsetting(self, pres_max, pres_min, gridded, pres_name='air_pressure'):
+        import numpy as np
+        if gridded:
+            output_path = self.GRIDDED_OUTPUT_FILENAME
+        else:
+            output_path = self.UNGRIDDED_OUTPUT_FILENAME
+        ds = Dataset(output_path)
+        pres = ds.variables[pres_name][:]
+        assert_that(np.min(pres), greater_than_or_equal_to(pres_min))
+        assert_that(np.max(pres), less_than_or_equal_to(pres_max))
+
     def check_output_col_grid(self, sample_file, sample_var, output_file, output_vars, expected_shape=None):
         """
         Check that the output grid matches the sample grid in shape.

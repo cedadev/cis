@@ -7,9 +7,12 @@ class Scatter_Plot(Generic_Plot):
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
+        from cis.plotting.plot import colors
+        from cis.exceptions import InvalidDimensionError
+
         scatter_size = self.plot_args.get("itemwidth", 1) if self.plot_args.get("itemwidth", 1) is not None else 1
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            datafile = self.plot_args["datagroups"][self.datagroup]
+            datafile = self.plot_args["datagroups"][i]
             if datafile["itemstyle"]:
                 self.mplkwargs["marker"] = datafile["itemstyle"]
             else:
@@ -20,14 +23,19 @@ class Scatter_Plot(Generic_Plot):
             self.mplkwargs["c"] = datafile.get("color", None)
             if self.mplkwargs["c"] is None:
                 if unpacked_data_item.get("y", None) is not None:  # i.e. the scatter plot is 3D
+                    if unpacked_data_item["y"].size != unpacked_data_item["data"].size:
+                        raise InvalidDimensionError("The plot axes are incompatible, please check and specify at least "
+                                                    "one axis manually.")
                     self.mplkwargs["c"] = unpacked_data_item["data"]
                 else:
-                    self.mplkwargs.pop("c", None)
+                    self.mplkwargs["c"] = colors[i % len(colors)]
 
             if datafile["edgecolor"]:
-                edge_color = datafile["edgecolor"]
+                self.mplkwargs['edgecolors'] = datafile["edgecolor"]
+            elif 'marker' not in self.mplkwargs or self.mplkwargs['marker'] == 'o':
+                self.mplkwargs['edgecolors'] = "None"
             else:
-                edge_color = "None"
+                self.mplkwargs.pop('edgecolors', None)
 
             x_coords = unpacked_data_item["x"]
 
@@ -41,8 +49,7 @@ class Scatter_Plot(Generic_Plot):
                 y_coords = unpacked_data_item["data"]
 
             self.color_axis.append(
-                self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, edgecolors=edge_color, *self.mplargs,
-                                              **self.mplkwargs))
+                self.matplotlib.scatter(x_coords, y_coords, s=scatter_size, *self.mplargs, **self.mplkwargs))
 
 
     def calculate_axis_limits(self, axis, min_val, max_val):
@@ -89,14 +96,14 @@ class Scatter_Plot(Generic_Plot):
                 self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
             else:
                 try:
-                    units = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).units
+                    units = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 
                 if len(self.packed_data_items) == 1:
                     # only 1 data to plot, display
                     try:
-                        name = self.packed_data_items[0].coord(name=self.plot_args[axis + "_variable"]).name()
+                        name = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).name()
                     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                         name = self.packed_data_items[0].name()
                     self.plot_args[axislabel] = name + " " + self.format_units(units)

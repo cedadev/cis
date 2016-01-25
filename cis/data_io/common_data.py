@@ -89,6 +89,16 @@ class CommonData(object):
         """
         pass
 
+    @abstractmethod
+    def as_data_frame(self, copy):
+        """
+        Convert a CommonData object to a Pandas DataFrame.
+
+        :param copy: Create a copy of the data for the new DataFrame? Default is True.
+        :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
+        """
+        pass
+
 
 class CommonDataList(list):
     """
