@@ -149,6 +149,35 @@ class TestAggregation(BaseAggregationTest):
         data_870 = ds.variables['AOD870']
         assert_arrays_almost_equal(data_870[:], arr_870, 1.0e-2)
 
+    def test_aggregation_of_multiple_variables_gives_same_result(self):
+        # JASCIS-281
+        variable = 'AOT_440'
+        filename = another_valid_aeronet_filename
+        t_start, t_end = dt.datetime(1999, 01, 01), dt.datetime(1999, 12, 29)
+        t_delta = dt.timedelta(hours=6)
+        str_delta = 'PT6H'
+        self.do_temporal_aggregate(variable, filename, t_start, t_end, str_delta)
+        self.check_temporal_aggregation(t_start, t_end, t_delta, 'DateTime')
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+        # Read the aggregated data
+        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        aot_440 = ds.variables['AOT_440'][:]
+
+        # Clean up the old aggregation
+        ds.close()
+        os.remove(self.GRIDDED_OUTPUT_FILENAME)
+
+        # Now redo the aggregation, but for all AOT variables
+        self.do_temporal_aggregate('AOT*', filename, t_start, t_end, str_delta)
+
+        # Read the new data in
+        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        aot_440_multi_var = ds.variables['AOT_440'][:]
+
+        # And check they are the same...
+        assert_arrays_almost_equal(aot_440, aot_440_multi_var)
+
 
 class TestSpatialAggregationByDataProduct(BaseAggregationTest):
     """
