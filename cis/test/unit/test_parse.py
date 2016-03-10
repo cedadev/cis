@@ -533,6 +533,13 @@ class TestParseAggregate(ParseTestFiles):
             args = ['aggregate', 'var1:%s' % self.escaped_single_valid_file, lim]
             parse_args(args)
 
+    def test_GIVEN_mixed_limits_valid_WHEN_aggregate_THEN_parsed_OK(self):
+        limits = ['x=[-180.0,180.0,0.5],y=[-80.0,10.0,0.1]',
+                  'x=[-180.0,180.0,0.5],y=[-80.0,10.0,0.1],t=[2008-05-12,2008-05-12,PT15M]']
+        for lim in limits:
+            args = ['aggregate', 'var1:%s' % self.escaped_single_valid_file, lim]
+            parse_args(args)
+
 
 class TestParseCollocate(ParseTestFiles):
     """
