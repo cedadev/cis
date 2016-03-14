@@ -16,7 +16,7 @@ from cis.time_util import convert_datetime_to_std_time
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
                    time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
-                   hybrid_ht_len=0, hybrid_pr_len=0, dim_order=None, mask=False):
+                   hybrid_ht_len=0, hybrid_pr_len=0, geopotential_height=False, dim_order=None, mask=False):
     """
     Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
     given get a 5x3 cube of the form:
@@ -41,6 +41,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     :param data_offset: Offset from the default data values
     :param hybrid_ht_len: Hybrid height grid length
     :param hybrid_pr_len: Hybrid pressure grid length
+    :param geopotential_height: Include a geopotential height field when calcluting a hybrid pressure? (default False)
     :param dim_order: List of 'lat', 'lon', 'alt', 'pres', 'time' in the order in which the dimensions occur
     :param mask: A mask to apply to the data, this should be either a scalar or the same shape as the data
     :return: A cube with well defined data.
@@ -156,11 +157,12 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
                                  "surface_air_pressure", units="Pa"),
             [coord_map['lat'], coord_map['lon'], coord_map['time']])
 
-        return_cube.add_aux_coord(iris.coords.AuxCoord(
-            np.arange(lat_dim_length * lon_dim_length * time_dim_length * hybrid_pr_len, dtype='i8')
-            .reshape(lat_dim_length, lon_dim_length, time_dim_length, hybrid_pr_len) + 10,
-            "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
-            [coord_map['lat'], coord_map['lon'], coord_map['time'], coord_map['hybrid_pr']])
+        if geopotential_height:
+            return_cube.add_aux_coord(iris.coords.AuxCoord(
+                np.arange(lat_dim_length * lon_dim_length * time_dim_length * hybrid_pr_len, dtype='i8')
+                .reshape(lat_dim_length, lon_dim_length, time_dim_length, hybrid_pr_len) + 10,
+                "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
+                [coord_map['lat'], coord_map['lon'], coord_map['time'], coord_map['hybrid_pr']])
 
         return_cube.add_aux_factory(HybridPressureFactory(
             delta=return_cube.coord("hybrid A coefficient at layer midpoints"),

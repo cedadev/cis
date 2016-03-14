@@ -135,7 +135,8 @@ class TestNNGridded(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -265,7 +266,8 @@ class TestNNGridded(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -287,7 +289,8 @@ class TestNNGridded(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -821,6 +824,28 @@ class TestLi(unittest.TestCase):
         # Outside of the pressure bounds - extrapolation off
         assert_equal(new_data.data[3], np.inf)
 
+    def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li())[0]
+        # Exactly on the lat, lon, time points, interpolated over pressure
+        assert_almost_equal(new_data.data[0], 221.5, decimal=5)
+        # Exactly on the lat, lon, points, interpolated over time and pressure
+        assert_almost_equal(new_data.data[1], 226.5, decimal=7)
+        # Exactly on the lat, time points, interpolated over longitude and pressure
+        assert_almost_equal(new_data.data[2], 330.5, decimal=7)
+        # Outside of the pressure bounds - extrapolation off
+        assert_equal(new_data.data[3], np.inf)
+
     def test_negative_lon_points_on_hybrid_pressure_coordinates_dont_matter(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
@@ -867,10 +892,11 @@ class TestLi(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
     def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
@@ -887,7 +913,8 @@ class TestLi(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
