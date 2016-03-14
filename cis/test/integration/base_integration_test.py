@@ -28,6 +28,7 @@ class BaseIntegrationTest(unittest.TestCase):
                 var = ds.variables[var]
             except KeyError:
                 raise AssertionError("Variable %s not found in output file" % var)
+        ds.close()
 
     def check_output_file_variable_attribute_contains_string(self, output_path, variable, attribute, string):
         ds = Dataset(output_path)
@@ -40,6 +41,7 @@ class BaseIntegrationTest(unittest.TestCase):
         except AttributeError:
             raise AssertionError("Attribute %s not found in variable" % attribute)
         assert string in att_string
+        ds.close()
 
     def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, gridded):
         if gridded:
@@ -57,6 +59,7 @@ class BaseIntegrationTest(unittest.TestCase):
         assert_that(max(lon), less_than_or_equal_to(lon_max))
         assert_that(min(lat), greater_than_or_equal_to(lat_min))
         assert_that(max(lat), less_than_or_equal_to(lat_max))
+        ds.close()
 
     def check_alt_subsetting(self, alt_max, alt_min, gridded):
         if gridded:
@@ -69,6 +72,7 @@ class BaseIntegrationTest(unittest.TestCase):
         alt = ds.variables[alt_name][:]
         assert_that(min(alt), greater_than_or_equal_to(alt_min))
         assert_that(max(alt), less_than_or_equal_to(alt_max))
+        ds.close()
 
     def check_pres_subsetting(self, pres_max, pres_min, gridded, pres_name='air_pressure'):
         import numpy as np
@@ -80,6 +84,7 @@ class BaseIntegrationTest(unittest.TestCase):
         pres = ds.variables[pres_name][:]
         assert_that(np.min(pres), greater_than_or_equal_to(pres_min))
         assert_that(np.max(pres), less_than_or_equal_to(pres_max))
+        ds.close()
 
     def check_output_col_grid(self, sample_file, sample_var, output_file, output_vars, expected_shape=None):
         """
@@ -101,3 +106,20 @@ class BaseIntegrationTest(unittest.TestCase):
             output_shape = output_var.data.shape
             # This copes with dims in different orders, length 1 values being taken out etc
             assert_that(reduce(mul, sample_shape), is_(reduce(mul, output_shape)))
+
+    def check_output_vars_are_different(self, output_file, output_vars):
+        """
+        Check that the output variables are NOT exactly the same
+        :param output_file:
+        :param output_vars:
+        :return:
+        """
+        from itertools import combinations
+        from cis import read_data_list
+        import numpy as np
+        output = read_data_list(output_file, output_vars)
+        # Loop over each possible pair of output var
+        for a, b in combinations(output, 2):
+            print a
+            print b
+            assert not np.allclose(a.data, b.data)

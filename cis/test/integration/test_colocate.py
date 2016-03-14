@@ -586,6 +586,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_vars_are_different(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_hybrid_height_onto_GASSP_nn(self):
         # Takes 1s
@@ -730,6 +731,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_vars_are_different(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_NetCDF_Gridded_onto_MODIS_L2_nn(self):
         # Takes 16s
@@ -745,6 +747,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_vars_are_different(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_NetCDF_Gridded_onto_MODIS_L3(self):
         # Takes 47s
