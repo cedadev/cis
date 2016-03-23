@@ -161,6 +161,57 @@ class TestGriddedAggregation(TestCase):
         result_data = numpy.array(53)
         assert_arrays_almost_equal(result_data, cube_out[0].data)
 
+    def test_aggregation_over_multidimensional_coord(self):
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
+        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
+                'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
+                'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
+                'air_pressure': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
+
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result_data = numpy.array(263)
+        assert_arrays_almost_equal(cube_out[0].data, result_data)
+
+    def test_partial_aggregation_over_multidimensional_coord(self):
+        # JASCIS-126
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
+        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
+
+        agg = Aggregator(self.cube, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
+                                  [51.0, 52.0, 53.0, 54.0, 55.0],
+                                  [86.0, 87.0, 88.0, 89.0, 90.0]],
+
+                                 [[121.0, 122.0, 123.0, 124.0, 125.0],
+                                  [156.0, 157.0, 158.0, 159.0, 160.0],
+                                  [191.0, 192.0, 193.0, 194.0, 195.0]],
+
+                                 [[226.0, 227.0, 228.0, 229.0, 230.0],
+                                  [261.0, 262.0, 263.0, 264.0, 265.0],
+                                  [296.0, 297.0, 298.0, 299.0, 300]],
+
+                                 [[331.0, 332.0, 333.0, 334.0, 335.0],
+                                  [366.0, 367.0, 368.0, 369.0, 370.0],
+                                  [401.0, 402.0, 403.0, 404.0, 405.0]],
+
+                                 [[436.0, 437.0, 438.0, 439.0, 440.0],
+                                  [471.0, 472.0, 473.0, 474.0, 475.0],
+                                  [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=np.float)
+
+        multidim_coord_points = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
+                                              [51.0, 52.0, 53.0, 54.0, 55.0],
+                                              [86.0, 87.0, 88.0, 89.0, 90.0]],
+                                             [[121.0, 122.0, 123.0, 124.0, 125.0],
+                                              [156.0, 157.0, 158.0, 159.0, 160.0],
+                                              [191.0, 192.0, 193.0, 194.0, 195.0]]], dtype=np.float)
+
+        assert_arrays_almost_equal(cube_out[0].data, result_data)
+        assert_arrays_almost_equal(cube_out[0].coord('air_pressure').points, multidim_coord_points)
+
 
 class TestGriddedListAggregation(TestCase):
 
