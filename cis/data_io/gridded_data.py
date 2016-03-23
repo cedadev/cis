@@ -462,6 +462,14 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         return self[0].dim_coords
 
     @property
+    def aux_coords(self):
+        """
+        The auxiliary coordinates of this data
+        """
+        # Use the dimensions of the first item since all items should have the same dimensions
+        return self[0].aux_coords
+
+    @property
     def ndim(self):
         """
         The number of dimensions in the data of this list.
