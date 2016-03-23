@@ -21,7 +21,7 @@ class Aggregator(object):
         self._grid = grid
 
     @staticmethod
-    def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel, **kwargs):
+    def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN, **kwargs):
         # Perform the (non-lazy) aggregation over the cube data
         # First reshape the data so that the dimensions being aggregated
         # over are grouped 'at the end' (i.e. axis=-1).
@@ -89,7 +89,7 @@ class Aggregator(object):
         new_data = self.data.collapsed(coords, kernel, **ag_args)
 
         for coord in coords_for_partial_collapse:
-            collapsed_coord, new_dims = self._partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel)
+            collapsed_coord, new_dims = self._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
             new_data.add_aux_coord(collapsed_coord, new_dims)
             # If the coordinate we had to collapse manually was a dependency in an aux factory (which is quite likely)
             #  then we need to put it back in and fix the factory, this will update any missing dependencies.
