@@ -14,7 +14,6 @@ from cis.test.util.mock import *
 
 
 class TestGriddedAggregation(TestCase):
-
     def setUp(self):
         self.cube = make_mock_cube()
         self.kernel = iris.analysis.MEAN
@@ -183,38 +182,36 @@ class TestGriddedAggregation(TestCase):
         cube_out = agg.aggregate_gridded(self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
-                                  [51.0, 52.0, 53.0, 54.0, 55.0],
-                                  [86.0, 87.0, 88.0, 89.0, 90.0]],
+                                    [51.0, 52.0, 53.0, 54.0, 55.0],
+                                    [86.0, 87.0, 88.0, 89.0, 90.0]],
 
-                                 [[121.0, 122.0, 123.0, 124.0, 125.0],
-                                  [156.0, 157.0, 158.0, 159.0, 160.0],
-                                  [191.0, 192.0, 193.0, 194.0, 195.0]],
+                                   [[121.0, 122.0, 123.0, 124.0, 125.0],
+                                    [156.0, 157.0, 158.0, 159.0, 160.0],
+                                    [191.0, 192.0, 193.0, 194.0, 195.0]],
 
-                                 [[226.0, 227.0, 228.0, 229.0, 230.0],
-                                  [261.0, 262.0, 263.0, 264.0, 265.0],
-                                  [296.0, 297.0, 298.0, 299.0, 300]],
+                                   [[226.0, 227.0, 228.0, 229.0, 230.0],
+                                    [261.0, 262.0, 263.0, 264.0, 265.0],
+                                    [296.0, 297.0, 298.0, 299.0, 300]],
 
-                                 [[331.0, 332.0, 333.0, 334.0, 335.0],
-                                  [366.0, 367.0, 368.0, 369.0, 370.0],
-                                  [401.0, 402.0, 403.0, 404.0, 405.0]],
+                                   [[331.0, 332.0, 333.0, 334.0, 335.0],
+                                    [366.0, 367.0, 368.0, 369.0, 370.0],
+                                    [401.0, 402.0, 403.0, 404.0, 405.0]],
 
-                                 [[436.0, 437.0, 438.0, 439.0, 440.0],
-                                  [471.0, 472.0, 473.0, 474.0, 475.0],
-                                  [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=np.float)
+                                   [[436.0, 437.0, 438.0, 439.0, 440.0],
+                                    [471.0, 472.0, 473.0, 474.0, 475.0],
+                                    [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=np.float)
 
-        multidim_coord_points = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
-                                              [51.0, 52.0, 53.0, 54.0, 55.0],
-                                              [86.0, 87.0, 88.0, 89.0, 90.0]],
-                                             [[121.0, 122.0, 123.0, 124.0, 125.0],
-                                              [156.0, 157.0, 158.0, 159.0, 160.0],
-                                              [191.0, 192.0, 193.0, 194.0, 195.0]]], dtype=np.float)
+        multidim_coord_points = numpy.array([[300000., 1000000., 1700000.],
+                                             [2400000., 3100000., 3800000.],
+                                             [4500000., 5200000., 5900000.],
+                                             [6600000., 7300000., 8000000.],
+                                             [8700000., 9400000., 10100000.]], dtype=np.float)
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
-        assert_arrays_almost_equal(cube_out[0].coord('air_pressure').points, multidim_coord_points)
+        assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
 
 class TestGriddedListAggregation(TestCase):
-
     def setUp(self):
         self.kernel = iris.analysis.MEAN
 
@@ -308,7 +305,7 @@ class TestGriddedListAggregation(TestCase):
         output = agg.aggregate_gridded(self.kernel)
 
         expect_mean = numpy.array(7.75)
-        expect_stddev = numpy.array(numpy.sqrt(244.25/11))
+        expect_stddev = numpy.array(numpy.sqrt(244.25 / 11))
         expect_count = numpy.array(12)
 
         assert isinstance(output, GriddedDataList)
@@ -414,13 +411,12 @@ class TestUngriddedAggregation(TestCase):
                               [4.0, 5.0],  # 6.0],
                               [7.0, 8.0],  # 9.0],
                               [10.0, 11.0]])  # 12.0],
-                            # [13.0, 14.0, 15.0]],
+        # [13.0, 14.0, 15.0]],
 
         assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
-
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
@@ -443,7 +439,6 @@ class TestUngriddedAggregation(TestCase):
 
     @istest
     def test_mean_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
@@ -460,7 +455,6 @@ class TestUngriddedAggregation(TestCase):
 
     @istest
     def test_max_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-
         self.kernel = max()
 
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
@@ -479,7 +473,6 @@ class TestUngriddedAggregation(TestCase):
 
     @istest
     def test_min_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-
         self.kernel = min()
 
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
@@ -498,7 +491,6 @@ class TestUngriddedAggregation(TestCase):
 
     @istest
     def test_stddev_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-
         self.kernel = stddev()
 
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
@@ -524,7 +516,7 @@ class TestUngriddedAggregation(TestCase):
         output = agg.aggregate_ungridded(self.kernel)
 
         expect_mean = numpy.array([[3.2], [11]])
-        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26/3.0)]])
+        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26 / 3.0)]])
         expect_count = numpy.array([[5], [7]])
 
         assert isinstance(output, GriddedDataList)
@@ -545,9 +537,9 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
 
-        expect_mean = numpy.array([[4.4, 4.5], [35.0/3, 13.5]])
+        expect_mean = numpy.array([[4.4, 4.5], [35.0 / 3, 13.5]])
         expect_stddev = numpy.array([[numpy.sqrt(9.3), numpy.sqrt(4.5)],
-                                     [numpy.sqrt(13.0/3), numpy.sqrt(4.5)]])
+                                     [numpy.sqrt(13.0 / 3), numpy.sqrt(4.5)]])
         expect_count = numpy.array([[5, 2], [3, 2]])
 
         assert isinstance(output, GriddedDataList)
@@ -592,7 +584,7 @@ class TestUngriddedAggregation(TestCase):
 
     def test_aggregating_coord_to_length_one_with_explicit_bounds_gets_output_as_length_one(self):
         data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False), }
+        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False),}
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
         lon = output.coord('longitude')
@@ -600,7 +592,7 @@ class TestUngriddedAggregation(TestCase):
 
     def test_aggregating_to_length_one_with_explicit_bounds_get_correct_bounds(self):
         data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False), }
+        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False),}
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
         lon = output.coord('longitude')
@@ -608,17 +600,15 @@ class TestUngriddedAggregation(TestCase):
 
 
 class TestUngriddedListAggregation(TestCase):
-
     def setUp(self):
         self.kernel = mean()
 
     @istest
     def test_aggregating_list_of_datasets_over_two_dims(self):
-
         grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
 
         datalist = UngriddedDataList([make_regular_2d_ungridded_data_with_missing_values(),
-                                     make_regular_2d_ungridded_data_with_missing_values()])
+                                      make_regular_2d_ungridded_data_with_missing_values()])
 
         agg = Aggregator(datalist, grid)
         cube_out = agg.aggregate_ungridded(self.kernel)
@@ -652,7 +642,7 @@ class TestUngriddedListAggregation(TestCase):
         output = agg.aggregate_ungridded(self.kernel)
 
         expect_mean = numpy.array([[3.2], [11]])
-        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26.0/3)]])
+        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26.0 / 3)]])
         expect_count = numpy.array([[5], [7]])
 
         assert isinstance(output, GriddedDataList)
@@ -683,9 +673,9 @@ class TestUngriddedListAggregation(TestCase):
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
 
-        expect_mean = numpy.array([[4.4, 4.5], [35.0/3, 13.5]])
+        expect_mean = numpy.array([[4.4, 4.5], [35.0 / 3, 13.5]])
         expect_stddev = numpy.array([[numpy.sqrt(9.3), numpy.sqrt(4.5)],
-                                     [numpy.sqrt(13.0/3), numpy.sqrt(4.5)]])
+                                     [numpy.sqrt(13.0 / 3), numpy.sqrt(4.5)]])
         expect_count = numpy.array([[5, 2], [3, 2]])
 
         assert isinstance(output, GriddedDataList)
