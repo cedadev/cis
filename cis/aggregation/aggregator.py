@@ -62,16 +62,14 @@ class Aggregator(object):
         for coord in coords:
             dims_to_collapse.update(self.data.coord_dims(coord))
 
-        coords_for_partial_collapse, coords_for_normal_collapse = [], []
+        coords_for_partial_collapse = []
 
         # Collapse any coords that span the dimension(s) being collapsed
         for coord in self.data.aux_coords:
             coord_dims = self.data.coord_dims(coord)
             if set(dims_to_collapse).intersection(coord_dims) and \
-                    set(range(coord.ndim)) != set(dims_to_collapse):
+                    set(coord_dims).difference(dims_to_collapse):
                 coords_for_partial_collapse.append(coord)
-            else:
-                coords_for_normal_collapse.append(coord)
 
         for coord in coords_for_partial_collapse:
             self.data.remove_coord(coord)
