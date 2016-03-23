@@ -81,6 +81,10 @@ class Aggregator(object):
         for coord in coords_for_partial_collapse:
             collapsed_coord, new_dims = self._partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel)
             new_data.add_aux_coord(collapsed_coord, new_dims)
+            # If the coordinate we had to collapse manually was a dependency in an aux factory (which is quite likely)
+            #  then we need to put it back in and fix the factory, this will update any missing dependencies.
+            for factory in new_data.aux_factories:
+                factory.update(None, collapsed_coord)
 
         return new_data
 
