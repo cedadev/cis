@@ -35,6 +35,16 @@ class Aggregator(object):
         untouched_shape = [coord.shape[dim] for dim in untouched_dims]
         new_shape = untouched_shape + [end_size]
         dims = untouched_dims + dims_to_collapse
+
+        new_dims = []
+        for d in dims:
+            new_d = d
+            for dc in dims_to_collapse:
+                if d > dc:
+                    new_d -= 1
+            if d not in dims_to_collapse:
+                new_dims.append(new_d)
+
         unrolled_data = np.transpose(coord.points, dims).reshape(new_shape)
 
         # Perform the same operation on the weights if applicable
@@ -44,7 +54,7 @@ class Aggregator(object):
 
         new_points = kernel.aggregate(unrolled_data, axis=-1, **kwargs)
         new_coord = coord.copy(points=new_points)
-        return new_coord, untouched_dims
+        return new_coord, new_dims
 
     def _gridded_full_collapse(self, coords, kernel):
 
@@ -67,8 +77,10 @@ class Aggregator(object):
         # Collapse any coords that span the dimension(s) being collapsed
         for coord in self.data.aux_coords:
             coord_dims = self.data.coord_dims(coord)
+            # If a coordinate has any of the dimensions we wan't to collapse AND has some dimensions we don't...
             if set(dims_to_collapse).intersection(coord_dims) and \
                     set(coord_dims).difference(dims_to_collapse):
+                # ... add it to our list of partial coordinates to collapse.
                 coords_for_partial_collapse.append(coord)
 
         for coord in coords_for_partial_collapse:
