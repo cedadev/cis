@@ -2,8 +2,6 @@ import collections
 import re
 import logging
 import warnings
-import iris
-from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 from cis.exceptions import InvalidCommandLineOptionError
 
@@ -194,6 +192,7 @@ def get_coord(data_object, variable, data):
     :param data:
     :return:
     """
+    from iris.exceptions import CoordinateNotFoundError
     if variable in [data_object.name(), data_object.standard_name, data_object.long_name, 'default']:
         return data
     else:
@@ -217,6 +216,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     """
     from iris.cube import Cube
     import iris.plot as iplt
+    from iris.exceptions import CoordinateNotFoundError
     import iris
     import logging
     from cartopy.util import add_cyclic_point
@@ -309,7 +309,8 @@ def fix_longitude_range(lons, range_start):
     :param range_start: longitude at start of 360 degree range into which values are required to fit
     :return: array of fixed longitudes
     """
-    return iris.analysis.cartography.wrap_lons(lons, range_start, 360)
+    from iris.analysis.cartography import wrap_lons
+    return wrap_lons(lons, range_start, 360)
 
 
 def find_longitude_wrap_start(x_variable, packed_data_items):
@@ -320,6 +321,7 @@ def find_longitude_wrap_start(x_variable, packed_data_items):
     :param packed_data_items:
     :return:
     """
+    from iris.exceptions import CoordinateNotFoundError
     x_wrap_start = None
     x_points_mins = []
     x_points_maxs = []
@@ -713,6 +715,7 @@ def guess_coord_axis(coord):
 
     This is intended to be similar to iris.util.guess_coord_axis.
     """
+    import iris
     # TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
     if isinstance(coord, iris.coords.Coord):
         guessed_axis = iris.util.guess_coord_axis(coord)

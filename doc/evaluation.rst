@@ -170,11 +170,11 @@ We then linearly interpolate the HadGEM data onto the ECHAM grid::
 
 Next we subtract the two fields using::
 
-    $ cis eval od550aer=a:echam-od550aer.nc od550=b:hadgem-od550aer-collocated.nc "a-b" 1 -o modeldifference
+    $ cis eval od550aer=a:echam-od550aer.nc od550aer=b:hadgem-od550aer-collocated.nc "a-b" 1 -o modeldifference
 
 Finally we plot the evaluated output::
 
-    $ cis plot od550aer:modeldifference.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="ECHAM-HadGEM difference AOT550" --v min=-0.25 --vmax=0.2
+    $ cis plot calculated_variable:modeldifference.nc --xmin -180 --xmax 180 --cbarorient=horizontal --title="ECHAM-HadGEM difference AOT550" --vmin=-0.25 --vmax=0.2
 
 .. image:: img/eval/echam_hadgem_difference.png
    :width: 450px

@@ -181,6 +181,31 @@ class Aggregator(object):
 
         return aggregated_cube
 
+    @staticmethod
+    def _get_CF_coordinate_units(coord):
+        """
+        Return a CF compliant coordinate unit from a given Coord. Tries common units based on coordinate standard names
+        if needed.
+        :param coord: A data_io.Coord.Coord object
+        :return: a valid cf_units.Unit
+        :raises ValueError for invalid CF units (which can't be fixed)
+        """
+        from cf_units import as_unit
+        coordinate_unit_mappings = {'latitude': 'degrees_north', 'longitude': 'degrees_east'}
+
+        try:
+            coord_unit = as_unit(coord.units)
+        except ValueError as e:
+            if e.message.startswith('[UT_UNKNOWN]') and coord.standard_name in coordinate_unit_mappings:
+                # For some common coordinates we can fix this...
+                coord_unit = as_unit(coordinate_unit_mappings[coord.standard_name])
+                logging.warning("Converting units for {coord} from {old} to the CF-compliant units: {new}"
+                                .format(**{'coord': coord.standard_name, 'old': coord.units, 'new': coord_unit}))
+            else:
+                # Otherwise give up
+                raise e
+        return coord_unit
+
     def _make_fully_collapsed_coord(self, coord):
         """
         Make a new DimCoord which represents a fully collapsed coordinate.
@@ -192,7 +217,7 @@ class Aggregator(object):
         cell_points = np.array([cell_centre])
         cell_bounds = np.array([[-np.inf, np.inf]])
         new_coord = DimCoord(cell_points, var_name=coord.name(), standard_name=coord.standard_name,
-                             units=coord.units, bounds=cell_bounds)
+                             units=self._get_CF_coordinate_units(coord), bounds=cell_bounds)
         return new_coord
 
     def _make_partially_collapsed_coord(self, coord, grid, guessed_axis):
@@ -220,7 +245,7 @@ class Aggregator(object):
             grid_delta = float(grid.delta)
         new_coordinate_grid = aggregation_grid_array(grid_start, grid_end, grid_delta, grid.is_time, coord)
         new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
-                             units=coord.units)
+                             units=self._get_CF_coordinate_units(coord))
         if len(new_coord.points) == 1:
             new_coord.bounds = [[grid_start, grid_end]]
         else:
