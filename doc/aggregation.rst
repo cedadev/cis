@@ -104,6 +104,11 @@ where:
 
   * ``t=[2011-11-03T12:00,2013-01,P1M]``
 
+  **Multi-dimensional gridded coordinates**
+
+  Some gridded coordinates can span multiple dimensions, such as hybrid height. These coordinates can be aggregated over
+  as normal, but note that if you only aggregate over a subset of the dimensions a mean kernel will always be used, and
+  no area weighting will be taken into account.
 
 ``<outputfile>``
   is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension if not

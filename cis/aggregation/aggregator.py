@@ -21,7 +21,7 @@ class Aggregator(object):
         self._grid = grid
 
     @staticmethod
-    def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN, **kwargs):
+    def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN):
         # Perform the (non-lazy) aggregation over the cube data
         # First reshape the data so that the dimensions being aggregated
         # over are grouped 'at the end' (i.e. axis=-1).
@@ -47,12 +47,7 @@ class Aggregator(object):
 
         unrolled_data = np.transpose(coord.points, dims).reshape(new_shape)
 
-        # Perform the same operation on the weights if applicable
-        if kwargs.get("weights") is not None:
-            weights = kwargs["weights"].view()
-            kwargs["weights"] = np.transpose(weights, dims).reshape(new_shape)
-
-        new_points = kernel.aggregate(unrolled_data, axis=-1, **kwargs)
+        new_points = kernel.aggregate(unrolled_data, axis=-1)
         new_coord = coord.copy(points=new_points)
         return new_coord, new_dims
 
