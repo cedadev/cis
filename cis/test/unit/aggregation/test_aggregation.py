@@ -210,7 +210,7 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
-    def test_partial_weighted_aggregation_over_multidimensional_coord(self):
+    def test_partial_aggregation_over_multidimensional_coord_along_middle_of_cube(self):
         # JASCIS-126
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
