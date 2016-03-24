@@ -265,7 +265,7 @@ def create_indexes(operator, coords, data, coord_map):
                       coords to be iterated over
     """
     for attr, cls in _index_attributes.iteritems():
-        if hasattr(operator, attr) and (getattr(operator, attr) is None):
+        if hasattr(operator, attr):
             index = cls()
             logging.info("--> Creating index for %s", operator.__class__.__name__)
             index.index_data(coords, data, coord_map)
