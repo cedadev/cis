@@ -112,10 +112,10 @@ class TestAggregation(BaseAggregationTest):
                              [i, i, i, i, 0.127948367761241, i, i, i, i, i, i, i, i, i, i, 0.0958142693422429]]])
         arr_550 = ma.masked_invalid(arr_550)
         arr_870 = ma.masked_invalid(arr_870)
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        data_550 = ds.variables['AOD550']
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        data_550 = self.ds.variables['AOD550']
         assert_arrays_almost_equal(data_550[:], arr_550.reshape((12, 16, 1)))
-        data_870 = ds.variables['AOD870']
+        data_870 = self.ds.variables['AOD870']
         assert_arrays_almost_equal(data_870[:], arr_870.reshape((12, 16, 1)))
 
     def test_aggregation_over_time(self):
@@ -146,10 +146,10 @@ class TestAggregation(BaseAggregationTest):
                               0.373931448211543, 0.207438293844461, 0.336047132128795,
                               0.220540801986261, 0.118595280574826, 0.0763243285563936,
                               0.0623867045505904, 0.0538315528589818]]])
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        data_550 = ds.variables['AOD550']
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        data_550 = self.ds.variables['AOD550']
         assert_arrays_almost_equal(data_550[:], arr_550, 1.0e-2)
-        data_870 = ds.variables['AOD870']
+        data_870 = self.ds.variables['AOD870']
         assert_arrays_almost_equal(data_870[:], arr_870, 1.0e-2)
 
     def test_aggregation_of_multiple_variables_gives_same_result(self):
@@ -164,19 +164,19 @@ class TestAggregation(BaseAggregationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
         # Read the aggregated data
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        aot_440 = ds.variables['AOT_440'][:]
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        aot_440 = self.ds.variables['AOT_440'][:]
 
         # Clean up the old aggregation
-        ds.close()
+        self.ds.close()
         os.remove(self.GRIDDED_OUTPUT_FILENAME)
 
         # Now redo the aggregation, but for all AOT variables
         self.do_temporal_aggregate('AOT*', filename, t_start, t_end, str_delta)
 
         # Read the new data in
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        aot_440_multi_var = ds.variables['AOT_440'][:]
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        aot_440_multi_var = self.ds.variables['AOT_440'][:]
 
         # And check they are the same...
         assert_arrays_almost_equal(aot_440, aot_440_multi_var)
