@@ -122,9 +122,9 @@ class TestAggregation(BaseAggregationTest):
         arr_870 = ma.masked_invalid(arr_870)
         self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         data_550 = self.ds.variables['AOD550']
-        assert_arrays_almost_equal(data_550[:], arr_550.reshape((12, 16, 1)))
+        assert_arrays_almost_equal(data_550[:], arr_550.reshape((16,12,1)))
         data_870 = self.ds.variables['AOD870']
-        assert_arrays_almost_equal(data_870[:], arr_870.reshape((12, 16, 1)))
+        assert_arrays_almost_equal(data_870[:], arr_870.reshape((16,12,1)))
 
     def test_aggregation_over_time(self):
         # Takes 14s
