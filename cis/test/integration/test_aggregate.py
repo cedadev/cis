@@ -14,11 +14,11 @@ from cis.parse import parse_args
 class BaseAggregationTest(BaseIntegrationTest):
     def check_grid_aggregation(self, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta,
                                lat_name='lat', lon_name='lon'):
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         expected_lat_bnds = np.array([[y, y + lat_delta] for y in np.arange(lat_start, lat_end, lat_delta)])
         expected_lon_bnds = np.array([[x, x + lon_delta] for x in np.arange(lon_start, lon_end, lon_delta)])
-        lat_bnds = ds.variables[lat_name + '_bnds']
-        lon_bnds = ds.variables[lon_name + '_bnds']
+        lat_bnds = self.ds.variables[lat_name + '_bnds']
+        lon_bnds = self.ds.variables[lon_name + '_bnds']
         try:
             assert_that(np.allclose(lat_bnds[:], expected_lat_bnds))
         except AssertionError:
@@ -30,9 +30,10 @@ class BaseAggregationTest(BaseIntegrationTest):
         except AssertionError:
             expected_lon_bnds = np.array([[x + lon_delta, x] for x in np.arange(lon_start, lon_end, lon_delta)])[::-1]
             assert_that(np.allclose(lon_bnds[:], expected_lon_bnds))
+        self.ds.close()
 
     def check_temporal_aggregation(self, time_start, time_end, time_delta, time_name='time'):
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         # Convert from time to days after..
 
         def convert_to_days_since_cis_epoch(date_time):
@@ -45,8 +46,10 @@ class BaseAggregationTest(BaseIntegrationTest):
 
         expected_time_bnds = np.array([[t, t + time_delta] for t in np.arange(time_start, time_end, time_delta)
                                        if t + time_delta <= time_end * (1 + 1e-13)])
-        time_bnds = ds.variables[time_name + '_bnds']
+        time_bnds = self.ds.variables[time_name + '_bnds']
+        assert_that(time_bnds.shape == expected_time_bnds.shape)
         assert_that(np.allclose(time_bnds[:], expected_time_bnds))
+        self.ds.close()
 
     def do_spatial_aggregate(self, variable, filename, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta):
         grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_start, lon_end, lon_delta, lat_start, lat_end, lat_delta)
@@ -455,17 +458,21 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
 
     def test_aggregate_Aeronet(self):
         # Takes 2s
-        variable = 'Dateddmmyy,Timehhmmss,Julian_Day,AOT_1640,AOT_1020,AOT_870,AOT_675,AOT_667,AOT_555,AOT_551,' \
-                   'AOT_532,AOT_531,AOT_500,AOT_490,AOT_443,AOT_440,AOT_412,AOT_380,AOT_340,Watercm,TripletVar_1640,' \
-                   'TripletVar_1020,TripletVar_870,TripletVar_675,TripletVar_667,TripletVar_555,TripletVar_551,' \
-                   'TripletVar_532,TripletVar_531,TripletVar_500,TripletVar_490,TripletVar_443,TripletVar_440,' \
-                   'TripletVar_412,TripletVar_380,TripletVar_340,WaterError,440870Angstrom,380500Angstrom,' \
-                   '440675Angstrom,500870Angstrom,340440Angstrom,440675AngstromPolar,Last_Processing_Date,' \
-                   'Solar_Zenith_Angle'
-        variable = 'Solar_Zenith_Angle'
+        variable = 'AOT_440'
         filename = valid_aeronet_filename
-        time_min, time_max = dt.datetime(2003, 9, 24, 7, 0, 0), dt.datetime(2003, 11, 04, 7, 0, 0)
-        time_delta = dt.timedelta(days=1)
+        time_min, time_max = dt.datetime(1999, 1, 1, 0, 0, 0), dt.datetime(1999, 12, 29, 0, 0, 0)
+        time_delta = dt.timedelta(hours=6)
+        str_delta = 'P1D'
+        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+    def test_aggregate_Aeronet_multi_var(self):
+        # Takes 2s
+        variable = 'AOT_*'
+        filename = valid_aeronet_filename
+        time_min, time_max = dt.date(1999, 1, 1), dt.date(1999, 12, 29)
+        time_delta = dt.timedelta(hours=6)
         str_delta = 'P1D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')

@@ -17,23 +17,25 @@ class BaseIntegrationTest(unittest.TestCase):
         self.clean_output()
 
     def clean_output(self):
+        if hasattr(self, 'ds') and self.ds.isopen():
+            self.ds.close()
         for path in self.UNGRIDDED_OUTPUT_FILENAME, self.GRIDDED_OUTPUT_FILENAME:
             if os.path.exists(path):
                 os.remove(path)
 
     def check_output_contains_variables(self, output_path, var_names):
-        ds = Dataset(output_path)
+        self.ds = Dataset(output_path)
         for var in var_names:
             try:
-                var = ds.variables[var]
+                var = self.ds.variables[var]
             except KeyError:
                 raise AssertionError("Variable %s not found in output file" % var)
-        ds.close()
+        self.ds.close()
 
     def check_output_file_variable_attribute_contains_string(self, output_path, variable, attribute, string):
-        ds = Dataset(output_path)
+        self.ds = Dataset(output_path)
         try:
-            var = ds.variables[variable]
+            var = self.ds.variables[variable]
         except KeyError:
             raise AssertionError("Variable %s not found in output file" % variable)
         try:
@@ -41,7 +43,7 @@ class BaseIntegrationTest(unittest.TestCase):
         except AttributeError:
             raise AssertionError("Attribute %s not found in variable" % attribute)
         assert string in att_string
-        ds.close()
+        self.ds.close()
 
     def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, gridded):
         if gridded:
@@ -52,14 +54,14 @@ class BaseIntegrationTest(unittest.TestCase):
             lat_name = 'latitude'
             lon_name = 'longitude'
             output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        ds = Dataset(output_path)
-        lat = ds.variables[lat_name][:]
-        lon = ds.variables[lon_name][:]
+        self.ds = Dataset(output_path)
+        lat = self.ds.variables[lat_name][:]
+        lon = self.ds.variables[lon_name][:]
         assert_that(min(lon), greater_than_or_equal_to(lon_min))
         assert_that(max(lon), less_than_or_equal_to(lon_max))
         assert_that(min(lat), greater_than_or_equal_to(lat_min))
         assert_that(max(lat), less_than_or_equal_to(lat_max))
-        ds.close()
+        self.ds.close()
 
     def check_alt_subsetting(self, alt_max, alt_min, gridded):
         if gridded:
@@ -68,11 +70,11 @@ class BaseIntegrationTest(unittest.TestCase):
         else:
             alt_name = 'altitude'
             output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        ds = Dataset(output_path)
-        alt = ds.variables[alt_name][:]
+        self.ds = Dataset(output_path)
+        alt = self.ds.variables[alt_name][:]
         assert_that(min(alt), greater_than_or_equal_to(alt_min))
         assert_that(max(alt), less_than_or_equal_to(alt_max))
-        ds.close()
+        self.ds.close()
 
     def check_pres_subsetting(self, pres_max, pres_min, gridded, pres_name='air_pressure'):
         import numpy as np
@@ -80,11 +82,11 @@ class BaseIntegrationTest(unittest.TestCase):
             output_path = self.GRIDDED_OUTPUT_FILENAME
         else:
             output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        ds = Dataset(output_path)
-        pres = ds.variables[pres_name][:]
+        self.ds = Dataset(output_path)
+        pres = self.ds.variables[pres_name][:]
         assert_that(np.min(pres), greater_than_or_equal_to(pres_min))
         assert_that(np.max(pres), less_than_or_equal_to(pres_max))
-        ds.close()
+        self.ds.close()
 
     def check_output_col_grid(self, sample_file, sample_var, output_file, output_vars, expected_shape=None):
         """
