@@ -857,3 +857,44 @@ class TestUngriddedListAggregation(TestCase):
         assert_arrays_almost_equal(mean_2.data, expect_mean + 10)
         assert_arrays_almost_equal(stddev_2.data, expect_stddev)
         assert_arrays_almost_equal(count_2.data, expect_count)
+
+    @istest
+    def test_aggregating_list_of_datasets_over_two_dims_with_diff_masks(self):
+        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
+
+        var_0 = make_regular_2d_ungridded_data_with_missing_values()
+        var_1 = make_regular_2d_ungridded_data_with_missing_values()
+
+        var_1.data.mask = 1
+
+        datalist = UngriddedDataList([var_1, var_0])
+
+        agg = Aggregator(datalist, grid)
+        cube_out = agg.aggregate_ungridded(self.kernel)
+
+        result_0 = numpy.ma.array([[1.0, 2.0, 3.0],
+                                 [4.0, 5.0, 6.0],
+                                 [7.0, 8.0, 9.0],
+                                 [10.0, 11.0, 12.0],
+                                 [13.0, 14.0, 15.0]],
+                                mask=[[0, 0, 0],
+                                      [0, 1, 0],
+                                      [0, 0, 1],
+                                      [0, 0, 0],
+                                      [1, 0, 0]], fill_value=float('inf'))
+
+        result_1 = numpy.ma.array([[1.0, 2.0, 3.0],
+                                   [4.0, 5.0, 6.0],
+                                   [7.0, 8.0, 9.0],
+                                   [10.0, 11.0, 12.0],
+                                   [13.0, 14.0, 15.0]],
+                                  mask=[[1, 1, 1],
+                                        [1, 1, 1],
+                                        [1, 1, 1],
+                                        [1, 1, 1],
+                                        [1, 1, 1]], fill_value=float('inf'))
+
+        print cube_out[0].data.fill_value
+        assert len(cube_out) == 2
+        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result_1))
+        assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result_0))
