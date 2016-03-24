@@ -110,7 +110,6 @@ class TestWriteNetcdf(unittest.TestCase):
         self.d = Dataset(tmp_file)
         assert self.d.dimensions['time'].isunlimited()
 
-
     def test_gridded_list_write_no_time_has_no_unlimited_dimension(self):
         data = GriddedDataList([make_from_cube(make_mock_cube())])
         data[0].var_name = 'rain'
