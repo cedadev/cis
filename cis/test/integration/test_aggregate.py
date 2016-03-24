@@ -10,6 +10,14 @@ from cis.test.integration_test_data import *
 from cis.test.utils_for_testing import *
 from cis.parse import parse_args
 
+try:
+    import pyhdf
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pyhdf = None
+
+skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
+
 
 class BaseAggregationTest(BaseIntegrationTest):
     def check_grid_aggregation(self, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta,
@@ -293,6 +301,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='latitude', lon_name='longitude')
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L2(self):
         # Takes 66s
         variable = '*'
@@ -303,6 +312,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='Latitude', lon_name='Longitude')
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L3(self):
         # (All variables takes 23 mins)
         # Takes 27s
@@ -318,6 +328,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
                                     lat_name='latitude', lon_name='longitude')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_CloudSatPRECIP(self):
         # Takes 190s
         variable = '*'
@@ -339,6 +350,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='Latitude', lon_name='Longitude')
 
+    @skip_pyhdf
     def test_aggregate_CloudSatRVOD(self):
         # Takes 200s
         variable = '*'  # Slow and runs out of memory
@@ -351,6 +363,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
                                     lat_name='Latitude', lon_name='Longitude')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_Caliop_L2(self):
         # Takes 37 mins
         variable = '*'
@@ -519,6 +532,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L2(self):
         # Takes 20 mins
         variable = 'Solar_Zenith,Latitude,Sensor_Azimuth,Longitude'
@@ -530,6 +544,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Scan_Start_Time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L3(self):
         # Takes 8s
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
@@ -543,6 +558,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_CloudSatPRECIP_with_dimension_variables(self):
         # Takes 28s
         # RuntimeError: NetCDF: String match to name in use
@@ -556,6 +572,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(',') +
                                              ['aggregated_Profile_time'])
 
+    @skip_pyhdf
     def test_aggregate_CloudSatPRECIP(self):
         variable = valid_cloudsat_PRECIP_variable
         filename = valid_cloudsat_PRECIP_file
@@ -566,6 +583,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [valid_cloudsat_PRECIP_variable])
 
+    @skip_pyhdf
     def test_aggregate_CloudSatRVOD(self):
         # Takes 41s
         variable = 'RVOD_liq_water_content,RVOD_ice_water_path'
@@ -589,6 +607,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_Time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_Caliop_L2(self):
         # Takes 20s
         variable = 'Perpendicular_Backscatter_Coefficient_532,' \
