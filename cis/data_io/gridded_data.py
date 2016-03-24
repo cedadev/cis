@@ -269,7 +269,13 @@ class GriddedData(iris.cube.Cube, CommonData):
         :param output_file: Output file to save to.
         """
         logging.info('Saving data to %s' % output_file)
-        iris.save(self, output_file, local_keys=self._local_attributes)
+        save_args = {'local_keys': self._local_attributes}
+        # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
+        if self.coords('time'):
+            save_args['unlimited_dimensions'] = ['time']
+        else:
+            iris.FUTURE.netcdf_no_unlimited = True
+        iris.save(self, output_file, **save_args)
 
     def as_data_frame(self, copy=True):
         """
@@ -317,7 +323,15 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         :param output_file: File to save to
         """
         logging.info('Saving data to %s' % output_file)
-        iris.save(self, output_file)
+        save_args = {}
+
+        # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
+        if self.coords('time'):
+            save_args['unlimited_dimensions'] = ['time']
+        else:
+            iris.FUTURE.netcdf_no_unlimited = True
+
+        iris.save(self, output_file, **save_args)
 
     def coord(self, *args, **kwargs):
         """

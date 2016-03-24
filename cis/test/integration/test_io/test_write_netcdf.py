@@ -2,7 +2,7 @@ import unittest
 import os
 from netCDF4 import Dataset
 
-from cis.data_io.gridded_data import make_from_cube
+from cis.data_io.gridded_data import make_from_cube, GriddedDataList
 from cis.test.util.mock import make_dummy_2d_ungridded_data, make_mock_cube
 from cis.test.integration_test_data import valid_cis_col_file, valid_cis_col_variable
 from cis.data_io.write_netcdf import write
@@ -13,6 +13,8 @@ tmp_file = "tmp_file.nc"
 class TestWriteNetcdf(unittest.TestCase):
 
     def tearDown(self):
+        if hasattr(self, 'd') and self.d.isopen():
+            self.d.close()
         os.remove(tmp_file)
 
     def test_write_netcdf(self):
@@ -28,9 +30,9 @@ class TestWriteNetcdf(unittest.TestCase):
         data_object = prod.create_data_object([valid_cis_col_file], valid_cis_col_variable)
         write(data_object, tmp_file)
 
-        d = Dataset(tmp_file)
+        self.d = Dataset(tmp_file)
 
-        v = d.variables['AOT_440']
+        v = self.d.variables['AOT_440']
 
         # This will fail because var.shape is in the file
         print v[:2]
@@ -54,9 +56,9 @@ class TestWriteNetcdf(unittest.TestCase):
                  'units': 'units'}
         data.add_attributes(attrs)
         write(data, tmp_file)
-        d = Dataset(tmp_file)
+        self.d = Dataset(tmp_file)
         for key, val in attrs.iteritems():
-            assert getattr(d.variables['rain'], key) == val
+            assert getattr(self.d.variables['rain'], key) == val
 
     def test_gridded_write_attributes(self):
         data = make_from_cube(make_mock_cube())
@@ -67,21 +69,52 @@ class TestWriteNetcdf(unittest.TestCase):
                  'units': 'units'}
         data.add_attributes(attrs)
         data.save_data(tmp_file)
-        d = Dataset(tmp_file)
+        self.d = Dataset(tmp_file)
         for key, val in attrs.iteritems():
-            assert getattr(d.variables['rain'], key) == val
+            assert getattr(self.d.variables['rain'], key) == val
 
     def test_ungridded_write_units(self):
         data = make_dummy_2d_ungridded_data()
         data.units = 'kg'
         write(data, tmp_file)
-        d = Dataset(tmp_file)
-        assert d.variables['rain'].units == 'kg'
+        self.d = Dataset(tmp_file)
+        assert self.d.variables['rain'].units == 'kg'
 
     def test_gridded_write_units(self):
         data = make_from_cube(make_mock_cube())
         data.var_name = 'rain'
         data.units = 'ppm'
         data.save_data(tmp_file)
-        d = Dataset(tmp_file)
-        assert d.variables['rain'].units == 'ppm'
+        self.d = Dataset(tmp_file)
+        assert self.d.variables['rain'].units == 'ppm'
+
+    def test_gridded_write_time_as_unlimited_dimension(self):
+        data = make_from_cube(make_mock_cube(time_dim_length=7))
+        data.var_name = 'rain'
+        data.save_data(tmp_file)
+        self.d = Dataset(tmp_file)
+        assert self.d.dimensions['time'].isunlimited()
+
+    def test_gridded_write_no_time_has_no_unlimited_dimension(self):
+        data = make_from_cube(make_mock_cube())
+        data.var_name = 'rain'
+        data.save_data(tmp_file)
+        self.d = Dataset(tmp_file)
+        for d in self.d.dimensions.itervalues():
+            assert not d.isunlimited()
+
+    def test_gridded_list_write_time_as_unlimited_dimension(self):
+        data = GriddedDataList([make_from_cube(make_mock_cube(time_dim_length=7))])
+        data[0].var_name = 'rain'
+        data.save_data(tmp_file)
+        self.d = Dataset(tmp_file)
+        assert self.d.dimensions['time'].isunlimited()
+
+
+    def test_gridded_list_write_no_time_has_no_unlimited_dimension(self):
+        data = GriddedDataList([make_from_cube(make_mock_cube())])
+        data[0].var_name = 'rain'
+        data.save_data(tmp_file)
+        self.d = Dataset(tmp_file)
+        for d in self.d.dimensions.itervalues():
+            assert not d.isunlimited()
