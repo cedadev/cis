@@ -88,6 +88,11 @@ class BaseIntegrationTest(unittest.TestCase):
         assert_that(np.max(pres), less_than_or_equal_to(pres_max))
         self.ds.close()
 
+    @staticmethod
+    def _clean_sample_file_name(sample_file):
+        import re
+        return re.sub(r'([\\]):', r':', sample_file)
+
     def check_output_col_grid(self, sample_file, sample_var, output_file, output_vars, expected_shape=None):
         """
         Check that the output grid matches the sample grid in shape.
@@ -100,7 +105,7 @@ class BaseIntegrationTest(unittest.TestCase):
         from cis import read_data, read_data_list
         from operator import mul
         if expected_shape is None:
-            sample_shape = read_data(sample_file, sample_var).data.shape
+            sample_shape = read_data(self._clean_sample_file_name(sample_file), sample_var).data.shape
         else:
             sample_shape = expected_shape
         output = read_data_list(output_file, output_vars)
