@@ -463,6 +463,32 @@ class TestGriddedListAggregation(TestCase):
         assert numpy.allclose(count_1.data, expect_count)
         assert numpy.allclose(count_2.data, expect_count)
 
+    def test_partial_aggregation_over_more_than_one_dim_on_multidimensional_coord(self):
+        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
+
+        data1 = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        data2 = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5, data_offset=1))
+        datalist = GriddedDataList([data1, data2])
+
+        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
+                'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
+
+        agg = Aggregator(datalist, grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
+                                   [156.0, 157.0, 158.0, 159.0, 160.0],
+                                   [261.0, 262.0, 263.0, 264.0, 265.0],
+                                   [366.0, 367.0, 368.0, 369.0, 370.0],
+                                   [471.0, 472.0, 473.0, 474.0, 475.0]], dtype=np.float)
+
+        multidim_coord_points = numpy.array([1000000., 3100000., 5200000., 7300000., 9400000.], dtype=np.float)
+
+        assert_arrays_almost_equal(cube_out[0].data, result_data)
+        assert_arrays_almost_equal(cube_out[1].data, result_data+1)
+        assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
+        assert_arrays_almost_equal(cube_out[1].coord('surface_air_pressure').points, multidim_coord_points)
+
 
 class TestUngriddedAggregation(TestCase):
     def setUp(self):
