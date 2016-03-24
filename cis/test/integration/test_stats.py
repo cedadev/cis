@@ -5,6 +5,14 @@ from cis.cis_main import stats_cmd, col_cmd
 from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 
+try:
+    import pyhdf
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pyhdf = None
+
+skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
+
 
 class TestStats(BaseIntegrationTest):
 
@@ -67,6 +75,7 @@ class TestStats(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, self.output_vars)
         os.remove('cis-collocated_gassp.nc')
 
+    @skip_pyhdf
     def test_CloudSat(self):
         # Takes 140s
         args = ['stats', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,

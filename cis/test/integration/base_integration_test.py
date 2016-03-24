@@ -102,17 +102,18 @@ class BaseIntegrationTest(unittest.TestCase):
         :param output_vars:
         :return:
         """
-        from cis import read_data, read_data_list
+        from cis import read_data
         from operator import mul
         if expected_shape is None:
             sample_shape = read_data(self._clean_sample_file_name(sample_file), sample_var).data.shape
         else:
             sample_shape = expected_shape
-        output = read_data_list(output_file, output_vars)
-        for output_var in output:
-            output_shape = output_var.data.shape
+        self.ds = Dataset(self._clean_sample_file_name(output_file))
+        for output_var in output_vars:
+            output_shape = self.ds.variables[output_var].shape
             # This copes with dims in different orders, length 1 values being taken out etc
             assert_that(reduce(mul, sample_shape), is_(reduce(mul, output_shape)))
+        self.ds.close()
 
     def check_output_vars_are_different(self, output_file, output_vars):
         """
@@ -122,11 +123,11 @@ class BaseIntegrationTest(unittest.TestCase):
         :return:
         """
         from itertools import combinations
-        from cis import read_data_list
         import numpy as np
-        output = read_data_list(output_file, output_vars)
+        self.ds = Dataset(self._clean_sample_file_name(output_file))
         # Loop over each possible pair of output var
-        for a, b in combinations(output, 2):
-            print a
-            print b
-            assert not np.allclose(a.data, b.data)
+        for a, b in combinations(output_vars, 2):
+            a_data = self.ds.variables[a]
+            b_data = self.ds.variables[b]
+            assert not np.allclose(a_data, b_data)
+        self.ds.close()
