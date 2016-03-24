@@ -462,21 +462,23 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         filename = valid_aeronet_filename
         time_min, time_max = dt.datetime(1999, 1, 1, 0, 0, 0), dt.datetime(1999, 12, 29, 0, 0, 0)
         time_delta = dt.timedelta(hours=6)
-        str_delta = 'P1D'
+        str_delta = 'PT6H'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Aeronet_multi_var(self):
         # Takes 2s
-        variable = 'AOT_*'
+        variable = 'AOT_1640,AOT_1020,AOT_870,AOT_675,AOT_667,AOT_555,AOT_551,' \
+                   'AOT_532,AOT_531,AOT_500,AOT_490,AOT_443,AOT_440,AOT_412,AOT_380,AOT_340'
         filename = valid_aeronet_filename
-        time_min, time_max = dt.date(1999, 1, 1), dt.date(1999, 12, 29)
+        time_min, time_max = dt.datetime(1999, 1, 1), dt.datetime(1999, 12, 29)
         time_delta = dt.timedelta(hours=6)
-        str_delta = 'P1D'
+        str_delta = 'PT6H'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_output_vars_are_different(self.GRIDDED_OUTPUT_FILENAME, variable.split(',')[:5])
 
     def test_aggregate_netCDF_gridded_HadGem(self):
         # Takes 1s
