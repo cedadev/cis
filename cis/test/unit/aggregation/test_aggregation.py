@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from nose.tools import istest
+from nose.tools import istest, eq_
 import iris.analysis
 
 from cis.data_io.gridded_data import make_from_cube, GriddedDataList
@@ -174,11 +174,12 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].data, result_data)
 
     def test_partial_aggregation_over_multidimensional_coord(self):
+        from cis.data_io.gridded_data import GriddedData
         # JASCIS-126
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
 
-        agg = Aggregator(self.cube, grid)
+        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
         cube_out = agg.aggregate_gridded(self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
@@ -211,11 +212,12 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
     def test_partial_aggregation_over_multidimensional_coord_along_middle_of_cube(self):
+        from cis.data_io.gridded_data import GriddedData
         # JASCIS-126
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(self.cube, grid)
+        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
         cube_out = agg.aggregate_gridded(self.kernel)
 
         result_data = numpy.array([[[36.0, 37.0, 38.0, 39.0, 40.0],
@@ -267,6 +269,41 @@ class TestGriddedAggregation(TestCase):
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
+
+    def test_calc_new_dims(self):
+        # Cube dims         [0, 1, 2, 3]
+        # Coord dims        [0, 1, 2]
+        # Dims to collapse      ^
+        # Untouched dims    [0, 2]
+        # New dims          [0, 1]
+        # Local dims        [1]
+        # Mirrors: test_partial_aggregation_over_multidimensional_coord_along_middle_of_cube
+        eq_(Aggregator._calc_new_dims([0, 1, 2], {1}), [0, 1])
+
+        # Cube dims         [0, 1, 2, 3]
+        # Coord dims        [0, 1, 2]
+        # Dims to collapse         ^
+        # Untouched dims    [0, 1]
+        # New dims          [0, 1]
+        # Local dims        [2]
+        # Mirrors: test_partial_aggregation_over_multidimensional_coord
+        eq_(Aggregator._calc_new_dims([0, 1, 2], {2}), [0, 1])
+
+        # Cube dims         [0, 1, 2, 3]
+        # Coord dims        [0, ., 1, 2]
+        # Coord dims        [0, 2, 3]
+        # Dims to collapse   ^
+        # Untouched dims    [1, 2]
+        # New dims          [1, 2]
+        # Local dims        [0]
+        # Mirrors: test_netCDF_gridded_hybrid_height_partial
+        eq_(Aggregator._calc_new_dims([0, 2, 3], {0}), [1, 2])
+
+        # Test collapsing multiple dimensions
+        eq_(Aggregator._calc_new_dims([0, 1, 2], {0, 1}), [0])
+
+        # Test collapsing multiple dimensions, some of which aren't on the coordinate
+        eq_(Aggregator._calc_new_dims([0, 1, 2], {2, 3}), [0, 1])
 
 
 class TestGriddedListAggregation(TestCase):

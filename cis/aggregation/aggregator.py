@@ -22,34 +22,45 @@ class Aggregator(object):
 
     @staticmethod
     def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN):
-        # Perform the (non-lazy) aggregation over the cube data
-        # First reshape the data so that the dimensions being aggregated
-        # over are grouped 'at the end' (i.e. axis=-1).
         import operator
+
+        # First calculate our new shape and dims
         dims_to_collapse = sorted(dims_to_collapse)
-
         end_size = reduce(operator.mul, (coord.shape[dim] for dim in dims_to_collapse))
-
         untouched_dims = list(set(range(coord.ndim)) - set(dims_to_collapse))
-
         untouched_shape = [coord.shape[dim] for dim in untouched_dims]
         new_shape = untouched_shape + [end_size]
         dims = untouched_dims + dims_to_collapse
 
-        new_dims = []
-        for d in dims:
-            new_d = d
-            for dc in dims_to_collapse:
-                if d > dc:
-                    new_d -= 1
-            if d not in dims_to_collapse:
-                new_dims.append(new_d)
-
+        # Then reshape the data so that the dimensions being aggregated
+        # over are grouped 'at the end' (i.e. axis=-1).
         unrolled_data = np.transpose(coord.points, dims).reshape(new_shape)
 
         new_points = kernel.aggregate(unrolled_data, axis=-1)
         new_coord = coord.copy(points=new_points)
-        return new_coord, new_dims
+        return new_coord
+
+    @staticmethod
+    def _calc_new_dims(coord_dims, dims_to_collapse):
+        """
+            Calculate the new dimensions for the coordinate.
+        :param coord_dims: the original dimensions
+        :param dims_to_collapse: The dimensions which are being collapsed over
+        :return: The new coordinates which the coord will take on the collapsed cube
+        """
+        new_dims = []
+        # For each original dimension subtract one for every collapsed coordinate which came before it.
+        # TODO: There must be a cleaner way to do this...
+        for d in coord_dims:
+            new_d = d
+            for dc in dims_to_collapse:
+                if d > dc:
+                    new_d -= 1
+            # If the dimension is one being collapsed then we don't include it in the new dimensions
+            if d not in dims_to_collapse:
+                new_dims.append(new_d)
+
+        return new_dims
 
     def _gridded_full_collapse(self, coords, kernel):
 
@@ -76,20 +87,21 @@ class Aggregator(object):
             if set(dims_to_collapse).intersection(coord_dims) and \
                     set(coord_dims).difference(dims_to_collapse):
                 # ... add it to our list of partial coordinates to collapse.
-                coords_for_partial_collapse.append(coord)
+                coords_for_partial_collapse.append((coord, coord_dims))
 
-        for coord in coords_for_partial_collapse:
+        for coord, _ in coords_for_partial_collapse:
             self.data.remove_coord(coord)
 
         new_data = self.data.collapsed(coords, kernel, **ag_args)
 
-        for coord in coords_for_partial_collapse:
-            collapsed_coord, new_dims = self._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
+        for coord, old_dims in coords_for_partial_collapse:
+            collapsed_coord = Aggregator._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
+            new_dims = Aggregator._calc_new_dims(old_dims, dims_to_collapse)
+
             new_data.add_aux_coord(collapsed_coord, new_dims)
             # If the coordinate we had to collapse manually was a dependency in an aux factory (which is quite likely)
             #  then we need to put it back in and fix the factory, this will update any missing dependencies.
-            for factory in new_data.aux_factories:
-                factory.update(None, collapsed_coord)
+            new_data.update_aux_factories(None, collapsed_coord)
 
         return new_data
 
