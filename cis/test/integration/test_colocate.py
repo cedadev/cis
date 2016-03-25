@@ -5,6 +5,14 @@ from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.parse import parse_args
 from cis.test.integration_test_data import *
 
+try:
+    import pyhdf
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pyhdf = None
+
+skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
+
 
 class TestUngriddedGriddedCollocate(BaseIntegrationTest):
     def test_GIVEN_single_variable_WHEN_collocate_THEN_successful_collocation(self):
@@ -165,6 +173,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variables)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, variables)
 
+    @skip_pyhdf
     def test_cloudsat_PRECIP_onto_NetCDF_Gridded(self):
         # Takes 15s
         vars = [valid_cloudsat_PRECIP_variable]
@@ -180,6 +189,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_cloudsat_PRECIP_onto_NetCDF_Gridded_using_moments_kernel(self):
         # Takes 15s
         vars = [valid_cloudsat_PRECIP_variable]
@@ -197,6 +207,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_cloudsat_RVOD_onto_NetCDF_Gridded(self):
         # Takes 290s
         vars = [valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable]
@@ -243,6 +254,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_MODIS_L2_onto_NetCDF_Gridded(self):
         # Takes 20s
         vars = ['Solar_Zenith', 'Optical_Depth_Ratio_Small_Land_And_Ocean']
@@ -258,6 +270,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_MODIS_L2_onto_NetCDF_Gridded_with_moments_kernel(self):
         # Takes 20s
         vars = ['Solar_Zenith', 'Optical_Depth_Ratio_Small_Land_And_Ocean']
@@ -276,6 +289,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.GRIDDED_OUTPUT_FILENAME, out_vars)
 
+    @skip_pyhdf
     def test_MODIS_L3_onto_NetCDF_Gridded(self):
         # Takes 27s
         vars = [valid_modis_l3_variable]
@@ -482,6 +496,7 @@ class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_Aeronet_onto_CloudSat(self):
         # Takes 5hrs
         variable = "AOT_440,AOT_870"
@@ -586,6 +601,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_vars_are_different(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
     def test_hybrid_height_onto_GASSP_nn(self):
         # Takes 1s
@@ -716,6 +732,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, out_vars)
 
+    @skip_pyhdf
     def test_NetCDF_Gridded_onto_MODIS_L2(self):
         # Takes 16s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
@@ -730,7 +747,9 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_vars_are_different(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_NetCDF_Gridded_onto_MODIS_L2_nn(self):
         # Takes 16s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
@@ -745,7 +764,9 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
+        self.check_output_vars_are_different(self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_NetCDF_Gridded_onto_MODIS_L3(self):
         # Takes 47s
         vars = valid_hadgem_variable,
@@ -791,6 +812,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_NetCDF_Gridded_onto_cloudsat_PRECIP(self):
         # Takes 23s
         vars = valid_echamham_variable_1, valid_echamham_variable_2
@@ -806,6 +828,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.UNGRIDDED_OUTPUT_FILENAME, vars)
 
+    @skip_pyhdf
     def test_NetCDF_Gridded_onto_cloudsat_RVOD(self):
         # Takes 125s
         vars = valid_echamham_variable_1, valid_echamham_variable_2

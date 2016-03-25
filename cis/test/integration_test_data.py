@@ -30,7 +30,10 @@ data_directory = os.environ.get("CIS_DATA_HOME", os.path.dirname(__file__))
 
 
 def make_pathname(filename):
-    return os.path.join(data_directory, filename)
+    path = os.path.join(data_directory, filename)
+    if os.name == 'nt':
+        path = path.replace(':', '\:')
+    return path
 
 
 valid_hdf_vd_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")

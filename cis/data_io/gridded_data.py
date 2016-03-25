@@ -269,7 +269,13 @@ class GriddedData(iris.cube.Cube, CommonData):
         :param output_file: Output file to save to.
         """
         logging.info('Saving data to %s' % output_file)
-        iris.save(self, output_file, local_keys=self._local_attributes)
+        save_args = {'local_keys': self._local_attributes}
+        # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
+        if self.coords('time'):
+            save_args['unlimited_dimensions'] = ['time']
+        else:
+            iris.FUTURE.netcdf_no_unlimited = True
+        iris.save(self, output_file, **save_args)
 
     def as_data_frame(self, copy=True):
         """
@@ -281,6 +287,12 @@ class GriddedData(iris.cube.Cube, CommonData):
         from iris.pandas import as_data_frame
         return as_data_frame(self, copy=copy)
 
+    def update_aux_factories(self, *args, **kwargs):
+        for factory in self.aux_factories:
+            factory.update(*args, **kwargs)
+
+    def collapsed(self, *args, **kwargs):
+        return make_from_cube(super(GriddedData, self).collapsed(*args, **kwargs))
 
 class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
@@ -311,7 +323,15 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         :param output_file: File to save to
         """
         logging.info('Saving data to %s' % output_file)
-        iris.save(self, output_file)
+        save_args = {}
+
+        # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
+        if self.coords('time'):
+            save_args['unlimited_dimensions'] = ['time']
+        else:
+            iris.FUTURE.netcdf_no_unlimited = True
+
+        iris.save(self, output_file, **save_args)
 
     def coord(self, *args, **kwargs):
         """
@@ -462,9 +482,21 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         return self[0].dim_coords
 
     @property
+    def aux_coords(self):
+        """
+        The auxiliary coordinates of this data
+        """
+        # Use the dimensions of the first item since all items should have the same dimensions
+        return self[0].aux_coords
+
+    @property
     def ndim(self):
         """
         The number of dimensions in the data of this list.
         """
         # Use the dimensions of the first item since all items should be the same shape
         return self[0].ndim
+
+    def update_aux_factories(self, *args, **kwargs):
+        for d in self:
+            d.update_aux_factories(*args, **kwargs)

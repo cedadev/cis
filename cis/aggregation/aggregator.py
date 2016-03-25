@@ -4,7 +4,7 @@ import datetime
 import iris.coord_categorisation
 import iris.analysis.cartography
 from iris.coords import DimCoord
-import numpy
+import numpy as np
 
 from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
 import cis.parse_datetime as parse_datetime
@@ -20,18 +20,90 @@ class Aggregator(object):
         self.data = data
         self._grid = grid
 
+    @staticmethod
+    def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN):
+        import operator
+
+        # First calculate our new shape and dims
+        dims_to_collapse = sorted(dims_to_collapse)
+        end_size = reduce(operator.mul, (coord.shape[dim] for dim in dims_to_collapse))
+        untouched_dims = list(set(range(coord.ndim)) - set(dims_to_collapse))
+        untouched_shape = [coord.shape[dim] for dim in untouched_dims]
+        new_shape = untouched_shape + [end_size]
+        dims = untouched_dims + dims_to_collapse
+
+        # Then reshape the data so that the dimensions being aggregated
+        # over are grouped 'at the end' (i.e. axis=-1).
+        unrolled_data = np.transpose(coord.points, dims).reshape(new_shape)
+
+        new_points = kernel.aggregate(unrolled_data, axis=-1)
+        new_coord = coord.copy(points=new_points)
+        return new_coord
+
+    @staticmethod
+    def _calc_new_dims(coord_dims, dims_to_collapse):
+        """
+            Calculate the new dimensions for the coordinate.
+        :param coord_dims: the original dimensions
+        :param dims_to_collapse: The dimensions which are being collapsed over
+        :return: The new coordinates which the coord will take on the collapsed cube
+        """
+        new_dims = []
+        # For each original dimension subtract one for every collapsed coordinate which came before it.
+        # TODO: There must be a cleaner way to do this...
+        for d in coord_dims:
+            new_d = d
+            for dc in dims_to_collapse:
+                if d > dc:
+                    new_d -= 1
+            # If the dimension is one being collapsed then we don't include it in the new dimensions
+            if d not in dims_to_collapse:
+                new_dims.append(new_d)
+
+        return new_dims
+
     def _gridded_full_collapse(self, coords, kernel):
+
+        ag_args = {}
         if isinstance(kernel, iris.analysis.WeightedAggregator):
             # If this is a list we can calculate weights using the first item (all variables should be on
             # same grid)
             data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
             # Weights to correctly calculate areas.
-            area_weights = iris.analysis.cartography.area_weights(data_for_weights)
-            return self.data.collapsed(coords, kernel, weights=area_weights)
-        elif isinstance(kernel, iris.analysis.Aggregator):
-            return self.data.collapsed(coords, kernel)
-        else:
+            ag_args['weights'] = iris.analysis.cartography.area_weights(data_for_weights)
+        elif not isinstance(kernel, iris.analysis.Aggregator):
             raise ClassNotFoundError('Error - unexpected aggregator type.')
+
+        dims_to_collapse = set()
+        for coord in coords:
+            dims_to_collapse.update(self.data.coord_dims(coord))
+
+        coords_for_partial_collapse = []
+
+        # Collapse any coords that span the dimension(s) being collapsed
+        for coord in self.data.aux_coords:
+            coord_dims = self.data.coord_dims(coord)
+            # If a coordinate has any of the dimensions we wan't to collapse AND has some dimensions we don't...
+            if set(dims_to_collapse).intersection(coord_dims) and \
+                    set(coord_dims).difference(dims_to_collapse):
+                # ... add it to our list of partial coordinates to collapse.
+                coords_for_partial_collapse.append((coord, coord_dims))
+
+        for coord, _ in coords_for_partial_collapse:
+            self.data.remove_coord(coord)
+
+        new_data = self.data.collapsed(coords, kernel, **ag_args)
+
+        for coord, old_dims in coords_for_partial_collapse:
+            collapsed_coord = Aggregator._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
+            new_dims = Aggregator._calc_new_dims(old_dims, dims_to_collapse)
+
+            new_data.add_aux_coord(collapsed_coord, new_dims)
+            # If the coordinate we had to collapse manually was a dependency in an aux factory (which is quite likely)
+            #  then we need to put it back in and fix the factory, this will update any missing dependencies.
+            new_data.update_aux_factories(None, collapsed_coord)
+
+        return new_data
 
     def aggregate_gridded(self, kernel):
         # Make sure all coordinate have bounds - important for weighting and aggregating
@@ -95,7 +167,7 @@ class Aggregator(object):
             raise CoordinateNotFoundError("No coordinate found that matches '{}'. Please check the coordinate "
                                           "name.".format("' or '".join(self._grid.keys())))
 
-        dummy_data = numpy.reshape(numpy.arange(int(numpy.prod(new_cube_shape))) + 1.0, tuple(new_cube_shape))
+        dummy_data = np.reshape(np.arange(int(np.prod(new_cube_shape))) + 1.0, tuple(new_cube_shape))
         aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
 
         collocator = GeneralGriddedCollocator()
@@ -149,8 +221,8 @@ class Aggregator(object):
         :return:
         """
         cell_start, cell_end, cell_centre = self._get_coord_start_end_centre(coord)
-        cell_points = numpy.array([cell_centre])
-        cell_bounds = numpy.array([[-numpy.inf, numpy.inf]])
+        cell_points = np.array([cell_centre])
+        cell_bounds = np.array([[-np.inf, np.inf]])
         new_coord = DimCoord(cell_points, var_name=coord.name(), standard_name=coord.standard_name,
                              units=self._get_CF_coordinate_units(coord), bounds=cell_bounds)
         return new_coord
@@ -195,12 +267,11 @@ class Aggregator(object):
         :param aggregated_cube: The aggregated cube to give new bounds
         :param source_cube: The source cube which the aggregation was made from.
         """
-        from numpy import isinf, all
         for coord in aggregated_cube.coords():
-            if len(coord.points) == 1 and all(isinf(coord.bounds)):
+            if len(coord.points) == 1 and np.all(np.isinf(coord.bounds)):
                 source_coord = source_cube.coord(coord.name())
                 coord_start, coord_end, coord_centre = self._get_coord_start_end_centre(source_coord)
-                coord.bounds = numpy.array([[coord_start, coord_end]])
+                coord.bounds = np.array([[coord_start, coord_end]])
 
     def _get_coord_start_end_centre(self, coord):
         """
@@ -208,8 +279,8 @@ class Aggregator(object):
         :param coord: Coordinate
         :return: Tuple of (start, end, midpoint)
         """
-        start = numpy.min(coord.points)
-        end = numpy.max(coord.points)
+        start = np.min(coord.points)
+        end = np.max(coord.points)
         centre = start + (end - start) / 2.0
         return start, end, centre
 
@@ -314,11 +385,11 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
             new_time += datetime.timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
                                            minutes=delta.minute, hours=delta.hour, weeks=0)
 
-        new_time_grid = numpy.array(new_time_grid)
+        new_time_grid = np.array(new_time_grid)
 
         return new_time_grid
     else:
-        new_grid = numpy.arange(start + delta / 2, end + delta / 2, delta)
+        new_grid = np.arange(start + delta / 2, end + delta / 2, delta)
 
         return new_grid
 
@@ -330,7 +401,7 @@ def find_nearest(array, value):
     :param value: A single value
     :return: A single value from the array
     """
-    idx = (numpy.abs(array - value)).argmin()
+    idx = (np.abs(array - value)).argmin()
     return array[idx]
 
 

@@ -2,6 +2,7 @@ import netCDF4
 
 import numpy
 from hamcrest import assert_that, is_
+import unittest
 
 from cis.cis_main import evaluate_cmd, col_cmd
 from cis.test.integration.base_integration_test import BaseIntegrationTest
@@ -9,6 +10,13 @@ from cis.test.integration_test_data import *
 from cis.parse import parse_args
 from cis.test.unit.eval.test_calc import compare_masked_arrays
 
+try:
+    import pyhdf
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pyhdf = None
+
+skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
 
 class TestEval(BaseIntegrationTest):
 
@@ -23,8 +31,8 @@ class TestEval(BaseIntegrationTest):
         evaluate_cmd(arguments)
 
         # Check correct:
-        ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
-        calculated_result = ds.variables['calculated_variable'][:]
+        self.ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
+        calculated_result = self.ds.variables['calculated_variable'][:]
         expected_result = [0.2341039087, 0.2285401152, 0.2228799533, 0.1953746746, 0.2094051561, 0.1696889668,
                            0.3137791803, 0.2798929273, 0.1664194279, 0.1254619092, 0.1258309124, 0.1496960031,
                            0.0768447737, 0.0550896430, 0.0534543107, 0.0538315909, 0.0666742975, 0.0512935449,
@@ -39,8 +47,8 @@ class TestEval(BaseIntegrationTest):
         evaluate_cmd(arguments)
 
         # Check correct:
-        ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        calculated_result = ds.variables['calculated_variable'][:]
+        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        calculated_result = self.ds.variables['calculated_variable'][:]
         # A hand calculated selection of values
         expected_result = [0.007633533, 0.007646653, 0.007749859, 0.007744226, 0.007761176]
 
@@ -61,9 +69,9 @@ class TestEval(BaseIntegrationTest):
         col_cmd(main_arguments)
 
         # Check collocation is the same
-        ds = netCDF4.Dataset('cis-collocated_gassp.nc')
-        col_var1 = ds.variables[valid_echamham_variable_1][:]
-        col_var2 = ds.variables[valid_echamham_variable_2][:]
+        self.ds = netCDF4.Dataset('cis-collocated_gassp.nc')
+        col_var1 = self.ds.variables[valid_echamham_variable_1][:]
+        col_var2 = self.ds.variables[valid_echamham_variable_2][:]
         # A hand calculated selection of values
         expected_col1 = numpy.ma.masked_invalid(
             [float('Nan'), float('Nan'), float('Nan'), 0.0815568640828, 0.0815568640828])
@@ -80,10 +88,11 @@ class TestEval(BaseIntegrationTest):
                 '1', '-o', self.OUTPUT_NAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
+        self.ds.close()
 
         # Check correct
-        ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
-        calculated_result = ds.variables['calculated_variable'][:]
+        self.ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
+        calculated_result = self.ds.variables['calculated_variable'][:]
         # A hand calculated selection of values
         expected_result = numpy.ma.masked_invalid([float('Nan'), float('Nan'), float('Nan'), 0.0004584692, 0.000697334])
 
@@ -91,6 +100,7 @@ class TestEval(BaseIntegrationTest):
         compare_masked_arrays(expected_result, calculated_result[:][0:5])
         os.remove('cis-collocated_gassp.nc')
 
+    @skip_pyhdf
     def test_CloudSat(self):
         args = ['eval', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,
                                       valid_cloudsat_RVOD_file),
@@ -98,8 +108,8 @@ class TestEval(BaseIntegrationTest):
                 'cloudsat_var:' + self.OUTPUT_NAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
-        ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
-        assert_that(ds.variables['cloudsat_var'].units, is_('ppm'))
+        self.ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
+        assert_that(self.ds.variables['cloudsat_var'].units, is_('ppm'))
 
     def test_can_specify_output_variable(self):
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
@@ -108,8 +118,8 @@ class TestEval(BaseIntegrationTest):
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        assert 'var_out' in ds.variables
+        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        assert 'var_out' in self.ds.variables
 
     def test_can_specify_attributes_gridded(self):
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
@@ -118,9 +128,9 @@ class TestEval(BaseIntegrationTest):
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        assert_that(ds.variables['var_out'].att1, is_('val1'))
-        assert_that(ds.variables['var_out'].att2, is_('val2'))
+        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        assert_that(self.ds.variables['var_out'].att1, is_('val1'))
+        assert_that(self.ds.variables['var_out'].att2, is_('val2'))
 
     def test_can_specify_units_gridded(self):
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
@@ -129,8 +139,8 @@ class TestEval(BaseIntegrationTest):
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        assert_that(ds.variables['var_out'].units, is_('kg m^-3'))
+        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        assert_that(self.ds.variables['var_out'].units, is_('kg m^-3'))
 
     def test_can_specify_units_gridded_no_output_var(self):
         args = ['eval', "%s:%s" % (valid_hadgem_variable, valid_hadgem_filename), "od550aer", "ppm", "-o",
@@ -138,6 +148,6 @@ class TestEval(BaseIntegrationTest):
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        assert_that(ds.variables['calculated_variable'].units, is_('ppm'))
-        assert_that(ds.variables['calculated_variable'].att1, is_('val1'))
+        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        assert_that(self.ds.variables['calculated_variable'].units, is_('ppm'))
+        assert_that(self.ds.variables['calculated_variable'].att1, is_('val1'))

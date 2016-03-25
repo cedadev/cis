@@ -302,8 +302,6 @@ def test_that_can_parse_datetimestr_to_obj():
         convert_datetime_to_std_time(dt.datetime(2010, 12, now.day)))
     eq_(parse_datetimestr_to_std_time("2010-"),
         convert_datetime_to_std_time(dt.datetime(2010, now.month, now.day)))
-    eq_(parse_datetimestr_to_std_time(""),
-        convert_datetime_to_std_time(dt.datetime(now.year, now.month, now.day)))
 
 
 if __name__ == '__main__':

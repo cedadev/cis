@@ -10,15 +10,23 @@ from cis.test.integration_test_data import *
 from cis.test.utils_for_testing import *
 from cis.parse import parse_args
 
+try:
+    import pyhdf
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pyhdf = None
+
+skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
+
 
 class BaseAggregationTest(BaseIntegrationTest):
     def check_grid_aggregation(self, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta,
                                lat_name='lat', lon_name='lon'):
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         expected_lat_bnds = np.array([[y, y + lat_delta] for y in np.arange(lat_start, lat_end, lat_delta)])
         expected_lon_bnds = np.array([[x, x + lon_delta] for x in np.arange(lon_start, lon_end, lon_delta)])
-        lat_bnds = ds.variables[lat_name + '_bnds']
-        lon_bnds = ds.variables[lon_name + '_bnds']
+        lat_bnds = self.ds.variables[lat_name + '_bnds']
+        lon_bnds = self.ds.variables[lon_name + '_bnds']
         try:
             assert_that(np.allclose(lat_bnds[:], expected_lat_bnds))
         except AssertionError:
@@ -30,9 +38,10 @@ class BaseAggregationTest(BaseIntegrationTest):
         except AssertionError:
             expected_lon_bnds = np.array([[x + lon_delta, x] for x in np.arange(lon_start, lon_end, lon_delta)])[::-1]
             assert_that(np.allclose(lon_bnds[:], expected_lon_bnds))
+        self.ds.close()
 
     def check_temporal_aggregation(self, time_start, time_end, time_delta, time_name='time'):
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
         # Convert from time to days after..
 
         def convert_to_days_since_cis_epoch(date_time):
@@ -45,8 +54,10 @@ class BaseAggregationTest(BaseIntegrationTest):
 
         expected_time_bnds = np.array([[t, t + time_delta] for t in np.arange(time_start, time_end, time_delta)
                                        if t + time_delta <= time_end * (1 + 1e-13)])
-        time_bnds = ds.variables[time_name + '_bnds']
+        time_bnds = self.ds.variables[time_name + '_bnds']
+        assert_that(time_bnds.shape == expected_time_bnds.shape)
         assert_that(np.allclose(time_bnds[:], expected_time_bnds))
+        self.ds.close()
 
     def do_spatial_aggregate(self, variable, filename, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta):
         grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_start, lon_end, lon_delta, lat_start, lat_end, lat_delta)
@@ -109,11 +120,11 @@ class TestAggregation(BaseAggregationTest):
                              [i, i, i, i, 0.127948367761241, i, i, i, i, i, i, i, i, i, i, 0.0958142693422429]]])
         arr_550 = ma.masked_invalid(arr_550)
         arr_870 = ma.masked_invalid(arr_870)
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        data_550 = ds.variables['AOD550']
-        assert_arrays_almost_equal(data_550[:], arr_550.reshape((12, 16, 1)))
-        data_870 = ds.variables['AOD870']
-        assert_arrays_almost_equal(data_870[:], arr_870.reshape((12, 16, 1)))
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        data_550 = self.ds.variables['AOD550']
+        assert_arrays_almost_equal(data_550[:], arr_550.reshape((16,12,1)))
+        data_870 = self.ds.variables['AOD870']
+        assert_arrays_almost_equal(data_870[:], arr_870.reshape((16,12,1)))
 
     def test_aggregation_over_time(self):
         # Takes 14s
@@ -143,10 +154,10 @@ class TestAggregation(BaseAggregationTest):
                               0.373931448211543, 0.207438293844461, 0.336047132128795,
                               0.220540801986261, 0.118595280574826, 0.0763243285563936,
                               0.0623867045505904, 0.0538315528589818]]])
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        data_550 = ds.variables['AOD550']
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        data_550 = self.ds.variables['AOD550']
         assert_arrays_almost_equal(data_550[:], arr_550, 1.0e-2)
-        data_870 = ds.variables['AOD870']
+        data_870 = self.ds.variables['AOD870']
         assert_arrays_almost_equal(data_870[:], arr_870, 1.0e-2)
 
     def test_aggregation_of_multiple_variables_gives_same_result(self):
@@ -161,19 +172,19 @@ class TestAggregation(BaseAggregationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
         # Read the aggregated data
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        aot_440 = ds.variables['AOT_440'][:]
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        aot_440 = self.ds.variables['AOT_440'][:]
 
         # Clean up the old aggregation
-        ds.close()
+        self.ds.close()
         os.remove(self.GRIDDED_OUTPUT_FILENAME)
 
         # Now redo the aggregation, but for all AOT variables
         self.do_temporal_aggregate('AOT*', filename, t_start, t_end, str_delta)
 
         # Read the new data in
-        ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
-        aot_440_multi_var = ds.variables['AOT_440'][:]
+        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        aot_440_multi_var = self.ds.variables['AOT_440'][:]
 
         # And check they are the same...
         assert_arrays_almost_equal(aot_440, aot_440_multi_var)
@@ -290,6 +301,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='latitude', lon_name='longitude')
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L2(self):
         # Takes 66s
         variable = '*'
@@ -300,6 +312,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='Latitude', lon_name='Longitude')
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L3(self):
         # (All variables takes 23 mins)
         # Takes 27s
@@ -315,6 +328,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
                                     lat_name='latitude', lon_name='longitude')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_CloudSatPRECIP(self):
         # Takes 190s
         variable = '*'
@@ -336,6 +350,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='Latitude', lon_name='Longitude')
 
+    @skip_pyhdf
     def test_aggregate_CloudSatRVOD(self):
         # Takes 200s
         variable = '*'  # Slow and runs out of memory
@@ -348,6 +363,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
                                     lat_name='Latitude', lon_name='Longitude')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_Caliop_L2(self):
         # Takes 37 mins
         variable = '*'
@@ -455,21 +471,27 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
 
     def test_aggregate_Aeronet(self):
         # Takes 2s
-        variable = 'Dateddmmyy,Timehhmmss,Julian_Day,AOT_1640,AOT_1020,AOT_870,AOT_675,AOT_667,AOT_555,AOT_551,' \
-                   'AOT_532,AOT_531,AOT_500,AOT_490,AOT_443,AOT_440,AOT_412,AOT_380,AOT_340,Watercm,TripletVar_1640,' \
-                   'TripletVar_1020,TripletVar_870,TripletVar_675,TripletVar_667,TripletVar_555,TripletVar_551,' \
-                   'TripletVar_532,TripletVar_531,TripletVar_500,TripletVar_490,TripletVar_443,TripletVar_440,' \
-                   'TripletVar_412,TripletVar_380,TripletVar_340,WaterError,440870Angstrom,380500Angstrom,' \
-                   '440675Angstrom,500870Angstrom,340440Angstrom,440675AngstromPolar,Last_Processing_Date,' \
-                   'Solar_Zenith_Angle'
-        variable = 'Solar_Zenith_Angle'
+        variable = 'AOT_440'
         filename = valid_aeronet_filename
-        time_min, time_max = dt.datetime(2003, 9, 24, 7, 0, 0), dt.datetime(2003, 11, 04, 7, 0, 0)
-        time_delta = dt.timedelta(days=1)
-        str_delta = 'P1D'
+        time_min, time_max = dt.datetime(1999, 1, 1, 0, 0, 0), dt.datetime(1999, 12, 29, 0, 0, 0)
+        time_delta = dt.timedelta(hours=6)
+        str_delta = 'PT6H'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
+    def test_aggregate_Aeronet_multi_var(self):
+        # Takes 2s
+        variable = 'AOT_1640,AOT_1020,AOT_870,AOT_675,AOT_667,AOT_555,AOT_551,' \
+                   'AOT_532,AOT_531,AOT_500,AOT_490,AOT_443,AOT_440,AOT_412,AOT_380,AOT_340'
+        filename = valid_aeronet_filename
+        time_min, time_max = dt.datetime(1999, 1, 1), dt.datetime(1999, 12, 29)
+        time_delta = dt.timedelta(hours=6)
+        str_delta = 'PT6H'
+        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_output_vars_are_different(self.GRIDDED_OUTPUT_FILENAME, variable.split(',')[:5])
 
     def test_aggregate_netCDF_gridded_HadGem(self):
         # Takes 1s
@@ -489,6 +511,16 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_netCDF_gridded_hybrid_height_partial(self):
+        # JASCIS-126
+        # Takes 2s
+        variable = valid_hybrid_height_variable
+        filename = valid_hybrid_height_filename
+        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 't', '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
     def test_aggregate_cis_ungridded(self):
         # Takes 2s
         variable = 'AOD550,AOD870,latitude,time'
@@ -500,6 +532,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L2(self):
         # Takes 20 mins
         variable = 'Solar_Zenith,Latitude,Sensor_Azimuth,Longitude'
@@ -511,6 +544,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Scan_Start_Time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_MODIS_L3(self):
         # Takes 8s
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
@@ -524,6 +558,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_CloudSatPRECIP_with_dimension_variables(self):
         # Takes 28s
         # RuntimeError: NetCDF: String match to name in use
@@ -537,6 +572,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(',') +
                                              ['aggregated_Profile_time'])
 
+    @skip_pyhdf
     def test_aggregate_CloudSatPRECIP(self):
         variable = valid_cloudsat_PRECIP_variable
         filename = valid_cloudsat_PRECIP_file
@@ -547,6 +583,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [valid_cloudsat_PRECIP_variable])
 
+    @skip_pyhdf
     def test_aggregate_CloudSatRVOD(self):
         # Takes 41s
         variable = 'RVOD_liq_water_content,RVOD_ice_water_path'
@@ -570,6 +607,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_Time')
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    @skip_pyhdf
     def test_aggregate_Caliop_L2(self):
         # Takes 20s
         variable = 'Perpendicular_Backscatter_Coefficient_532,' \
