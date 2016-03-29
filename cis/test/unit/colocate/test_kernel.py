@@ -925,6 +925,26 @@ class TestLi(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, None, li())[0]
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
 
+    def test_collocation_over_scalar_coord(self):
+        # A scalar time coordinate should make no difference when collocating points with a time value.
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube_with_scalar_time())
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(1.0, 1.0, t=dt.datetime(1984, 8, 22, 0, 0, 0)),
+             HyperPoint(4.0, 4.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             # Note that it doesn't even matter if the point is outside the bounds of the scalar time...
+             # TODO: Is this correct behaviour?
+             HyperPoint(-4.0, -4.0, t=dt.datetime(1984, 10, 1, 0, 0, 0))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li())[0]
+
+        assert_almost_equal(new_data.data[0], 8.8)
+        assert_almost_equal(new_data.data[1], 11.2)
+        assert_almost_equal(new_data.data[2], 4.8)
+
 
 if __name__ == '__main__':
     unittest.main()
