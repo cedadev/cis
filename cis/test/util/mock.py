@@ -16,6 +16,7 @@ from cis.time_util import convert_datetime_to_std_time
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
                    time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
+                   surf_pres_offset=0,
                    hybrid_ht_len=0, hybrid_pr_len=0, geopotential_height=False, dim_order=None, mask=False):
     """
     Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
@@ -39,6 +40,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     :param pressure_offset: Offset from the default grid in pressure
     :param time_offset: Offset from the default grid in time
     :param data_offset: Offset from the default data values
+    :param surf_pres_offset: Offset for the optional surface pressure field
     :param hybrid_ht_len: Hybrid height grid length
     :param hybrid_pr_len: Hybrid pressure grid length
     :param geopotential_height: Include a geopotential height field when calcluting a hybrid pressure? (default False)
@@ -153,7 +155,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
                                   coord_map['hybrid_pr'])
         return_cube.add_aux_coord(
             iris.coords.AuxCoord(np.arange(lat_dim_length * lon_dim_length * time_dim_length, dtype='i8')
-                                 .reshape(lat_dim_length, lon_dim_length, time_dim_length) * 100000,
+                                 .reshape(lat_dim_length, lon_dim_length, time_dim_length) * 100000 + surf_pres_offset,
                                  "surface_air_pressure", units="Pa"),
             [coord_map['lat'], coord_map['lon'], coord_map['time']])
 
@@ -470,6 +472,47 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     longitude = DimCoord(np.arange(-5 + offset, 6 + offset, 5), standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(105) + 1.0, (5, 3, 7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
+
+    return cube
+
+
+def make_square_5x3_2d_cube_with_scalar_time(time_offset=0):
+    """
+        Makes a well defined cube of shape 5x3 with data as follows
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+        time:
+            1984-08-27
+        time_bounds:
+            [1984-08-22, 1984-09-01]
+    """
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+    from cis.time_util import cis_standard_time_unit
+
+    t0 = datetime.datetime(1984, 8, 27)
+
+    time_nums = convert_datetime_to_std_time(t0 + datetime.timedelta(days=time_offset))
+
+    time = DimCoord(time_nums, standard_name='time',
+                    bounds=[convert_datetime_to_std_time(t0 - datetime.timedelta(days=5)),
+                            convert_datetime_to_std_time(t0 + datetime.timedelta(days=5))],
+                    units=cis_standard_time_unit)
+
+    latitude = DimCoord(np.arange(-10., 11., 5), var_name='lat', standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5., 6., 5), var_name='lon', standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(15) + 1.0, (5, 3))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)], var_name='dummy')
+
+    cube.add_aux_coord(time)
 
     return cube
 
