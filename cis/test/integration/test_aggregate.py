@@ -521,6 +521,15 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
 
+    def test_netCDF_gridded_hybrid_height_partial_with_multi_kernel(self):
+        # Takes 2s
+        variable = valid_hybrid_height_variable
+        filename = valid_hybrid_height_filename
+        arguments = ['aggregate', variable + ':' + filename, 't', '-o', self.OUTPUT_NAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
+        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+
     def test_aggregate_cis_ungridded(self):
         # Takes 2s
         variable = 'AOD550,AOD870,latitude,time'

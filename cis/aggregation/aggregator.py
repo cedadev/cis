@@ -62,8 +62,16 @@ class Aggregator(object):
 
         return new_dims
 
-    def _gridded_full_collapse(self, coords, kernel):
+    @staticmethod
+    def _update_aux_factories(data, *args, **kwargs):
+        from cis.utils import listify
+        d_list = listify(data)
+        for d in d_list:
+            for factory in d.aux_factories:
+                factory.update(*args, **kwargs)
 
+    def _gridded_full_collapse(self, coords, kernel):
+        from copy import deepcopy
         ag_args = {}
         if isinstance(kernel, iris.analysis.WeightedAggregator):
             # If this is a list we can calculate weights using the first item (all variables should be on
@@ -89,10 +97,15 @@ class Aggregator(object):
                 # ... add it to our list of partial coordinates to collapse.
                 coords_for_partial_collapse.append((coord, coord_dims))
 
-        for coord, _ in coords_for_partial_collapse:
-            self.data.remove_coord(coord)
+        # Before we remove the coordinates which need to be partially collapsed we take a copy of the data. We need
+        #  this so that the aggregation doesn't have any side effects on the input data. This is particularly important
+        #  when using a MultiKernel for which this routine gets called multiple times.
+        data_for_collapse = deepcopy(self.data)
 
-        new_data = self.data.collapsed(coords, kernel, **ag_args)
+        for coord, _ in coords_for_partial_collapse:
+            data_for_collapse.remove_coord(coord)
+
+        new_data = data_for_collapse.collapsed(coords, kernel, **ag_args)
 
         for coord, old_dims in coords_for_partial_collapse:
             collapsed_coord = Aggregator._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
@@ -101,7 +114,7 @@ class Aggregator(object):
             new_data.add_aux_coord(collapsed_coord, new_dims)
             # If the coordinate we had to collapse manually was a dependency in an aux factory (which is quite likely)
             #  then we need to put it back in and fix the factory, this will update any missing dependencies.
-            new_data.update_aux_factories(None, collapsed_coord)
+            self._update_aux_factories(new_data, None, collapsed_coord)
 
         return new_data
 

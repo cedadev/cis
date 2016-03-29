@@ -287,10 +287,6 @@ class GriddedData(iris.cube.Cube, CommonData):
         from iris.pandas import as_data_frame
         return as_data_frame(self, copy=copy)
 
-    def update_aux_factories(self, *args, **kwargs):
-        for factory in self.aux_factories:
-            factory.update(*args, **kwargs)
-
     def collapsed(self, *args, **kwargs):
         return make_from_cube(super(GriddedData, self).collapsed(*args, **kwargs))
 
@@ -496,7 +492,3 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         """
         # Use the dimensions of the first item since all items should be the same shape
         return self[0].ndim
-
-    def update_aux_factories(self, *args, **kwargs):
-        for d in self:
-            d.update_aux_factories(*args, **kwargs)

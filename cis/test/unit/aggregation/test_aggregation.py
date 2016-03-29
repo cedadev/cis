@@ -211,6 +211,48 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
+    def test_partial_aggregation_over_multidimensional_coord_with_multi_kernel(self):
+        from cis.data_io.gridded_data import GriddedData
+        # JASCIS-126
+        from cis.aggregation.aggregation_kernels import MultiKernel, StddevKernel, CountKernel
+        self.kernel = MultiKernel('moments', [iris.analysis.MEAN, StddevKernel(), CountKernel()])
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
+        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
+
+        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
+        cube_out = agg.aggregate_gridded(self.kernel)
+
+        result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
+                                    [51.0, 52.0, 53.0, 54.0, 55.0],
+                                    [86.0, 87.0, 88.0, 89.0, 90.0]],
+
+                                   [[121.0, 122.0, 123.0, 124.0, 125.0],
+                                    [156.0, 157.0, 158.0, 159.0, 160.0],
+                                    [191.0, 192.0, 193.0, 194.0, 195.0]],
+
+                                   [[226.0, 227.0, 228.0, 229.0, 230.0],
+                                    [261.0, 262.0, 263.0, 264.0, 265.0],
+                                    [296.0, 297.0, 298.0, 299.0, 300]],
+
+                                   [[331.0, 332.0, 333.0, 334.0, 335.0],
+                                    [366.0, 367.0, 368.0, 369.0, 370.0],
+                                    [401.0, 402.0, 403.0, 404.0, 405.0]],
+
+                                   [[436.0, 437.0, 438.0, 439.0, 440.0],
+                                    [471.0, 472.0, 473.0, 474.0, 475.0],
+                                    [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=np.float)
+
+        multidim_coord_points = numpy.array([[300000., 1000000., 1700000.],
+                                             [2400000., 3100000., 3800000.],
+                                             [4500000., 5200000., 5900000.],
+                                             [6600000., 7300000., 8000000.],
+                                             [8700000., 9400000., 10100000.]], dtype=np.float)
+
+        assert_arrays_almost_equal(cube_out[0].data, result_data)
+        assert_arrays_almost_equal(cube_out[1].data, np.ones(result_data.shape)*10.8012345)
+        assert_arrays_almost_equal(cube_out[2].data, np.ones(result_data.shape) * 7)
+        assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
+
     def test_partial_aggregation_over_more_than_one_dim_on_multidimensional_coord(self):
         from cis.data_io.gridded_data import GriddedData
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
