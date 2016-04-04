@@ -123,8 +123,8 @@ The file containing the orography field (which should be properly referenced fro
 Reading NetCDF4 Hierarchical Groups
 ===================================
 CIS supports the reading of `NetCDF4 hierarchical groups <https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/Data-Model.html>`_.
-These can be specified on the command line in the format ``<group>.<variable_name>``,
-e.g. ``AVHRR.Ch4CentralWavenumber``. Groups can be nested to any required depth like ``<group1>.<group2...>.<variable_name>``.
+These can be specified on the command line in the format ``<group>/<variable_name>``,
+e.g. ``AVHRR/Ch4CentralWavenumber``. Groups can be nested to any required depth like ``<group1>/<group2...>/<variable_name>``.
 
 CIS currently does not support writing out of NetCDF4 groups, so any groups read in will be output 'flat'.
 

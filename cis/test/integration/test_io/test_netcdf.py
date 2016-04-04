@@ -78,7 +78,7 @@ class TestNetCDFGroups(unittest.TestCase):
         all_vars = self.root_vars
         for group, vars in self.group_vars.iteritems():
             for var in vars:
-                all_vars.append(".".join([group, var]))
+                all_vars.append("/".join([group, var]))
         return all_vars
 
     def test_can_get_netcdf_file_variables(self):
@@ -90,32 +90,32 @@ class TestNetCDFGroups(unittest.TestCase):
         all_vars = self._get_fully_qualified_vars()
         data = read_many_files_individually([valid_netcdf_groups_file], all_vars)
         assert_that(data[u'StartOrbit'][0][:], is_([8031]))
-        assert_that(data[u'GOME2.ChannelNumber'][0][:], contains(1, 2, 3, 4, 5, 6))
-        assert_that(data[u'AVHRR.Ch4CentralWavenumber'][0][:], is_([933.63]))
-        assert_that(data[u'IASI.IASIFlag'][0][:], is_([0]))
+        assert_that(data[u'GOME2/ChannelNumber'][0][:], contains(1, 2, 3, 4, 5, 6))
+        assert_that(data[u'AVHRR/Ch4CentralWavenumber'][0][:], is_([933.63]))
+        assert_that(data[u'IASI/IASIFlag'][0][:], is_([0]))
 
     def test_can_read(self):
         all_vars = self._get_fully_qualified_vars()
         data = read(valid_netcdf_groups_file, all_vars)
         assert_that(data[u'StartOrbit'][:], is_([8031]))
-        assert_that(data[u'GOME2.ChannelNumber'][:], contains(1, 2, 3, 4, 5, 6))
-        assert_that(data[u'AVHRR.Ch4CentralWavenumber'][:], is_([933.63]))
-        assert_that(data[u'IASI.IASIFlag'][:], is_([0]))
+        assert_that(data[u'GOME2/ChannelNumber'][:], contains(1, 2, 3, 4, 5, 6))
+        assert_that(data[u'AVHRR/Ch4CentralWavenumber'][:], is_([933.63]))
+        assert_that(data[u'IASI/IASIFlag'][:], is_([0]))
 
     def test_can_remove_variables_with_non_spatiotemporal_dimensions(self):
         nc_vars = get_netcdf_file_variables(valid_netcdf_groups_file)
         allowed_dims = ['Dim4', 'Dim7', 'Dim8']
         remove_variables_with_non_spatiotemporal_dimensions(nc_vars, allowed_dims)
         expected_vars = ['DegradedInstMdr', 'DegradedProcMdr', 'GOMEScanMode',
-                         'GOME2.StartPixelPmd', 'GOME2.LengthPixelPmd', 'GOME2.WavelengthPmd']
+                         'GOME2/StartPixelPmd', 'GOME2/LengthPixelPmd', 'GOME2/WavelengthPmd']
         assert_that(nc_vars.keys(), contains_inanyorder(*expected_vars))
 
     def test_can_read_nested_groups(self):
-        var_name = 'group1.group2.var4'
+        var_name = 'group1/group2/var4'
         data = read(valid_nested_groups_file, var_name)
         assert_that(data[var_name][:], is_([12321]))
 
     def test_can_get_variables_nested_groups(self):
         nc_vars = get_netcdf_file_variables(valid_nested_groups_file)
-        expected_vars = ['var1', 'var2', 'group1.var3', 'group1.group2.var4', 'group3.var5', 'group3.group4.var6']
+        expected_vars = ['var1', 'var2', 'group1/var3', 'group1/group2/var4', 'group3/var5', 'group3/group4/var6']
         assert_that(nc_vars.keys(), contains_inanyorder(*expected_vars))

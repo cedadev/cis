@@ -117,3 +117,14 @@ class TestWriteNetcdf(unittest.TestCase):
         self.d = Dataset(tmp_file)
         for d in self.d.dimensions.itervalues():
             assert not d.isunlimited()
+
+    # def test_can_write_hierarchical_group_variables(self):
+    #     from cis.test.integration_test_data import valid_nested_groups_file
+    #     from cis import read_data
+    #     from hamcrest import assert_that, is_
+    #     var_name = 'group1/group2/var4'
+    #     data = read_data(valid_nested_groups_file, var_name, product='cis')
+    #     assert_that(data.data, is_([12321]))
+    #     data.save_data(tmp_file)
+    #     self.d = Dataset(tmp_file)
+    #     assert_that(self.d.variables[var_name][:], is_([12321]))
