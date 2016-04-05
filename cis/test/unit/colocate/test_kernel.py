@@ -907,8 +907,7 @@ class TestLi(unittest.TestCase):
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, cube_list, None, li(extrapolate=True))
         assert_almost_equal(new_data[0].data[0], 125.0, decimal=7)
-        # Assert that the first data point from the second dataset is different from the first one...
-        assert new_data[1].data[0] - new_data[0].data[0] > 10**-6
+        assert_almost_equal(new_data[1].data[0], 225.0, decimal=7)
 
     def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
