@@ -877,7 +877,7 @@ def _to_flat_ndarray(data, copy=True):
     if isinstance(data, np.ma.MaskedArray):
         if not copy:
             raise ValueError("Masked arrays must always be copied.")
-        ndarr = data.astype('f').filled(np.NaN).flatten()
+        ndarr = data.filled(np.NaN).flatten()
     elif copy:
         ndarr = data.flatten()
     else:
