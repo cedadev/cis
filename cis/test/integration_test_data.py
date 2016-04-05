@@ -523,9 +523,9 @@ valid_hybrid_height_variable = 'mmrbc'
 # Has netCDF4 hierarchical groups
 valid_netcdf_groups_file = make_pathname('W_XX-EUMETSAT-Darmstadt_SOUNDING_and_SATELLITE_METOPB_and_'
                                          'GOME_C_EUMP_20140405235655_08032_eps_t_pmap_l2.nc')
-valid_netcdf_groups_variable = 'AVHRR.Ch4CentralWavenumber'
+valid_netcdf_groups_variable = 'AVHRR/Ch4CentralWavenumber'
 valid_nested_groups_file = make_pathname('nested_groups.nc')
-valid_nested_groups_variable = 'group1.group2.var4'
+valid_nested_groups_variable = 'group1/group2/var4'
 
 invalid_filename = "invalidfilename"
 non_netcdf_file = make_pathname("notanetcdffile")

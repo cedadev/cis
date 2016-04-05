@@ -288,6 +288,13 @@ class TestUtils(unittest.TestCase):
         assert numpy.ma.count_masked(conc) == 1
 
     def test_partial_aggregation_over_multidimensional_coord(self):
+        """
+         I wonder if I'm better off not completely collapsing the auxilliary coordinate in the first place, just leaving
+         it as length one - this would probably be simpler and safer. It's easier to remove length one coords than add
+         them
+        :return:
+        """
+        # TODO: Currently failing
         from cis.data_io.gridded_data import GriddedData
         from cis.utils import new_axis
         from cis.test.util.mock import make_mock_cube

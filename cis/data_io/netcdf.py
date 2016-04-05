@@ -25,8 +25,8 @@ def get_netcdf_file_attributes(filename):
 def get_netcdf_file_variables(filename, exclude_coords=False):
     """
     Get all the variables contained in a NetCDF file. Variables in NetCDF4 Hierarchical groups are returned with their
-    fully qualified variable name in the form ``<group1>.<group2....>.<variable_name>``,
-    e.g.``AVHRR.Ch4CentralWavenumber``.
+    fully qualified variable name in the form ``<group1>/<group2....>/<variable_name>``,
+    e.g.``AVHRR/Ch4CentralWavenumber``.
 
     :param filename: The filename of the file to get the variables from
     :param exclude_coords: Exclude coordinate variables if True
@@ -52,7 +52,7 @@ def _get_all_fully_qualified_variables(dataset):
     """
     List all variables in a file.
     Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
-    <group1>.<group2....>.<variable_name>, e.g. 'AVHRR.Ch4CentralWavenumber'.
+    <group1>/<group2....>/<variable_name>, e.g. 'AVHRR/Ch4CentralWavenumber'.
     :param dataset: Dataset to get variables for
     :return: Dictionary of variable_name : netCDF4 Variable instance
     """
@@ -71,7 +71,7 @@ def _get_all_fully_qualified_variables(dataset):
             current_groups = previous_groups + [group_key]
             for var_key, var in group.variables.iteritems():
                 path = current_groups + [var_key]
-                var_dict[".".join(path)] = var
+                var_dict["/".join(path)] = var
             get_variables_for_group(group, var_dict, current_groups)
 
     all_vars = dataset.variables
@@ -86,8 +86,8 @@ def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotempora
     support variables with this dimensionality and will fail if they are used.
 
     :param variables: Dictionary of netCDF variable names : Variable objects. Variable names may be fully qualified
-      NetCDF4 Hierarchical group variables in the form ``<group1>.<group2....>.<variable_name>``,
-      e.g. ``AVHRR.Ch4CentralWavenumber``.
+      NetCDF4 Hierarchical group variables in the form ``<group1>/<group2....>/<variable_name>``,
+      e.g. ``AVHRR/Ch4CentralWavenumber``.
     :param spatiotemporal_var_names: List of valid spatiotemporal dimensions.
     :return: None
     """
@@ -140,7 +140,7 @@ def read_many_files_individually(filenames, usr_variables):
     :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
     :param usr_variables: A list of variable (dataset) names to read from the files. The names must appear exactly as
       in in the NetCDF file. Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
-      ``<group1>.<group2....>.<variable_name>``, e.g. ``AVHRR.Ch4CentralWavenumber``.
+      ``<group1>/<group2....>/<variable_name>``, e.g. ``AVHRR/Ch4CentralWavenumber``.
     :return: A dictionary of lists of variable instances constructed from all of the input files with the fully
       qualified variable name as the key
     """
@@ -166,7 +166,7 @@ def read(filename, usr_variables):
     :param filename: The name (with path) of the NetCDF file to read.
     :param usr_variables: A variable (dataset) name to read from the files. The name must appear exactly as in in the
       NetCDF file. Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
-      ``<group1>.<group2....>.<variable_name>``, e.g. ``AVHRR.Ch4CentralWavenumber``.
+      ``<group1>/<group2....>/<variable_name>``, e.g. ``AVHRR/Ch4CentralWavenumber``.
     :return: A Variable instance constructed from  the input file
     """
     from netCDF4 import Dataset
@@ -180,8 +180,8 @@ def read(filename, usr_variables):
 
     data = {}
     for full_variable in usr_variables:
-        # Split the fully qualified variable (group.variable) into group and variable
-        parts = full_variable.split(".")
+        # Split the fully qualified variable (group/variable) into group and variable
+        parts = full_variable.split("/")
         groups = parts[:-1]
         variable = parts[-1]
         current_group = datafile
