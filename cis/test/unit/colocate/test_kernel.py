@@ -891,6 +891,25 @@ class TestLi(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, None, li(extrapolate=True))[0]
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
+    def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates_multi_var(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube_list = [gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))]
+        cube_list.append(gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3,
+                                                                         hybrid_pr_len=10,
+                                                                         data_offset=100)))
+
+        sample_points = UngriddedData.from_points_array(
+            # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
+            [HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
+
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube_list, None, li(extrapolate=True))
+        assert_almost_equal(new_data[0].data[0], 125.0, decimal=7)
+        # Assert that the first data point from the second dataset is different from the first one...
+        assert new_data[1].data[0] - new_data[0].data[0] > 10**-6
+
     def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt

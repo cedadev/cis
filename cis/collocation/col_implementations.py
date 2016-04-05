@@ -61,6 +61,10 @@ class GeneralUngriddedCollocator(Collocator):
             # so we really can just call this method recursively if we've got a list of data.
             output = UngriddedDataList()
             for var in data:
+                if hasattr(kernel, "interpolator"):
+                    # If we have an interpolator on the kernel we need to reset it as it depends on the actual values
+                    #  as well as the coordinates
+                    kernel.interpolator = None
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
