@@ -445,6 +445,9 @@ class TestDataReader(TestCase):
         variables = [{key: self.MockVar(val) for key, val in variable_dimensions.items()}]
         decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
 
-        assert_that(decider.find_auxiliary_coordinates(expected_var), is_([]))
-        assert_that(decider.find_auxiliary_coordinates('extra_dim'), is_(['aux_coord']))
-        assert_that(decider.find_auxiliary_coordinates('two_extra'), is_(['aux_coord', 'another_aux']))
+        assert_that(decider.find_auxiliary_coordinate(expected_var), is_(None))
+        assert_that(decider.find_auxiliary_coordinate('extra_dim'), is_('aux_coord'))
+
+        # Don't return variables with more than one aux coord (which would have to be more than 2D)
+        with self.assertRaises(InvalidVariableError) as cm:
+            decider.find_auxiliary_coordinate('two_extra')

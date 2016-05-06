@@ -228,10 +228,17 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             self.time_variable_name \
             = coordinates_vars
 
-    def find_auxiliary_coordinates(self, variable):
+    def find_auxiliary_coordinate(self, variable):
         dim_coord_names = [self.latitude_variable_name, self.longitude_variable_name,
                            self.altitude_variable_name, self.pressure_variable_name] + self.time_dimensions
-        return [dim for dim in self._variable_dimensions[0][variable] if dim not in dim_coord_names]
+        aux_coords = [dim for dim in self._variable_dimensions[0][variable] if dim not in dim_coord_names]
+        if len(aux_coords) > 1:
+            raise InvalidVariableError("CIS currently only supports reading data variables with one auxilliary "
+                                       "coordinate")
+        elif len(aux_coords) == 0:
+            return None
+        else:
+            return aux_coords[0]
 
     def get_variable_names_which_have_time_coord(self):
         variables = []
@@ -353,7 +360,7 @@ class NCAR_NetCDF_RAF(AProduct):
         logging.info("Listing coordinates: " + str(variables_list))
         add_to_list_if_not_none(variable, variables_list)
 
-        variables_list.extend(variable_selector.find_auxiliary_coordinates(variable))
+        variables_list.append(variable_selector.find_auxiliary_coordinate(variable))
 
         data_variables = read_many_files_individually(filenames, variables_list)
 
@@ -402,6 +409,36 @@ class NCAR_NetCDF_RAF(AProduct):
                 self._create_coord("P", variable_selector.pressure_variable_name, data_variables, "air_pressure"))
         return coords
 
+    @staticmethod
+    def _add_aux_coordinate(dim_coords, data_vars, aux_coord_name, variable):
+        """
+        Add an auxiliary coordinate to a list of (reshaped) dimension coordinates
+
+        :param dim_coords: CoordList of one-dimensional coordinates representing physical dimensions
+        :param data_vars: The data variables read from the relevant files
+        :param aux_coord_name: The name of the aux coord to add to the coord list
+        :param variable: The data variable being added (to retrieve the shape)
+        :return: A CoordList of reshaped (2D) physical coordinates plus the 2D auxiliary coordinate
+        """
+        from cis.data_io.Coord import Coord
+        from cis.utils import expand_1d_to_2d_array
+
+        # The data should be two-dimensional
+        len_x, len_y = data_vars[variable].shape
+
+        for dim_coord in dim_coords:
+            dim_coord.data = expand_1d_to_2d_array(dim_coord.data, len_y, axis=1)
+
+        all_coords = dim_coords
+
+        # We assume that the auxilliary coordinate is the same shape across files
+        d = data_vars[aux_coord_name][0]
+        # Reshape to the length of the first dim_coord (they should all be the same)
+        aux_data = expand_1d_to_2d_array(d[:], len_x, axis=0)
+        all_coords.append(Coord(aux_data, get_metadata(d)))
+
+        return all_coords
+
     def create_coords(self, filenames, variable=None):
         """
         Reads the coordinates and data if required from the files
@@ -411,12 +448,17 @@ class NCAR_NetCDF_RAF(AProduct):
         """
         data_variables, variable_selector = self._load_data(filenames, variable)
 
-        coords = self._create_coordinates_list(data_variables, variable_selector)
+        dim_coords = self._create_coordinates_list(data_variables, variable_selector)
 
         if variable is None:
-            return UngriddedCoordinates(coords)
+            return UngriddedCoordinates(dim_coords)
         else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable][0]), coords)
+            aux_coord = variable_selector.find_auxiliary_coordinate(variable)
+            if aux_coord is not None:
+                all_coords = self._add_aux_coordinate(dim_coords, data_variables, aux_coord, variable)
+            else:
+                all_coords = dim_coords
+            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable][0]), all_coords)
 
     def create_data_object(self, filenames, variable):
         """

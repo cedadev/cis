@@ -427,6 +427,28 @@ valid_GASSP_aeroplane_filename = make_pathname("SP2_mrg60_NP3_20060927_R1.ict.nc
 valid_GASSP_aeroplane_vars = ['BC_ng_kg', "BC_ng_m3", "UTC_mid", "GpsAlt", "GpsLat", "GpsLon"]
 valid_GASSP_aeroplane_variable = valid_GASSP_aeroplane_vars[0]
 
+# TODO: Update me with some valid NSD data
+cis_test_files["GASSP_aux_coord"] = TestFileTestData(
+    master_filename=valid_GASSP_aeroplane_filename,
+    file_format="NetCDF/GASSP/1.0",
+    product_name="NCAR_NetCDF_RAF",
+    start_datetime=datetime(2006, 9, 27, 18, 43, 30),
+    end_datetime=datetime(2006, 9, 27, 23, 53, 30),
+    lat_min=29.4966,
+    lat_max=31.0048,
+    lon_min=-96.0271,
+    lon_max=-93.4528,
+    #    alt_min=20.5,
+    #    alt_max=3678.5,
+    all_variable_names=valid_GASSP_aeroplane_vars,
+    valid_vars_count=len(valid_GASSP_aeroplane_vars),
+    data_variable_name='NSD',
+    data_variable_standard_name='NSD',
+    data_variable_properties={
+        "units": "#/#",
+        "missing_value": -9999}
+)
+
 cis_test_files["GASSP_aeroplane"] = TestFileTestData(
     master_filename=valid_GASSP_aeroplane_filename,
     file_format="NetCDF/GASSP/1.0",

@@ -40,6 +40,12 @@ class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
         assert_that(len(time_coord.data), equal_to(63609))
 
 
+class TestNCAR_NetCDF_RAF_with_GASSP_aux_coord(ProductTests, unittest.TestCase):
+
+    def setUp(self):
+        self.setup(cis_test_files["GASSP_aux_coord"], NCAR_NetCDF_RAF)
+
+
 class TestNCAR_NetCDF_RAF_with_GASSP_aeroplane(ProductTests, unittest.TestCase):
 
     def setUp(self):
