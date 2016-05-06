@@ -540,6 +540,28 @@ class TestParseAggregate(ParseTestFiles):
             args = ['aggregate', 'var1:%s' % self.escaped_single_valid_file, lim]
             parse_args(args)
 
+    def test_output_file_matches_an_input_file(self):
+        from cis.parse import _output_file_matches_an_input_file
+        from argparse import Namespace
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as tmpfile:
+            input_file = tmpfile.name
+            arguments = Namespace()
+            # Test output file is the same as input file
+            arguments.output = input_file
+            arguments.datagroups = [{"filenames": [input_file]}]
+            assert _output_file_matches_an_input_file(arguments)
+
+            # Test output file is different
+            with NamedTemporaryFile() as tmp_out:
+                arguments.output = tmp_out.name
+                assert not _output_file_matches_an_input_file(arguments)
+
+            # Test output file is different (and doesn't exist)
+            arguments.output = 'blah'
+            assert not _output_file_matches_an_input_file(arguments)
+
 
 class TestParseCollocate(ParseTestFiles):
     """

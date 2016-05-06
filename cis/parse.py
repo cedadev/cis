@@ -806,20 +806,20 @@ def _split_output_if_includes_variable_name(arguments, parser):
 
 def _validate_output_file(arguments, parser):
     _split_output_if_includes_variable_name(arguments, parser)
-    _check_output_filepath_not_input(arguments, parser)
-    _append_file_extension_to_output_if_missing(arguments, parser, '.nc')
+    if not arguments.output.endswith('.nc'):
+        arguments.output += '.nc'
+    if _output_file_matches_an_input_file(arguments):
+        parser.error("The input file must not be the same as the output file")
 
 
-def _append_file_extension_to_output_if_missing(arguments, parser, extension):
-    if not extension:
-        parser.error("Invalid file extension: '%s'" % extension)
-    if not extension.startswith('.'):
-        extension = '.' + extension
-    if not arguments.output.endswith(extension):
-        arguments.output = arguments.output + extension
-
-
-def _check_output_filepath_not_input(arguments, parser):
+def _output_file_matches_an_input_file(arguments):
+    """
+    Checks that the output file is not also one of the input files. Uses os.path.samefile where available (not NT) or
+    falls back to comparing os.stat.
+    :param arguments: The command line arguments
+    :return: True if the output file is also an input file
+    """
+    match = False
     try:
         input_files = list(arguments.samplefiles)
     except AttributeError:
@@ -827,13 +827,16 @@ def _check_output_filepath_not_input(arguments, parser):
 
     for datagroup in arguments.datagroups:
         input_files.extend(datagroup['filenames'])
-    gridded_output_file = arguments.output + ".nc"
-    ungridded_output_file = add_file_prefix('cis-', gridded_output_file)
-    for output_file in [gridded_output_file, ungridded_output_file]:
+    ungridded_output_file = add_file_prefix('cis-', arguments.output)
+    for output_file in [arguments.output, ungridded_output_file]:
         for input_file in input_files:
             if os.path.exists(output_file):
-                if os.path.samefile(output_file, input_file):
-                    parser.error("The input file must not be the same as the output file")
+                # Windows doesn't have samefile support...
+                if (hasattr(os.path, 'samefile') and os.path.samefile(output_file, input_file)) or \
+                        (output_file == input_file and os.stat(output_file) == os.stat(input_file)):
+                    match = True
+                    break
+    return match
 
 
 def _create_attributes_dictionary(arguments, parser):
