@@ -119,9 +119,9 @@ def expand_1d_to_2d_array(array_1d, length, axis=0):
     import numpy as np
 
     if axis == 0:
-        array_2d = np.repeat(array_1d[np.newaxis, :], length, 0)
+        array_2d = np.lib.stride_tricks.as_strided(array_1d, (length, array_1d.size), (0, array_1d.itemsize))
     else:
-        array_2d = np.repeat(array_1d[:, np.newaxis], length, 1)
+        array_2d = np.lib.stride_tricks.as_strided(array_1d, (array_1d.size, length), (array_1d.itemsize, 0))
 
     return array_2d
 

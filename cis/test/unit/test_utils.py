@@ -55,8 +55,8 @@ class TestUtils(unittest.TestCase):
         from cis.utils import expand_1d_to_2d_array
 
         a = np.array([1, 2, 3, 4])
-        b = expand_1d_to_2d_array(a, 4, axis=0)
-        ref = np.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]])
+        b = expand_1d_to_2d_array(a, 5, axis=0)
+        ref = np.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]])
         assert (np.equal(b, ref).all())
 
     def test_can_expand_1d_array_down(self):
@@ -64,8 +64,8 @@ class TestUtils(unittest.TestCase):
         from cis.utils import expand_1d_to_2d_array
 
         a = np.array([1, 2, 3, 4])
-        b = expand_1d_to_2d_array(a, 4, axis=1)
-        ref = np.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
+        b = expand_1d_to_2d_array(a, 5, axis=1)
+        ref = np.array([[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]])
         assert (np.equal(b, ref).all())
 
     def ten_bins_are_created_by_default(self):
