@@ -819,3 +819,72 @@ def log_memory_profile(location):
         logging.debug("App Memory MB ({}): {}".format(location, mem))
     except ImportError:
         pass
+
+
+def new_axis(src_cube, scalar_coord=None, partially_collapsed_coord=None):
+    """
+    Create a new axis as the leading dimension of the cube, promoting a scalar
+    coordinate if specified.
+
+    Args:
+
+    * src_cube (:class:`iris.cube.Cube`)
+        Source cube on which to generate a new axis.
+
+    Kwargs:
+
+    * scalar_coord (:class:`iris.coord.Coord` or 'string')
+        Scalar coordinate to promote to a dimension coordinate.
+
+    Returns:
+        A new :class:`iris.cube.Cube` instance with one extra leading dimension
+        (length 1).
+
+    For example::
+
+        >>> cube.shape
+        (360, 360)
+        >>> ncube = iris.util.new_axis(cube, 'time')
+        >>> ncube.shape
+        (1, 360, 360)
+
+    .. warning::
+
+        Calling this method will trigger any deferred loading, causing the
+        data array of the cube to be loaded into memory.
+
+    """
+    import iris
+    import copy
+    if scalar_coord is not None:
+        scalar_coord = src_cube.coord(scalar_coord)
+
+    if partially_collapsed_coord is not None:
+        partially_collapsed_coord = src_cube.coord(partially_collapsed_coord)
+
+    # Indexing numpy arrays requires loading deferred data here returning a
+    # copy of the data with a new leading dimension.
+    new_cube = iris.cube.Cube(src_cube.data[None])
+    new_cube.metadata = src_cube.metadata
+
+    for coord in src_cube.aux_coords:
+        if scalar_coord and scalar_coord == coord:
+            dim_coord = iris.coords.DimCoord.from_coord(coord)
+            new_cube.add_dim_coord(dim_coord, 0)
+        elif partially_collapsed_coord and partially_collapsed_coord == coord:
+            new_coord = coord.copy(points=np.array([coord.points]))
+            dims = np.append(np.zeros(1), np.array(src_cube.coord_dims(coord)) + 1)
+            new_cube.add_aux_coord(new_coord, dims)
+            src_cube.aux_factories[0].update(coord, new_coord)
+        else:
+            dims = np.array(src_cube.coord_dims(coord)) + 1
+            new_cube.add_aux_coord(coord.copy(), dims)
+
+    for coord in src_cube.dim_coords:
+        coord_dims = np.array(src_cube.coord_dims(coord)) + 1
+        new_cube.add_dim_coord(coord.copy(), coord_dims)
+
+    for factory in src_cube.aux_factories:
+        new_cube.add_aux_factory(copy.deepcopy(factory))
+
+    return new_cube

@@ -287,6 +287,41 @@ class TestUtils(unittest.TestCase):
         conc = concatenate(arrays)
         assert numpy.ma.count_masked(conc) == 1
 
+    def test_partial_aggregation_over_multidimensional_coord(self):
+        """
+         I wonder if I'm better off not completely collapsing the auxilliary coordinate in the first place, just leaving
+         it as length one - this would probably be simpler and safer. It's easier to remove length one coords than add
+         them
+        :return:
+        """
+        # TODO: Currently failing
+        from cis.data_io.gridded_data import GriddedData
+        from cis.utils import new_axis
+        from cis.test.util.mock import make_mock_cube
+        from cis.aggregation.aggregation_grid import AggregationGrid
+        from cis.aggregation.aggregator import Aggregator
+        from iris.cube import CubeList
+        from iris.analysis import MEAN
+
+        cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
+        other_cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5, time_offset=7, surf_pres_offset=4)
+        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
+
+        cube._var_name = 'rain'
+        other_cube._var_name = 'rain'
+
+        agg = Aggregator(GriddedData.make_from_cube(cube), grid)
+        cube_out = agg.aggregate_gridded(MEAN)
+
+        agg = Aggregator(GriddedData.make_from_cube(other_cube),
+                         {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)})
+        other_cube_out = agg.aggregate_gridded(MEAN)
+
+        new_cubes = CubeList([new_axis(cube_out[0], 'time', 'surface_air_pressure'),
+                              new_axis(other_cube_out[0], 'time', 'surface_air_pressure')])
+
+        assert len(new_cubes.merge()) == 1
+
 
 class TestFindLongitudeWrapStart(unittest.TestCase):
 
