@@ -736,16 +736,15 @@ def add_to_list_if_not_none(item, list):
         list.append(item)
 
 
-def dimensions_equal(dimensions, other_dimensions):
+def dimensions_compatible(dimensions, other_dimensions):
     """
-    Check to see if two dimensions are the same (contain the same variables in the same order)
+    Check to see if two dimensions share the same common coordinates. Note that this will only compare the dimensions
+    up to the length of the shortest list.
 
     :param dimensions: dimension list
     :param other_dimensions: other dimension list
     """
 
-    if len(dimensions) is not len(other_dimensions):
-        return False
     for dim, other_dim in zip(dimensions, other_dimensions):
         if not dim == other_dim:
             return False

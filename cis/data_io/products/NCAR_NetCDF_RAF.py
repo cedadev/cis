@@ -7,7 +7,7 @@ from cis.data_io.Coord import CoordList
 from cis.exceptions import InvalidVariableError, FileFormatError
 from cis.data_io.products import AProduct
 from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
-from cis.utils import add_to_list_if_not_none, dimensions_equal, listify
+from cis.utils import add_to_list_if_not_none, dimensions_compatible, listify
 from cis.data_io.netcdf import get_metadata, get_netcdf_file_attributes, read_many_files_individually, \
     get_netcdf_file_variables
 
@@ -228,10 +228,15 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             self.time_variable_name \
             = coordinates_vars
 
-    def get_variable_names_with_same_dimensions_as_time_coord(self):
+    def find_auxiliary_coordinates(self, variable):
+        dim_coord_names = [self.latitude_variable_name, self.longitude_variable_name,
+                           self.altitude_variable_name, self.pressure_variable_name] + self.time_dimensions
+        return [dim for dim in self._variable_dimensions[0][variable] if dim not in dim_coord_names]
+
+    def get_variable_names_which_have_time_coord(self):
         variables = []
-        for name, dimensions in self._variable_dimensions[0].items():  # Use the first file as a master
-            if dimensions_equal(dimensions, self.time_dimensions):
+        for name, dimensions in self._variable_dimensions[0].items():
+            if len(dimensions) > 0 and dimensions_compatible(dimensions, self.time_dimensions):
                 variables.append(name)
         return set(variables)
 
@@ -347,6 +352,8 @@ class NCAR_NetCDF_RAF(AProduct):
 
         logging.info("Listing coordinates: " + str(variables_list))
         add_to_list_if_not_none(variable, variables_list)
+
+        variables_list.extend(variable_selector.find_auxiliary_coordinates(variable))
 
         data_variables = read_many_files_individually(filenames, variables_list)
 
@@ -494,7 +501,7 @@ class NCAR_NetCDF_RAF(AProduct):
         """
 
         selector = self._load_data_definition(filenames)
-        return selector.get_variable_names_with_same_dimensions_as_time_coord()
+        return selector.get_variable_names_which_have_time_coord()
 
     def get_file_format(self, filename):
         """
