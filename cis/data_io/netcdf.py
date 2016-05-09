@@ -248,13 +248,39 @@ def find_missing_value(var):
 
 def get_data(var):
     """
-    Reads raw data from a NetCDF.Variable instance.
+    Reads raw data from a NetCDF.Variable instance. Also applies CF-compliant valid max, min and ranges.
 
     :param var: The specific Variable instance to read
     :return:  A numpy maskedarray. Missing values are False in the mask.
     """
+    from numpy import ma
+    import logging
     # Note that this will automatically apply any specified scalings and
     #  return a masked array based on _FillValue
     data = var[:]
 
-    return data
+    if hasattr(var, 'valid_max'):
+        try:
+            v_max = float(var.valid_max)
+        except ValueError:
+            logging.warning("Unable to parse valid_max metadata for {}. Not applying mask.".format(var._name))
+        else:
+            m_data = ma.masked_greater(data, v_max)
+
+    if hasattr(var, 'valid_min'):
+        try:
+            v_min = float(var.valid_min)
+        except ValueError:
+            logging.warning("Unable to parse valid_min metadata for {}. Not applying mask.".format(var._name))
+        else:
+            m_data = ma.masked_less(data, v_min)
+
+    if hasattr(var, 'valid_range'):
+        try:
+            v_range = [float(i) for i in var.valid_range.split()]
+        except ValueError:
+            logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
+        else:
+            m_data = ma.masked_outside(data, *v_range)
+
+    return m_data

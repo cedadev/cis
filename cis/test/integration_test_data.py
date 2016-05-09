@@ -395,6 +395,9 @@ cis_test_files["ascii"] = TestFileTestData(
     data_variable_properties={}
 )
 
+netcdf_cf_compliant_ranges_filename = make_pathname("netcdf_file_with_valid_ranges.nc")
+netcdf_cf_compliant_ranges_vars = ["LON_502", "SO4_1950", "CL_1944"]
+
 valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
 valid_NCAR_NetCDF_RAF_variable = 'ATX'
 
