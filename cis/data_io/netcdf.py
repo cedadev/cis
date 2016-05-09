@@ -265,7 +265,7 @@ def get_data(var):
         except ValueError:
             logging.warning("Unable to parse valid_max metadata for {}. Not applying mask.".format(var._name))
         else:
-            m_data = ma.masked_greater(data, v_max)
+            data = ma.masked_greater(data, v_max)
 
     if hasattr(var, 'valid_min'):
         try:
@@ -273,7 +273,7 @@ def get_data(var):
         except ValueError:
             logging.warning("Unable to parse valid_min metadata for {}. Not applying mask.".format(var._name))
         else:
-            m_data = ma.masked_less(data, v_min)
+            data = ma.masked_less(data, v_min)
 
     if hasattr(var, 'valid_range'):
         try:
@@ -281,6 +281,6 @@ def get_data(var):
         except ValueError:
             logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
         else:
-            m_data = ma.masked_outside(data, *v_range)
+            data = ma.masked_outside(data, *v_range)
 
-    return m_data
+    return data
