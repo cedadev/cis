@@ -426,31 +426,31 @@ cis_test_files["NCAR_NetCDF_RAF"] = TestFileTestData(
 valid_GASSP_not_entirely_correct_filename = make_pathname("ACE1_aero_an.nc")
 valid_GASSP_not_entirely_correct_variable = 'TIM_627'
 
+cis_test_files["GASSP_aux_coord"] = TestFileTestData(
+    master_filename=make_pathname("ACE1_NSD_RF06_11081995163707_11081995210628.nc"),
+    file_format="NetCDF/GASSP/2.0",
+    product_name="NCAR_NetCDF_RAF",
+    start_datetime=datetime(1995, 11, 8, 16, 37, 07),
+    end_datetime=datetime(1995, 11, 8, 21, 6, 28),
+    lat_min=4.85591,
+    lat_max=21.3232,
+    lon_min=-157.946,
+    lon_max=-155.102,
+    #    alt_min=20.5,
+    #    alt_max=3678.5,
+    all_variable_names=["TIME", "LATITUDE", "LONGITUDE", "PRESSURE_ALTITUDE", "NUMDIST_DMA_OPC", "AREADIST_DMA_OPC",
+                        "VOLDIST_DMA_OPC", "AIR_TEMPERATURE", "RELATIVE_HUMIDITY", "DYNAMIC_PRESSURE", "AIR_PRESSURE"],
+    valid_vars_count=11,
+    data_variable_name='NUMDIST_DMA_OPC',
+    data_variable_standard_name='NUMDIST_DMA_OPC',
+    data_variable_properties={
+        "units": "#/cm3",
+        "missing_value": -32767}
+)
+
 valid_GASSP_aeroplane_filename = make_pathname("SP2_mrg60_NP3_20060927_R1.ict.nc")
 valid_GASSP_aeroplane_vars = ['BC_ng_kg', "BC_ng_m3", "UTC_mid", "GpsAlt", "GpsLat", "GpsLon"]
 valid_GASSP_aeroplane_variable = valid_GASSP_aeroplane_vars[0]
-
-# TODO: Update me with some valid NSD data
-cis_test_files["GASSP_aux_coord"] = TestFileTestData(
-    master_filename=valid_GASSP_aeroplane_filename,
-    file_format="NetCDF/GASSP/1.0",
-    product_name="NCAR_NetCDF_RAF",
-    start_datetime=datetime(2006, 9, 27, 18, 43, 30),
-    end_datetime=datetime(2006, 9, 27, 23, 53, 30),
-    lat_min=29.4966,
-    lat_max=31.0048,
-    lon_min=-96.0271,
-    lon_max=-93.4528,
-    #    alt_min=20.5,
-    #    alt_max=3678.5,
-    all_variable_names=valid_GASSP_aeroplane_vars,
-    valid_vars_count=len(valid_GASSP_aeroplane_vars),
-    data_variable_name='NSD',
-    data_variable_standard_name='NSD',
-    data_variable_properties={
-        "units": "#/#",
-        "missing_value": -9999}
-)
 
 cis_test_files["GASSP_aeroplane"] = TestFileTestData(
     master_filename=valid_GASSP_aeroplane_filename,
