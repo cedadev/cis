@@ -230,7 +230,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
 
     def find_auxiliary_coordinate(self, variable):
         dim_coord_names = [self.latitude_variable_name, self.longitude_variable_name,
-                           self.altitude_variable_name, self.pressure_variable_name] + self.time_dimensions
+                           self.altitude_variable_name, self.pressure_variable_name] + list(self.time_dimensions)
         aux_coords = [dim for dim in self._variable_dimensions[0][variable] if dim not in dim_coord_names]
         if len(aux_coords) > 1:
             raise InvalidVariableError("CIS currently only supports reading data variables with one auxilliary "
@@ -360,8 +360,6 @@ class NCAR_NetCDF_RAF(AProduct):
         logging.info("Listing coordinates: " + str(variables_list))
         add_to_list_if_not_none(variable, variables_list)
 
-        variables_list.append(variable_selector.find_auxiliary_coordinate(variable))
-
         data_variables = read_many_files_individually(filenames, variables_list)
 
         return data_variables, variable_selector
@@ -410,21 +408,22 @@ class NCAR_NetCDF_RAF(AProduct):
         return coords
 
     @staticmethod
-    def _add_aux_coordinate(dim_coords, data_vars, aux_coord_name, variable):
+    def _add_aux_coordinate(dim_coords, filename, aux_coord_name, shape):
         """
         Add an auxiliary coordinate to a list of (reshaped) dimension coordinates
 
         :param dim_coords: CoordList of one-dimensional coordinates representing physical dimensions
-        :param data_vars: The data variables read from the relevant files
+        :param filename: The data file containing the aux coord
         :param aux_coord_name: The name of the aux coord to add to the coord list
-        :param variable: The data variable being added (to retrieve the shape)
+        :param shape: The shape of the data variable whose coordinate thise belongs
         :return: A CoordList of reshaped (2D) physical coordinates plus the 2D auxiliary coordinate
         """
         from cis.data_io.Coord import Coord
         from cis.utils import expand_1d_to_2d_array
+        from cis.data_io.netcdf import read
 
         # The data should be two-dimensional
-        len_x, len_y = data_vars[variable].shape
+        len_x, len_y = shape
 
         for dim_coord in dim_coords:
             dim_coord.data = expand_1d_to_2d_array(dim_coord.data, len_y, axis=1)
@@ -432,7 +431,7 @@ class NCAR_NetCDF_RAF(AProduct):
         all_coords = dim_coords
 
         # We assume that the auxilliary coordinate is the same shape across files
-        d = data_vars[aux_coord_name][0]
+        d = read(filename, [aux_coord_name])[aux_coord_name]
         # Reshape to the length of the first dim_coord (they should all be the same)
         aux_data = expand_1d_to_2d_array(d[:], len_x, axis=0)
         all_coords.append(Coord(aux_data, get_metadata(d)))
@@ -453,9 +452,10 @@ class NCAR_NetCDF_RAF(AProduct):
         if variable is None:
             return UngriddedCoordinates(dim_coords)
         else:
-            aux_coord = variable_selector.find_auxiliary_coordinate(variable)
-            if aux_coord is not None:
-                all_coords = self._add_aux_coordinate(dim_coords, data_variables, aux_coord, variable)
+            aux_coord_name = variable_selector.find_auxiliary_coordinate(variable)
+            if aux_coord_name is not None:
+                all_coords = self._add_aux_coordinate(dim_coords, filenames[0], aux_coord_name,
+                                                      data_variables[variable][0].shape)
             else:
                 all_coords = dim_coords
             return UngriddedData(data_variables[variable], get_metadata(data_variables[variable][0]), all_coords)
