@@ -591,8 +591,9 @@ class UngriddedData(LazyData, CommonData):
         """
         summary = u'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
         summary += u'     Shape = {}\n'.format(self.data.shape) + '\n'
-        summary += u'     Total number of points = {}\n'.format(len(self.get_all_points()))
-        summary += u'     Number of non-masked points = {}\n'.format(len(self.get_non_masked_points()))
+        summary += u'     Total number of points = {}\n'.format(self.data.size)
+        num_non_masked_points = self.data.count() if hasattr(self.data, 'count') else self.data.size
+        summary += u'     Number of non-masked points = {}\n'.format(num_non_masked_points)
 
         summary += unicode(self.metadata)
 
