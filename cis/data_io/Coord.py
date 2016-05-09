@@ -237,29 +237,6 @@ class CoordList(list):
         flattened_coords = [(c.data_flattened if c is not None else None) for c in all_coords]
         return UngriddedHyperPointView(flattened_coords, None)
 
-    def get_standard_coords(self, data_len):
-        """Constructs a list of the standard coordinate values.
-        The standard coordinates are latitude, longitude, altitude, time and air_pressure; they occur in the return
-        list in this order. If a standard coordinate has not been found it's values are returned as a list of length
-        :attr:`data_len`.
-
-        :param int data_len: Expected length of coordinate data
-        :return: :class:`list` of indexed sequences of coordinate values
-        """
-        from cis.exceptions import CoordinateNotFoundError
-
-        empty_data = [None for i in xrange(data_len)]
-        ret_list = []
-
-        for name in HyperPoint.standard_names:
-            try:
-                coord = self.get_coord(standard_name=name).data.flatten()
-            except CoordinateNotFoundError:
-                coord = empty_data
-            ret_list.append(coord)
-
-        return ret_list
-
     def find_standard_coords(self):
         """Constructs a list of the standard coordinates.
         The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
