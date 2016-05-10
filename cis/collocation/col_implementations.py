@@ -6,7 +6,7 @@ import iris.analysis.interpolate
 import iris.coords
 from iris.exceptions import CoordinateMultiDimError
 import numpy as np
-from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
+from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, sum as np_sum
 
 from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
                                            IndexedConstraint, Kernel, AbstractDataOnlyKernel)
@@ -362,6 +362,18 @@ class max(AbstractDataOnlyKernel):
         Return the maximum value
         """
         return np_max(values)
+
+
+class sum(AbstractDataOnlyKernel):
+    """
+    Calculate the sum of the values
+    """
+
+    def get_value_for_data_only(self, values):
+        """
+        Return the sum of the values
+        """
+        return np_sum(values)
 
 
 # noinspection PyPep8Naming

@@ -36,6 +36,7 @@ where:
   * ``kernel=<kernel>`` - the method by which the value in each aggregation cell is determined. ``<kernel>`` should be
     one of:
 
+    * ``sum`` - return the sum of all of the data points in that aggregation cell.
     * ``mean`` - use the mean value of all the data points in that aggregation cell. For gridded data, this mean is
       weighted to take into account differing cell areas due to the projection of lat/lon lines on the Earth.
     * ``min`` - use the lowest valid value of all the data points in that aggregate cell.
