@@ -717,9 +717,10 @@ def guess_coord_axis(coord):
     """
     import iris
     # TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
+    guessed_axis = None
     if isinstance(coord, iris.coords.Coord):
         guessed_axis = iris.util.guess_coord_axis(coord)
-    else:
+    elif coord.standard_name is not None:
         guessed_axis = standard_names.get(coord.standard_name.lower())
     return guessed_axis
 

@@ -93,7 +93,7 @@ class Metadata(object):
 
     @staticmethod
     def guess_standard_name(name):
-        standard_name = name
+        standard_name = None
         if name.lower().startswith('lat'):
             standard_name = 'latitude'
         elif name.lower().startswith('lon'):
