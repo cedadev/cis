@@ -14,11 +14,11 @@ Roughly, one plugin should describe a set of data with the same
 metadata.
 
 Since the CIS plugin is designed to read any data which CIS produces,
-the signature matches any file which starts with `cis-` and ends with
-`.nc`::
+the signature matches any file which ends with `.nc` (we also check the
+source attribute but that is beyond the scope of this tutorial)::
 
     def get_file_signature(self):
-        return [r'cis\\-.\*\\.nc']
+        return [r'\.nc']
 
 This uses a wildcard string to tell CIS which files do and don’t match
 for our product.

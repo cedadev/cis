@@ -295,7 +295,6 @@ class LazyData(object):
         self.attributes.pop(key, None)
 
     def save_data(self, output_file):
-        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         write_coordinates(self, output_file)
         add_data_to_file(self, output_file)
@@ -763,7 +762,6 @@ class UngriddedDataList(CommonDataList):
         :param output_file: output filename
         :return:
         """
-        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         # Should only write coordinates out once
         write_coordinates(self[0], output_file)

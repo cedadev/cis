@@ -7,8 +7,7 @@ What kind of data can CIS deal with?
 Writing
 =======
 
-When creating files from a CIS command, CIS uses the NetCDF 4 classic format. Ungridded output files are always
-prefixed with ``cis-``, and both ungridded and gridded output are always suffixed with ``.nc``.
+When creating files from a CIS command, CIS uses the NetCDF 4 classic format. Output files are always suffixed with ``.nc``.
 
 .. _data-products-reading:
 
@@ -35,7 +34,7 @@ So far, CIS can read the following ungridded data files:
   MODIS L2         MODIS_L2               Satellite          \*MYD06_L2*.hdf, \*MOD06_L2*.hdf, \*MYD04_L2*.hdf, \*MOD04_L2*.hdf, \*MYDATML2.*.hdf, \*MODATML2*.hdf
   Cloud CCI        Cloud_CCI              Satellite          \*ESACCI*CLOUD*
   CSV datapoints   ASCII_Hyperpoints      N/A                \*.txt
-  CIS ungridded    cis                    CIS output         cis-\*.nc
+  CIS ungridded    cis                    CIS output         \*.nc containing the attribute Source = CIS(version)
   NCAR-RAF         NCAR_NetCDF_RAF        Aircraft           \*.nc containing the attribute Conventions with the value NCAR-RAF/nimbus
   GASSP            NCAR_NetCDF_RAF        Aircraft           \*.nc containing the attribute GASSP_Version
   GASSP            NCAR_NetCDF_RAF        Ship               \*.nc containing the attribute GASSP_Version, with no altitude

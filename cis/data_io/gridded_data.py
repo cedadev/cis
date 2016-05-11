@@ -10,7 +10,6 @@ from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.hyperpoint_view import GriddedHyperPointView
 
 from iris.std_names import STD_NAMES
-from cis.utils import remove_file_prefix
 
 
 def load_cube(*args, **kwargs):

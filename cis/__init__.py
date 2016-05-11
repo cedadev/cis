@@ -21,7 +21,7 @@ more than one variable name. This function returns a list of data objects, eithe
 ungridded, but not a mix. For ungridded data lists it is assumed that all objects share the same coordinates.
 """
 __author__ = "David Michel, Daniel Wallis, Duncan Watson-Parris, Richard Wilkinson, Ian Bush, Matt Kendall, John Holt"
-__version__ = "1.3.5"
+__version__ = "1.4.0"
 __status__ = "Dev"
 __website__ = "http://www.cistools.net/"
 

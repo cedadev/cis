@@ -121,7 +121,7 @@ where square brackets denote optional commands and:
 
 ``<outputfile>``
   is an optional argument specifying the file to output to. This will be automatically given a ``.nc`` extension if not
-  present and if the output is ungridded, will be prepended with ``cis-`` to identify it as a CIS output file. This must
+  present. This must
   not be the same file path as any of the input files. If not provided, the default output filename is *out.nc*
 
   * ``<output_var>`` is an optional prefix to the output file argument to specify the name of the output variable within
@@ -194,14 +194,14 @@ The AE is calculated using an eval statement::
 
 Plotting it shows the expected correlation::
 
-    $ cis plot 440-870Angstrom:agoufou.lev20 calculated_variable:cis-alfa.nc --type comparativescatter --itemwidth=10 --xlabel="AERONET 440-870Angstrom" --ylabel="AERONET (-1)*(numpy.log(AOT_870/AOT_440)/numpy.log(870./440.))"
+    $ cis plot 440-870Angstrom:agoufou.lev20 calculated_variable:alfa.nc --type comparativescatter --itemwidth=10 --xlabel="AERONET 440-870Angstrom" --ylabel="AERONET (-1)*(numpy.log(AOT_870/AOT_440)/numpy.log(870./440.))"
 
 .. image:: img/eval/angstrom_exponent.png
    :width: 450px
 
 This correlation can be confirmed by using the CIS :ref:`stats <statistics>` command::
 
-    $ cis stats 440-870Angstrom:agoufou.lev20 calculated_variable:cis-alfa.nc
+    $ cis stats 440-870Angstrom:agoufou.lev20 calculated_variable:alfa.nc
 
     ==================================
     RESULTS OF STATISTICAL COMPARISON:
@@ -251,7 +251,7 @@ First we perform an evaluation using the `numpy.masked_where <http://docs.scipy.
 method to produce an optical depth variable that is masked at all points where the cloud cover is more than 20%::
 
     $ cis eval Cloud_Fraction_Ocean=cloud,Optical_Depth_Land_And_Ocean=od:MOD04_L2.A2010001.2255.005.2010005215814.hdf "numpy.ma.masked_where(cloud > 0.2, od)" 1 -o od:masked_optical_depth.nc
-    $ cis plot od:cis-masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title Aerosol optical depth --cbarscale 0.5 --itemwidth 10 -o masked_optical_depth.png'
+    $ cis plot od:masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title Aerosol optical depth --cbarscale 0.5 --itemwidth 10 -o masked_optical_depth.png'
 
 .. image:: img/eval/modis_masked_optical_depth.png
    :width: 450px
@@ -259,7 +259,7 @@ method to produce an optical depth variable that is masked at all points where t
 Then we perform an aggregation on this masked output file to give the end result - aerosol optical depth aggregated only
 using points where the cloud cover is less than 20%::
 
-    $ cis aggregate od:cis-masked_optical_depth.nc x=[132,162,0.5],y=[-70,-57,0.5] -o aggregated_masked_optical_depth
+    $ cis aggregate od:masked_optical_depth.nc x=[132,162,0.5],y=[-70,-57,0.5] -o aggregated_masked_optical_depth
     $ cis plot od:aggregated_masked_optical_depth.nc --xmin 132 --xmax 162 --ymin -70 --title "Aerosol optical depth (cloud fraction > 0.2)" --cbarscale 0.5 -o aggregated_aod.png
 
 .. image:: img/eval/modis_aggregated_aod.png

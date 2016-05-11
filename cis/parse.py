@@ -9,7 +9,6 @@ import logging
 
 from cis.exceptions import InvalidCommandLineOptionError
 from plotting.plot import Plotter
-from utils import add_file_prefix
 
 
 def initialise_top_parser():
@@ -142,8 +141,7 @@ def add_col_parser_arguments(parser):
                              "specified. For example filename:variable=var1,collocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file containing the collocated data. The name specified will"
-                             " be suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and "
-                             "so that cis can recognise it when using the file for further operations.")
+                             " be suffixed with \".nc\".")
     return parser
 
 
@@ -827,15 +825,13 @@ def _output_file_matches_an_input_file(arguments):
 
     for datagroup in arguments.datagroups:
         input_files.extend(datagroup['filenames'])
-    ungridded_output_file = add_file_prefix('cis-', arguments.output)
-    for output_file in [arguments.output, ungridded_output_file]:
-        for input_file in input_files:
-            if os.path.exists(output_file):
-                # Windows doesn't have samefile support...
-                if (hasattr(os.path, 'samefile') and os.path.samefile(output_file, input_file)) or \
-                        (output_file == input_file and os.stat(output_file) == os.stat(input_file)):
-                    match = True
-                    break
+    for input_file in input_files:
+        if os.path.exists(arguments.output):
+            # Windows doesn't have samefile support...
+            if (hasattr(os.path, 'samefile') and os.path.samefile(arguments.output, input_file)) or \
+                    (arguments.output == input_file and os.stat(arguments.output) == os.stat(input_file)):
+                match = True
+                break
     return match
 
 

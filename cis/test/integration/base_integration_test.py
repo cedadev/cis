@@ -6,9 +6,7 @@ from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_t
 
 class BaseIntegrationTest(unittest.TestCase):
 
-    OUTPUT_NAME = 'test_integration_out'
-    UNGRIDDED_OUTPUT_FILENAME = 'cis-' + OUTPUT_NAME + ".nc"
-    GRIDDED_OUTPUT_FILENAME = OUTPUT_NAME + ".nc"
+    OUTPUT_FILENAME = "test_integration_out.nc"
 
     def setUp(self):
         self.clean_output()
@@ -19,9 +17,8 @@ class BaseIntegrationTest(unittest.TestCase):
     def clean_output(self):
         if hasattr(self, 'ds') and self.ds.isopen():
             self.ds.close()
-        for path in self.UNGRIDDED_OUTPUT_FILENAME, self.GRIDDED_OUTPUT_FILENAME:
-            if os.path.exists(path):
-                os.remove(path)
+        if os.path.exists(self.OUTPUT_FILENAME):
+            os.remove(self.OUTPUT_FILENAME)
 
     def check_output_contains_variables(self, output_path, var_names):
         self.ds = Dataset(output_path)
@@ -45,44 +42,26 @@ class BaseIntegrationTest(unittest.TestCase):
         assert string in att_string
         self.ds.close()
 
-    def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, gridded):
-        if gridded:
-            lat_name = 'lat'
-            lon_name = 'lon'
-            output_path = self.GRIDDED_OUTPUT_FILENAME
-        else:
-            lat_name = 'latitude'
-            lon_name = 'longitude'
-            output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        self.ds = Dataset(output_path)
-        lat = self.ds.variables[lat_name][:]
-        lon = self.ds.variables[lon_name][:]
+    def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min):
+        self.ds = Dataset(self.OUTPUT_FILENAME)
+        lat = self.ds.variables['latitude'][:]
+        lon = self.ds.variables['longitude'][:]
         assert_that(min(lon), greater_than_or_equal_to(lon_min))
         assert_that(max(lon), less_than_or_equal_to(lon_max))
         assert_that(min(lat), greater_than_or_equal_to(lat_min))
         assert_that(max(lat), less_than_or_equal_to(lat_max))
         self.ds.close()
 
-    def check_alt_subsetting(self, alt_max, alt_min, gridded):
-        if gridded:
-            alt_name = 'alt'
-            output_path = self.GRIDDED_OUTPUT_FILENAME
-        else:
-            alt_name = 'altitude'
-            output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        self.ds = Dataset(output_path)
-        alt = self.ds.variables[alt_name][:]
+    def check_alt_subsetting(self, alt_max, alt_min):
+        self.ds = Dataset(self.OUTPUT_FILENAME)
+        alt = self.ds.variables['altitude'][:]
         assert_that(min(alt), greater_than_or_equal_to(alt_min))
         assert_that(max(alt), less_than_or_equal_to(alt_max))
         self.ds.close()
 
-    def check_pres_subsetting(self, pres_max, pres_min, gridded, pres_name='air_pressure'):
+    def check_pres_subsetting(self, pres_max, pres_min, pres_name='air_pressure'):
         import numpy as np
-        if gridded:
-            output_path = self.GRIDDED_OUTPUT_FILENAME
-        else:
-            output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        self.ds = Dataset(output_path)
+        self.ds = Dataset(self.OUTPUT_FILENAME)
         pres = self.ds.variables[pres_name][:]
         assert_that(np.min(pres), greater_than_or_equal_to(pres_min))
         assert_that(np.max(pres), less_than_or_equal_to(pres_max))

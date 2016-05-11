@@ -19,6 +19,7 @@ except ImportError:
 
 skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
 
+
 class TestSubsetIntegration(BaseIntegrationTest):
     def test_GIVEN_single_variable_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_aerosol_cci_variable
@@ -26,11 +27,11 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable + ':' + filename,
-                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, [variable])
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
 
     def test_GIVEN_single_variable_as_var_name_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_aerosol_cci_variable
@@ -38,11 +39,11 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable + ':' + filename,
-                     'lon=[%s,%s],lat=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'lon=[%s,%s],lat=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, [variable])
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
 
     def test_GIVEN_single_variable_in_gridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_hadgem_variable
@@ -50,11 +51,11 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable + ':' + filename,
-                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable])
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
 
     def test_GIVEN_single_variable_as_var_name_in_gridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_hadgem_variable
@@ -62,11 +63,11 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable + ':' + filename,
-                     'longitude=[%s,%s],latitude=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'longitude=[%s,%s],latitude=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable])
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
 
     def test_GIVEN_multiple_variables_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable1 = valid_aerosol_cci_variable
@@ -75,11 +76,11 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
-                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, [variable1, variable2])
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable1, variable2])
 
     def test_GIVEN_multiple_variables_in_gridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable1 = valid_echamham_variable_1
@@ -88,11 +89,11 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
-                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable1, variable2])
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable1, variable2])
 
     def test_GIVEN_multiple_gridded_variables_on_different_grids_WHEN_subset_THEN_subset_correctly(self):
         variable1 = 'v_1'
@@ -100,17 +101,17 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_1d_filename
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
-                     'y=[%s,%s]' % (lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'y=[%s,%s]' % (lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.ds = Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = Dataset(self.OUTPUT_FILENAME)
         lat = self.ds.variables['latitude'][:]
         assert_that(min(lat), greater_than_or_equal_to(lat_min))
         assert_that(max(lat), less_than_or_equal_to(lat_max))
         lat_1 = self.ds.variables['latitude_1'][:]
         assert_that(min(lat_1), greater_than_or_equal_to(lat_min))
         assert_that(max(lat_1), less_than_or_equal_to(lat_max))
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, [variable1, variable2])
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable1, variable2])
 
     def test_GIVEN_variables_specified_by_wildcard_WHEN_subset_THEN_subsetted_correctly(self):
         variable1 = 'surface_albedo???'
@@ -119,27 +120,23 @@ class TestSubsetIntegration(BaseIntegrationTest):
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
         arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
-                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, ['AOD550', 'AOD870', 'surface_albedo550',
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, ['AOD550', 'AOD870', 'surface_albedo550',
                                                                               'surface_albedo670', 'surface_albedo870'])
 
 
 class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
     def do_subset(self, filename, time_min, time_max, variable):
-        arguments = ['subset', variable + ':' + filename, 't=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_NAME]
+        arguments = ['subset', variable + ':' + filename, 't=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 
-    def check_temporal_subsetting(self, t_min, t_max, gridded):
+    def check_temporal_subsetting(self, t_min, t_max):
         import datetime
-        if gridded:
-            output_path = self.GRIDDED_OUTPUT_FILENAME
-        else:
-            output_path = self.UNGRIDDED_OUTPUT_FILENAME
-        self.ds = Dataset(output_path)
+        self.ds = Dataset(self.OUTPUT_FILENAME)
         cis_standard = datetime.datetime(1600, 1, 1, 0, 0, 0)
         time = self.ds.variables['time']
         datetime_min = datetime.datetime.strptime(t_min, "%Y-%m-%dT%H:%M:%S")
@@ -169,8 +166,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_aerosol_cci_filename
         time_min, time_max = '2008-06-12T10:15:00', '2008-06-12T10:35:00'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_NCAR_RAF(self):
         # Takes 4s
@@ -178,19 +175,19 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
         time_min, time_max = '2009-01-14T20:15:00', '2009-01-15T02:45:00'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_NCAR_RAF_with_named_time_variable(self):
         # Takes 4s
         filename = valid_NCAR_NetCDF_RAF_filename
         variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
         time_min, time_max = '2009-01-14T20:15:00', '2009-01-15T02:45:00'
-        arguments = ['subset', variable + ':' + filename, 'time=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_NAME]
+        arguments = ['subset', variable + ':' + filename, 'time=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_GASSP(self):
         # Takes 1.3s
@@ -198,8 +195,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         variable = ",".join(valid_GASSP_aeroplane_vars)
         time_min, time_max = '2006-09-27T19:15:00', '2006-09-27T20:45:00'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_GASSP_not_entirely_valid(self):
         # see issue JASCIS-145
@@ -207,8 +204,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         variable = valid_GASSP_not_entirely_correct_variable
         time_min, time_max = '1993-10-27T00:00:00', '1993-11-27T00:00:00'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_Caliop_L1(self):
         # Takes 1470s
@@ -217,8 +214,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_caliop_l1_filename
         time_min, time_max = '2009-12-31T23:40:00', '2010-01-01T00:17:17'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_Aeronet(self):
         # Takes 30s
@@ -226,8 +223,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_aeronet_filename
         time_min, time_max = '2003-09-24T07:00:00', '2003-11-04T07:00:00'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_MODIS_L2(self):
         # Takes 16s
@@ -237,8 +234,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_modis_l2_filename
         time_min, time_max = '2010-01-01T22:55:19', '2010-01-01T22:58:44'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @raises(NoDataInSubsetError)
     def test_subset_MODIS_L3(self):
@@ -258,8 +255,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_cloudsat_PRECIP_file
         time_min, time_max = '2008-02-14T00:57:36', '2008-02-14T02:09:36'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
     def test_subset_Caliop_L2(self):
@@ -269,8 +266,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_caliop_l2_filename
         time_min, time_max = '2009-12-31T23:42:43', '2010-01-01T00:17:17'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
     def test_subset_CloudSatRVOD(self):
@@ -279,8 +276,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_cloudsat_RVOD_file
         time_min, time_max = '2007-06-29T13:12:00', '2007-06-29T14:29:00'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_cis_gridded(self):
         # Takes 1s
@@ -288,8 +285,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_cis_gridded_output_filename
         time_min, time_max = '2007-06-04T10:18:37', '2007-06-28T10:19:47'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, True)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_cis_ungridded(self):
         # Takes 1s
@@ -297,8 +294,8 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_cis_ungridded_output_filename
         time_min, time_max = '2008-06-12T10:18:37', '2008-06-12T10:19:47'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_netCDF_gridded_HadGem(self):
         # Takes 1s
@@ -306,22 +303,22 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_hadgem_filename
         time_min, time_max = '2007-06-02T10:18:37', '2007-06-12T10:19:47'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, True)
-        self.check_output_contains_variables(self.GRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_subset_ASCII(self):
         variable = 'value'
         filename = valid_ascii_filename
         time_min, time_max = '2012-08-23T15:32:03', '2012-08-28T00:00:00'
         self.do_subset(filename, time_min, time_max, variable)
-        self.check_temporal_subsetting(time_min, time_max, False)
-        self.check_output_contains_variables(self.UNGRIDDED_OUTPUT_FILENAME, variable.split(','))
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
 
 class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
     def do_subset(self, filename, lat_max, lat_min, lon_max, lon_min, variable):
         arguments = ['subset', variable + ':' + filename,
-                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_NAME]
+                     'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 
@@ -333,7 +330,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 84, 99
         lat_min, lat_max = -6, 6
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_Aerosol_CCI(self):
         # Takes 97s
@@ -342,7 +339,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -15, 5
         lat_min, lat_max = -30, 45
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_NCAR_RAF(self):
         # Takes 170s
@@ -351,7 +348,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -160, -157
         lat_min, lat_max = 30, 50
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     @skip_pyhdf
     def test_subset_Caliop_L1(self):
@@ -361,7 +358,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 0, 60
         lat_min, lat_max = -30, 30
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_Aeronet(self):
         # Takes 60s
@@ -370,7 +367,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -1.5, 1.4
         lat_min, lat_max = 15, 15.5
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     @skip_pyhdf
     def test_subset_MODIS_L2(self):
@@ -380,7 +377,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -150, 150
         lat_min, lat_max = -72, -63
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     @skip_pyhdf
     def test_subset_MODIS_L3(self):
@@ -401,7 +398,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 0, 120
         lat_min, lat_max = 40, 60
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     @skip_pyhdf
     def test_subset_Caliop_L2(self):
@@ -411,7 +408,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 0, 60
         lat_min, lat_max = -30, 30
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     @skip_pyhdf
     def test_subset_CloudSatPRECIP(self):
@@ -421,7 +418,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_cis_gridded(self):
         # Takes 1s
@@ -430,7 +427,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, True)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_cis_ungridded(self):
         # Takes 1s
@@ -439,7 +436,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 1, 3
         lat_min, lat_max = 41, 42
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     @skip_pyhdf
     def test_subset_CloudSatRVOD(self):
@@ -450,7 +447,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_GASP(self):
         # 257s exit code 137
@@ -459,7 +456,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -94, 95
         lat_min, lat_max = 30, 31
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_ASCII(self):
         variable = '*'
@@ -467,7 +464,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 1, 6
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, False)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
 
 class TestEmptySubsets(BaseIntegrationTest):
@@ -475,7 +472,7 @@ class TestEmptySubsets(BaseIntegrationTest):
     def do_subset(self, filename, variable, alt_bounds='', pres_bounds=''):
         # Join the bounds with a comma if they are both specified
         joint_bounds = ','.join([alt_bounds, pres_bounds]) if alt_bounds and pres_bounds else alt_bounds or pres_bounds
-        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_NAME]
+        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 
@@ -486,7 +483,7 @@ class TestEmptySubsets(BaseIntegrationTest):
         filename = valid_NCAR_NetCDF_RAF_filename
         alt_min, alt_max = 15000, 20000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, False)
+        self.check_alt_subsetting(alt_max, alt_min)
 
     #More...
 
@@ -495,7 +492,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
     def do_subset(self, filename, variable, alt_bounds='', pres_bounds=''):
         # Join the bounds with a comma if they are both specified
         joint_bounds = ','.join([alt_bounds, pres_bounds]) if alt_bounds and pres_bounds else alt_bounds or pres_bounds
-        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_NAME]
+        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 
@@ -505,7 +502,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_NCAR_NetCDF_RAF_filename
         alt_min, alt_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, False)
+        self.check_alt_subsetting(alt_max, alt_min)
 
     def test_subset_NCAR_RAF_pres(self):
         # Takes 170s
@@ -513,7 +510,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_NCAR_NetCDF_RAF_filename
         pres_min, pres_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_min, pres_max))
-        self.check_pres_subsetting(pres_max, pres_min, False)
+        self.check_pres_subsetting(pres_max, pres_min)
 
     def test_subset_NCAR_RAF_pres_order_doesnt_matter(self):
         # Takes 170s
@@ -521,7 +518,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_NCAR_NetCDF_RAF_filename
         pres_min, pres_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_max, pres_min))
-        self.check_pres_subsetting(pres_max, pres_min, False)
+        self.check_pres_subsetting(pres_max, pres_min)
 
     @skip_pyhdf
     def test_subset_Caliop_L1(self):
@@ -530,7 +527,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_caliop_l1_filename
         alt_min, alt_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, False)
+        self.check_alt_subsetting(alt_max, alt_min)
 
     def test_subset_hybrid_pressure_model_field(self):
         """
@@ -542,7 +539,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_hybrid_pressure_filename
         pres_min, pres_max = 0.95, 0.96
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(pres_min, pres_max))
-        self.check_pres_subsetting(pres_max, pres_min, True, pres_name='lev')
+        self.check_pres_subsetting(pres_max, pres_min, pres_name='lev')
 
     @raises(CoordinateNotFoundError)
     def test_subset_hybrid_pressure_model_field_by_variable(self):
@@ -555,7 +552,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_hybrid_pressure_filename
         pres_min, pres_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='air_pressure=[{},{}]'.format(pres_min, pres_max))
-        self.check_pres_subsetting(pres_max, pres_min, True)
+        self.check_pres_subsetting(pres_max, pres_min)
 
     @skip_pyhdf
     def test_subset_Caliop_L2(self):
@@ -564,7 +561,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_caliop_l2_filename
         alt_min, alt_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, False)
+        self.check_alt_subsetting(alt_max, alt_min)
 
     @skip_pyhdf
     def test_subset_CloudSatRVOD_alt(self):
@@ -573,7 +570,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_cloudsat_RVOD_file
         alt_min, alt_max = 0, 2000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, False)
+        self.check_alt_subsetting(alt_max, alt_min)
 
     def test_subset_GASSP(self):
         # 257s exit code 137
@@ -581,7 +578,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_GASSP_aeroplane_filename
         alt_min, alt_max = 0, 2000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, False)
+        self.check_alt_subsetting(alt_max, alt_min)
 
     @raises(CoordinateNotFoundError)
     def test_subset_GASSP_pres(self):
@@ -596,4 +593,4 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         filename = valid_ascii_filename
         alt_min, alt_max = 0, 12
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
-        self.check_alt_subsetting(alt_max, alt_min, False)
+        self.check_alt_subsetting(alt_max, alt_min)

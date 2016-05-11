@@ -371,38 +371,6 @@ def copy_attributes(source, dest):
             dest.__dict__.update(source.__dict__)
 
 
-def add_file_prefix(prefix, filepath):
-    """
-    Add a prefix to a filename taking into account any path that might be present before that actual filename
-
-    :param prefix: A string to prefix the filename with
-    :param filepath: Filename, optionally including path
-    :return: A string with the full path to the prefixed file
-    """
-    import os.path
-    filename = os.path.basename(filepath)
-    path = os.path.dirname(filepath)
-    return os.path.join(path, prefix + filename)
-
-
-def remove_file_prefix(prefix, filepath):
-    """
-    Remove a prefix from a filename, taking into account any path that might be present before that actual filename
-
-    :param prefix: The prefix to remove
-    :param filepath: Filename, optional including path
-    :return: A string with the full path to the un-prefixed file
-    """
-    import os.path
-
-    filename = os.path.basename(filepath)
-    path = os.path.dirname(filepath)
-
-    filename = filename.replace(prefix, '', 1)
-
-    return os.path.join(path, filename)
-
-
 def parse_key_val_string(arguments, separator):
     """
     Takes a (comma) separated list of keyword value pairs (separated by =) and returns a dictionary with those keys and

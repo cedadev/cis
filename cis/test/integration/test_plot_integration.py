@@ -89,11 +89,11 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_subset_ECHAM_over_0_360_boundary_plots_OK(self):
         var = valid_echamham_variable_1
         filename = valid_echamham_filename
-        args = ['subset', var + ':' + filename, 'x=[-10,10]', '-o', self.OUTPUT_NAME]
+        args = ['subset', var + ':' + filename, 'x=[-10,10]', '-o', self.OUTPUT_FILENAME]
         args = parse_args(args)
         subset_cmd(args)
         out_name = 'subset_echam_boundary.png'
-        args = ['plot', var + ":" + self.GRIDDED_OUTPUT_FILENAME, '--type', 'contourf', '-o', out_name]
+        args = ['plot', var + ":" + self.OUTPUT_FILENAME, '--type', 'contourf', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
 
@@ -111,11 +111,11 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_plot_gridded_2d_with_flattened_time(self):
         variable = valid_cis_gridded_output_variable
         filename = valid_cis_gridded_output_filename
-        args = ['subset', variable + ':' + filename, 't=[2007-06-07T15]', '-o', self.OUTPUT_NAME]
+        args = ['subset', variable + ':' + filename, 't=[2007-06-07T15]', '-o', self.OUTPUT_FILENAME]
         args = parse_args(args)
         subset_cmd(args)
         out_name = '3d_out.png'
-        args = ['plot', variable + ':' + self.GRIDDED_OUTPUT_FILENAME, '-o', out_name]
+        args = ['plot', variable + ':' + self.OUTPUT_FILENAME, '-o', out_name]
         main_arguments = parse_args(args)
         plot_cmd(main_arguments)
 
@@ -127,11 +127,11 @@ class TestPlotIntegration(BaseIntegrationTest):
         variable = 'Solar_Zenith_Angle'
         filename = valid_aeronet_filename
         agg_args = ['aggregate', variable + ':' + filename,
-                    't=[2003-09-24T07:00:00,2003-11-04T07:00:00,P1D]', '-o', self.OUTPUT_NAME]
+                    't=[2003-09-24T07:00:00,2003-11-04T07:00:00,P1D]', '-o', self.OUTPUT_FILENAME]
         args = parse_args(agg_args)
         aggregate_cmd(args)
         out_name = 'aeronet_out.png'
-        args = ['plot', variable + ':' + self.GRIDDED_OUTPUT_FILENAME,
+        args = ['plot', variable + ':' + self.OUTPUT_FILENAME,
                 '--xaxis', 'time', '--yaxis', variable, '-o', out_name]
         main_arguments = parse_args(args)
         plot_cmd(main_arguments)

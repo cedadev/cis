@@ -26,12 +26,12 @@ class TestEval(BaseIntegrationTest):
         # AOD550 = AOD500 * (550/500)^(-1*Angstrom500-870)"
         # Takes 3s
         args = ['eval', 'AOT_500,500-870Angstrom=a550to870:' + another_valid_aeronet_filename,
-                'AOT_500 * (550.0/500)**(-1*a550to870)', '1', '-o', self.OUTPUT_NAME]
+                'AOT_500 * (550.0/500)**(-1*a550to870)', '1', '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
         # Check correct:
-        self.ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         calculated_result = self.ds.variables['calculated_variable'][:]
         expected_result = [0.2341039087, 0.2285401152, 0.2228799533, 0.1953746746, 0.2094051561, 0.1696889668,
                            0.3137791803, 0.2798929273, 0.1664194279, 0.1254619092, 0.1258309124, 0.1496960031,
@@ -42,12 +42,12 @@ class TestEval(BaseIntegrationTest):
 
     def test_ECHAMHAM_wavelength_sum(self):
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
-                '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), '1', '-o', self.OUTPUT_NAME]
+                '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), '1', '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
         # Check correct:
-        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         calculated_result = self.ds.variables['calculated_variable'][:]
         # A hand calculated selection of values
         expected_result = [0.007633533, 0.007646653, 0.007749859, 0.007744226, 0.007761176]
@@ -69,7 +69,7 @@ class TestEval(BaseIntegrationTest):
         col_cmd(main_arguments)
 
         # Check collocation is the same
-        self.ds = netCDF4.Dataset('cis-collocated_gassp.nc')
+        self.ds = netCDF4.Dataset('collocated_gassp.nc')
         col_var1 = self.ds.variables[valid_echamham_variable_1][:]
         col_var2 = self.ds.variables[valid_echamham_variable_2][:]
         # A hand calculated selection of values
@@ -82,72 +82,72 @@ class TestEval(BaseIntegrationTest):
 
         # Then do an evaluation using the collocated data:
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2,
-                                      'cis-collocated_gassp.nc'),
+                                      'collocated_gassp.nc'),
                 "%s=gassp_alias:%s" % (valid_GASSP_aeroplane_variable, valid_GASSP_aeroplane_filename),
                 "(%s + %s) / gassp_alias " % (valid_echamham_variable_1, valid_echamham_variable_2),
-                '1', '-o', self.OUTPUT_NAME]
+                '1', '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
         self.ds.close()
 
         # Check correct
-        self.ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         calculated_result = self.ds.variables['calculated_variable'][:]
         # A hand calculated selection of values
         expected_result = numpy.ma.masked_invalid([float('Nan'), float('Nan'), float('Nan'), 0.0004584692, 0.000697334])
 
         assert_that(calculated_result.shape, is_((311,)))
         compare_masked_arrays(expected_result, calculated_result[:][0:5])
-        os.remove('cis-collocated_gassp.nc')
+        os.remove('collocated_gassp.nc')
 
     @skip_pyhdf
     def test_CloudSat(self):
         args = ['eval', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,
                                       valid_cloudsat_RVOD_file),
                 '%s/%s' % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable), 'ppm', '-o',
-                'cloudsat_var:' + self.OUTPUT_NAME]
+                'cloudsat_var:' + self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
-        self.ds = netCDF4.Dataset(self.UNGRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         assert_that(self.ds.variables['cloudsat_var'].units, is_('ppm'))
 
     def test_can_specify_output_variable(self):
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
                 '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), 'kg m^-3',
-                '-o', 'var_out:' + self.OUTPUT_NAME]
+                '-o', 'var_out:' + self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         assert 'var_out' in self.ds.variables
 
     def test_can_specify_attributes_gridded(self):
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
                 '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), 'kg m^-3',
-                '-o', 'var_out:' + self.OUTPUT_NAME, '-a', 'att1=val1,att2=val2']
+                '-o', 'var_out:' + self.OUTPUT_FILENAME, '-a', 'att1=val1,att2=val2']
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         assert_that(self.ds.variables['var_out'].att1, is_('val1'))
         assert_that(self.ds.variables['var_out'].att2, is_('val2'))
 
     def test_can_specify_units_gridded(self):
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
                 '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), 'kg m^-3',
-                '-o', 'var_out:' + self.OUTPUT_NAME, '-a', 'att1=val1,att2=val2']
+                '-o', 'var_out:' + self.OUTPUT_FILENAME, '-a', 'att1=val1,att2=val2']
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         assert_that(self.ds.variables['var_out'].units, is_('kg m^-3'))
 
     def test_can_specify_units_gridded_no_output_var(self):
         args = ['eval', "%s:%s" % (valid_hadgem_variable, valid_hadgem_filename), "od550aer", "ppm", "-o",
-                self.OUTPUT_NAME, "-a", "att1=val1"]
+                self.OUTPUT_FILENAME, "-a", "att1=val1"]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
 
-        self.ds = netCDF4.Dataset(self.GRIDDED_OUTPUT_FILENAME)
+        self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         assert_that(self.ds.variables['calculated_variable'].units, is_('ppm'))
         assert_that(self.ds.variables['calculated_variable'].att1, is_('val1'))
