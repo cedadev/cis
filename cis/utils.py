@@ -89,11 +89,10 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale=False)
     return bin_edges
 
 
-def expand_1d_to_2d_array(array_1d, length, axis=0):
+def expand_1d_to_2d_array(array, length, axis=0):
     """
-    General utility routine to 'extend a 1D array into a 2D array
-    by duplicating the data along a given 'axis' (default is 0)
-    of size 'length'.
+    General utility routine to 'extend arbitrary dimensional array into a higher dimension
+    by duplicating the data along a given 'axis' (default is 0) of size 'length'.
 
     Examples::
 
@@ -111,17 +110,20 @@ def expand_1d_to_2d_array(array_1d, length, axis=0):
          [3 3 3 3]
          [4 4 4 4]]
 
-    :param array_1d:
+    :param array:
     :param length:
     :param axis:
     :return:
     """
-    import numpy as np
+    from numpy.lib.stride_tricks import broadcast_to
 
     if axis == 0:
-        array_2d = np.lib.stride_tricks.as_strided(array_1d, (length, array_1d.size), (0, array_1d.itemsize))
+        array_2d = broadcast_to(array, (length, array.size))
+        # array_2d = np.lib.stride_tricks.as_strided(array_1d, (length, array_1d.size), (0, array_1d.itemsize))
     else:
-        array_2d = np.lib.stride_tricks.as_strided(array_1d, (array_1d.size, length), (array_1d.itemsize, 0))
+        reshaped = array.reshape(array.size, 1)
+        array_2d = broadcast_to(reshaped, (array.size, length))
+        # array_2d = np.lib.stride_tricks.as_strided(array_1d, (array_1d.size, length), (array_1d.itemsize, 0))
 
     return array_2d
 

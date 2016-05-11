@@ -68,6 +68,15 @@ class TestUtils(unittest.TestCase):
         ref = np.array([[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]])
         assert (np.equal(b, ref).all())
 
+    @raises(ValueError)
+    def test_changing_an_element_of_expanded_array_raises_error(self):
+        import numpy as np
+        from cis.utils import expand_1d_to_2d_array
+
+        a = np.array([1, 2, 3, 4])
+        b = expand_1d_to_2d_array(a, 5, axis=0)
+        b[1,4] = 42
+
     def ten_bins_are_created_by_default(self):
         from numpy import array
 
