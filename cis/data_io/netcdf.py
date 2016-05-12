@@ -253,7 +253,7 @@ def get_data(var):
     :param var: The specific Variable instance to read
     :return:  A numpy maskedarray. Missing values are False in the mask.
     """
-    from numpy import ma
+    import numpy as np
     import logging
     # Note that this will automatically apply any specified scalings and
     #  return a masked array based on _FillValue
@@ -265,7 +265,7 @@ def get_data(var):
         except ValueError:
             logging.warning("Unable to parse valid_max metadata for {}. Not applying mask.".format(var._name))
         else:
-            data = ma.masked_greater(data, v_max)
+            data = np.ma.masked_greater(data, v_max)
 
     if hasattr(var, 'valid_min'):
         try:
@@ -273,14 +273,17 @@ def get_data(var):
         except ValueError:
             logging.warning("Unable to parse valid_min metadata for {}. Not applying mask.".format(var._name))
         else:
-            data = ma.masked_less(data, v_min)
+            data = np.ma.masked_less(data, v_min)
 
     if hasattr(var, 'valid_range'):
         try:
-            v_range = [float(i) for i in var.valid_range.split()]
+            if isinstance(var.valid_range, np.ndarray):
+                v_range = var.valid_range
+            elif hasattr(var.valid_range, 'split'):
+                v_range = [float(i) for i in var.valid_range.split()]
         except ValueError:
             logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
         else:
-            data = ma.masked_outside(data, *v_range)
+            data = np.ma.masked_outside(data, *v_range)
 
     return data
