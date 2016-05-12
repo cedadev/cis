@@ -198,6 +198,15 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_temporal_subsetting(time_min, time_max)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
+    def test_subset_GASSP_aux_coord(self):
+        # Takes 1.3s
+        filename = cis_test_files['GASSP_aux_coord'].master_filename
+        variable = ",".join(cis_test_files['GASSP_aux_coord'].all_variable_names)
+        time_min, time_max = '2006-09-27T19:15:00', '2006-09-27T20:45:00'
+        self.do_subset(filename, time_min, time_max, variable)
+        self.check_temporal_subsetting(time_min, time_max)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
+
     def test_subset_GASSP_not_entirely_valid(self):
         # see issue JASCIS-145
         filename = valid_GASSP_not_entirely_correct_filename
@@ -458,6 +467,15 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
+    def test_subset_GASSP_aux_coord(self):
+        # Takes 1.3s
+        filename = cis_test_files['GASSP_aux_coord'].master_filename
+        variable = ",".join(cis_test_files['GASSP_aux_coord'].all_variable_names)
+        lon_min, lon_max = -94, 95
+        lat_min, lat_max = 30, 31
+        self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+
     def test_subset_ASCII(self):
         variable = '*'
         filename = valid_ascii_filename
@@ -594,3 +612,27 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
         alt_min, alt_max = 0, 12
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
         self.check_alt_subsetting(alt_max, alt_min)
+
+
+class TestAuxSubset(BaseIntegrationTest):
+
+    def check_aux_subsetting(self, aux_min, aux_max, var):
+        self.ds = Dataset(self.OUTPUT_FILENAME)
+        alt = self.ds.variables[var][:]
+        assert_that(alt.min(), greater_than_or_equal_to(aux_min))
+        assert_that(alt.max(), less_than_or_equal_to(aux_max))
+        self.ds.close()
+
+    def do_subset(self, filename, variable, aux_bounds):
+        # Join the bounds with a comma if they are both specified
+        arguments = ['subset', variable + ':' + filename, aux_bounds, '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+
+    def test_subset_GASSP_aux_coord(self):
+        # Takes 1.3s
+        filename = cis_test_files['GASSP_aux_coord'].master_filename
+        variable = cis_test_files['GASSP_aux_coord'].data_variable_name
+        dp_min, dp_max = 0.05, 0.8
+        self.do_subset(filename, variable, 'DP_MID=[{min},{max}]'.format(min=dp_min, max=dp_max))
+        self.check_aux_subsetting(dp_min, dp_max, 'DP_MID')

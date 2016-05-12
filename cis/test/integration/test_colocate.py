@@ -95,6 +95,20 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
+    def test_GASSP_aux_onto_NetCDF_Gridded(self):
+        filename = cis_test_files['GASSP_aux_coord'].master_filename
+        var = cis_test_files['GASSP_aux_coord'].data_variable_name
+        sample_file = valid_echamham_filename
+        sample_var = valid_echamham_variable_1
+        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        arguments = ['col', var + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [var])
+        self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, [var])
+
     def test_GASSP_ship_onto_NetCDF_Gridded(self):
         # Takes 10mins
         vars = valid_GASSP_ship_vars
@@ -468,6 +482,19 @@ class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(","))
 
+    def test_GASSP_aux_coord_onto_Aeronet(self):
+        # Takes 73s
+        filename = cis_test_files['GASSP_aux_coord'].master_filename
+        variable = cis_test_files['GASSP_aux_coord'].data_variable_name
+        sample_file = valid_aeronet_filename
+        collocator_and_opts = 'box[h_sep=10km],kernel=mean'
+        arguments = ['col', variable + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(","))
+
     def test_GASSP_onto_Aeronet_using_moments_kernel(self):
         # Takes 73s
         variable = valid_GASSP_aeroplane_variable
@@ -593,6 +620,22 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         filename = valid_echamham_filename
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
+        collocator_and_opts = 'lin,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + filename,
+                     sample_file + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
+        self.check_output_vars_are_different(self.OUTPUT_FILENAME, vars)
+
+    def test_NetCDF_Gridded_onto_GASSP_aux_coord_li(self):
+        # Takes 1s
+        vars = valid_echamham_variable_1, valid_echamham_variable_2
+        filename = valid_echamham_filename
+        sample_file = cis_test_files['GASSP_aux_coord'].master_filename
+        sample_var = cis_test_files['GASSP_aux_coord'].data_variable_name
         collocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,

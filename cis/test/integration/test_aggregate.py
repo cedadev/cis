@@ -471,6 +471,17 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
+    def test_aggregate_GASSP_aux_coord(self):
+        # Takes 1.3s
+        filename = cis_test_files['GASSP_aux_coord'].master_filename
+        variable = cis_test_files['GASSP_aux_coord'].data_variable_name
+        time_min, time_max = dt.datetime(2006, 9, 27, 20, 15), dt.datetime(2006, 9, 27, 22, 45)
+        time_delta = dt.timedelta(minutes=30)
+        str_delta = 'PT30M'
+        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
+
     def test_aggregate_Aeronet(self):
         # Takes 2s
         variable = 'AOT_440'
