@@ -247,7 +247,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
 
     def test_aggregate_NCAR_RAF(self):
         # Takes 513s
-        variable = '*'
+        variable = valid_NCAR_NetCDF_RAF_variable
         filename = valid_NCAR_NetCDF_RAF_filename
         lon_min, lon_max, lon_delta = -160, -157, 1
         lat_min, lat_max, lat_delta = 30, 50, 5

@@ -343,7 +343,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
 
     def test_subset_NCAR_RAF(self):
         # Takes 170s
-        variable = '*'
+        variable = 'ATX,PITCH'
         filename = valid_NCAR_NetCDF_RAF_filename
         lon_min, lon_max = -160, -157
         lat_min, lat_max = 30, 50
@@ -479,7 +479,7 @@ class TestEmptySubsets(BaseIntegrationTest):
     @raises(NoDataInSubsetError)
     def test_empty_subset_ungridded_vertical(self):
         # Takes 170s
-        variable = '*'
+        variable = valid_NCAR_NetCDF_RAF_variable
         filename = valid_NCAR_NetCDF_RAF_filename
         alt_min, alt_max = 15000, 20000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
@@ -498,7 +498,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
 
     def test_subset_NCAR_RAF_alt(self):
         # Takes 170s
-        variable = '*'
+        variable = valid_NCAR_NetCDF_RAF_variable
         filename = valid_NCAR_NetCDF_RAF_filename
         alt_min, alt_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='z=[{},{}]'.format(alt_min, alt_max))
@@ -506,7 +506,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
 
     def test_subset_NCAR_RAF_pres(self):
         # Takes 170s
-        variable = '*'
+        variable = valid_NCAR_NetCDF_RAF_variable
         filename = valid_NCAR_NetCDF_RAF_filename
         pres_min, pres_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_min, pres_max))
@@ -514,7 +514,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
 
     def test_subset_NCAR_RAF_pres_order_doesnt_matter(self):
         # Takes 170s
-        variable = '*'
+        variable = valid_NCAR_NetCDF_RAF_variable
         filename = valid_NCAR_NetCDF_RAF_filename
         pres_min, pres_max = 1000, 2000
         self.do_subset(filename, variable, alt_bounds='p=[{},{}]'.format(pres_max, pres_min))
