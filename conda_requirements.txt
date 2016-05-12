@@ -3,7 +3,7 @@
 
 # Python dependencies
 matplotlib
-numpy=>1.10
+numpy>=1.10
 iris
 scipy
 pandas
