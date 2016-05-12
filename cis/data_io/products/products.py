@@ -61,7 +61,7 @@ class cis(AProduct):
         except KeyError as ex:
             errors = ['No source attribute found in {}'.format(filename)]
         else:
-            if source.starswith('CIS'):
+            if not source.startswith('CIS'):
                 errors = ['Source ({}) does not match CIS in {}'.format(source, filename)]
         return errors
 
