@@ -23,13 +23,6 @@ class TestAProduct(TestCase):
         product_cls = _get_class(valid_caliop_l2_filename)
         eq_(product_cls.__name__, 'Caliop_L2')
 
-    def test_GIVEN_filename_matches_cis_and_aerosol_cci_WHEN_get_class_THEN_cis_product_returned(self):
-        # If a filename matches the file signature for CIS and aerosol CCI (e.g. because you subsetted
-        # an Aerosol CCI product, CIS needs to identify that the CIS product takes priority
-        filename = 'cis-aatsr_20100717003203-ESACCI-L2P_NEWAEROSOL-ALL-ATSR2_ERS2-ORAC_43800-fv02.02b_v1.0_odaer550.nc'
-        product_cls = _get_class(filename)
-        eq_(product_cls.__name__, 'cis')
-
     @raises(ClassNotFoundError)
     def test_that_get_class_raises_ClassNotFoundError_for_non_existing_product(self):
         product_cls = _get_class('some_file_that_does_not_match_anything')
