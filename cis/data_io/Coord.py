@@ -157,7 +157,7 @@ class CoordList(list):
         from collections import Mapping
         coords = self
 
-        if isinstance(name_or_coord, basestring):
+        if isinstance(name_or_coord, str):
             name = name_or_coord
             coord = None
         else:
@@ -165,28 +165,27 @@ class CoordList(list):
             coord = name_or_coord
 
         if name is not None:
-            coords = filter(lambda coord_: coord_.name() == name, coords)
+            coords = [coord_ for coord_ in coords if coord_.name() == name]
 
         if standard_name is not None:
-            coords = filter(lambda coord_: coord_.standard_name == standard_name, coords)
+            coords = [coord_ for coord_ in coords if coord_.standard_name == standard_name]
 
         if long_name is not None:
-            coords = filter(lambda coord_: coord_.long_name == long_name, coords)
+            coords = [coord_ for coord_ in coords if coord_.long_name == long_name]
 
         if axis is not None:
             axis = axis.upper()
-            coords = filter(lambda coord_: coord_.axis == axis, coords)
+            coords = [coord_ for coord_ in coords if coord_.axis == axis]
 
         if attributes is not None:
             if not isinstance(attributes, Mapping):
                 raise ValueError(
                     'The attributes keyword was expecting a dictionary type, but got a %s instead.' % type(attributes))
-            coords = filter(lambda coord_: all(
-                            k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems()),
-                            coords)
+            coords = [coord_ for coord_ in coords if all(
+                            k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.items())]
 
         if coord is not None:
-            coords = filter(lambda coord_: coord_ == coord, coords)
+            coords = [coord_ for coord_ in coords if coord_ == coord]
 
         return coords
 

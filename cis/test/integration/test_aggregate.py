@@ -166,7 +166,7 @@ class TestAggregation(BaseAggregationTest):
         # JASCIS-281
         variable = 'AOT_440'
         filename = another_valid_aeronet_filename
-        t_start, t_end = dt.datetime(1999, 01, 01), dt.datetime(1999, 12, 29)
+        t_start, t_end = dt.datetime(1999, 0o1, 0o1), dt.datetime(1999, 12, 29)
         t_delta = dt.timedelta(hours=6)
         str_delta = 'PT6H'
         self.do_temporal_aggregate(variable, filename, t_start, t_end, str_delta)

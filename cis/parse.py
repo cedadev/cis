@@ -8,7 +8,7 @@ import os.path
 import logging
 
 from cis.exceptions import InvalidCommandLineOptionError
-from plotting.plot import Plotter
+from cis.plotting.plot import Plotter
 
 
 def initialise_top_parser():
@@ -51,7 +51,7 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("-o", "--output", metavar="Output filename", nargs="?",
                         help="The filename of the output file for the plot image")
     parser.add_argument("--type", metavar="Chart type", nargs="?",
-                        help="The chart type, one of: " + str(Plotter.plot_types.keys()))
+                        help="The chart type, one of: " + str(list(Plotter.plot_types.keys())))
 
     parser.add_argument("--xlabel", metavar="X axis label", nargs="?", help="The label for the x axis")
     parser.add_argument("--ylabel", metavar="Y axis label", nargs="?", help="The label for the y axis")
@@ -283,7 +283,7 @@ def check_aggregate_kernel(arg, parser):
 
     aggregation_classes = plugin.find_plugin_classes(Kernel, 'cis.collocation.col_implementations')
     aggregation_names = [cls().__class__.__name__ for cls in aggregation_classes]
-    if arg in aggregation_kernels.keys() or arg in aggregation_names:
+    if arg in list(aggregation_kernels.keys()) or arg in aggregation_names:
         return arg
     else:
         parser.error(arg + " is not a valid aggregation kernel. Please use one of " + str(aggregation_names))
@@ -512,7 +512,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
 
         input_dict = {}
 
-        option = options._asdict().keys()
+        option = list(options._asdict().keys())
 
         # First deal with the comma separated compulsory arguments
         for i in range(0, compulsory_args):
@@ -697,9 +697,9 @@ def check_plot_type(plot_type, parser):
     """
 
     if plot_type is not None:
-        if plot_type not in Plotter.plot_types.keys():
+        if plot_type not in list(Plotter.plot_types.keys()):
             parser.error(
-                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
+                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(list(Plotter.plot_types.keys())))
 
     return plot_type
 

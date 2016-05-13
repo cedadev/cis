@@ -117,7 +117,7 @@ class CollocatorFactory(object):
         col_param_names = ['fill_value', 'var_name', 'var_long_name', 'var_units']
         col_params = {}
         con_params = {}
-        for key, value in params.iteritems():
+        for key, value in params.items():
             if key in col_param_names:
                 col_params[key] = value
             else:

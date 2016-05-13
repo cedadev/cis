@@ -33,7 +33,7 @@ def __add_metadata(var, data):
         var.calendar = data.metadata.calendar
     if data.metadata.history:
         var.history = data.metadata.history
-    for name, value in data.attributes.iteritems():
+    for name, value in data.attributes.items():
         setattr(var, name, value)
     return var
 

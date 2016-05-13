@@ -98,7 +98,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
 
     if time_dim_length:
         t0 = datetime.datetime(1984, 8, 27)
-        times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(time_dim_length)])
+        times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in range(time_dim_length)])
         time_nums = convert_datetime_to_std_time(times)
         time_bounds = None
         if time_dim_length == 1:
@@ -201,8 +201,8 @@ def make_dummy_2d_cube_with_small_offset_in_lat():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(0, 360, 10), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(-84, 106, 10)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(0, 360, 10)), standard_name='longitude', units='degrees')
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
@@ -216,8 +216,8 @@ def make_dummy_2d_cube_with_small_offset_in_lon():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(-85, 105, 10)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(1, 361, 10)), standard_name='longitude', units='degrees')
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
@@ -231,8 +231,8 @@ def make_dummy_2d_cube_with_small_offset_in_lat_and_lon():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(-84, 106, 10)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(1, 361, 10)), standard_name='longitude', units='degrees')
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
@@ -256,8 +256,8 @@ def make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(0, 10, 2), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(0, 10, 2), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(0, 10, 2)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(0, 10, 2)), standard_name='longitude', units='degrees')
     cube1 = Cube(numpy.random.rand(5, 5), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     checkerboard = numpy.zeros((5, 5))
@@ -463,7 +463,7 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     import datetime
 
     t0 = datetime.datetime(1984, 8, 27)
-    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
+    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in range(7)])
 
     time_nums = convert_datetime_to_std_time(times)
 
@@ -557,7 +557,7 @@ def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count
     import datetime
 
     t0 = datetime.datetime(1984, 8, 27)
-    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
+    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in range(7)])
 
     time_nums = convert_datetime_to_std_time(times)
 
@@ -665,7 +665,7 @@ def make_dummy_1d_cube():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
+    latitude = DimCoord(list(range(-85, 105, 10)), standard_name='latitude', units='degrees')
     cube = Cube(numpy.random.rand(19), dim_coords_and_dims=[(latitude, 0)])
 
     return cube
@@ -700,14 +700,14 @@ def make_dummy_1d_points_list(num):
     """
         Create a list of 1d points 'num' long
     """
-    return [get_random_1d_point() for i in xrange(0, num)]
+    return [get_random_1d_point() for i in range(0, num)]
 
 
 def make_dummy_2d_points_list(num):
     """
         Create a list of 2d points 'num' long
     """
-    return [get_random_2d_point() for i in xrange(0, num)]
+    return [get_random_2d_point() for i in range(0, num)]
 
 
 def make_dummy_ungridded_data_time_series(len=10):
@@ -721,7 +721,7 @@ def make_dummy_ungridded_data_time_series(len=10):
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
     t0 = datetime(1984, 8, 27)
-    times = np.array([t0 + timedelta(days=d) for d in xrange(len)])
+    times = np.array([t0 + timedelta(days=d) for d in range(len)])
 
     x = Coord(np.zeros(len) + 65.2, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(np.zeros(len) - 12.1, Metadata(standard_name='longitude', units='degrees'))
@@ -950,7 +950,7 @@ def make_regular_2d_with_time_ungridded_data():
     y, x = np.meshgrid(y_points, x_points)
 
     t0 = datetime.datetime(1984, 8, 27)
-    times = np.reshape(np.array([t0 + datetime.timedelta(days=d) for d in xrange(15)]), (5, 3))
+    times = np.reshape(np.array([t0 + datetime.timedelta(days=d) for d in range(15)]), (5, 3))
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
@@ -1072,7 +1072,7 @@ def make_regular_4d_ungridded_data():
     x_points = np.linspace(-10, 10, 5)
     y_points = np.linspace(-5, 5, 5)
     t0 = datetime.datetime(1984, 8, 27)
-    times = convert_datetime_to_std_time(np.array([t0 + datetime.timedelta(days=d) for d in xrange(5)]))
+    times = convert_datetime_to_std_time(np.array([t0 + datetime.timedelta(days=d) for d in range(5)]))
 
     alt = np.linspace(0, 90, 10)
 

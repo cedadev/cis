@@ -1,1 +1,1 @@
-from aggregate import Aggregate
+from .aggregate import Aggregate

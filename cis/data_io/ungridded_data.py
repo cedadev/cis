@@ -49,19 +49,19 @@ class Metadata(object):
         :param offset: The left hand padding to apply to the text
         :return: The summary
         """
-        string = u''
-        string += u'{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
-        string += u'{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
-        string += u'{pad:{width}}Units = {units}\n'.format(pad=' ', width=offset, units=self.units)
+        string = ''
+        string += '{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
+        string += '{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
+        string += '{pad:{width}}Units = {units}\n'.format(pad=' ', width=offset, units=self.units)
         if self.calendar:
-            string += u'{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
-        string += u'{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
-        string += u'{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=self.range)
-        string += u'{pad:{width}}History = {history}\n'.format(pad=' ', width=offset, history=self.history)
+            string += '{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
+        string += '{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
+        string += '{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=self.range)
+        string += '{pad:{width}}History = {history}\n'.format(pad=' ', width=offset, history=self.history)
         if self.misc:
-            string += u'{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
-            for k, v in self.misc.iteritems():
-                string += u'{pad:{width}}{att} = {val}\n'.format(pad=' ', width=offset + 2, att=k.title(), val=v)
+            string += '{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
+            for k, v in self.misc.items():
+                string += '{pad:{width}}{att} = {val}\n'.format(pad=' ', width=offset + 2, att=k.title(), val=v)
         return string
 
     def __str__(self):
@@ -588,17 +588,17 @@ class UngriddedData(LazyData, CommonData):
         """
         Unicode summary of the UngriddedData with metadata of itself and its coordinates
         """
-        summary = u'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
-        summary += u'     Shape = {}\n'.format(self.data.shape) + '\n'
-        summary += u'     Total number of points = {}\n'.format(self.data.size)
+        summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
+        summary += '     Shape = {}\n'.format(self.data.shape) + '\n'
+        summary += '     Total number of points = {}\n'.format(self.data.size)
         num_non_masked_points = self.data.count() if hasattr(self.data, 'count') else self.data.size
-        summary += u'     Number of non-masked points = {}\n'.format(num_non_masked_points)
+        summary += '     Number of non-masked points = {}\n'.format(num_non_masked_points)
 
-        summary += unicode(self.metadata)
+        summary += str(self.metadata)
 
-        summary += u'     Coordinates: \n'
+        summary += '     Coordinates: \n'
         for c in self.coords():
-            summary += u'{pad:{width}}{name}\n'.format(pad=' ', width=7, name=c.name())
+            summary += '{pad:{width}}{name}\n'.format(pad=' ', width=7, name=c.name())
             c.update_range()
             summary += c.metadata.summary(offset=10)
 

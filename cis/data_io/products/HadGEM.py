@@ -38,7 +38,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
                 pass
 
         variable_constraint = variable
-        if isinstance(variable, basestring):
+        if isinstance(variable, str):
             # noinspection PyPep8
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
                                                                c.standard_name == variable or

@@ -16,7 +16,7 @@ def info(filenames, variables=None, product=None, type=None):
 
     if variables is not None:
         for user_var in variables:
-            print str(get_data(filenames, user_var, product=product))
+            print(str(get_data(filenames, user_var, product=product)))
     else:
         for variable in get_variables(filenames, product=product, data_type=type):
-            print variable
+            print(variable)

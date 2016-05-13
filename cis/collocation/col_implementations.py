@@ -421,7 +421,7 @@ class nn_horizontal(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -456,7 +456,7 @@ class nn_altitude(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -474,7 +474,7 @@ class nn_pressure(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -492,7 +492,7 @@ class nn_time(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -967,7 +967,7 @@ class CubeCellConstraint(CellConstraint):
         con_points = HyperPointList()
         for point in data:
             include = True
-            for idx in xrange(HyperPoint.number_standard_names):
+            for idx in range(HyperPoint.number_standard_names):
                 cell = sample_point[idx]
                 if cell is not None:
                     if not (np.min(cell.bound) <= point[idx] < np.max(cell.bound)):

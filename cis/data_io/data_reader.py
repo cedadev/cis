@@ -18,7 +18,7 @@ def expand_filelist(filelist):
     from glob import glob
     from cis.utils import OrderedSet
 
-    if isinstance(filelist, basestring):
+    if isinstance(filelist, str):
         input_list = filelist.split(',')
     else:
         input_list = listify(filelist)

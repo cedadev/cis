@@ -33,7 +33,7 @@ class abstract_Caliop(AProduct):
 
         for filename in filenames:
             sd = SD(filename)
-            for var_name, var_info in sd.datasets().iteritems():
+            for var_name, var_info in sd.datasets().items():
                 if var_info[1] == valid_shape:
                     variables.add(var_name)
 
@@ -58,7 +58,7 @@ class abstract_Caliop(AProduct):
             except HDF4Error as e:
                 raise IOError(str(e))
 
-            for var in sds_dict.keys():
+            for var in list(sds_dict.keys()):
                 utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
 
         alt_name = "altitude"

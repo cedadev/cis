@@ -101,7 +101,7 @@ class NetCDF_Gridded(AProduct):
                 pass
 
         variable_constraint = variable
-        if isinstance(variable, basestring):
+        if isinstance(variable, str):
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
                                                                c.standard_name == variable or
                                                                c.long_name == variable), display=variable)
@@ -140,7 +140,7 @@ class NetCDF_Gridded(AProduct):
         def _make_aux_coord_and_dims_from_geopotential(g_cube):
             from scipy.constants import g
             points = g_cube.data / g
-            dims = range(len(g_cube.shape))
+            dims = list(range(len(g_cube.shape)))
             coord = AuxCoord(points=points,
                              standard_name='altitude',
                              long_name='Geopotential height at layer midpoints',
@@ -150,7 +150,7 @@ class NetCDF_Gridded(AProduct):
             return coord, dims
 
         def _make_aux_coord_and_dims_from_geopotential_height(g_ht_cube):
-            dims = range(len(g_ht_cube.shape))
+            dims = list(range(len(g_ht_cube.shape)))
             coord = AuxCoord(points=g_ht_cube.data,
                              standard_name='altitude',
                              long_name='Geopotential height at layer midpoints',
@@ -160,7 +160,7 @@ class NetCDF_Gridded(AProduct):
             return coord, dims
 
         def _make_aux_coord_and_dims_from_air_pressure(aps_cube):
-            dims = range(len(aps_cube.shape))
+            dims = list(range(len(aps_cube.shape)))
             coord = AuxCoord(points=aps_cube.data,
                              standard_name='air_pressure',
                              long_name='Air Pressure',
@@ -172,7 +172,7 @@ class NetCDF_Gridded(AProduct):
                                         'geopotential_height': _make_aux_coord_and_dims_from_geopotential_height,
                                         'air_pressure': _make_aux_coord_and_dims_from_air_pressure}
 
-        for standard_name, make_aux_coord in aux_coord_creation_functions.items():
+        for standard_name, make_aux_coord in list(aux_coord_creation_functions.items()):
             constraint = DisplayConstraint(cube_func=lambda c: c.standard_name == standard_name,
                                            display=standard_name)
             try:

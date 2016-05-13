@@ -35,7 +35,7 @@ class TestWriteNetcdf(unittest.TestCase):
         v = self.d.variables['AOT_440']
 
         # This will fail because var.shape is in the file
-        print v[:2]
+        print(v[:2])
 
     def test_write_col_and_reload_2(self):
         # Copy a collocated file and try to reload it.  This exposes a bug where
@@ -57,7 +57,7 @@ class TestWriteNetcdf(unittest.TestCase):
         data.add_attributes(attrs)
         write(data, tmp_file)
         self.d = Dataset(tmp_file)
-        for key, val in attrs.iteritems():
+        for key, val in attrs.items():
             assert getattr(self.d.variables['rain'], key) == val
 
     def test_gridded_write_attributes(self):
@@ -70,7 +70,7 @@ class TestWriteNetcdf(unittest.TestCase):
         data.add_attributes(attrs)
         data.save_data(tmp_file)
         self.d = Dataset(tmp_file)
-        for key, val in attrs.iteritems():
+        for key, val in attrs.items():
             assert getattr(self.d.variables['rain'], key) == val
 
     def test_ungridded_write_units(self):
@@ -100,7 +100,7 @@ class TestWriteNetcdf(unittest.TestCase):
         data.var_name = 'rain'
         data.save_data(tmp_file)
         self.d = Dataset(tmp_file)
-        for d in self.d.dimensions.itervalues():
+        for d in self.d.dimensions.values():
             assert not d.isunlimited()
 
     def test_gridded_list_write_time_as_unlimited_dimension(self):
@@ -115,7 +115,7 @@ class TestWriteNetcdf(unittest.TestCase):
         data[0].var_name = 'rain'
         data.save_data(tmp_file)
         self.d = Dataset(tmp_file)
-        for d in self.d.dimensions.itervalues():
+        for d in self.d.dimensions.values():
             assert not d.isunlimited()
 
     # def test_can_write_hierarchical_group_variables(self):

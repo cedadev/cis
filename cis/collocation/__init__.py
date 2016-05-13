@@ -1,1 +1,1 @@
-from col import Collocate
+from .col import Collocate

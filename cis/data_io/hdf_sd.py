@@ -125,7 +125,7 @@ def read(filename, variables=None, datadict=None):
     datafile = None
     try:
         datafile = SD.SD(filename)
-        sd_variables = datafile.datasets().keys()
+        sd_variables = list(datafile.datasets().keys())
     finally:
         if datafile is not None:
             datafile.end()

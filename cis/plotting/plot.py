@@ -136,7 +136,7 @@ class Plotter(object):
         """
         Removes arguments from the mplkwargs if they are equal to None
         """
-        for key in self.mplkwargs.keys():
+        for key in list(self.mplkwargs.keys()):
             if self.mplkwargs[key] is None:
                 self.mplkwargs.pop(key)
 

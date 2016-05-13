@@ -830,7 +830,7 @@ class TestUngriddedListAggregation(TestCase):
                                       [0, 0, 0],
                                       [1, 0, 0]], fill_value=float('inf'))
 
-        print cube_out[0].data.fill_value
+        print(cube_out[0].data.fill_value)
         assert len(cube_out) == 2
         assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
         assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result))
@@ -936,7 +936,7 @@ class TestUngriddedListAggregation(TestCase):
                                         [1, 1, 1],
                                         [1, 1, 1]], fill_value=float('inf'))
 
-        print cube_out[0].data.fill_value
+        print(cube_out[0].data.fill_value)
         assert len(cube_out) == 2
         assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result_1))
         assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result_0))

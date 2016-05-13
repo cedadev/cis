@@ -2,6 +2,7 @@ from netCDF4 import Dataset
 import os
 import unittest
 from hamcrest import assert_that, greater_than_or_equal_to, less_than_or_equal_to, is_
+from functools import reduce
 
 
 class BaseIntegrationTest(unittest.TestCase):

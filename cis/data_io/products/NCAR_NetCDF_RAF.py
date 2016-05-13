@@ -85,11 +85,11 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         self.time_stamp_info = None
         self.time_dimensions = None
 
-        self._attributes = [{k.lower(): v for k, v in attrs.items()} for attrs in listify(attributes)]
+        self._attributes = [{k.lower(): v for k, v in list(attrs.items())} for attrs in listify(attributes)]
         if len(variables) == 0:
             raise InvalidVariableError("No variables in the file so the type of data is unknown")
-        self._variables = variables[0].keys()
-        self._variable_dimensions = [{name: var.dimensions for name, var in vars.items()}
+        self._variables = list(variables[0].keys())
+        self._variable_dimensions = [{name: var.dimensions for name, var in list(vars.items())}
                                      for vars in listify(variables)]
         self._check_has_variables_and_attributes()
 
@@ -242,7 +242,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
 
     def get_variable_names_which_have_time_coord(self):
         variables = []
-        for name, dimensions in self._variable_dimensions[0].items():
+        for name, dimensions in list(self._variable_dimensions[0].items()):
             if len(dimensions) > 0 and dimensions_compatible(dimensions, self.time_dimensions):
                 variables.append(name)
         return set(variables)
@@ -297,7 +297,7 @@ class NCAR_NetCDF_RAF(AProduct):
         except (RuntimeError, IOError) as ex:
             raise FileFormatError(["File is unreadable", ex.message])
 
-        attributes_lower = {attr.lower(): val for attr, val in attributes.items()}
+        attributes_lower = {attr.lower(): val for attr, val in list(attributes.items())}
         if self.GASSP_VERSION_ATTRIBUTE_NAME.lower() in attributes_lower:
             file_type = "NetCDF/GASSP/{}".format(attributes_lower[self.GASSP_VERSION_ATTRIBUTE_NAME.lower()])
 

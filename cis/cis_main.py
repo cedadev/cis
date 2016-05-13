@@ -236,7 +236,7 @@ def stats_cmd(main_arguments):
 
 
 def version_cmd(_main_arguments):
-    print "Using CIS version:", __version__, "(" + __status__ + ")"
+    print("Using CIS version:", __version__, "(" + __status__ + ")")
 
 
 commands = {'plot': plot_cmd,
@@ -285,7 +285,7 @@ def main():
     except IOError as e:
         # If we don't have permission to write to the log file, all we can do is inform the user
         # All future calls to the logging module will be ignored (?)
-        print("WARNING: Unable to write to the log: %s" % e)
+        print(("WARNING: Unable to write to the log: %s" % e))
     logging.captureWarnings(True)  # to catch warning from 3rd party libraries
 
     try:

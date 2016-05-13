@@ -2,6 +2,7 @@ from operator import mul
 import numpy
 
 from cis import __version__
+from functools import reduce
 
 
 class EvaluationError(Exception):
@@ -15,8 +16,8 @@ class Calculator(object):
     Class to perform arithmetic calculations on sets of data.
     """
 
-    SAFE_BUILTINS = ['abs', 'all', 'any', 'bool', 'cmp', 'divmod', 'enumerate', 'filter', 'int', 'len', 'map', 'max',
-                     'min', 'pow', 'range', 'reduce', 'reversed', 'round', 'sorted', 'sum', 'xrange', 'zip']
+    SAFE_BUILTINS = ['abs', 'all', 'any', 'bool', 'divmod', 'enumerate', 'filter', 'int', 'len', 'map', 'max',
+                     'min', 'pow', 'range', 'reversed', 'round', 'sorted', 'sum', 'zip']
     SAFE_MODULES = ['numpy']
 
     def evaluate(self, data_list, expr, output_var=None, units=None, attributes=None):
@@ -48,10 +49,10 @@ class Calculator(object):
             result = eval(expr, safe_globals, safe_locals)
         except NameError as ex:
             raise EvaluationError("A variable or function referenced in your expression could not be found - "
-                                  "check your expression. Error is: %s" % ex.message)
+                                  "check your expression. Error is: %s" % ex.args[0])
         except ValueError as ex:
             raise EvaluationError("An error occurred evaluating your expression - check that it's correct and that "
-                                  "the variables are compatible shapes. Error is: %s" % ex.message)
+                                  "the variables are compatible shapes. Error is: %s" % ex.args[0])
         return self._post_process(data_list, result, expr, output_var, units, attributes)
 
     def _post_process(self, data_list, result_array, expr, output_var, units, attributes):

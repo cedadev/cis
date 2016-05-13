@@ -67,9 +67,9 @@ def _get_all_fully_qualified_variables(dataset):
         """
         if not previous_groups:
             previous_groups = []
-        for group_key, group in group.groups.iteritems():
+        for group_key, group in group.groups.items():
             current_groups = previous_groups + [group_key]
-            for var_key, var in group.variables.iteritems():
+            for var_key, var in group.variables.items():
                 path = current_groups + [var_key]
                 var_dict["/".join(path)] = var
             get_variables_for_group(group, var_dict, current_groups)
@@ -92,7 +92,7 @@ def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotempora
     :return: None
     """
     if spatiotemporal_var_names is not None:
-        for var in variables.keys():
+        for var in list(variables.keys()):
             for dim in variables[var].dimensions:
                 if dim not in spatiotemporal_var_names:
                     del variables[var]
@@ -153,7 +153,7 @@ def read_many_files_individually(filenames, usr_variables):
     for filename in filenames:
 
         var_dict = read(filename, usr_variables)
-        for var in var_dict.keys():
+        for var in list(var_dict.keys()):
             add_element_to_list_in_dict(var_data, var, var_dict[var])
 
     return var_data

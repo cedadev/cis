@@ -13,6 +13,7 @@ from cis.utils import isnan, guess_coord_axis
 from cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
 from cis.aggregation.aggregation_kernels import MultiKernel
 from cis.data_io.gridded_data import GriddedDataList
+from functools import reduce
 
 
 class Aggregator(object):
@@ -178,7 +179,7 @@ class Aggregator(object):
 
         if len(self._grid) != 0:
             raise CoordinateNotFoundError("No coordinate found that matches '{}'. Please check the coordinate "
-                                          "name.".format("' or '".join(self._grid.keys())))
+                                          "name.".format("' or '".join(list(self._grid.keys()))))
 
         dummy_data = np.reshape(np.arange(int(np.prod(new_cube_shape))) + 1.0, tuple(new_cube_shape))
         aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)

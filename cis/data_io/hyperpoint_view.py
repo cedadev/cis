@@ -95,7 +95,7 @@ class UngriddedHyperPointView(HyperPointView):
         """Iterates over all or non-masked points according to the value of non_masked_iteration
         :return: next HyperPoint
         """
-        for idx in xrange(self.length):
+        for idx in range(self.length):
             if self.non_masked_iteration and self.data is not None and self.data[idx] is np.ma.masked:
                 continue
             yield self.__getitem__(idx)
@@ -104,14 +104,14 @@ class UngriddedHyperPointView(HyperPointView):
         """Iterates over all points regardless of the value of non_masked_iteration
         :return: next HyperPoint
         """
-        for idx in xrange(self.length):
+        for idx in range(self.length):
             yield self.__getitem__(idx)
 
     def iter_non_masked_points(self):
         """Iterates over non-masked points regardless of the value of non_masked_iteration
         :return: next HyperPoint
         """
-        for idx in xrange(self.length):
+        for idx in range(self.length):
             if self.data is not None and self.data[idx] is np.ma.masked:
                 continue
             yield self.__getitem__(idx)
@@ -121,7 +121,7 @@ class UngriddedHyperPointView(HyperPointView):
         data array and the corresponding HyperPoint.
         :return: tuple(index of point, HyperPoint)
         """
-        for idx in xrange(self.length):
+        for idx in range(self.length):
             if self.data is not None and self.data[idx] is np.ma.masked:
                 continue
             yield (idx, self.__getitem__(idx))
@@ -131,7 +131,7 @@ class UngriddedHyperPointView(HyperPointView):
             raise IndexError("list index out of range")
 
         if isinstance(value, HyperPoint):
-            for idx in xrange(HyperPoint.number_standard_names):
+            for idx in range(HyperPoint.number_standard_names):
                 val = value[idx]
                 coord = self.coords[idx]
                 if coord is not None:
@@ -283,7 +283,7 @@ class GriddedHyperPointView(HyperPointView):
         """
         # shape = tuple([c.size for c in self.coords if c is not None])
         shape = self.data.shape
-        for idx in xrange(self.length):
+        for idx in range(self.length):
             if self.data is not None:
                 indices = np.unravel_index(idx, shape, order='C')
                 if self.data[indices] is np.ma.masked:
@@ -354,7 +354,7 @@ class GriddedHyperPointView(HyperPointView):
         :return: dimension index or None if the underlying cube does not have the coordinate
         """
         ret_idx = None
-        for dim_idx, sc_idx in self.dims_to_std_coords_map.iteritems():
+        for dim_idx, sc_idx in self.dims_to_std_coords_map.items():
             if sc_idx == hp_index:
                 ret_idx = dim_idx
         return ret_idx

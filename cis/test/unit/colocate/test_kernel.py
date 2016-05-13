@@ -469,7 +469,7 @@ class TestNNTime(unittest.TestCase):
         sample_points = HyperPointList()
 
         t0 = dt.datetime(1984, 8, 27)
-        for d in xrange(15):
+        for d in range(15):
             sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=t0 + dt.timedelta(days=d)))
         sample_points = UngriddedData.from_points_array(sample_points)
 

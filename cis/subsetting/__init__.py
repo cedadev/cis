@@ -1,1 +1,1 @@
-from subset import Subset
+from .subset import Subset
