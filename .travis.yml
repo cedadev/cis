@@ -18,10 +18,10 @@ install:
   # Install miniconda
   # -----------------
   - if [[ "$TRAVIS_PYTHON_VERSION" == 2* ]]; then
-    export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda
-  else
-    export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda3
-  fi
+      export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda
+    else
+      export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda3
+    fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       wget ${CONDA_BASE}-3.7.0-MacOSX-x86_64.sh -O miniconda.sh;
     else
