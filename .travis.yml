@@ -1,12 +1,13 @@
 language: c
 sudo: false
 
-python:
-  - 2.7
-  - 3.4
+#python:
+#  - 2.7
+#  - 3.4
 
 env:
-  - TEST_TARGET=unit
+  - TEST_TARGET=unit PYTHON_TARGET=2.7
+  - TEST_TARGET=unit PYTHON_TARGET=3.4
   # - TEST_TARGET=integration
 
 os:
@@ -17,7 +18,7 @@ install:
 
   # Install miniconda
   # -----------------
-  - if [[ "$TRAVIS_PYTHON_VERSION" == 2* ]]; then
+  - if [[ $PYTHON_TARGET == 2* ]]; then
       export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda;
     else
       export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda3;
@@ -37,7 +38,7 @@ install:
   - conda config --set show_channel_urls True
   - conda update --quiet conda
   - ENV_NAME='test-environment'
-  - conda create --quiet -n $ENV_NAME
+  - conda create --quiet -n $ENV_NAME python=$PYTHON_TARGET
   - source activate $ENV_NAME
 
   # Customise the testing environment
