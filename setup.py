@@ -47,9 +47,9 @@ class check_dep(Command):
         for dep in dependencies:
             try:
                 require(dep)
-                print dep + " ...[ok]"
+                print(dep + " ...[ok]")
             except (DistributionNotFound, VersionConflict):
-                print dep + "... MISSING!"
+                print(dep + "... MISSING!")
 
 # Extract long-description from README
 README = open(os.path.join(root_path, 'README.md')).read()
