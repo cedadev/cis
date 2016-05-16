@@ -295,7 +295,7 @@ class NCAR_NetCDF_RAF(AProduct):
         try:
             attributes = get_netcdf_file_attributes(filename)
         except (RuntimeError, IOError) as ex:
-            raise FileFormatError(["File is unreadable", ex.message])
+            raise FileFormatError(["File is unreadable", ex.args[0]])
 
         attributes_lower = {attr.lower(): val for attr, val in list(attributes.items())}
         if self.GASSP_VERSION_ATTRIBUTE_NAME.lower() in attributes_lower:

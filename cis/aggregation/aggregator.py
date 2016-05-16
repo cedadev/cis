@@ -217,7 +217,7 @@ class Aggregator(object):
         try:
             coord_unit = as_unit(coord.units)
         except ValueError as e:
-            if e.message.startswith('[UT_UNKNOWN]') and coord.standard_name in coordinate_unit_mappings:
+            if e.args[0].startswith('[UT_UNKNOWN]') and coord.standard_name in coordinate_unit_mappings:
                 # For some common coordinates we can fix this...
                 coord_unit = as_unit(coordinate_unit_mappings[coord.standard_name])
                 logging.warning("Converting units for {coord} from {old} to the CF-compliant units: {new}"

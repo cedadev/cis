@@ -94,6 +94,7 @@ class NetCDF_Gridded(AProduct):
         :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
         from cis.exceptions import InvalidVariableError
+        import six
 
         # Check if the files given actually exist.
         for filename in filenames:
@@ -101,7 +102,7 @@ class NetCDF_Gridded(AProduct):
                 pass
 
         variable_constraint = variable
-        if isinstance(variable, str):
+        if isinstance(variable, six.string_types):
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
                                                                c.standard_name == variable or
                                                                c.long_name == variable), display=variable)
@@ -119,7 +120,7 @@ class NetCDF_Gridded(AProduct):
                 message = "Variable not found: {} \nTo see a list of variables run: cis info {}" \
                     .format(str(variable), filenames[0])
             else:
-                message = e.message
+                message = e.args[0]
             raise InvalidVariableError(message)
         except ValueError as e:
             raise IOError(str(e))

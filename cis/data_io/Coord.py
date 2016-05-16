@@ -154,10 +154,11 @@ class CoordList(list):
 
         :return: A :class:`CoordList` of coordinates fitting the given criteria
         """
+        import six
         from collections import Mapping
         coords = self
 
-        if isinstance(name_or_coord, str):
+        if isinstance(name_or_coord, six.string_types):
             name = name_or_coord
             coord = None
         else:

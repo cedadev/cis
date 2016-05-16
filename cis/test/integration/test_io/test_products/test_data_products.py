@@ -85,9 +85,10 @@ class ProductTests(object):
 
     @istest
     def test_variable_printing(self):
+        import six
         data_obj = self.product().create_data_object([self.filename], self.valid_variable)
         summary = data_obj.summary()
-        assert_is_instance(summary, str)
+        assert_is_instance(summary, six.string_types)
 
     def check_valid_vars(self, vars):
         if self.vars is not None:

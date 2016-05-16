@@ -31,6 +31,7 @@ class Calculator(object):
         :param attributes: Dictionary of attribute names : values to add to the output NetCDF variable
         :return: Data object matching the type of the input data (i.e. GriddedData or UngriddedData).
         """
+        import six
         if '__' in expr:
             raise EvaluationError("Use of functions or variables with double underscores (__) is not allowed")
         # Create list of allowed globals
@@ -39,7 +40,7 @@ class Calculator(object):
         safe_globals['__builtins__'] = {var: globals()['__builtins__'][var] for var in self.SAFE_BUILTINS}
         safe_locals = {}
         for var in data_list:
-            assert isinstance(var.alias, str)
+            assert isinstance(var.alias, six.string_types)
             assert isinstance(var.data, numpy.ndarray)
             if not var.is_gridded:
                 safe_locals[var.alias] = var.data_flattened

@@ -246,7 +246,7 @@ class GriddedData(iris.cube.Cube, CommonData):
                 try:
                     setattr(self, key, value)
                 except ValueError as e:
-                    logging.warning("Could not set NetCDF attribute '%s' because %s" % (key, e.message))
+                    logging.warning("Could not set NetCDF attribute '%s' because %s" % (key, e.args[0]))
         # Record that this is a local (variable) attribute, not a global attribute
         self._local_attributes.extend(list(attributes.keys()))
 

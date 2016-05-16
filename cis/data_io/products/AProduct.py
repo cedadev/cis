@@ -201,7 +201,7 @@ def get_data(filenames, variable, product=None):
         logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving data using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
-                                     % (product_cls.__name__, type(e).__name__, e.message), e)
+                                     % (product_cls.__name__, type(e).__name__, e.args[0]), e)
 
 
 def get_coordinates(filenames, product=None):
@@ -223,7 +223,7 @@ def get_coordinates(filenames, product=None):
         logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving coordinates using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
-                                     % (product_cls.__name__, type(e).__name__, e.message), e)
+                                     % (product_cls.__name__, type(e).__name__, e.args[0]), e)
 
 
 def get_variables(filenames, product=None, data_type=None):
@@ -245,7 +245,7 @@ def get_variables(filenames, product=None, data_type=None):
         logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
         raise ProductPluginException("An error occurred retrieving variables using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
-                                     % (product_cls.__name__, type(e).__name__, e.message), e)
+                                     % (product_cls.__name__, type(e).__name__, e.args[0]), e)
 
 
 def get_file_format(filenames, product=None):
@@ -267,12 +267,12 @@ def get_file_format(filenames, product=None):
         raise ProductPluginException(
             "An error occurred retrieving the file format using the product %s. Check that this "
             "is the correct product plugin for your chosen data. Exception was %s: %s."
-            % (product_cls.__name__, type(e).__name__, e.message), e)
+            % (product_cls.__name__, type(e).__name__, e.args[0]), e)
 
     try:
         product_cls().create_coords(filenames)
     except Exception as ex:
-        raise FileFormatError(error_list=['Could not read coordinates from the file', ex.message])
+        raise FileFormatError(error_list=['Could not read coordinates from the file', ex.args[0]])
     return file_format
 
 

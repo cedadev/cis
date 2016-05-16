@@ -27,6 +27,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
         VariableConstraint object
         :return: If variable was specified this will return an UngriddedData object, otherwise a CoordList
         """
+        import six
         from cis.exceptions import InvalidVariableError
         from cis.data_io.products.gridded_NetCDF import DisplayConstraint
         from cis.data_io.gridded_data import load_cube
@@ -38,7 +39,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
                 pass
 
         variable_constraint = variable
-        if isinstance(variable, str):
+        if isinstance(variable, six.string_types):
             # noinspection PyPep8
             variable_constraint = DisplayConstraint(cube_func=(lambda c: c.var_name == variable or
                                                                c.standard_name == variable or
@@ -57,7 +58,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
                 message = "Variable not found: {} \nTo see a list of variables run: cis info {}" \
                     .format(str(variable), filenames[0])
             else:
-                message = e.message
+                message = e.args[0]
             raise InvalidVariableError(message)
         except ValueError as e:
             raise IOError(str(e))
