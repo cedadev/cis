@@ -2,10 +2,10 @@ import logging
 import numpy
 
 from cis.exceptions import UserPrintableException
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 
 
-class Heatmap(Generic_Plot):
+class Heatmap(GenericPlot):
 
     def __init__(self, ax, packed_data_items, plot_args, *mplargs, **mplkwargs):
         # Do this here because if this is ungridded data, we won't be able to complete the super() call

@@ -1,46 +1,55 @@
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
+import numpy
 
 
-class Histogram_2D(Generic_Plot):
-    valid_histogram_styles = ["bar", "step", "stepfilled"]
+class Histogram2D(GenericPlot):
 
     def plot(self):
         """
-        Plots a 2D histogram
+        Plots a 3d histogram.
+        Requires two data items.
+        The first data item is plotted on the x axis, and the second on the y axis
         """
-        from numpy.ma import MaskedArray
-        vmin = self.mplkwargs.pop("vmin")
-        vmax = self.mplkwargs.pop("vmax")
+        from cis.utils import apply_intersection_mask_to_two_arrays
+        from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
+        if len(self.packed_data_items) == 2:
+            vmin = self.mplkwargs.pop("vmin")
+            vmax = self.mplkwargs.pop("vmax")
 
-        self.mplkwargs["bins"] = self.calculate_bin_edges()
+            xbins = self.calculate_bin_edges("x")
+            ybins = self.calculate_bin_edges("y")
 
-        for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            datafile = self.plot_args["datagroups"][i]
-            if datafile["itemstyle"]:
-                if datafile["itemstyle"] in self.valid_histogram_styles:
-                    self.mplkwargs["histtype"] = datafile["itemstyle"]
-                else:
-                    from cis.exceptions import InvalidHistogramStyleError
-                    raise InvalidHistogramStyleError(
-                        "'" + datafile["itemstyle"] + "' is not a valid histogram style, please use one of: " + str(
-                            self.valid_histogram_styles))
+            # All bins that have count less than cmin will not be displayed
+            cmin = self.plot_args["vmin"]
+            # All bins that have count more than cmax will not be displayed
+            cmax = self.plot_args["vmax"]
 
-            else:
-                self.mplkwargs.pop("histtype", None)
+            # Add y=x line
+            min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
+            max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
+            y_equals_x_array = [min_val, max_val]
+            self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
-            if datafile["color"]:
-                self.mplkwargs["color"] = datafile["color"]
-            else:
-                self.mplkwargs.pop("color", None)
+            # Just in case data has different shapes, reshape here
+            self.unpacked_data_items[0]["data"] = numpy.reshape(self.unpacked_data_items[0]["data"],
+                                                                self.unpacked_data_items[1]["data"].shape)
 
-            if isinstance(unpacked_data_item["data"], MaskedArray):
-                data = unpacked_data_item["data"].compressed()
-            else:
-                data = unpacked_data_item["data"].flatten()
+            first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(
+                self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
 
-            self.matplotlib.hist(data, *self.mplargs, **self.mplkwargs)
-        self.mplkwargs["vmin"] = vmin
-        self.mplkwargs["vmax"] = vmax
+            first_data_item = first_data_item.compressed()
+            second_data_item = second_data_item.compressed()
+
+            # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
+            histogram2ddata = numpy.histogram2d(first_data_item, second_data_item, bins=[xbins, ybins])[0]
+            histogram2ddata = numpy.ma.masked_equal(histogram2ddata, 0)
+            self.matplotlib.pcolor(xbins, ybins, histogram2ddata.T, vmin=cmin, vmax=cmax,
+                                   *self.mplargs, **self.mplkwargs)
+
+            self.mplkwargs["vmin"] = vmin
+            self.mplkwargs["vmax"] = vmax
+        else:
+            raise InvalidNumberOfDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
 
     def unpack_data_items(self):
         return self.unpack_comparative_data()
@@ -48,10 +57,7 @@ class Histogram_2D(Generic_Plot):
     def setup_map(self):
         pass
 
-    def is_map(self):
-        return False
-
-    def calculate_bin_edges(self):
+    def calculate_bin_edges(self, axis):
         """
         Calculates the number of bins for a given axis.
         Uses 10 as the default
@@ -59,84 +65,104 @@ class Histogram_2D(Generic_Plot):
         :return: The number of bins for the given axis
         """
         from cis.utils import calculate_histogram_bin_edges
-        from numpy import array
-        min_val = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
-        max_val = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
-        data = array([min_val, max_val])
-        bin_edges = calculate_histogram_bin_edges(data, "x", self.plot_args["xmin"], self.plot_args["xmax"],
-                                                  self.plot_args["xbinwidth"], self.plot_args["logx"])
+        if axis == "x":
+            data = self.unpacked_data_items[0]["data"]
+        elif axis == "y":
+            data = self.unpacked_data_items[1]["data"]
 
-        self.plot_args["xmin"] = bin_edges.min()
-        self.plot_args["xmax"] = bin_edges.max()
+        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "min"], self.plot_args[axis + "max"],
+                                                  self.plot_args[axis + "binwidth"], self.plot_args["log" + axis])
+
+        self.plot_args[axis + "min"] = bin_edges.min()
+        self.plot_args[axis + "max"] = bin_edges.max()
 
         return bin_edges
 
     def format_plot(self):
-        # We don't format the time axis here as we're only plotting frequency against data
-        self.format_2d_plot()
+        # We don't format the time axis here as we're only plotting data against data
+        self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
+        self.format_3d_plot()
 
     def set_default_axis_label(self, axis):
-        """
-        Sets the default axis label for the given axis.
-        If the axis is "y", then labels it "Frequency", else works it out based on the name and units of the data
-        :param axis: The axis to calculate the default axis label for
-        """
-        axis = axis.lower()
-        axislabel = axis + "label"
-
-        if self.plot_args[axislabel] is None:
-            if axis == "x":
-                units = self.packed_data_items[0].units
-
-                if len(self.packed_data_items) == 1:
-                    name = self.packed_data_items[0].name()
-                    # only 1 data to plot, display
-                    self.plot_args[axislabel] = name + " " + self.format_units(units)
-                else:
-                    # if more than 1 data, legend will tell us what the name is. so just displaying units
-                    self.plot_args[axislabel] = self.format_units(units)
-            elif axis == "y":
-                self.plot_args[axislabel] = "Frequency"
+        self.set_default_axis_label_for_comparative_plot(axis)
 
     def calculate_axis_limits(self, axis, min_val, max_val):
         """
         Calculates the limits for a given axis.
-        If the axis is "y" then looks at the "data" as this is where the values are stored
+        If the axis is "x" then looks at the data of the first data item
+        If the axis is "y" then looks at the data of the second data item
         :param axis: The axis to calculate the limits for
         :return: A dictionary containing the min and max values for the given axis
         """
         if axis == "x":
-            c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0]['data'])
+            coord_axis = 0
         elif axis == "y":
-            c_min, c_max = None, None
+            coord_axis = 1
+        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[coord_axis]["data"])
 
         new_min = c_min if min_val is None else min_val
         new_max = c_max if max_val is None else max_val
 
         return new_min, new_max
 
+    def create_legend(self):
+        """
+        Overides the create legend method of the Generic Plot as a 3d histogram doesn't need a legend
+        """
+        pass
+
+    def add_color_bar(self):
+        """
+        Adds a color bar to the plot and labels it as "Frequency"
+        """
+        step = self.plot_args["vstep"]
+        if step is None:
+            ticks = None
+        else:
+            from matplotlib.ticker import MultipleLocator
+            ticks = MultipleLocator(step)
+        cbar = self.matplotlib.colorbar(orientation=self.plot_args["cbarorient"], ticks=ticks)
+
+        if self.plot_args["cbarlabel"] is None:
+            label = "Frequency"
+        else:
+            label = self.plot_args["cbarlabel"]
+
+        cbar.set_label(label)
+
     def set_axis_ticks(self, axis, no_of_dims):
+        from numpy import arange
 
         if axis == "x":
             tick_method = self.matplotlib.xticks
+            item_index = 0
         elif axis == "y":
             tick_method = self.matplotlib.yticks
+            item_index = 1
 
         if self.plot_args[axis + "tickangle"] is None:
             angle = None
         else:
             angle = self.plot_args[axis + "tickangle"]
 
-        tick_method(rotation=angle)
+        if self.plot_args[axis + "step"] is not None:
+            step = self.plot_args[axis + "step"]
 
-    def apply_axis_limits(self):
-        """
-        Applies the limits (if given) to the specified axis.
-        Sets the "y" axis as having a minimum value of 0 as can never have a negative frequency
-        :param valrange: A dictionary containing the min and/or max values for the axis
-        :param axis: The axis to apply the limits to
-        """
-        # Need to ensure that frequency starts from 0
-        self.plot_args['ymin'] = 0 if self.plot_args['ymin'] < 0 else self.plot_args['ymin']
+            if self.plot_args[axis + "min"] is None:
+                min_val = self.unpacked_data_items[item_index]["data"].min()
+            else:
+                min_val = self.plot_args[axis + "min"]
 
-        super(Histogram_2D, self).apply_axis_limits()
+            if self.plot_args[axis + "max"] is None:
+                max_val = self.unpacked_data_items[item_index]["data"].max()
+            else:
+                max_val = self.plot_args[axis + "max"]
+
+            ticks = arange(min_val, max_val + step, step)
+
+            tick_method(ticks, rotation=angle)
+        else:
+            tick_method(rotation=angle)
+
+    def drawcoastlines(self):
+        pass

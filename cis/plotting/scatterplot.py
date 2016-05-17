@@ -1,7 +1,7 @@
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 
 
-class Scatter_Plot(Generic_Plot):
+class ScatterPlot(GenericPlot):
     def plot(self):
         """
         Plots one or many scatter plots

@@ -1,14 +1,14 @@
 from cis.exceptions import InvalidPlotTypeError
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 from cis.plotting.heatmap import Heatmap
-from cis.plotting.contour_plot import Contour_Plot
-from cis.plotting.contourf_plot import Contourf_Plot
-from cis.plotting.scatter_plot import Scatter_Plot
+from cis.plotting.contourplot import ContourPlot
+from cis.plotting.contourfplot import ContourfPlot
+from cis.plotting.scatterplot import ScatterPlot
 
 import numpy
 
 
-class Overlay(Generic_Plot):
+class Overlay(GenericPlot):
 
     def get_data_items_max(self):
         return self.unpacked_data_items[0]['x'].max()
@@ -35,14 +35,14 @@ class Overlay(Generic_Plot):
             if self.plot_args['datagroups'][i]['type'] == 'heatmap':
                 p = Heatmap([self.packed_data_items[i]], self.plot_args, x_wrap_start, *self.mplargs, **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contour':
-                p = Contour_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
-                                 **self.mplkwargs)
+                p = ContourPlot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
+                                **self.mplkwargs)
             elif self.plot_args['datagroups'][i]['type'] == 'contourf':
-                p = Contourf_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
-                                  **self.mplkwargs)
-            elif self.plot_args['datagroups'][i]['type'] == 'scatter':
-                p = Scatter_Plot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
+                p = ContourfPlot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                                  **self.mplkwargs)
+            elif self.plot_args['datagroups'][i]['type'] == 'scatter':
+                p = ScatterPlot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
+                                **self.mplkwargs)
             else:
                 raise InvalidPlotTypeError("Invalid or no plot type requested for overlay plot, please choose from "
                                            "heatmap, contour, contourf or scatter, for example: "

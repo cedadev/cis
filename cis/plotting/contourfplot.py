@@ -1,7 +1,7 @@
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 
 
-class Contourf_Plot(Generic_Plot):
+class ContourfPlot(GenericPlot):
     def plot(self):
         """
         Plots a filled contour plot

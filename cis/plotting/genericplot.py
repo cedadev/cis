@@ -8,15 +8,14 @@ from cis.utils import find_longitude_wrap_start
 from .formatter import LogFormatterMathtextSpecial
 from ._auto_args_wrapper import initializer
 
-class Generic_Plot(object):
+
+class GenericPlot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
-    # TODO: Remove the plot_args argument let python figure out which kwargs are named here, and which end up in
-    # mplkwargs
     # TODO: Reorder these into roughly the order they are most commonly used
     @initializer
     def __init__(self, packed_data_items, ax=None, calculate_min_and_max_values=True, datagroup=0,
-                 datagroups=None, nocolourbar=False, logx=False, logy=False, logv=False, xmin=None,
+                 labels=None, nocolourbar=False, logx=False, logy=False, logv=False, xmin=None,
                  xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, vmin=None, vmax=None, vstep=None,
                  cbarorient='horizontal', grid=False, xlabel=None, ylabel=None, cbarlabel=None, title=None, fontsize=None,
                  itemwidth=1, xtikangle=None, ytickangle=None, xbinwidth=None, ybinwidth=None, coastlinecolour='k',
@@ -34,13 +33,17 @@ class Generic_Plot(object):
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            _, self.ax = plt.subplots()
 
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
 
         # TODO: The nocolorbar defaults to False, but wouldn't it be simpler to have a colorbar property?
 
-        # Why does this need to know this - it should only get one datagroup surely?
+        # TODO: Why does this need to know this - it should only get one datagroup surely?
         self.datagroup = datagroup
 
         self.color_axis = []
@@ -61,13 +64,18 @@ class Generic_Plot(object):
         if calculate_min_and_max_values:
             self.calculate_min_and_max_values()
 
-        self.matplotlib = ax
-
         if self.is_map():
             self.setup_map()
             self.check_data_is_2d()
 
         self.plot()
+
+        self.apply_axis_limits()
+        self.format_plot()
+
+        self.auto_set_ticks()
+
+        return self.ax
 
     def check_data_is_2d(self):
         if len(self.packed_data_items[0].shape) > 2:
@@ -91,8 +99,32 @@ class Generic_Plot(object):
         self.projection = ccrs.PlateCarree(central_longitude=(self.x_wrap_start + 180.0))
         # But not the transform...
         self.transform = ccrs.PlateCarree()
-        self.cartopy_axis = self.matplotlib.axes(projection=self.projection)
+        self.cartopy_axis = self._replace_axes_with_cartopy_axes(self.ax, self.projection)
         self.mplkwargs['transform'] = self.transform
+
+    @staticmethod
+    def _replace_axes_with_cartopy_axes(ax, projection):
+        from cartopy.mpl.geoaxes import GeoAxes
+        from matplotlib.axes import SubplotBase
+        if not isinstance(ax, GeoAxes):
+            fig = ax.get_figure()
+            if isinstance(ax, SubplotBase):
+                new_ax = fig.add_subplot(ax.get_subplotspec(),
+                                         projection=projection,
+                                         title=ax.get_title(),
+                                         xlabel=ax.get_xlabel(),
+                                         ylabel=ax.get_ylabel())
+            else:
+                new_ax = fig.add_axes(projection=projection,
+                                      title=ax.get_title(),
+                                      xlabel=ax.get_xlabel(),
+                                      ylabel=ax.get_ylabel())
+
+            # delete the axes which didn't have a cartopy projection
+            fig.delaxes(ax)
+        else:
+            new_ax = ax
+        return new_ax
 
     def get_data_items_max(self):
         import numpy as np

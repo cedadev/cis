@@ -3,37 +3,35 @@ Class for plotting graphs.
 Also contains a dictionary for the valid plot types.
 All plot types need to be imported and added to the plot_types dictionary in order to be used.
 """
-from cis.plotting.contour_plot import Contour_Plot
-from cis.plotting.contourf_plot import Contourf_Plot
+from cis.plotting.contourplot import ContourPlot
+from cis.plotting.contourfplot import ContourfPlot
 from cis.plotting.heatmap import Heatmap
-from cis.plotting.line_plot import Line_Plot
-from cis.plotting.scatter_plot import Scatter_Plot
-from cis.plotting.comparative_scatter import Comparative_Scatter
+from cis.plotting.lineplot import LinePlot
+from cis.plotting.scatterplot import ScatterPlot
+from cis.plotting.comparativescatter import ComparativeScatter
 from cis.plotting.overlay import Overlay
-from cis.plotting.histogram2d import Histogram_2D
-from cis.plotting.histogram3d import Histogram_3D
+from cis.plotting.histogram import Histogram
+from cis.plotting.histogram2d import Histogram2D
 from cis.utils import wrap_longitude_coordinate_values, listify
 
-import matplotlib.pyplot as plt
-
-plot_options = {'title': plt.title,
-                'xlabel': plt.xlabel,
-                'ylabel': plt.ylabel,
-                'fontsize': plt.rcParams.update}
+plot_options = {'title': 'set_title',
+                'xlabel': 'set_xlabel',
+                'ylabel': 'set_ylabel',
+                'fontsize': 'matplotlib.rcParams.update'}
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 
 class Plotter(object):
-    plot_types = {"contour": Contour_Plot,
-                  "contourf": Contourf_Plot,
+    plot_types = {"contour": ContourPlot,
+                  "contourf": ContourfPlot,
                   "heatmap": Heatmap,
-                  "line": Line_Plot,
-                  "scatter": Scatter_Plot,
-                  "comparativescatter": Comparative_Scatter,
+                  "line": LinePlot,
+                  "scatter": ScatterPlot,
+                  "comparativescatter": ComparativeScatter,
                   "overlay": Overlay,
-                  "histogram2d": Histogram_2D,
-                  "histogram3d": Histogram_3D}
+                  "histogram2d": Histogram,
+                  "histogram3d": Histogram2D}
 
     def __init__(self, data, type=None, out_filename=None, plotheight=None,
                  plotwidth=None, *args, **kwargs):
@@ -47,6 +45,7 @@ class Plotter(object):
         :param args: Any other arguments received from the parser
         :param kwargs: Any other keyword arguments received from the plotter
         """
+        import matplotlib.pyplot as plt
 
         if type in self.plot_types:
             type = type
@@ -59,11 +58,7 @@ class Plotter(object):
         self.fig, ax = plt.subplots()
 
         self.set_width_and_height(plotwidth, plotheight)
-        plot = self.plot_types[type](ax, data, *args, **kwargs)
-        plot.apply_axis_limits()
-        plot.format_plot()
-
-        plot.auto_set_ticks()
+        ax = self.plot_types[type](data, ax=ax, *args, **kwargs)
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename=None):
@@ -74,14 +69,13 @@ class Plotter(object):
          png being the default
         """
         import logging
-        import matplotlib.pyplot as plt
         if out_filename is None:
-            plt.show()
+            self.fig.show()
         else:
             logging.info("saving plot to file: " + out_filename)
             width = self.fig.get_figwidth()
-            plt.savefig(out_filename, bbox_inches='tight',
-                        pad_inches=0.05 * width)  # Will overwrite if file already exists
+            self.fig.savefig(out_filename, bbox_inches='tight',
+                             pad_inches=0.05 * width)  # Will overwrite if file already exists
 
     def set_width_and_height(self, width, height):
         """

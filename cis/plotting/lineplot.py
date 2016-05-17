@@ -1,7 +1,7 @@
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 
 
-class Line_Plot(Generic_Plot):
+class LinePlot(GenericPlot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
 
     def plot(self):
@@ -18,7 +18,7 @@ class Line_Plot(Generic_Plot):
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
             datafile = self.plot_args["datagroups"][i]
             if datafile["itemstyle"]:
-                if datafile["itemstyle"] in Line_Plot.line_styles:
+                if datafile["itemstyle"] in LinePlot.line_styles:
                     self.mplkwargs["linestyle"] = datafile["itemstyle"]
                 else:
                     from cis.exceptions import InvalidLineStyleError

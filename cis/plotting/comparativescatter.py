@@ -1,7 +1,8 @@
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 
 
-class Comparative_Scatter(Generic_Plot):
+class ComparativeScatter(GenericPlot):
+
     def plot(self):
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) == 2:
