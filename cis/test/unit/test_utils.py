@@ -55,8 +55,8 @@ class TestUtils(unittest.TestCase):
         from cis.utils import expand_1d_to_2d_array
 
         a = np.array([1, 2, 3, 4])
-        b = expand_1d_to_2d_array(a, 4, axis=0)
-        ref = np.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]])
+        b = expand_1d_to_2d_array(a, 5, axis=0)
+        ref = np.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]])
         assert (np.equal(b, ref).all())
 
     def test_can_expand_1d_array_down(self):
@@ -64,9 +64,18 @@ class TestUtils(unittest.TestCase):
         from cis.utils import expand_1d_to_2d_array
 
         a = np.array([1, 2, 3, 4])
-        b = expand_1d_to_2d_array(a, 4, axis=1)
-        ref = np.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]])
+        b = expand_1d_to_2d_array(a, 5, axis=1)
+        ref = np.array([[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]])
         assert (np.equal(b, ref).all())
+
+    @raises(ValueError)
+    def test_changing_an_element_of_expanded_array_raises_error(self):
+        import numpy as np
+        from cis.utils import expand_1d_to_2d_array
+
+        a = np.array([1, 2, 3, 4])
+        b = expand_1d_to_2d_array(a, 5, axis=0)
+        b[1,4] = 42
 
     def ten_bins_are_created_by_default(self):
         from numpy import array
@@ -292,7 +301,6 @@ class TestFindLongitudeWrapStart(unittest.TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         eq_(find_longitude_wrap_start('longitude', [data]), -180)
-
 
     def test_GIVEN_data_is_minus_0_to_360_THEN_returns_0(self):
         from cis.test.util.mock import make_regular_2d_ungridded_data

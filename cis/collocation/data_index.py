@@ -66,7 +66,7 @@ class GridCellBinIndexInSlices(object):
 
             hp_coords.append(hp_coord)
 
-        bounds_coords_max = zip(lower_bounds, hp_coords, max_bounds)
+        bounds_coords_max = list(zip(lower_bounds, hp_coords, max_bounds))
 
         # stack for each coordinate
         #    where the coordinate is larger than the maximum set to -1
@@ -94,7 +94,7 @@ class GridCellBinIndexInSlices(object):
             axis=0)
 
         # if the coordinate was decreasing then correct the indices for this cell
-        for indices_slice, decreasing, coord_length in zip(xrange(indices.shape[0]), coord_descreasing, coord_lengths):
+        for indices_slice, decreasing, coord_length in zip(range(indices.shape[0]), coord_descreasing, coord_lengths):
             if decreasing:
                 # indices[indices_slice] += (coord_length - 1) - indices[indices_slice]
                 indices[indices_slice] *= -1
@@ -264,8 +264,8 @@ def create_indexes(operator, coords, data, coord_map):
     :param coord_map: list of tuples relating index in HyperPoint to index in coords and in
                       coords to be iterated over
     """
-    for attr, cls in _index_attributes.iteritems():
-        if hasattr(operator, attr) and (getattr(operator, attr) is None):
+    for attr, cls in _index_attributes.items():
+        if hasattr(operator, attr):
             index = cls()
             logging.info("--> Creating index for %s", operator.__class__.__name__)
             index.index_data(coords, data, coord_map)

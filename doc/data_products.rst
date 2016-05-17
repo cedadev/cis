@@ -7,8 +7,7 @@ What kind of data can CIS deal with?
 Writing
 =======
 
-When creating files from a CIS command, CIS uses the NetCDF 4 classic format. Ungridded output files are always
-prefixed with ``cis-``, and both ungridded and gridded output are always suffixed with ``.nc``.
+When creating files from a CIS command, CIS uses the NetCDF 4 classic format. Output files are always suffixed with ``.nc``.
 
 .. _data-products-reading:
 
@@ -35,7 +34,7 @@ So far, CIS can read the following ungridded data files:
   MODIS L2         MODIS_L2               Satellite          \*MYD06_L2*.hdf, \*MOD06_L2*.hdf, \*MYD04_L2*.hdf, \*MOD04_L2*.hdf, \*MYDATML2.*.hdf, \*MODATML2*.hdf
   Cloud CCI        Cloud_CCI              Satellite          \*ESACCI*CLOUD*
   CSV datapoints   ASCII_Hyperpoints      N/A                \*.txt
-  CIS ungridded    cis                    CIS output         cis-\*.nc
+  CIS ungridded    cis                    CIS output         \*.nc containing the attribute Source = CIS(version)
   NCAR-RAF         NCAR_NetCDF_RAF        Aircraft           \*.nc containing the attribute Conventions with the value NCAR-RAF/nimbus
   GASSP            NCAR_NetCDF_RAF        Aircraft           \*.nc containing the attribute GASSP_Version
   GASSP            NCAR_NetCDF_RAF        Ship               \*.nc containing the attribute GASSP_Version, with no altitude
@@ -123,8 +122,8 @@ The file containing the orography field (which should be properly referenced fro
 Reading NetCDF4 Hierarchical Groups
 ===================================
 CIS supports the reading of `NetCDF4 hierarchical groups <https://www.unidata.ucar.edu/software/netcdf/docs/netcdf/Data-Model.html>`_.
-These can be specified on the command line in the format ``<group>.<variable_name>``,
-e.g. ``AVHRR.Ch4CentralWavenumber``. Groups can be nested to any required depth like ``<group1>.<group2...>.<variable_name>``.
+These can be specified on the command line in the format ``<group>/<variable_name>``,
+e.g. ``AVHRR/Ch4CentralWavenumber``. Groups can be nested to any required depth like ``<group1>/<group2...>/<variable_name>``.
 
 CIS currently does not support writing out of NetCDF4 groups, so any groups read in will be output 'flat'.
 

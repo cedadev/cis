@@ -208,7 +208,7 @@ class TestParsePlot(ParseTestFiles):
 
     def test_can_specify_valid_chart_type(self):
         args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                Plotter.plot_types.keys()[0]]
+                list(Plotter.plot_types.keys())[0]]
         parse_args(args)
 
     def test_should_raise_error_with_an_invalid_chart_type(self):
@@ -223,7 +223,7 @@ class TestParsePlot(ParseTestFiles):
     def test_should_raise_error_with_more_than_one_chart_type(self):
         try:
             args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                    Plotter.plot_types.keys()[0], Plotter.plot_types.keys()[1]]
+                    list(Plotter.plot_types.keys())[0], list(Plotter.plot_types.keys())[1]]
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -533,6 +533,35 @@ class TestParseAggregate(ParseTestFiles):
         for lim in limits:
             args = ['aggregate', 'var1:%s' % self.escaped_single_valid_file, lim]
             parse_args(args)
+
+    def test_GIVEN_mixed_limits_valid_WHEN_aggregate_THEN_parsed_OK(self):
+        limits = ['x=[-180.0,180.0,0.5],y=[-80.0,10.0,0.1]',
+                  'x=[-180.0,180.0,0.5],y=[-80.0,10.0,0.1],t=[2008-05-12,2008-05-12,PT15M]']
+        for lim in limits:
+            args = ['aggregate', 'var1:%s' % self.escaped_single_valid_file, lim]
+            parse_args(args)
+
+    def test_output_file_matches_an_input_file(self):
+        from cis.parse import _output_file_matches_an_input_file
+        from argparse import Namespace
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as tmpfile:
+            input_file = tmpfile.name
+            arguments = Namespace()
+            # Test output file is the same as input file
+            arguments.output = input_file
+            arguments.datagroups = [{"filenames": [input_file]}]
+            assert _output_file_matches_an_input_file(arguments)
+
+            # Test output file is different
+            with NamedTemporaryFile() as tmp_out:
+                arguments.output = tmp_out.name
+                assert not _output_file_matches_an_input_file(arguments)
+
+            # Test output file is different (and doesn't exist)
+            arguments.output = 'blah'
+            assert not _output_file_matches_an_input_file(arguments)
 
 
 class TestParseCollocate(ParseTestFiles):

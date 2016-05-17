@@ -314,7 +314,7 @@ def single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube
 def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_extra_dim()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=18)
-    print sample_cube.data
+    print(sample_cube.data)
     col = GeneralGriddedCollocator(fill_value=-999.9)
     out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
@@ -328,7 +328,7 @@ def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no
 def single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_altitude()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    print sample_cube.data
+    print(sample_cube.data)
     col = GeneralGriddedCollocator(fill_value=-999.9)
     out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
@@ -369,7 +369,7 @@ def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_al
 def single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(con, kernel):
     sample_cube = make_square_5x3_2d_cube_with_pressure()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    print sample_cube.data
+    print(sample_cube.data)
     col = GeneralGriddedCollocator(fill_value=-999.9)
     out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
@@ -404,7 +404,7 @@ def single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pr
                                    [[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]]])
-    print out_cube.data.filled()
+    print(out_cube.data.filled())
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 

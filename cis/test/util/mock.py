@@ -16,7 +16,8 @@ from cis.time_util import convert_datetime_to_std_time
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
                    time_dim_length=0,
                    horizontal_offset=0, altitude_offset=0, pressure_offset=0, time_offset=0, data_offset=0,
-                   hybrid_ht_len=0, hybrid_pr_len=0, dim_order=None, mask=False):
+                   surf_pres_offset=0,
+                   hybrid_ht_len=0, hybrid_pr_len=0, geopotential_height=False, dim_order=None, mask=False):
     """
     Makes a cube of any shape required, with coordinate offsets from the default available. If no arguments are
     given get a 5x3 cube of the form:
@@ -39,8 +40,10 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
     :param pressure_offset: Offset from the default grid in pressure
     :param time_offset: Offset from the default grid in time
     :param data_offset: Offset from the default data values
+    :param surf_pres_offset: Offset for the optional surface pressure field
     :param hybrid_ht_len: Hybrid height grid length
     :param hybrid_pr_len: Hybrid pressure grid length
+    :param geopotential_height: Include a geopotential height field when calcluting a hybrid pressure? (default False)
     :param dim_order: List of 'lat', 'lon', 'alt', 'pres', 'time' in the order in which the dimensions occur
     :param mask: A mask to apply to the data, this should be either a scalar or the same shape as the data
     :return: A cube with well defined data.
@@ -95,7 +98,7 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
 
     if time_dim_length:
         t0 = datetime.datetime(1984, 8, 27)
-        times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(time_dim_length)])
+        times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in range(time_dim_length)])
         time_nums = convert_datetime_to_std_time(times)
         time_bounds = None
         if time_dim_length == 1:
@@ -152,15 +155,16 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
                                   coord_map['hybrid_pr'])
         return_cube.add_aux_coord(
             iris.coords.AuxCoord(np.arange(lat_dim_length * lon_dim_length * time_dim_length, dtype='i8')
-                                 .reshape(lat_dim_length, lon_dim_length, time_dim_length) * 100000,
+                                 .reshape(lat_dim_length, lon_dim_length, time_dim_length) * 100000 + surf_pres_offset,
                                  "surface_air_pressure", units="Pa"),
             [coord_map['lat'], coord_map['lon'], coord_map['time']])
 
-        return_cube.add_aux_coord(iris.coords.AuxCoord(
-            np.arange(lat_dim_length * lon_dim_length * time_dim_length * hybrid_pr_len, dtype='i8')
-            .reshape(lat_dim_length, lon_dim_length, time_dim_length, hybrid_pr_len) + 10,
-            "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
-            [coord_map['lat'], coord_map['lon'], coord_map['time'], coord_map['hybrid_pr']])
+        if geopotential_height:
+            return_cube.add_aux_coord(iris.coords.AuxCoord(
+                np.arange(lat_dim_length * lon_dim_length * time_dim_length * hybrid_pr_len, dtype='i8')
+                .reshape(lat_dim_length, lon_dim_length, time_dim_length, hybrid_pr_len) + 10,
+                "altitude", long_name="Geopotential height at layer midpoints", units="meter"),
+                [coord_map['lat'], coord_map['lon'], coord_map['time'], coord_map['hybrid_pr']])
 
         return_cube.add_aux_factory(HybridPressureFactory(
             delta=return_cube.coord("hybrid A coefficient at layer midpoints"),
@@ -197,8 +201,8 @@ def make_dummy_2d_cube_with_small_offset_in_lat():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(0, 360, 10), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(-84, 106, 10)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(0, 360, 10)), standard_name='longitude', units='degrees')
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
@@ -212,8 +216,8 @@ def make_dummy_2d_cube_with_small_offset_in_lon():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(-85, 105, 10)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(1, 361, 10)), standard_name='longitude', units='degrees')
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
@@ -227,8 +231,8 @@ def make_dummy_2d_cube_with_small_offset_in_lat_and_lon():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-84, 106, 10), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(1, 361, 10), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(-84, 106, 10)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(1, 361, 10)), standard_name='longitude', units='degrees')
     cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
@@ -252,8 +256,8 @@ def make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(0, 10, 2), standard_name='latitude', units='degrees')
-    longitude = DimCoord(range(0, 10, 2), standard_name='longitude', units='degrees')
+    latitude = DimCoord(list(range(0, 10, 2)), standard_name='latitude', units='degrees')
+    longitude = DimCoord(list(range(0, 10, 2)), standard_name='longitude', units='degrees')
     cube1 = Cube(numpy.random.rand(5, 5), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     checkerboard = numpy.zeros((5, 5))
@@ -459,7 +463,7 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     import datetime
 
     t0 = datetime.datetime(1984, 8, 27)
-    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
+    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in range(7)])
 
     time_nums = convert_datetime_to_std_time(times)
 
@@ -468,6 +472,47 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
     longitude = DimCoord(np.arange(-5 + offset, 6 + offset, 5), standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(105) + 1.0, (5, 3, 7))
     cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1), (time, 2)], var_name='dummy')
+
+    return cube
+
+
+def make_square_5x3_2d_cube_with_scalar_time(time_offset=0):
+    """
+        Makes a well defined cube of shape 5x3 with data as follows
+        array([[1,2,3],
+               [4,5,6],
+               [7,8,9],
+               [10,11,12],
+               [13,14,15]])
+        and coordinates in latitude:
+            array([ -10, -5, 0, 5, 10 ])
+        longitude:
+            array([ -5, 0, 5 ])
+        time:
+            1984-08-27
+        time_bounds:
+            [1984-08-22, 1984-09-01]
+    """
+    import numpy as np
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+    from cis.time_util import cis_standard_time_unit
+
+    t0 = datetime.datetime(1984, 8, 27)
+
+    time_nums = convert_datetime_to_std_time(t0 + datetime.timedelta(days=time_offset))
+
+    time = DimCoord(time_nums, standard_name='time',
+                    bounds=[convert_datetime_to_std_time(t0 - datetime.timedelta(days=5)),
+                            convert_datetime_to_std_time(t0 + datetime.timedelta(days=5))],
+                    units=cis_standard_time_unit)
+
+    latitude = DimCoord(np.arange(-10., 11., 5), var_name='lat', standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(-5., 6., 5), var_name='lon', standard_name='longitude', units='degrees')
+    data = np.reshape(np.arange(15) + 1.0, (5, 3))
+    cube = Cube(data, dim_coords_and_dims=[(latitude, 0), (longitude, 1)], var_name='dummy')
+
+    cube.add_aux_coord(time)
 
     return cube
 
@@ -512,7 +557,7 @@ def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count
     import datetime
 
     t0 = datetime.datetime(1984, 8, 27)
-    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in xrange(7)])
+    times = np.array([t0 + datetime.timedelta(days=d + time_offset) for d in range(7)])
 
     time_nums = convert_datetime_to_std_time(times)
 
@@ -620,7 +665,7 @@ def make_dummy_1d_cube():
     from iris.cube import Cube
     from iris.coords import DimCoord
 
-    latitude = DimCoord(range(-85, 105, 10), standard_name='latitude', units='degrees')
+    latitude = DimCoord(list(range(-85, 105, 10)), standard_name='latitude', units='degrees')
     cube = Cube(numpy.random.rand(19), dim_coords_and_dims=[(latitude, 0)])
 
     return cube
@@ -655,14 +700,14 @@ def make_dummy_1d_points_list(num):
     """
         Create a list of 1d points 'num' long
     """
-    return [get_random_1d_point() for i in xrange(0, num)]
+    return [get_random_1d_point() for i in range(0, num)]
 
 
 def make_dummy_2d_points_list(num):
     """
         Create a list of 2d points 'num' long
     """
-    return [get_random_2d_point() for i in xrange(0, num)]
+    return [get_random_2d_point() for i in range(0, num)]
 
 
 def make_dummy_ungridded_data_time_series(len=10):
@@ -676,7 +721,7 @@ def make_dummy_ungridded_data_time_series(len=10):
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
     t0 = datetime(1984, 8, 27)
-    times = np.array([t0 + timedelta(days=d) for d in xrange(len)])
+    times = np.array([t0 + timedelta(days=d) for d in range(len)])
 
     x = Coord(np.zeros(len) + 65.2, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(np.zeros(len) - 12.1, Metadata(standard_name='longitude', units='degrees'))
@@ -905,7 +950,7 @@ def make_regular_2d_with_time_ungridded_data():
     y, x = np.meshgrid(y_points, x_points)
 
     t0 = datetime.datetime(1984, 8, 27)
-    times = np.reshape(np.array([t0 + datetime.timedelta(days=d) for d in xrange(15)]), (5, 3))
+    times = np.reshape(np.array([t0 + datetime.timedelta(days=d) for d in range(15)]), (5, 3))
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
@@ -1027,7 +1072,7 @@ def make_regular_4d_ungridded_data():
     x_points = np.linspace(-10, 10, 5)
     y_points = np.linspace(-5, 5, 5)
     t0 = datetime.datetime(1984, 8, 27)
-    times = convert_datetime_to_std_time(np.array([t0 + datetime.timedelta(days=d) for d in xrange(5)]))
+    times = convert_datetime_to_std_time(np.array([t0 + datetime.timedelta(days=d) for d in range(5)]))
 
     alt = np.linspace(0, 90, 10)
 

@@ -15,10 +15,11 @@ def expand_filelist(filelist):
     :raises ValueError: if any of the files in the list do not exist.
     """
     import os
+    import six
     from glob import glob
     from cis.utils import OrderedSet
 
-    if isinstance(filelist, basestring):
+    if isinstance(filelist, six.string_types):
         input_list = filelist.split(',')
     else:
         input_list = listify(filelist)

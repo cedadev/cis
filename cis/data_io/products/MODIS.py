@@ -14,7 +14,7 @@ class MODIS_L3(AProduct):
     def _parse_datetime(self, metadata_dict, keyword):
         import re
         res = ""
-        for s in metadata_dict.itervalues():
+        for s in metadata_dict.values():
             i_start = s.find(keyword)
             ssub = s[i_start:len(s)]
             i_end = ssub.find("END_OBJECT")
@@ -56,7 +56,7 @@ class MODIS_L3(AProduct):
         variables = set([])
         for filename in filenames:
             sd = SD(filename)
-            for var_name, var_info in sd.datasets().iteritems():
+            for var_name, var_info in sd.datasets().items():
                 # Check that the dimensions are correct
                 if var_info[0] == ('YDim:mod08', 'XDim:mod08'):
                     variables.add(var_name)
@@ -157,7 +157,7 @@ class MODIS_L2(AProduct):
         variables = set([])
         for filename in filenames:
             sd = pyhdf.SD.SD(filename)
-            for var_name, var_info in sd.datasets().iteritems():
+            for var_name, var_info in sd.datasets().items():
                 if var_info[1] == valid_shape:
                     variables.add(var_name)
 

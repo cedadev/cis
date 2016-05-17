@@ -50,7 +50,7 @@ class SubsetConstraint(SubsetConstraintInterface):
 
     def __str__(self):
         limit_strs = []
-        for name, limit in self._limits.iteritems():
+        for name, limit in self._limits.items():
             limit_strs.append("{}: [{}, {}]".format(name, str(limit.start), str(limit.end)))
         return ', '.join(limit_strs)
 
@@ -89,7 +89,7 @@ class GriddedSubsetConstraint(SubsetConstraint):
         """
         extract_constraint = None
         intersection_constraint = {}
-        for coord, limits in self._limits.iteritems():
+        for coord, limits in self._limits.items():
             if data.coord(coord).units.modulus is not None:
                 # These coordinates can be safely used with iris.cube.Cube.intersection()
                 intersection_constraint[coord] = (limits.start, limits.end)
@@ -120,7 +120,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         # Create the combined mask across all limits
         shape = data.coords()[0].data_flattened.shape  # This assumes they are all the same shape
         combined_mask = np.zeros(shape, dtype=bool)
-        for limit in self._limits.itervalues():
+        for limit in self._limits.values():
             # Mask out any points which are NOT (<= to the end limit AND >= to the start limit)
             mask = ~ (np.less_equal(limit.coord.data_flattened, limit.end) &
                       np.greater_equal(limit.coord.data_flattened, limit.start))

@@ -29,10 +29,10 @@ def load_multiple_aeronet(fnames, variables=None):
         # reading in all variables into a dictionary:
         # a_dict, key: variable name, value: list of masked arrays
         a_dict = load_aeronet(filename, variables)
-        for var in a_dict.keys():
+        for var in list(a_dict.keys()):
             add_element_to_list_in_dict(adata, var, a_dict[var])
 
-    for var in adata.keys():
+    for var in list(adata.keys()):
         adata[var] = concatenate(adata[var])
 
     return adata

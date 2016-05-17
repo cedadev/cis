@@ -72,7 +72,13 @@ class MultiKernel(object):
         self.sub_kernels = sub_kernels
 
 
-aggregation_kernels = {'mean': iris.analysis.MEAN,
+aggregation_kernels = {'sum': iris.analysis.SUM,
+                       'median': iris.analysis.MEDIAN,
+                       'gmean': iris.analysis.GMEAN,
+                       'hmean': iris.analysis.HMEAN,
+                       'peak': iris.analysis.PEAK,
+                       'RMS': iris.analysis.RMS,
+                       'mean': iris.analysis.MEAN,
                        'min': iris.analysis.MIN,
                        'max': iris.analysis.MAX,
                        'moments': MultiKernel('moments', [iris.analysis.MEAN, StddevKernel(), CountKernel()])}

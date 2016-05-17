@@ -155,7 +155,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         col = GeneralUngriddedCollocator()
         output = col.collocate(sample_points, data_list, constraint, kernel)
 
-        expected_result = np.array(range(1, 16))
+        expected_result = np.array(list(range(1, 16)))
         expected_stddev = np.array(15 * [float('inf')])
         expected_n = np.array(15 * [1])
         assert len(output) == 6

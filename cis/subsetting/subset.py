@@ -68,7 +68,7 @@ class Subset(object):
 
         if len(self._limits) != 0:
             raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
-                                          "coordinate name.".format("' or '".join(self._limits.keys())))
+                                          "coordinate name.".format("' or '".join(list(self._limits.keys()))))
 
         subset = subset_constraint.constrain(data)
 

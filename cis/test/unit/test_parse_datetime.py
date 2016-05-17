@@ -88,7 +88,7 @@ def parse_datetime_passed_error_message_to_parser():
     try:
         dt = parse_as_number_or_datetime('2X10')
     except MockParserError as e:
-        assert e.message.index(name) > 0
+        assert e.args[0].index(name) > 0
 
 
 # parse_datetime: Parse errors
@@ -302,8 +302,6 @@ def test_that_can_parse_datetimestr_to_obj():
         convert_datetime_to_std_time(dt.datetime(2010, 12, now.day)))
     eq_(parse_datetimestr_to_std_time("2010-"),
         convert_datetime_to_std_time(dt.datetime(2010, now.month, now.day)))
-    eq_(parse_datetimestr_to_std_time(""),
-        convert_datetime_to_std_time(dt.datetime(now.year, now.month, now.day)))
 
 
 if __name__ == '__main__':

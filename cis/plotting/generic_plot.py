@@ -435,24 +435,19 @@ class Generic_Plot(object):
         Calculates the min and max values of all the data given
         Stores the values in the matplotlib keyword args to be directly passed into the plot methods.
         """
-        from sys import maxint
-        from numpy import ma
+        vmin = self.plot_args["valrange"].get("vmin", None)
+        vmax = self.plot_args["valrange"].get("vmax", None)
 
-        if self.plot_args['logv']:
-            mask_val = 0.0
-        else:
-            mask_val = -maxint - 1
-
-        vmin = self.plot_args["vmin"] or maxint
-        vmax = self.plot_args["vmax"] or -maxint - 1
-
-        if vmin == maxint:
-            vmin = min(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"] <= mask_val).min() for
-                       unpacked_data_item in self.unpacked_data_items)
-
-        if vmax == -maxint - 1:
-            vmax = max(ma.array(unpacked_data_item["data"], mask=unpacked_data_item["data"] <= mask_val).max() for
-                       unpacked_data_item in self.unpacked_data_items)
+        if vmin is None:
+            if self.plot_args.get('logv', False):
+                vmin = min(d["data"][d["data"] > 0].min() for d in self.unpacked_data_items)
+            else:
+                vmin = min(d["data"].min() for d in self.unpacked_data_items)
+        if vmax is None:
+            if self.plot_args.get('logv', False):
+                vmax = max(d["data"][d["data"] > 0].max() for d in self.unpacked_data_items)
+            else:
+                vmax = max(d["data"].max() for d in self.unpacked_data_items)
 
         # TODO: This should really just return the values, and let the calling function put them where they want.
         self.mplkwargs["vmin"] = float(vmin)
@@ -562,9 +557,9 @@ class Generic_Plot(object):
         self.set_default_axis_label("X")
         self.set_default_axis_label("Y")
 
-        for key in plot_options.keys():
+        for key in list(plot_options.keys()):
             # Call the method associated with the option
-            if key in self.plot_args.keys() and self.plot_args[key] is not None:
+            if key in list(self.plot_args.keys()) and self.plot_args[key] is not None:
                 plot_options[key](self.plot_args[key])
 
         if len(self.packed_data_items) > 1:
@@ -585,7 +580,7 @@ class Generic_Plot(object):
         :return: Can we access natural earth?
         """
         from cartopy.io.shapereader import natural_earth
-        from urllib2 import HTTPError
+        from urllib.error import HTTPError
         try:
             natural_earth_available = natural_earth()
         except HTTPError:
@@ -661,9 +656,9 @@ class Generic_Plot(object):
         if self.plot_args["title"] is None:
             self.plot_args["title"] = self.packed_data_items[0].long_name
 
-        for key in plot_options.keys():
+        for key in list(plot_options.keys()):
             # Call the method associated with the option
-            if key in self.plot_args.keys():
+            if key in list(self.plot_args.keys()):
                 plot_options[key](self.plot_args[key])
 
         if not self.plot_args["nocolourbar"]:

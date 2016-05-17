@@ -154,10 +154,11 @@ class CoordList(list):
 
         :return: A :class:`CoordList` of coordinates fitting the given criteria
         """
+        import six
         from collections import Mapping
         coords = self
 
-        if isinstance(name_or_coord, basestring):
+        if isinstance(name_or_coord, six.string_types):
             name = name_or_coord
             coord = None
         else:
@@ -165,28 +166,27 @@ class CoordList(list):
             coord = name_or_coord
 
         if name is not None:
-            coords = filter(lambda coord_: coord_.name() == name, coords)
+            coords = [coord_ for coord_ in coords if coord_.name() == name]
 
         if standard_name is not None:
-            coords = filter(lambda coord_: coord_.standard_name == standard_name, coords)
+            coords = [coord_ for coord_ in coords if coord_.standard_name == standard_name]
 
         if long_name is not None:
-            coords = filter(lambda coord_: coord_.long_name == long_name, coords)
+            coords = [coord_ for coord_ in coords if coord_.long_name == long_name]
 
         if axis is not None:
             axis = axis.upper()
-            coords = filter(lambda coord_: coord_.axis == axis, coords)
+            coords = [coord_ for coord_ in coords if coord_.axis == axis]
 
         if attributes is not None:
             if not isinstance(attributes, Mapping):
                 raise ValueError(
                     'The attributes keyword was expecting a dictionary type, but got a %s instead.' % type(attributes))
-            coords = filter(lambda coord_: all(
-                            k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.iteritems()),
-                            coords)
+            coords = [coord_ for coord_ in coords if all(
+                            k in coord_.attributes and coord_.attributes[k] == v for k, v in attributes.items())]
 
         if coord is not None:
-            coords = filter(lambda coord_: coord_ == coord, coords)
+            coords = [coord_ for coord_ in coords if coord_ == coord]
 
         return coords
 
@@ -236,29 +236,6 @@ class CoordList(list):
         all_coords = self.find_standard_coords()
         flattened_coords = [(c.data_flattened if c is not None else None) for c in all_coords]
         return UngriddedHyperPointView(flattened_coords, None)
-
-    def get_standard_coords(self, data_len):
-        """Constructs a list of the standard coordinate values.
-        The standard coordinates are latitude, longitude, altitude, time and air_pressure; they occur in the return
-        list in this order. If a standard coordinate has not been found it's values are returned as a list of length
-        :attr:`data_len`.
-
-        :param int data_len: Expected length of coordinate data
-        :return: :class:`list` of indexed sequences of coordinate values
-        """
-        from cis.exceptions import CoordinateNotFoundError
-
-        empty_data = [None for i in xrange(data_len)]
-        ret_list = []
-
-        for name in HyperPoint.standard_names:
-            try:
-                coord = self.get_coord(standard_name=name).data.flatten()
-            except CoordinateNotFoundError:
-                coord = empty_data
-            ret_list.append(coord)
-
-        return ret_list
 
     def find_standard_coords(self):
         """Constructs a list of the standard coordinates.

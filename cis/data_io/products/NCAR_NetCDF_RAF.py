@@ -7,7 +7,7 @@ from cis.data_io.Coord import CoordList
 from cis.exceptions import InvalidVariableError, FileFormatError
 from cis.data_io.products import AProduct
 from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
-from cis.utils import add_to_list_if_not_none, dimensions_equal, listify
+from cis.utils import add_to_list_if_not_none, dimensions_compatible, listify
 from cis.data_io.netcdf import get_metadata, get_netcdf_file_attributes, read_many_files_individually, \
     get_netcdf_file_variables
 
@@ -85,11 +85,11 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         self.time_stamp_info = None
         self.time_dimensions = None
 
-        self._attributes = [{k.lower(): v for k, v in attrs.items()} for attrs in listify(attributes)]
+        self._attributes = [{k.lower(): v for k, v in list(attrs.items())} for attrs in listify(attributes)]
         if len(variables) == 0:
             raise InvalidVariableError("No variables in the file so the type of data is unknown")
-        self._variables = variables[0].keys()
-        self._variable_dimensions = [{name: var.dimensions for name, var in vars.items()}
+        self._variables = list(variables[0].keys())
+        self._variable_dimensions = [{name: var.dimensions for name, var in list(vars.items())}
                                      for vars in listify(variables)]
         self._check_has_variables_and_attributes()
 
@@ -228,10 +228,22 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             self.time_variable_name \
             = coordinates_vars
 
-    def get_variable_names_with_same_dimensions_as_time_coord(self):
+    def find_auxiliary_coordinate(self, variable):
+        dim_coord_names = [self.latitude_variable_name, self.longitude_variable_name,
+                           self.altitude_variable_name, self.pressure_variable_name] + list(self.time_dimensions)
+        aux_coords = [dim for dim in self._variable_dimensions[0][variable] if dim not in dim_coord_names]
+        if len(aux_coords) > 1:
+            raise InvalidVariableError("CIS currently only supports reading data variables with one auxilliary "
+                                       "coordinate")
+        elif len(aux_coords) == 0:
+            return None
+        else:
+            return aux_coords[0]
+
+    def get_variable_names_which_have_time_coord(self):
         variables = []
-        for name, dimensions in self._variable_dimensions[0].items():  # Use the first file as a master
-            if dimensions_equal(dimensions, self.time_dimensions):
+        for name, dimensions in list(self._variable_dimensions[0].items()):
+            if len(dimensions) > 0 and dimensions_compatible(dimensions, self.time_dimensions):
                 variables.append(name)
         return set(variables)
 
@@ -283,9 +295,9 @@ class NCAR_NetCDF_RAF(AProduct):
         try:
             attributes = get_netcdf_file_attributes(filename)
         except (RuntimeError, IOError) as ex:
-            raise FileFormatError(["File is unreadable", ex.message])
+            raise FileFormatError(["File is unreadable", ex.args[0]])
 
-        attributes_lower = {attr.lower(): val for attr, val in attributes.items()}
+        attributes_lower = {attr.lower(): val for attr, val in list(attributes.items())}
         if self.GASSP_VERSION_ATTRIBUTE_NAME.lower() in attributes_lower:
             file_type = "NetCDF/GASSP/{}".format(attributes_lower[self.GASSP_VERSION_ATTRIBUTE_NAME.lower()])
 
@@ -395,6 +407,35 @@ class NCAR_NetCDF_RAF(AProduct):
                 self._create_coord("P", variable_selector.pressure_variable_name, data_variables, "air_pressure"))
         return coords
 
+    @staticmethod
+    def _add_aux_coordinate(dim_coords, filename, aux_coord_name, length):
+        """
+        Add an auxiliary coordinate to a list of (reshaped) dimension coordinates
+
+        :param dim_coords: CoordList of one-dimensional coordinates representing physical dimensions
+        :param filename: The data file containing the aux coord
+        :param aux_coord_name: The name of the aux coord to add to the coord list
+        :param length: The length of the data dimensions which this auxiliary coordinate should span
+        :return: A CoordList of reshaped (2D) physical coordinates plus the 2D auxiliary coordinate
+        """
+        from cis.data_io.Coord import Coord
+        from cis.utils import expand_1d_to_2d_array
+        from cis.data_io.netcdf import read
+
+        # We assume that the auxilliary coordinate is the same shape across files
+        d = read(filename, [aux_coord_name])[aux_coord_name]
+        # Reshape to the length given
+        aux_data = expand_1d_to_2d_array(d[:], length, axis=0)
+        # Get the length of the auxiliary coordinate
+        len_y = d[:].size
+
+        for dim_coord in dim_coords:
+            dim_coord.data = expand_1d_to_2d_array(dim_coord.data, len_y, axis=1)
+
+        all_coords = dim_coords + [Coord(aux_data, get_metadata(d))]
+
+        return all_coords
+
     def create_coords(self, filenames, variable=None):
         """
         Reads the coordinates and data if required from the files
@@ -404,12 +445,18 @@ class NCAR_NetCDF_RAF(AProduct):
         """
         data_variables, variable_selector = self._load_data(filenames, variable)
 
-        coords = self._create_coordinates_list(data_variables, variable_selector)
+        dim_coords = self._create_coordinates_list(data_variables, variable_selector)
 
         if variable is None:
-            return UngriddedCoordinates(coords)
+            return UngriddedCoordinates(dim_coords)
         else:
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable][0]), coords)
+            aux_coord_name = variable_selector.find_auxiliary_coordinate(variable)
+            if aux_coord_name is not None:
+                all_coords = self._add_aux_coordinate(dim_coords, filenames[0], aux_coord_name,
+                                                      dim_coords.get_coord(standard_name='time').data.size)
+            else:
+                all_coords = dim_coords
+            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable][0]), all_coords)
 
     def create_data_object(self, filenames, variable):
         """
@@ -494,7 +541,7 @@ class NCAR_NetCDF_RAF(AProduct):
         """
 
         selector = self._load_data_definition(filenames)
-        return selector.get_variable_names_with_same_dimensions_as_time_coord()
+        return selector.get_variable_names_which_have_time_coord()
 
     def get_file_format(self, filename):
         """

@@ -21,9 +21,9 @@ class HaversineDistanceKDTreeIndex(object):
         """
         if len(data.data.shape) > 1:
             # Flatten coordinates.
-            lat_idx = [key for key, value in data.dims_to_std_coords_map.items()
+            lat_idx = [key for key, value in list(data.dims_to_std_coords_map.items())
                        if value == HyperPoint.LATITUDE][0]
-            lon_idx = [key for key, value in data.dims_to_std_coords_map.items()
+            lon_idx = [key for key, value in list(data.dims_to_std_coords_map.items())
                        if value == HyperPoint.LONGITUDE][0]
             flattened_coords = np.meshgrid(*data.coords, indexing='ij')
             lat = flattened_coords[lat_idx].ravel()

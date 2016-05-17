@@ -123,8 +123,8 @@ where:
 
 ``<outputfile>``
   is an optional argument specifying the file to output to. This will be automatically given a ``.nc`` extension if not
-  present and if the output is ungridded, will be prepended with ``cis-`` to identify it as a CIS output file. This must
-  not be the same file path as any of the input files. If not provided, the default output filename is *out.nc*
+  present. This must not be the same file path as any of the input files. If not provided, the default output filename
+  is *out.nc*
 
 A full example would be::
 
@@ -155,7 +155,7 @@ Ungridded -> ungridded ``box``                   ``box``             ``moments``
 Collocation output files
 ========================
 
-All ungridded collocation output files are prefixed with ``cis-`` and both ungridded and gridded data files are suffixed with ``.nc`` (so there is no need to specify the extension in the output parameter). This is to ensure the cis data product is always used to read collocated ungridded data.
+Output data files are suffixed with ``.nc`` (so there is no need to specify the extension in the output parameter).
 
 It is worth noting that in the process of collocation all of the data and sample points are represented as 1-d lists, so any structural information about the input files is lost. This is done to ensure consistency in the collocation output. This means, however, that input files which may have been plotable as, for example, a heatmap may not be after collocation. In this situation plotting the data as a scatter plot will yield the required results.
 

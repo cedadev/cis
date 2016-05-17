@@ -102,7 +102,7 @@ class VisualTest(BaseIntegrationTest):
 
             if _DISPLAY_FIGURES:
                 if err:
-                    print('Image comparison would have failed. Message: %s' % err)
+                    print(('Image comparison would have failed. Message: %s' % err))
                 plt.show()
             else:
                 assert not err, 'Image comparison failed. Message: %s' % err

@@ -6,7 +6,7 @@ import iris.analysis.interpolate
 import iris.coords
 from iris.exceptions import CoordinateMultiDimError
 import numpy as np
-from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max
+from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, sum as np_sum
 
 from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
                                            IndexedConstraint, Kernel, AbstractDataOnlyKernel)
@@ -71,6 +71,11 @@ class GeneralUngriddedCollocator(Collocator):
         # Convert ungridded data to a list of points if kernel needs it.
         # Special case checks for kernels that use a cube - this could be done more elegantly.
         if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
+            if hasattr(kernel, "interpolator"):
+                # If we have an interpolator on the kernel we need to reset it as it depends on the actual values
+                #  as well as the coordinates
+                kernel.interpolator = None
+                kernel.coord_names = []
             if not isinstance(data, iris.cube.Cube):
                 raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
             if constraint is not None and not isinstance(constraint, DummyConstraint):
@@ -359,6 +364,18 @@ class max(AbstractDataOnlyKernel):
         return np_max(values)
 
 
+class sum(AbstractDataOnlyKernel):
+    """
+    Calculate the sum of the values
+    """
+
+    def get_value_for_data_only(self, values):
+        """
+        Return the sum of the values
+        """
+        return np_sum(values)
+
+
 # noinspection PyPep8Naming
 class moments(AbstractDataOnlyKernel):
     return_size = 3
@@ -404,7 +421,7 @@ class nn_horizontal(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -439,7 +456,7 @@ class nn_altitude(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -457,7 +474,7 @@ class nn_pressure(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -475,7 +492,7 @@ class nn_time(Kernel):
         """
         iterator = data.__iter__()
         try:
-            nearest_point = iterator.next()
+            nearest_point = next(iterator)
         except StopIteration:
             # No points to check
             raise ValueError
@@ -950,7 +967,7 @@ class CubeCellConstraint(CellConstraint):
         con_points = HyperPointList()
         for point in data:
             include = True
-            for idx in xrange(HyperPoint.number_standard_names):
+            for idx in range(HyperPoint.number_standard_names):
                 cell = sample_point[idx]
                 if cell is not None:
                     if not (np.min(cell.bound) <= point[idx] < np.max(cell.bound)):
