@@ -23,8 +23,6 @@ plot_options = {'title': plt.title,
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
-colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-
 
 class Plotter(object):
     plot_types = {"contour": Contour_Plot,
@@ -37,29 +35,29 @@ class Plotter(object):
                   "histogram2d": Histogram_2D,
                   "histogram3d": Histogram_3D}
 
-    def __init__(self, packed_data_items, plot_type=None, out_filename=None, plotheight=None,
-                 plotwidth=None, *mplargs, **mplkwargs):
+    def __init__(self, data, type=None, out_filename=None, plotheight=None,
+                 plotwidth=None, *args, **kwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
-        :param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
-        :param plot_type: The plot type to be used, as a string
+        :param data: A list of packed (i.e. GriddedData or UngriddedData objects) data items to be plotted
+        :param type: The plot type to be used, as a string
         :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be
          used, with png being the default
-        :param mplargs: Any other arguments received from the parser
-        :param mplkwargs: Any other keyword arguments received from the plotter
+        :param args: Any other arguments received from the parser
+        :param kwargs: Any other keyword arguments received from the plotter
         """
 
         # packed_data_items = self._remove_length_one_dimensions(packed_data_items)
 
-        if plot_type is None:
-            plot_type = self.set_default_plot_type(packed_data_items)
+        if type is None:
+            type = self.set_default_plot_type(data)
 
         # Create figure and a single axis (we assume for now not more than one 'subplot').
         self.fig, ax = plt.subplots()
 
         self.set_width_and_height(plotwidth, plotheight)
-        plot = self.plot_types[plot_type](ax, packed_data_items, *mplargs, **mplkwargs)
+        plot = self.plot_types[type](ax, data, *args, **kwargs)
         plot.apply_axis_limits()
         plot.format_plot()
 
@@ -139,15 +137,3 @@ class Plotter(object):
             if all_coords_are_of_same_shape:
                 error_message += "\nThe shape of its coordinates is: " + str(data[0].coords()[0].shape)
             raise InvalidPlotTypeError(error_message)
-
-    def _remove_length_one_dimensions(self, packed_data):
-        from iris.util import squeeze
-        from cis.data_io.gridded_data import GriddedData
-        listify(packed_data)
-        new_data_list = []
-        for data in packed_data:
-            if data.is_gridded:
-                new_data_list.append(GriddedData.make_from_cube(squeeze(data)))
-            else:
-                new_data_list.append(data)
-        return new_data_list
