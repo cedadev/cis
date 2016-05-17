@@ -31,7 +31,7 @@ def initializer(fun):
 
     @wraps(fun)
     def wrapper(self, *args, **kargs):
-        for name, arg in list(zip(names[1:], args)) + list(kargs.items()):
+        for name, arg in list(zip(names[1:], args)) + [kw for kw in kargs.items() if kw[0] in names]:
             setattr(self, name, arg)
         for i in range(len(defaults)):
             index = -(i + 1)
