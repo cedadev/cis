@@ -12,7 +12,6 @@ from cis.plotting.comparativescatter import ComparativeScatter
 from cis.plotting.overlay import Overlay
 from cis.plotting.histogram import Histogram
 from cis.plotting.histogram2d import Histogram2D
-from cis.utils import wrap_longitude_coordinate_values, listify
 
 plot_options = {'title': 'set_title',
                 'xlabel': 'set_xlabel',

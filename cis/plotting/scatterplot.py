@@ -9,11 +9,11 @@ class ScatterPlot(GenericPlot):
         """
         from cis.plotting.plot import colors
 
-        self.mplkwargs["s"] = self.plot_args["itemwidth"]
+        self.mplkwargs["s"] = self.itemwidth
 
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
             local_kwargs = self.mplkwargs.copy()
-            datafile = self.plot_args["datagroups"][i]
+            datafile = self.datagroups[i]
 
             if "itemstyle" in datafile:
                 local_kwargs["marker"] = datafile["itemstyle"]
@@ -70,7 +70,7 @@ class ScatterPlot(GenericPlot):
         new_max = c_max if max_val is None else max_val
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
-        if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
+        if axis == "y" and self.yaxis == "air_pressure" and min_val is None and max_val is None:
             new_min, new_max = new_max, new_min
 
         return new_min, new_max
@@ -88,29 +88,29 @@ class ScatterPlot(GenericPlot):
         axis = axis.lower()
         axislabel = axis + "label"
 
-        if self.plot_args[axislabel] is None:
+        if getattr(self, axislabel) is None:
             if self.is_map():
-                self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
+                setattr(self, axislabel, "Longitude" if axis == "x" else "Latitude")
             else:
                 try:
-                    units = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).units
+                    units = self.packed_data_items[0].coord(getattr(self, axis + "axis")).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 
                 if len(self.packed_data_items) == 1:
                     # only 1 data to plot, display
                     try:
-                        name = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).name()
+                        name = self.packed_data_items[0].coord(getattr(self, axis + "axis")).name()
                     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                         name = self.packed_data_items[0].name()
-                    self.plot_args[axislabel] = name + " " + self.format_units(units)
+                        setattr(self, axislabel, name + " " + self.format_units(units))
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
-                    self.plot_args[axislabel] = units
+                        setattr(self, axislabel, units)
 
     def create_legend(self):
         legend_titles = []
-        datagroups = self.plot_args["datagroups"]
+        datagroups = self.datagroups
         for i, item in enumerate(self.packed_data_items):
             if datagroups is not None and "label" in datagroups[i]:
                 legend_titles.append(datagroups[i]["label"])

@@ -4,6 +4,9 @@ import numpy
 
 class Histogram2D(GenericPlot):
 
+    def __init__(self, packed_data_items, xbinwidth=None, ybinwidth=None, *args, **kwargs):
+        super().__init__(packed_data_items, *args, **kwargs)
+
     def plot(self):
         """
         Plots a 3d histogram.
@@ -20,9 +23,9 @@ class Histogram2D(GenericPlot):
             ybins = self.calculate_bin_edges("y")
 
             # All bins that have count less than cmin will not be displayed
-            cmin = self.plot_args["vmin"]
+            cmin = self.vmin
             # All bins that have count more than cmax will not be displayed
-            cmax = self.plot_args["vmax"]
+            cmax = self.vmax
 
             # Add y=x line
             min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
@@ -70,11 +73,11 @@ class Histogram2D(GenericPlot):
         elif axis == "y":
             data = self.unpacked_data_items[1]["data"]
 
-        bin_edges = calculate_histogram_bin_edges(data, axis, self.plot_args[axis + "min"], self.plot_args[axis + "max"],
-                                                  self.plot_args[axis + "binwidth"], self.plot_args["log" + axis])
+        bin_edges = calculate_histogram_bin_edges(data, axis, getattr(self, axis + "min"), getattr(self, axis + "max"),
+                                                  getattr(self, axis + "binwidth"), getattr(self, "log" + axis))
 
-        self.plot_args[axis + "min"] = bin_edges.min()
-        self.plot_args[axis + "max"] = bin_edges.max()
+        setattr(self, axis + "min", bin_edges.min())
+        setattr(self, axis + "max", bin_edges.max())
 
         return bin_edges
 
@@ -115,18 +118,18 @@ class Histogram2D(GenericPlot):
         """
         Adds a color bar to the plot and labels it as "Frequency"
         """
-        step = self.plot_args["vstep"]
+        step = self.vstep
         if step is None:
             ticks = None
         else:
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
-        cbar = self.matplotlib.colorbar(orientation=self.plot_args["cbarorient"], ticks=ticks)
+        cbar = self.matplotlib.colorbar(orientation=self.cbarorient, ticks=ticks)
 
-        if self.plot_args["cbarlabel"] is None:
+        if self.cbarlabel is None:
             label = "Frequency"
         else:
-            label = self.plot_args["cbarlabel"]
+            label = self.cbarlabel
 
         cbar.set_label(label)
 
@@ -140,23 +143,23 @@ class Histogram2D(GenericPlot):
             tick_method = self.matplotlib.yticks
             item_index = 1
 
-        if self.plot_args[axis + "tickangle"] is None:
+        if getattr(self, axis + "tickangle") is None:
             angle = None
         else:
-            angle = self.plot_args[axis + "tickangle"]
+            angle = getattr(self, axis + "tickangle")
 
-        if self.plot_args[axis + "step"] is not None:
-            step = self.plot_args[axis + "step"]
+        if getattr(self, axis + "step") is not None:
+            step = getattr(self, axis + "step")
 
-            if self.plot_args[axis + "min"] is None:
+            if getattr(self, axis + "min") is None:
                 min_val = self.unpacked_data_items[item_index]["data"].min()
             else:
-                min_val = self.plot_args[axis + "min"]
+                min_val = getattr(self, axis + "min")
 
-            if self.plot_args[axis + "max"] is None:
+            if getattr(self, axis + "max") is None:
                 max_val = self.unpacked_data_items[item_index]["data"].max()
             else:
-                max_val = self.plot_args[axis + "max"]
+                max_val = getattr(self, axis + "max")
 
             ticks = arange(min_val, max_val + step, step)
 

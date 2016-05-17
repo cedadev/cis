@@ -8,7 +8,7 @@ class ComparativeScatter(GenericPlot):
         if len(self.packed_data_items) == 2:
             # Add y=x line
             ax = self.matplotlib.gca()
-            if self.plot_args["logx"] and self.plot_args["logy"]:
+            if self.logx and self.logy:
                 import numpy.ma as ma
                 positive_item0 = ma.array(self.unpacked_data_items[0]["data"],
                                           mask=self.unpacked_data_items[0]["data"] <= 0)
@@ -22,7 +22,7 @@ class ComparativeScatter(GenericPlot):
             y_equals_x_array = [min_val, max_val]
             ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
-            datagroup = self.plot_args["datagroups"][0]
+            datagroup = self.datagroups[0]
             if datagroup["itemstyle"]:
                 self.mplkwargs["marker"] = datagroup["itemstyle"]
             else:
@@ -34,7 +34,7 @@ class ComparativeScatter(GenericPlot):
                 self.mplkwargs.pop("color", None)
 
             ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"],
-                       s=self.plot_args["itemwidth"], edgecolors="none", *self.mplargs, **self.mplkwargs)
+                       s=self.itemwidth, edgecolors="none", *self.mplargs, **self.mplkwargs)
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 

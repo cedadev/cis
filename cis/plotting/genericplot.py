@@ -13,13 +13,13 @@ class GenericPlot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
 
     # TODO: Reorder these into roughly the order they are most commonly used
-    @initializer
+    # @initializer
     def __init__(self, packed_data_items, ax=None, calculate_min_and_max_values=True, datagroup=0,
-                 labels=None, nocolourbar=False, logx=False, logy=False, logv=False, xmin=None,
+                 datagroups=None, nocolourbar=False, logx=False, logy=False, logv=False, xmin=None,
                  xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, vmin=None, vmax=None, vstep=None,
                  cbarorient='horizontal', grid=False, xlabel=None, ylabel=None, cbarlabel=None, title=None, fontsize=None,
-                 itemwidth=1, xtikangle=None, ytickangle=None, xbinwidth=None, ybinwidth=None, coastlinecolour='k',
-                 nasabluemarble=False, xaxis=None, yaxis=None, plotwidth=None, plotheight=None, cbarscale=None,
+                 itemwidth=1, xtickangle=None, ytickangle=None, coastlinecolour='k',
+                 nasabluemarble=False, xaxis=None, yaxis=None, cbarscale=None,
                  *mplargs, **mplkwargs):
         """
         Constructor for Generic_Plot.
@@ -35,24 +35,52 @@ class GenericPlot(object):
         """
         import matplotlib.pyplot as plt
 
+        self.packed_data_items = packed_data_items
+
         if ax is None:
             _, self.ax = plt.subplots()
+        else:
+            self.ax = ax
+
+        self.datagroup = datagroup
+        self.datagroups = datagroups
+        self.nocolourbar = nocolourbar
+        self.logx = logx
+        self.logy = logy
+        self.logv = logv
+        self.xmin = xmin
+        self.xmax = xmax
+        self.xstep = xstep
+        self.ymin = ymin
+        self.ymax = ymax
+        self.ystep = ystep
+        self.vmin = vmin
+        self.vmax = vmax
+        self.vstep = vstep
+        self.cbarorient = cbarorient
+        self.grid = grid
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.cbarlabel = cbarlabel
+        self.title = title
+        self.fontsize = fontsize
+        self.itemwidth = itemwidth
+        self.xtickangle = xtickangle
+        self.ytickangle = ytickangle
+        self.coastlinecolour = coastlinecolour
+        self.nasabluemarble = nasabluemarble
+        self.xaxis = xaxis
+        self.yaxis = yaxis
+        self.cbarscale = cbarscale
 
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
-
-        # TODO: The nocolorbar defaults to False, but wouldn't it be simpler to have a colorbar property?
-
-        # TODO: Why does this need to know this - it should only get one datagroup surely?
-        self.datagroup = datagroup
 
         self.color_axis = []
 
         if logv:
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
-
-        self.packed_data_items = packed_data_items
 
         self.assign_variables_to_x_and_y_axis()
 
@@ -84,7 +112,7 @@ class GenericPlot(object):
     def set_x_wrap_start(self, user_xmin):
 
         # FIND THE WRAP START OF THE DATA
-        data_wrap_start = find_longitude_wrap_start(self.plot_args["x_variable"], self.packed_data_items)
+        data_wrap_start = find_longitude_wrap_start(self.xaxis, self.packed_data_items)
 
         # NOW find the wrap start of the user specified range
         if user_xmin is not None:
@@ -135,7 +163,7 @@ class GenericPlot(object):
 
     def unpack_data_items(self):
         def __get_data(axis):
-            variable = self.plot_args[axis + "_variable"]
+            variable = getattr(self, axis + 'axis')
             if variable == "default" or variable == self.packed_data_items[0].name() \
                     or variable == self.packed_data_items[0].standard_name \
                     or variable == self.packed_data_items[0].long_name:
@@ -151,15 +179,14 @@ class GenericPlot(object):
                 return coord.points if isinstance(self.packed_data_items[0], Cube) else coord.data
 
         def __set_variable_as_data(axis):
-            old_variable = self.plot_args[axis + "_variable"]
-            self.plot_args[axis + "_variable"] = self.packed_data_items[0].name()
-            logging.info("Plotting " + self.plot_args[
-                axis + "_variable"] + " on the " + axis + " axis as " + old_variable + " has length 1")
+            old_variable = getattr(self, axis + 'axis')
+            setattr(self, axis + '_axis', self.packed_data_items[0].name())
+            logging.info("Plotting " + getattr(self, axis + 'axis') + " on the " + axis + " axis as " + old_variable + " has length 1")
 
         def __swap_x_and_y_variables():
-            temp = self.plot_args["x_variable"]
-            self.plot_args["x_variable"] = self.plot_args["y_variable"]
-            self.plot_args["y_variable"] = temp
+            temp = self.xaxis
+            self.xaxis = self.yaxis
+            self.yaxis = temp
 
         from cis.utils import unpack_data_object
         from iris.cube import Cube
@@ -180,7 +207,7 @@ class GenericPlot(object):
                     if x_data == y_data:
                         __swap_x_and_y_variables()
 
-        return [unpack_data_object(packed_data_item, self.plot_args["x_variable"], self.plot_args["y_variable"],
+        return [unpack_data_object(packed_data_item, self.xaxis, self.yaxis,
                                    self.x_wrap_start) for packed_data_item in self.packed_data_items]
 
     def unpack_comparative_data(self):
@@ -211,7 +238,7 @@ class GenericPlot(object):
         Works out legend labels unless explicitly given to the parser in the datagroups argument.
         """
         legend_titles = []
-        datagroups = self.plot_args["datagroups"]
+        datagroups = self.datagroups
         for i, item in enumerate(self.packed_data_items):
             if datagroups is not None and datagroups[i]["label"]:
                 legend_titles.append(datagroups[i]["label"])
@@ -234,7 +261,7 @@ class GenericPlot(object):
         new_max = c_max if max_val is None else max_val
 
         # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
-        if axis == "y" and self.plot_args["y_variable"] == "air_pressure" and min_val is None and max_val is None:
+        if axis == "y" and self.yaxis == "air_pressure" and min_val is None and max_val is None:
             new_min, new_max = new_max, new_min
 
         return new_min, new_max
@@ -244,8 +271,8 @@ class GenericPlot(object):
         Applies the limits to the specified axis if given, or calculates them otherwise
         """
 
-        self.xmin, self.xmax = self.calculate_axis_limits('x', self.plot_args['xmin'], self.plot_args['xmax'])
-        ymin, ymax = self.calculate_axis_limits('y', self.plot_args['ymin'], self.plot_args['ymax'])
+        self.xmin, self.xmax = self.calculate_axis_limits('x', self.xmin, self.xmax)
+        ymin, ymax = self.calculate_axis_limits('y', self.ymin, self.ymax)
 
         if self.is_map():
             try:
@@ -262,20 +289,20 @@ class GenericPlot(object):
         Allows specifying of tick spacing and orientation
         """
 
-        step = self.plot_args["vstep"]
+        step = self.vstep
         if step is None:
             ticks = None
         else:
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
 
-        if self.plot_args["logv"]:
+        if self.logv:
             formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
         else:
             formatter = None
         #
-        scale = self.plot_args["cbarscale"]
-        orientation = self.plot_args["cbarorient"]
+        scale = self.cbarscale
+        orientation = self.cbarorient
         if scale is None:
             default_scales = {"horizontal": 1.0, "vertical": 0.55}
             scale = default_scales.get(orientation, 1.0)
@@ -285,15 +312,15 @@ class GenericPlot(object):
         cbar = self.matplotlib.colorbar(self.color_axis[0], orientation=orientation, ticks=ticks,
                                         shrink=scale, format=formatter)
 
-        if not self.plot_args["logv"]:
+        if not self.logv:
             cbar.formatter.set_scientific(True)
             cbar.formatter.set_powerlimits((-3, 3))
             cbar.update_ticks()
 
-        if self.plot_args["cbarlabel"] is None:
+        if self.cbarlabel is None:
             label = self.format_units(self.packed_data_items[0].units)
         else:
-            label = self.plot_args["cbarlabel"]
+            label = self.cbarlabel
 
         cbar.set_label(label)
 
@@ -331,18 +358,18 @@ class GenericPlot(object):
                 # tick_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
                 # tick_kwargs['ha'] = "right"
 
-        if self.plot_args[axis + "step"] is not None:
-            step = self.plot_args[axis + "step"]
+        if getattr(self, axis + 'step') is not None:
+            step = getattr(self, axis + 'step')
 
-            if self.plot_args[axis + "min"] is None:
+            if getattr(self, axis + "min") is None:
                 min_val = min(unpacked_data_item[coord_axis].min() for unpacked_data_item in self.unpacked_data_items)
             else:
-                min_val = self.plot_args[axis + "min"]
+                min_val = getattr(self, axis + "min")
 
-            if self.plot_args[axis + "max"] is None:
+            if getattr(self, axis + "max") is None:
                 max_val = max(unpacked_data_item[coord_axis].max() for unpacked_data_item in self.unpacked_data_items)
             else:
-                max_val = self.plot_args[axis + "max"]
+                max_val = getattr(self, axis + "max")
 
             ticks = arange(min_val, max_val + step, step)
 
@@ -353,11 +380,11 @@ class GenericPlot(object):
     def format_time_axis(self):
         from cis.time_util import cis_standard_time_unit
 
-        coords = self.packed_data_items[0].coords(standard_name=self.plot_args["x_variable"])
+        coords = self.packed_data_items[0].coords(standard_name=self.xaxis)
         if len(coords) == 0:
-            coords = self.packed_data_items[0].coords(name_or_coord=self.plot_args["x_variable"])
+            coords = self.packed_data_items[0].coords(name_or_coord=self.xaxis)
         if len(coords) == 0:
-            coords = self.packed_data_items[0].coords(long_name=self.plot_args["x_variable"])
+            coords = self.packed_data_items[0].coords(long_name=self.xaxis)
 
         if len(coords) == 1:
             if coords[0].units == str(cis_standard_time_unit):
@@ -376,10 +403,10 @@ class GenericPlot(object):
         elif axis == 'y':
             item_index = 1
 
-        if self.plot_args[axislabel] is None:
+        if getattr(self, axislabel) is None:
             units = self.packed_data_items[item_index].units
             name = self.packed_data_items[item_index].name()
-            self.plot_args[axislabel] = name + " " + self.format_units(units)
+            setattr(self, axislabel, name + " " + self.format_units(units))
 
     def calc_min_and_max_vals_of_array_incl_log(self, axis, array):
         """
@@ -389,7 +416,7 @@ class GenericPlot(object):
         :param array: The array to calculate the min and max values of
         :return: The min and max values of the array
         """
-        log_axis = self.plot_args["log" + axis]
+        log_axis = getattr(self, "log" + axis)
 
         if log_axis:
             import numpy.ma as ma
@@ -427,10 +454,10 @@ class GenericPlot(object):
             return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
 
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
-        tick_angle = self.plot_args["xtickangle"]
+        tick_angle = self.xtickangle
         if tick_angle is None:
-            self.plot_args["xtickangle"] = 45
-        self.matplotlib.xticks(rotation=self.plot_args["xtickangle"], ha="right")
+            self.xtickangle = 45
+        self.matplotlib.xticks(rotation=self.xtickangle, ha="right")
         # Give extra spacing at bottom of plot due to rotated labels
         self.matplotlib.gcf().subplots_adjust(bottom=0.3)
 
@@ -441,8 +468,8 @@ class GenericPlot(object):
         Converts the fontsize argument (if specified) from a float into a dictionary that matplotlib can recognise.
         Could be further extended to allow specifying bold, and other font formatting
         """
-        if self.plot_args["fontsize"] is not None:
-                self.mplkwargs["fontsize"] = {"font.size": float(self.plot_args["fontsize"])}
+        if self.fontsize is not None:
+                self.mplkwargs["fontsize"] = {"font.size": float(self.fontsize)}
 
     def is_map(self):
         """
@@ -451,8 +478,8 @@ class GenericPlot(object):
         from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
         from cis.exceptions import CoordinateNotFoundError as cisNotFoundError
         try:
-            x = self.packed_data_items[0].coord(self.plot_args["x_variable"])
-            y = self.packed_data_items[0].coord(self.plot_args["y_variable"])
+            x = self.packed_data_items[0].coord(self.xaxis)
+            y = self.packed_data_items[0].coord(self.yaxis)
         except (cisNotFoundError, irisNotFoundError):
             return False
 
@@ -466,16 +493,16 @@ class GenericPlot(object):
         Calculates the min and max values of all the data given
         Stores the values in the matplotlib keyword args to be directly passed into the plot methods.
         """
-        vmin = self.plot_args["valrange"].get("vmin", None)
-        vmax = self.plot_args["valrange"].get("vmax", None)
+        vmin = self.vmin
+        vmax = self.vmax
 
         if vmin is None:
-            if self.plot_args.get('logv', False):
+            if self.logv:
                 vmin = min(d["data"][d["data"] > 0].min() for d in self.unpacked_data_items)
             else:
                 vmin = min(d["data"].min() for d in self.unpacked_data_items)
         if vmax is None:
-            if self.plot_args.get('logv', False):
+            if self.logv:
                 vmax = max(d["data"][d["data"] > 0].max() for d in self.unpacked_data_items)
             else:
                 vmax = max(d["data"].max() for d in self.unpacked_data_items)
@@ -491,37 +518,37 @@ class GenericPlot(object):
         """
 
         # Set the options specific to a datagroup with the contour type
-        self.mplkwargs['cmap'] = self.plot_args['datagroups'][self.datagroup]['cmap']
-        self.mplkwargs["contlabel"] = self.plot_args['datagroups'][self.datagroup]['contlabel']
-        self.mplkwargs["cfontsize"] = self.plot_args['datagroups'][self.datagroup]['contfontsize']
-        self.mplkwargs["colors"] = self.plot_args['datagroups'][self.datagroup]['color']
+        self.mplkwargs['cmap'] = self.datagroups[self.datagroup]['cmap']
+        self.mplkwargs["contlabel"] = self.datagroups[self.datagroup]['contlabel']
+        self.mplkwargs["cfontsize"] = self.datagroups[self.datagroup]['contfontsize']
+        self.mplkwargs["colors"] = self.datagroups[self.datagroup]['color']
 
-        self.mplkwargs["linewidths"] = self.plot_args['datagroups'][self.datagroup]['contwidth']
-        if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
-            self.plot_args["vmin"] = self.plot_args['datagroups'][self.datagroup]['cmin']
-        if self.plot_args['datagroups'][self.datagroup]['cmax'] is not None:
-            self.plot_args["vmax"] = self.plot_args['datagroups'][self.datagroup]['cmax']
+        self.mplkwargs["linewidths"] = self.datagroups[self.datagroup]['contwidth']
+        if self.datagroups[self.datagroup]['cmin'] is not None:
+            self.vmin = self.datagroups[self.datagroup]['cmin']
+        if self.datagroups[self.datagroup]['cmax'] is not None:
+            self.vmax = self.datagroups[self.datagroup]['cmax']
 
         self.calculate_min_and_max_values()
 
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
-        if self.plot_args["vstep"] is None and \
-                        self.plot_args['datagroups'][self.datagroup]['contnlevels'] is None:
+        if self.vstep is None and \
+                        self.datagroups[self.datagroup]['contnlevels'] is None:
             nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
-        elif self.plot_args["vstep"] is None:
-            nconts = self.plot_args['datagroups'][self.datagroup]['contnlevels']
+        elif self.vstep is None:
+            nconts = self.datagroups[self.datagroup]['contnlevels']
         else:
-            nconts = (vmax - vmin) / self.plot_args["vstep"]
+            nconts = (vmax - vmin) / self.vstep
 
-        if self.plot_args['datagroups'][self.datagroup]['contlevels'] is None:
-            if self.plot_args['logv'] is None:
+        if self.datagroups[self.datagroup]['contlevels'] is None:
+            if self.logv is None:
                 contour_level_list = np.linspace(vmin, vmax, nconts)
             else:
                 contour_level_list = np.logspace(np.log10(vmin), np.log10(vmax), nconts)
         else:
-            contour_level_list = self.plot_args['datagroups'][self.datagroup]['contlevels']
+            contour_level_list = self.datagroups[self.datagroup]['contlevels']
 
         if filled:
             contour_type = self.matplotlib.contourf
@@ -567,8 +594,8 @@ class GenericPlot(object):
         import logging
         from cis.plotting.plot import plot_options
 
-        logx = self.plot_args["logx"]
-        logy = self.plot_args["logy"]
+        logx = self.logx
+        logy = self.logy
         if logx or logy:
             self.set_log_scale(logx, logy)
         else:
@@ -577,7 +604,7 @@ class GenericPlot(object):
             except AttributeError:
                 logging.warning("Couldn't apply scientific notation to axes")
 
-        if self.plot_args["grid"]:
+        if self.grid:
             self.matplotlib.grid(True, which="both")
 
         self.set_axes_ticks(2)
@@ -634,7 +661,7 @@ class GenericPlot(object):
 
         ext = self._get_extent()
 
-        if self.plot_args["nasabluemarble"] is not False:
+        if self.nasabluemarble is not False:
             bluemarble_res = bluemarble_scales[0][1]
             for scale, res in bluemarble_scales[1:]:
                 if scale > ext:
@@ -649,8 +676,7 @@ class GenericPlot(object):
                     if scale > ext:
                         coastline_res = res
 
-                colour = self.plot_args["coastlinescolour"] if self.plot_args["coastlinescolour"] is not None else "black"
-                self.cartopy_axis.coastlines(color=colour, resolution=coastline_res)
+                self.cartopy_axis.coastlines(color=self.coastlinecolour, resolution=coastline_res)
             else:
                 logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
                                 'Check internet connectivity and try again')
@@ -662,12 +688,12 @@ class GenericPlot(object):
         from cis.plotting.plot import plot_options
         import cis.plotting.overlay
 
-        logx = self.plot_args["logx"]
-        logy = self.plot_args["logy"]
+        logx = self.logx
+        logy = self.logy
         if logx or logy:
             self.set_log_scale(logx, logy)
 
-        if self.plot_args["grid"]:
+        if self.grid:
             self.matplotlib.grid(True, which="both")
 
         if self.is_map():
@@ -680,19 +706,19 @@ class GenericPlot(object):
         self.set_default_axis_label("X")
         self.set_default_axis_label("Y")
 
-        if self.plot_args["xlabel"] is None:
-            self.plot_args["xlabel"] = ""
-        if self.plot_args["ylabel"] is None:
-            self.plot_args["ylabel"] = ""
-        if self.plot_args["title"] is None:
-            self.plot_args["title"] = self.packed_data_items[0].long_name
+        if self.xlabel is None:
+            self.xlabel = ""
+        if self.ylabel is None:
+            self.ylabel = ""
+        if self.title is None:
+            self.title = self.packed_data_items[0].long_name
 
         for key in list(plot_options.keys()):
             # Call the method associated with the option
             if key in list(self.plot_args.keys()):
                 plot_options[key](self.plot_args[key])
 
-        if not self.plot_args["nocolourbar"]:
+        if not self.nocolourbar:
             self.add_color_bar()
 
         if len(self.packed_data_items) > 1 and not isinstance(self, cis.plotting.overlay.Overlay):
@@ -709,22 +735,22 @@ class GenericPlot(object):
         axis = axis.lower()
         axislabel = axis + "label"
 
-        if self.plot_args[axislabel] is None:
+        if getattr(self, axislabel) is None:
             if self.is_map():
-                self.plot_args[axislabel] = "Longitude" if axis == "x" else "Latitude"
+                setattr(self, axislabel, "Longitude" if axis == "x" else "Latitude")
             else:
                 try:
-                    name = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).name()
+                    name = self.packed_data_items[0].coord(getattr(self, axis + 'axis')).name()
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
 
                 try:
-                    units = self.packed_data_items[0].coord(self.plot_args[axis + "_variable"]).units
+                    units = self.packed_data_items[0].coord(getattr(self, axis + 'axis')).units
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                self.plot_args[axislabel] = name + " " + self.format_units(units)
+                setattr(self, axislabel, name + " " + self.format_units(units))
 
     def format_units(self, units):
         """
@@ -757,7 +783,7 @@ class GenericPlot(object):
             y_variable = self.get_variable_name("y")
 
         if x_variable == y_variable:
-            specified_axis = "x" if self.plot_args["x_variable"] is not None else "y"
+            specified_axis = "x" if self.xaxis is not None else "y"
             not_specified_axis = "y" if specified_axis == "x" else "y"
             raise NotEnoughAxesSpecifiedError("-- {0} axis must also be specified if assigning the current {0} axis "
                                               "coordinate to the {1} axis".format(not_specified_axis, specified_axis))
@@ -772,8 +798,8 @@ class GenericPlot(object):
         else:
             logging.info("Plotting " + y_variable + " on the y axis")
 
-        self.plot_args["x_variable"] = x_variable
-        self.plot_args["y_variable"] = y_variable
+        self.xaxis = x_variable
+        self.yaxis = y_variable
 
     @staticmethod
     def name_preferring_standard(coord_item):
@@ -787,7 +813,7 @@ class GenericPlot(object):
         import cis.exceptions as cis_ex
 
         # If the user has explicitly specified what variable they want plotting on the axis
-        if self.plot_args[axis + '_variable'] is None:
+        if getattr(self, axis + 'axis') is None:
             try:
                 return self.name_preferring_standard(self.packed_data_items[0].coord(axis=axis.upper()))
             except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
@@ -804,7 +830,7 @@ class GenericPlot(object):
                         return "search:" + str(number_of_points_in_dimension)
                 return "default"
         else:
-            return self.plot_args[axis + "_variable"]
+            return getattr(self, axis + 'axis')
 
     def auto_set_ticks(self):
         """
@@ -814,8 +840,8 @@ class GenericPlot(object):
         """
         from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
-        y_variable = self.plot_args['y_variable'].lower()
-        x_variable = self.plot_args['x_variable'].lower()
+        y_variable = self.yaxis.lower()
+        x_variable = self.yaxis.lower()
 
         ymin, ymax = self.matplotlib.get_ylim()
 
@@ -826,8 +852,8 @@ class GenericPlot(object):
         max_x_bins = 9
         max_y_bins = 9
 
-        xsteps = self.plot_args['xstep']
-        ysteps = self.plot_args['ystep']
+        xsteps = self.xstep
+        ysteps = self.ystep
 
         lon_steps = [1, 3, 6, 9, 10]
         lat_steps = [1, 3, 6, 9, 10]
@@ -852,8 +878,8 @@ class GenericPlot(object):
 
         lat_or_lon = 'lat', 'lon'
 
-        if xsteps is None and not self.plot_args['logx']:
-            if self.plot_args['x_variable'].lower().startswith(lat_or_lon):
+        if xsteps is None and not self.logx:
+            if self.x_variable.lower().startswith(lat_or_lon):
                 lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
                 if self.is_map():
                     self.cartopy_axis.set_xticks(lon_locator.tick_values(xmin, xmax), crs=self.transform)
@@ -867,7 +893,7 @@ class GenericPlot(object):
                 self.matplotlib.axes().xaxis.set_minor_locator(AutoMinorLocator())
                 self.matplotlib.axes().xaxis.grid(False, which='minor')
 
-        if ysteps is None and not self.plot_args['logy']:
+        if ysteps is None and not self.logy:
             if y_variable.startswith(lat_or_lon):
                 lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
                 if self.is_map():

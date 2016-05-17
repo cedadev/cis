@@ -4,6 +4,10 @@ from cis.plotting.genericplot import GenericPlot
 class Histogram(GenericPlot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
 
+    def __init__(self, packed_data_items, xbinwidth=None, *args, **kwargs):
+        super().__init__(packed_data_items, *args, **kwargs)
+        self.xbinwidth = xbinwidth
+
     def plot(self):
         """
         Plots a 2D histogram
@@ -15,7 +19,7 @@ class Histogram(GenericPlot):
         self.mplkwargs["bins"] = self.calculate_bin_edges()
 
         for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            datafile = self.plot_args["datagroups"][i]
+            datafile = self.datagroups[i]
             if datafile["itemstyle"]:
                 if datafile["itemstyle"] in self.valid_histogram_styles:
                     self.mplkwargs["histtype"] = datafile["itemstyle"]
@@ -63,11 +67,11 @@ class Histogram(GenericPlot):
         min_val = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
         max_val = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
         data = array([min_val, max_val])
-        bin_edges = calculate_histogram_bin_edges(data, "x", self.plot_args["xmin"], self.plot_args["xmax"],
-                                                  self.plot_args["xbinwidth"], self.plot_args["logx"])
+        bin_edges = calculate_histogram_bin_edges(data, "x", self.xmin, self.xmax,
+                                                  self.xbinwidth, self.logx)
 
-        self.plot_args["xmin"] = bin_edges.min()
-        self.plot_args["xmax"] = bin_edges.max()
+        self.xmin = bin_edges.min()
+        self.xmax = bin_edges.max()
 
         return bin_edges
 
@@ -84,19 +88,19 @@ class Histogram(GenericPlot):
         axis = axis.lower()
         axislabel = axis + "label"
 
-        if self.plot_args[axislabel] is None:
+        if getattr(self, axislabel) is None:
             if axis == "x":
                 units = self.packed_data_items[0].units
 
                 if len(self.packed_data_items) == 1:
                     name = self.packed_data_items[0].name()
                     # only 1 data to plot, display
-                    self.plot_args[axislabel] = name + " " + self.format_units(units)
+                    setattr(self, axislabel, name + " " + self.format_units(units))
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
-                    self.plot_args[axislabel] = self.format_units(units)
+                    setattr(self, axislabel, self.format_units(units))
             elif axis == "y":
-                self.plot_args[axislabel] = "Frequency"
+                setattr(self, axislabel, "Frequency")
 
     def calculate_axis_limits(self, axis, min_val, max_val):
         """
@@ -122,10 +126,10 @@ class Histogram(GenericPlot):
         elif axis == "y":
             tick_method = self.matplotlib.yticks
 
-        if self.plot_args[axis + "tickangle"] is None:
+        if getattr(self, axis + "tickangle") is None:
             angle = None
         else:
-            angle = self.plot_args[axis + "tickangle"]
+            angle = getattr(self, axis + "tickangle")
 
         tick_method(rotation=angle)
 
@@ -137,6 +141,6 @@ class Histogram(GenericPlot):
         :param axis: The axis to apply the limits to
         """
         # Need to ensure that frequency starts from 0
-        self.plot_args['ymin'] = 0 if self.plot_args['ymin'] < 0 else self.plot_args['ymin']
+        self.ymin = 0 if self.ymin < 0 else self.ymin
 
         super(Histogram, self).apply_axis_limits()

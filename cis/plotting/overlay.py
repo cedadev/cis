@@ -18,36 +18,36 @@ class Overlay(GenericPlot):
 
     def plot(self):
         x_wrap_start = None
-        for i in numpy.arange(0, len(self.plot_args['datagroups'])):
+        for i in numpy.arange(0, len(self.datagroups)):
 
-            if self.plot_args['datagroups'][i]['color'] is None and self.plot_args['datagroups'][i]['cmap'] is None \
-               and self.plot_args['datagroups'][i]['type'] == 'contour':
-                self.plot_args['datagroups'][i]['color'] = "black"
+            if self.datagroups[i]['color'] is None and self.datagroups[i]['cmap'] is None \
+               and self.datagroups[i]['type'] == 'contour':
+                self.datagroups[i]['color'] = "black"
 
-            if self.plot_args['datagroups'][i]['contlabel'] is None:
+            if self.datagroups[i]['contlabel'] is None:
                 # Default to contour labels on if not filled, off if filled
-                self.plot_args['datagroups'][i]['contlabel'] = \
-                    self.plot_args['datagroups'][i]['type'] == 'contour'
+                self.datagroups[i]['contlabel'] = \
+                    self.datagroups[i]['type'] == 'contour'
 
-            if self.plot_args['datagroups'][i]['transparency'] is not None:
-                self.mplkwargs['alpha'] = 1.0 - self.plot_args['datagroups'][i]['transparency']  # change to an opacity
+            if self.datagroups[i]['transparency'] is not None:
+                self.mplkwargs['alpha'] = 1.0 - self.datagroups[i]['transparency']  # change to an opacity
 
-            if self.plot_args['datagroups'][i]['type'] == 'heatmap':
+            if self.datagroups[i]['type'] == 'heatmap':
                 p = Heatmap([self.packed_data_items[i]], self.plot_args, x_wrap_start, *self.mplargs, **self.mplkwargs)
-            elif self.plot_args['datagroups'][i]['type'] == 'contour':
+            elif self.datagroups[i]['type'] == 'contour':
                 p = ContourPlot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                                 **self.mplkwargs)
-            elif self.plot_args['datagroups'][i]['type'] == 'contourf':
+            elif self.datagroups[i]['type'] == 'contourf':
                 p = ContourfPlot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                                  **self.mplkwargs)
-            elif self.plot_args['datagroups'][i]['type'] == 'scatter':
+            elif self.datagroups[i]['type'] == 'scatter':
                 p = ScatterPlot([self.packed_data_items[i]], self.plot_args, x_wrap_start, datagroup=i, *self.mplargs,
                                 **self.mplkwargs)
             else:
                 raise InvalidPlotTypeError("Invalid or no plot type requested for overlay plot, please choose from "
                                            "heatmap, contour, contourf or scatter, for example: "
                                            "'temperature:my_data.nc:type=contourf'. Requested option was "
-                                           "'{}'.".format(self.plot_args['datagroups'][i]['type']))
+                                           "'{}'.".format(self.datagroups[i]['type']))
 
             self.color_axis.extend(p.color_axis)
 
@@ -69,20 +69,20 @@ class Overlay(GenericPlot):
         """
         from cis.plotting.formatter import LogFormatterMathtextSpecial
 
-        step = self.plot_args["vstep"]
+        step = self.vstep
         if step is None:
             ticks = None
         else:
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
 
-        if self.plot_args["logv"]:
+        if self.logv:
             formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
         else:
             formatter = None
         #
-        scale = self.plot_args["cbarscale"]
-        orientation = self.plot_args["cbarorient"]
+        scale = self.cbarscale
+        orientation = self.cbarorient
         if scale is None:
             default_scales = {"horizontal": 1.0, "vertical": 0.55}
             scale = default_scales.get(orientation, 1.0)
@@ -93,7 +93,7 @@ class Overlay(GenericPlot):
             cbar = self.matplotlib.colorbar(color_axis, orientation=orientation, ticks=ticks,
                                             shrink=scale, format=formatter)
 
-            if not self.plot_args["logv"]:
+            if not self.logv:
                 cbar.formatter.set_scientific(True)
                 cbar.formatter.set_powerlimits((-3, 3))
                 cbar.update_ticks()

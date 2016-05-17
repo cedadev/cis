@@ -7,11 +7,11 @@ from cis.plotting.genericplot import GenericPlot
 
 class Heatmap(GenericPlot):
 
-    def __init__(self, ax, packed_data_items, plot_args, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, ax, *args, **kwargs):
         # Do this here because if this is ungridded data, we won't be able to complete the super() call
         if not packed_data_items[0].is_gridded:
             raise UserPrintableException("Heatmap can only be plotted for gridded data")
-        super(Heatmap, self).__init__(ax, packed_data_items, plot_args, *mplargs, **mplkwargs)
+        super(Heatmap, self).__init__(packed_data_items, ax, *args, **kwargs)
 
     def plot(self):
         """
@@ -27,23 +27,23 @@ class Heatmap(GenericPlot):
             raise UserPrintableException("Heatmap can only be plotted for gridded data")
 
         # Set the options specific to a datagroup with the heatmap type
-        self.mplkwargs['cmap'] = self.plot_args['datagroups'][self.datagroup]['cmap']
+        self.mplkwargs['cmap'] = self.datagroups[self.datagroup]['cmap']
 
-        if self.plot_args['datagroups'][self.datagroup]['cmin'] is not None:
-            self.plot_args["vmin"] = self.plot_args['datagroups'][self.datagroup]['cmin']
-        if self.plot_args['datagroups'][self.datagroup]['cmax'] is not None:
-            self.plot_args["vmax"] = self.plot_args['datagroups'][self.datagroup]['cmax']
+        if self.datagroups[self.datagroup]['cmin'] is not None:
+            self.vmin = self.datagroups[self.datagroup]['cmin']
+        if self.datagroups[self.datagroup]['cmax'] is not None:
+            self.vmax = self.datagroups[self.datagroup]['cmax']
 
         # if self.is_map():
         #     self.mplkwargs["latlon"] = True
 
-        x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.plot_args)
+        x, y, data = make_color_mesh_cells(self.packed_data_items[0], self.xaxis, self.yaxis)
 
         self.color_axis.append(self.matplotlib.pcolormesh(x, y, data, *self.mplargs, **self.mplkwargs))
 
     def get_data_items_max(self):
         # Take into account the bounds
-        x_coord = self.packed_data_items[0].coord(self.plot_args['x_variable'])
+        x_coord = self.packed_data_items[0].coord(self.xaxis)
         if not x_coord.has_bounds():
             x_coord.guess_bounds()
         return numpy.max(x_coord.bounds)
@@ -59,7 +59,7 @@ class Heatmap(GenericPlot):
         self.format_3d_plot()
 
 
-def make_color_mesh_cells(packed_data_item, plot_args):
+def make_color_mesh_cells(packed_data_item, xvar, yvar):
     """
     Generate the correct cell corners for use with a heatmap, since heatmap doesn't take
     cell centers but cell corners
@@ -73,8 +73,8 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     import numpy as np
     import numpy.ma as ma
     data = packed_data_item.data
-    x = get_coord(packed_data_item, plot_args['x_variable'], data)
-    y = get_coord(packed_data_item, plot_args['y_variable'], data)
+    x = get_coord(packed_data_item, xvar, data)
+    y = get_coord(packed_data_item, yvar, data)
     x_dim = packed_data_item.coord_dims(x)
     y_dim = packed_data_item.coord_dims(y)
     # for coord in (x, y):

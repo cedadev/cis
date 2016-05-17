@@ -12,20 +12,20 @@ from nose.tools import eq_
 
 from cis.data_io.gridded_data import make_from_cube
 from cis.plotting.plot import Plotter
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 from cis.test.utils_for_testing import assert_arrays_equal
 from cis.plotting.heatmap import make_color_mesh_cells, Heatmap
-from cis.plotting.scatter_plot import Scatter_Plot
+from cis.plotting.scatterplot import ScatterPlot
 
 
 class TestPlotting(unittest.TestCase):
-    plot_args = {'x_variable': 'longitude',
-                 'y_variable': 'latitude',
-                 'valrange': {'vmin': 0, 'vmax': 2},
-                 'xrange': {'xmin': 0, 'xmax': 360}
-                 }
+    # plot_args = {'x_variable': 'longitude',
+    #              'y_variable': 'latitude',
+    #              'valrange': {'vmin': 0, 'vmax': 2},
+    #              'xrange': {'xmin': 0, 'xmax': 360}
+    #              }
 
-    class TestGenericPlot(Generic_Plot):
+    class TestGenericPlot(GenericPlot):
         def plot(self):
             pass
 
@@ -43,20 +43,11 @@ class TestGenericPlot(unittest.TestCase):
         """
         from mock import MagicMock
 
-        self.plot = MagicMock(Scatter_Plot)
-        self.plot.plot_args = {'x_variable': 'longitude',
-                               'y_variable': 'latitude',
-                               'valrange': {},
-                               'xrange': {'xmin': None, 'xmax': None},
-                               'datagroups': {0: {'cmap': None,
-                                                  'cmin': None,
-                                                  'cmax': None,
-                                                  'itemstyle': None,
-                                                  'edgecolor': None}},
-                               'nasabluemarble': False,
-                               'coastlinescolour': None,
-                               }
-        self.plot.set_x_wrap_start = Scatter_Plot.set_x_wrap_start
+        self.plot = MagicMock(ScatterPlot)
+        self.plot.xaxis = 'longitude'
+        self.plot.yaxis = 'latitude'
+
+        self.plot.set_x_wrap_start = ScatterPlot.set_x_wrap_start
 
     def test_GIVEN_data_range_minus_180_to_180_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
         from cis.test.util.mock import make_regular_2d_ungridded_data
@@ -130,16 +121,6 @@ class TestGenericPlot(unittest.TestCase):
 
 
 class TestHeatMap(unittest.TestCase):
-    plot_args = {'x_variable': 'longitude',
-                 'y_variable': 'latitude',
-                 'valrange': {},
-                 'xrange': {'xmin': None, 'xmax': None},
-                 'datagroups': {0: {'cmap': None,
-                                    'cmin': None,
-                                    'cmax': None}},
-                 'nasabluemarble': False,
-                 'coastlinescolour': None
-                 }
     kwargs = {}
 
     def setUp(self):
@@ -153,7 +134,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, self.plot_args)
+        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
         expected_x = np.array([[-1, 0, 1],
                                [-1, 0, 1],
                                [-1, 0, 1]])
@@ -167,7 +148,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap(self.ax, [data], self.plot_args)
+        map = Heatmap([data], self.ax)
         map.plot()
 
     def test_lat_lon_increasing_no_bounds(self):
@@ -177,7 +158,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, self.plot_args)
+        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
         expected_x = np.array([[0, 1, 2],
                                [0, 1, 2],
                                [0, 1, 2]])
@@ -191,7 +172,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap(self.ax, [data], self.plot_args)
+        map = Heatmap([data], self.ax)
         map.plot()
 
     def test_lat_lon_decreasing_no_bounds(self):
@@ -201,7 +182,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, self.plot_args)
+        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
         expected_x = np.array([[1, 0, -1],
                                [1, 0, -1],
                                [1, 0, -1]])
@@ -215,7 +196,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap(self.ax, [data], self.plot_args)
+        map = Heatmap([data], self.ax)
         map.plot()
 
     def test_wide_longitude(self):
@@ -225,7 +206,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, self.plot_args)
+        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
         x_bounds = np.arange(-179, 190, 10)
         y_bounds = np.array([50, 51, 52])
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
@@ -233,7 +214,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap(self.ax, [data], self.plot_args)
+        map = Heatmap([data], self.ax)
         map.plot()
 
     def test_longitude_0_360(self):
@@ -243,7 +224,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, self.plot_args)
+        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
         x_bounds = np.arange(0, 380, 20)
         y_bounds = np.array([50, 51, 52])
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
@@ -251,7 +232,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap(self.ax, [data], self.plot_args)
+        map = Heatmap([data], self.ax)
         map.plot()
 
     def test_longitude_0_360_one_degree(self):
@@ -261,7 +242,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, self.plot_args)
+        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
         x_bounds = np.arange(0, 361, 1)
         y_bounds = np.array([50, 51, 52])
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
@@ -269,5 +250,5 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.plot_args)
+        map = Heatmap([data])
         map.plot()
