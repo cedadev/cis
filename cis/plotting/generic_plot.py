@@ -5,8 +5,8 @@ from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 
 from cis.exceptions import CISError
 from cis.utils import find_longitude_wrap_start
-from cis.plotting.formatter import LogFormatterMathtextSpecial
-
+from .formatter import LogFormatterMathtextSpecial
+from ._auto_args_wrapper import initializer
 
 class Generic_Plot(object):
     DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
@@ -14,7 +14,8 @@ class Generic_Plot(object):
     # TODO: Remove the plot_args argument let python figure out which kwargs are named here, and which end up in
     # mplkwargs
     # TODO: Reorder these into roughly the order they are most commonly used
-    def __init__(self, ax, packed_data_items, plot_args, calculate_min_and_max_values=True, datagroup=0,
+    @initializer
+    def __init__(self, packed_data_items, ax=None, calculate_min_and_max_values=True, datagroup=0,
                  datagroups=None, nocolourbar=False, logx=False, logy=False, logv=False, xmin=None,
                  xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, vmin=None, vmax=None, vstep=None,
                  cbarorient='horizontal', grid=False, xlabel=None, ylabel=None, cbarlabel=None, title=None, fontsize=None,
@@ -48,7 +49,6 @@ class Generic_Plot(object):
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
 
-        self.plot_args = plot_args
         self.packed_data_items = packed_data_items
 
         self.assign_variables_to_x_and_y_axis()
