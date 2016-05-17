@@ -8,8 +8,7 @@ import os.path
 import logging
 
 from cis.exceptions import InvalidCommandLineOptionError
-from plotting.plot import Plotter
-from utils import add_file_prefix
+from cis.plotting.plot import Plotter
 
 
 def initialise_top_parser():
@@ -125,7 +124,7 @@ def add_plot_parser_arguments(parser):
 
     parser.add_argument("--coastlinescolour", metavar="Coastlines Colour", nargs="?",
                         help="The colour of the coastlines on a map. Any valid html colour (e.g. red)",
-                        choices=(cnames.keys() + ['grey']))
+                        choices=(list(cnames.keys()) + ['grey']))
     parser.add_argument("--nasabluemarble",
                         help="Add the NASA 'Blue Marble' image as the background to a map, instead of coastlines",
                         action='store_true')
@@ -303,7 +302,7 @@ def check_aggregate_kernel(arg, parser):
 
     aggregation_classes = plugin.find_plugin_classes(Kernel, 'cis.collocation.col_implementations')
     aggregation_names = [cls().__class__.__name__ for cls in aggregation_classes]
-    if arg in aggregation_kernels.keys() or arg in aggregation_names:
+    if arg in list(aggregation_kernels.keys()) or arg in aggregation_names:
         return arg
     else:
         parser.error(arg + " is not a valid aggregation kernel. Please use one of " + str(aggregation_names))
@@ -508,7 +507,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
 
         input_dict = {}
 
-        option = options._asdict().keys()
+        option = list(options._asdict().keys())
 
         # First deal with the comma separated compulsory arguments
         for i in range(0, compulsory_args):
@@ -691,9 +690,9 @@ def check_plot_type(plot_type, parser):
     """
 
     if plot_type is not None:
-        if plot_type not in Plotter.plot_types.keys():
+        if plot_type not in list(Plotter.plot_types.keys()):
             parser.error(
-                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(Plotter.plot_types.keys()))
+                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(list(Plotter.plot_types.keys())))
 
     return plot_type
 
@@ -731,20 +730,20 @@ def _split_output_if_includes_variable_name(arguments, parser):
 
 def _validate_output_file(arguments, parser):
     _split_output_if_includes_variable_name(arguments, parser)
-    _check_output_filepath_not_input(arguments, parser)
-    _append_file_extension_to_output_if_missing(arguments, parser, '.nc')
+    if not arguments.output.endswith('.nc'):
+        arguments.output += '.nc'
+    if _output_file_matches_an_input_file(arguments):
+        parser.error("The input file must not be the same as the output file")
 
 
-def _append_file_extension_to_output_if_missing(arguments, parser, extension):
-    if not extension:
-        parser.error("Invalid file extension: '%s'" % extension)
-    if not extension.startswith('.'):
-        extension = '.' + extension
-    if not arguments.output.endswith(extension):
-        arguments.output = arguments.output + extension
-
-
-def _check_output_filepath_not_input(arguments, parser):
+def _output_file_matches_an_input_file(arguments):
+    """
+    Checks that the output file is not also one of the input files. Uses os.path.samefile where available (not NT) or
+    falls back to comparing os.stat.
+    :param arguments: The command line arguments
+    :return: True if the output file is also an input file
+    """
+    match = False
     try:
         input_files = list(arguments.samplefiles)
     except AttributeError:
@@ -752,13 +751,14 @@ def _check_output_filepath_not_input(arguments, parser):
 
     for datagroup in arguments.datagroups:
         input_files.extend(datagroup['filenames'])
-    gridded_output_file = arguments.output + ".nc"
-    ungridded_output_file = add_file_prefix('cis-', gridded_output_file)
-    for output_file in [gridded_output_file, ungridded_output_file]:
-        for input_file in input_files:
-            if os.path.exists(output_file):
-                if os.path.samefile(output_file, input_file):
-                    parser.error("The input file must not be the same as the output file")
+    for input_file in input_files:
+        if os.path.exists(arguments.output):
+            # Windows doesn't have samefile support...
+            if (hasattr(os.path, 'samefile') and os.path.samefile(arguments.output, input_file)) or \
+                    (arguments.output == input_file and os.stat(arguments.output) == os.stat(input_file)):
+                match = True
+                break
+    return match
 
 
 def _create_attributes_dictionary(arguments, parser):

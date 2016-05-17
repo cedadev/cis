@@ -84,10 +84,10 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     x_vals = x.contiguous_bounds()
     y_vals = y.contiguous_bounds()
 
-    print x.points[0], x.points[-1]
+    print(x.points[0], x.points[-1])
     # print x.bounds[0], x.bounds[-1]
 
-    print x_vals[0], x_vals[-1]
+    print(x_vals[0], x_vals[-1])
 
     # if getattr(x, 'circular', False):
     #     data, x_vals = add_cyclic_point(data, x_vals, x_dim[0])
@@ -97,7 +97,7 @@ def make_color_mesh_cells(packed_data_item, plot_args):
     # x_vals = [b[0] for b in x.bounds] #+ [x.bounds[-1][1]]
     # y_vals = [b[0] for b in y_bounds] + [y_bounds[-1][1]]
 
-    print x_vals[0], x_vals[-1]
+    print(x_vals[0], x_vals[-1])
 
     # Get the order right
     if x_dim > y_dim:

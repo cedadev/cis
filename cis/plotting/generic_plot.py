@@ -44,7 +44,7 @@ class Generic_Plot(object):
 
         self.color_axis = []
 
-        if plot_args["logv"]:
+        if logv:
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
 
@@ -54,9 +54,8 @@ class Generic_Plot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        user_x_min = self.plot_args['xmin']
-        self.set_x_wrap_start(user_x_min)
-        self.offset_longitude = user_x_min != self.x_wrap_start
+        self.set_x_wrap_start(xmin)
+        self.offset_longitude = xmin != self.x_wrap_start
         self.unpacked_data_items = self.unpack_data_items()
 
         if calculate_min_and_max_values:
