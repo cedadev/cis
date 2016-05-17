@@ -48,10 +48,12 @@ class Plotter(object):
         :param kwargs: Any other keyword arguments received from the plotter
         """
 
-        # packed_data_items = self._remove_length_one_dimensions(packed_data_items)
-
-        if type is None:
+        if type in self.plot_types:
+            type = type
+        elif type is None:
             type = self.set_default_plot_type(data)
+        else:
+            raise ValueError("Invalid plot type, must be one of: {}".format(list(self.plot_types.keys())))
 
         # Create figure and a single axis (we assume for now not more than one 'subplot').
         self.fig, ax = plt.subplots()
@@ -100,7 +102,8 @@ class Plotter(object):
         self.fig.set_figheight(height)
         self.fig.set_figwidth(width)
 
-    def set_default_plot_type(self, data):
+    @staticmethod
+    def set_default_plot_type(data):
         """
         Sets the default plot type based on the number of dimensions of the data
         :param data: A list of packed data items
