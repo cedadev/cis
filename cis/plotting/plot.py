@@ -57,7 +57,11 @@ class Plotter(object):
         self.fig, ax = plt.subplots()
 
         self.set_width_and_height(plotwidth, plotheight)
-        ax = self.plot_types[type](data, ax=ax, *args, **kwargs)
+        plot = self.plot_types[type](data, ax=ax, *args, **kwargs)
+        plot.apply_axis_limits()
+        plot.format_plot()
+
+        plot.auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename=None):

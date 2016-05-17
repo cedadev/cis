@@ -98,13 +98,6 @@ class GenericPlot(object):
 
         self.plot()
 
-        self.apply_axis_limits()
-        self.format_plot()
-
-        self.auto_set_ticks()
-
-        return self.ax
-
     def check_data_is_2d(self):
         if len(self.packed_data_items[0].shape) > 2:
             raise CISError("Data is not 1D or 2D - can't plot it on a map.")
