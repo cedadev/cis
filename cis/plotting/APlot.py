@@ -20,6 +20,13 @@ def format_units(units):
         return ""
 
 
+def name_preferring_standard(coord_item):
+    for name in [coord_item.standard_name, coord_item.var_name, coord_item.long_name]:
+        if name:
+            return name
+    return ''
+
+
 class APlot(object):
 
     __metaclass__ = ABCMeta
@@ -146,14 +153,6 @@ class APlot(object):
         self.xaxis = x_variable
         self.yaxis = y_variable
 
-
-    @staticmethod
-    def name_preferring_standard(coord_item):
-        for name in [coord_item.standard_name, coord_item.var_name, coord_item.long_name]:
-            if name:
-                return name
-        return ''
-
     def get_variable_name(self, axis):
         import iris.exceptions as iris_ex
         import cis.exceptions as cis_ex
@@ -161,7 +160,7 @@ class APlot(object):
         # If the user has explicitly specified what variable they want plotting on the axis
         if getattr(self, axis + 'axis') is None:
             try:
-                return self.name_preferring_standard(self.packed_data_items[0].coord(axis=axis.upper()))
+                return name_preferring_standard(self.packed_data_items[0].coord(axis=axis.upper()))
             except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
                 if axis == "x":
                     number_of_points_in_dimension = self.packed_data_items[0].shape[0]
