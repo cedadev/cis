@@ -436,3 +436,14 @@ class Generic2DPlot(APlot):
         if len(self.packed_data_items[0].shape) > 2:
             raise CISError("Data is not 1D or 2D - can't plot it on a map.")
 
+    def set_x_wrap_start(self, user_xmin):
+        from cis.utils import find_longitude_wrap_start
+
+        # FIND THE WRAP START OF THE DATA
+        data_wrap_start = find_longitude_wrap_start(self.xaxis, self.packed_data_items)
+
+        # NOW find the wrap start of the user specified range
+        if user_xmin is not None:
+            self.x_wrap_start = -180 if user_xmin < 0 else 0
+        else:
+            self.x_wrap_start = data_wrap_start

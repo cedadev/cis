@@ -3,8 +3,6 @@ from abc import abstractmethod, ABCMeta
 
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 
-from cis.utils import find_longitude_wrap_start
-
 
 def format_units(units):
     """
@@ -88,8 +86,6 @@ class APlot(object):
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        self.set_x_wrap_start(xmin)
-        self.offset_longitude = xmin != self.x_wrap_start
         self.unpacked_data_items = self.unpack_data_items()
 
         self.plot()
@@ -252,23 +248,6 @@ class APlot(object):
             if not self.is_map():
                 self.matplotlib.axes().yaxis.set_minor_locator(AutoMinorLocator())
                 self.matplotlib.axes().yaxis.grid(False, which='minor')
-
-    def set_x_wrap_start(self, user_xmin):
-        # FIND THE WRAP START OF THE DATA
-        data_wrap_start = find_longitude_wrap_start(self.xaxis, self.packed_data_items)
-
-        # NOW find the wrap start of the user specified range
-        if user_xmin is not None:
-            self.x_wrap_start = -180 if user_xmin < 0 else 0
-        else:
-            self.x_wrap_start = data_wrap_start
-
-    def get_data_items_max(self):
-        import numpy as np
-        data_max = np.nanmax(self.unpacked_data_items[0]['x'])
-        for i in self.unpacked_data_items:
-            data_max = max([np.nanmax(i["x"]), data_max])
-        return data_max
 
     def unpack_data_items(self):
         def __get_data(axis):
