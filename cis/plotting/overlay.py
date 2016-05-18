@@ -1,8 +1,7 @@
 from cis.exceptions import InvalidPlotTypeError
 from cis.plotting.genericplot import GenericPlot
 from cis.plotting.heatmap import Heatmap
-from cis.plotting.contourplot import ContourPlot
-from cis.plotting.contourfplot import ContourfPlot
+from cis.plotting.contourplot import ContourPlot, ContourfPlot
 from cis.plotting.scatterplot import ScatterPlot
 
 import numpy

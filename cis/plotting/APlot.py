@@ -18,13 +18,6 @@ def format_units(units):
         return ""
 
 
-def name_preferring_standard(coord_item):
-    for name in [coord_item.standard_name, coord_item.var_name, coord_item.long_name]:
-        if name:
-            return name
-    return ''
-
-
 def calc_min_and_max_vals_of_array_incl_log(array, log=False):
     """
     Calculates the min and max values of a given array.
@@ -51,12 +44,8 @@ class APlot(object):
 
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
-    def __init__(self, packed_data_items, ax=None, datagroup=0,
-                 datagroups=None, logx=False, logy=False, xmin=None,
-                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None,
-                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None,
-                 itemwidth=1, xtickangle=None, ytickangle=None,
-                 xaxis=None, yaxis=None, *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, ax, xaxis, yaxis, color=None,
+                 edgecolor=None, itemstyle=None, label=None, *mplargs, **mplkwargs):
         """
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -72,43 +61,19 @@ class APlot(object):
 
         self.packed_data_items = packed_data_items
 
-        if ax is None:
-            _, self.ax = plt.subplots()
-        else:
-            self.ax = ax
+        self.ax = ax
 
-        self.datagroup = datagroup
-        self.datagroups = datagroups
-        self.logx = logx
-        self.logy = logy
-        self.xmin = xmin
-        self.xmax = xmax
-        self.xstep = xstep
-        self.ymin = ymin
-        self.ymax = ymax
-        self.ystep = ystep
-        self.grid = grid
-        self.xlabel = xlabel
-        self.ylabel = ylabel
-        self.title = title
-        self.fontsize = fontsize
-        self.itemwidth = itemwidth
-        self.xtickangle = xtickangle
-        self.ytickangle = ytickangle
         self.xaxis = xaxis
         self.yaxis = yaxis
+        self.color = color
+        self.label = label
+        self.edgecolor = edgecolor
+        self.itemstyle = itemstyle
 
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs
 
         self.color_axis = []
-
-        self.assign_variables_to_x_and_y_axis()
-
-        logging.debug("Unpacking the data items")
-        self.unpacked_data_items = self.unpack_data_items()
-
-        self.plot()
 
 
     @abstractmethod
@@ -132,66 +97,6 @@ class APlot(object):
         :param axis: The axis of which to set the default label for. Either "x" or "y".
         """
         pass
-
-    def assign_variables_to_x_and_y_axis(self):
-        """
-        Overwrites which variable to used for the x and y axis
-        Does not work for Iris Cubes
-        :param main_arguments: The arguments received from the parser
-        :param data: A list of packed data objects
-        """
-        import logging
-        from cis.exceptions import NotEnoughAxesSpecifiedError
-
-        x_variable = self.get_variable_name("x")
-
-        if x_variable.lower().endswith('time') and len(self.packed_data_items) > 1:
-            y_variable = 'default'
-        else:
-            y_variable = self.get_variable_name("y")
-
-        if x_variable == y_variable:
-            specified_axis = "x" if self.xaxis is not None else "y"
-            not_specified_axis = "y" if specified_axis == "x" else "y"
-            raise NotEnoughAxesSpecifiedError("-- {0} axis must also be specified if assigning the current {0} axis "
-                                              "coordinate to the {1} axis".format(not_specified_axis, specified_axis))
-
-        if "search" in x_variable:
-            logging.info("Plotting unknown on the x axis")
-        else:
-            logging.info("Plotting " + x_variable + " on the x axis")
-
-        if "search" in y_variable:
-            logging.info("Plotting unknown on the y axis")
-        else:
-            logging.info("Plotting " + y_variable + " on the y axis")
-
-        self.xaxis = x_variable
-        self.yaxis = y_variable
-
-    def get_variable_name(self, axis):
-        import iris.exceptions as iris_ex
-        import cis.exceptions as cis_ex
-
-        # If the user has explicitly specified what variable they want plotting on the axis
-        if getattr(self, axis + 'axis') is None:
-            try:
-                return name_preferring_standard(self.packed_data_items[0].coord(axis=axis.upper()))
-            except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-                if axis == "x":
-                    number_of_points_in_dimension = self.packed_data_items[0].shape[0]
-                elif axis == "y":
-                    if len(self.packed_data_items[0].shape) > 1:
-                        number_of_points_in_dimension = self.packed_data_items[0].shape[1]
-                    else:
-                        return "default"
-
-                for coord in self.packed_data_items[0].coords():
-                    if coord.shape[0] == number_of_points_in_dimension:
-                        return "search:" + str(number_of_points_in_dimension)
-                return "default"
-        else:
-            return getattr(self, axis + 'axis')
 
     def auto_set_ticks(self):
         """
@@ -288,7 +193,7 @@ class APlot(object):
 
         def __set_variable_as_data(axis):
             old_variable = getattr(self, axis + 'axis')
-            setattr(self, axis + '_axis', self.packed_data_items[0].name())
+            setattr(self, axis + 'axis', self.packed_data_items[0].name())
             logging.info("Plotting " + getattr(self,
                                                axis + 'axis') + " on the " + axis + " axis as " + old_variable + " has length 1")
 
@@ -436,9 +341,8 @@ class APlot(object):
 
         if len(coords) == 1:
             if coords[0].units == str(cis_standard_time_unit):
-                self.matplotlib.xaxis_date()
+                self.ax.xaxis_date()
                 # self.set_x_axis_as_time()
-
 
     def set_x_axis_as_time(self):
         from matplotlib import ticker
@@ -483,22 +387,7 @@ class APlot(object):
         if self.fontsize is not None:
             self.mplkwargs["fontsize"] = {"font.size": float(self.fontsize)}
 
-    def is_map(self):
-        """
-        :return: A boolean saying if the first packed data item contains lat and lon coordinates
-        """
-        from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
-        from cis.exceptions import CoordinateNotFoundError as cisNotFoundError
-        try:
-            x = self.packed_data_items[0].coord(self.xaxis)
-            y = self.packed_data_items[0].coord(self.yaxis)
-        except (cisNotFoundError, irisNotFoundError):
-            return False
 
-        if x.name().lower().startswith("lon") and y.name().lower().startswith("lat"):
-            return True
-        else:
-            return False
 
     def set_log_scale(self, logx, logy):
         """

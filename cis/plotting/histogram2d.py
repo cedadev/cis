@@ -25,9 +25,9 @@ class Histogram2D(Generic2DPlot):
             ybins = self.calculate_bin_edges("y")
 
             # All bins that have count less than cmin will not be displayed
-            cmin = self.vmin
+            cmin = vmin
             # All bins that have count more than cmax will not be displayed
-            cmax = self.vmax
+            cmax = vmax
 
             # Add y=x line
             min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())

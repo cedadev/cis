@@ -315,32 +315,19 @@ def fix_longitude_range(lons, range_start):
     return wrap_lons(lons, range_start, 360)
 
 
-def find_longitude_wrap_start(x_variable, packed_data_items):
+def find_longitude_wrap_start(packed_data_items):
     """
     ONLY WORK OUT THE WRAP START OF THE DATA
-    :param x_variable:
-    :param x_range:
     :param packed_data_items:
     :return:
     """
     from iris.exceptions import CoordinateNotFoundError
-    x_wrap_start = None
-    x_points_mins = []
-    x_points_maxs = []
-    for data_object in packed_data_items:
-        try:
-            coord = data_object.coord(x_variable)
-            x_axis_name = guess_coord_axis(coord)
-        except CoordinateNotFoundError:
-            x_axis_name = None
-        if x_axis_name == 'X':
-            x_points_mins.append(np.min(coord.points))
-            x_points_maxs.append(np.max(coord.points))
-
-    if len(x_points_mins) > 0:
-        x_points_min = min(x_points_mins)
-        x_points_max = max(x_points_maxs)
-
+    # They either all have longitude coordinates in, or none of them do.
+    try:
+        x_points_min = min([d.get_coord('longitude').points.min() for d in packed_data_items])
+    except CoordinateNotFoundError:
+        x_wrap_start = None
+    else:
         x_wrap_start = -180 if x_points_min < 0 else 0
 
     return x_wrap_start
@@ -720,21 +707,6 @@ def dimensions_compatible(dimensions, other_dimensions):
         if not dim == other_dim:
             return False
     return True
-
-
-def set_cube_standard_name_if_valid(cube, standard_name):
-    """
-    Set a cube's standard name if it is a valid CF compliant name, otherwise set it to None
-
-    :param cube: Cube to set standard name on
-    :param standard_name: Standard name to set
-    :return:
-    """
-    try:
-        cube.standard_name = standard_name
-    except ValueError:
-        # If the standard name is not valid CF compliant standard name
-        cube.standard_name = None
 
 
 def deprecated(func):

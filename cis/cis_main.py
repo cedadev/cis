@@ -74,8 +74,10 @@ def plot_cmd(main_arguments):
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
+    layer_opts = [{k: v for k, v in d if k not in ['variable', 'filenames', 'product']}
+                  for d in main_arguments.pop('datagroups')]
     try:
-        Plotter(data, plot_type, output, **main_arguments)
+        Plotter(data, plot_type, output, layer_opts, **main_arguments)
     except MemoryError:
         __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
                          "of data to be plotted, increase the swap space available on your machine or use a machine "

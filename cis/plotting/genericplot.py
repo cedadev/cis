@@ -11,6 +11,17 @@ from .formatter import LogFormatterMathtextSpecial
 
 class GenericPlot(APlot):
 
+    def __init__(self, packed_data_items, *mplargs, **mplkwargs):
+        super().__init__(packed_data_items, *mplargs, **mplkwargs)
+
+        logging.debug("Unpacking the data items")
+        # TODO: Drop one of self.unpacked_data_items or self.packed_data_items
+        # If I drop the unpacked then I'll need to store the x and y coords somewhere and worry about the cube transforms,
+        #  if I drop the packed items then I'll need to store the metadata somewhere (units, axis labels etc).
+        self.unpacked_data_items = self.unpack_data_items()
+
+        self.plot()
+
     def format_plot(self):
         """
         Used by 2d subclasses to format the plot
@@ -54,12 +65,8 @@ class Generic2DPlot(APlot):
 
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
-    def __init__(self, packed_data_items, ax=None, calculate_min_and_max_values=True, datagroup=0, datagroups=None,
-                 nocolourbar=False, logx=False, logy=False, logv=False, xmin=None, xmax=None, xstep=None, ymin=None,
-                 ymax=None, ystep=None, vmin=None, vmax=None, vstep=None, cbarorient='horizontal', grid=False,
-                 xlabel=None, ylabel=None, cbarlabel=None, title=None, fontsize=None, itemwidth=1, xtickangle=None,
-                 ytickangle=None, coastlinecolour='k', nasabluemarble=False, xaxis=None, yaxis=None, cbarscale=None,
-                 *mplargs, **mplkwargs):
+    def __init__(self, packed_data_items, ax=None, logv=False, vmin=None, vmax=None, vstep=None,
+                 transparency=None, cmap=None, cmin=None, cmax=None, x_wrap_start=None, *args, **kwargs):
         """
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -72,83 +79,32 @@ class Generic2DPlot(APlot):
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
-        super().__init__(packed_data_items, ax, datagroup, datagroups, logx, logy, xmin,
-                         xmax, xstep, ymin, ymax, ystep, grid, xlabel, ylabel, title, fontsize, itemwidth, xtickangle,
-                         ytickangle, xaxis, yaxis, *mplargs, **mplkwargs)
-        import matplotlib.pyplot as plt
+        super().__init__(packed_data_items, ax, *args, **kwargs)
 
-        self.packed_data_items = packed_data_items
-
-        if ax is None:
-            _, self.ax = plt.subplots()
-        else:
-            self.ax = ax
-
-        self.datagroup = datagroup
-        self.datagroups = datagroups
-        self.nocolourbar = nocolourbar
-        self.logx = logx
-        self.logy = logy
         self.logv = logv
-        self.xmin = xmin
-        self.xmax = xmax
-        self.xstep = xstep
-        self.ymin = ymin
-        self.ymax = ymax
-        self.ystep = ystep
         self.vmin = vmin
         self.vmax = vmax
         self.vstep = vstep
-        self.cbarorient = cbarorient
-        self.grid = grid
-        self.xlabel = xlabel
-        self.ylabel = ylabel
-        self.cbarlabel = cbarlabel
-        self.title = title
-        self.fontsize = fontsize
-        self.itemwidth = itemwidth
-        self.xtickangle = xtickangle
-        self.ytickangle = ytickangle
-        self.coastlinecolour = coastlinecolour
-        self.nasabluemarble = nasabluemarble
-        self.xaxis = xaxis
-        self.yaxis = yaxis
-        self.cbarscale = cbarscale
 
-        self.mplargs = mplargs
-        self.mplkwargs = mplkwargs
+        self.cmin = cmin
+        self.cmax = cmax
+        self.cmap = cmap
+        self.transparency = transparency
 
-        self.color_axis = []
-
-        if logv:
+        if self.logv:
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
 
         self.assign_variables_to_x_and_y_axis()
 
         logging.debug("Unpacking the data items")
-        self.set_x_wrap_start(xmin)
-        self.offset_longitude = xmin != self.x_wrap_start
+        self.x_wrap_start = x_wrap_start
         self.unpacked_data_items = self.unpack_data_items()
 
-        if calculate_min_and_max_values:
-            self.calculate_min_and_max_values()
-
-        if self.is_map():
-            self.setup_map()
-            self.check_data_is_2d()
+        self.mplkwargs["vmin"], self.mplkwargs["vmax"] = self.calculate_min_and_max_values()
 
         self.plot()
 
-    def setup_map(self):
-        import cartopy.crs as ccrs
-
-        # The projection of the data gets offset
-        self.projection = ccrs.PlateCarree(central_longitude=(self.x_wrap_start + 180.0))
-        # But not the transform...
-        self.transform = ccrs.PlateCarree()
-        self.cartopy_axis = self._replace_axes_with_cartopy_axes(self.ax, self.projection)
-        self.mplkwargs['transform'] = self.transform
 
     @staticmethod
     def _replace_axes_with_cartopy_axes(ax, projection):
@@ -306,89 +262,19 @@ class Generic2DPlot(APlot):
                 # in general, display both name and units in brackets
                 setattr(self, axislabel, name + " " + format_units(units))
 
-    def contour_plot(self, filled):
-        """
-        Used by both contour and contourf to plot a contour plot
-        :param filled: A boolean specifying whether or not the contour plot should be filled
-        """
-
-        # Set the options specific to a datagroup with the contour type
-        self.mplkwargs['cmap'] = self.datagroups[self.datagroup]['cmap']
-        self.mplkwargs["contlabel"] = self.datagroups[self.datagroup]['contlabel']
-        self.mplkwargs["cfontsize"] = self.datagroups[self.datagroup]['contfontsize']
-        self.mplkwargs["colors"] = self.datagroups[self.datagroup]['color']
-
-        self.mplkwargs["linewidths"] = self.datagroups[self.datagroup]['contwidth']
-        if self.datagroups[self.datagroup]['cmin'] is not None:
-            self.vmin = self.datagroups[self.datagroup]['cmin']
-        if self.datagroups[self.datagroup]['cmax'] is not None:
-            self.vmax = self.datagroups[self.datagroup]['cmax']
-
-        self.calculate_min_and_max_values()
-
-        vmin = self.mplkwargs.pop("vmin")
-        vmax = self.mplkwargs.pop("vmax")
-
-        if self.vstep is None and \
-                        self.datagroups[self.datagroup]['contnlevels'] is None:
-            nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
-        elif self.vstep is None:
-            nconts = self.datagroups[self.datagroup]['contnlevels']
-        else:
-            nconts = (vmax - vmin) / self.vstep
-
-        if self.datagroups[self.datagroup]['contlevels'] is None:
-            if self.logv is None:
-                contour_level_list = np.linspace(vmin, vmax, nconts)
-            else:
-                contour_level_list = np.logspace(np.log10(vmin), np.log10(vmax), nconts)
-        else:
-            contour_level_list = self.datagroups[self.datagroup]['contlevels']
-
-        if filled:
-            contour_type = self.matplotlib.contourf
-        else:
-            contour_type = self.matplotlib.contour
-
-        if self.is_map() and self.unpacked_data_items[0]["data"].ndim == 2:
-            # This fails for an unknown reason on one dimensional data
-            self.mplkwargs["latlon"] = True
-
-        self.color_axis.append(contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
-                                       self.unpacked_data_items[0]["data"], contour_level_list, *self.mplargs, **self.mplkwargs))
-        if self.mplkwargs["contlabel"] and not filled:
-            self.matplotlib.clabel(self.color_axis[0], fontsize=self.mplkwargs["cfontsize"], inline=1, fmt='%.3g')
-        elif self.mplkwargs["contlabel"] and filled:
-            self.matplotlib.clabel(self.color_axis[0], fontsize=self.mplkwargs["cfontsize"], inline=0, fmt='%.3g')
-
-        self.mplkwargs.pop("latlon", None)
-        self.mplkwargs.pop("tri", None)
-
-        self.mplkwargs["vmin"] = vmin
-        self.mplkwargs["vmax"] = vmax
-
     def calculate_min_and_max_values(self):
         """
         Calculates the min and max values of all the data given
         Stores the values in the matplotlib keyword args to be directly passed into the plot methods.
         """
-        vmin = self.vmin
-        vmax = self.vmax
+        from .APlot import calc_min_and_max_vals_of_array_incl_log
 
-        if vmin is None:
-            if self.logv:
-                vmin = min(d["data"][d["data"] > 0].min() for d in self.unpacked_data_items)
-            else:
-                vmin = min(d["data"].min() for d in self.unpacked_data_items)
-        if vmax is None:
-            if self.logv:
-                vmax = max(d["data"][d["data"] > 0].max() for d in self.unpacked_data_items)
-            else:
-                vmax = max(d["data"].max() for d in self.unpacked_data_items)
+        data_min, data_max = calc_min_and_max_vals_of_array_incl_log(self.data)
 
-        # TODO: This should really just return the values, and let the calling function put them where they want.
-        self.mplkwargs["vmin"] = float(vmin)
-        self.mplkwargs["vmax"] = float(vmax)
+        vmin = self.vmin if self.vmin is not None else data_min
+        vmax = self.vmax if self.vmax is not None else data_max
+
+        return vmin, vmax
 
     def add_color_bar(self):
         """
@@ -432,18 +318,3 @@ class Generic2DPlot(APlot):
 
         cbar.set_label(label)
 
-    def check_data_is_2d(self):
-        if len(self.packed_data_items[0].shape) > 2:
-            raise CISError("Data is not 1D or 2D - can't plot it on a map.")
-
-    def set_x_wrap_start(self, user_xmin):
-        from cis.utils import find_longitude_wrap_start
-
-        # FIND THE WRAP START OF THE DATA
-        data_wrap_start = find_longitude_wrap_start(self.xaxis, self.packed_data_items)
-
-        # NOW find the wrap start of the user specified range
-        if user_xmin is not None:
-            self.x_wrap_start = -180 if user_xmin < 0 else 0
-        else:
-            self.x_wrap_start = data_wrap_start
