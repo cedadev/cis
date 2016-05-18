@@ -1,7 +1,9 @@
-from cis.plotting.genericplot import GenericPlot
+from cis.plotting.genericplot import GenericPlot, Generic2DPlot
+from cis.plotting.APlot import APlot
 
 
-class ScatterPlot(GenericPlot):
+# TODO: The generic scatter shouldn't have any of the if 2D stuff in...
+class GenericScatter(APlot):
     def plot(self):
         """
         Plots one or many scatter plots
@@ -77,13 +79,6 @@ class ScatterPlot(GenericPlot):
 
         return new_min, new_max
 
-    def format_plot(self):
-        self.format_time_axis()
-        if self.scatter_type == "3D":
-            self.format_3d_plot()
-        elif self.scatter_type == "2D":
-            self.format_2d_plot()
-
     def set_default_axis_label(self, axis):
         import cis.exceptions as cisex
         import iris.exceptions as irisex
@@ -121,3 +116,11 @@ class ScatterPlot(GenericPlot):
                 legend_titles.append(item.long_name)
         legend = self.matplotlib.legend(self.color_axis, legend_titles, loc="best", scatterpoints=1)
         legend.draggable(state=True)
+
+
+class ScatterPlot(GenericScatter, GenericPlot):
+    pass
+
+
+class ScatterPlot2D(GenericScatter, Generic2DPlot):
+    pass
