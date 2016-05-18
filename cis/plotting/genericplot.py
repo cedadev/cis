@@ -9,6 +9,68 @@ from .formatter import LogFormatterMathtextSpecial
 # obviously static methods. and split files. This should make the classes more manageable and easier to test.
 
 
+def set_yaxis_ticks(ax, step=None, tickangle=None, transform=None):
+    from cartopy.mpl.ticker import LatitudeFormatter
+    from cartopy.mpl.geoaxes import GeoAxes
+    from numpy import arange
+
+    tick_kwargs = {}
+
+    if isinstance(ax, GeoAxes):
+        ax.yaxis.set_major_formatter(LatitudeFormatter())
+        tick_kwargs['crs'] = transform
+
+    if tickangle is None:
+        tick_kwargs['ha'] = "right"
+    else:
+        tick_kwargs['rotation'] = tickangle
+        tick_kwargs['ha'] = "right"
+
+    if step is not None:
+        min_val, max_val = ax.get_ylim()
+        ticks = arange(min_val, max_val + step, step)
+
+        ax.set_yticks(ticks, **tick_kwargs)
+    elif tick_kwargs:
+        ax.set_yticks(**tick_kwargs)
+
+
+def set_xaxis_ticks(ax, step=None, tickangle=None, transform=None):
+    from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+    from cartopy.mpl.geoaxes import GeoAxes
+    from numpy import arange
+
+    tick_kwargs = {}
+
+    if isinstance(ax, GeoAxes):
+        ax.xaxis.set_major_formatter(LongitudeFormatter())
+        tick_kwargs['crs'] = transform
+
+    if tickangle is None:
+        tick_kwargs['ha'] = "center"
+    else:
+        tick_kwargs['rotation'] = tickangle
+        tick_kwargs['ha'] = "right"
+
+    if step is not None:
+        min_val, max_val = ax.get_xlim()
+        ticks = arange(min_val, max_val + step, step)
+
+        ax.set_xticks(ticks, **tick_kwargs)
+    elif tick_kwargs:
+        ax.set_xticks(**tick_kwargs)
+
+
+def scale_axis(ax, axis, log):
+    if log:
+        setattr(ax, 'set_{}scale'.format(axis), "log")
+    else:
+        try:
+            ax.ticklabel_format(style='sci', scilimits=(-3, 3), axis=axis)
+        except AttributeError:
+            logging.warning("Couldn't apply scientific notation to {} axes".format(axis))
+
+
 class GenericPlot(APlot):
 
     def __init__(self, packed_data_items, *mplargs, **mplkwargs):
@@ -20,44 +82,39 @@ class GenericPlot(APlot):
         #  if I drop the packed items then I'll need to store the metadata somewhere (units, axis labels etc).
         self.unpacked_data_items = self.unpack_data_items()
 
+        self.mplkwargs['label'] = self.label or packed_data_items.longname
+
         self.plot()
 
     @staticmethod
-    def format_plot(self):
+    def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title, transform=None, legend=False):
         """
         Used by 2d subclasses to format the plot
         """
-        import logging
-        from cis.plotting.plot import plot_options
+        import matplotlib
 
-        logx = self.logx
-        logy = self.logy
-        if logx or logy:
-            self.set_log_scale(logx, logy)
-        else:
-            try:
-                self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
-            except AttributeError:
-                logging.warning("Couldn't apply scientific notation to axes")
+        scale_axis(ax, 'x', logx)
+        scale_axis(ax, 'y', logy)
 
-        if self.grid:
-            self.matplotlib.grid(True, which="both")
+        if grid:
+            ax.grid(True, which="both")
 
-        self.set_axes_ticks(2)
+        set_xaxis_ticks(ax, xstep, xtickangle, transform)
+        set_yaxis_ticks(ax, ystep, ytickangle, transform)
 
-        self.set_font_size()
+        if fontsize is not None:
+            matplotlib.rcParams.update({'font.size': fontsize})
 
         # If any of the options have not been specified, then use the defaults
-        self.set_default_axis_label("X")
-        self.set_default_axis_label("Y")
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
-        for key in list(plot_options.keys()):
-            # Call the method associated with the option
-            if key in list(self.plot_args.keys()) and self.plot_args[key] is not None:
-                plot_options[key](self.plot_args[key])
+        ax.set_title(title)
 
-        if len(self.packed_data_items) > 1:
-            self.create_legend()
+        if legend:
+            legend = ax.legend(loc="best")
+            legend.draggable(state=True)
+
 
 
 class Generic2DPlot(APlot):
@@ -163,79 +220,41 @@ class Generic2DPlot(APlot):
                                 'Check internet connectivity and try again')
 
     @staticmethod
-    def format_plot(self):
+    def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title, transform=None, legend=False):
         """
         Used by 3d subclasses to format the plot
         """
-        from cis.plotting.plot import plot_options
-        import cis.plotting.overlay
+        import matplotlib
 
         self.format_time_axis()
 
-        logx = self.logx
-        logy = self.logy
-        if logx or logy:
-            self.set_log_scale(logx, logy)
+        if logx:
+            ax.set_xscale("log")
+        if logy:
+            ax.set_yscale("log")
 
-        if self.grid:
-            self.matplotlib.grid(True, which="both")
+        if grid:
+            ax.grid(True, which="both")
 
         if self.is_map():
             self.drawcoastlines()
 
-        self.set_axes_ticks(3)
+        set_xaxis_ticks(ax, xstep, xtickangle, transform)
+        set_yaxis_ticks(ax, ystep, ytickangle, transform)
 
-        self.set_font_size()
+        if fontsize is not None:
+            matplotlib.rcParams.update({'font.size': fontsize})
+
         # If any of the options have not been specified, then use the defaults
-        self.set_default_axis_label("X")
-        self.set_default_axis_label("Y")
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
-        if self.xlabel is None:
-            self.xlabel = ""
-        if self.ylabel is None:
-            self.ylabel = ""
-        if self.title is None:
-            self.title = self.packed_data_items[0].long_name
+        ax.set_title(title)
 
-        for key in list(plot_options.keys()):
-            # Call the method associated with the option
-            if key in list(self.plot_args.keys()):
-                plot_options[key](self.plot_args[key])
+        if legend:
+            legend = ax.legend(loc="best")
+            legend.draggable(state=True)
 
-        if not self.nocolourbar:
-            self.add_color_bar()
-
-        if len(self.packed_data_items) > 1 and not isinstance(self, cis.plotting.overlay.Overlay):
-            self.create_legend()
-
-    def set_default_axis_label(self, axis):
-        """
-        Used by 3d plots to calculate the default axis label.
-        Uses Latitude or Longitude if a map is being plotted
-        :param axis: The axis to calculate the default label for
-        """
-        import cis.exceptions as cisex
-        import iris.exceptions as irisex
-        from .APlot import format_units
-        axis = axis.lower()
-        axislabel = axis + "label"
-
-        if getattr(self, axislabel) is None:
-            if self.is_map():
-                setattr(self, axislabel, "Longitude" if axis == "x" else "Latitude")
-            else:
-                try:
-                    name = self.packed_data_items[0].coord(getattr(self, axis + 'axis')).name()
-                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                    name = self.packed_data_items[0].name()
-
-                try:
-                    units = self.packed_data_items[0].coord(getattr(self, axis + 'axis')).units
-                except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                    units = self.packed_data_items[0].units
-
-                # in general, display both name and units in brackets
-                setattr(self, axislabel, name + " " + format_units(units))
 
     def calculate_min_and_max_values(self):
         """
@@ -251,45 +270,42 @@ class Generic2DPlot(APlot):
 
         return vmin, vmax
 
-    def add_color_bar(self):
+    @staticmethod
+    def add_color_bar(fig, mappable, cbarorient, cbarscale, cbarlabel, logv, vstep):
         """
         Adds a colour bar to a plot
         Allows specifying of tick spacing and orientation
         """
         from .APlot import format_units
+        from matplotlib.colorbar import ColorbarBase
 
-        step = self.vstep
+        step = vstep
         if step is None:
             ticks = None
         else:
             from matplotlib.ticker import MultipleLocator
             ticks = MultipleLocator(step)
 
-        if self.logv:
+        if logv:
             formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
         else:
             formatter = None
         #
-        scale = self.cbarscale
-        orientation = self.cbarorient
+        scale = cbarscale
+        orientation = cbarorient
         if scale is None:
             default_scales = {"horizontal": 1.0, "vertical": 0.55}
             scale = default_scales.get(orientation, 1.0)
         else:
             scale = float(scale)
 
-        cbar = self.matplotlib.colorbar(self.color_axis[0], orientation=orientation, ticks=ticks,
+        cbar = fig.colorbar(mappable, orientation=orientation, ticks=ticks,
                                         shrink=scale, format=formatter)
 
-        if not self.logv:
+        if not logv:
             cbar.formatter.set_scientific(True)
             cbar.formatter.set_powerlimits((-3, 3))
             cbar.update_ticks()
 
-        if self.cbarlabel is None:
-            label = format_units(self.packed_data_items[0].units)
-        else:
-            label = self.cbarlabel
-
-        cbar.set_label(label)
+        cbar.set_label(cbarlabel)
 

@@ -41,20 +41,18 @@ class ComparativeScatter(GenericPlot):
     def unpack_data_items(self):
         return self.unpack_comparative_data()
 
-    def set_default_axis_label(self, axis):
+    @staticmethod
+    def guess_axis_label(data, axisvar=None, axis=None):
         """
         Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
         :param axis: The axis to set the default label for
         """
         from .APlot import format_units
-        axis = axis.lower()
-        axislabel = axis + "label"
-        if axis == 'x':
+        if axis.lower() == 'x':
             item_index = 0
-        elif axis == 'y':
+        elif axis.lower() == 'y':
             item_index = 1
 
-        if getattr(self, axislabel) is None:
-            units = self.packed_data_items[item_index].units
-            name = self.packed_data_items[item_index].name()
-            setattr(self, axislabel, name + " " + format_units(units))
+        units = data[item_index].units
+        name = data[item_index].name()
+        return name + " " + format_units(units)

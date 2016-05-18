@@ -60,7 +60,7 @@ class Overlay(GenericPlot):
         self.matplotlib.gcf().delaxes(self.matplotlib.gcf().axes[-1])
         self.add_color_bar()
 
-    def set_default_axis_label(self, axis):
+    def guess_axis_label(self, axis):
         self.set_3daxis_label(axis)
 
     def add_color_bar(self):

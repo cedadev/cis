@@ -83,33 +83,21 @@ class Histogram2D(Generic2DPlot):
 
         return bin_edges
 
-    def format_plot(self):
-        self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
-        super().format_plot()
-
-    def set_default_axis_label(self, axis):
+    @staticmethod
+    def guess_axis_label(data, axisvar=None, axis=None):
         """
         Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
         :param axis: The axis to set the default label for
         """
         from .APlot import format_units
-        axis = axis.lower()
-        axislabel = axis + "label"
-        if axis == 'x':
+        if axis.lower() == 'x':
             item_index = 0
-        elif axis == 'y':
+        elif axis.lower() == 'y':
             item_index = 1
 
-        if getattr(self, axislabel) is None:
-            units = self.packed_data_items[item_index].units
-            name = self.packed_data_items[item_index].name()
-            setattr(self, axislabel, name + " " + format_units(units))
-
-    def create_legend(self):
-        """
-        Overides the create legend method of the Generic Plot as a 3d histogram doesn't need a legend
-        """
-        pass
+        units = data[item_index].units
+        name = data[item_index].name()
+        return name + " " + format_units(units)
 
     def add_color_bar(self):
         """

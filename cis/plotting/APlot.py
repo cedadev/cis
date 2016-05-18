@@ -83,20 +83,26 @@ class APlot(object):
         """
         pass
 
-    @abstractmethod
-    def format_plot(self):
+    @staticmethod
+    def guess_axis_label(data, axisvar=None, axis=None):
         """
-        The method that will format the plot. To be implemented by each subclass of Generic_Plot.
+        :param data: The data to inspect for names and units
+        :param axisvar: An axis name to look in coords for
+        :param axis: An axis label (x or y)
         """
-        pass
+        import cis.exceptions as cisex
+        import iris.exceptions as irisex
+        try:
+            coord = data.coord(axisvar)
+        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+            name = data.name()
+            units = data.units
+        else:
+            name = coord.name()
+            units = coord.units
 
-    @abstractmethod
-    def set_default_axis_label(self, axis):
-        """
-        The method that will set the default axis label. To be implemented by each subclass of Generic_Plot.
-        :param axis: The axis of which to set the default label for. Either "x" or "y".
-        """
-        pass
+        # in general, display both name and units in brackets
+        return name + " " + format_units(units)
 
     def auto_set_ticks(self):
         """
@@ -227,74 +233,6 @@ class APlot(object):
     def unpack_comparative_data(self):
         return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]
 
-    def create_legend(self):
-        """
-        Creates a draggable legend in the "best" location for the plot.
-        Works out legend labels unless explicitly given to the parser in the datagroups argument.
-        """
-        legend_titles = []
-        datagroups = self.datagroups
-        for i, item in enumerate(self.packed_data_items):
-            if datagroups is not None and datagroups[i]["label"]:
-                legend_titles.append(datagroups[i]["label"])
-            else:
-                legend_titles.append(item.long_name)
-        legend = self.matplotlib.legend(legend_titles, loc="best")
-        legend.draggable(state=True)
-
-    def set_axis_ticks(self, axis, no_of_dims):
-        from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-        from numpy import arange
-
-        tick_kwargs = {}
-
-        if self.is_map():
-            if axis == "x":
-                coord_axis = "x"
-                tick_method = self.cartopy_axis.set_xticks
-                self.cartopy_axis.xaxis.set_major_formatter(LongitudeFormatter())
-            elif axis == "y":
-                coord_axis = "data" if no_of_dims == 2 else "y"
-                tick_method = self.cartopy_axis.set_yticks
-                self.cartopy_axis.yaxis.set_major_formatter(LatitudeFormatter())
-
-            tick_kwargs['crs'] = self.transform
-        else:
-            if axis == "x":
-                coord_axis = "x"
-                tick_method = self.matplotlib.set_xticks
-            elif axis == "y":
-                coord_axis = "data" if no_of_dims == 2 else "y"
-                tick_method = self.matplotlib.set_yticks
-
-            #TODO: These other kwargs are going to be broken, I think I'll need to ask for the labels using get_labels, then use l.update(kwarg).
-
-            # if self.plot_args.get(axis + "tickangle", None) is None:
-            #     angle = None
-                # tick_kwargs['ha'] = "center" if axis == "x" else "right"
-            # else:
-                # tick_kwargs['rotation'] = self.plot_args[axis + "tickangle"]
-                # tick_kwargs['ha'] = "right"
-
-        if getattr(self, axis + 'step') is not None:
-            step = getattr(self, axis + 'step')
-
-            if getattr(self, axis + "min") is None:
-                min_val = min(unpacked_data_item[coord_axis].min() for unpacked_data_item in self.unpacked_data_items)
-            else:
-                min_val = getattr(self, axis + "min")
-
-            if getattr(self, axis + "max") is None:
-                max_val = max(unpacked_data_item[coord_axis].max() for unpacked_data_item in self.unpacked_data_items)
-            else:
-                max_val = getattr(self, axis + "max")
-
-            ticks = arange(min_val, max_val + step, step)
-
-            tick_method(ticks, **tick_kwargs)
-        elif not self.is_map() and tick_kwargs:
-            tick_method(**tick_kwargs)
-
     def format_time_axis(self):
         from cis.time_util import cis_standard_time_unit
 
@@ -349,23 +287,5 @@ class APlot(object):
         Converts the fontsize argument (if specified) from a float into a dictionary that matplotlib can recognise.
         Could be further extended to allow specifying bold, and other font formatting
         """
-        if self.fontsize is not None:
-            self.mplkwargs["fontsize"] = {"font.size": float(self.fontsize)}
 
-
-
-    def set_log_scale(self, logx, logy):
-        """
-        Sets a log (base 10) scale (if specified) on the axes
-        :param logx: A boolean specifying whether or not to apply a log scale to the x axis
-        :param logy: A boolean specifying whether or not to apply a log scale to the y axis
-        """
-        if logx:
-            self.matplotlib.set_xscale("log")
-        if logy:
-            self.matplotlib.set_yscale("log")
-
-    def set_axes_ticks(self, no_of_dims):
-        self.set_axis_ticks("x", no_of_dims)
-        self.set_axis_ticks("y", no_of_dims)
 

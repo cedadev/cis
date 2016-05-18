@@ -69,29 +69,29 @@ class Histogram(GenericPlot):
 
         return bin_edges
 
-    def set_default_axis_label(self, axis):
+    @staticmethod
+    def guess_axis_label(data, axisvar=None, axis=None):
         """
         Sets the default axis label for the given axis.
         If the axis is "y", then labels it "Frequency", else works it out based on the name and units of the data
         :param axis: The axis to calculate the default axis label for
         """
         from .APlot import format_units
-        axis = axis.lower()
-        axislabel = axis + "label"
 
-        if getattr(self, axislabel) is None:
-            if axis == "x":
-                units = self.packed_data_items[0].units
+        if axis.lower() == "x":
+            units = data[0].units
 
-                if len(self.packed_data_items) == 1:
-                    name = self.packed_data_items[0].name()
-                    # only 1 data to plot, display
-                    setattr(self, axislabel, name + " " + format_units(units))
-                else:
-                    # if more than 1 data, legend will tell us what the name is. so just displaying units
-                    setattr(self, axislabel, format_units(units))
-            elif axis == "y":
-                setattr(self, axislabel, "Frequency")
+            if len(data) == 1:
+                name = data[0].name()
+                # only 1 data to plot, display
+                label = name + " " + format_units(units)
+            else:
+                # if more than 1 data, legend will tell us what the name is. so just displaying units
+                label = format_units(units)
+        elif axis.lower() == "y":
+            label = "Frequency"
+
+        return label
 
     def set_axis_ticks(self, axis, no_of_dims):
 

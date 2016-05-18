@@ -13,11 +13,6 @@ from cis.plotting.histogram import Histogram
 from cis.plotting.histogram2d import Histogram2D
 import logging
 
-plot_options = {'title': 'set_title',
-                'xlabel': 'set_xlabel',
-                'ylabel': 'set_ylabel',
-                'fontsize': 'matplotlib.rcParams.update'}
-
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 
@@ -126,6 +121,8 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=
         ax.set_ylim(ymin=ymin, ymax=ymax)
 
 
+
+
 class Plotter(object):
     plot_types = {"contour": ContourPlot,
                   "contourf": ContourfPlot,
@@ -169,9 +166,16 @@ class Plotter(object):
         yaxis = yaxis or guess_y_axis(data, xaxis)
 
         # TODO: Check that projection=None is a valid default.
-        if projection is None and is_map(data, xaxis, yaxis):
-            projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, xmin) + 180.0))
-            kwargs['transform'] = ccrs.PlateCarree()
+
+        if is_map(data, xaxis, yaxis):
+            xlabel = xlabel or "Longitude"
+            ylabel = ylabel or "Latitude"
+            if projection is None:
+                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, xmin) + 180.0))
+                kwargs['transform'] = ccrs.PlateCarree()
+
+        xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
+        ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
 
         self.fig, ax = plt.subplots(projection=projection)
 
@@ -184,8 +188,10 @@ class Plotter(object):
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
         # instance
         apply_axis_limits(ax, xmin, xmax, ymin, ymax, projection=projection, reverse_y=(yaxis == 'air_pressure'))
-        self.plot_types[type].format_plot()
-
+        self.plot_types[type].format_plot(legend=len(data)>1)
+        if not nocolourbar:
+            self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units))
+        
         self.plot_types[type].auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
