@@ -59,6 +59,7 @@ class ComparativeScatter(GenericPlot):
         Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
         :param axis: The axis to set the default label for
         """
+        from .APlot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
         if axis == 'x':
@@ -69,4 +70,4 @@ class ComparativeScatter(GenericPlot):
         if getattr(self, axislabel) is None:
             units = self.packed_data_items[item_index].units
             name = self.packed_data_items[item_index].name()
-            setattr(self, axislabel, name + " " + self.format_units(units))
+            setattr(self, axislabel, name + " " + format_units(units))

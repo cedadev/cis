@@ -285,6 +285,7 @@ class Generic2DPlot(APlot):
         """
         import cis.exceptions as cisex
         import iris.exceptions as irisex
+        from .APlot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
 
@@ -303,7 +304,7 @@ class Generic2DPlot(APlot):
                     units = self.packed_data_items[0].units
 
                 # in general, display both name and units in brackets
-                setattr(self, axislabel, name + " " + self.format_units(units))
+                setattr(self, axislabel, name + " " + format_units(units))
 
     def contour_plot(self, filled):
         """
@@ -394,6 +395,7 @@ class Generic2DPlot(APlot):
         Adds a colour bar to a plot
         Allows specifying of tick spacing and orientation
         """
+        from .APlot import format_units
 
         step = self.vstep
         if step is None:
@@ -424,7 +426,7 @@ class Generic2DPlot(APlot):
             cbar.update_ticks()
 
         if self.cbarlabel is None:
-            label = self.format_units(self.packed_data_items[0].units)
+            label = format_units(self.packed_data_items[0].units)
         else:
             label = self.cbarlabel
 

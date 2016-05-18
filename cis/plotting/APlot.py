@@ -6,6 +6,20 @@ from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 from cis.utils import find_longitude_wrap_start
 
 
+def format_units(units):
+    """
+    :param units: The units of a variable, as a string
+    :return: The units surrounding brackets, or the empty string if no units given
+    """
+    if "since" in str(units):
+        # Assume we are on a time if the units contain since.
+        return ""
+    elif units:
+        return "(" + str(units) + ")"
+    else:
+        return ""
+
+
 class APlot(object):
 
     __metaclass__ = ABCMeta
@@ -95,19 +109,6 @@ class APlot(object):
         :param axis: The axis of which to set the default label for. Either "x" or "y".
         """
         pass
-
-    def format_units(self, units):
-        """
-        :param units: The units of a variable, as a string
-        :return: The units surrounding brackets, or the empty string if no units given
-        """
-        if "since" in str(units):
-            # Assume we are on a time if the units contain since.
-            return ""
-        elif units:
-            return "(" + str(units) + ")"
-        else:
-            return ""
 
     def assign_variables_to_x_and_y_axis(self):
         """

@@ -41,6 +41,7 @@ class LinePlot(GenericPlot):
     def set_default_axis_label(self, axis):
         import cis.exceptions as cisex
         import iris.exceptions as irisex
+        from .APlot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
 
@@ -56,10 +57,10 @@ class LinePlot(GenericPlot):
                 except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                     name = self.packed_data_items[0].name()
                 # only 1 data to plot, display
-                setattr(self, axislabel, name + " " + self.format_units(units))
+                setattr(self, axislabel, name + " " + format_units(units))
             else:
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
-                setattr(self, axislabel, self.format_units(units))
+                setattr(self, axislabel, format_units(units))
 
     def calculate_axis_limits(self, axis, min_val, max_val):
         if axis == "x":

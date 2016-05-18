@@ -85,6 +85,7 @@ class ScatterPlot(GenericPlot):
     def set_default_axis_label(self, axis):
         import cis.exceptions as cisex
         import iris.exceptions as irisex
+        from .APlot import format_units
         axis = axis.lower()
         axislabel = axis + "label"
 
@@ -103,7 +104,7 @@ class ScatterPlot(GenericPlot):
                         name = self.packed_data_items[0].coord(getattr(self, axis + "axis")).name()
                     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
                         name = self.packed_data_items[0].name()
-                        setattr(self, axislabel, name + " " + self.format_units(units))
+                        setattr(self, axislabel, name + " " + format_units(units))
                 else:
                     # if more than 1 data, legend will tell us what the name is. so just displaying units
                         setattr(self, axislabel, units)
