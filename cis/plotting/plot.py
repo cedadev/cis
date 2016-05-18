@@ -12,6 +12,8 @@ from cis.plotting.overlay import Overlay
 from cis.plotting.histogram import Histogram
 from cis.plotting.histogram2d import Histogram2D
 import logging
+from .APlot import format_units
+from .genericplot import format_plot
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
@@ -122,6 +124,100 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=
 
 
 
+def set_x_axis_as_time(ax, xtickangle):
+    from matplotlib import ticker
+    from cis.time_util import convert_std_time_to_datetime
+
+    def format_date(x, pos=None):
+        return convert_std_time_to_datetime(x).strftime('%Y-%m-%d')
+
+    def format_datetime(x, pos=None):
+        # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
+        date_time = convert_std_time_to_datetime(x)
+        day_min, day_max = ax.get_xlim()
+        day_range = day_max - day_min
+        if day_range < 1 and date_time.second == 0:
+            return "%02d" % date_time.hour + ':' + "%02d" % date_time.minute
+        elif day_range < 1:
+            return "%02d" % date_time.hour + ':' + "%02d" % date_time.minute + ':' + "%02d" % date_time.second
+        elif day_range > 5:
+            return str(date_time.date())
+        else:
+            return date_time.isoformat(' ')
+
+    def format_time(x, pos=None):
+        return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
+
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
+    if xtickangle is None:
+        xtickangle = 45
+    ax.xticks(rotation=xtickangle, ha="right")
+    # Give extra spacing at bottom of plot due to rotated labels
+    ax.get_figure().subplots_adjust(bottom=0.3)
+
+    # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
+
+
+def _get_extent(ax):
+    """
+     Calculates the diagonal extent of plot area in Km
+    :return: The diagonal size of the plot in Km
+    """
+    from cis.utils import haversine
+    x0, x1, y0, y1 = ax.get_extent()
+    return haversine(y0, x0, y1, x1)
+
+
+def _test_natural_earth_available():
+    """
+    Test whether we can download the natural earth cartographies.
+    :return: Can we access natural earth?
+    """
+    from cartopy.io.shapereader import natural_earth
+    from urllib.error import HTTPError
+    try:
+        natural_earth_available = natural_earth()
+    except HTTPError:
+        natural_earth_available = False
+    return natural_earth_available
+
+
+def drawcoastlines(ax, nasabluemarble, coastlinecolour, transform):
+    """
+    Adds coastlines or nasa blue marble back ground to a plot (no coastlines are plotted over nasa blue marble).
+    There are three levels of resolution used based on the spatial scale of the plot. These are determined using
+    values determined by eye for bluemarble and the coastlines independently.
+    """
+    from matplotlib.image import imread
+    import os.path as path
+    bluemarble_scales = [(0, 'raster/world.topo.bathy.200407.3x1350x675.png'),
+                         (5000, 'raster/world.topo.bathy.200407.3x2700x1350.png'),
+                         (2500, 'raster/world.topo.bathy.200407.3x5400x2700.png')]
+
+    coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
+
+    ext = _get_extent(ax)
+
+    if nasabluemarble is not False:
+        bluemarble_res = bluemarble_scales[0][1]
+        for scale, res in bluemarble_scales[1:]:
+            if scale > ext:
+                bluemarble_res = res
+
+        img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
+        ax.imshow(img, origin='upper', transform=transform, extent=[-180, 180, -90, 90])
+    else:
+        if _test_natural_earth_available():
+            coastline_res = coastline_scales[0][1]
+            for scale, res in coastline_scales[1:]:
+                if scale > ext:
+                    coastline_res = res
+
+            ax.coastlines(color=coastlinecolour, resolution=coastline_res)
+        else:
+            logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
+                            'Check internet connectivity and try again')
+
 
 class Plotter(object):
     plot_types = {"contour": ContourPlot,
@@ -135,8 +231,8 @@ class Plotter(object):
                   "histogram3d": Histogram2D}
 
     def __init__(self, data, type=None, out_filename=None, xaxis=None, yaxis=None, layer_opts=None, plotheight=None,
-                 plotwidth=None, logx=False, logy=False, xmin=None,
-                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None,
+                 plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False, nasabluemarble=False,
+                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, cbarlabel=None, coastlinecolour='k',
                  grid=False, xlabel=None, ylabel=None, title=None, fontsize=None,
                  itemwidth=1, xtickangle=None, ytickangle=None, projection=None, *args, **kwargs):
         """
@@ -188,10 +284,20 @@ class Plotter(object):
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
         # instance
         apply_axis_limits(ax, xmin, xmax, ymin, ymax, projection=projection, reverse_y=(yaxis == 'air_pressure'))
-        self.plot_types[type].format_plot(legend=len(data)>1)
+
+        # TODO figure out what to do about the transforms floating about the place.
+        format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title,
+                    transform=None, legend=len(data)>1)
         if not nocolourbar:
             self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units))
-        
+
+        # TODO: I need a better test for the xaxis being time...
+        if xaxis == 'time':
+            set_x_axis_as_time(ax, xtickangle)
+
+        if is_map(data, xaxis, yaxis):
+            drawcoastlines(ax, nasabluemarble, coastlinecolour, transform=None)
+
         self.plot_types[type].auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 

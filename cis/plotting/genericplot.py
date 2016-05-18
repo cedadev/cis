@@ -61,14 +61,36 @@ def set_xaxis_ticks(ax, step=None, tickangle=None, transform=None):
         ax.set_xticks(**tick_kwargs)
 
 
-def scale_axis(ax, axis, log):
-    if log:
-        setattr(ax, 'set_{}scale'.format(axis), "log")
-    else:
-        try:
-            ax.ticklabel_format(style='sci', scilimits=(-3, 3), axis=axis)
-        except AttributeError:
-            logging.warning("Couldn't apply scientific notation to {} axes".format(axis))
+def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title,
+                transform=None, legend=False):
+    """
+    Used by 2d subclasses to format the plot
+    """
+    import matplotlib
+
+    if logx:
+        ax.set_xscale("log")
+    if logy:
+        ax.set_yscale("log")
+
+    if grid:
+        ax.grid(True, which="both")
+
+    set_xaxis_ticks(ax, xstep, xtickangle, transform)
+    set_yaxis_ticks(ax, ystep, ytickangle, transform)
+
+    if fontsize is not None:
+        matplotlib.rcParams.update({'font.size': fontsize})
+
+    # If any of the options have not been specified, then use the defaults
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    ax.set_title(title)
+
+    if legend:
+        legend = ax.legend(loc="best")
+        legend.draggable(state=True)
 
 
 class GenericPlot(APlot):
@@ -85,36 +107,6 @@ class GenericPlot(APlot):
         self.mplkwargs['label'] = self.label or packed_data_items.longname
 
         self.plot()
-
-    @staticmethod
-    def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title, transform=None, legend=False):
-        """
-        Used by 2d subclasses to format the plot
-        """
-        import matplotlib
-
-        scale_axis(ax, 'x', logx)
-        scale_axis(ax, 'y', logy)
-
-        if grid:
-            ax.grid(True, which="both")
-
-        set_xaxis_ticks(ax, xstep, xtickangle, transform)
-        set_yaxis_ticks(ax, ystep, ytickangle, transform)
-
-        if fontsize is not None:
-            matplotlib.rcParams.update({'font.size': fontsize})
-
-        # If any of the options have not been specified, then use the defaults
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-
-        ax.set_title(title)
-
-        if legend:
-            legend = ax.legend(loc="best")
-            legend.draggable(state=True)
-
 
 
 class Generic2DPlot(APlot):
@@ -160,101 +152,6 @@ class Generic2DPlot(APlot):
         self.mplkwargs["vmin"], self.mplkwargs["vmax"] = self.calculate_min_and_max_values()
 
         self.plot()
-
-    def _get_extent(self):
-        """
-         Calculates the diagonal extent of plot area in Km
-        :return: The diagonal size of the plot in Km
-        """
-        from cis.utils import haversine
-        x0, x1, y0, y1 = self.cartopy_axis.get_extent()
-        return haversine(y0, x0, y1, x1)
-
-    def _test_natural_earth_available(self):
-        """
-        Test whether we can download the natural earth cartographies.
-        :return: Can we access natural earth?
-        """
-        from cartopy.io.shapereader import natural_earth
-        from urllib.error import HTTPError
-        try:
-            natural_earth_available = natural_earth()
-        except HTTPError:
-            natural_earth_available = False
-        return natural_earth_available
-
-    def drawcoastlines(self):
-        """
-        Adds coastlines or nasa blue marble back ground to a plot (no coastlines are plotted over nasa blue marble).
-        There are three levels of resolution used based on the spatial scale of the plot. These are determined using
-        values determined by eye for bluemarble and the coastlines independently.
-        """
-        from matplotlib.image import imread
-        import os.path as path
-        bluemarble_scales = [(0, 'raster/world.topo.bathy.200407.3x1350x675.png'),
-                             (5000, 'raster/world.topo.bathy.200407.3x2700x1350.png'),
-                             (2500, 'raster/world.topo.bathy.200407.3x5400x2700.png')]
-
-        coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
-
-        ext = self._get_extent()
-
-        if self.nasabluemarble is not False:
-            bluemarble_res = bluemarble_scales[0][1]
-            for scale, res in bluemarble_scales[1:]:
-                if scale > ext:
-                    bluemarble_res = res
-
-            img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
-            self.cartopy_axis.imshow(img, origin='upper', transform=self.transform, extent=[-180, 180, -90, 90])
-        else:
-            if self._test_natural_earth_available():
-                coastline_res = coastline_scales[0][1]
-                for scale, res in coastline_scales[1:]:
-                    if scale > ext:
-                        coastline_res = res
-
-                self.cartopy_axis.coastlines(color=self.coastlinecolour, resolution=coastline_res)
-            else:
-                logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
-                                'Check internet connectivity and try again')
-
-    @staticmethod
-    def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title, transform=None, legend=False):
-        """
-        Used by 3d subclasses to format the plot
-        """
-        import matplotlib
-
-        self.format_time_axis()
-
-        if logx:
-            ax.set_xscale("log")
-        if logy:
-            ax.set_yscale("log")
-
-        if grid:
-            ax.grid(True, which="both")
-
-        if self.is_map():
-            self.drawcoastlines()
-
-        set_xaxis_ticks(ax, xstep, xtickangle, transform)
-        set_yaxis_ticks(ax, ystep, ytickangle, transform)
-
-        if fontsize is not None:
-            matplotlib.rcParams.update({'font.size': fontsize})
-
-        # If any of the options have not been specified, then use the defaults
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-
-        ax.set_title(title)
-
-        if legend:
-            legend = ax.legend(loc="best")
-            legend.draggable(state=True)
-
 
     def calculate_min_and_max_values(self):
         """

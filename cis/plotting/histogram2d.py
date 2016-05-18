@@ -99,24 +99,12 @@ class Histogram2D(Generic2DPlot):
         name = data[item_index].name()
         return name + " " + format_units(units)
 
-    def add_color_bar(self):
+    @staticmethod
+    def add_color_bar(fig, mappable, cbarorient, cbarscale, cbarlabel, logv, vstep):
         """
         Adds a color bar to the plot and labels it as "Frequency"
         """
-        step = self.vstep
-        if step is None:
-            ticks = None
-        else:
-            from matplotlib.ticker import MultipleLocator
-            ticks = MultipleLocator(step)
-        cbar = self.matplotlib.colorbar(orientation=self.cbarorient, ticks=ticks)
-
-        if self.cbarlabel is None:
-            label = "Frequency"
-        else:
-            label = self.cbarlabel
-
-        cbar.set_label(label)
+        super().add_color_bar(fig, mappable, cbarorient, cbarscale, "Frequency", logv, vstep)
 
     def set_axis_ticks(self, axis, no_of_dims):
         from numpy import arange
