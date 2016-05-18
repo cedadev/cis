@@ -147,7 +147,7 @@ class Plotter(object):
 
         # TODO: Each plot is really just one 'layer', it should only get arguments relevant for that layer.
         for d, params in zip(data, layer_opts):
-            plot = self.plot_types[type](d, ax=ax, *args, **layer_opts+kwargs)
+            plot = self.plot_types[type](d, ax, xaxis, yaxis, *args, **layer_opts+kwargs)
 
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
         # instance
