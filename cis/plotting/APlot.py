@@ -25,6 +25,26 @@ def name_preferring_standard(coord_item):
     return ''
 
 
+def calc_min_and_max_vals_of_array_incl_log(array, log=False):
+    """
+    Calculates the min and max values of a given array.
+    If a log scale is being used only positive values are taken into account
+    :param array: The array to calculate the min and max values of
+    :param log: Is a log scale being used?
+    :return: The min and max values of the array
+    """
+
+    if log:
+        import numpy.ma as ma
+        positive_array = ma.array(array, mask=array <= 0)
+        min_val = positive_array.min()
+        max_val = positive_array.max()
+    else:
+        min_val = array.min()
+        max_val = array.max()
+    return min_val, max_val
+
+
 class APlot(object):
 
     __metaclass__ = ABCMeta
@@ -308,9 +328,8 @@ class APlot(object):
         :param axis: The axis for the limits to be calculated
         :return: A dictionary containing the min and max values of an array along a given axis
         """
-        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis,
-                                                                    self.unpacked_data_items[
-                                                                        0][axis])
+        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[0][axis],
+                                                               getattr(self, "log" + axis))
 
         new_min = c_min if min_val is None else min_val
         new_max = c_max if max_val is None else max_val
@@ -420,25 +439,6 @@ class APlot(object):
                 self.matplotlib.xaxis_date()
                 # self.set_x_axis_as_time()
 
-    def calc_min_and_max_vals_of_array_incl_log(self, axis, array):
-        """
-        Calculates the min and max values of a given array.
-        If a log scale is being used on the given axis, only positive values are taken into account
-        :param axis: The axis to check if a log scale is being used for
-        :param array: The array to calculate the min and max values of
-        :return: The min and max values of the array
-        """
-        log_axis = getattr(self, "log" + axis)
-
-        if log_axis:
-            import numpy.ma as ma
-            positive_array = ma.array(array, mask=array <= 0)
-            min_val = positive_array.min()
-            max_val = positive_array.max()
-        else:
-            min_val = array.min()
-            max_val = array.max()
-        return min_val, max_val
 
     def set_x_axis_as_time(self):
         from matplotlib import ticker

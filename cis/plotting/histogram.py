@@ -100,8 +100,10 @@ class Histogram(GenericPlot):
         :param axis: The axis to calculate the limits for
         :return: A dictionary containing the min and max values for the given axis
         """
+        from .APlot import calc_min_and_max_vals_of_array_incl_log
         if axis == "x":
-            c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0]['data'])
+            c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[0]['data'],
+                                                                   getattr(self, "log" + axis))
         elif axis == "y":
             c_min, c_max = None, None
 

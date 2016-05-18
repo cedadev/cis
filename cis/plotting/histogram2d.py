@@ -113,11 +113,13 @@ class Histogram2D(Generic2DPlot):
         :param axis: The axis to calculate the limits for
         :return: A dictionary containing the min and max values for the given axis
         """
+        from .APlot import calc_min_and_max_vals_of_array_incl_log
         if axis == "x":
             coord_axis = 0
         elif axis == "y":
             coord_axis = 1
-        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[coord_axis]["data"])
+        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[coord_axis]["data"],
+                                                               getattr(self, "log" + axis))
 
         new_min = c_min if min_val is None else min_val
         new_max = c_max if max_val is None else max_val

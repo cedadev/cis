@@ -57,6 +57,7 @@ class ScatterPlot(GenericPlot):
         :param step: The distance between each tick on the axis
         :return: A dictionary containing the min and max values for the axis, and the step between each tick
         """
+        from .APlot import calc_min_and_max_vals_of_array_incl_log
         if axis == "x":
             coord_axis = "x"
         elif axis == "y":
@@ -64,7 +65,8 @@ class ScatterPlot(GenericPlot):
                 coord_axis = "data"
             elif self.scatter_type == "3D":
                 coord_axis = "y"
-        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[0][coord_axis])
+        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[0][coord_axis],
+                                                               getattr(self, "log" + axis))
 
         new_min = c_min if min_val is None else min_val
         new_max = c_max if max_val is None else max_val
