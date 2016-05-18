@@ -397,7 +397,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90},
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
 
@@ -412,7 +412,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':-180,'xmax':180},
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
 
@@ -427,7 +427,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
-        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90},
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
 
@@ -442,7 +442,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
-        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':0,'xmax':360},
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
 
@@ -457,7 +457,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
-        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
 
@@ -472,7 +472,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
 
@@ -487,7 +487,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90}, coastlinescolour='red',
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
 
@@ -503,7 +503,7 @@ class TestPlotVisual(VisualTest):
         datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
                  make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
 
-        Plotter(datas, x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter(datas, xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':0,'xmax':360},
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '-180to180'},
                             {'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '0to360'}])
@@ -520,7 +520,7 @@ class TestPlotVisual(VisualTest):
         datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
                  make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
 
-        Plotter(datas, x_variable='longitude', y_variable='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter(datas, xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
                 itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':-180,'xmax':180},
                 datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '-180to180'},
                             {'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '0to360'}])

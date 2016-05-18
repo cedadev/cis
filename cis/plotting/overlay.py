@@ -8,6 +8,8 @@ from cis.plotting.scatterplot import ScatterPlot
 import numpy
 
 
+# TODO: This shouldn't be a generic plot - it needs to be a static method in plot.Plot and should probably work for 2D
+# as well as 3D plots.
 class Overlay(GenericPlot):
 
     def get_data_items_max(self):

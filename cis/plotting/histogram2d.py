@@ -1,11 +1,13 @@
-from cis.plotting.genericplot import GenericPlot
+from cis.plotting.genericplot import Generic2DPlot
 import numpy
 
 
-class Histogram2D(GenericPlot):
+class Histogram2D(Generic2DPlot):
 
     def __init__(self, packed_data_items, xbinwidth=None, ybinwidth=None, *args, **kwargs):
         super().__init__(packed_data_items, *args, **kwargs)
+        self.xbinwidth = xbinwidth
+        self.ybinwidth = ybinwidth
 
     def plot(self):
         """
@@ -82,12 +84,25 @@ class Histogram2D(GenericPlot):
         return bin_edges
 
     def format_plot(self):
-        # We don't format the time axis here as we're only plotting data against data
         self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
-        self.format_3d_plot()
+        super().format_plot()
 
     def set_default_axis_label(self, axis):
-        self.set_default_axis_label_for_comparative_plot(axis)
+        """
+        Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
+        :param axis: The axis to set the default label for
+        """
+        axis = axis.lower()
+        axislabel = axis + "label"
+        if axis == 'x':
+            item_index = 0
+        elif axis == 'y':
+            item_index = 1
+
+        if getattr(self, axislabel) is None:
+            units = self.packed_data_items[item_index].units
+            name = self.packed_data_items[item_index].name()
+            setattr(self, axislabel, name + " " + self.format_units(units))
 
     def calculate_axis_limits(self, axis, min_val, max_val):
         """

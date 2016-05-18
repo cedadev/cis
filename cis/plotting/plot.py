@@ -53,11 +53,17 @@ class Plotter(object):
         else:
             raise ValueError("Invalid plot type, must be one of: {}".format(list(self.plot_types.keys())))
 
+        # TODO: This could become an argument in the future
         # Create figure and a single axis (we assume for now not more than one 'subplot').
         self.fig, ax = plt.subplots()
 
         self.set_width_and_height(plotwidth, plotheight)
+
+        # TODO: Each plot is really just one 'layer', it should only get arguments relevant for that layer.
         plot = self.plot_types[type](data, ax=ax, *args, **kwargs)
+
+        # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
+        # instance
         plot.apply_axis_limits()
         plot.format_plot()
 

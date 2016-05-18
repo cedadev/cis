@@ -54,15 +54,19 @@ class ComparativeScatter(GenericPlot):
 
         return new_min, new_max
 
-    def format_plot(self):
-        # We don't format the time axis here as we're only plotting data against data
-        self.format_2d_plot()
-
     def set_default_axis_label(self, axis):
-        self.set_default_axis_label_for_comparative_plot(axis)
+        """
+        Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
+        :param axis: The axis to set the default label for
+        """
+        axis = axis.lower()
+        axislabel = axis + "label"
+        if axis == 'x':
+            item_index = 0
+        elif axis == 'y':
+            item_index = 1
 
-    def create_legend(self):
-        pass
-
-    def is_map(self):
-        return False
+        if getattr(self, axislabel) is None:
+            units = self.packed_data_items[item_index].units
+            name = self.packed_data_items[item_index].name()
+            setattr(self, axislabel, name + " " + self.format_units(units))

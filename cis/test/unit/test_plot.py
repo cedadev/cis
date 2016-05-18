@@ -19,8 +19,8 @@ from cis.plotting.scatterplot import ScatterPlot
 
 
 class TestPlotting(unittest.TestCase):
-    # plot_args = {'x_variable': 'longitude',
-    #              'y_variable': 'latitude',
+    # plot_args = {'xaxis': 'longitude',
+    #              'yaxis': 'latitude',
     #              'valrange': {'vmin': 0, 'vmax': 2},
     #              'xrange': {'xmin': 0, 'xmax': 360}
     #              }

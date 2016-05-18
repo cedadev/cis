@@ -48,16 +48,6 @@ class Heatmap(GenericPlot):
             x_coord.guess_bounds()
         return numpy.max(x_coord.bounds)
 
-    def set_default_axis_label(self, axis):
-        return self.set_3daxis_label(axis)
-
-    def create_legend(self):
-        pass
-
-    def format_plot(self):
-        self.format_time_axis()
-        self.format_3d_plot()
-
 
 def make_color_mesh_cells(packed_data_item, xvar, yvar):
     """

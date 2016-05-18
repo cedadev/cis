@@ -1,7 +1,7 @@
-from cis.plotting.genericplot import GenericPlot
+from cis.plotting.genericplot import Generic2DPlot
 
 
-class ContourPlot(GenericPlot):
+class ContourPlot(Generic2DPlot):
     # 'contour' : PlotType(1, 2, plot_contour),
     def plot(self):
         """
@@ -12,7 +12,3 @@ class ContourPlot(GenericPlot):
 
     def set_default_axis_label(self, axis):
         return self.set_3daxis_label(axis)
-
-    def format_plot(self):
-        self.format_time_axis()
-        self.format_3d_plot()

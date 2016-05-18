@@ -49,12 +49,6 @@ class Histogram(GenericPlot):
     def unpack_data_items(self):
         return self.unpack_comparative_data()
 
-    def setup_map(self):
-        pass
-
-    def is_map(self):
-        return False
-
     def calculate_bin_edges(self):
         """
         Calculates the number of bins for a given axis.
@@ -74,10 +68,6 @@ class Histogram(GenericPlot):
         self.xmax = bin_edges.max()
 
         return bin_edges
-
-    def format_plot(self):
-        # We don't format the time axis here as we're only plotting frequency against data
-        self.format_2d_plot()
 
     def set_default_axis_label(self, axis):
         """
