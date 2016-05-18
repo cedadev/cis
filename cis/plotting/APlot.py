@@ -109,7 +109,6 @@ class APlot(object):
         else:
             return ""
 
-
     def assign_variables_to_x_and_y_axis(self):
         """
         Overwrites which variable to used for the x and y axis
@@ -153,7 +152,6 @@ class APlot(object):
             if name:
                 return name
         return ''
-
 
     def get_variable_name(self, axis):
         import iris.exceptions as iris_ex
@@ -255,7 +253,6 @@ class APlot(object):
                 self.matplotlib.axes().yaxis.set_minor_locator(AutoMinorLocator())
                 self.matplotlib.axes().yaxis.grid(False, which='minor')
 
-
     def set_x_wrap_start(self, user_xmin):
         # FIND THE WRAP START OF THE DATA
         data_wrap_start = find_longitude_wrap_start(self.xaxis, self.packed_data_items)
@@ -266,14 +263,12 @@ class APlot(object):
         else:
             self.x_wrap_start = data_wrap_start
 
-
     def get_data_items_max(self):
         import numpy as np
         data_max = np.nanmax(self.unpacked_data_items[0]['x'])
         for i in self.unpacked_data_items:
             data_max = max([np.nanmax(i["x"]), data_max])
         return data_max
-
 
     def unpack_data_items(self):
         def __get_data(axis):
@@ -328,7 +323,6 @@ class APlot(object):
     def unpack_comparative_data(self):
         return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]
 
-
     def calculate_axis_limits(self, axis, min_val, max_val):
         """
         Calculates the axis limits for a given axis
@@ -347,7 +341,6 @@ class APlot(object):
             new_min, new_max = new_max, new_min
 
         return new_min, new_max
-
 
     def apply_axis_limits(self):
         """
@@ -380,7 +373,6 @@ class APlot(object):
                 legend_titles.append(item.long_name)
         legend = self.matplotlib.legend(legend_titles, loc="best")
         legend.draggable(state=True)
-
 
     def set_axis_ticks(self, axis, no_of_dims):
         from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
@@ -449,7 +441,6 @@ class APlot(object):
                 self.matplotlib.xaxis_date()
                 # self.set_x_axis_as_time()
 
-
     def calc_min_and_max_vals_of_array_incl_log(self, axis, array):
         """
         Calculates the min and max values of a given array.
@@ -469,7 +460,6 @@ class APlot(object):
             min_val = array.min()
             max_val = array.max()
         return min_val, max_val
-
 
     def set_x_axis_as_time(self):
         from matplotlib import ticker
@@ -506,7 +496,6 @@ class APlot(object):
 
         # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
-
     def set_font_size(self):
         """
         Converts the fontsize argument (if specified) from a float into a dictionary that matplotlib can recognise.
@@ -514,7 +503,6 @@ class APlot(object):
         """
         if self.fontsize is not None:
             self.mplkwargs["fontsize"] = {"font.size": float(self.fontsize)}
-
 
     def is_map(self):
         """
@@ -533,7 +521,6 @@ class APlot(object):
         else:
             return False
 
-
     def set_log_scale(self, logx, logy):
         """
         Sets a log (base 10) scale (if specified) on the axes
@@ -544,7 +531,6 @@ class APlot(object):
             self.matplotlib.set_xscale("log")
         if logy:
             self.matplotlib.set_yscale("log")
-
 
     def set_axes_ticks(self, no_of_dims):
         self.set_axis_ticks("x", no_of_dims)
