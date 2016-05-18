@@ -94,6 +94,38 @@ def guess_x_axis(data):
     return xaxis
 
 
+def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=None, projection=None, reverse_y=False):
+    """
+    Applies the specified limits to the given axis
+    """
+    from cartopy.mpl.geoaxes import GeoAxes
+
+    # First make sure all of the data fits
+    ax.relim()
+    ax.autoscale()
+
+    if reverse_y:
+        ax.invert_yaxis()
+
+    # Then apply user limits (using different interfaces for different axes types...)
+    if isinstance(ax, GeoAxes):
+        # We can't optionally pass in certain bounds to set_extent so we need to pull out the existing ones and only
+        #  change the ones we've been given.
+        x1, x2, y1, y2 = ax.get_extent()
+        xmin = xmin or x1
+        xmax = xmax or x2
+        ymin = ymin or y1
+        ymax = ymax or y2
+        try:
+            #TODO: Not sure if we still need this logic...
+            ax.set_extent([xmin, xmax, ymin, ymax], crs=transform)
+        except ValueError:
+            ax.set_extent([xmin, xmax, ymin, ymax], crs=projection)
+    else:
+        ax.set_xlim(xmin=xmin, xmax=xmax)
+        ax.set_ylim(ymin=ymin, ymax=ymax)
+
+
 class Plotter(object):
     plot_types = {"contour": ContourPlot,
                   "contourf": ContourfPlot,
@@ -136,7 +168,7 @@ class Plotter(object):
         xaxis = xaxis or guess_x_axis(data)
         yaxis = yaxis or guess_y_axis(data, xaxis)
 
-        # TODO
+        # TODO: Check that projection=None is a valid default.
         if projection is None and is_map(data, xaxis, yaxis):
             projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, xmin) + 180.0))
             kwargs['transform'] = ccrs.PlateCarree()
@@ -151,10 +183,10 @@ class Plotter(object):
 
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
         # instance
-        plot.apply_axis_limits()
-        plot.format_plot()
+        apply_axis_limits(ax, xmin, xmax, ymin, ymax, projection=projection, reverse_y=(yaxis == 'air_pressure'))
+        self.plot_types[type].format_plot()
 
-        plot.auto_set_ticks()
+        self.plot_types[type].auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename=None):

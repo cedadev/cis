@@ -51,34 +51,6 @@ class GenericScatter(APlot):
             self.color_axis.append(
                 self.matplotlib.scatter(x_coords, y_coords, *self.mplargs, **local_kwargs))
 
-    def calculate_axis_limits(self, axis, min_val, max_val):
-        """
-        :param axis: The axis to calculate the limits for
-        :param min_val: The user specified minimum value for the axis
-        :param max_val: The user specified maximum value for the axis
-        :param step: The distance between each tick on the axis
-        :return: A dictionary containing the min and max values for the axis, and the step between each tick
-        """
-        from .APlot import calc_min_and_max_vals_of_array_incl_log
-        if axis == "x":
-            coord_axis = "x"
-        elif axis == "y":
-            if self.scatter_type == "2D":
-                coord_axis = "data"
-            elif self.scatter_type == "3D":
-                coord_axis = "y"
-        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[0][coord_axis],
-                                                               getattr(self, "log" + axis))
-
-        new_min = c_min if min_val is None else min_val
-        new_max = c_max if max_val is None else max_val
-
-        # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
-        if axis == "y" and self.yaxis == "air_pressure" and min_val is None and max_val is None:
-            new_min, new_max = new_max, new_min
-
-        return new_min, new_max
-
     def set_default_axis_label(self, axis):
         import cis.exceptions as cisex
         import iris.exceptions as irisex

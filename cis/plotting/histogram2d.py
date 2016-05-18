@@ -105,27 +105,6 @@ class Histogram2D(Generic2DPlot):
             name = self.packed_data_items[item_index].name()
             setattr(self, axislabel, name + " " + format_units(units))
 
-    def calculate_axis_limits(self, axis, min_val, max_val):
-        """
-        Calculates the limits for a given axis.
-        If the axis is "x" then looks at the data of the first data item
-        If the axis is "y" then looks at the data of the second data item
-        :param axis: The axis to calculate the limits for
-        :return: A dictionary containing the min and max values for the given axis
-        """
-        from .APlot import calc_min_and_max_vals_of_array_incl_log
-        if axis == "x":
-            coord_axis = 0
-        elif axis == "y":
-            coord_axis = 1
-        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[coord_axis]["data"],
-                                                               getattr(self, "log" + axis))
-
-        new_min = c_min if min_val is None else min_val
-        new_max = c_max if max_val is None else max_val
-
-        return new_min, new_max
-
     def create_legend(self):
         """
         Overides the create legend method of the Generic Plot as a 3d histogram doesn't need a legend

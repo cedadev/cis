@@ -41,21 +41,6 @@ class ComparativeScatter(GenericPlot):
     def unpack_data_items(self):
         return self.unpack_comparative_data()
 
-    def calculate_axis_limits(self, axis, min_val, max_val):
-        from .APlot import calc_min_and_max_vals_of_array_incl_log
-        if axis == "x":
-            axis_index = 0
-        elif axis == "y":
-            axis_index = 1
-
-        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[axis_index]["data"],
-                                                               getattr(self, "log" + axis))
-
-        new_min = c_min if min_val is None else min_val
-        new_max = c_max if max_val is None else max_val
-
-        return new_min, new_max
-
     def set_default_axis_label(self, axis):
         """
         Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram

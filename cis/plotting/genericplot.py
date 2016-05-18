@@ -22,6 +22,7 @@ class GenericPlot(APlot):
 
         self.plot()
 
+    @staticmethod
     def format_plot(self):
         """
         Used by 2d subclasses to format the plot
@@ -95,8 +96,6 @@ class Generic2DPlot(APlot):
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
 
-        self.assign_variables_to_x_and_y_axis()
-
         logging.debug("Unpacking the data items")
         self.x_wrap_start = x_wrap_start
         self.unpacked_data_items = self.unpack_data_items()
@@ -104,31 +103,6 @@ class Generic2DPlot(APlot):
         self.mplkwargs["vmin"], self.mplkwargs["vmax"] = self.calculate_min_and_max_values()
 
         self.plot()
-
-
-    @staticmethod
-    def _replace_axes_with_cartopy_axes(ax, projection):
-        from cartopy.mpl.geoaxes import GeoAxes
-        from matplotlib.axes import SubplotBase
-        if not isinstance(ax, GeoAxes):
-            fig = ax.get_figure()
-            if isinstance(ax, SubplotBase):
-                new_ax = fig.add_subplot(ax.get_subplotspec(),
-                                         projection=projection,
-                                         title=ax.get_title(),
-                                         xlabel=ax.get_xlabel(),
-                                         ylabel=ax.get_ylabel())
-            else:
-                new_ax = fig.add_axes(projection=projection,
-                                      title=ax.get_title(),
-                                      xlabel=ax.get_xlabel(),
-                                      ylabel=ax.get_ylabel())
-
-            # delete the axes which didn't have a cartopy projection
-            fig.delaxes(ax)
-        else:
-            new_ax = ax
-        return new_ax
 
     def _get_extent(self):
         """
@@ -188,6 +162,7 @@ class Generic2DPlot(APlot):
                 logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
                                 'Check internet connectivity and try again')
 
+    @staticmethod
     def format_plot(self):
         """
         Used by 3d subclasses to format the plot

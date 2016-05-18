@@ -61,21 +61,3 @@ class LinePlot(GenericPlot):
             else:
                 # if more than 1 data, legend will tell us what the name is. so just displaying units
                 setattr(self, axislabel, format_units(units))
-
-    def calculate_axis_limits(self, axis, min_val, max_val):
-        from .APlot import calc_min_and_max_vals_of_array_incl_log
-        if axis == "x":
-            coord_axis = "x"
-        elif axis == "y":
-            coord_axis = "data"
-        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[0][coord_axis],
-                                                               getattr(self, "log" + axis))
-
-        new_min = c_min if min_val is None else min_val
-        new_max = c_max if max_val is None else max_val
-
-        # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
-        if axis == "y" and self.yaxis == "air_pressure" and min_val is None and max_val is None:
-            new_min, new_max = new_max, new_min
-
-        return new_min, new_max

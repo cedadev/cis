@@ -227,41 +227,6 @@ class APlot(object):
     def unpack_comparative_data(self):
         return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]
 
-    def calculate_axis_limits(self, axis, min_val, max_val):
-        """
-        Calculates the axis limits for a given axis
-        :param axis: The axis for the limits to be calculated
-        :return: A dictionary containing the min and max values of an array along a given axis
-        """
-        c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[0][axis],
-                                                               getattr(self, "log" + axis))
-
-        new_min = c_min if min_val is None else min_val
-        new_max = c_max if max_val is None else max_val
-
-        # If we are plotting air pressure we want to reverse it, as it is vertical coordinate decreasing with altitude
-        if axis == "y" and self.yaxis == "air_pressure" and min_val is None and max_val is None:
-            new_min, new_max = new_max, new_min
-
-        return new_min, new_max
-
-    def apply_axis_limits(self):
-        """
-        Applies the limits to the specified axis if given, or calculates them otherwise
-        """
-
-        self.xmin, self.xmax = self.calculate_axis_limits('x', self.xmin, self.xmax)
-        ymin, ymax = self.calculate_axis_limits('y', self.ymin, self.ymax)
-
-        if self.is_map():
-            try:
-                self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.transform)
-            except ValueError:
-                self.cartopy_axis.set_extent([self.xmin, self.xmax, ymin, ymax], crs=self.projection)
-        else:
-            self.matplotlib.set_xlim(xmin=self.xmin, xmax=self.xmax)
-            self.matplotlib.set_ylim(ymin=ymin, ymax=ymax)
-
     def create_legend(self):
         """
         Creates a draggable legend in the "best" location for the plot.

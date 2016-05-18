@@ -93,25 +93,6 @@ class Histogram(GenericPlot):
             elif axis == "y":
                 setattr(self, axislabel, "Frequency")
 
-    def calculate_axis_limits(self, axis, min_val, max_val):
-        """
-        Calculates the limits for a given axis.
-        If the axis is "y" then looks at the "data" as this is where the values are stored
-        :param axis: The axis to calculate the limits for
-        :return: A dictionary containing the min and max values for the given axis
-        """
-        from .APlot import calc_min_and_max_vals_of_array_incl_log
-        if axis == "x":
-            c_min, c_max = calc_min_and_max_vals_of_array_incl_log(self.unpacked_data_items[0]['data'],
-                                                                   getattr(self, "log" + axis))
-        elif axis == "y":
-            c_min, c_max = None, None
-
-        new_min = c_min if min_val is None else min_val
-        new_max = c_max if max_val is None else max_val
-
-        return new_min, new_max
-
     def set_axis_ticks(self, axis, no_of_dims):
 
         if axis == "x":
