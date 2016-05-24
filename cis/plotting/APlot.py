@@ -57,10 +57,6 @@ class APlot(object):
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
-        import matplotlib.pyplot as plt
-
-        self.packed_data_items = packed_data_items
-
         self.ax = ax
 
         self.xaxis = xaxis
@@ -103,55 +99,11 @@ class APlot(object):
         # in general, display both name and units in brackets
         return name + " " + format_units(units)
 
-    def unpack_data_items(self):
-        def __get_data(axis):
-            variable = getattr(self, axis + 'axis')
-            if variable == "default" or variable == self.packed_data_items[0].name() \
-                    or variable == self.packed_data_items[0].standard_name \
-                    or variable == self.packed_data_items[0].long_name:
-                return self.packed_data_items[0].data
-            else:
-                if variable.startswith("search"):
-                    number_of_points = float(variable.split(":")[1])
-                    for coord in self.packed_data_items[0].coords():
-                        if coord.shape[0] == number_of_points:
-                            break
-                else:
-                    coord = self.packed_data_items[0].coord(variable)
-                return coord.points if isinstance(self.packed_data_items[0], Cube) else coord.data
-
-        def __set_variable_as_data(axis):
-            old_variable = getattr(self, axis + 'axis')
-            setattr(self, axis + 'axis', self.packed_data_items[0].name())
-            logging.info("Plotting " + getattr(self,
-                                               axis + 'axis') + " on the " + axis + " axis as " + old_variable + " has length 1")
-
-        def __swap_x_and_y_variables():
-            temp = self.xaxis
-            self.xaxis = self.yaxis
-            self.yaxis = temp
-
+    def unpack_data_items(self, packed_data_items, x_wrap_start=None):
         from cis.utils import unpack_data_object
-        from iris.cube import Cube
-        import logging
-        if len(self.packed_data_items[0].shape) == 1:
-            x_data = __get_data("x")
-            y_data = __get_data("y")
 
-            if len(x_data) == 1 and len(y_data) == len(self.packed_data_items[0].data):
-                __set_variable_as_data("x")
-            elif len(y_data) == 1 and len(x_data) == len(self.packed_data_items[0].data):
-                __set_variable_as_data("y")
-            else:
-                try:
-                    if (x_data == y_data).all():
-                        __swap_x_and_y_variables()
-                except AttributeError:
-                    if x_data == y_data:
-                        __swap_x_and_y_variables()
-
-        return [unpack_data_object(packed_data_item, self.xaxis, self.yaxis,
-                                   self.x_wrap_start) for packed_data_item in self.packed_data_items]
+        return [unpack_data_object(packed_data_item, self.xaxis, self.yaxis, x_wrap_start)
+                for packed_data_item in packed_data_items]
 
     def unpack_comparative_data(self):
         return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]

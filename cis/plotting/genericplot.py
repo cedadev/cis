@@ -102,7 +102,7 @@ class GenericPlot(APlot):
         # TODO: Drop one of self.unpacked_data_items or self.packed_data_items
         # If I drop the unpacked then I'll need to store the x and y coords somewhere and worry about the cube transforms,
         #  if I drop the packed items then I'll need to store the metadata somewhere (units, axis labels etc).
-        self.unpacked_data_items = self.unpack_data_items()
+        self.unpacked_data_items = self.unpack_data_items(packed_data_items)
 
         self.mplkwargs['label'] = self.label or packed_data_items.longname
 
@@ -146,8 +146,7 @@ class Generic2DPlot(APlot):
             self.mplkwargs["norm"] = LogNorm()
 
         logging.debug("Unpacking the data items")
-        self.x_wrap_start = x_wrap_start
-        self.unpacked_data_items = self.unpack_data_items()
+        self.unpacked_data_items = self.unpack_data_items(packed_data_items, x_wrap_start)
 
         self.mplkwargs["vmin"], self.mplkwargs["vmax"] = self.calculate_min_and_max_values()
 
