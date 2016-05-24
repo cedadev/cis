@@ -45,7 +45,7 @@ class APlot(object):
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
     def __init__(self, packed_data_items, ax, xaxis, yaxis, color=None,
-                 edgecolor=None, itemstyle=None, label=None, *mplargs, **mplkwargs):
+                 edgecolor='None', itemstyle=None, itemwidth=1, label=None, *mplargs, **mplkwargs):
         """
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -70,6 +70,7 @@ class APlot(object):
         self.label = label
         self.edgecolor = edgecolor
         self.itemstyle = itemstyle
+        self.itemwidth = itemwidth
 
         self.mplargs = mplargs
         self.mplkwargs = mplkwargs

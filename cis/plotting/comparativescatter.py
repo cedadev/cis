@@ -10,15 +10,15 @@ class ComparativeScatter(GenericPlot):
             ax = self.matplotlib.gca()
             if self.logx and self.logy:
                 import numpy.ma as ma
-                positive_item0 = ma.array(self.unpacked_data_items[0]["data"],
-                                          mask=self.unpacked_data_items[0]["data"] <= 0)
-                positive_item1 = ma.array(self.unpacked_data_items[1]["data"],
-                                          mask=self.unpacked_data_items[1]["data"] <= 0)
+                positive_item0 = ma.array(self.x,
+                                          mask=self.x<= 0)
+                positive_item1 = ma.array(self.y,
+                                          mask=self.y <= 0)
                 min_val = min(positive_item0.min(), positive_item1.min())
                 max_val = max(positive_item0.max(), positive_item1.max())
             else:
-                min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
-                max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
+                min_val = min(self.x.min(), self.y.min())
+                max_val = max(self.x.max(), self.y.max())
             y_equals_x_array = [min_val, max_val]
             ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
@@ -33,7 +33,7 @@ class ComparativeScatter(GenericPlot):
             else:
                 self.mplkwargs.pop("color", None)
 
-            ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"],
+            ax.scatter(self.x, self.y,
                        s=self.itemwidth, edgecolors="none", *self.mplargs, **self.mplkwargs)
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")

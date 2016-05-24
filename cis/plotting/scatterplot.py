@@ -4,52 +4,6 @@ from cis.plotting.APlot import APlot
 
 # TODO: The generic scatter shouldn't have any of the if 2D stuff in...
 class GenericScatter(APlot):
-    def plot(self):
-        """
-        Plots one or many scatter plots
-        Stores the plot in a list to be used for when adding the legend
-        """
-        from cis.plotting.plot import colors
-
-        self.mplkwargs["s"] = self.itemwidth
-
-        for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            local_kwargs = self.mplkwargs.copy()
-            datafile = self.datagroups[i]
-
-            if "itemstyle" in datafile:
-                local_kwargs["marker"] = datafile["itemstyle"]
-
-            if 'cmap' in datafile:
-                local_kwargs["cmap"] = datafile["cmap"]
-
-            # Default to no edgecolour
-            if "edgecolor" in datafile:
-                local_kwargs["edgecolors"] = datafile["edgecolor"]
-            elif 'marker' not in local_kwargs or local_kwargs['marker'] == 'o':
-                local_kwargs["edgecolors"] = 'None'
-
-            if "c" not in local_kwargs:
-                if datafile.get("color", None):
-                    local_kwargs["c"] = datafile["color"]
-                elif unpacked_data_item.get("y", None) is not None:  # i.e. the scatter plot is 3D
-                    local_kwargs["c"] = unpacked_data_item["data"]
-                else:
-                    local_kwargs["c"] = colors[i % len(colors)]
-
-            x_coords = unpacked_data_item["x"]
-
-            if unpacked_data_item.get("y", None) is not None:
-                # 3D
-                self.scatter_type = "3D"
-                y_coords = unpacked_data_item["y"]
-            else:
-                # 2D
-                self.scatter_type = "2D"
-                y_coords = unpacked_data_item["data"]
-
-            self.color_axis.append(
-                self.matplotlib.scatter(x_coords, y_coords, *self.mplargs, **local_kwargs))
 
     @staticmethod
     def guess_axis_label(data, axisvar=None, axis=None):
@@ -75,9 +29,42 @@ class GenericScatter(APlot):
         return label
 
 
-class ScatterPlot(GenericScatter, GenericPlot):
-    pass
+class ScatterPlot(GenericPlot, GenericScatter):
+
+    def plot(self):
+        """
+        Plots one or many scatter plots
+        Stores the plot in a list to be used for when adding the legend
+        """
+        # TODO: This is better now but I'm still not convinced about having mplkwargs being changed globably like this
+        self.mplkwargs["s"] = self.itemwidth
+
+        self.mplkwargs["marker"] = self.itemstyle
+
+        self.mplkwargs["edgecolors"] = self.edgecolor
+
+        self.mplkwargs["c"] = self.color
+
+        self.color_axis.append(
+            self.ax.scatter(self.x, self.data, *self.mplargs, **self.mplkwargs))
 
 
-class ScatterPlot2D(GenericScatter, Generic2DPlot):
-    pass
+class ScatterPlot2D(Generic2DPlot, GenericScatter):
+
+    def plot(self):
+        """
+        Plots one or many scatter plots
+        Stores the plot in a list to be used for when adding the legend
+        """
+        self.mplkwargs["s"] = self.itemwidth
+
+        self.mplkwargs["marker"] = self.itemstyle
+
+        self.mplkwargs["cmap"] = self.cmap
+
+        self.mplkwargs["edgecolors"] = self.edgecolor
+
+        self.mplkwargs["c"] = self.data
+
+        self.color_axis.append(
+            self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs))

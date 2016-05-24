@@ -304,8 +304,8 @@ class Plotter(object):
     def __init__(self, data, type=None, out_filename=None, xaxis=None, yaxis=None, layer_opts=None, plotheight=None,
                  plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False, nasabluemarble=False,
                  xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, cbarlabel=None, coastlinecolour='k',
-                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None,
-                 itemwidth=1, xtickangle=None, ytickangle=None, projection=None, *args, **kwargs):
+                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None, xtickangle=None, ytickangle=None,
+                 projection=None, *args, **kwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
@@ -350,6 +350,7 @@ class Plotter(object):
         self.set_width_and_height(plotwidth, plotheight)
 
         # Each plot is really just one 'layer', it should only get arguments relevant for that layer.
+        # TODO: I'll have to choose colors for each layer if they haven't been set already...
         for d, params in zip(data, layer_opts):
             plot = self.plot_types[type](d, ax, xaxis, yaxis, *args, **layer_opts+kwargs)
 

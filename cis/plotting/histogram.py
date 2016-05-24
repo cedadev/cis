@@ -13,36 +13,37 @@ class Histogram(GenericPlot):
         Plots a 2D histogram
         """
         from numpy.ma import MaskedArray
+        # TODO: What is going on here..?
         vmin = self.mplkwargs.pop("vmin")
         vmax = self.mplkwargs.pop("vmax")
 
         self.mplkwargs["bins"] = self.calculate_bin_edges()
 
-        for i, unpacked_data_item in enumerate(self.unpacked_data_items):
-            datafile = self.datagroups[i]
-            if datafile["itemstyle"]:
-                if datafile["itemstyle"] in self.valid_histogram_styles:
-                    self.mplkwargs["histtype"] = datafile["itemstyle"]
-                else:
-                    from cis.exceptions import InvalidHistogramStyleError
-                    raise InvalidHistogramStyleError(
-                        "'" + datafile["itemstyle"] + "' is not a valid histogram style, please use one of: " + str(
-                            self.valid_histogram_styles))
-
+        if self.itemstyle:
+            if self.itemstyle in self.valid_histogram_styles:
+                self.mplkwargs["histtype"] = self.itemstyle
             else:
-                self.mplkwargs.pop("histtype", None)
+                from cis.exceptions import InvalidHistogramStyleError
+                raise InvalidHistogramStyleError(
+                    "'" + self.itemstyle + "' is not a valid histogram style, please use one of: " + str(
+                        self.valid_histogram_styles))
+        # TODO: Why are we popping this off - maybe someone put it on there deliberately?
+        else:
+            self.mplkwargs.pop("histtype", None)
 
-            if datafile["color"]:
-                self.mplkwargs["color"] = datafile["color"]
-            else:
-                self.mplkwargs.pop("color", None)
+        if self.color:
+            self.mplkwargs["color"] = self.color
+        # TODO: As above
+        else:
+            self.mplkwargs.pop("color", None)
 
-            if isinstance(unpacked_data_item["data"], MaskedArray):
-                data = unpacked_data_item["data"].compressed()
-            else:
-                data = unpacked_data_item["data"].flatten()
+        if isinstance(self.data, MaskedArray):
+            data = self.data.compressed()
+        else:
+            data = self.data.flatten()
 
-            self.matplotlib.hist(data, *self.mplargs, **self.mplkwargs)
+        self.ax.hist(data, *self.mplargs, **self.mplkwargs)
+
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
@@ -58,12 +59,10 @@ class Histogram(GenericPlot):
         """
         from cis.utils import calculate_histogram_bin_edges
         from numpy import array
-        min_val = min(unpacked_data_item["data"].min() for unpacked_data_item in self.unpacked_data_items)
-        max_val = max(unpacked_data_item["data"].max() for unpacked_data_item in self.unpacked_data_items)
-        data = array([min_val, max_val])
-        bin_edges = calculate_histogram_bin_edges(data, "x", self.xmin, self.xmax,
-                                                  self.xbinwidth, self.logx)
+        data = array([self.data.min(), self.data.max()])
+        bin_edges = calculate_histogram_bin_edges(data, "x", self.xmin, self.xmax, self.xbinwidth, self.logx)
 
+        # TODO: Why are these being changed?
         self.xmin = bin_edges.min()
         self.xmax = bin_edges.max()
 
@@ -96,9 +95,9 @@ class Histogram(GenericPlot):
     def set_axis_ticks(self, axis, no_of_dims):
 
         if axis == "x":
-            tick_method = self.matplotlib.xticks
+            tick_method = self.ax.xticks
         elif axis == "y":
-            tick_method = self.matplotlib.yticks
+            tick_method = self.ax.yticks
 
         if getattr(self, axis + "tickangle") is None:
             angle = None

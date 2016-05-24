@@ -53,12 +53,12 @@ class ContourPlot(Generic2DPlot):
         else:
             contour_type = self.ax.contour
 
-        if self.is_map() and self.unpacked_data_items[0]["data"].ndim == 2:
+        if self.is_map() and self.data.ndim == 2:
             # This fails for an unknown reason on one dimensional data
             mplkwargs["latlon"] = True
 
-        self.color_axis.append(contour_type(self.unpacked_data_items[0]["x"], self.unpacked_data_items[0]["y"],
-                                            self.unpacked_data_items[0]["data"], contour_level_list, **mplkwargs))
+        self.color_axis.append(contour_type(self.x, self.y,
+                                            self.data, contour_level_list, **mplkwargs))
         if mplkwargs["contlabel"] and not self.filled:
             self.ax.clabel(self.color_axis[0], fontsize=mplkwargs["cfontsize"], inline=1, fmt='%.3g')
         elif mplkwargs["contlabel"] and self.filled:

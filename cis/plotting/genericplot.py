@@ -99,9 +99,6 @@ class GenericPlot(APlot):
         super(GenericPlot).__init__(packed_data_items, *mplargs, **mplkwargs)
 
         logging.debug("Unpacking the data items")
-        # TODO: Drop one of self.unpacked_data_items or self.packed_data_items
-        # If I drop the unpacked then I'll need to store the x and y coords somewhere and worry about the cube transforms,
-        #  if I drop the packed items then I'll need to store the metadata somewhere (units, axis labels etc).
         self.unpack_data_items(packed_data_items)
 
         self.mplkwargs['label'] = self.label or packed_data_items.longname

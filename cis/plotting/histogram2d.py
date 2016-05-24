@@ -30,17 +30,17 @@ class Histogram2D(Generic2DPlot):
             cmax = vmax
 
             # Add y=x line
-            min_val = min(self.unpacked_data_items[0]["data"].min(), self.unpacked_data_items[1]["data"].min())
-            max_val = max(self.unpacked_data_items[0]["data"].max(), self.unpacked_data_items[1]["data"].max())
+            min_val = min(self.x.min(), self.y.min())
+            max_val = max(self.x.max(), self.y.max())
             y_equals_x_array = [min_val, max_val]
-            self.matplotlib.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
+            self.ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
             # Just in case data has different shapes, reshape here
-            self.unpacked_data_items[0]["data"] = numpy.reshape(self.unpacked_data_items[0]["data"],
-                                                                self.unpacked_data_items[1]["data"].shape)
+            self.x = numpy.reshape(self.x,
+                                                                self.y.shape)
 
             first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(
-                self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"])
+                self.x, self.y)
 
             first_data_item = first_data_item.compressed()
             second_data_item = second_data_item.compressed()
@@ -48,7 +48,7 @@ class Histogram2D(Generic2DPlot):
             # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
             histogram2ddata = numpy.histogram2d(first_data_item, second_data_item, bins=[xbins, ybins])[0]
             histogram2ddata = numpy.ma.masked_equal(histogram2ddata, 0)
-            self.matplotlib.pcolor(xbins, ybins, histogram2ddata.T, vmin=cmin, vmax=cmax,
+            self.ax.pcolor(xbins, ybins, histogram2ddata.T, vmin=cmin, vmax=cmax,
                                    *self.mplargs, **self.mplkwargs)
 
             self.mplkwargs["vmin"] = vmin
@@ -72,9 +72,9 @@ class Histogram2D(Generic2DPlot):
         """
         from cis.utils import calculate_histogram_bin_edges
         if axis == "x":
-            data = self.unpacked_data_items[0]["data"]
+            data = self.x
         elif axis == "y":
-            data = self.unpacked_data_items[1]["data"]
+            data = self.y
 
         bin_edges = calculate_histogram_bin_edges(data, axis, getattr(self, axis + "min"), getattr(self, axis + "max"),
                                                   getattr(self, axis + "binwidth"), getattr(self, "log" + axis))
@@ -111,11 +111,9 @@ class Histogram2D(Generic2DPlot):
         from numpy import arange
 
         if axis == "x":
-            tick_method = self.matplotlib.xticks
-            item_index = 0
+            tick_method = self.ax.xticks
         elif axis == "y":
-            tick_method = self.matplotlib.yticks
-            item_index = 1
+            tick_method = self.ax.yticks
 
         if getattr(self, axis + "tickangle") is None:
             angle = None
@@ -126,12 +124,12 @@ class Histogram2D(Generic2DPlot):
             step = getattr(self, axis + "step")
 
             if getattr(self, axis + "min") is None:
-                min_val = self.unpacked_data_items[item_index]["data"].min()
+                min_val = getattr(self, axis).min()
             else:
                 min_val = getattr(self, axis + "min")
 
             if getattr(self, axis + "max") is None:
-                max_val = self.unpacked_data_items[item_index]["data"].max()
+                max_val = getattr(self, axis).max()
             else:
                 max_val = getattr(self, axis + "max")
 
