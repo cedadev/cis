@@ -96,7 +96,7 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, font
 class GenericPlot(APlot):
 
     def __init__(self, packed_data_items, *mplargs, **mplkwargs):
-        super().__init__(packed_data_items, *mplargs, **mplkwargs)
+        super(GenericPlot).__init__(packed_data_items, *mplargs, **mplkwargs)
 
         logging.debug("Unpacking the data items")
         # TODO: Drop one of self.unpacked_data_items or self.packed_data_items
@@ -129,7 +129,7 @@ class Generic2DPlot(APlot):
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
-        super().__init__(packed_data_items, ax, *args, **kwargs)
+        super(Generic2DPlot, self).__init__(packed_data_items, ax, *args, **kwargs)
 
         self.logv = logv
         self.vmin = vmin

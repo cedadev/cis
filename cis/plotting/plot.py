@@ -277,7 +277,7 @@ class Plotter(object):
 
         self.set_width_and_height(plotwidth, plotheight)
 
-        # TODO: Each plot is really just one 'layer', it should only get arguments relevant for that layer.
+        # Each plot is really just one 'layer', it should only get arguments relevant for that layer.
         for d, params in zip(data, layer_opts):
             plot = self.plot_types[type](d, ax, xaxis, yaxis, *args, **layer_opts+kwargs)
 

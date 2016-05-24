@@ -75,7 +75,6 @@ class APlot(object):
 
         self.color_axis = []
 
-
     @abstractmethod
     def plot(self):
         """
@@ -104,7 +103,7 @@ class APlot(object):
         # in general, display both name and units in brackets
         return name + " " + format_units(units)
 
-    def auto_set_ticks(self):
+    def auto_set_ticks(self, ax, xaxis, yaxis, xmin, xmax, ymin, ymax, xstep, ystep, logx, logy, ismap, transform):
         """
         Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
         Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude

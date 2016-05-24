@@ -5,7 +5,7 @@ import numpy
 class Histogram2D(Generic2DPlot):
 
     def __init__(self, packed_data_items, xbinwidth=None, ybinwidth=None, *args, **kwargs):
-        super().__init__(packed_data_items, *args, **kwargs)
+        super(Histogram2D, self).__init__(packed_data_items, *args, **kwargs)
         self.xbinwidth = xbinwidth
         self.ybinwidth = ybinwidth
 
@@ -104,7 +104,7 @@ class Histogram2D(Generic2DPlot):
         """
         Adds a color bar to the plot and labels it as "Frequency"
         """
-        super().add_color_bar(fig, mappable, cbarorient, cbarscale, "Frequency", logv, vstep)
+        super(Histogram2D).add_color_bar(fig, mappable, cbarorient, cbarscale, "Frequency", logv, vstep)
 
     def set_axis_ticks(self, axis, no_of_dims):
         from numpy import arange
