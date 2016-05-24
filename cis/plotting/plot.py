@@ -219,6 +219,77 @@ def drawcoastlines(ax, nasabluemarble, coastlinecolour, transform):
                             'Check internet connectivity and try again')
 
 
+def auto_set_map_ticks(ax, xmin, xmax, ymin, ymax, xstep, ystep, logx, logy, transform):
+    """
+    Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
+    Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
+    vs longitude plots the ticks can come out overlapped, so an exception is included to deal with this.
+    """
+    from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+    from matplotlib.ticker import MaxNLocator
+
+    max_x_bins = 9
+    max_y_bins = 7  # as plots are wider rather than taller
+
+    lon_steps = [1, 3, 6, 9, 10]
+    lat_steps = [1, 3, 6, 9, 10]
+    variable_step = [1, 2, 4, 5, 10]
+
+    if (xmax - xmin) < 5:
+        lon_steps = variable_step
+    if (ymax - ymin) < 5:
+        lat_steps = variable_step
+
+    # We need to make a special exception for particularly narrow and wide plots, which will be lat vs lon
+    # preserving the aspect ratio. This gives more options for the spacing to try and find something that can use
+    # the maximum number of bins.
+    if (ymax - ymin) > 2.2 * (xmax - xmin):
+        max_x_bins = 4
+        max_y_bins = 11
+    elif (xmax - xmin) > 2.2 * (ymax - ymin):
+        max_x_bins = 14
+        max_y_bins = 4
+
+    if xstep is None and not logx:
+        lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
+        ax.set_xticks(lon_locator.tick_values(xmin, xmax), crs=transform)
+        ax.xaxis.set_major_formatter(LongitudeFormatter())
+
+    if ystep is None and not logy:
+        lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
+        ax.set_yticks(lat_locator.tick_values(ymin, ymax), crs=transform)
+        ax.yaxis.set_major_formatter(LatitudeFormatter())
+
+
+def auto_set_ticks(ax, x_axis, y_axis, xmin, xmax, ymin, ymax, xstep, ystep, logx, logy):
+    """
+    Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
+    Log axes generally come out nicely spaced without needing manual intervention.
+    """
+    # TODO: The decision whether to do the actual setting should be done outside this function
+    # TODO: Split into one function which just works on a single axis, with lat or lon as a bool
+    from matplotlib.ticker import MaxNLocator, AutoMinorLocator
+    max_x_bins = 9
+    max_y_bins = 9
+
+    lat_lon_steps = [1, 3, 6, 9, 10]
+    variable_step = [1, 2, 4, 5, 10]
+
+    # Use lat/lon steps if we're a lat/lon axis with a large enough range
+    x_steps = lat_lon_steps if x_axis.startswith('lon') and (xmax - xmin) > 5 else variable_step
+    y_steps = lat_lon_steps if y_axis.startswith('lat') and (ymax - ymin) > 5 else variable_step
+
+    if xstep is None and not logx:
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=max_x_bins, steps=x_steps))
+        ax.xaxis.set_minor_locator(AutoMinorLocator())
+        ax.xaxis.grid(False, which='minor')
+
+    if ystep is None and not logy:
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=max_y_bins, steps=y_steps))
+        ax.yaxis.set_minor_locator(AutoMinorLocator())
+        ax.yaxis.grid(False, which='minor')
+
+
 class Plotter(object):
     plot_types = {"contour": ContourPlot,
                   "contourf": ContourfPlot,
@@ -262,13 +333,14 @@ class Plotter(object):
         yaxis = yaxis or guess_y_axis(data, xaxis)
 
         # TODO: Check that projection=None is a valid default.
-
+        transform = None
         if is_map(data, xaxis, yaxis):
             xlabel = xlabel or "Longitude"
             ylabel = ylabel or "Latitude"
             if projection is None:
                 projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, xmin) + 180.0))
-                kwargs['transform'] = ccrs.PlateCarree()
+                transform = ccrs.PlateCarree()
+                kwargs['transform'] = transform
 
         xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
         ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
@@ -287,7 +359,7 @@ class Plotter(object):
 
         # TODO figure out what to do about the transforms floating about the place.
         format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title,
-                    transform=None, legend=len(data)>1)
+                    transform, legend=len(data)>1)
         if not nocolourbar:
             self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units))
 
@@ -296,9 +368,11 @@ class Plotter(object):
             set_x_axis_as_time(ax, xtickangle)
 
         if is_map(data, xaxis, yaxis):
-            drawcoastlines(ax, nasabluemarble, coastlinecolour, transform=None)
+            drawcoastlines(ax, nasabluemarble, coastlinecolour, transform)
+            auto_set_map_ticks(ax, xmin, xmax, ymin, ymax, xstep, ystep, logx, logy, transform)
+        else:
+            auto_set_ticks(ax, xaxis, yaxis, xmin, xmax, ymin, ymax, xstep, ystep, logx, logy)
 
-        self.plot_types[type].auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename=None):
