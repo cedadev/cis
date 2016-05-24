@@ -2,8 +2,6 @@ import collections
 import re
 import logging
 import warnings
-import iris
-from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 from cis.exceptions import InvalidCommandLineOptionError
 
@@ -91,11 +89,10 @@ def calculate_histogram_bin_edges(data, axis, user_min, user_max, step, log_scal
     return bin_edges
 
 
-def expand_1d_to_2d_array(array_1d, length, axis=0):
+def expand_1d_to_2d_array(array, length, axis=0):
     """
-    General utility routine to 'extend a 1D array into a 2D array
-    by duplicating the data along a given 'axis' (default is 0)
-    of size 'length'.
+    General utility routine to 'extend arbitrary dimensional array into a higher dimension
+    by duplicating the data along a given 'axis' (default is 0) of size 'length'.
 
     Examples::
 
@@ -113,17 +110,20 @@ def expand_1d_to_2d_array(array_1d, length, axis=0):
          [3 3 3 3]
          [4 4 4 4]]
 
-    :param array_1d:
+    :param array:
     :param length:
     :param axis:
     :return:
     """
-    import numpy as np
+    from numpy.lib.stride_tricks import broadcast_to
 
     if axis == 0:
-        array_2d = np.repeat(array_1d[np.newaxis, :], length, 0)
+        array_2d = broadcast_to(array, (length, array.size))
+        # array_2d = np.lib.stride_tricks.as_strided(array_1d, (length, array_1d.size), (0, array_1d.itemsize))
     else:
-        array_2d = np.repeat(array_1d[:, np.newaxis], length, 1)
+        reshaped = array.reshape(array.size, 1)
+        array_2d = broadcast_to(reshaped, (array.size, length))
+        # array_2d = np.lib.stride_tricks.as_strided(array_1d, (array_1d.size, length), (array_1d.itemsize, 0))
 
     return array_2d
 
@@ -194,6 +194,7 @@ def get_coord(data_object, variable, data):
     :param data:
     :return:
     """
+    from iris.exceptions import CoordinateNotFoundError
     if variable in [data_object.name(), data_object.standard_name, data_object.long_name, 'default']:
         return data
     else:
@@ -217,6 +218,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
     """
     from iris.cube import Cube
     import iris.plot as iplt
+    from iris.exceptions import CoordinateNotFoundError
     import iris
     import logging
     from cartopy.util import add_cyclic_point
@@ -281,14 +283,14 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
                         data, x = add_cyclic_point(data, x)
                     except ValueError as e:
                         logging.warn('Unable to add cyclic data point for {}. Error was: '.format(x_variable)
-                                     + e.message)
+                                     + e.args[0])
                     x, y = np.meshgrid(x, y)
                 elif len(y) == data.shape[-1]:
                     try:
                         data, y = add_cyclic_point(data, y)
                     except ValueError as e:
                         logging.warn('Unable to add cyclic data point for {}. Error was: '.format(y_variable)
-                                     + e.message)
+                                     + e.args[0])
                     y, x = np.meshgrid(y, x)
     elif x_axis_name == 'X' and x_wrap_start is not None:
         x = fix_longitude_range(x, x_wrap_start)
@@ -309,34 +311,23 @@ def fix_longitude_range(lons, range_start):
     :param range_start: longitude at start of 360 degree range into which values are required to fit
     :return: array of fixed longitudes
     """
-    return iris.analysis.cartography.wrap_lons(lons, range_start, 360)
+    from iris.analysis.cartography import wrap_lons
+    return wrap_lons(lons, range_start, 360)
 
 
-def find_longitude_wrap_start(x_variable, packed_data_items):
+def find_longitude_wrap_start(packed_data_items):
     """
     ONLY WORK OUT THE WRAP START OF THE DATA
-    :param x_variable:
-    :param x_range:
     :param packed_data_items:
     :return:
     """
-    x_wrap_start = None
-    x_points_mins = []
-    x_points_maxs = []
-    for data_object in packed_data_items:
-        try:
-            coord = data_object.coord(x_variable)
-            x_axis_name = guess_coord_axis(coord)
-        except CoordinateNotFoundError:
-            x_axis_name = None
-        if x_axis_name == 'X':
-            x_points_mins.append(np.min(coord.points))
-            x_points_maxs.append(np.max(coord.points))
-
-    if len(x_points_mins) > 0:
-        x_points_min = min(x_points_mins)
-        x_points_max = max(x_points_maxs)
-
+    from iris.exceptions import CoordinateNotFoundError
+    # They either all have longitude coordinates in, or none of them do.
+    try:
+        x_points_min = min([d.get_coord('longitude').points.min() for d in packed_data_items])
+    except CoordinateNotFoundError:
+        x_wrap_start = None
+    else:
         x_wrap_start = -180 if x_points_min < 0 else 0
 
     return x_wrap_start
@@ -365,38 +356,6 @@ def copy_attributes(source, dest):
             dest.__dict__.update(source)
         else:
             dest.__dict__.update(source.__dict__)
-
-
-def add_file_prefix(prefix, filepath):
-    """
-    Add a prefix to a filename taking into account any path that might be present before that actual filename
-
-    :param prefix: A string to prefix the filename with
-    :param filepath: Filename, optionally including path
-    :return: A string with the full path to the prefixed file
-    """
-    import os.path
-    filename = os.path.basename(filepath)
-    path = os.path.dirname(filepath)
-    return os.path.join(path, prefix + filename)
-
-
-def remove_file_prefix(prefix, filepath):
-    """
-    Remove a prefix from a filename, taking into account any path that might be present before that actual filename
-
-    :param prefix: The prefix to remove
-    :param filepath: Filename, optional including path
-    :return: A string with the full path to the un-prefixed file
-    """
-    import os.path
-
-    filename = os.path.basename(filepath)
-    path = os.path.dirname(filepath)
-
-    filename = filename.replace(prefix, '', 1)
-
-    return os.path.join(path, filename)
 
 
 def parse_key_val_string(arguments, separator):
@@ -713,10 +672,12 @@ def guess_coord_axis(coord):
 
     This is intended to be similar to iris.util.guess_coord_axis.
     """
+    import iris
     # TODO Can more be done for ungridded based on units, as with iris.util.guess_coord_axis?
+    guessed_axis = None
     if isinstance(coord, iris.coords.Coord):
         guessed_axis = iris.util.guess_coord_axis(coord)
-    else:
+    elif coord.standard_name is not None:
         guessed_axis = standard_names.get(coord.standard_name.lower())
     return guessed_axis
 
@@ -733,35 +694,19 @@ def add_to_list_if_not_none(item, list):
         list.append(item)
 
 
-def dimensions_equal(dimensions, other_dimensions):
+def dimensions_compatible(dimensions, other_dimensions):
     """
-    Check to see if two dimensions are the same (contain the same variables in the same order)
+    Check to see if two dimensions share the same common coordinates. Note that this will only compare the dimensions
+    up to the length of the shortest list.
 
     :param dimensions: dimension list
     :param other_dimensions: other dimension list
     """
 
-    if len(dimensions) is not len(other_dimensions):
-        return False
     for dim, other_dim in zip(dimensions, other_dimensions):
         if not dim == other_dim:
             return False
     return True
-
-
-def set_cube_standard_name_if_valid(cube, standard_name):
-    """
-    Set a cube's standard name if it is a valid CF compliant name, otherwise set it to None
-
-    :param cube: Cube to set standard name on
-    :param standard_name: Standard name to set
-    :return:
-    """
-    try:
-        cube.standard_name = standard_name
-    except ValueError:
-        # If the standard name is not valid CF compliant standard name
-        cube.standard_name = None
 
 
 def deprecated(func):

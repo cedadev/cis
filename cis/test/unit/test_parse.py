@@ -166,7 +166,6 @@ class TestParse(ParseTestFiles):
             if e.code != 2:
                 raise e
 
-    @raises(argparse.ArgumentTypeError)
     def test_GIVEN_input_contains_output_WHEN_parse_THEN_raises_error(self):
         dummy_cis_out = 'out.nc'
         args_list = [["subset", "var:" + dummy_cis_out, "x=[-180,180]", "-o", dummy_cis_out[:-3]],
@@ -208,7 +207,7 @@ class TestParsePlot(ParseTestFiles):
 
     def test_can_specify_valid_chart_type(self):
         args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                Plotter.plot_types.keys()[0]]
+                list(Plotter.plot_types.keys())[0]]
         parse_args(args)
 
     def test_should_raise_error_with_an_invalid_chart_type(self):
@@ -223,7 +222,7 @@ class TestParsePlot(ParseTestFiles):
     def test_should_raise_error_with_more_than_one_chart_type(self):
         try:
             args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                    Plotter.plot_types.keys()[0], Plotter.plot_types.keys()[1]]
+                    list(Plotter.plot_types.keys())[0], list(Plotter.plot_types.keys())[1]]
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -534,6 +533,35 @@ class TestParseAggregate(ParseTestFiles):
             args = ['aggregate', 'var1:%s' % self.escaped_single_valid_file, lim]
             parse_args(args)
 
+    def test_GIVEN_mixed_limits_valid_WHEN_aggregate_THEN_parsed_OK(self):
+        limits = ['x=[-180.0,180.0,0.5],y=[-80.0,10.0,0.1]',
+                  'x=[-180.0,180.0,0.5],y=[-80.0,10.0,0.1],t=[2008-05-12,2008-05-12,PT15M]']
+        for lim in limits:
+            args = ['aggregate', 'var1:%s' % self.escaped_single_valid_file, lim]
+            parse_args(args)
+
+    def test_output_file_matches_an_input_file(self):
+        from cis.parse import _output_file_matches_an_input_file
+        from argparse import Namespace
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as tmpfile:
+            input_file = tmpfile.name
+            arguments = Namespace()
+            # Test output file is the same as input file
+            arguments.output = input_file
+            arguments.datagroups = [{"filenames": [input_file]}]
+            assert _output_file_matches_an_input_file(arguments)
+
+            # Test output file is different
+            with NamedTemporaryFile() as tmp_out:
+                arguments.output = tmp_out.name
+                assert not _output_file_matches_an_input_file(arguments)
+
+            # Test output file is different (and doesn't exist)
+            arguments.output = 'blah'
+            assert not _output_file_matches_an_input_file(arguments)
+
 
 class TestParseCollocate(ParseTestFiles):
     """
@@ -560,7 +588,7 @@ class TestParseCollocate(ParseTestFiles):
         args = ["col", var + ':' + self.escaped_test_directory_files[0], samplegroup]
         main_args = parse_args(args)
         sg = main_args.samplegroup
-        assert_that(sg['collocator'], is_(None))
+        assert_that(not sg.get('collocator', False))
         assert_that(sg['variable'], is_('rain'))
 
     def test_can_specify_one_valid_samplefile_and_one_complete_datagroup(self):
@@ -571,8 +599,7 @@ class TestParseCollocate(ParseTestFiles):
         eq_(('col', {}), args.samplegroup['collocator'])
         eq_(('con', {}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
-        eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}],
-            args.datagroups)
+        eq_([{'variables': ['variable'], 'filenames': [self.test_directory_files[0]]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_without_other_options(self):
         args = ["col", "variable:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0] +
@@ -580,10 +607,7 @@ class TestParseCollocate(ParseTestFiles):
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_(('bin', {}), args.samplegroup['collocator'])
-        eq_(None, args.samplegroup['constraint'])
-        eq_(None, args.samplegroup['kernel'])
-        eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}],
-            args.datagroups)
+        eq_([{'variables': ['variable'], 'filenames': [self.test_directory_files[0]]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_many_datagroups(self):
         args = ["col", "variable1:" + self.escaped_test_directory_files[0],
@@ -594,7 +618,7 @@ class TestParseCollocate(ParseTestFiles):
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_("variable4", args.samplegroup['variable'])
         eq_(('col', {}), args.samplegroup['collocator'])
-        eq_(None, args.samplegroup['constraint'])
+        eq_(False, args.samplegroup.get('constraint', False))
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_([self.test_directory_files[0]], args.datagroups[0]['filenames'])
         eq_(["variable1"], args.datagroups[0]['variables'])
@@ -614,4 +638,3 @@ class TestParseCollocate(ParseTestFiles):
         eq_(('SepConstraint', {'h_sep': '1500', 'v_sep': '22000', 't_sep': '5000'}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_(('bin', {}), args.samplegroup['collocator'])
-        eq_(None, args.samplegroup['product'])

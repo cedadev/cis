@@ -33,7 +33,7 @@ def __add_metadata(var, data):
         var.calendar = data.metadata.calendar
     if data.metadata.history:
         var.history = data.metadata.history
-    for name, value in data.attributes.iteritems():
+    for name, value in data.attributes.items():
         setattr(var, name, value)
     return var
 
@@ -135,6 +135,8 @@ def add_data_to_file(data_object, filename):
     :param filename:
     :return:
     """
+    from cis import __version__
     netcdf_file = Dataset(filename, 'a', format="NETCDF4")
     var = __create_variable(netcdf_file, data_object, prefer_standard_name=False)
+    netcdf_file.source = "CIS" + __version__
     netcdf_file.close()

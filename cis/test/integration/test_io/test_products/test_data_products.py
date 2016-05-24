@@ -85,9 +85,10 @@ class ProductTests(object):
 
     @istest
     def test_variable_printing(self):
+        import six
         data_obj = self.product().create_data_object([self.filename], self.valid_variable)
         summary = data_obj.summary()
-        assert_is_instance(summary, basestring)
+        assert_is_instance(summary, six.string_types)
 
     def check_valid_vars(self, vars):
         if self.vars is not None:
@@ -301,7 +302,7 @@ class TestASCII(ProductTests, unittest.TestCase):
         from cis.time_util import convert_datetime_to_std_time
 
         data = self.product().create_data_object([self.filename], True)
-        assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 25, 15, 32, 03)))
+        assert(data.coord('time').data[3] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 25, 15, 32, 0o3)))
         assert(data.coord('time').data[4] == convert_datetime_to_std_time(datetime.datetime(2012, 8, 26)))
 
 

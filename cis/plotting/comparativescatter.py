@@ -1,13 +1,14 @@
-from cis.plotting.generic_plot import Generic_Plot
+from cis.plotting.genericplot import GenericPlot
 
 
-class Comparative_Scatter(Generic_Plot):
+class ComparativeScatter(GenericPlot):
+
     def plot(self):
         from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         if len(self.packed_data_items) == 2:
             # Add y=x line
             ax = self.matplotlib.gca()
-            if self.plot_args["logx"] and self.plot_args["logy"]:
+            if self.logx and self.logy:
                 import numpy.ma as ma
                 positive_item0 = ma.array(self.unpacked_data_items[0]["data"],
                                           mask=self.unpacked_data_items[0]["data"] <= 0)
@@ -21,7 +22,7 @@ class Comparative_Scatter(Generic_Plot):
             y_equals_x_array = [min_val, max_val]
             ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
-            datagroup = self.plot_args["datagroups"][0]
+            datagroup = self.datagroups[0]
             if datagroup["itemstyle"]:
                 self.mplkwargs["marker"] = datagroup["itemstyle"]
             else:
@@ -33,35 +34,25 @@ class Comparative_Scatter(Generic_Plot):
                 self.mplkwargs.pop("color", None)
 
             ax.scatter(self.unpacked_data_items[0]["data"], self.unpacked_data_items[1]["data"],
-                       s=self.plot_args["itemwidth"], edgecolors="none", *self.mplargs, **self.mplkwargs)
+                       s=self.itemwidth, edgecolors="none", *self.mplargs, **self.mplkwargs)
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 
     def unpack_data_items(self):
         return self.unpack_comparative_data()
 
-    def calculate_axis_limits(self, axis, min_val, max_val):
-        if axis == "x":
-            axis_index = 0
-        elif axis == "y":
-            axis_index = 1
+    @staticmethod
+    def guess_axis_label(data, axisvar=None, axis=None):
+        """
+        Sets the default axis label for a comparative plot, e.g. a comparative scatter or a 3d histogram
+        :param axis: The axis to set the default label for
+        """
+        from .APlot import format_units
+        if axis.lower() == 'x':
+            item_index = 0
+        elif axis.lower() == 'y':
+            item_index = 1
 
-        c_min, c_max = self.calc_min_and_max_vals_of_array_incl_log(axis, self.unpacked_data_items[axis_index]["data"])
-
-        new_min = c_min if min_val is None else min_val
-        new_max = c_max if max_val is None else max_val
-
-        return new_min, new_max
-
-    def format_plot(self):
-        # We don't format the time axis here as we're only plotting data against data
-        self.format_2d_plot()
-
-    def set_default_axis_label(self, axis):
-        self.set_default_axis_label_for_comparative_plot(axis)
-
-    def create_legend(self):
-        pass
-
-    def is_map(self):
-        return False
+        units = data[item_index].units
+        name = data[item_index].name()
+        return name + " " + format_units(units)

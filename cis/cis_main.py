@@ -59,7 +59,7 @@ def plot_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments
     """
-    from plotting.plot import Plotter
+    from .plotting.plot import Plotter
     from cis.data_io.data_reader import DataReader
 
     try:
@@ -74,8 +74,10 @@ def plot_cmd(main_arguments):
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
 
+    layer_opts = [{k: v for k, v in d if k not in ['variable', 'filenames', 'product']}
+                  for d in main_arguments.pop('datagroups')]
     try:
-        Plotter(data, plot_type, output, **main_arguments)
+        Plotter(data, plot_type, output, layer_opts, **main_arguments)
     except MemoryError:
         __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
                          "of data to be plotted, increase the swap space available on your machine or use a machine "
@@ -186,7 +188,7 @@ def evaluate_cmd(main_arguments):
 
     :param main_arguments: The command line arguments (minus the eval command)
     """
-    from evaluate import Calculator
+    from .evaluate import Calculator
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
     calculator = Calculator()
@@ -201,7 +203,7 @@ def stats_cmd(main_arguments):
 
     :param main_arguments: The command line arguments (minus the stats command)
     """
-    from stats import StatsAnalyzer
+    from .stats import StatsAnalyzer
     from cis.data_io.gridded_data import GriddedDataList
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
@@ -232,7 +234,7 @@ def stats_cmd(main_arguments):
 
 
 def version_cmd(_main_arguments):
-    print "Using CIS version:", __version__, "(" + __status__ + ")"
+    print("Using CIS version:", __version__, "(" + __status__ + ")")
 
 
 commands = {'plot': plot_cmd,
@@ -252,7 +254,7 @@ def parse_and_run_arguments(arguments=None):
     """
     from datetime import datetime
 
-    from parse import parse_args
+    from .parse import parse_args
 
     # parse command line arguments
     arguments = parse_args(arguments)
@@ -281,7 +283,7 @@ def main():
     except IOError as e:
         # If we don't have permission to write to the log file, all we can do is inform the user
         # All future calls to the logging module will be ignored (?)
-        print("WARNING: Unable to write to the log: %s" % e)
+        print(("WARNING: Unable to write to the log: %s" % e))
     logging.captureWarnings(True)  # to catch warning from 3rd party libraries
 
     try:

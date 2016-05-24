@@ -1,8 +1,13 @@
 language: c
 sudo: false
 
+#python:
+#  - 2.7
+#  - 3.4
+
 env:
-  - TEST_TARGET=unit
+  - TEST_TARGET=unit PYTHON_TARGET=2.7
+  - TEST_TARGET=unit PYTHON_TARGET=3.4
   # - TEST_TARGET=integration
 
 os:
@@ -13,11 +18,17 @@ install:
 
   # Install miniconda
   # -----------------
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      wget http://repo.continuum.io/miniconda/Miniconda-3.7.0-MacOSX-x86_64.sh -O miniconda.sh;
+  - if [[ $PYTHON_TARGET == 2* ]]; then
+      export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda;
     else
-      wget http://repo.continuum.io/miniconda/Miniconda-3.7.0-Linux-x86_64.sh -O miniconda.sh;
+      export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda3;
     fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      wget ${CONDA_BASE}-3.7.0-MacOSX-x86_64.sh -O miniconda.sh;
+    else
+      wget ${CONDA_BASE}-3.7.0-Linux-x86_64.sh -O miniconda.sh;
+    fi
+
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
 
@@ -27,12 +38,12 @@ install:
   - conda config --set show_channel_urls True
   - conda update --quiet conda
   - ENV_NAME='test-environment'
-  - conda create --quiet -n $ENV_NAME python=2.7
+  - conda create --quiet -n $ENV_NAME python=$PYTHON_TARGET
   - source activate $ENV_NAME
 
   # Customise the testing environment
   # ---------------------------------
-  - conda install -c scitools -c cistools --quiet --file conda_requirements.txt
+  - conda install -c conda-forge --quiet --file conda_requirements.txt
 
   - PREFIX=$HOME/miniconda/envs/$ENV_NAME
 

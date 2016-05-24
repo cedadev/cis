@@ -16,14 +16,14 @@ First subset two Caliop data files::
 
 Results of subset can be plotted with::
 
-  $ cis plot Temperature:cis-2009.nc --itemwidth 25 --xaxis time --yaxis air_pressure
-  $ cis plot Temperature:cis-2010.nc --itemwidth 25 --xaxis time --yaxis air_pressure
+  $ cis plot Temperature:2009.nc --itemwidth 25 --xaxis time --yaxis air_pressure
+  $ cis plot Temperature:2010.nc --itemwidth 25 --xaxis time --yaxis air_pressure
 
 
 Then collocate data, and plot output::
 
-  $ cis col Temperature:cis-2010.nc cis-2009.nc:collocator=box[p_sep=1.1],kernel=nn_p
-  $ cis plot Temperature:cis-out.nc --itemwidth 25 --xaxis time --yaxis air_pressure
+  $ cis col Temperature:2010.nc 2009.nc:collocator=box[p_sep=1.1],kernel=nn_p
+  $ cis plot Temperature:out.nc --itemwidth 25 --xaxis time --yaxis air_pressure
 
 
 The output for the two subset data files, and the collocated data should look like:
@@ -63,8 +63,8 @@ Subset to a relevant region::
 
 The results of subsetting can be plotted with::
 
-  $ cis plot AOD550:cis-AOD550n_3.nc --itemwidth 10
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc --itemwidth 20
+  $ cis plot AOD550:AOD550n_3.nc --itemwidth 10
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:MOD08n_3.nc --itemwidth 20
 
 These should look like:
 
@@ -76,11 +76,11 @@ These should look like:
 
 To collocate with the nearest-neighbour kernel use::
 
-  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:collocator=box[h_sep=150],kernel=nn_h -o MOD08_on_AOD550_nn_kdt
+  $ cis col Cloud_Top_Temperature_Mean_Mean:MOD08n_3.nc AOD550n_3.nc:collocator=box[h_sep=150],kernel=nn_h -o MOD08_on_AOD550_nn_kdt
 
 This can be plotted with::
 
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_nn_kdt.nc --itemwidth 10
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:MOD08_on_AOD550_nn_kdt.nc --itemwidth 10
 
 The sample points are more closely spaced than the data points, hence a patchwork effect is produced.
 
@@ -100,11 +100,11 @@ Mean Kernel
 ^^^^^^^^^^^
 This example is similar to the first nearest-neighbour collocation above::
 
-  $ cis col Cloud_Top_Temperature_Mean_Mean:cis-MOD08n_3.nc cis-AOD550n_3.nc:collocator=box[h_sep=75],kernel=mean -o MOD08_on_AOD550_hsep_75km
+  $ cis col Cloud_Top_Temperature_Mean_Mean:MOD08n_3.nc AOD550n_3.nc:collocator=box[h_sep=75],kernel=mean -o MOD08_on_AOD550_hsep_75km
 
 Plotting this again gives a granular result::
 
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_hsep_75km.nc --itemwidth 10
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:MOD08_on_AOD550_hsep_75km.nc --itemwidth 10
 
 .. image:: img/MOD08_on_AOD550_hsep_75km.png
    :width: 300px
@@ -115,7 +115,7 @@ This example collocates the Aerosol CCI data on to the MODIS L3 grid::
 
 This can be plotted as follows, with the full image and zoomed into a representative section show below::
 
-  $ cis plot AOD550:cis-AOD550_on_MOD08_kdt_hsep_50km_full.nc --itemwidth 50
+  $ cis plot AOD550:AOD550_on_MOD08_kdt_hsep_50km_full.nc --itemwidth 50
 
 .. image:: img/AOD550_on_MOD08_kdt_hsep_50km_full.png
    :width: 300px
@@ -129,7 +129,7 @@ The reverse collocation can be performed with this command (taking about 7 minut
 
 Plotting it with this command gives the result below::
 
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_kdt_hsep_100km_var_full.nc
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:MOD08_on_AOD550_kdt_hsep_100km_var_full.nc
 
 .. image:: img/MOD08_on_AOD550_kdt_hsep_100km_var_full.png
    :width: 300px
@@ -140,7 +140,7 @@ Omitting the variable option in the sample group gives collocated values over a 
 
 Plotting it with this command gives the result below::
 
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MOD08_on_AOD550_kdt_hsep_100km_full.nc
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:MOD08_on_AOD550_kdt_hsep_100km_full.nc
 
 .. image:: img/MOD08_on_AOD550_kdt_hsep_100km_full.png
    :width: 300px
@@ -168,7 +168,7 @@ This is a trivial example that collocates on to a 4x4 spatial grid at a single t
 
   $ cis subset AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[0,2],y=[24,26] -o AOD550n_1
 
-  $ cis col AOD550:cis-AOD550n_1.nc tas_1.nc:collocator=bin[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_1
+  $ cis col AOD550:AOD550n_1.nc tas_1.nc:collocator=bin[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_1
 
   $ cis plot AOD550:AOD550_on_tas_1.nc
 
@@ -192,7 +192,7 @@ This example involves collocation on to a grid with three time steps. The ungrid
 
   $ cis subset AOD550:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[-6,0],y=[20,30] -o AOD550n_3
 
-  $ cis col AOD550:cis-AOD550n_3.nc tas_3day.nc:collocator=bin[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_3day
+  $ cis col AOD550:AOD550n_3.nc tas_3day.nc:collocator=bin[fill_value=-9999.0],kernel=mean -o AOD550_on_tas_3day
 
   $ ncdump AOD550_on_tas_3day.nc |less
 

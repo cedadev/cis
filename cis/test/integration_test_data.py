@@ -30,7 +30,10 @@ data_directory = os.environ.get("CIS_DATA_HOME", os.path.dirname(__file__))
 
 
 def make_pathname(filename):
-    return os.path.join(data_directory, filename)
+    path = os.path.join(data_directory, filename)
+    if os.name == 'nt':
+        path = path.replace(':', '\:')
+    return path
 
 
 valid_hdf_vd_file = make_pathname("2008045004519_09563_CS_2C-PRECIP-COLUMN_GRANULE_P_R04_E02.hdf")
@@ -392,6 +395,9 @@ cis_test_files["ascii"] = TestFileTestData(
     data_variable_properties={}
 )
 
+netcdf_cf_compliant_ranges_filename = make_pathname("netcdf_file_with_valid_ranges.nc")
+netcdf_cf_compliant_ranges_vars = ["LON_502", "SO4_1950", "CL_1944"]
+
 valid_NCAR_NetCDF_RAF_filename = make_pathname("RF04.20090114.192600_035100.PNI.nc")
 valid_NCAR_NetCDF_RAF_variable = 'ATX'
 
@@ -419,6 +425,28 @@ cis_test_files["NCAR_NetCDF_RAF"] = TestFileTestData(
 # this data is not entirely correct because there is an extra 1 length dimension in it
 valid_GASSP_not_entirely_correct_filename = make_pathname("ACE1_aero_an.nc")
 valid_GASSP_not_entirely_correct_variable = 'TIM_627'
+
+cis_test_files["GASSP_aux_coord"] = TestFileTestData(
+    master_filename=make_pathname("ACE1_NSD_RF06_11081995163707_11081995210628.nc"),
+    file_format="NetCDF/GASSP/2.0",
+    product_name="NCAR_NetCDF_RAF",
+    start_datetime=datetime(1995, 11, 8, 16, 37, 0o7),
+    end_datetime=datetime(1995, 11, 8, 21, 6, 28),
+    lat_min=4.85591,
+    lat_max=21.3232,
+    lon_min=-157.946,
+    lon_max=-155.102,
+    #    alt_min=20.5,
+    #    alt_max=3678.5,
+    all_variable_names=["TIME", "LATITUDE", "LONGITUDE", "PRESSURE_ALTITUDE", "NUMDIST_DMA_OPC", "AREADIST_DMA_OPC",
+                        "VOLDIST_DMA_OPC", "AIR_TEMPERATURE", "RELATIVE_HUMIDITY", "DYNAMIC_PRESSURE", "AIR_PRESSURE"],
+    valid_vars_count=11,
+    data_variable_name='NUMDIST_DMA_OPC',
+    data_variable_standard_name='NUMDIST_DMA_OPC',
+    data_variable_properties={
+        "units": "#/cm3",
+        "missing_value": -32767}
+)
 
 valid_GASSP_aeroplane_filename = make_pathname("SP2_mrg60_NP3_20060927_R1.ict.nc")
 valid_GASSP_aeroplane_vars = ['BC_ng_kg', "BC_ng_m3", "UTC_mid", "GpsAlt", "GpsLat", "GpsLon"]
@@ -520,9 +548,9 @@ valid_hybrid_height_variable = 'mmrbc'
 # Has netCDF4 hierarchical groups
 valid_netcdf_groups_file = make_pathname('W_XX-EUMETSAT-Darmstadt_SOUNDING_and_SATELLITE_METOPB_and_'
                                          'GOME_C_EUMP_20140405235655_08032_eps_t_pmap_l2.nc')
-valid_netcdf_groups_variable = 'AVHRR.Ch4CentralWavenumber'
+valid_netcdf_groups_variable = 'AVHRR/Ch4CentralWavenumber'
 valid_nested_groups_file = make_pathname('nested_groups.nc')
-valid_nested_groups_variable = 'group1.group2.var4'
+valid_nested_groups_variable = 'group1/group2/var4'
 
 invalid_filename = "invalidfilename"
 non_netcdf_file = make_pathname("notanetcdffile")

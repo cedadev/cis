@@ -61,10 +61,10 @@ class TestTimeUtils(TestCase):
 
     def test_that_can_calculate_mid_point_between_two_datetime(self):
         from cis.time_util import calculate_mid_time
-        t1 = convert_datetime_to_std_time(dt.datetime(2010, 02, 05, 0, 0, 0))
-        t2 = convert_datetime_to_std_time(dt.datetime(2010, 02, 06, 0, 0, 0))
+        t1 = convert_datetime_to_std_time(dt.datetime(2010, 0o2, 0o5, 0, 0, 0))
+        t2 = convert_datetime_to_std_time(dt.datetime(2010, 0o2, 0o6, 0, 0, 0))
         tm = calculate_mid_time(t1, t2)
-        eq_(tm, convert_datetime_to_std_time(dt.datetime(2010, 02, 05, 12, 0, 0)))
+        eq_(tm, convert_datetime_to_std_time(dt.datetime(2010, 0o2, 0o5, 12, 0, 0)))
 
     def test_convert_julian_date_to_std_time(self):
         import numpy as np

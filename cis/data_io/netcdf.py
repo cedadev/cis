@@ -25,8 +25,8 @@ def get_netcdf_file_attributes(filename):
 def get_netcdf_file_variables(filename, exclude_coords=False):
     """
     Get all the variables contained in a NetCDF file. Variables in NetCDF4 Hierarchical groups are returned with their
-    fully qualified variable name in the form ``<group1>.<group2....>.<variable_name>``,
-    e.g.``AVHRR.Ch4CentralWavenumber``.
+    fully qualified variable name in the form ``<group1>/<group2....>/<variable_name>``,
+    e.g.``AVHRR/Ch4CentralWavenumber``.
 
     :param filename: The filename of the file to get the variables from
     :param exclude_coords: Exclude coordinate variables if True
@@ -52,7 +52,7 @@ def _get_all_fully_qualified_variables(dataset):
     """
     List all variables in a file.
     Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
-    <group1>.<group2....>.<variable_name>, e.g. 'AVHRR.Ch4CentralWavenumber'.
+    <group1>/<group2....>/<variable_name>, e.g. 'AVHRR/Ch4CentralWavenumber'.
     :param dataset: Dataset to get variables for
     :return: Dictionary of variable_name : netCDF4 Variable instance
     """
@@ -67,11 +67,11 @@ def _get_all_fully_qualified_variables(dataset):
         """
         if not previous_groups:
             previous_groups = []
-        for group_key, group in group.groups.iteritems():
+        for group_key, group in group.groups.items():
             current_groups = previous_groups + [group_key]
-            for var_key, var in group.variables.iteritems():
+            for var_key, var in group.variables.items():
                 path = current_groups + [var_key]
-                var_dict[".".join(path)] = var
+                var_dict["/".join(path)] = var
             get_variables_for_group(group, var_dict, current_groups)
 
     all_vars = dataset.variables
@@ -86,13 +86,13 @@ def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotempora
     support variables with this dimensionality and will fail if they are used.
 
     :param variables: Dictionary of netCDF variable names : Variable objects. Variable names may be fully qualified
-      NetCDF4 Hierarchical group variables in the form ``<group1>.<group2....>.<variable_name>``,
-      e.g. ``AVHRR.Ch4CentralWavenumber``.
+      NetCDF4 Hierarchical group variables in the form ``<group1>/<group2....>/<variable_name>``,
+      e.g. ``AVHRR/Ch4CentralWavenumber``.
     :param spatiotemporal_var_names: List of valid spatiotemporal dimensions.
     :return: None
     """
     if spatiotemporal_var_names is not None:
-        for var in variables.keys():
+        for var in list(variables.keys()):
             for dim in variables[var].dimensions:
                 if dim not in spatiotemporal_var_names:
                     del variables[var]
@@ -140,7 +140,7 @@ def read_many_files_individually(filenames, usr_variables):
     :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
     :param usr_variables: A list of variable (dataset) names to read from the files. The names must appear exactly as
       in in the NetCDF file. Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
-      ``<group1>.<group2....>.<variable_name>``, e.g. ``AVHRR.Ch4CentralWavenumber``.
+      ``<group1>/<group2....>/<variable_name>``, e.g. ``AVHRR/Ch4CentralWavenumber``.
     :return: A dictionary of lists of variable instances constructed from all of the input files with the fully
       qualified variable name as the key
     """
@@ -153,7 +153,7 @@ def read_many_files_individually(filenames, usr_variables):
     for filename in filenames:
 
         var_dict = read(filename, usr_variables)
-        for var in var_dict.keys():
+        for var in list(var_dict.keys()):
             add_element_to_list_in_dict(var_data, var, var_dict[var])
 
     return var_data
@@ -166,7 +166,7 @@ def read(filename, usr_variables):
     :param filename: The name (with path) of the NetCDF file to read.
     :param usr_variables: A variable (dataset) name to read from the files. The name must appear exactly as in in the
       NetCDF file. Variable names may be fully qualified NetCDF4 Hierarchical group variables in the form
-      ``<group1>.<group2....>.<variable_name>``, e.g. ``AVHRR.Ch4CentralWavenumber``.
+      ``<group1>/<group2....>/<variable_name>``, e.g. ``AVHRR/Ch4CentralWavenumber``.
     :return: A Variable instance constructed from  the input file
     """
     from netCDF4 import Dataset
@@ -180,8 +180,8 @@ def read(filename, usr_variables):
 
     data = {}
     for full_variable in usr_variables:
-        # Split the fully qualified variable (group.variable) into group and variable
-        parts = full_variable.split(".")
+        # Split the fully qualified variable (group/variable) into group and variable
+        parts = full_variable.split("/")
         groups = parts[:-1]
         variable = parts[-1]
         current_group = datafile
@@ -248,13 +248,42 @@ def find_missing_value(var):
 
 def get_data(var):
     """
-    Reads raw data from a NetCDF.Variable instance.
+    Reads raw data from a NetCDF.Variable instance. Also applies CF-compliant valid max, min and ranges.
 
     :param var: The specific Variable instance to read
     :return:  A numpy maskedarray. Missing values are False in the mask.
     """
+    import numpy as np
+    import logging
     # Note that this will automatically apply any specified scalings and
     #  return a masked array based on _FillValue
     data = var[:]
+
+    if hasattr(var, 'valid_max'):
+        try:
+            v_max = float(var.valid_max)
+        except ValueError:
+            logging.warning("Unable to parse valid_max metadata for {}. Not applying mask.".format(var._name))
+        else:
+            data = np.ma.masked_greater(data, v_max)
+
+    if hasattr(var, 'valid_min'):
+        try:
+            v_min = float(var.valid_min)
+        except ValueError:
+            logging.warning("Unable to parse valid_min metadata for {}. Not applying mask.".format(var._name))
+        else:
+            data = np.ma.masked_less(data, v_min)
+
+    if hasattr(var, 'valid_range'):
+        try:
+            if isinstance(var.valid_range, np.ndarray):
+                v_range = var.valid_range
+            elif hasattr(var.valid_range, 'split'):
+                v_range = [float(i) for i in var.valid_range.split()]
+        except ValueError:
+            logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
+        else:
+            data = np.ma.masked_outside(data, *v_range)
 
     return data

@@ -53,7 +53,7 @@ where:
 
 
 ``outputfile``
-  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension and prepended with ``cis-`, if it contains ungridded data, to make it distinguishable as a collocated file. The default filename is ``cis-out.nc`` for ungridded data, and ``out.nc`` for gridded data.
+  is an optional argument to specify the name to use for the file output. This is automatically given a ``.nc`` extension. The default filename is ``out.nc``.
 
 A full example would be::
 
@@ -67,22 +67,22 @@ Examples
 Below are examples of subsetting using each of the supported products (together with a command to plot the output)::
 
   $ cis subset AO2CO2:RF04.20090114.192600_035100.PNI.nc time=[2009-01-14:19:26:00,2009-01-14:19:36:00] -o RF04-AO2CO2-out
-  $ cis plot AO2CO2:cis-RF04-AO2CO2-out.nc
+  $ cis plot AO2CO2:RF04-AO2CO2-out.nc
 
   $ cis subset IO_RVOD_ice_water_content:2007180125457_06221_CS_2B-CWC-RVOD_GRANULE_P_R04_E02.hdf t=[2007-06-29:13:00,2007-06-29:13:30] -o CloudSAT-out
-  $ cis plot IO_RVOD_ice_water_content:cis-CloudSAT-out.nc --xaxis=time --yaxis=altitude
+  $ cis plot IO_RVOD_ice_water_content:CloudSAT-out.nc --xaxis=time --yaxis=altitude
 
   $ cis subset Cloud_Top_Temperature:MYD06_L2.A2011100.1720.051.2011102130126.hdf x=[-50,-40],y=[0,10] -o MODIS_L2-out
-  $ cis plot Cloud_Top_Temperature:cis-MODIS_L2-out.nc
+  $ cis plot Cloud_Top_Temperature:MODIS_L2-out.nc
 
   $ cis subset cwp:20080620072500-ESACCI-L2_CLOUD-CLD_PRODUCTS-MODIS-AQUA-fv1.0.nc x=[85,90],y=[-3,3] -o Cloud_CCI-out
-  $ cis plot atmosphere_mass_content_of_cloud_liquid_water:cis-Cloud_CCI-out.nc
+  $ cis plot atmosphere_mass_content_of_cloud_liquid_water:Cloud_CCI-out.nc
 
   $ cis subset AOD870:20080612093821-ESACCI-L2P_AEROSOL-ALL-AATSR_ENVISAT-ORAC_32855-fv02.02.nc x=[-5,20],y=[15,25] -o Aerosol_CCI-out
-  $ cis plot atmosphere_optical_thickness_due_to_aerosol:cis-Aerosol_CCI-out.nc
+  $ cis plot atmosphere_optical_thickness_due_to_aerosol:Aerosol_CCI-out.nc
 
   $ cis subset 440675Angstrom:920801_121229_Abracos_Hill.lev20 t=[2002] -o Aeronet-out
-  $ cis plot 440675Angstrom:cis-Aeronet-out.nc --xaxis=time --yaxis=440675Angstrom
+  $ cis plot 440675Angstrom:Aeronet-out.nc --xaxis=time --yaxis=440675Angstrom
 
   $ cis subset solar_3:xglnwa.pm.k8dec-k9nov.vprof.tm.nc y=[0,90] -o Xglnwa_vprof-out
   $ cis plot solar_3:Xglnwa_vprof-out.nc
@@ -91,7 +91,7 @@ Below are examples of subsetting using each of the supported products (together 
   $ cis plot solar_3:Xglnwa-out.nc
 
   $ cis subset Cloud_Top_Temperature_Mean_Mean:MOD08_E3.A2010009.005.2010026072315.hdf x=[0,179.9],y=[0,90] -o MODIS_L3-out
-  $ cis plot Cloud_Top_Temperature_Mean_Mean:cis-MODIS_L3-out.nc
+  $ cis plot Cloud_Top_Temperature_Mean_Mean:MODIS_L3-out.nc
 
 
 The files used above can be found at::

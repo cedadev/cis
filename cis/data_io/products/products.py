@@ -11,7 +11,7 @@ class cis(AProduct):
     priority = 100
 
     def get_file_signature(self):
-        return [r'cis\-.*\.nc']
+        return [r'.*\.nc']
 
     def create_coords(self, filenames, usr_variable=None):
         from cis.data_io.netcdf import read_many_files_individually, get_metadata
@@ -46,6 +46,24 @@ class cis(AProduct):
 
     def get_file_format(self, filename):
         return "NetCDF/CIS"
+
+    def get_file_type_error(self, filename):
+        """
+        Test that the file is of the correct signature
+        :param filename: the file name for the file
+        :return: list fo errors or None
+        """
+        from cis.data_io.netcdf import get_netcdf_file_attributes
+        atts = get_netcdf_file_attributes(filename)
+        errors = None
+        try:
+            source = atts['source']
+        except KeyError as ex:
+            errors = ['No source attribute found in {}'.format(filename)]
+        else:
+            if not source.startswith('CIS'):
+                errors = ['Source ({}) does not match CIS in {}'.format(source, filename)]
+        return errors
 
 
 class Aeronet(AProduct):

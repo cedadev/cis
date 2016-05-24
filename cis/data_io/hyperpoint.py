@@ -89,7 +89,7 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
          time, but it doesn't seem to repopulate derived dimensions. Hence the altitude dimension (which is usually the
          derived one) needs to be first in the list of coordinates to interpolate over.
         """
-        return sorted([(x, y) for x, y in self._asdict().items() if y is not None and x != 'val'])
+        return sorted([(x, y) for x, y in list(self._asdict().items()) if y is not None and x != 'val'])
 
     def compdist(self, p1, p2):
         """

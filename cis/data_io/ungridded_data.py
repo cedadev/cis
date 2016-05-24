@@ -49,19 +49,19 @@ class Metadata(object):
         :param offset: The left hand padding to apply to the text
         :return: The summary
         """
-        string = u''
-        string += u'{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
-        string += u'{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
-        string += u'{pad:{width}}Units = {units}\n'.format(pad=' ', width=offset, units=self.units)
+        string = ''
+        string += '{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
+        string += '{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
+        string += '{pad:{width}}Units = {units}\n'.format(pad=' ', width=offset, units=self.units)
         if self.calendar:
-            string += u'{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
-        string += u'{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
-        string += u'{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=self.range)
-        string += u'{pad:{width}}History = {history}\n'.format(pad=' ', width=offset, history=self.history)
+            string += '{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
+        string += '{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
+        string += '{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=self.range)
+        string += '{pad:{width}}History = {history}\n'.format(pad=' ', width=offset, history=self.history)
         if self.misc:
-            string += u'{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
-            for k, v in self.misc.iteritems():
-                string += u'{pad:{width}}{att} = {val}\n'.format(pad=' ', width=offset + 2, att=k.title(), val=v)
+            string += '{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
+            for k, v in self.misc.items():
+                string += '{pad:{width}}{att} = {val}\n'.format(pad=' ', width=offset + 2, att=k.title(), val=v)
         return string
 
     def __str__(self):
@@ -93,14 +93,14 @@ class Metadata(object):
 
     @staticmethod
     def guess_standard_name(name):
-        standard_name = name
+        standard_name = None
         if name.lower().startswith('lat'):
             standard_name = 'latitude'
         elif name.lower().startswith('lon'):
             standard_name = 'longitude'
         elif name.lower().startswith('alt') or name.lower() == 'height':
             standard_name = 'altitude'
-        elif name.lower().startswith('pres'):
+        elif name.lower().startswith('pres') or name.lower() == 'air_pressure':
             standard_name = 'air_pressure'
         elif name.lower() == 'time':
             standard_name = 'time'
@@ -295,7 +295,6 @@ class LazyData(object):
         self.attributes.pop(key, None)
 
     def save_data(self, output_file):
-        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         write_coordinates(self, output_file)
         add_data_to_file(self, output_file)
@@ -589,16 +588,17 @@ class UngriddedData(LazyData, CommonData):
         """
         Unicode summary of the UngriddedData with metadata of itself and its coordinates
         """
-        summary = u'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
-        summary += u'     Shape = {}\n'.format(self.data.shape) + '\n'
-        summary += u'     Total number of points = {}\n'.format(len(self.get_all_points()))
-        summary += u'     Number of non-masked points = {}\n'.format(len(self.get_non_masked_points()))
+        summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
+        summary += '     Shape = {}\n'.format(self.data.shape) + '\n'
+        summary += '     Total number of points = {}\n'.format(self.data.size)
+        num_non_masked_points = self.data.count() if hasattr(self.data, 'count') else self.data.size
+        summary += '     Number of non-masked points = {}\n'.format(num_non_masked_points)
 
-        summary += unicode(self.metadata)
+        summary += str(self.metadata)
 
-        summary += u'     Coordinates: \n'
+        summary += '     Coordinates: \n'
         for c in self.coords():
-            summary += u'{pad:{width}}{name}\n'.format(pad=' ', width=7, name=c.name())
+            summary += '{pad:{width}}{name}\n'.format(pad=' ', width=7, name=c.name())
             c.update_range()
             summary += c.metadata.summary(offset=10)
 
@@ -762,7 +762,6 @@ class UngriddedDataList(CommonDataList):
         :param output_file: output filename
         :return:
         """
-        output_file = utils.add_file_prefix('cis-', output_file)
         logging.info('Saving data to %s' % output_file)
         # Should only write coordinates out once
         write_coordinates(self[0], output_file)
@@ -877,7 +876,7 @@ def _to_flat_ndarray(data, copy=True):
     if isinstance(data, np.ma.MaskedArray):
         if not copy:
             raise ValueError("Masked arrays must always be copied.")
-        ndarr = data.astype('f').filled(np.NaN).flatten()
+        ndarr = data.filled(np.NaN).flatten()
     elif copy:
         ndarr = data.flatten()
     else:

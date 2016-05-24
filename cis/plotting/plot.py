@@ -3,67 +3,302 @@ Class for plotting graphs.
 Also contains a dictionary for the valid plot types.
 All plot types need to be imported and added to the plot_types dictionary in order to be used.
 """
-from cis.plotting.contour_plot import Contour_Plot
-from cis.plotting.contourf_plot import Contourf_Plot
+from cis.plotting.contourplot import ContourPlot, ContourfPlot
 from cis.plotting.heatmap import Heatmap
-from cis.plotting.line_plot import Line_Plot
-from cis.plotting.scatter_plot import Scatter_Plot
-from cis.plotting.comparative_scatter import Comparative_Scatter
+from cis.plotting.lineplot import LinePlot
+from cis.plotting.scatterplot import ScatterPlot
+from cis.plotting.comparativescatter import ComparativeScatter
 from cis.plotting.overlay import Overlay
-from cis.plotting.histogram2d import Histogram_2D
-from cis.plotting.histogram3d import Histogram_3D
-from cis.utils import wrap_longitude_coordinate_values, listify
-
-import matplotlib.pyplot as plt
-
-plot_options = {'title': plt.title,
-                'xlabel': plt.xlabel,
-                'ylabel': plt.ylabel,
-                'fontsize': plt.rcParams.update}
+from cis.plotting.histogram import Histogram
+from cis.plotting.histogram2d import Histogram2D
+import logging
+from .APlot import format_units
+from .genericplot import format_plot
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
-colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+
+def is_map(data, xaxis, yaxis):
+    """
+    :return: A boolean saying if the first packed data item contains lat and lon coordinates
+    """
+    from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
+    from cis.exceptions import CoordinateNotFoundError as cisNotFoundError
+    try:
+        x = data[0].coord(xaxis)
+        y = data[0].coord(yaxis)
+    except (cisNotFoundError, irisNotFoundError):
+        return False
+
+    if x.name().lower().startswith("lon") and y.name().lower().startswith("lat"):
+        return True
+    else:
+        return False
+
+
+def name_preferring_standard(coord_item):
+    for name in [coord_item.standard_name, coord_item.var_name, coord_item.long_name]:
+        if name:
+            return name
+    return ''
+
+
+def guess_y_axis(data, xaxis):
+    import cis.exceptions as cis_ex
+    import iris.exceptions as iris_ex
+    yaxis = 'default'
+    # If we're not dealing with the case where the xaxis is time and we have many y layers (which should be default)...
+    if not (xaxis.lower().endswith('time') and len(data) > 1):
+        try:
+            return name_preferring_standard(data.coord(axis="Y"))
+        except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
+            if len(data.shape) > 1:
+                number_of_points_in_dimension = data.shape[1]
+            else:
+                yaxis = "default"
+
+            for coord in data.coords():
+                if coord.shape[0] == number_of_points_in_dimension:
+                    yaxis = "search:" + str(number_of_points_in_dimension)
+
+    if "search" in yaxis:
+        logging.info("Plotting unknown on the y axis")
+    else:
+        logging.info("Plotting " + yaxis + " on the y axis")
+    return yaxis
+
+
+def guess_x_axis(data):
+    import cis.exceptions as cis_ex
+    import iris.exceptions as iris_ex
+
+    xaxis = "default"
+    try:
+        xaxis = name_preferring_standard(data.coord(axis='X'))
+    except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
+        number_of_points_in_dimension = data.shape[0]
+
+        for coord in data.coords():
+            if coord.shape[0] == number_of_points_in_dimension:
+                xaxis = "search:" + str(number_of_points_in_dimension)
+                break
+
+    if "search" in xaxis:
+        logging.info("Plotting unknown on the x axis")
+    else:
+        logging.info("Plotting " + xaxis + " on the x axis")
+
+    return xaxis
+
+
+def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=None, projection=None, reverse_y=False):
+    """
+    Applies the specified limits to the given axis
+    """
+    from cartopy.mpl.geoaxes import GeoAxes
+
+    # First make sure all of the data fits
+    ax.relim()
+    ax.autoscale()
+
+    if reverse_y:
+        ax.invert_yaxis()
+
+    # Then apply user limits (using different interfaces for different axes types...)
+    if isinstance(ax, GeoAxes):
+        # We can't optionally pass in certain bounds to set_extent so we need to pull out the existing ones and only
+        #  change the ones we've been given.
+        x1, x2, y1, y2 = ax.get_extent()
+        xmin = xmin or x1
+        xmax = xmax or x2
+        ymin = ymin or y1
+        ymax = ymax or y2
+        try:
+            #TODO: Not sure if we still need this logic...
+            ax.set_extent([xmin, xmax, ymin, ymax], crs=transform)
+        except ValueError:
+            ax.set_extent([xmin, xmax, ymin, ymax], crs=projection)
+    else:
+        ax.set_xlim(xmin=xmin, xmax=xmax)
+        ax.set_ylim(ymin=ymin, ymax=ymax)
+
+
+
+def set_x_axis_as_time(ax, xtickangle):
+    from matplotlib import ticker
+    from cis.time_util import convert_std_time_to_datetime
+
+    def format_date(x, pos=None):
+        return convert_std_time_to_datetime(x).strftime('%Y-%m-%d')
+
+    def format_datetime(x, pos=None):
+        # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
+        date_time = convert_std_time_to_datetime(x)
+        day_min, day_max = ax.get_xlim()
+        day_range = day_max - day_min
+        if day_range < 1 and date_time.second == 0:
+            return "%02d" % date_time.hour + ':' + "%02d" % date_time.minute
+        elif day_range < 1:
+            return "%02d" % date_time.hour + ':' + "%02d" % date_time.minute + ':' + "%02d" % date_time.second
+        elif day_range > 5:
+            return str(date_time.date())
+        else:
+            return date_time.isoformat(' ')
+
+    def format_time(x, pos=None):
+        return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
+
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
+    if xtickangle is None:
+        xtickangle = 45
+    ax.xticks(rotation=xtickangle, ha="right")
+    # Give extra spacing at bottom of plot due to rotated labels
+    ax.get_figure().subplots_adjust(bottom=0.3)
+
+    # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
+
+
+def _get_extent(ax):
+    """
+     Calculates the diagonal extent of plot area in Km
+    :return: The diagonal size of the plot in Km
+    """
+    from cis.utils import haversine
+    x0, x1, y0, y1 = ax.get_extent()
+    return haversine(y0, x0, y1, x1)
+
+
+def _test_natural_earth_available():
+    """
+    Test whether we can download the natural earth cartographies.
+    :return: Can we access natural earth?
+    """
+    from cartopy.io.shapereader import natural_earth
+    from urllib.error import HTTPError
+    try:
+        natural_earth_available = natural_earth()
+    except HTTPError:
+        natural_earth_available = False
+    return natural_earth_available
+
+
+def drawcoastlines(ax, nasabluemarble, coastlinecolour, transform):
+    """
+    Adds coastlines or nasa blue marble back ground to a plot (no coastlines are plotted over nasa blue marble).
+    There are three levels of resolution used based on the spatial scale of the plot. These are determined using
+    values determined by eye for bluemarble and the coastlines independently.
+    """
+    from matplotlib.image import imread
+    import os.path as path
+    bluemarble_scales = [(0, 'raster/world.topo.bathy.200407.3x1350x675.png'),
+                         (5000, 'raster/world.topo.bathy.200407.3x2700x1350.png'),
+                         (2500, 'raster/world.topo.bathy.200407.3x5400x2700.png')]
+
+    coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
+
+    ext = _get_extent(ax)
+
+    if nasabluemarble is not False:
+        bluemarble_res = bluemarble_scales[0][1]
+        for scale, res in bluemarble_scales[1:]:
+            if scale > ext:
+                bluemarble_res = res
+
+        img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
+        ax.imshow(img, origin='upper', transform=transform, extent=[-180, 180, -90, 90])
+    else:
+        if _test_natural_earth_available():
+            coastline_res = coastline_scales[0][1]
+            for scale, res in coastline_scales[1:]:
+                if scale > ext:
+                    coastline_res = res
+
+            ax.coastlines(color=coastlinecolour, resolution=coastline_res)
+        else:
+            logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
+                            'Check internet connectivity and try again')
 
 
 class Plotter(object):
-    plot_types = {"contour": Contour_Plot,
-                  "contourf": Contourf_Plot,
+    plot_types = {"contour": ContourPlot,
+                  "contourf": ContourfPlot,
                   "heatmap": Heatmap,
-                  "line": Line_Plot,
-                  "scatter": Scatter_Plot,
-                  "comparativescatter": Comparative_Scatter,
+                  "line": LinePlot,
+                  "scatter": ScatterPlot,
+                  "comparativescatter": ComparativeScatter,
                   "overlay": Overlay,
-                  "histogram2d": Histogram_2D,
-                  "histogram3d": Histogram_3D}
+                  "histogram2d": Histogram,
+                  "histogram3d": Histogram2D}
 
-    def __init__(self, packed_data_items, plot_type=None, out_filename=None, plotheight=None,
-                 plotwidth=None, *mplargs, **mplkwargs):
+    def __init__(self, data, type=None, out_filename=None, xaxis=None, yaxis=None, layer_opts=None, plotheight=None,
+                 plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False, nasabluemarble=False,
+                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, cbarlabel=None, coastlinecolour='k',
+                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None,
+                 itemwidth=1, xtickangle=None, ytickangle=None, projection=None, *args, **kwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
-        :param packed_data_items: A list of packed (i.e. Iris cubes or UngriddedData objects) data items to be plotted
-        :param plot_type: The plot type to be used, as a string
+        :param data: A list of packed (i.e. GriddedData or UngriddedData objects) data items to be plotted
+        :param type: The plot type to be used, as a string
         :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be
          used, with png being the default
-        :param mplargs: Any other arguments received from the parser
-        :param mplkwargs: Any other keyword arguments received from the plotter
+        :param args: Any other arguments received from the parser
+        :param kwargs: Any other keyword arguments received from the plotter
         """
+        import matplotlib.pyplot as plt
+        import cartopy.crs as ccrs
 
-        # packed_data_items = self._remove_length_one_dimensions(packed_data_items)
+        if type in self.plot_types:
+            type = type
+        elif type is None:
+            type = self.set_default_plot_type(data)
+        else:
+            raise ValueError("Invalid plot type, must be one of: {}".format(list(self.plot_types.keys())))
 
-        if plot_type is None:
-            plot_type = self.set_default_plot_type(packed_data_items)
-
+        # TODO: This could become an argument in the future
         # Create figure and a single axis (we assume for now not more than one 'subplot').
-        self.fig, ax = plt.subplots()
+
+        xaxis = xaxis or guess_x_axis(data)
+        yaxis = yaxis or guess_y_axis(data, xaxis)
+
+        # TODO: Check that projection=None is a valid default.
+
+        if is_map(data, xaxis, yaxis):
+            xlabel = xlabel or "Longitude"
+            ylabel = ylabel or "Latitude"
+            if projection is None:
+                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, xmin) + 180.0))
+                kwargs['transform'] = ccrs.PlateCarree()
+
+        xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
+        ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
+
+        self.fig, ax = plt.subplots(projection=projection)
 
         self.set_width_and_height(plotwidth, plotheight)
-        plot = self.plot_types[plot_type](ax, packed_data_items, *mplargs, **mplkwargs)
-        plot.apply_axis_limits()
-        plot.format_plot()
 
-        plot.auto_set_ticks()
+        # TODO: Each plot is really just one 'layer', it should only get arguments relevant for that layer.
+        for d, params in zip(data, layer_opts):
+            plot = self.plot_types[type](d, ax, xaxis, yaxis, *args, **layer_opts+kwargs)
+
+        # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
+        # instance
+        apply_axis_limits(ax, xmin, xmax, ymin, ymax, projection=projection, reverse_y=(yaxis == 'air_pressure'))
+
+        # TODO figure out what to do about the transforms floating about the place.
+        format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title,
+                    transform=None, legend=len(data)>1)
+        if not nocolourbar:
+            self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units))
+
+        # TODO: I need a better test for the xaxis being time...
+        if xaxis == 'time':
+            set_x_axis_as_time(ax, xtickangle)
+
+        if is_map(data, xaxis, yaxis):
+            drawcoastlines(ax, nasabluemarble, coastlinecolour, transform=None)
+
+        self.plot_types[type].auto_set_ticks()
         self.output_to_file_or_screen(out_filename)
 
     def output_to_file_or_screen(self, out_filename=None):
@@ -74,14 +309,13 @@ class Plotter(object):
          png being the default
         """
         import logging
-        import matplotlib.pyplot as plt
         if out_filename is None:
-            plt.show()
+            self.fig.show()
         else:
             logging.info("saving plot to file: " + out_filename)
             width = self.fig.get_figwidth()
-            plt.savefig(out_filename, bbox_inches='tight',
-                        pad_inches=0.05 * width)  # Will overwrite if file already exists
+            self.fig.savefig(out_filename, bbox_inches='tight',
+                             pad_inches=0.05 * width)  # Will overwrite if file already exists
 
     def set_width_and_height(self, width, height):
         """
@@ -102,7 +336,8 @@ class Plotter(object):
         self.fig.set_figheight(height)
         self.fig.set_figwidth(width)
 
-    def set_default_plot_type(self, data):
+    @staticmethod
+    def set_default_plot_type(data):
         """
         Sets the default plot type based on the number of dimensions of the data
         :param data: A list of packed data items
@@ -140,14 +375,17 @@ class Plotter(object):
                 error_message += "\nThe shape of its coordinates is: " + str(data[0].coords()[0].shape)
             raise InvalidPlotTypeError(error_message)
 
-    def _remove_length_one_dimensions(self, packed_data):
-        from iris.util import squeeze
-        from cis.data_io.gridded_data import GriddedData
-        listify(packed_data)
-        new_data_list = []
-        for data in packed_data:
-            if data.is_gridded:
-                new_data_list.append(GriddedData.make_from_cube(squeeze(data)))
-            else:
-                new_data_list.append(data)
-        return new_data_list
+
+def get_x_wrap_start(data, user_xmin=None):
+    from cis.utils import find_longitude_wrap_start
+
+    # FIND THE WRAP START OF THE DATA
+    data_wrap_start = find_longitude_wrap_start(data)
+
+    # NOW find the wrap start of the user specified range
+    if user_xmin is not None:
+        x_wrap_start = -180 if user_xmin < 0 else 0
+    else:
+        x_wrap_start = data_wrap_start
+
+    return x_wrap_start

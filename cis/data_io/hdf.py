@@ -99,9 +99,9 @@ def read(filenames, variables):
         # sdata, key: variable name, value: list of sds
         # vdata, key: variable name, value: list of vds
         sds_dict, vds_dict = __read_hdf4(filename, variables)
-        for var in sds_dict.keys():
+        for var in list(sds_dict.keys()):
             utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
-        for var in vds_dict.keys():
+        for var in list(vds_dict.keys()):
             utils.add_element_to_list_in_dict(vdata, var, vds_dict[var])
 
     return sdata, vdata

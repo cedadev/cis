@@ -135,7 +135,8 @@ class TestNNGridded(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -265,7 +266,8 @@ class TestNNGridded(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -287,7 +289,8 @@ class TestNNGridded(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_gridded
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -466,7 +469,7 @@ class TestNNTime(unittest.TestCase):
         sample_points = HyperPointList()
 
         t0 = dt.datetime(1984, 8, 27)
-        for d in xrange(15):
+        for d in range(15):
             sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=t0 + dt.timedelta(days=d)))
         sample_points = UngriddedData.from_points_array(sample_points)
 
@@ -821,6 +824,67 @@ class TestLi(unittest.TestCase):
         # Outside of the pressure bounds - extrapolation off
         assert_equal(new_data.data[3], np.inf)
 
+    def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li())[0]
+        # Exactly on the lat, lon, time points, interpolated over pressure
+        assert_almost_equal(new_data.data[0], 221.5, decimal=5)
+        # Exactly on the lat, lon, points, interpolated over time and pressure
+        assert_almost_equal(new_data.data[1], 226.5, decimal=7)
+        # Exactly on the lat, time points, interpolated over longitude and pressure
+        assert_almost_equal(new_data.data[2], 330.5, decimal=7)
+        # Outside of the pressure bounds - extrapolation off
+        assert_equal(new_data.data[3], np.inf)
+
+    def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_multi_var(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube_list = [gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))]
+        cube_list.append(gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3,
+                                                                         hybrid_pr_len=10,
+                                                                         data_offset=100)))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        col = GeneralUngriddedCollocator()
+        outlist = col.collocate(sample_points, cube_list, None, li())
+        # First data set:
+        new_data = outlist[0]
+        # Exactly on the lat, lon, time points, interpolated over pressure
+        assert_almost_equal(new_data.data[0], 221.5, decimal=5)
+        # Exactly on the lat, lon, points, interpolated over time and pressure
+        assert_almost_equal(new_data.data[1], 226.5, decimal=7)
+        # Exactly on the lat, time points, interpolated over longitude and pressure
+        assert_almost_equal(new_data.data[2], 330.5, decimal=7)
+        # Outside of the pressure bounds - extrapolation off
+        assert_equal(new_data.data[3], np.inf)
+
+        # Second dataset:
+        new_data = outlist[1]
+        # Exactly on the lat, lon, time points, interpolated over pressure
+        assert_almost_equal(new_data.data[0], 321.5, decimal=5)
+        # Exactly on the lat, lon, points, interpolated over time and pressure
+        assert_almost_equal(new_data.data[1], 326.5, decimal=7)
+        # Exactly on the lat, time points, interpolated over longitude and pressure
+        assert_almost_equal(new_data.data[2],430.5, decimal=7)
+        # Outside of the pressure bounds - extrapolation off
+        assert_equal(new_data.data[3], np.inf)
+
+
     def test_negative_lon_points_on_hybrid_pressure_coordinates_dont_matter(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
@@ -866,11 +930,30 @@ class TestLi(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, None, li(extrapolate=True))[0]
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
-    def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
+    def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates_multi_var(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube_list = [gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))]
+        cube_list.append(gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3,
+                                                                         hybrid_pr_len=10,
+                                                                         data_offset=100)))
+
+        sample_points = UngriddedData.from_points_array(
+            # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
+            [HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
+
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube_list, None, li(extrapolate=True))
+        assert_almost_equal(new_data[0].data[0], 125.0, decimal=7)
+        assert_almost_equal(new_data[1].data[0], 225.0, decimal=7)
+
+    def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
@@ -887,7 +970,8 @@ class TestLi(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li, DummyConstraint
         import datetime as dt
 
-        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
+                                                               geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
@@ -897,6 +981,26 @@ class TestLi(unittest.TestCase):
         col = GeneralUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, li())[0]
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
+
+    def test_collocation_over_scalar_coord(self):
+        # A scalar time coordinate should make no difference when collocating points with a time value.
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube_with_scalar_time())
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(1.0, 1.0, t=dt.datetime(1984, 8, 22, 0, 0, 0)),
+             HyperPoint(4.0, 4.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             # Note that it doesn't even matter if the point is outside the bounds of the scalar time...
+             # TODO: Is this correct behaviour?
+             HyperPoint(-4.0, -4.0, t=dt.datetime(1984, 10, 1, 0, 0, 0))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li())[0]
+
+        assert_almost_equal(new_data.data[0], 8.8)
+        assert_almost_equal(new_data.data[1], 11.2)
+        assert_almost_equal(new_data.data[2], 4.8)
 
 
 if __name__ == '__main__':
