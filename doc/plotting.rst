@@ -69,6 +69,9 @@ There are a number of optional arguments, which should be entered as a comma sep
 ``itemstyle``
   shape of scatter marker, see :ref:`colours-and-markers`
 
+``itemwidth``
+  width of an item. Units are points in the case of a line, and points^2 in the case of a scatter point
+
 ``label``
   name of datagroup for the legend
 
@@ -136,9 +139,6 @@ There are a number of plot formatting options available:
 
 ``--title``
   The title of the plot
-
-``--itemwidth``
-  The width of an item. Unit are points in the case of a line, and points squared in the case of a scatter point
 
 ``--fontsize``
   The size of the font in points

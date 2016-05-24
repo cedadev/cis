@@ -66,9 +66,6 @@ def add_plot_parser_arguments(parser):
                         help="The angle (in degrees) of the ticks on the y axis", type=float)
 
     parser.add_argument("--title", metavar="Chart title", nargs="?", help="The title for the chart")
-    parser.add_argument("--itemwidth", metavar="Item width", nargs="?",
-                        help="The width of an item. Unit are points in the case of a line, and point^2 in the case of a"
-                             " scatter point.", type=float)
     parser.add_argument("--fontsize", metavar="Font size", nargs="?", help="The size of the font in points", type=float)
     parser.add_argument("--cmap", metavar="Colour map", nargs="?", help="The colour map used, e.g. RdBu")
     parser.add_argument("--height", metavar="Plot height", nargs="?", help="The height of the plot in inches",
@@ -317,10 +314,12 @@ def get_plot_datagroups(datagroups, parser):
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "color", "edgecolor", "itemstyle",
+                                                       "itemwidth",
                                                        "label", "product", "type", "transparency", "cmap", "cmin",
                                                        "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "contfontsize"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
+                                         check_nothing,
                                          check_nothing, check_product, check_plot_type, check_float, check_nothing,
                                          check_float, check_float, check_int, convert_to_list_of_floats, check_boolean,
                                          check_float, check_float)
