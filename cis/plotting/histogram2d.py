@@ -56,8 +56,9 @@ class Histogram2D(Generic2DPlot):
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
 
-    def unpack_data_items(self):
-        return self.unpack_comparative_data()
+    def unpack_data_items(self, packed_data_items, x_wrap_start=None):
+        self.x = packed_data_items[0].data
+        self.y = packed_data_items[1].data
 
     def setup_map(self):
         pass

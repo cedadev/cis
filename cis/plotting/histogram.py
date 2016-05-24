@@ -46,8 +46,8 @@ class Histogram(GenericPlot):
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
 
-    def unpack_data_items(self):
-        return self.unpack_comparative_data()
+    def unpack_data_items(self, packed_data_items, x_wrap_start=None):
+        self.data = packed_data_items.data
 
     def calculate_bin_edges(self):
         """

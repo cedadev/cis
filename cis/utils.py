@@ -300,7 +300,7 @@ def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
         logging.debug("Shape of y: " + str(y.shape))
     logging.debug("Shape of data: " + str(data.shape))
 
-    return {"data": data, "x": x, "y": y}
+    return data, x, y
 
 
 def fix_longitude_range(lons, range_start):

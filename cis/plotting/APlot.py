@@ -57,6 +57,11 @@ class APlot(object):
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
+        # Raw data attributes (for unpacking the packed data into)
+        self.data = None
+        self.x = None
+        self.y = None
+
         self.ax = ax
 
         self.xaxis = xaxis
@@ -101,9 +106,4 @@ class APlot(object):
 
     def unpack_data_items(self, packed_data_items, x_wrap_start=None):
         from cis.utils import unpack_data_object
-
-        return [unpack_data_object(packed_data_item, self.xaxis, self.yaxis, x_wrap_start)
-                for packed_data_item in packed_data_items]
-
-    def unpack_comparative_data(self):
-        return [{"data": packed_data_item.data} for packed_data_item in self.packed_data_items]
+        self.data, self.x, self.y = unpack_data_object(packed_data_items, self.xaxis, self.yaxis, x_wrap_start)

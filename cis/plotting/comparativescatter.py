@@ -38,8 +38,9 @@ class ComparativeScatter(GenericPlot):
         else:
             raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
 
-    def unpack_data_items(self):
-        return self.unpack_comparative_data()
+    def unpack_data_items(self, packed_data_items, x_wrap_start=None):
+        self.x = packed_data_items[0].data
+        self.y = packed_data_items[1].data
 
     @staticmethod
     def guess_axis_label(data, axisvar=None, axis=None):
