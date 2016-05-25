@@ -398,8 +398,7 @@ class TestPlotVisual(VisualTest):
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
         Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90},
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+                itemwidth=50, ymin=-90, ymax=90)
 
         self.check_graphic()
 
@@ -413,8 +412,7 @@ class TestPlotVisual(VisualTest):
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
         Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':-180,'xmax':180},
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+                itemwidth=50, ymin=-90, ymax=90, xmin=-180, xmax=180)
 
         self.check_graphic()
 
@@ -428,8 +426,7 @@ class TestPlotVisual(VisualTest):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90},
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+                itemwidth=50, ymin=-90, ymax=90)
 
         self.check_graphic()
 
@@ -443,8 +440,7 @@ class TestPlotVisual(VisualTest):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':0,'xmax':360},
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+                itemwidth=50, ymin=-90, ymax=90, xmin=0, xmax=360)
 
         self.check_graphic()
 
@@ -458,8 +454,7 @@ class TestPlotVisual(VisualTest):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
         Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+                itemwidth=50, ymin=-90, ymax=90, nasabluemarble=True)
 
         self.check_graphic()
 
@@ -473,8 +468,7 @@ class TestPlotVisual(VisualTest):
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
         Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, nasabluemarble=True,
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+                itemwidth=50, ymin=-90, ymax=90, nasabluemarble=True)
 
         self.check_graphic()
 
@@ -488,8 +482,7 @@ class TestPlotVisual(VisualTest):
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
         Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, coastlinescolour='red',
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':''}])
+                itemwidth=50, ymin=-90, ymax=90, coastlinescolour='red')
 
         self.check_graphic()
 
@@ -504,9 +497,8 @@ class TestPlotVisual(VisualTest):
                  make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
 
         Plotter(datas, xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':0,'xmax':360},
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '-180to180'},
-                            {'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '0to360'}])
+                itemwidth=50, ymin=-90, ymax=90, xmin=-180, xmax=180,
+                layer_opts=[{'label': '-180to180'}, {'label': '0to360'}])
 
         self.check_graphic()
 
@@ -521,9 +513,8 @@ class TestPlotVisual(VisualTest):
                  make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
 
         Plotter(datas, xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
-                itemwidth=50, yrange={'ymin':-90, 'ymax':90}, xrange={'xmin':-180,'xmax':180},
-                datagroups=[{'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '-180to180'},
-                            {'itemstyle':'', 'cmap':'jet', 'edgecolor':'', 'label': '0to360'}])
+                itemwidth=50, ymin=-90, ymax=90, xmin=-180, xmax=180,
+                layer_opts=[{'label': '-180to180'}, {'label': '0to360'}])
 
         self.check_graphic()
 

@@ -30,11 +30,11 @@ class LinePlot(GenericPlot):
         else:
             self.mplkwargs.pop("color", None)
 
-        if unpacked_data_item["x"].shape[0] != unpacked_data_item["data"].shape[0]:
+        if self.x.shape[0] != self.data.shape[0]:
             raise InvalidDimensionError("The plot axes are incompatible, please check and specify at least one "
                                         "axis manually.")
 
-        self.matplotlib.plot(unpacked_data_item["x"], unpacked_data_item["data"], *self.mplargs, **self.mplkwargs)
+        self.ax.plot(self.x, self.data, *self.mplargs, **self.mplkwargs)
 
 
     @staticmethod

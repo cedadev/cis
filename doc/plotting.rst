@@ -131,12 +131,6 @@ There are a number of plot formatting options available:
 ``--cbarlabel``
   The label for the colorbar
 
-``--xtickangle``
-  The angle for the ticks on the x axis
-
-``--ytickangle``
-  The angle for the ticks on the y axis
-
 ``--title``
   The title of the plot
 

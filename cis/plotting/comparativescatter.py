@@ -4,39 +4,19 @@ from cis.plotting.genericplot import GenericPlot
 class ComparativeScatter(GenericPlot):
 
     def plot(self):
-        from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
-        if len(self.packed_data_items) == 2:
-            # Add y=x line
-            ax = self.matplotlib.gca()
-            if self.logx and self.logy:
-                import numpy.ma as ma
-                positive_item0 = ma.array(self.x,
-                                          mask=self.x<= 0)
-                positive_item1 = ma.array(self.y,
-                                          mask=self.y <= 0)
-                min_val = min(positive_item0.min(), positive_item1.min())
-                max_val = max(positive_item0.max(), positive_item1.max())
-            else:
-                min_val = min(self.x.min(), self.y.min())
-                max_val = max(self.x.max(), self.y.max())
-            y_equals_x_array = [min_val, max_val]
-            ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
+        import numpy as np
+        lims = [np.min([self.ax.get_xlim(), self.ax.get_ylim()]),  # min of both axes
+                np.max([self.ax.get_xlim(), self.ax.get_ylim()])]  # max of both axes
 
-            datagroup = self.datagroups[0]
-            if datagroup["itemstyle"]:
-                self.mplkwargs["marker"] = datagroup["itemstyle"]
-            else:
-                self.mplkwargs.pop("marker", None)
+        # now plot both limits against eachother
+        self.ax.plot(lims, lims, color="black", linestyle="dashed")
 
-            if datagroup["color"]:
-                self.mplkwargs["color"] = datagroup["color"]
-            else:
-                self.mplkwargs.pop("color", None)
+        self.mplkwargs["marker"] = self.itemstyle
 
-            ax.scatter(self.x, self.y,
-                       s=self.itemwidth, edgecolors="none", *self.mplargs, **self.mplkwargs)
-        else:
-            raise InvalidNumberOfDatagroupsSpecifiedError("Comparative scatter requires two datagroups")
+        self.mplkwargs["color"] = self.color
+
+        self.ax.scatter(self.x, self.y,
+                   s=self.itemwidth, edgecolors="none", *self.mplargs, **self.mplkwargs)
 
     def unpack_data_items(self, packed_data_items, x_wrap_start=None):
         self.x = packed_data_items[0].data
@@ -57,3 +37,7 @@ class ComparativeScatter(GenericPlot):
         units = data[item_index].units
         name = data[item_index].name()
         return name + " " + format_units(units)
+
+    @staticmethod
+    def valid_number_of_datagroups(number_of_datagroups):
+        return number_of_datagroups == 2

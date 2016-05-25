@@ -108,3 +108,7 @@ class APlot(object):
     def unpack_data_items(self, packed_data_items, x_wrap_start=None):
         from cis.utils import unpack_data_object
         self.data, self.x, self.y = unpack_data_object(packed_data_items, self.xaxis, self.yaxis, x_wrap_start)
+
+    @staticmethod
+    def valid_number_of_datagroups(number_of_datagroups):
+        return number_of_datagroups == 1

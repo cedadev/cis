@@ -92,20 +92,6 @@ class Histogram(GenericPlot):
 
         return label
 
-    def set_axis_ticks(self, axis, no_of_dims):
-
-        if axis == "x":
-            tick_method = self.ax.xticks
-        elif axis == "y":
-            tick_method = self.ax.yticks
-
-        if getattr(self, axis + "tickangle") is None:
-            angle = None
-        else:
-            angle = getattr(self, axis + "tickangle")
-
-        tick_method(rotation=angle)
-
     def apply_axis_limits(self):
         """
         Applies the limits (if given) to the specified axis.

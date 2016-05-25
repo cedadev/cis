@@ -60,11 +60,6 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--ylabel", metavar="Y axis label", nargs="?", help="The label for the y axis")
     parser.add_argument("--cbarlabel", metavar="Colour bar label", nargs="?", help="The label for the colour bar")
 
-    parser.add_argument("--xtickangle", metavar="X tick angle", nargs="?",
-                        help="The angle (in degrees) of the ticks on the x axis", type=float)
-    parser.add_argument("--ytickangle", metavar="Y tick angle", nargs="?",
-                        help="The angle (in degrees) of the ticks on the y axis", type=float)
-
     parser.add_argument("--title", metavar="Chart title", nargs="?", help="The title for the chart")
     parser.add_argument("--fontsize", metavar="Font size", nargs="?", help="The size of the font in points", type=float)
     parser.add_argument("--cmap", metavar="Colour map", nargs="?", help="The colour map used, e.g. RdBu")

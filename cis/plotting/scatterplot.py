@@ -45,8 +45,7 @@ class ScatterPlot(GenericPlot, GenericScatter):
 
         self.mplkwargs["c"] = self.color
 
-        self.color_axis.append(
-            self.ax.scatter(self.x, self.data, *self.mplargs, **self.mplkwargs))
+        self.color_axis.append(self.ax.scatter(self.x, self.data, *self.mplargs, **self.mplkwargs))
 
 
 class ScatterPlot2D(Generic2DPlot, GenericScatter):

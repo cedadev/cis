@@ -324,7 +324,7 @@ def find_longitude_wrap_start(packed_data_items):
     from iris.exceptions import CoordinateNotFoundError
     # They either all have longitude coordinates in, or none of them do.
     try:
-        x_points_min = min([d.get_coord('longitude').points.min() for d in packed_data_items])
+        x_points_min = min([d.coord('longitude').points.min() for d in packed_data_items])
     except CoordinateNotFoundError:
         x_wrap_start = None
     else:

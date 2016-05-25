@@ -16,52 +16,43 @@ class Histogram2D(Generic2DPlot):
         The first data item is plotted on the x axis, and the second on the y axis
         """
         from cis.utils import apply_intersection_mask_to_two_arrays
-        from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
-        if len(self.packed_data_items) == 2:
-            vmin = self.mplkwargs.pop("vmin")
-            vmax = self.mplkwargs.pop("vmax")
+        vmin = self.mplkwargs.pop("vmin")
+        vmax = self.mplkwargs.pop("vmax")
 
-            xbins = self.calculate_bin_edges("x")
-            ybins = self.calculate_bin_edges("y")
+        xbins = self.calculate_bin_edges("x")
+        ybins = self.calculate_bin_edges("y")
 
-            # All bins that have count less than cmin will not be displayed
-            cmin = vmin
-            # All bins that have count more than cmax will not be displayed
-            cmax = vmax
+        # All bins that have count less than cmin will not be displayed
+        cmin = vmin
+        # All bins that have count more than cmax will not be displayed
+        cmax = vmax
 
-            # Add y=x line
-            min_val = min(self.x.min(), self.y.min())
-            max_val = max(self.x.max(), self.y.max())
-            y_equals_x_array = [min_val, max_val]
-            self.ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
+        # Add y=x line
+        min_val = min(self.x.min(), self.y.min())
+        max_val = max(self.x.max(), self.y.max())
+        y_equals_x_array = [min_val, max_val]
+        self.ax.plot(y_equals_x_array, y_equals_x_array, color="black", linestyle="dashed")
 
-            # Just in case data has different shapes, reshape here
-            self.x = numpy.reshape(self.x,
-                                                                self.y.shape)
+        # Just in case data has different shapes, reshape here
+        self.x = numpy.reshape(self.x, self.y.shape)
 
-            first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(
-                self.x, self.y)
+        first_data_item, second_data_item = apply_intersection_mask_to_two_arrays(
+            self.x, self.y)
 
-            first_data_item = first_data_item.compressed()
-            second_data_item = second_data_item.compressed()
+        first_data_item = first_data_item.compressed()
+        second_data_item = second_data_item.compressed()
 
-            # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
-            histogram2ddata = numpy.histogram2d(first_data_item, second_data_item, bins=[xbins, ybins])[0]
-            histogram2ddata = numpy.ma.masked_equal(histogram2ddata, 0)
-            self.ax.pcolor(xbins, ybins, histogram2ddata.T, vmin=cmin, vmax=cmax,
-                                   *self.mplargs, **self.mplkwargs)
+        # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
+        histogram2ddata = numpy.histogram2d(first_data_item, second_data_item, bins=[xbins, ybins])[0]
+        histogram2ddata = numpy.ma.masked_equal(histogram2ddata, 0)
+        self.ax.pcolor(xbins, ybins, histogram2ddata.T, vmin=cmin, vmax=cmax, *self.mplargs, **self.mplkwargs)
 
-            self.mplkwargs["vmin"] = vmin
-            self.mplkwargs["vmax"] = vmax
-        else:
-            raise InvalidNumberOfDatagroupsSpecifiedError("Histogram 3D requires two datagroups")
+        self.mplkwargs["vmin"] = vmin
+        self.mplkwargs["vmax"] = vmax
 
     def unpack_data_items(self, packed_data_items, x_wrap_start=None):
         self.x = packed_data_items[0].data
         self.y = packed_data_items[1].data
-
-    def setup_map(self):
-        pass
 
     def calculate_bin_edges(self, axis):
         """
@@ -115,11 +106,6 @@ class Histogram2D(Generic2DPlot):
         elif axis == "y":
             tick_method = self.ax.yticks
 
-        if getattr(self, axis + "tickangle") is None:
-            angle = None
-        else:
-            angle = getattr(self, axis + "tickangle")
-
         if getattr(self, axis + "step") is not None:
             step = getattr(self, axis + "step")
 
@@ -135,9 +121,11 @@ class Histogram2D(Generic2DPlot):
 
             ticks = arange(min_val, max_val + step, step)
 
-            tick_method(ticks, rotation=angle)
-        else:
-            tick_method(rotation=angle)
+            tick_method(ticks)
 
     def drawcoastlines(self):
         pass
+
+    @staticmethod
+    def valid_number_of_datagroups(number_of_datagroups):
+        return number_of_datagroups == 2

@@ -52,14 +52,13 @@ def guess_y_axis(data, xaxis):
         try:
             return name_preferring_standard(data.coord(axis="Y"))
         except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-            if len(data.shape) > 1:
-                number_of_points_in_dimension = data.shape[1]
+            if len(data[0].shape) > 1:
+                number_of_points_in_dimension = data[0].shape[1]
+                for coord in data.coords():
+                    if coord.shape[0] == number_of_points_in_dimension:
+                        yaxis = "search:" + str(number_of_points_in_dimension)
             else:
                 yaxis = "default"
-
-            for coord in data.coords():
-                if coord.shape[0] == number_of_points_in_dimension:
-                    yaxis = "search:" + str(number_of_points_in_dimension)
 
     if "search" in yaxis:
         logging.info("Plotting unknown on the y axis")
@@ -76,7 +75,7 @@ def guess_x_axis(data):
     try:
         xaxis = name_preferring_standard(data.coord(axis='X'))
     except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-        number_of_points_in_dimension = data.shape[0]
+        number_of_points_in_dimension = data[0].shape[0]
 
         for coord in data.coords():
             if coord.shape[0] == number_of_points_in_dimension:
@@ -124,7 +123,7 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=
 
 
 
-def set_x_axis_as_time(ax, xtickangle):
+def set_x_axis_as_time(ax):
     from matplotlib import ticker
     from cis.time_util import convert_std_time_to_datetime
 
@@ -149,9 +148,7 @@ def set_x_axis_as_time(ax, xtickangle):
         return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
 
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
-    if xtickangle is None:
-        xtickangle = 45
-    ax.xticks(rotation=xtickangle, ha="right")
+    ax.xticks(rotation=45, ha="right")
     # Give extra spacing at bottom of plot due to rotated labels
     ax.get_figure().subplots_adjust(bottom=0.3)
 
@@ -182,7 +179,7 @@ def _test_natural_earth_available():
     return natural_earth_available
 
 
-def drawcoastlines(ax, nasabluemarble, coastlinecolour, transform):
+def drawcoastlines(ax, nasabluemarble, coastlinescolour, transform):
     """
     Adds coastlines or nasa blue marble back ground to a plot (no coastlines are plotted over nasa blue marble).
     There are three levels of resolution used based on the spatial scale of the plot. These are determined using
@@ -213,7 +210,7 @@ def drawcoastlines(ax, nasabluemarble, coastlinecolour, transform):
                 if scale > ext:
                     coastline_res = res
 
-            ax.coastlines(color=coastlinecolour, resolution=coastline_res)
+            ax.coastlines(color=coastlinescolour, resolution=coastline_res)
         else:
             logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
                             'Check internet connectivity and try again')
@@ -303,9 +300,9 @@ class Plotter(object):
 
     def __init__(self, data, type=None, out_filename=None, xaxis=None, yaxis=None, layer_opts=None, plotheight=None,
                  plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False, nasabluemarble=False,
-                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, cbarlabel=None, coastlinecolour='k',
-                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None, xtickangle=None, ytickangle=None,
-                 projection=None, *args, **kwargs):
+                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, cbarlabel=None, coastlinescolour='k',
+                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None,
+                 cbarscale=None, cbarorient=None, projection=None, *args, **kwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
@@ -316,8 +313,11 @@ class Plotter(object):
         :param args: Any other arguments received from the parser
         :param kwargs: Any other keyword arguments received from the plotter
         """
+        from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
         import matplotlib.pyplot as plt
         import cartopy.crs as ccrs
+
+        layer_opts = layer_opts or [{}]
 
         if type in self.plot_types:
             type = type
@@ -326,9 +326,15 @@ class Plotter(object):
         else:
             raise ValueError("Invalid plot type, must be one of: {}".format(list(self.plot_types.keys())))
 
+        if not self.plot_types[type].valid_number_of_datagroups(len(data)):
+            raise InvalidNumberOfDatagroupsSpecifiedError("Invalid number of datagroups specified. Only one datagroup "
+                                                          "can be plotted for a {}.".format(type))
+
         # TODO: This could become an argument in the future
         # Create figure and a single axis (we assume for now not more than one 'subplot').
 
+        # TODO: A lot of the axis and plot type guesses are based on the first datagroup. It would be nice to be able to
+        # specify at least the axis name separately. Especially once supporting multiple subplots.
         xaxis = xaxis or guess_x_axis(data)
         yaxis = yaxis or guess_y_axis(data, xaxis)
 
@@ -345,31 +351,33 @@ class Plotter(object):
         xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
         ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
 
-        self.fig, ax = plt.subplots(projection=projection)
+        self.fig, ax = plt.subplots(subplot_kw={'projection': projection})
 
         self.set_width_and_height(plotwidth, plotheight)
 
         # Each plot is really just one 'layer', it should only get arguments relevant for that layer.
         # TODO: I'll have to choose colors for each layer if they haven't been set already...
         for d, params in zip(data, layer_opts):
-            plot = self.plot_types[type](d, ax, xaxis, yaxis, *args, **layer_opts+kwargs)
+            layer_args = dict(list(kwargs.items()) + list(params.items()))
+            plot = self.plot_types[type](d, ax, xaxis=xaxis, yaxis=yaxis, *args, **layer_args)
 
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
         # instance
         apply_axis_limits(ax, xmin, xmax, ymin, ymax, projection=projection, reverse_y=(yaxis == 'air_pressure'))
 
         # TODO figure out what to do about the transforms floating about the place.
-        format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title,
+        format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title,
                     transform, legend=len(data)>1)
         if not nocolourbar:
-            self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units))
+            self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units), cbarscale=cbarscale,
+                                                cbarorient=cbarorient)
 
         # TODO: I need a better test for the xaxis being time...
         if xaxis == 'time':
-            set_x_axis_as_time(ax, xtickangle)
+            set_x_axis_as_time(ax)
 
         if is_map(data, xaxis, yaxis):
-            drawcoastlines(ax, nasabluemarble, coastlinecolour, transform)
+            drawcoastlines(ax, nasabluemarble, coastlinescolour, transform)
             auto_set_map_ticks(ax, xmin, xmax, ymin, ymax, xstep, ystep, logx, logy, transform)
         else:
             auto_set_ticks(ax, xaxis, yaxis, xmin, xmax, ymin, ymax, xstep, ystep, logx, logy)

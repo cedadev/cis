@@ -9,7 +9,7 @@ from .formatter import LogFormatterMathtextSpecial
 # obviously static methods. and split files. This should make the classes more manageable and easier to test.
 
 
-def set_yaxis_ticks(ax, step=None, tickangle=None, transform=None):
+def set_yaxis_ticks(ax, step=None, transform=None):
     from cartopy.mpl.ticker import LatitudeFormatter
     from cartopy.mpl.geoaxes import GeoAxes
     from numpy import arange
@@ -20,23 +20,16 @@ def set_yaxis_ticks(ax, step=None, tickangle=None, transform=None):
         ax.yaxis.set_major_formatter(LatitudeFormatter())
         tick_kwargs['crs'] = transform
 
-    if tickangle is None:
-        tick_kwargs['ha'] = "right"
-    else:
-        tick_kwargs['rotation'] = tickangle
-        tick_kwargs['ha'] = "right"
-
+    # TODO: this should be checked outside of this function
     if step is not None:
         min_val, max_val = ax.get_ylim()
         ticks = arange(min_val, max_val + step, step)
 
         ax.set_yticks(ticks, **tick_kwargs)
-    elif tick_kwargs:
-        ax.set_yticks(**tick_kwargs)
 
 
-def set_xaxis_ticks(ax, step=None, tickangle=None, transform=None):
-    from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+def set_xaxis_ticks(ax, step=None, transform=None):
+    from cartopy.mpl.ticker import LongitudeFormatter
     from cartopy.mpl.geoaxes import GeoAxes
     from numpy import arange
 
@@ -46,22 +39,15 @@ def set_xaxis_ticks(ax, step=None, tickangle=None, transform=None):
         ax.xaxis.set_major_formatter(LongitudeFormatter())
         tick_kwargs['crs'] = transform
 
-    if tickangle is None:
-        tick_kwargs['ha'] = "center"
-    else:
-        tick_kwargs['rotation'] = tickangle
-        tick_kwargs['ha'] = "right"
-
+    # TODO: this should be checked outside of this function
     if step is not None:
         min_val, max_val = ax.get_xlim()
         ticks = arange(min_val, max_val + step, step)
 
         ax.set_xticks(ticks, **tick_kwargs)
-    elif tick_kwargs:
-        ax.set_xticks(**tick_kwargs)
 
 
-def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, fontsize, xlabel, ylabel, title,
+def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title,
                 transform=None, legend=False):
     """
     Used by 2d subclasses to format the plot
@@ -76,8 +62,8 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, font
     if grid:
         ax.grid(True, which="both")
 
-    set_xaxis_ticks(ax, xstep, xtickangle, transform)
-    set_yaxis_ticks(ax, ystep, ytickangle, transform)
+    set_xaxis_ticks(ax, xstep, transform)
+    set_yaxis_ticks(ax, ystep, transform)
 
     if fontsize is not None:
         matplotlib.rcParams.update({'font.size': fontsize})
@@ -96,12 +82,12 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, xtickangle, ytickangle, font
 class GenericPlot(APlot):
 
     def __init__(self, packed_data_items, *mplargs, **mplkwargs):
-        super(GenericPlot).__init__(packed_data_items, *mplargs, **mplkwargs)
+        super(GenericPlot, self).__init__(packed_data_items, *mplargs, **mplkwargs)
 
         logging.debug("Unpacking the data items")
         self.unpack_data_items(packed_data_items)
 
-        self.mplkwargs['label'] = self.label or packed_data_items.longname
+        self.mplkwargs['label'] = self.label or packed_data_items.long_name
 
         self.plot()
 
