@@ -330,6 +330,11 @@ class TestNetCDF_Gridded_xenida(ProductTests, unittest.TestCase):
         # Model data is gridded so IRIS takes care of this
         pass
 
+    @nottest
+    def test_create_pandas_object(self):
+        # This is broken - but it's in Iris
+        pass
+
 
 class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
     def setUp(self):
@@ -355,6 +360,11 @@ class TestNetCDF_Gridded_xglnwa(ProductTests, unittest.TestCase):
         # Model data is gridded so IRIS takes care of this
         pass
 
+    @nottest
+    def test_create_pandas_object(self):
+        # This is broken - but it's in Iris
+        pass
+
 
 class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
     def setUp(self):
@@ -370,3 +380,9 @@ class TestNetCDF_Gridded_HadGEM(ProductTests, unittest.TestCase):
     def test_write_coords(self):
         # Gridded coordinates are taken care of by IRIS
         pass
+
+    @nottest
+    def test_create_pandas_object(self):
+        # Cannot create pandas objects for data with > 2 dimensions
+        pass
+
