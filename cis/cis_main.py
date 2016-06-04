@@ -59,7 +59,7 @@ def plot_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments
     """
-    from plotting.plot import Plotter
+    from cis.plotting.plot import Plotter
     from cis.data_io.data_reader import DataReader
     import cis.exceptions as ex
 
@@ -190,7 +190,7 @@ def evaluate_cmd(main_arguments):
 
     :param main_arguments: The command line arguments (minus the eval command)
     """
-    from evaluate import Calculator
+    from cis.evaluate import Calculator
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
     calculator = Calculator()
@@ -205,7 +205,7 @@ def stats_cmd(main_arguments):
 
     :param main_arguments: The command line arguments (minus the stats command)
     """
-    from stats import StatsAnalyzer
+    from cis.stats import StatsAnalyzer
     from cis.data_io.gridded_data import GriddedDataList
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
@@ -256,7 +256,7 @@ def parse_and_run_arguments(arguments=None):
     """
     from datetime import datetime
 
-    from parse import parse_args
+    from cis.parse import parse_args
 
     # parse command line arguments
     arguments = parse_args(arguments)
