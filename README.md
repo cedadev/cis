@@ -12,6 +12,7 @@ v1.3.2 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.44573.svg)](http
 CIS is an open source command-line tool for the easy collocation, visualization, analysis, and comparison of a
 diverse set of gridded and ungridded datasets used across earth sciences. Visit our homepage at www.cistools.net.
 
+For issue tracking and improvement suggestions please see our JIRA project at: https://jira.ceh.ac.uk/projects/JASCIS/issues.
 
 Installation
 ------------
