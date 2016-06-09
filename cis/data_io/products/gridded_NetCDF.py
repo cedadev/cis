@@ -24,6 +24,9 @@ class NetCDF_Gridded(AProduct):
     def get_variable_names(self, filenames, data_type=None):
         import iris
         import cf_units as unit
+        # Don't automatically promote variables which define reference surfaces for dimensionless vertical coordinates
+        # as independent Cubes - it's just confusing for users I think
+        iris.FUTURE.netcdf_promote = False
         variables = []
         cubes = iris.load(filenames)
 

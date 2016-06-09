@@ -2,17 +2,18 @@ from time import gmtime, strftime
 import logging
 
 import iris
-from iris.cube import CubeList
 import numpy as np
 
 from cis.data_io.common_data import CommonData, CommonDataList
 from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.hyperpoint_view import GriddedHyperPointView
 
-from iris.std_names import STD_NAMES
-
 
 def load_cube(*args, **kwargs):
+    # Don't automatically promote variables which define reference surfaces for dimensionless vertical coordinates
+    # as independent Cubes - it's just confusing for users I think
+    iris.FUTURE.netcdf_promote = False
+
     iris_cube = iris.load_cube(*args, **kwargs)
     return make_from_cube(iris_cube)
 

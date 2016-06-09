@@ -1,6 +1,8 @@
 CIS
 ===
 
+[![Join the chat at https://gitter.im/cedadev/cis](https://badges.gitter.im/cedadev/cis.svg)](https://gitter.im/cedadev/cis?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/cedadev/cis.svg?branch=master)](https://travis-ci.org/cedadev/cis)
 [![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
 [![Downloads](https://anaconda.org/cistools/cis/badges/downloads.svg)](https://anaconda.org/CISTools/cis/files)
@@ -10,6 +12,7 @@ v1.3.2 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.44573.svg)](http
 CIS is an open source command-line tool for the easy collocation, visualization, analysis, and comparison of a
 diverse set of gridded and ungridded datasets used across earth sciences. Visit our homepage at www.cistools.net.
 
+For issue tracking and improvement suggestions please see our JIRA project at: https://jira.ceh.ac.uk/projects/JASCIS/issues.
 
 Installation
 ------------
