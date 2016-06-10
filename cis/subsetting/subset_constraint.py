@@ -21,6 +21,90 @@ class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constrain
     pass
 
 
+def _set_constraint_limits(data, limits):
+    """
+    Identify and set the constraint limits on the subset_constraint object using the coordinates from the data
+    object
+
+    :param data: The data object containing the coordinates to subset
+    :param subset_constraint: The constraint object on to which to apply the limits
+    """
+    import cis.parse_datetime as parse_datetime
+
+    coord_limits = {}
+
+    for coord in data.coords(dim_coords=True):
+        # Match user-specified limits with dimensions found in data.
+        guessed_axis = guess_coord_axis(coord)
+        limit = None
+        if coord.name() in limits:
+            limit = limits.pop(coord.name())
+        elif hasattr(coord, 'var_name') and coord.var_name in limits:
+            limit = limits.pop(coord.var_name)
+        elif coord.standard_name in limits:
+            limit = limits.pop(coord.standard_name)
+        elif coord.long_name in limits:
+            limit = limits.pop(coord.long_name)
+        elif guessed_axis is not None:
+            if guessed_axis in limits:
+                limit = limits.pop(guessed_axis)
+            elif guessed_axis.lower() in limits:
+                limit = limits.pop(guessed_axis.lower())
+
+        if limit is not None:
+            wrapped = False
+            if limit.is_time or guessed_axis == 'T':
+                # Ensure that the limits are date/times.
+                dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
+                limit_start = _convert_datetime_to_coord_unit(coord, dt)
+                dt = parse_datetime.convert_datetime_components_to_datetime(limit.end, False)
+                limit_end = _convert_datetime_to_coord_unit(coord, dt)
+            else:
+                # Assume to be a non-time axis.
+                (limit_start, limit_end) = _fix_non_circular_limits(float(limit.start), float(limit.end))
+            # Apply the limit to the constraint object
+            coord_limits[coord.name()] = CoordLimits(coord, limit_start, limit_end,
+                                                     lambda x: limit_start <= x.point <= limit_end)
+
+    return coord_limits
+
+
+def _convert_datetime_to_coord_unit(coord, dt):
+    """Converts a datetime to be in the unit of a specified Coord.
+    """
+    from cf_units import Unit
+
+    if isinstance(coord, iris.coords.Coord):
+        # The unit class is then cf_units.Unit.
+        iris_unit = coord.units
+    else:
+        iris_unit = Unit(coord.units)
+    return iris_unit.date2num(dt)
+
+
+def _convert_coord_unit_to_datetime(coord, dt):
+    """Converts a datetime to be in the unit of a specified Coord.
+    """
+    from cf_units import Unit
+
+    if isinstance(coord, iris.coords.Coord):
+        # The unit class is then cf_units.Unit.
+        iris_unit = coord.units
+    else:
+        iris_unit = Unit(coord.units)
+    return iris_unit.num2date(dt)
+
+
+def _fix_non_circular_limits(limit_start, limit_end):
+    if limit_start <= limit_end:
+        new_limits = (limit_start, limit_end)
+    else:
+        new_limits = (limit_end, limit_start)
+        logging.info("Real limits: original: %s  after fix: %s", (limit_start, limit_end), new_limits)
+
+    return new_limits
+
+
 class SubsetConstraint(SubsetConstraintInterface):
     """Abstract Constraint for subsetting.
 
@@ -32,21 +116,10 @@ class SubsetConstraint(SubsetConstraintInterface):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self):
-        self._limits = {}
+    def __init__(self, limits):
+        # TODO: Document what these limits should be...
+        self._limits = limits
         logging.debug("Created SubsetConstraint of type %s", self.__class__.__name__)
-
-    def set_limit(self, coord, dim_min, dim_max):
-        """
-        Sets boundary values for a dimension to be used in subsetting.
-        :param coord: coordinate to which limit applies
-        :param dim_min: lower bound on dimension or None to indicate no lower bound
-        :param dim_max: upper bound on dimension or None to indicate no upper bound
-        """
-        if dim_min is not None or dim_max is not None:
-            logging.info("Setting limit for dimension '%s' [%s, %s]", coord.name(), str(dim_min), str(dim_max))
-            self._limits[coord.name()] = CoordLimits(coord, dim_min, dim_max,
-                                                     lambda x: dim_min <= x.point <= dim_max)
 
     def __str__(self):
         limit_strs = []

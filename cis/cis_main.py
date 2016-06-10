@@ -151,7 +151,9 @@ def subset_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments (minus the subset command)
     """
-    from cis.subsetting.subset import Subset
+    from cis import read_data_list
+    from iris.exceptions import IrisError
+    import cis.exceptions as ex
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Subsetting can only be performed on one data group")
@@ -161,8 +163,25 @@ def subset_cmd(main_arguments):
     filenames = input_group['filenames']
     product = input_group["product"] if input_group["product"] is not None else None
 
-    subset = Subset(main_arguments.limits, main_arguments.output)
-    subset.subset(variables, filenames, product)
+    # Read the input data - the parser limits the number of data groups to one for this command.
+    try:
+        # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
+        # the specified files.
+        logging.info("Reading data for variables: %s", variables)
+        data = read_data_list(filenames, variables, product)
+    except (IrisError, ex.InvalidVariableError) as e:
+        raise ex.CISError("There was an error reading in data: \n" + str(e))
+    except IOError as e:
+        raise ex.CISError("There was an error reading one of the files: \n" + str(e))
+
+    # TODO Check what the arguments are here
+    subset = data.subset(**main_arguments.limits)
+
+    if subset is None:
+        # Constraints exclude all data.
+        raise ex.NoDataInSubsetError("No output created - constraints exclude all data")
+
+    subset.save_data(main_arguments.output)
 
 
 def aggregate_cmd(main_arguments):

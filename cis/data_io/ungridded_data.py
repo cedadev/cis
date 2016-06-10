@@ -610,6 +610,27 @@ class UngriddedData(LazyData, CommonData):
     def __unicode__(self):
         return self.summary()
 
+    def subset(self, **kwargs):
+        from cis.subsetting.subset_constraint import UngriddedSubsetConstraint
+        from cis.exceptions import CoordinateNotFoundError
+
+        constraints = {}
+        for coord, limits in kwargs:
+            # do some stuff here
+            # TODO Figure out what the right type of the arguments should be for here
+            pass
+
+        if len(constraints) != 0:
+            raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
+                                          "coordinate name.".format("' or '".join(list(constraints.keys()))))
+
+        subset_constraint = UngriddedSubsetConstraint(constraints)
+
+        subset = subset_constraint.constrain(self)
+
+        subset.add_history("Subsetted using limits: " + str(subset_constraint))
+        return subset
+
 
 class UngriddedCoordinates(CommonData):
     """

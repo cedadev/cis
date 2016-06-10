@@ -99,6 +99,16 @@ class CommonData(object):
         """
         pass
 
+    @abstractmethod
+    def subset(self, **kwargs):
+        """
+        Subset the CommonData object based on the specified constraints
+        :param inplace:
+        :param kwargs:
+        :return:
+        """
+        pass
+
 
 class CommonDataList(list):
     """

@@ -8,7 +8,7 @@ import numpy as np
 
 from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
 import cis.parse_datetime as parse_datetime
-from cis.subsetting.subset import Subset
+from cis.subsetting.subset_constraint import _fix_non_circular_limits, _convert_datetime_to_coord_unit
 from cis.utils import isnan, guess_coord_axis
 from cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
 from cis.aggregation.aggregation_kernels import MultiKernel
@@ -256,13 +256,13 @@ class Aggregator(object):
         if grid.is_time or guessed_axis == 'T':
             # Ensure that the limits are date/times.
             dt = parse_datetime.convert_datetime_components_to_datetime(grid.start, True)
-            grid_start = Subset._convert_datetime_to_coord_unit(coord, dt)
+            grid_start = _convert_datetime_to_coord_unit(coord, dt)
             dt = parse_datetime.convert_datetime_components_to_datetime(grid.end, False)
-            grid_end = Subset._convert_datetime_to_coord_unit(coord, dt)
+            grid_end = _convert_datetime_to_coord_unit(coord, dt)
             grid_delta = grid.delta
         else:
             # Assume to be a non-time axis
-            (grid_start, grid_end) = Subset._fix_non_circular_limits(float(grid.start), float(grid.end))
+            (grid_start, grid_end) = _fix_non_circular_limits(float(grid.start), float(grid.end))
             grid_delta = float(grid.delta)
         new_coordinate_grid = aggregation_grid_array(grid_start, grid_end, grid_delta, grid.is_time, coord)
         new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
