@@ -290,6 +290,11 @@ class GriddedData(iris.cube.Cube, CommonData):
     def collapsed(self, *args, **kwargs):
         return make_from_cube(super(GriddedData, self).collapsed(*args, **kwargs))
 
+    def subset(self, **kwargs):
+        from subsetting.subset_constraint import subset, GriddedSubsetConstraint
+        return subset(self, GriddedSubsetConstraint, **kwargs)
+
+
 class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
     This class extends iris.cube.CubeList to add functionality needed for CIS to process multiple gridded data.
@@ -492,3 +497,7 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         """
         # Use the dimensions of the first item since all items should be the same shape
         return self[0].ndim
+
+    def subset(self, **kwargs):
+        from subsetting.subset_constraint import subset, GriddedSubsetConstraint
+        return subset(self, GriddedSubsetConstraint, **kwargs)

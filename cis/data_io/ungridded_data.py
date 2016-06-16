@@ -611,25 +611,8 @@ class UngriddedData(LazyData, CommonData):
         return self.summary()
 
     def subset(self, **kwargs):
-        from cis.subsetting.subset_constraint import UngriddedSubsetConstraint
-        from cis.exceptions import CoordinateNotFoundError
-
-        constraints = {}
-        for coord, limits in kwargs:
-            # do some stuff here
-            # TODO Figure out what the right type of the arguments should be for here
-            pass
-
-        if len(constraints) != 0:
-            raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
-                                          "coordinate name.".format("' or '".join(list(constraints.keys()))))
-
-        subset_constraint = UngriddedSubsetConstraint(constraints)
-
-        subset = subset_constraint.constrain(self)
-
-        subset.add_history("Subsetted using limits: " + str(subset_constraint))
-        return subset
+        from subsetting.subset_constraint import subset, UngriddedSubsetConstraint
+        return subset(self, UngriddedSubsetConstraint, **kwargs)
 
 
 class UngriddedCoordinates(CommonData):
@@ -851,6 +834,10 @@ class UngriddedDataList(CommonDataList):
             df[d.name()] = data
 
         return df
+
+    def subset(self, **kwargs):
+        from subsetting.subset_constraint import subset, UngriddedSubsetConstraint
+        return subset(self, UngriddedSubsetConstraint, **kwargs)
 
 
 def _coords_as_data_frame(coord_list, copy=True):

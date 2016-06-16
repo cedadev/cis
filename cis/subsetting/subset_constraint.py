@@ -11,6 +11,34 @@ import cis.data_io.gridded_data as gridded_data
 from cis.utils import guess_coord_axis
 
 
+def subset(data, constraint, **kwargs):
+    """
+    Helper function for constraining a CommonData or CommonDataList object (data) given a SubsetConstraintInterface
+    object, the constraints should be specified using the kwargs of the form coord: [min, max]
+
+    :param CommonData or CommonDataList data:
+    :param SubsetConstraintInterface constraint:
+    :param kwargs:
+    :return:
+    """
+    from cis.exceptions import CoordinateNotFoundError
+
+    constraints = create_constraint_limits(data, kwargs)
+
+    if len(constraints) != 0:
+        raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
+                                      "coordinate name.".format("' or '".join(list(constraints.keys()))))
+
+    subset_constraint = constraint(constraints)
+
+    subset = subset_constraint.constrain(data)
+
+    for s in subset:
+        s.add_history("Subsetted using limits: " + str(subset_constraint))
+
+    return subset
+
+
 class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
     """Holds the start and end values for subsetting limits.
     :ivar coord: the coordinate the limit applies to
@@ -21,15 +49,16 @@ class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constrain
     pass
 
 
-def _set_constraint_limits(data, limits):
+def create_constraint_limits(data, limits):
     """
-    Identify and set the constraint limits on the subset_constraint object using the coordinates from the data
-    object
+    Create a set of CoordLimits based on the given data and limits
 
     :param data: The data object containing the coordinates to subset
-    :param subset_constraint: The constraint object on to which to apply the limits
+    :param limits: A dictionary containing coordinate names and limits as tuples or lists of either floats of datetime objects
     """
     import cis.parse_datetime as parse_datetime
+    from datetime import datetime
+    from iris.time import PartialDateTime
 
     coord_limits = {}
 
@@ -53,12 +82,14 @@ def _set_constraint_limits(data, limits):
 
         if limit is not None:
             wrapped = False
-            if limit.is_time or guessed_axis == 'T':
+            if isinstance(limit[0], datetime):
                 # Ensure that the limits are date/times.
                 dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
                 limit_start = _convert_datetime_to_coord_unit(coord, dt)
                 dt = parse_datetime.convert_datetime_components_to_datetime(limit.end, False)
                 limit_end = _convert_datetime_to_coord_unit(coord, dt)
+            elif isinstance(limit[0], PartialDateTime):
+                pass  # TODO: Do something here
             else:
                 # Assume to be a non-time axis.
                 (limit_start, limit_end) = _fix_non_circular_limits(float(limit.start), float(limit.end))
@@ -109,9 +140,6 @@ class SubsetConstraint(SubsetConstraintInterface):
     """Abstract Constraint for subsetting.
 
     Holds the limits for subsetting in each dimension.
-
-    .. Note:
-        This is not used for the ungridded subsetting which uses fixed numpy comparisons for speed.
 
     """
     __metaclass__ = ABCMeta
@@ -178,6 +206,10 @@ class GriddedSubsetConstraint(SubsetConstraint):
 
 class UngriddedSubsetConstraint(SubsetConstraint):
     """Implementation of SubsetConstraint for subsetting ungridded data.
+
+    .. Note:
+        The constrain method is not used for ungridded subsetting which uses fixed numpy comparisons for speed.
+
     """
 
     def constrain(self, data):

@@ -9,7 +9,13 @@ def parse_datetimestr_to_std_time(s):
     return cis_standard_time_unit.date2num(du.parse(s))
 
 
+def _parse_actual_datetime(s):
+    import dateutil.parser as du
+    return du.parse(s)
+
+
 def _parse_datetime(dt_string):
+    # TODO: This only really parses partial datetimes...
     """Parse a date/time string.
 
     The string should be in an ISO 8601 format except that the date and time
@@ -18,6 +24,8 @@ def _parse_datetime(dt_string):
     :return: list of datetime components
     :raise ValueError: if the string cannot be parsed as a date/time
     """
+    from iris.time import PartialDateTime
+
     # Separate date and time at first character that is one of 'T', ' ' or ':'.
     match = re.match(r'(?P<date>[^T :]+)(?:[T :])(?P<time>.+)$', dt_string)
     if match is not None:
@@ -36,13 +44,7 @@ def _parse_datetime(dt_string):
     else:
         dt_components.extend(time_components)
 
-    # Check that the components are valid (assuming month and/or date is 1 if missing).
-    tmp_components = list(dt_components)
-    if len(tmp_components) < 3:
-        tmp_components.extend([1] * (3 - len(tmp_components)))
-    datetime.datetime(*tmp_components)
-
-    return dt_components
+    return PartialDateTime(*dt_components)
 
 
 def parse_datetime(dt_string, name, parser):
