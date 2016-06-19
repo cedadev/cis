@@ -25,7 +25,7 @@ def subset(data, constraint, **kwargs):
 
     constraints = create_constraint_limits(data, kwargs)
 
-    if len(constraints) != 0:
+    if len(constraints) == 0:
         raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
                                       "coordinate name.".format("' or '".join(list(constraints.keys()))))
 
@@ -33,8 +33,8 @@ def subset(data, constraint, **kwargs):
 
     subset = subset_constraint.constrain(data)
 
-    for s in subset:
-        s.add_history("Subsetted using limits: " + str(subset_constraint))
+    if subset is not None:
+        subset.add_history("Subsetted using limits: " + str(subset_constraint))
 
     return subset
 
@@ -95,7 +95,7 @@ def create_constraint_limits(data, limits):
                     limit_end = _convert_datetime_to_coord_unit(coord, limit[1])
                 else:
                     # Assume to be a non-time axis.
-                    (limit_start, limit_end) = _fix_non_circular_limits(float(limit.start), float(limit.end))
+                    (limit_start, limit_end) = _fix_non_circular_limits(float(limit[0]), float(limit[1]))
             else:
                 raise ValueError("Error processing limit for {}. "
                                  "Limits must be a list or tuple of length 2".format(coord))

@@ -57,7 +57,7 @@ class TestSubsetOnGriddedData(TestCase):
 
     def test_GIVEN_single_variable_WHEN_subset_THEN_Subsetter_called_correctly(self):
 
-            subset = self.data.subset(self.limits)
+            subset = self.data.subset(**self.limits)
             assert_that(subset.data.tolist(),
                         is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
 
@@ -65,7 +65,7 @@ class TestSubsetOnGriddedData(TestCase):
 
         data = GriddedDataList([make_square_5x3_2d_cube(), make_square_5x3_2d_cube()])
 
-        subset = data.subset(self.limits)
+        subset = data.subset(**self.limits)
         assert_that(subset[0].data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
         assert_that(subset[1].data.tolist(), is_(subset[0].data.tolist()))
 
@@ -73,6 +73,6 @@ class TestSubsetOnGriddedData(TestCase):
         self.limits = {'longitude': [self.xmin, self.xmax],
                        'latitude': [self.ymin, self.ymax]}
 
-        subset = self.data.subset(self.limits)
+        subset = self.data.subset(**self.limits)
 
         assert_that(subset.data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))

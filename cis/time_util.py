@@ -12,7 +12,7 @@ class PartialDateTime(object):
     the calendar/time fields (year, month, hour, etc.) and defines a period of time,
     primarily for creating ranges of :class:`datetime.datetime` instances.
     """
-    
+
     def __init__(self, year, month=None, day=None, hour=None, minute=None, second=None):
         """
         Allows creation of datetime ranges. The year is mandatory, all others are optional - but intermediate components
