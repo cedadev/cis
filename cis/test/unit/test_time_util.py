@@ -1,12 +1,12 @@
 """
 module to test the time conversion utilities
 """
-from nose.tools import eq_, assert_almost_equal
+from nose.tools import eq_, assert_almost_equal, istest, raises
 import datetime as dt
 from unittest import TestCase
 
 from cis.time_util import convert_sec_since_to_std_time, convert_datetime_to_std_time, \
-    convert_julian_date_to_std_time
+    convert_julian_date_to_std_time, PartialDateTime, find_last_day_of_month
 
 
 class TestTimeUtils(TestCase):
@@ -88,4 +88,52 @@ class TestTimeUtils(TestCase):
 
         eq_(julian_days.shape, std_days.shape)
         assert np.allclose(std_days, ref)
+
+    # Tests for find_last_day_of_month
+    def test_find_last_day_of_month_finds_day_for_dec_2010(self):
+        day = find_last_day_of_month(2010, 12)
+        assert (day == 31)
+
+    def test_find_last_day_of_month_finds_day_for_feb_2000(self):
+        day = find_last_day_of_month(2000, 2)
+        assert (day == 29)
+
+    # Tests for convert_datetime_components_to_datetime
+    def test_convert_datetime_components_to_datetime_can_convert_year_as_lower_limit(self):
+        start, end = PartialDateTime(2000).convert_to_datetime_range()
+        assert (start == dt.datetime(2000, 1, 1, 0, 0, 0))
+        assert (end == dt.datetime(2000, 12, 31, 23, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_year_month_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6).convert_to_datetime_range()
+        assert (start == dt.datetime(1990, 6, 1, 0, 0, 0))
+        assert (end == dt.datetime(1990, 6, 30, 23, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_year_month_day_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7).convert_to_datetime_range()
+        assert (start == dt.datetime(1990, 6, 7, 0, 0, 0))
+        assert (end == dt.datetime(1990, 6, 7, 23, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_date_hour_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7, 18).convert_to_datetime_range()
+        assert (start == dt.datetime(1990, 6, 7, 18, 0, 0))
+        assert (end == dt.datetime(1990, 6, 7, 18, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_date_hour_min_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7, 6, 30).convert_to_datetime_range()
+        assert (start == dt.datetime(1990, 6, 7, 6, 30, 0))
+        assert (end == dt.datetime(1990, 6, 7, 6, 30, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_date_hour_min_sec_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7, 12, 15, 45).convert_to_datetime_range()
+        assert (start == dt.datetime(1990, 6, 7, 12, 15, 45))
+        assert (end == dt.datetime(1990, 6, 7, 12, 15, 45))
+
+    @raises(ValueError)
+    def test_convert_datetime_components_to_datetime_raises_error_if_invalid_date(self):
+        start, end = PartialDateTime(2000, 6, 31).convert_to_datetime_range()
+
+    @raises(ValueError)
+    def test_convert_datetime_components_to_datetime_raises_error_if_invalid_time(self):
+        start, end = PartialDateTime(2000, 6, 30, 12, 30, 60).convert_to_datetime_range()
 

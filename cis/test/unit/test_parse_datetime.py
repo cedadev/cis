@@ -2,8 +2,7 @@
 """
 import datetime
 from nose.tools import istest, raises, assert_almost_equal, eq_
-from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime, find_last_day_of_month, \
-                               convert_datetime_components_to_datetime, parse_datetimestr_delta_to_float_days, \
+from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime, parse_datetimestr_delta_to_float_days, \
                                parse_datetimestr_to_std_time
 
 
@@ -157,116 +156,6 @@ def parse_as_number_or_datetime_can_parse_float():
     parser = MockParser()
     dt = parse_as_number_or_datetime('12.345', 'limit arg', parser)
     assert (dt == 12.345)
-
-
-# Tests for find_last_day_of_month
-@istest
-def find_last_day_of_month_finds_day_for_dec_2010():
-    day = find_last_day_of_month(2010, 12)
-    assert (day == 31)
-
-
-@istest
-def find_last_day_of_month_finds_day_for_feb_2000():
-    day = find_last_day_of_month(2000, 2)
-    assert (day == 29)
-
-
-# Tests for convert_datetime_components_to_datetime
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_as_lower_limit():
-    dt = convert_datetime_components_to_datetime([2000], True)
-    assert (dt == datetime.datetime(2000, 1, 1, 0, 0, 0))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_int_as_lower_limit():
-    dt = convert_datetime_components_to_datetime(2000, True)
-    assert (dt == datetime.datetime(2000, 1, 1, 0, 0, 0))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_as_upper_limit():
-    dt = convert_datetime_components_to_datetime([2000], False)
-    assert (dt == datetime.datetime(2000, 12, 31, 23, 59, 59))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_int_as_upper_limit():
-    dt = convert_datetime_components_to_datetime(2000, False)
-    assert (dt == datetime.datetime(2000, 12, 31, 23, 59, 59))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_month_as_lower_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6], True)
-    assert (dt == datetime.datetime(1990, 6, 1, 0, 0, 0))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_month_as_upper_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6], False)
-    assert (dt == datetime.datetime(1990, 6, 30, 23, 59, 59))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_month_day_as_lower_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7], True)
-    assert (dt == datetime.datetime(1990, 6, 7, 0, 0, 0))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_year_month_day_as_upper_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7], False)
-    assert (dt == datetime.datetime(1990, 6, 7, 23, 59, 59))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_date_hour_as_lower_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7, 18], True)
-    assert (dt == datetime.datetime(1990, 6, 7, 18, 0, 0))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_date_hour_as_upper_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7, 18], False)
-    assert (dt == datetime.datetime(1990, 6, 7, 18, 59, 59))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_date_hour_min_as_lower_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7, 6, 30], True)
-    assert (dt == datetime.datetime(1990, 6, 7, 6, 30, 0))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_date_hour_min_as_upper_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7, 6, 30], False)
-    assert (dt == datetime.datetime(1990, 6, 7, 6, 30, 59))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_date_hour_min_sec_as_lower_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7, 12, 15, 45], True)
-    assert (dt == datetime.datetime(1990, 6, 7, 12, 15, 45))
-
-
-@istest
-def convert_datetime_components_to_datetime_can_convert_date_hour_min_sec_as_upper_limit():
-    dt = convert_datetime_components_to_datetime([1990, 6, 7, 12, 15, 45], False)
-    assert (dt == datetime.datetime(1990, 6, 7, 12, 15, 45))
-
-
-@istest
-@raises(ValueError)
-def convert_datetime_components_to_datetime_raises_error_if_invalid_date():
-    dt = convert_datetime_components_to_datetime([2000, 6, 31], True)
-
-
-@istest
-@raises(ValueError)
-def convert_datetime_components_to_datetime_raises_error_if_invalid_time():
-    dt = convert_datetime_components_to_datetime([2000, 6, 30, 12, 30, 60], True)
 
 
 @istest

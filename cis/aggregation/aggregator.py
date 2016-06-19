@@ -253,12 +253,16 @@ class Aggregator(object):
         :param guessed_axis: String identifier of the axis to which this coordinate belongs (e.g. 'T', 'X')
         :return: DimCoord
         """
-        if grid.is_time or guessed_axis == 'T':
+        from cis.time_util import PartialDateTime
+        if isinstance(grid.start, datetime):
             # Ensure that the limits are date/times.
-            dt = parse_datetime.convert_datetime_components_to_datetime(grid.start, True)
-            grid_start = _convert_datetime_to_coord_unit(coord, dt)
-            dt = parse_datetime.convert_datetime_components_to_datetime(grid.end, False)
-            grid_end = _convert_datetime_to_coord_unit(coord, dt)
+            grid_start = _convert_datetime_to_coord_unit(coord, grid.start)
+            grid_end = _convert_datetime_to_coord_unit(coord, grid.end)
+            grid_delta = grid.delta
+        elif isinstance(grid.start, PartialDateTime):
+            dt_start, dt_end = grid.start.convert_to_datetime_range()
+            grid_start = _convert_datetime_to_coord_unit(coord, dt_start)
+            grid_end = _convert_datetime_to_coord_unit(coord, dt_end)
             grid_delta = grid.delta
         else:
             # Assume to be a non-time axis

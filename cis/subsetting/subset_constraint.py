@@ -56,9 +56,8 @@ def create_constraint_limits(data, limits):
     :param data: The data object containing the coordinates to subset
     :param limits: A dictionary containing coordinate names and limits as tuples or lists of either floats of datetime objects
     """
-    import cis.parse_datetime as parse_datetime
     from datetime import datetime
-    from iris.time import PartialDateTime
+    from cis.time_util import PartialDateTime
 
     coord_limits = {}
 
@@ -81,18 +80,26 @@ def create_constraint_limits(data, limits):
                 limit = limits.pop(guessed_axis.lower())
 
         if limit is not None:
-            wrapped = False
-            if isinstance(limit[0], datetime):
-                # Ensure that the limits are date/times.
-                dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
-                limit_start = _convert_datetime_to_coord_unit(coord, dt)
-                dt = parse_datetime.convert_datetime_components_to_datetime(limit.end, False)
-                limit_end = _convert_datetime_to_coord_unit(coord, dt)
-            elif isinstance(limit[0], PartialDateTime):
-                pass  # TODO: Do something here
+            if len(limit) == 1:
+                if isinstance(limit[0], PartialDateTime):
+                    dt_start, dt_end = limit[0].convert_to_datetime_range()
+                    limit_start = _convert_datetime_to_coord_unit(coord, dt_start)
+                    limit_end = _convert_datetime_to_coord_unit(coord, dt_end)
+                else:
+                    raise ValueError("Error processing limit for {}. "
+                                     "When providing a single limit that limit must be a PartialDateTime".format(coord))
+            elif len(limit) == 2:
+                if isinstance(limit[0], datetime) and isinstance(limit[1], datetime):
+                    # Ensure that the limits are date/times.
+                    limit_start = _convert_datetime_to_coord_unit(coord, limit[0])
+                    limit_end = _convert_datetime_to_coord_unit(coord, limit[1])
+                else:
+                    # Assume to be a non-time axis.
+                    (limit_start, limit_end) = _fix_non_circular_limits(float(limit.start), float(limit.end))
             else:
-                # Assume to be a non-time axis.
-                (limit_start, limit_end) = _fix_non_circular_limits(float(limit.start), float(limit.end))
+                raise ValueError("Error processing limit for {}. "
+                                 "Limits must be a list or tuple of length 2".format(coord))
+
             # Apply the limit to the constraint object
             coord_limits[coord.name()] = CoordLimits(coord, limit_start, limit_end,
                                                      lambda x: limit_start <= x.point <= limit_end)
