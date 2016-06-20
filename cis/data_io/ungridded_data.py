@@ -744,6 +744,9 @@ class UngriddedCoordinates(CommonData):
         """
         return False
 
+    def subset(self, **kwargs):
+        raise NotImplementedError("Subset is not available for UngriddedCoordinates objects")
+
 
 class UngriddedDataList(CommonDataList):
     """
