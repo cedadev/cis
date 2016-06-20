@@ -260,7 +260,7 @@ class Aggregator(object):
             grid_end = _convert_datetime_to_coord_unit(coord, grid.end)
             grid_delta = grid.delta
         elif isinstance(grid.start, PartialDateTime):
-            dt_start, dt_end = grid.start.convert_to_datetime_range()
+            dt_start, dt_end = grid.start.range()
             grid_start = _convert_datetime_to_coord_unit(coord, dt_start)
             grid_end = _convert_datetime_to_coord_unit(coord, dt_end)
             grid_delta = grid.delta

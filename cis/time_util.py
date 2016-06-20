@@ -32,7 +32,20 @@ class PartialDateTime(object):
         self.minute = minute
         self.second = second
 
-    def convert_to_datetime_range(self):
+        self.attributes = ['year', 'month', 'day', 'hour', 'minute', 'second']
+
+        # Check we have valid components - there should be no non-None values after the first one (if there is one)
+        components = [getattr(self, a) for a in self.attributes]
+        if None in components and any(c is not None for c in components[components.index(None):]):
+            raise ValueError("All intermediate values must be specified when creating a PartialDateTime")
+
+        # Check that the components are valid by trying to find the minimum date
+        try:
+            _ = self.min()
+        except TypeError:
+            raise ValueError("Invalid PartialDateTime arguments")
+
+    def range(self):
         """
         Return the datetime representing the start of the range defined by this object, and that representing the end.
 
@@ -40,38 +53,63 @@ class PartialDateTime(object):
 
         >>> from cis.time_util import PartialDateTime
         >>> pdt = PartialDateTime(2008)
-        >>> pdt.convert_to_datetime_range()
+        >>> pdt.range()
         datetime(2008,1,1,1,1,1), datetime(2008,12,31,23,59,59)
 
         Or for February 2001:
 
         >>> pdt = PartialDateTime(2001, 2)
-        >>> pdt.convert_to_datetime_range()
+        >>> pdt.range()
         datetime(2001,2,1,1,1,1), datetime(2008,2,28,23,59,59)
 
         :return (datetime.datetime, datetime.datetime) : A pair of datetime objects
         """
-        from datetime import datetime
+        return self.min(), self.max()
 
-        attributes = ['year', 'month', 'day', 'hour', 'minute', 'second']
+    def min(self):
+        """
+        Return the datetime object for the start of the PartialDateTime period. I.e. the earliest valid datetime
+
+        :return datetime.datetime: The earliest datetime
+        """
+        from datetime import datetime
         lower_limits = [None, 1, 1, 0, 0, 0]
+
+        # Get the initialized date-components
+        dt_start = [getattr(self, a) for a in self.attributes if getattr(self, a) is not None]
+
+        # Fill in the remaining fields with default values.
+        for idx in range(len(dt_start), len(self.attributes)):
+            if self.attributes[idx] == 'day':
+                dt_start.append(lower_limits[idx])
+            else:
+                dt_start.append(lower_limits[idx])
+        return datetime(*dt_start)
+
+    def max(self):
+        """
+        Return the datetime object for the end of the PartialDateTime period. I.e. the latest valid datetime
+
+        :return datetime.datetime: The latest datetime
+        """
+        from datetime import datetime
         upper_limits = [None, 12, None, 23, 59, 59]
 
         # Get the initialized date-components
-        dt_start = [getattr(self, a) for a in attributes if getattr(self, a) is not None]
-        dt_end = [getattr(self, a) for a in attributes if getattr(self, a) is not None]
+        dt_end = [getattr(self, a) for a in self.attributes if getattr(self, a) is not None]
 
         # Fill in the remaining fields with default values.
-        for idx in range(len(dt_start), len(attributes)):
-            if attributes[idx] == 'day':
-                dt_start.append(lower_limits[idx])
+        for idx in range(len(dt_end), len(self.attributes)):
+            if self.attributes[idx] == 'day':
                 # Set day to last day of month. The year and month will already be in there.
                 dt_end.append(find_last_day_of_month(*dt_end))
             else:
-                dt_start.append(lower_limits[idx])
                 dt_end.append(upper_limits[idx])
 
-        return datetime(*dt_start), datetime(*dt_end)
+        return datetime(*dt_end)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 def find_last_day_of_month(year, month):

@@ -82,7 +82,7 @@ def create_constraint_limits(data, limits):
         if limit is not None:
             if len(limit) == 1:
                 if isinstance(limit[0], PartialDateTime):
-                    dt_start, dt_end = limit[0].convert_to_datetime_range()
+                    dt_start, dt_end = limit[0].range()
                     limit_start = _convert_datetime_to_coord_unit(coord, dt_start)
                     limit_end = _convert_datetime_to_coord_unit(coord, dt_end)
                 else:
