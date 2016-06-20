@@ -18,28 +18,18 @@ class PartialDateTime(object):
         Allows creation of datetime ranges. The year is mandatory, all others are optional - but intermediate components
         must be specified. E.g. you can't specify a year and a day with no month.
 
-        Args:
-
-        * year (int):
-        * month (int):
-        * day (int):
-        * hour (int):
-        * minute (int):
-        * second (int):
-        * microsecond (int):
-
+        :param int year:
+        :param int month:
+        :param int day:
+        :param int hour:
+        :param int minute:
+        :param int second:
         """
-        #: The year number as an integer, or None.
         self.year = year
-        #: The month number as an integer, or None.
         self.month = month
-        #: The day number as an integer, or None.
         self.day = day
-        #: The hour number as an integer, or None.
         self.hour = hour
-        #: The minute number as an integer, or None.
         self.minute = minute
-        #: The second number as an integer, or None.
         self.second = second
 
     def convert_to_datetime_range(self):
