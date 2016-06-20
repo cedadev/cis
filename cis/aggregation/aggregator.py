@@ -7,7 +7,6 @@ from iris.coords import DimCoord
 import numpy as np
 
 from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
-import cis.parse_datetime as parse_datetime
 from cis.subsetting.subset import _fix_non_circular_limits, _convert_datetime_to_coord_unit
 from cis.utils import isnan, guess_coord_axis
 from cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
@@ -367,9 +366,10 @@ def month_past_end_of_year(month, year):
 
 
 def aggregation_grid_array(start, end, delta, is_time, coordinate):
+    from cis.subsetting.subset import _convert_coord_unit_to_datetime
     if is_time:
-        start_dt = Subset._convert_coord_unit_to_datetime(coordinate, start)
-        end_dt = Subset._convert_coord_unit_to_datetime(coordinate, end)
+        start_dt = _convert_coord_unit_to_datetime(coordinate, start)
+        end_dt = _convert_coord_unit_to_datetime(coordinate, end)
 
         # Some logic to find the mid point to start on
         if delta.year > 0:
@@ -388,7 +388,7 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
         new_time = start_dt
 
         while new_time < end_dt:
-            new_time_grid.append(Subset._convert_datetime_to_coord_unit(coordinate, new_time))
+            new_time_grid.append(_convert_datetime_to_coord_unit(coordinate, new_time))
 
             new_year = new_time.year + delta.year
             new_month = new_time.month + delta.month

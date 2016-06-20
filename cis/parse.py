@@ -227,7 +227,9 @@ def parse_float(arg, name, parser):
     :param parser: The parser used to report an error message
     :return: The parsed float if succeeds or the original argument if fails
     """
-    if arg:
+    if arg == 'None' or arg is None:
+        return None
+    else:
         try:
             arg = float(arg)
             return arg
@@ -441,7 +443,7 @@ def get_subset_limits(subsetlimits, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
+    from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime, parse_partial_datetime
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(subsetlimits)
@@ -460,31 +462,33 @@ def get_subset_limits(subsetlimits, parser):
                 "A dimension for subsetting does not have dimension name, start value and/or end value specified")
         else:
             dim_name = match.group('dim')
+            limit_dict[dim_name] = []
+
             limit1 = match.group('start')
-            if match.group('end') is None:
-                limit2 = limit1
-            else:
-                limit2 = match.group('end')
+            limit2 = match.group('end')
 
             # If the dimension is specified as x, y, z, or t, assume that the dimension is spatial or temporal in the
             # obvious way. Otherwise, parse what is found as a date/time or number.
-            if dim_name.lower() == 't':
-                limit1_parsed = parse_datetime(limit1, 'subset range start date/time', parser)
-                limit2_parsed = parse_datetime(limit2, 'subset range end date/time', parser)
+            if dim_name.lower() == 't' or dim_name.lower() == 'time':
+                if limit2 is None:
+                    limits = parse_partial_datetime(limit1, 'subset range date/time', parser)
+                else:
+                    limits = [parse_datetime(limit1, 'subset range start date/time', parser),
+                              parse_datetime(limit2, 'subset range end date/time', parser)]
             elif dim_name.lower() in ['x', 'y', 'z']:
-                limit1_parsed = parse_float(limit1, 'subset range start coordinate', parser)
-                limit2_parsed = parse_float(limit2, 'subset range start coordinate', parser)
+                limits = [parse_float(limit1, 'subset range start coordinate', parser),
+                          parse_float(limit2, 'subset range start coordinate', parser)]
                 if dim_name.lower() == 'x':
-                    if not limit1_parsed <= limit2_parsed:
+                    if not limits[0] <= limits[1]:
                         parser.error("Longitude limits must be monotonically increasing (i.e. for x[A,B] A <= B). For "
                                      "example, x=[90,-90] is invalid but x=[90,270] is valid")
-                    if not limit2_parsed - limit1_parsed <= 360:
+                    if not limits[1] - limits[0] <= 360:
                         parser.error("Longitude limits should not be more than 360 degrees apart "
                                      "(i.e. for x[A,B] B-A <= 360)")
             else:
-                limit1_parsed = parse_as_number_or_datetime(limit1, 'subset range start coordinate', parser)
-                limit2_parsed = parse_as_number_or_datetime(limit2, 'subset range start coordinate', parser)
-            limit_dict[dim_name] = [limit1_parsed, limit2_parsed]
+                limits = [parse_as_number_or_datetime(limit1, 'subset range start coordinate', parser),
+                          parse_as_number_or_datetime(limit2, 'subset range start coordinate', parser)]
+            limit_dict[dim_name] = limits
     return limit_dict
 
 

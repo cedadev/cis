@@ -1,7 +1,7 @@
 """Tests for parse_datetime module
 """
 from nose.tools import istest, raises, assert_almost_equal, eq_
-from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime, parse_datetimestr_delta_to_float_days, \
+from cis.parse_datetime import parse_partial_datetime, parse_as_number_or_datetime, parse_datetimestr_delta_to_float_days, \
                                parse_datetimestr_to_std_time
 from cis.time_util import PartialDateTime
 
@@ -15,18 +15,18 @@ class MockParser(object):
         raise MockParserError(message)
 
 
-# Tests for parse_datetime
+# Tests for parse_partial_datetime
 @istest
 def parse_datetime_can_parse_year():
     parser = MockParser()
-    dt = parse_datetime('2010', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010))
 
 
 @istest
 def parse_datetime_can_parse_year_month():
     parser = MockParser()
-    dt = parse_datetime('2010-07', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-07', 'date/time arg', parser)
     print(dt)
     assert (dt == PartialDateTime(2010, 7))
 
@@ -34,49 +34,49 @@ def parse_datetime_can_parse_year_month():
 @istest
 def parse_datetime_can_parse_date():
     parser = MockParser()
-    dt = parse_datetime('2010-07-01', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-07-01', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010, 7, 1))
 
 
 @istest
 def parse_datetime_can_parse_date_hour():
     parser = MockParser()
-    dt = parse_datetime('2010-07-01T13', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-07-01T13', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010, 7, 1, 13))
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min():
     parser = MockParser()
-    dt = parse_datetime('2010-07-01T13:27', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-07-01T13:27', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010, 7, 1, 13, 27))
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min_sec():
     parser = MockParser()
-    dt = parse_datetime('2010-07-01T13:27:43', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-07-01T13:27:43', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010, 7, 1, 13, 27, 43))
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min_sec_no_leading_zeros():
     parser = MockParser()
-    dt = parse_datetime('2010-3-4T5:6:7', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-3-4T5:6:7', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010, 3, 4, 5, 6, 7))
 
 
 @istest
 def parse_datetime_can_parse_date_time_with_space_separator():
     parser = MockParser()
-    dt = parse_datetime('2010-07-01 13:27:43', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-07-01 13:27:43', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010, 7, 1, 13, 27, 43))
 
 
 @istest
 def parse_datetime_can_parse_date_time_with_colon_separator():
     parser = MockParser()
-    dt = parse_datetime('2010-07-01:13:27:43', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-07-01:13:27:43', 'date/time arg', parser)
     assert (dt == PartialDateTime(2010, 7, 1, 13, 27, 43))
 
 
@@ -85,7 +85,7 @@ def parse_datetime_passed_error_message_to_parser():
     parser = MockParser()
     name = 'date/time arg'
     try:
-        dt = parse_datetime('2X10', name, parser)
+        dt = parse_partial_datetime('2X10', name, parser)
     except MockParserError as e:
         assert e.args[0].index(name) > 0
 
@@ -95,28 +95,28 @@ def parse_datetime_passed_error_message_to_parser():
 @raises(MockParserError)
 def parse_datetime_raises_error_if_invalid_character_in_year():
     parser = MockParser()
-    dt = parse_datetime('2X10', 'date/time arg', parser)
+    dt = parse_partial_datetime('2X10', 'date/time arg', parser)
 
 
 @istest
 @raises(MockParserError)
 def parse_datetime_raises_error_if_time_but_incomplete_date():
     parser = MockParser()
-    dt = parse_datetime('2010-10T12:00', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-10T12:00', 'date/time arg', parser)
 
 
 @istest
 @raises(MockParserError)
 def parse_datetime_raises_error_if_too_many_date_components():
     parser = MockParser()
-    dt = parse_datetime('2010-10-05-06', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-10-05-06', 'date/time arg', parser)
 
 
 @istest
 @raises(MockParserError)
 def parse_datetime_raises_error_if_too_many_time_components():
     parser = MockParser()
-    dt = parse_datetime('2010-10-05T12:01:02:03', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-10-05T12:01:02:03', 'date/time arg', parser)
 
 
 # parse_datetime: Strings that parse correctly but correspond to invalid date/times
@@ -124,14 +124,14 @@ def parse_datetime_raises_error_if_too_many_time_components():
 @raises(MockParserError)
 def parse_datetime_raises_error_if_invalid_month():
     parser = MockParser()
-    dt = parse_datetime('2010-13', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-13', 'date/time arg', parser)
 
 
 @istest
 @raises(MockParserError)
 def parse_datetime_raises_error_if_invalid_day():
     parser = MockParser()
-    dt = parse_datetime('2010-06-31', 'date/time arg', parser)
+    dt = parse_partial_datetime('2010-06-31', 'date/time arg', parser)
 
 
 # Tests for parse_as_number_or_datetime
@@ -140,7 +140,7 @@ def parse_as_number_or_datetime_can_parse_date_as_datetime():
     from datetime import datetime
     parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01', 'date/time arg', parser)
-    assert (dt == PartialDateTime(2010, 7, 1))
+    assert (dt == datetime(2010, 7, 1))
 
 
 @istest

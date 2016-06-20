@@ -9,14 +9,18 @@ def parse_datetimestr_to_std_time(s):
     return cis_standard_time_unit.date2num(du.parse(s))
 
 
-def _parse_actual_datetime(s):
+def _parse_datetime(s):
+    """Parse a date/time string.
+
+    The string should be in an ISO 8601 format except that the date and time
+    parts may be separated by a space or colon instead of T.
+    """
     import dateutil.parser as du
     return du.parse(s)
 
 
-def _parse_datetime(dt_string):
-    # TODO: This only really parses partial datetimes...
-    """Parse a date/time string.
+def _parse_partial_datetime(dt_string):
+    """Parse a partial date/time string.
 
     The string should be in an ISO 8601 format except that the date and time
     parts may be separated by a space or colon instead of T.
@@ -47,6 +51,26 @@ def _parse_datetime(dt_string):
     return PartialDateTime(*dt_components)
 
 
+def parse_partial_datetime(dt_string, name, parser):
+    """Parse a partial date/time string from the command line, reporting parse errors.
+
+    The string should be in an ISO 8601 format except that the date and time
+    parts may be separated by a space or colon instead of T.
+    :param dt_string: String to parse
+    :param name:      A description of the argument used for error messages
+    :param parser:    The parser used to report errors
+    :return: datetime value
+    """
+    if dt_string == 'None' or dt_string is None:
+        return None
+    try:
+        dt = _parse_partial_datetime(dt_string)
+    except ValueError:
+        parser.error("'" + dt_string + "' is not a valid " + name)
+        dt = None
+    return dt
+
+
 def parse_datetime(dt_string, name, parser):
     """Parse a date/time string from the command line, reporting parse errors.
 
@@ -57,6 +81,8 @@ def parse_datetime(dt_string, name, parser):
     :param parser:    The parser used to report errors
     :return: datetime value
     """
+    if dt_string == 'None' or dt_string is None:
+        return None
     try:
         dt = _parse_datetime(dt_string)
     except ValueError:
@@ -177,7 +203,8 @@ def parse_as_number_or_datetime(in_string, name, parser):
     :param parser:    The parser used to report errors
     :return: int, or float value (possibly converted to the standard time from a time string)
     """
-    import dateutil.parser as du
+    if in_string == 'None' or in_string is None:
+        return None
     try:
         ret = int(in_string)
     except ValueError:
