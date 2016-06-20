@@ -291,7 +291,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         return make_from_cube(super(GriddedData, self).collapsed(*args, **kwargs))
 
     def subset(self, **kwargs):
-        from cis.subsetting.subset_constraint import subset, GriddedSubsetConstraint
+        from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
 
 
@@ -499,5 +499,5 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         return self[0].ndim
 
     def subset(self, **kwargs):
-        from cis.subsetting.subset_constraint import subset, GriddedSubsetConstraint
+        from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)

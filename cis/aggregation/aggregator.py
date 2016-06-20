@@ -8,7 +8,7 @@ import numpy as np
 
 from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
 import cis.parse_datetime as parse_datetime
-from cis.subsetting.subset_constraint import _fix_non_circular_limits, _convert_datetime_to_coord_unit
+from cis.subsetting.subset import _fix_non_circular_limits, _convert_datetime_to_coord_unit
 from cis.utils import isnan, guess_coord_axis
 from cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
 from cis.aggregation.aggregation_kernels import MultiKernel
@@ -254,7 +254,7 @@ class Aggregator(object):
         :return: DimCoord
         """
         from cis.time_util import PartialDateTime
-        if isinstance(grid.start, datetime):
+        if isinstance(grid.start, datetime.datetime):
             # Ensure that the limits are date/times.
             grid_start = _convert_datetime_to_coord_unit(coord, grid.start)
             grid_end = _convert_datetime_to_coord_unit(coord, grid.end)

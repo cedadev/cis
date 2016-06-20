@@ -611,7 +611,7 @@ class UngriddedData(LazyData, CommonData):
         return self.summary()
 
     def subset(self, **kwargs):
-        from cis.subsetting.subset_constraint import subset, UngriddedSubsetConstraint
+        from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
 
@@ -839,7 +839,7 @@ class UngriddedDataList(CommonDataList):
         return df
 
     def subset(self, **kwargs):
-        from cis.subsetting.subset_constraint import subset, UngriddedSubsetConstraint
+        from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
 

@@ -442,7 +442,6 @@ def get_subset_limits(subsetlimits, parser):
     :return: The parsed datagroups as a list of dictionaries
     """
     from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
-    from cis.subsetting.subset_limits import SubsetLimits
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(subsetlimits)
@@ -469,15 +468,12 @@ def get_subset_limits(subsetlimits, parser):
 
             # If the dimension is specified as x, y, z, or t, assume that the dimension is spatial or temporal in the
             # obvious way. Otherwise, parse what is found as a date/time or number.
-            is_time = None
             if dim_name.lower() == 't':
                 limit1_parsed = parse_datetime(limit1, 'subset range start date/time', parser)
                 limit2_parsed = parse_datetime(limit2, 'subset range end date/time', parser)
-                is_time = True
             elif dim_name.lower() in ['x', 'y', 'z']:
                 limit1_parsed = parse_float(limit1, 'subset range start coordinate', parser)
                 limit2_parsed = parse_float(limit2, 'subset range start coordinate', parser)
-                is_time = False
                 if dim_name.lower() == 'x':
                     if not limit1_parsed <= limit2_parsed:
                         parser.error("Longitude limits must be monotonically increasing (i.e. for x[A,B] A <= B). For "
@@ -488,7 +484,7 @@ def get_subset_limits(subsetlimits, parser):
             else:
                 limit1_parsed = parse_as_number_or_datetime(limit1, 'subset range start coordinate', parser)
                 limit2_parsed = parse_as_number_or_datetime(limit2, 'subset range start coordinate', parser)
-            limit_dict[dim_name] = SubsetLimits(limit1_parsed, limit2_parsed, is_time)
+            limit_dict[dim_name] = [limit1_parsed, limit2_parsed]
     return limit_dict
 
 
