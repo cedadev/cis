@@ -45,13 +45,8 @@ are not defined in the :class:`CommonData` interface. The most useful of these m
     :inherited-members:
 
 
-Unsupported API
-===============
-
-.. warning::
-    While the above interfaces are designed as a 'public' API and unlikely to change over CIS versions, those documented
-    below are not yet standardised and may change or be removed even between minor version revisions. It is expected
-    however that these particular classes will be developed and stabilised over time to form part of the 'public' API.
+Analysis Methods
+================
 
 Collocation
 -----------
@@ -86,31 +81,4 @@ the result for the user to output as needed.
    --------
    The main collocation class can be imported using :code:`from cis.plotting import Plotter`, it's methods are outlined below:
    .. automethod:: cis.plotting.Plotter.__init__
-
-
-Stats
------
-The main collocation class can be imported using :code:`from cis.stats import StatsAnalyzer`, it's methods are outlined below:
-
-.. autoclass:: cis.stats.StatsAnalyzer
-    :noindex:
-    :special-members:
-    :member-order: bysource
-
-
-Full Python reference documentation
------------------------------------
-The rest of the documentation below documents internal CIS functions and modules which are not intended to be used as an
-API at all. They are documented here as a reference for developers and other interested parties.
-
-.. toctree::
-
-    cis.data_io
-    cis.aggregation
-    cis.collocation
-    cis.plotting
-    cis.subsetting
-    cis_stats
-    cis_utils
-    cis_exceptions
 

@@ -28,7 +28,7 @@ Contents:
    plugin_development
    analysis_plugin_development
    maintenance_and_development
-   CIS as a Python library (API) <api/cis>
+   CIS as a Python library (API) <cis_api>
 
 Indices and tables
 ==================
