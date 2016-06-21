@@ -27,7 +27,7 @@ def subset(data, constraint, **kwargs):
 
     if len(constraints) == 0:
         raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
-                                      "coordinate name.".format("' or '".join(list(constraints.keys()))))
+                                      "coordinate name.".format("' or '".join(list(kwargs.keys()))))
 
     subset_constraint = constraint(constraints)
 
