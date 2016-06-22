@@ -12,6 +12,19 @@ class _GenericKernel(object):
     pass
 
 
+def get_default_collocator_name(method_name, sample_gridded, data_gridded):
+    # Default collocators - (sample_gridded, data_gridded) : collocator_name
+    default_methods = {(True, True): 'lin',
+                       (True, False): 'bin',
+                       (False, True): 'nn',
+                       (False, False): 'box'}
+
+    if method_name is None:
+        # If no collocator has been specified we'll identify a default.
+        method_name = default_methods.get((sample_gridded, data_gridded))
+    return method_name
+
+
 class CollocatorFactory(object):
     """
     Class for creating Collocator, Constraint and Kernel instances
@@ -42,18 +55,6 @@ class CollocatorFactory(object):
         kernel = self._instantiate_with_params(kernel_cls, kernel_params)
         return col, con, kernel
 
-    def get_default_collocator_name(self, method_name, sample_gridded, data_gridded):
-        # Default collocators - (sample_gridded, data_gridded) : collocator_name
-        default_methods = {(True, True): 'lin',
-                           (True, False): 'bin',
-                           (False, True): 'nn',
-                           (False, False): 'box'}
-
-        if method_name is None:
-            # If no collocator has been specified we'll identify a default.
-            method_name = default_methods.get((sample_gridded, data_gridded))
-        return method_name
-
     def _get_collocator_classes_for_method(self, method_name, kernel_name, sample_gridded, data_gridded):
         """
         Gets the collocator, constraint and kernel classes corresponding to a specified collocation method and kernel
@@ -67,7 +68,7 @@ class CollocatorFactory(object):
         import cis.collocation.col_implementations as ci
         from cis.collocation.col_framework import get_kernel
 
-        method_name = self.get_default_collocator_name(method_name, sample_gridded, data_gridded)
+        method_name = get_default_collocator_name(method_name, sample_gridded, data_gridded)
 
         key = '_'.join([method_name, str(sample_gridded), str(data_gridded)])
 

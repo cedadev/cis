@@ -109,6 +109,17 @@ class CommonData(object):
         """
         pass
 
+    @abstractmethod
+    def collocate(self, sample, how='', kernel=None, **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+        :param CommonData sample: The sample data to collocate onto
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param cis.collocation.col_framework.Kernel kernel:
+        :return CommonData: The collocated dataset
+        """
+        pass
+
 
 class CommonDataList(list):
     """

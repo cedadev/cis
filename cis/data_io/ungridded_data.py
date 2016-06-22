@@ -614,6 +614,29 @@ class UngriddedData(LazyData, CommonData):
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
+    def collocate(self, sample, how='', kernel=None, **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+        :param CommonData sample: The sample data to collocate onto
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param cis.collocation.col_framework.Kernel kernel:
+        :return CommonData: The collocated dataset
+        """
+        from cis.collocation.col import get_default_collocator_name
+        from cis.data_io.gridded_data import GriddedData
+        # This gets us the right collocator method name
+        method = get_default_collocator_name(how, isinstance(sample, GriddedData), False)
+        # We then need to lookup the right collocator, constraint, kernel combination - very much (but probably not
+        # exactly like _get_collocator_classes_for_method). I don't actually need any of the collocator arguments as
+        # the user can easily change these once the class has been created. I'll need constraint arguments though.
+        # I should think about whether the user should pass in kernel objects or just strings, the benefit of just strings
+        #  is that I can use much of the existing collocation framework - but passing arguments is a little more complicated.
+        # I might want to tweak the kernel arguments anyway to make the extrapolation more consistent...?
+        # TODO: The actual collocation
+        # The problem is that for lin you don't pass a kernel - but we want to be able to turn extrapolation off or on,
+        # so that has to be a separate arg, which means using strings. But using strings is a bit less extensible by
+        # the user...
+
 
 class UngriddedCoordinates(CommonData):
     """
