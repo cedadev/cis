@@ -182,8 +182,7 @@ class Collocate(object):
                                                                                        self.sample_points.is_gridded,
                                                                                        data.is_gridded)
 
-        col_name = self.collocator_factory.get_default_collocator_name(col_name, self.sample_points.is_gridded,
-                                                                       data.is_gridded)
+        col_name = get_default_collocator_name(col_name, self.sample_points.is_gridded, data.is_gridded)
         logging.info("Collocator: " + str(col_name))
         if kern is None:
             kernel_name = kernel.__class__.__name__
