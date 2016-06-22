@@ -150,13 +150,11 @@ class Collocate(object):
         Constructor
 
         :param CommonData sample_points: Sample points to collocate on to
-        :param output_filename: Filename to output to
         :param missing_data_for_missing_sample: Write missing values out when sample data is missing
         :param CollocatorFactory collocator_factory: An optional configuration object
         """
         self.sample_points = sample_points
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
-        self.coords_to_be_written = True
         self.collocator_factory = collocator_factory
 
     def collocate(self, data, col_name=None, col_params=None, kern=None, kern_params=None):
