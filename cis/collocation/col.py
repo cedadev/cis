@@ -201,19 +201,11 @@ class Collocate(object):
 
         logging.info("Completed. Total time taken: " + str(time() - t1))
 
-        filenames = None
-        variables = None
-        try:
-            filenames = data.filenames
-            variables = data.var_name
-        except AttributeError:
-            pass  # It's not critical if we can't get the history.
-
         for data in new_data:
             history = "Collocated onto sampling from: " + str(self.sample_points.filenames) + " " + \
                       "\nusing CIS version " + __version__ + " " + \
-                      "\nvariables: " + str(variables) + " " + \
-                      "\nwith files: " + str(filenames) + " " + \
+                      "\nvariables: " + str(getattr(data, "var_name", None)) + " " + \
+                      "\nwith files: " + str(getattr(data, "filenames", None)) + " " + \
                       "\nusing collocator: " + str(col_name) + " " + \
                       "\ncollocator parameters: " + str(col_params) + " " + \
                       "\nkernel: " + str(kern) + " " + \
