@@ -294,6 +294,21 @@ class GriddedData(iris.cube.Cube, CommonData):
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
 
+    def collocated_onto(self, sample, how='', kernel=None, **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+        :param CommonData sample: The sample data to collocate onto
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param cis.collocation.col_framework.Kernel kernel:
+        :return CommonData: The collocated dataset
+        """
+        #TODO: Fill me in
+        pass
+
+    def sampled_from(self, data, how='', kernel=None, **kwargs):
+        # TODO: Fill me in
+        pass
+
 
 class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """

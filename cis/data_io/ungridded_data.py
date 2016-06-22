@@ -809,6 +809,13 @@ class UngriddedCoordinates(CommonData):
     def subset(self, **kwargs):
         raise NotImplementedError("Subset is not available for UngriddedCoordinates objects")
 
+    def collocated_onto(self, sample, how='', kernel=None, **kwargs):
+        raise NotImplementedError("UngriddedCoordinates objects cannot be used as sources of data for collocation.")
+
+    def sampled_from(self, data, how='', kernel=None, **kwargs):
+        # TODO: Fill me in
+        pass
+
 
 class UngriddedDataList(CommonDataList):
     """
