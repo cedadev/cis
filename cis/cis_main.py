@@ -174,7 +174,6 @@ def subset_cmd(main_arguments):
     except IOError as e:
         raise ex.CISError("There was an error reading one of the files: \n" + str(e))
 
-    # TODO Check what the arguments are here
     subset = data.subset(**main_arguments.limits)
 
     if subset is None:
