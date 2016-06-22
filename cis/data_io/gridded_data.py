@@ -291,23 +291,66 @@ class GriddedData(iris.cube.Cube, CommonData):
         return make_from_cube(super(GriddedData, self).collapsed(*args, **kwargs))
 
     def subset(self, **kwargs):
+        """
+        Subset the CommonData object based on the specified constraints
+        :param kwargs:
+        :return:
+        """
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
 
-    def collocated_onto(self, sample, how='', kernel=None, **kwargs):
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
         """
         Collocate the CommonData object with another CommonData object using the specified collocator and kernel
-        :param CommonData sample: The sample data to collocate onto
+
+        :param CommonData or CommonDataList data: The data to resample
         :param str how: Collocation method (e.g. lin, nn, bin or box)
-        :param cis.collocation.col_framework.Kernel kernel:
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
         :return CommonData: The collocated dataset
         """
-        #TODO: Fill me in
-        pass
+        from cis.collocation import col_implementations as ci
+        from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
+        from cis.collocation.col_framework import get_kernel, Kernel
+        from cis.collocation.col import collocate
 
-    def sampled_from(self, data, how='', kernel=None, **kwargs):
-        # TODO: Fill me in
-        pass
+        if isinstance(data, UngriddedData) or isinstance(data, UngriddedDataList):
+            col_cls = ci.GeneralGriddedCollocator()
+            # Bin is the default for ungridded -> gridded collocation
+            if how == '' or how == 'bin':
+                con = ci.BinnedCubeCellOnlyConstraint()
+            elif how == 'box':
+                con = ci.SepConstraintKdtree(**kwargs)
+            else:
+                raise ValueError("Invalid method specified for ungridded -> gridded collocation: " + how)
+
+            # We can have any kernel, default to moments
+            kernel = get_kernel(kernel)
+        elif isinstance(data, GriddedData) or isinstance(data, GriddedDataList):
+            col_cls = ci.GriddedCollocator
+            con = None
+            if kernel is not None:
+                raise ValueError("Cannot specify kernel when method is 'lin' or 'nn'")
+
+            # Lin is the default for gridded -> gridded
+            if how == '' or how == 'lin':
+                kernel = ci.gridded_gridded_li()
+            elif how == 'nn':
+                kernel = ci.gridded_gridded_nn()
+            else:
+                raise ValueError("Invalid method specified for gridded -> gridded collocation: " + how)
+        else:
+            raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
+
+        col = col_cls(missing_data_for_missing_sample=missing_data_for_missing_sample, fill_value=fill_value,
+                      var_name=var_name, var_long_name=var_long_name, var_units=var_units)
+
+        return collocate(data, self, col, con, kernel)
 
 
 class GriddedDataList(iris.cube.CubeList, CommonDataList):

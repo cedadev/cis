@@ -273,9 +273,13 @@ def __get_class(parent_class, name=None):
 def get_kernel(method=None):
     """
     Top level routine for finding the correct Kernel object.
-    :param method: The kernel method to find - this should be a string which matches the name of one
+    :param str method: The kernel method to find - this should be a string which matches the name of one
     of the subclasses of Kernel
     :return: One of Kernel's subclasses
     """
-    kernel_cls = __get_class(Kernel, method)
+    from cis.exceptions import ClassNotFoundError
+    try:
+        kernel_cls = __get_class(Kernel, method)
+    except ClassNotFoundError:
+        raise ValueError("No kernel found matching name: " + str(method))
     return kernel_cls

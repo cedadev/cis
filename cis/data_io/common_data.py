@@ -103,33 +103,49 @@ class CommonData(object):
     def subset(self, **kwargs):
         """
         Subset the CommonData object based on the specified constraints
-        :param inplace:
         :param kwargs:
         :return:
         """
         pass
 
     @abstractmethod
-    def collocated_onto(self, sample, how='', kernel=None, **kwargs):
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
         """
         Collocate the CommonData object with another CommonData object using the specified collocator and kernel
-        :param CommonData sample: The sample data to collocate onto
+
+        :param CommonData or CommonDataList data: The data to resample
         :param str how: Collocation method (e.g. lin, nn, bin or box)
-        :param cis.collocation.col_framework.Kernel kernel:
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
         :return CommonData: The collocated dataset
         """
         pass
 
-    @abstractmethod
-    def sampled_from(self, data, how='', kernel=None, **kwargs):
+    def collocated_onto(self, sample, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                        var_name='', var_long_name='', var_units='', **kwargs):
         """
-        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
-        :param CommonData data: The data to resample
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel.
+
+        :param CommonData sample: The sample data to collocate onto
         :param str how: Collocation method (e.g. lin, nn, bin or box)
-        :param cis.collocation.col_framework.Kernel kernel:
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
         :return CommonData: The collocated dataset
         """
-        pass
+        sample.sampled_from(self, how=how, kernel=kernel,
+                            missing_data_for_missing_sample=missing_data_for_missing_sample, fill_value=fill_value,
+                            var_name=var_name, var_long_name=var_long_name, var_units=var_units, **kwargs)
 
 
 class CommonDataList(list):
@@ -225,3 +241,27 @@ class CommonDataList(list):
         """
         for data in self:
             data.set_longitude_range(range_start)
+
+    @abstractmethod
+    def subset(self, **kwargs):
+        pass
+
+    def collocated_onto(self, sample, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                        var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel.
+
+        :param CommonData sample: The sample data to collocate onto
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
+        :return CommonData: The collocated dataset
+        """
+        sample.sampled_from(self, how=how, kernel=kernel,
+                            missing_data_for_missing_sample=missing_data_for_missing_sample, fill_value=fill_value,
+                            var_name=var_name, var_long_name=var_long_name, var_units=var_units, **kwargs)

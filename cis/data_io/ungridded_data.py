@@ -611,70 +611,33 @@ class UngriddedData(LazyData, CommonData):
         return self.summary()
 
     def subset(self, **kwargs):
+        """
+        Subset the CommonData object based on the specified constraints
+        :param kwargs:
+        :return:
+        """
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
-    def collocated_onto(self, sample, how='', kernel=None, **kwargs):
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
         """
         Collocate the CommonData object with another CommonData object using the specified collocator and kernel
-        :param CommonData sample: The sample data to collocate onto
+
+        :param CommonData or CommonDataList data: The data to resample
         :param str how: Collocation method (e.g. lin, nn, bin or box)
-        :param cis.collocation.col_framework.Kernel kernel:
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
         :return CommonData: The collocated dataset
         """
-        from cis.collocation.col import get_default_collocator_name
-        from cis.data_io.gridded_data import GriddedData
-        # This gets us the right collocator method name
-        method = get_default_collocator_name(how, isinstance(sample, GriddedData), False)
-        # We then need to lookup the right collocator, constraint, kernel combination - very much (but probably not
-        # exactly like _get_collocator_classes_for_method). I don't actually need any of the collocator arguments as
-        # the user can easily change these once the class has been created. I'll need constraint arguments though.
-        # I should think about whether the user should pass in kernel objects or just strings, the benefit of just strings
-        #  is that I can use much of the existing collocation framework - but passing arguments is a little more complicated.
-        # I might want to tweak the kernel arguments anyway to make the extrapolation more consistent...?
-        # TODO: The actual collocation
-        # The problem is that for lin you don't pass a kernel - but we want to be able to turn extrapolation off or on,
-        # so that has to be a separate arg, which means using strings. But using strings is a bit less extensible by
-        # the user...
-
-    def sampled_from(self, data, how='', kernel=None, **kwargs):
-        """
-        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
-        :param CommonData data: The data to resample
-        :param str how: Collocation method (e.g. lin, nn, bin or box)
-        :param cis.collocation.col_framework.Kernel kernel:
-        :return CommonData: The collocated dataset
-        """
-        from cis.collocation import col_implementations as ci
-        from cis.data_io.gridded_data import GriddedData
-        from cis.exceptions import CoordinateNotFoundError
-
-        # TODO: This is just an outline at the moment but the advantage of this method over the one above is that
-        #  we can easily work out the right method. We can then get rid of the wierd lookup table in col.py.
-        # Still have to work out what kernel should be... Perhaps it can be either?
-        col = ci.GeneralUngriddedCollocator()
-
-        # valid options
-        if isinstance(data, UngriddedData):
-            # how must == 'box'
-            # We can have any kernel
-            # kernel = ?
-            con = ci.SepConstraintKdtree
-            pass
-        elif isinstance(data, GriddedData):
-            if how == 'box':
-                con = ci.SepConstraintKdtree
-            elif kernel in ['li', 'nn']:
-                con = None
-            else:
-                raise ValueError("invalid kernel")
-
-        try:
-            new_data = col.collocate(self, data, con, kernel)
-        except TypeError as e:
-            raise CoordinateNotFoundError('Collocator was unable to compare data points, check the dimensions of each '
-                                          'data set and the collocation methods chosen. \n' + str(e))
-        return new_data
+        _ungridded_sampled_from(self, data, how=how, kernel=kernel,
+                                missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                var_units=var_units, **kwargs)
 
 
 class UngriddedCoordinates(CommonData):
@@ -747,6 +710,10 @@ class UngriddedCoordinates(CommonData):
     def time(self):
         return self.coord(standard_name='time')
 
+    @property
+    def var_name(self):
+        return ''
+
     def hyper_point(self, index):
         """
         :param index: The index in the array to find the point for
@@ -812,9 +779,28 @@ class UngriddedCoordinates(CommonData):
     def collocated_onto(self, sample, how='', kernel=None, **kwargs):
         raise NotImplementedError("UngriddedCoordinates objects cannot be used as sources of data for collocation.")
 
-    def sampled_from(self, data, how='', kernel=None, **kwargs):
-        # TODO: Fill me in
-        pass
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=False, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+
+        Note - that the default value for missing_data_for_missing_sample is different in this implementation as
+        compared to the UngriddedData implementation.
+
+        :param CommonData or CommonDataList data: The data to resample
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :return CommonData: The collocated dataset
+        """
+        _ungridded_sampled_from(self, data, how=how, kernel=kernel,
+                                missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                var_units=var_units, **kwargs)
 
 
 class UngriddedDataList(CommonDataList):
@@ -965,3 +951,53 @@ def _to_flat_ndarray(data, copy=True):
         ndarr = data.ravel()
 
     return ndarr
+
+
+def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                            var_name='', var_long_name='', var_units='', **kwargs):
+    """
+    Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+
+    :param CommonData or CommonDataList data: The data to resample
+    :param str how: Collocation method (e.g. lin, nn, bin or box)
+    :param str or cis.collocation.col_framework.Kernel kernel:
+    :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+    :param float fill_value: Value to use for missing data
+    :param str var_name: The output variable name
+    :param str var_long_name: The output variable's long name
+    :param str var_units: The output variable's units
+    :return CommonData: The collocated dataset
+    """
+    from cis.collocation import col_implementations as ci
+    from cis.data_io.gridded_data import GriddedData, GriddedDataList
+    from cis.collocation.col import collocate, get_kernel
+
+    col = ci.GeneralUngriddedCollocator(fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                        var_units=var_units,
+                                        missing_data_for_missing_sample=missing_data_for_missing_sample)
+
+    if isinstance(data, UngriddedData) or isinstance(data, UngriddedDataList):
+        # Box is the default, and only option for ungridded -> ungridded collocation
+        if how != '' or how != 'box':
+            raise ValueError("Invalid method specified for ungridded -> ungridded collocation: " + how)
+        con = ci.SepConstraintKdtree(**kwargs)
+        # We can have any kernel, default to moments
+        kernel = get_kernel(kernel)
+    elif isinstance(data, GriddedData) or isinstance(data, GriddedDataList):
+        # nn is the default for gridded -> ungridded collocation
+        if how == '' or how == 'nn':
+            con = None
+            kernel = ci.nn_gridded
+        elif how == 'lin':
+            con = None
+            kernel = ci.li
+        elif how == 'box':
+            con = ci.SepConstraintKdtree(**kwargs)
+            # We can have any kernel, default to moments
+            kernel = get_kernel(kernel)
+        else:
+            raise ValueError("Invalid method specified for gridded -> ungridded collocation: " + how)
+    else:
+        raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
+
+    return collocate(data, sample, col, con, kernel)

@@ -606,8 +606,10 @@ class li(Kernel):
 
 
 class GriddedCollocator(Collocator):
-    def __init__(self, var_name='', var_long_name='', var_units='', missing_data_for_missing_sample=False):
-        super(Collocator, self).__init__()
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
+                 missing_data_for_missing_sample=False):
+        super(GriddedCollocator, self).__init__()
+        self.fill_value = fill_value
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units

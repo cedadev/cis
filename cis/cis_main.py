@@ -106,8 +106,7 @@ def col_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments (minus the col command)
     """
-    from cis.exceptions import ClassNotFoundError, CISError
-    from cis.collocation.col import Collocate
+    from cis.collocation.col_framework import get_kernel
 
     output_file = main_arguments.output
     data_reader = DataReader()
@@ -119,11 +118,6 @@ def col_cmd(main_arguments):
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
         missing_data_for_missing_samples = True
 
-    try:
-        col = Collocate(sample_data, missing_data_for_missing_samples)
-    except IOError as e:
-        __error_occurred("There was an error reading one of the files: \n" + str(e))
-
     col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup[
                                                                   'collocator'] is not None else None
     col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup[
@@ -134,15 +128,17 @@ def col_cmd(main_arguments):
     for input_group in main_arguments.datagroups:
         variables = input_group['variables']
         filenames = input_group['filenames']
-        product = input_group["product"] if input_group["product"] is not None else None
+        product = input_group["product"]
 
         data = data_reader.read_data_list(filenames, variables, product)
         data_writer = DataWriter()
-        try:
-            output = col.collocate(data, col_name, col_options, kern_name, kern_options)
-            data_writer.write_data(output, output_file)
-        except ClassNotFoundError as e:
-            __error_occurred(str(e) + "\nInvalid collocation option.")
+
+        kernel = get_kernel(kern_name)(**kern_options) if kern_name is not None else None
+
+        output = data.collocated_onto(sample_data, how=col_name, kernel=kernel,
+                                      missing_data_for_missing_samples=missing_data_for_missing_samples, **col_options)
+
+        data_writer.write_data(output, output_file)
 
 
 def subset_cmd(main_arguments):
