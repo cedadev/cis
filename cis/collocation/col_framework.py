@@ -270,18 +270,6 @@ def __get_class(parent_class, name=None):
     raise ClassNotFoundError("Specified "+parent_class.__name__+" subclass cannot be found")
 
 
-def get_constraint(method=None):
-    """
-    Top level routine for finding the correct Constraint object. This doesn't instantiate the constraint class as it
-    may need variables passed to the constructor
-    :param method: The constraint method to find - this should be a string which matches the name of one
-    of the subclasses of Constraint
-    :return: One of Constraint's subclasses
-    """
-    constraint_cls = __get_class(Constraint, method)
-    return constraint_cls
-
-
 def get_kernel(method=None):
     """
     Top level routine for finding the correct Kernel object.
@@ -291,14 +279,3 @@ def get_kernel(method=None):
     """
     kernel_cls = __get_class(Kernel, method)
     return kernel_cls
-
-
-def get_collocator(method=None):
-    """
-    Top level routine for finding the correct Collocator object.
-    :param method: The collocate method to find - this should be a string which matches the name of one
-    of the subclasses of Collocator
-    :return: One of Collocator's subclasses
-    """
-    collocate_cls = __get_class(Collocator, method)
-    return collocate_cls
