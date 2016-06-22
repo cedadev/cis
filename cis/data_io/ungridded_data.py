@@ -614,7 +614,7 @@ class UngriddedData(LazyData, CommonData):
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
-    def collocate(self, sample, how='', kernel=None, **kwargs):
+    def collocated_onto(self, sample, how='', kernel=None, **kwargs):
         """
         Collocate the CommonData object with another CommonData object using the specified collocator and kernel
         :param CommonData sample: The sample data to collocate onto
@@ -636,6 +636,45 @@ class UngriddedData(LazyData, CommonData):
         # The problem is that for lin you don't pass a kernel - but we want to be able to turn extrapolation off or on,
         # so that has to be a separate arg, which means using strings. But using strings is a bit less extensible by
         # the user...
+
+    def sampled_from(self, data, how='', kernel=None, **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+        :param CommonData data: The data to resample
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param cis.collocation.col_framework.Kernel kernel:
+        :return CommonData: The collocated dataset
+        """
+        from cis.collocation import col_implementations as ci
+        from cis.data_io.gridded_data import GriddedData
+        from cis.exceptions import CoordinateNotFoundError
+
+        # TODO: This is just an outline at the moment but the advantage of this method over the one above is that
+        #  we can easily work out the right method. We can then get rid of the wierd lookup table in col.py.
+        # Still have to work out what kernel should be... Perhaps it can be either?
+        col = ci.GeneralUngriddedCollocator()
+
+        # valid options
+        if isinstance(data, UngriddedData):
+            # how must == 'box'
+            # We can have any kernel
+            # kernel = ?
+            con = ci.SepConstraintKdtree
+            pass
+        elif isinstance(data, GriddedData):
+            if how == 'box':
+                con = ci.SepConstraintKdtree
+            elif kernel in ['li', 'nn']:
+                con = None
+            else:
+                raise ValueError("invalid kernel")
+
+        try:
+            new_data = col.collocate(self, data, con, kernel)
+        except TypeError as e:
+            raise CoordinateNotFoundError('Collocator was unable to compare data points, check the dimensions of each '
+                                          'data set and the collocation methods chosen. \n' + str(e))
+        return new_data
 
 
 class UngriddedCoordinates(CommonData):
