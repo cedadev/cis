@@ -30,8 +30,7 @@ class GeneralUngriddedCollocator(Collocator):
             try:
                 self.fill_value = float(fill_value)
             except ValueError:
-                raise cis.exceptions.InvalidCommandLineOptionError(
-                    'Dummy Constraint fill_value must be a valid float')
+                raise cis.exceptions.InvalidCommandLineOptionError('fill_value must be a valid float')
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -100,12 +99,10 @@ class GeneralUngriddedCollocator(Collocator):
         logging.info("--> Collocating...")
 
         # Create output arrays.
-        self.var_name = data.name()
-        self.var_long_name = metadata.long_name
-        self.var_standard_name = metadata.standard_name
-        self.var_units = data.units
-        var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
-                                                      self.var_standard_name, self.var_units)
+        var_set_details = kernel.get_variable_details(self.var_name or data.name(),
+                                                      self.var_long_name or metadata.long_name,
+                                                      metadata.standard_name,
+                                                      self.var_units or data.units)
         sample_points_count = len(sample_points)
         values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
         log_memory_profile("GeneralUngriddedCollocator after output array creation")
@@ -806,8 +803,7 @@ class GeneralGriddedCollocator(Collocator):
             try:
                 self.fill_value = float(fill_value)
             except ValueError:
-                raise cis.exceptions.InvalidCommandLineOptionError(
-                    'Dummy Constraint fill_value must be a valid float')
+                raise cis.exceptions.InvalidCommandLineOptionError('fill_value must be a valid float')
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -904,7 +900,10 @@ class GeneralGriddedCollocator(Collocator):
                     pass
 
         # Construct an output cube containing the collocated data.
-        kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
+        kernel_var_details = kernel.get_variable_details(self.var_name or data.var_name,
+                                                         self.var_long_name or data.long_name,
+                                                         data.standard_name,
+                                                         self.var_units or data.units)
         output = GriddedDataList([])
         for idx, val in enumerate(values):
             cube = self._create_collocated_cube(data, val, output_coords)

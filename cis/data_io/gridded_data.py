@@ -316,8 +316,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         """
         from cis.collocation import col_implementations as ci
         from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
-        from cis.collocation.col_framework import get_kernel, Kernel
-        from cis.collocation.col import collocate
+        from cis.collocation.col import collocate, get_kernel
 
         if isinstance(data, UngriddedData) or isinstance(data, UngriddedDataList):
             col_cls = ci.GeneralGriddedCollocator()

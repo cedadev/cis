@@ -119,11 +119,11 @@ def col_cmd(main_arguments):
         missing_data_for_missing_samples = True
 
     col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup[
-                                                                  'collocator'] is not None else None
+                                                                  'collocator'] is not None else ''
     col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup[
                                                                      'collocator'] is not None else {}
     kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
-    kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
+    kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else {}
 
     for input_group in main_arguments.datagroups:
         variables = input_group['variables']

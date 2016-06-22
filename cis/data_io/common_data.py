@@ -143,9 +143,10 @@ class CommonData(object):
         :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
         :return CommonData: The collocated dataset
         """
-        sample.sampled_from(self, how=how, kernel=kernel,
-                            missing_data_for_missing_sample=missing_data_for_missing_sample, fill_value=fill_value,
-                            var_name=var_name, var_long_name=var_long_name, var_units=var_units, **kwargs)
+        return sample.sampled_from(self, how=how, kernel=kernel,
+                                   missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                   fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                   var_units=var_units, **kwargs)
 
 
 class CommonDataList(list):
@@ -262,6 +263,7 @@ class CommonDataList(list):
         :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
         :return CommonData: The collocated dataset
         """
-        sample.sampled_from(self, how=how, kernel=kernel,
-                            missing_data_for_missing_sample=missing_data_for_missing_sample, fill_value=fill_value,
-                            var_name=var_name, var_long_name=var_long_name, var_units=var_units, **kwargs)
+        return sample.sampled_from(self, how=how, kernel=kernel,
+                                   missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                   fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                   var_units=var_units, **kwargs)
