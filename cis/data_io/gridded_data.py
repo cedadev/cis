@@ -299,6 +299,15 @@ class GriddedData(iris.cube.Cube, CommonData):
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
 
+    def aggregate(self, kernel=None, **kwargs):
+        """
+        Aggregate the CommonData object based on the specified grids
+        :param kernel: The kernel to use in the aggregation
+        :param kwargs: The grid specifications for each coordinate dimension
+        :return:
+        """
+        return _aggregate_gridded(self, kernel, **kwargs)
+
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
         """
@@ -558,3 +567,18 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
     def subset(self, **kwargs):
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
+
+
+def _aggregate_gridded(data, kernel, **kwargs):
+    from cis.aggregation.aggregation_kernels import aggregation_kernels
+    from iris.analysis import Aggregator as IrisAggregator
+    from cis.aggregation.aggregator import GriddedAggregator, aggregate
+
+    if isinstance(kernel, str):
+        kernel_inst = aggregation_kernels[kernel]
+    elif isinstance(kernel, IrisAggregator):
+        kernel_inst = kernel
+    else:
+        raise ValueError("Invalid kernel specified: " + kernel)
+
+    return aggregate(GriddedAggregator, data, kernel_inst, **kwargs)

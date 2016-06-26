@@ -619,6 +619,18 @@ class UngriddedData(LazyData, CommonData):
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
+    def aggregate(self, kernel=None, **kwargs):
+        """
+        Aggregate the CommonData object based on the specified grids
+        :param kernel: The kernel to use in the aggregation
+        :param kwargs: The grid specifications for each coordinate dimension
+        :return:
+        """
+        from cis.aggregation.aggregator import aggregate, Aggregator
+        pass
+        # TODO
+
+
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
         """
@@ -638,7 +650,6 @@ class UngriddedData(LazyData, CommonData):
                                        missing_data_for_missing_sample=missing_data_for_missing_sample,
                                        fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
                                        var_units=var_units, **kwargs)
-
 
 class UngriddedCoordinates(CommonData):
     """
@@ -1001,3 +1012,11 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
         raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
 
     return collocate(data, sample, col, con, kernel)
+
+
+# TODO: Add calls to this method above
+
+def _aggregate_ungridded(data, kernel, **kwargs):
+    from cis.aggregation.aggregator import UngriddedAggregator, aggregate
+    from cis.collocation.col import get_kernel
+    return aggregate(UngriddedAggregator, data, get_kernel(kernel), **kwargs)

@@ -109,6 +109,16 @@ class CommonData(object):
         pass
 
     @abstractmethod
+    def aggregate(self, kernel=None, **kwargs):
+        """
+        Aggregate the CommonData object based on the specified grids
+        :param kernel: The kernel to use in the aggregation
+        :param kwargs: The grid specifications for each coordinate dimension
+        :return:
+        """
+        pass
+
+    @abstractmethod
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
         """
@@ -147,7 +157,6 @@ class CommonData(object):
                                    missing_data_for_missing_sample=missing_data_for_missing_sample,
                                    fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
                                    var_units=var_units, **kwargs)
-
 
 class CommonDataList(list):
     """
@@ -267,3 +276,7 @@ class CommonDataList(list):
                                    missing_data_for_missing_sample=missing_data_for_missing_sample,
                                    fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
                                    var_units=var_units, **kwargs)
+
+    @abstractmethod
+    def aggregate(self, kernel=None, **kwargs):
+        pass

@@ -185,7 +185,9 @@ def aggregate_cmd(main_arguments):
 
     :param main_arguments: The command line arguments (minus the aggregate command)
     """
-    from cis.aggregation.aggregate import Aggregate
+    from cis import read_data_list
+    from iris.exceptions import IrisError
+    import cis.exceptions as ex
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Aggregation can only be performed on one data group")
@@ -194,8 +196,20 @@ def aggregate_cmd(main_arguments):
     variables = input_group['variables']
     filenames = input_group['filenames']
 
-    aggregate = Aggregate(main_arguments.grid, main_arguments.output)
-    aggregate.aggregate(variables, filenames, input_group["product"], input_group["kernel"])
+    # Read the input data - the parser limits the number of data groups to one for this command.
+    try:
+        # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
+        # the specified files.
+        logging.info("Reading data for variables: %s", variables)
+        data = read_data_list(filenames, variables, input_group["product"])
+    except (IrisError, ex.InvalidVariableError) as e:
+        raise ex.CISError("There was an error reading in data: \n" + str(e))
+    except IOError as e:
+        raise ex.CISError("There was an error reading one of the files: \n" + str(e))
+
+    output = data.aggregate(kernel=input_group["kernel"], **main_arguments.grid)
+
+    output.save_data(main_arguments.output)
 
 
 def evaluate_cmd(main_arguments):

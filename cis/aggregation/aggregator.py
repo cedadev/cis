@@ -1,6 +1,9 @@
 import logging
+from abc import ABCMeta, abstractmethod
+
 import datetime
 
+# TODO: Make these imports more local
 import iris.coord_categorisation
 import iris.analysis.cartography
 from iris.coords import DimCoord
@@ -15,10 +18,50 @@ from cis.data_io.gridded_data import GriddedDataList
 from functools import reduce
 
 
+def aggregate(aggregator, data, kernel, **kwargs):
+    """
+
+    :param Aggregator aggregator: The aggregator class to instantiate
+    :param CommonData or CommonDataList data: The data to aggregate
+    :param cis.collocation.col_framework.Kernel or iris.Analysis.Aggregator kernel:
+    :param kwargs:
+    :return:
+    """
+    from cis import __version__
+
+    aggregator = aggregator(data, kwargs)
+    data = aggregator.aggregate_ungridded(kernel)
+
+    # TODO Tidy up output of grid in the history
+    history = "Aggregated using CIS version " + __version__ + \
+              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
+              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
+              "\n using new grid: " + str(kwargs) + \
+              "\n with kernel: " + kernel + "."
+    data.add_history(history)
+
+    return data
+
+
 class Aggregator(object):
+    """
+    Class which provides a method for performing collocation. This just defines the interface which
+    the subclasses must implement.
+    """
+    __metaclass__ = ABCMeta
+
     def __init__(self, data, grid):
         self.data = data
         self._grid = grid
+
+
+    @abstractmethod
+    def aggregate(self):
+        pass
+
+#TODO: Check which methods belong to which class - maybe split into separate modules
+
+class UngriddedAggregator(Aggregator):
 
     @staticmethod
     def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN):
@@ -118,7 +161,7 @@ class Aggregator(object):
 
         return new_data
 
-    def aggregate_gridded(self, kernel):
+    def aggregate(self, kernel):
         # Make sure all coordinate have bounds - important for weighting and aggregating
         # Only try and guess bounds on Dim Coords
         for coord in self.data.coords(dim_coords=True):
@@ -150,7 +193,10 @@ class Aggregator(object):
             output.append_or_extend(self._gridded_full_collapse(coords, kernel))
         return output
 
-    def aggregate_ungridded(self, kernel):
+
+class GriddedAggregator(Aggregator):
+
+    def aggregate(self, kernel):
         """
         Performs aggregation for ungridded data by first generating a new grid, converting it into a cube, then
         collocating using the appropriate kernel and a cube cell constraint
