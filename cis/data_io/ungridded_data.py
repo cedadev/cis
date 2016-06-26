@@ -987,10 +987,10 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
         # nn is the default for gridded -> ungridded collocation
         if how == '' or how == 'nn':
             con = None
-            kernel = ci.nn_gridded
+            kernel = ci.nn_gridded()
         elif how == 'lin':
             con = None
-            kernel = ci.li
+            kernel = ci.li()
         elif how == 'box':
             con = ci.SepConstraintKdtree(**kwargs)
             # We can have any kernel, default to moments
