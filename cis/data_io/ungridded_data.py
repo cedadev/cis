@@ -634,10 +634,10 @@ class UngriddedData(LazyData, CommonData):
         :param str var_units: The output variable's units
         :return CommonData: The collocated dataset
         """
-        _ungridded_sampled_from(self, data, how=how, kernel=kernel,
-                                missing_data_for_missing_sample=missing_data_for_missing_sample,
-                                fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
-                                var_units=var_units, **kwargs)
+        return _ungridded_sampled_from(self, data, how=how, kernel=kernel,
+                                       missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                       fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                       var_units=var_units, **kwargs)
 
 
 class UngriddedCoordinates(CommonData):
