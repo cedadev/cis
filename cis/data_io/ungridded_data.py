@@ -787,6 +787,9 @@ class UngriddedCoordinates(CommonData):
     def subset(self, **kwargs):
         raise NotImplementedError("Subset is not available for UngriddedCoordinates objects")
 
+    def aggregate(self, **kwargs):
+        raise NotImplementedError("Aggregation is not available for UngriddedCoordinates objects")
+
     def collocated_onto(self, sample, how='', kernel=None, **kwargs):
         raise NotImplementedError("UngriddedCoordinates objects cannot be used as sources of data for collocation.")
 

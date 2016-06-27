@@ -3,6 +3,7 @@ import unittest
 from cis.collocation.col_framework import get_kernel
 from cis.aggregation.aggregation_grid import AggregationGrid
 from cis.aggregation.gridded_aggregator import GriddedAggregator
+from cis.aggregation.ungridded_aggregator import UngriddedAggregator
 from cis.test.util import mock
 from cis.aggregation.aggregation_kernels import aggregation_kernels, CountKernel
 from cis.test.utils_for_testing import *
@@ -65,7 +66,7 @@ class TestMomentsKernel(unittest.TestCase):
         data = mock.make_regular_2d_ungridded_data()
         kernel_class = get_kernel('moments')
         kernel = kernel_class()
-        agg = GriddedAggregator(data, grid)
+        agg = UngriddedAggregator(data, grid)
         result = agg.aggregate(kernel)
 
         expected_means = numpy.array([3.5, 11])
@@ -81,7 +82,7 @@ class TestMomentsKernel(unittest.TestCase):
         data = mock.make_regular_2d_ungridded_data()
         kernel_class = get_kernel('moments')
         kernel = kernel_class()
-        agg = GriddedAggregator(data, grid)
+        agg = UngriddedAggregator(data, grid)
         result = agg.aggregate(kernel)
 
         mean, stddev, num = result
