@@ -301,7 +301,7 @@ class GriddedData(iris.cube.Cube, CommonData):
 
     def aggregate(self, kernel=None, **kwargs):
         """
-        Aggregate the CommonData object based on the specified grids
+        Aggregate based on the specified grids
         :param kernel: The kernel to use in the aggregation
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
@@ -568,11 +568,28 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
 
+    def aggregate(self, kernel=None, **kwargs):
+        """
+        Aggregate based on the specified grids
+        :param kernel: The kernel to use in the aggregation
+        :param kwargs: The grid specifications for each coordinate dimension
+        :return:
+        """
+        return _aggregate_gridded(self, kernel, **kwargs)
+
 
 def _aggregate_gridded(data, kernel, **kwargs):
+    """
+    Aggregate a GriddedData or GriddedDataList based on the specified grids (currently only collapsing is available)
+    :param GriddedData or GriddedDataList data: The data object to aggregate
+    :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
+    :param kwargs: The coordinates to collapse
+    :return:
+    """
     from cis.aggregation.aggregation_kernels import aggregation_kernels
     from iris.analysis import Aggregator as IrisAggregator
-    from cis.aggregation.gridded_aggregator import GriddedAggregator, aggregate
+    from cis.aggregation.gridded_aggregator import GriddedAggregator
+    from cis.aggregation.aggregate import aggregate
 
     if isinstance(kernel, str):
         kernel_inst = aggregation_kernels[kernel]

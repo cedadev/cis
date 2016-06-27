@@ -622,13 +622,11 @@ class UngriddedData(LazyData, CommonData):
     def aggregate(self, kernel=None, **kwargs):
         """
         Aggregate the CommonData object based on the specified grids
-        :param kernel: The kernel to use in the aggregation
+        :param cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
         """
-        from cis.aggregation.gridded_aggregator import aggregate, Aggregator
-        pass
-        # TODO
+        _aggregate_ungridded(self, kernel, **kwargs)
 
 
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
@@ -911,6 +909,15 @@ class UngriddedDataList(CommonDataList):
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
+    def aggregate(self, kernel=None, **kwargs):
+        """
+        Aggregate based on the specified grids
+        :param cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
+        :param kwargs: The grid specifications for each coordinate dimension
+        :return:
+        """
+        return _aggregate_ungridded(self, kernel, **kwargs)
+
 
 def _coords_as_data_frame(coord_list, copy=True):
     """
@@ -1017,9 +1024,15 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
     return collocate(data, sample, col, con, kernel)
 
 
-# TODO: Add calls to this method above
-
 def _aggregate_ungridded(data, kernel, **kwargs):
-    from cis.aggregation.gridded_aggregator import UngriddedAggregator, aggregate
+    """
+    Aggregate an UngriddedData or UngriddedDataList based on the specified grids
+    :param UngriddedData or UngriddedDataList data: The data object to aggregate
+    :param cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
+    :param kwargs: The grid specifications for each coordinate dimension
+    :return:
+    """
+    from cis.aggregation.ungridded_aggregator import UngriddedAggregator
+    from cis.aggregation.aggregate import aggregate
     from cis.collocation.col import get_kernel
     return aggregate(UngriddedAggregator, data, get_kernel(kernel), **kwargs)
