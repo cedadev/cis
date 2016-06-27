@@ -287,8 +287,16 @@ class GriddedData(iris.cube.Cube, CommonData):
         from iris.pandas import as_data_frame
         return as_data_frame(self, copy=copy)
 
-    def collapsed(self, *args, **kwargs):
-        return make_from_cube(super(GriddedData, self).collapsed(*args, **kwargs))
+    def collapsed(self, coords, kernel=None, **kwargs):
+        """
+        Collapse the dataset over one or more coordinates using CIS aggregation (NOT Iris). This allows multidimensional
+         coordinates to be aggregated over as well.
+        :param list of iris.coords.Coord or str coords: The coords to collapse
+        :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
+        :param kwargs: NOT USED - this is only to match the iris interface.
+        :return:
+        """
+        return _collapse_gridded(self, coords, kernel)
 
     def subset(self, **kwargs):
         """
@@ -306,7 +314,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
         """
-        return _aggregate_gridded(self, kernel, **kwargs)
+        raise NotImplementedError("Aggregating gridded data to a different grid is currently unsupported")
 
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
@@ -463,19 +471,16 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
             data_list.append(data.aggregated_by(*args, **kwargs))
         return data_list
 
-    def collapsed(self, *args, **kwargs):
+    def collapsed(self, coords, kernel=None, **kwargs):
         """
-        Build a collapsed GriddedDataList by calling iris.cube.Cube.collapsed(*args, **kwargs)
-        for the all items in the data list
-        :param args:
-        :param kwargs:
-        :return: GriddedDataList
+        Collapse the dataset over one or more coordinates using CIS aggregation (NOT Iris). This allows multidimensional
+         coordinates to be aggregated over as well.
+        :param list of iris.coords.Coord or str coords: The coords to collapse
+        :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
+        :param kwargs: NOT USED - this is only to match the iris interface.
+        :return:
         """
-        data_list = GriddedDataList()
-        for data in self:
-            collapsed_data = make_from_cube(data.collapsed(*args, **kwargs))
-            data_list.append(collapsed_data)
-        return data_list
+        return _collapse_gridded(self, coords, kernel)
 
     def interpolate(self, *args, **kwargs):
         """
@@ -575,26 +580,44 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
         """
-        return _aggregate_gridded(self, kernel, **kwargs)
+        raise NotImplementedError("Aggregating gridded data to a different grid is currently unsupported")
 
 
-def _aggregate_gridded(data, kernel, **kwargs):
+def _collapse_gridded(data, coords, kernel):
     """
-    Aggregate a GriddedData or GriddedDataList based on the specified grids (currently only collapsing is available)
+    Collapse a GriddedData or GriddedDataList based on the specified grids (currently only collapsing is available)
     :param GriddedData or GriddedDataList data: The data object to aggregate
+    :param list of iris.coords.Coord or str coords: The coords to collapse
     :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
-    :param kwargs: The coordinates to collapse
     :return:
     """
     from cis.aggregation.aggregation_kernels import aggregation_kernels
-    from iris.analysis import Aggregator as IrisAggregator
+    from iris.analysis import Aggregator as IrisAggregator, MEAN
     from cis.aggregation.gridded_aggregator import GriddedAggregator
     from cis.aggregation.aggregate import aggregate
+    from cis.utils import listify
+    from iris.coords import Coord
 
+    # Make sure coords are a list
+    coords = listify(coords)
+
+    # This is a horrible hack to make the collapsed interface match the aggregation interface...
+    kwargs = {}
+    for c in coords:
+        if isinstance(c, Coord):
+            kwargs[c.name()] = []
+        elif isinstance(c, str):
+            kwargs[c] = []
+        else:
+            raise ValueError("Invalid coord specified: " + c)
+
+    # Choose the right kernel - or fall back to default (MEAN)
     if isinstance(kernel, str):
         kernel_inst = aggregation_kernels[kernel]
     elif isinstance(kernel, IrisAggregator):
         kernel_inst = kernel
+    elif kernel is None:
+        kernel_inst = MEAN()
     else:
         raise ValueError("Invalid kernel specified: " + kernel)
 

@@ -13,7 +13,7 @@ def aggregate(aggregator, data, kernel, **kwargs):
     from cis import __version__
 
     aggregator = aggregator(data, kwargs)
-    data = aggregator.aggregate_ungridded(kernel)
+    data = aggregator.aggregate(kernel)
 
     # TODO Tidy up output of grid in the history
     history = "Aggregated using CIS version " + __version__ + \
