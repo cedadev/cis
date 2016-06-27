@@ -4,10 +4,8 @@ from nose.tools import istest, eq_
 import iris.analysis
 
 from cis.data_io.gridded_data import make_from_cube, GriddedDataList
-from cis.data_io.ungridded_data import UngriddedDataList
-from cis.collocation.col_implementations import mean, max, min, stddev, moments
 from cis.aggregation.aggregation_grid import AggregationGrid
-from cis.aggregation.gridded_aggregator import Aggregator
+from cis.aggregation.gridded_aggregator import GriddedAggregator
 from cis.test.utils_for_testing import *
 from cis.aggregation.aggregation_kernels import aggregation_kernels
 from cis.test.util.mock import *
@@ -24,8 +22,8 @@ class TestGriddedAggregation(TestCase):
         # Partial collapse of gridded data not supported (see JASCIS-148).
         grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         assert numpy.array_equal(self.cube.data, cube_out.data)
         assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
@@ -35,8 +33,8 @@ class TestGriddedAggregation(TestCase):
     def test_collapsing_coordinate_collapses_coordinate(self):
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array([2, 5, 8, 11, 14])
 
@@ -48,8 +46,8 @@ class TestGriddedAggregation(TestCase):
     def test_collapsing_coordinate_takes_start_end_but_ignores_them(self):
         grid = {'x': AggregationGrid(0, 5, float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array([2, 5, 8, 11, 14])
 
@@ -62,8 +60,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'longitude': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
                 'latitude': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array(8.0)
 
@@ -74,8 +72,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'lon': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
                 'lat': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array(8.0)
 
@@ -86,8 +84,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
                 'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array(8.0)
 
@@ -100,8 +98,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
                 'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         # result = numpy.array(8.1538461538461533)
         result = numpy.array(numpy.mean(self.cube.data))
@@ -114,8 +112,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False),
                 'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array(15)
 
@@ -127,8 +125,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
                 'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array(1)
 
@@ -139,8 +137,8 @@ class TestGriddedAggregation(TestCase):
         self.kernel = iris.analysis.STD_DEV
         grid = {'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result = numpy.array([numpy.sqrt(22.5), numpy.sqrt(22.5), numpy.sqrt(22.5)])
 
@@ -154,8 +152,8 @@ class TestGriddedAggregation(TestCase):
                 'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
                 'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array(53)
         assert_arrays_almost_equal(result_data, cube_out[0].data)
@@ -167,8 +165,8 @@ class TestGriddedAggregation(TestCase):
                 'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
                 'air_pressure': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(self.cube, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(self.cube, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array(263)
         assert_arrays_almost_equal(cube_out[0].data, result_data)
@@ -179,8 +177,8 @@ class TestGriddedAggregation(TestCase):
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
 
-        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(GriddedData.make_from_cube(self.cube), grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
                                     [51.0, 52.0, 53.0, 54.0, 55.0],
@@ -219,8 +217,8 @@ class TestGriddedAggregation(TestCase):
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
 
-        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(GriddedData.make_from_cube(self.cube), grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
                                     [51.0, 52.0, 53.0, 54.0, 55.0],
@@ -259,8 +257,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
                 'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(GriddedData.make_from_cube(self.cube), grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
@@ -279,8 +277,8 @@ class TestGriddedAggregation(TestCase):
         grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
                 'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(GriddedData.make_from_cube(self.cube), grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
@@ -302,8 +300,8 @@ class TestGriddedAggregation(TestCase):
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(GriddedData.make_from_cube(self.cube), grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array([[[36.0, 37.0, 38.0, 39.0, 40.0],
                                     [41.0, 42.0, 43.0, 44.0, 45.0],
@@ -363,7 +361,7 @@ class TestGriddedAggregation(TestCase):
         # New dims          [0, 1]
         # Local dims        [1]
         # Mirrors: test_partial_aggregation_over_multidimensional_coord_along_middle_of_cube
-        eq_(Aggregator._calc_new_dims([0, 1, 2], {1}), [0, 1])
+        eq_(GriddedAggregator._calc_new_dims([0, 1, 2], {1}), [0, 1])
 
         # Cube dims         [0, 1, 2, 3]
         # Coord dims        [0, 1, 2]
@@ -372,7 +370,7 @@ class TestGriddedAggregation(TestCase):
         # New dims          [0, 1]
         # Local dims        [2]
         # Mirrors: test_partial_aggregation_over_multidimensional_coord
-        eq_(Aggregator._calc_new_dims([0, 1, 2], {2}), [0, 1])
+        eq_(GriddedAggregator._calc_new_dims([0, 1, 2], {2}), [0, 1])
 
         # Cube dims         [0, 1, 2, 3]
         # Coord dims        [0, ., 1, 2]
@@ -382,13 +380,14 @@ class TestGriddedAggregation(TestCase):
         # New dims          [1, 2]
         # Local dims        [0]
         # Mirrors: test_netCDF_gridded_hybrid_height_partial
-        eq_(Aggregator._calc_new_dims([0, 2, 3], {0}), [1, 2])
+        eq_(GriddedAggregator._calc_new_dims([0, 2, 3], {0}), [1, 2])
 
         # Test collapsing multiple dimensions
-        eq_(Aggregator._calc_new_dims([0, 1, 2], {0, 1}), [0])
+        eq_(GriddedAggregator._calc_new_dims([0, 1, 2], {0, 1}), [0])
 
         # Test collapsing multiple dimensions, some of which aren't on the coordinate
-        eq_(Aggregator._calc_new_dims([0, 1, 2], {2, 3}), [0, 1])
+        eq_(GriddedAggregator._calc_new_dims([0, 1, 2], {2, 3}), [0, 1])
+
 
 
 class TestGriddedListAggregation(TestCase):
@@ -403,8 +402,8 @@ class TestGriddedListAggregation(TestCase):
         datalist = GriddedDataList([data1, data2])
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
 
-        agg = Aggregator(datalist, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(datalist, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result1 = numpy.array([2, 5, 8, 11, 14])
         result2 = result1 + 1
@@ -424,8 +423,8 @@ class TestGriddedListAggregation(TestCase):
         datalist = GriddedDataList([data1, data2])
         grid = {'y': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(datalist, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(datalist, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result1 = numpy.array([7, 8, 9])
         result2 = result1 + 1
@@ -447,8 +446,8 @@ class TestGriddedListAggregation(TestCase):
 
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(data, grid)
+        output = agg.aggregate(self.kernel)
 
         expect_mean = numpy.array([[5.5, 8.75, 9]])
         expect_stddev = numpy.array([numpy.sqrt(15), numpy.sqrt(26.25), numpy.sqrt(30)])
@@ -481,8 +480,8 @@ class TestGriddedListAggregation(TestCase):
         grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False),
                 'y': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(data, grid)
+        output = agg.aggregate(self.kernel)
 
         expect_mean = numpy.array(7.75)
         expect_stddev = numpy.array(numpy.sqrt(244.25 / 11))
@@ -515,8 +514,8 @@ class TestGriddedListAggregation(TestCase):
         grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
                 'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
 
-        agg = Aggregator(datalist, grid)
-        cube_out = agg.aggregate_gridded(self.kernel)
+        agg = GriddedAggregator(datalist, grid)
+        cube_out = agg.aggregate(self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
@@ -531,412 +530,3 @@ class TestGriddedListAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
         assert_arrays_almost_equal(cube_out[1].coord('surface_air_pressure').points, multidim_coord_points)
 
-
-class TestUngriddedAggregation(TestCase):
-    def setUp(self):
-        self.kernel = mean()
-
-    @istest
-    def test_aggregating_single_point_in_one_dimension(self):
-        grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        data = make_dummy_ungridded_data_single_point()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_can_name_variables_by_standard_name(self):
-        """
-        Note that this is also the variable name for many ungridded cases
-        """
-        grid = {'latitude': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        data = make_dummy_ungridded_data_single_point()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_aggregating_single_point_in_one_dimension_lower_bound_edge_case(self):
-        """
-        Test to document the behaviour of aggregation when a point on a cell's lower bound is taken to be in that cell
-          or out of it. If the point is on the lower bound it is taken to be part of that cell.
-        """
-        grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        data = make_dummy_ungridded_data_single_point(lat=-2.50000)
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_aggregating_single_point_in_one_dimension_upper_bound_edge_case(self):
-        """
-        Test to document the behaviour of aggregation when a point on a cell's upper bound is taken to be in that cell
-          or out of it. If the point is on the upper bound it is NOT taken to be part of that cell.
-        """
-        grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        data = make_dummy_ungridded_data_single_point(lat=2.50000)
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[0], [0], [0.0], [1.0], [0]], mask=[[1], [1], [1], [0], [1]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_aggregating_edge_cases(self):
-        """
-        Further tests to reinforce the above edge case tests in two dimensions. Note that the upper edges of the
-        ungridded data points array are removed from the aggregate because they fall on the respective cells' upper
-        bounds.
-        """
-        grid = {'x': AggregationGrid(-5, 5, 5, False), 'y': AggregationGrid(-10, 10, 5, False)}
-
-        data = make_regular_2d_ungridded_data()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.array([[1.0, 2.0],  # 3.0],
-                              [4.0, 5.0],  # 6.0],
-                              [7.0, 8.0],  # 9.0],
-                              [10.0, 11.0]])  # 12.0],
-        # [13.0, 14.0, 15.0]],
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        data = make_regular_2d_ungridded_data_with_missing_values()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[1.0, 2.0, 3.0],
-                                 [4.0, 5.0, 6.0],
-                                 [7.0, 8.0, 9.0],
-                                 [10.0, 11.0, 12.0],
-                                 [13.0, 14.0, 15.0]],
-                                mask=[[0, 0, 0],
-                                      [0, 1, 0],
-                                      [0, 0, 1],
-                                      [0, 0, 0],
-                                      [1, 0, 0]], fill_value=float('inf'))
-
-        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_mean_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
-
-        data = make_regular_2d_ungridded_data_with_missing_values()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[2.5, 2.0, 4.5],
-                                 [8.5, 11.0, 13.5]],
-                                mask=[[0, 0, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_max_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-        self.kernel = max()
-
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
-
-        data = make_regular_2d_ungridded_data_with_missing_values()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[4.0, 2.0, 6.0],
-                                 [10.0, 14.0, 15.0]],
-                                mask=[[0, 0, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_min_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-        self.kernel = min()
-
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
-
-        data = make_regular_2d_ungridded_data_with_missing_values()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[1.0, 2.0, 3.0],
-                                 [7.0, 8.0, 12.0]],
-                                mask=[[0, 0, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    @istest
-    def test_stddev_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-        self.kernel = stddev()
-
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
-
-        data = make_regular_2d_ungridded_data_with_missing_values()
-
-        agg = Aggregator(data, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[numpy.sqrt(4.5), float('NaN'), numpy.sqrt(4.5)],
-                                 [numpy.sqrt(4.5), 3.0, numpy.sqrt(4.5)]],
-                                mask=[[0, 1, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
-
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-
-    def test_aggregation_one_dim_using_moments_kernel(self):
-        self.kernel = moments()
-        data = make_regular_2d_ungridded_data_with_missing_values()
-        grid = {'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
-
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-
-        expect_mean = numpy.array([[3.2], [11]])
-        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26 / 3.0)]])
-        expect_count = numpy.array([[5], [7]])
-
-        assert isinstance(output, GriddedDataList)
-        assert len(output) == 3
-        actual_mean, actual_stddev, actual_count = output
-        assert actual_mean.var_name == 'rain'
-        assert actual_stddev.var_name == 'rain_std_dev'
-        assert actual_count.var_name == 'rain_num_points'
-        assert_arrays_almost_equal(actual_mean.data, expect_mean)
-        assert_arrays_almost_equal(actual_stddev.data, expect_stddev)
-        assert_arrays_almost_equal(actual_count.data, expect_count)
-
-    def test_aggregation_two_dims_using_moments_kernel(self):
-        self.kernel = moments()
-        data = make_regular_2d_ungridded_data_with_missing_values()
-        grid = {'y': AggregationGrid(-12.5, 12.5, 15, False), 'x': AggregationGrid(-7.5, 7.5, 10, False)}
-
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-
-        expect_mean = numpy.array([[4.4, 4.5], [35.0 / 3, 13.5]])
-        expect_stddev = numpy.array([[numpy.sqrt(9.3), numpy.sqrt(4.5)],
-                                     [numpy.sqrt(13.0 / 3), numpy.sqrt(4.5)]])
-        expect_count = numpy.array([[5, 2], [3, 2]])
-
-        assert isinstance(output, GriddedDataList)
-        assert len(output) == 3
-        actual_mean, actual_stddev, actual_count = output
-        assert actual_mean.var_name == 'rain'
-        assert actual_stddev.var_name == 'rain_std_dev'
-        assert actual_count.var_name == 'rain_num_points'
-        assert_arrays_almost_equal(actual_mean.data, expect_mean)
-        assert_arrays_almost_equal(actual_stddev.data, expect_stddev)
-        assert_arrays_almost_equal(actual_count.data, expect_count)
-
-    def test_aggregating_on_grid_0_to_360_when_data_is_minus_180_to_180(self):
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=-175., lon_max=145.)
-        grid = {'x': AggregationGrid(125, 270, 40, False)}
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-        assert_arrays_equal(output[0].data, [[13.5, 5.5, 6.5, 7.5]])
-
-    def test_aggregating_on_grid_minus_180_to_180_when_data_is_0_to_360(self):
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=5., lon_max=325.)
-        grid = {'x': AggregationGrid(-75, 125, 40, False)}
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-        assert_arrays_equal(output[0].data, [[12.5, 13.5, 5.5, 6.5, 7.5]])
-
-    def test_collapsed_coords_get_output_as_length_1(self):
-        data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(0, 360, 10, False)}
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-        lat = output.coord('latitude')
-        assert_that(lat.points, is_([0]))
-
-    def test_collapsed_coords_get_max_min_bounds(self):
-        data = make_regular_2d_ungridded_data()
-        grid = {'y': AggregationGrid(-90, 90, 10, False)}
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-        lon = output.coord('longitude')
-        assert_arrays_equal(lon.bounds, [[-5, 5]])
-
-    def test_aggregating_coord_to_length_one_with_explicit_bounds_gets_output_as_length_one(self):
-        data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False),}
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-        lon = output.coord('longitude')
-        assert_that(lon.points, is_([0]))
-
-    def test_aggregating_to_length_one_with_explicit_bounds_get_correct_bounds(self):
-        data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(-180, 180, 360, False), 'y': AggregationGrid(-90, 90, 10, False),}
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-        lon = output.coord('longitude')
-        assert_arrays_equal(lon.bounds, [[-180, 180]])
-
-
-class TestUngriddedListAggregation(TestCase):
-    def setUp(self):
-        self.kernel = mean()
-
-    @istest
-    def test_aggregating_list_of_datasets_over_two_dims(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        datalist = UngriddedDataList([make_regular_2d_ungridded_data_with_missing_values(),
-                                      make_regular_2d_ungridded_data_with_missing_values()])
-
-        agg = Aggregator(datalist, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result = numpy.ma.array([[1.0, 2.0, 3.0],
-                                 [4.0, 5.0, 6.0],
-                                 [7.0, 8.0, 9.0],
-                                 [10.0, 11.0, 12.0],
-                                 [13.0, 14.0, 15.0]],
-                                mask=[[0, 0, 0],
-                                      [0, 1, 0],
-                                      [0, 0, 1],
-                                      [0, 0, 0],
-                                      [1, 0, 0]], fill_value=float('inf'))
-
-        print(cube_out[0].data.fill_value)
-        assert len(cube_out) == 2
-        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-        assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result))
-
-    def test_aggregation_one_dim_using_moments_kernel(self):
-        self.kernel = moments()
-        data1 = make_regular_2d_ungridded_data_with_missing_values()
-        data2 = make_regular_2d_ungridded_data_with_missing_values()
-        data2.metadata._name = 'snow'
-        data2._data += 10
-        data = UngriddedDataList([data1, data2])
-        grid = {'y': AggregationGrid(-12.5, 12.5, 12.5, False)}
-
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-
-        expect_mean = numpy.array([[3.2], [11]])
-        expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26.0 / 3)]])
-        expect_count = numpy.array([[5], [7]])
-
-        assert isinstance(output, GriddedDataList)
-        assert len(output) == 6
-        mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
-        assert mean_1.var_name == 'rain'
-        assert stddev_1.var_name == 'rain_std_dev'
-        assert count_1.var_name == 'rain_num_points'
-        assert mean_2.var_name == 'snow'
-        assert stddev_2.var_name == 'snow_std_dev'
-        assert count_2.var_name == 'snow_num_points'
-        assert_arrays_almost_equal(mean_1.data, expect_mean)
-        assert_arrays_almost_equal(stddev_1.data, expect_stddev)
-        assert_arrays_almost_equal(count_1.data, expect_count)
-        assert_arrays_almost_equal(mean_2.data, expect_mean + 10)
-        assert_arrays_almost_equal(stddev_2.data, expect_stddev)
-        assert_arrays_almost_equal(count_2.data, expect_count)
-
-    def test_aggregation_two_dims_using_moments_kernel(self):
-        self.kernel = moments()
-        data1 = make_regular_2d_ungridded_data_with_missing_values()
-        data2 = make_regular_2d_ungridded_data_with_missing_values()
-        data2.metadata._name = 'snow'
-        data2._data += 10
-        data = UngriddedDataList([data1, data2])
-        grid = {'y': AggregationGrid(-12.5, 12.5, 15, False), 'x': AggregationGrid(-7.5, 7.5, 10, False)}
-
-        agg = Aggregator(data, grid)
-        output = agg.aggregate_ungridded(self.kernel)
-
-        expect_mean = numpy.array([[4.4, 4.5], [35.0 / 3, 13.5]])
-        expect_stddev = numpy.array([[numpy.sqrt(9.3), numpy.sqrt(4.5)],
-                                     [numpy.sqrt(13.0 / 3), numpy.sqrt(4.5)]])
-        expect_count = numpy.array([[5, 2], [3, 2]])
-
-        assert isinstance(output, GriddedDataList)
-        assert len(output) == 6
-        mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
-        assert mean_1.var_name == 'rain'
-        assert stddev_1.var_name == 'rain_std_dev'
-        assert count_1.var_name == 'rain_num_points'
-        assert mean_2.var_name == 'snow'
-        assert stddev_2.var_name == 'snow_std_dev'
-        assert count_2.var_name == 'snow_num_points'
-        assert_arrays_almost_equal(mean_1.data, expect_mean)
-        assert_arrays_almost_equal(stddev_1.data, expect_stddev)
-        assert_arrays_almost_equal(count_1.data, expect_count)
-        assert_arrays_almost_equal(mean_2.data, expect_mean + 10)
-        assert_arrays_almost_equal(stddev_2.data, expect_stddev)
-        assert_arrays_almost_equal(count_2.data, expect_count)
-
-    @istest
-    def test_aggregating_list_of_datasets_over_two_dims_with_diff_masks(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5, False), 'y': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        var_0 = make_regular_2d_ungridded_data_with_missing_values()
-        var_1 = make_regular_2d_ungridded_data_with_missing_values()
-
-        var_1.data.mask = 1
-
-        datalist = UngriddedDataList([var_1, var_0])
-
-        agg = Aggregator(datalist, grid)
-        cube_out = agg.aggregate_ungridded(self.kernel)
-
-        result_0 = numpy.ma.array([[1.0, 2.0, 3.0],
-                                 [4.0, 5.0, 6.0],
-                                 [7.0, 8.0, 9.0],
-                                 [10.0, 11.0, 12.0],
-                                 [13.0, 14.0, 15.0]],
-                                mask=[[0, 0, 0],
-                                      [0, 1, 0],
-                                      [0, 0, 1],
-                                      [0, 0, 0],
-                                      [1, 0, 0]], fill_value=float('inf'))
-
-        result_1 = numpy.ma.array([[1.0, 2.0, 3.0],
-                                   [4.0, 5.0, 6.0],
-                                   [7.0, 8.0, 9.0],
-                                   [10.0, 11.0, 12.0],
-                                   [13.0, 14.0, 15.0]],
-                                  mask=[[1, 1, 1],
-                                        [1, 1, 1],
-                                        [1, 1, 1],
-                                        [1, 1, 1],
-                                        [1, 1, 1]], fill_value=float('inf'))
-
-        print(cube_out[0].data.fill_value)
-        assert len(cube_out) == 2
-        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result_1))
-        assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result_0))
