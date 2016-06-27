@@ -572,7 +572,7 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
 def _aggregate_gridded(data, kernel, **kwargs):
     from cis.aggregation.aggregation_kernels import aggregation_kernels
     from iris.analysis import Aggregator as IrisAggregator
-    from cis.aggregation.aggregator import GriddedAggregator, aggregate
+    from cis.aggregation.gridded_aggregator import GriddedAggregator, aggregate
 
     if isinstance(kernel, str):
         kernel_inst = aggregation_kernels[kernel]

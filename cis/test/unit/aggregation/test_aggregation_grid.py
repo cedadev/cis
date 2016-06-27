@@ -4,7 +4,7 @@ import datetime
 from nose.tools import assert_equal, with_setup
 
 import numpy as np
-from cis.aggregation.aggregator import categorise_coord_function
+from cis.aggregation.ungridded_aggregator import categorise_coord_function
 from cis.parse_datetime import date_delta_creator
 from cf_units import Unit, CALENDAR_STANDARD
 import iris.coords

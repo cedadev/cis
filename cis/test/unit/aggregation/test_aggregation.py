@@ -7,7 +7,7 @@ from cis.data_io.gridded_data import make_from_cube, GriddedDataList
 from cis.data_io.ungridded_data import UngriddedDataList
 from cis.collocation.col_implementations import mean, max, min, stddev, moments
 from cis.aggregation.aggregation_grid import AggregationGrid
-from cis.aggregation.aggregator import Aggregator
+from cis.aggregation.gridded_aggregator import Aggregator
 from cis.test.utils_for_testing import *
 from cis.aggregation.aggregation_kernels import aggregation_kernels
 from cis.test.util.mock import *

@@ -1,77 +1,62 @@
-import logging
-
-import iris.analysis
-import iris.coords
-import iris.coord_categorisation
-from iris.exceptions import IrisError
-
-from cis.data_io.data_reader import DataReader
-from cis.data_io.data_writer import DataWriter
-from cis.aggregation.aggregator import Aggregator
-from cis.collocation.col_framework import get_kernel
-from cis.exceptions import CISError, InvalidVariableError
-from cis import __version__
-from cis.aggregation.aggregation_kernels import aggregation_kernels as cube_aggregation_kernels
+from abc import ABCMeta, abstractmethod
 
 
-class Aggregate(object):
-    def __init__(self, grid, output_file, data_reader=DataReader(), data_writer=DataWriter()):
-        """
-        Constructor
+def aggregate(aggregator, data, kernel, **kwargs):
+    """
 
-        :param dict grid: A dictionary of dimension_name:AggregationGrid key value pairs.
-        :param output_file: The filename to output the result to
-        :param data_reader: Optional :class:`DataReader` configuration object
-        :param data_writer: Optional :class:`DataWriter` configuration object
-        """
-        self._data_writer = data_writer
-        self._data_reader = data_reader
+    :param Aggregator aggregator: The aggregator class to instantiate
+    :param CommonData or CommonDataList data: The data to aggregate
+    :param cis.collocation.col_framework.Kernel or iris.Analysis.Aggregator kernel:
+    :param kwargs:
+    :return:
+    """
+    from cis import __version__
+
+    aggregator = aggregator(data, kwargs)
+    data = aggregator.aggregate_ungridded(kernel)
+
+    # TODO Tidy up output of grid in the history
+    history = "Aggregated using CIS version " + __version__ + \
+              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
+              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
+              "\n using new grid: " + str(kwargs) + \
+              "\n with kernel: " + kernel + "."
+    data.add_history(history)
+
+    return data
+
+
+class Aggregator(object):
+    """
+    Class which provides a method for performing collocation. This just defines the interface which
+    the subclasses must implement.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, data, grid):
+        self.data = data
         self._grid = grid
-        self._output_file = output_file
 
-    def _create_aggregator(self, data, grid):
-        return Aggregator(data, grid)
+    @abstractmethod
+    def aggregate(self, kernel):
+        pass
 
-    def aggregate(self, variables, filenames, product=None, kernel=None):
-        """
-        Aggregate the given variables based on the initialised grid
+    def get_grid(self, coord):
+        from cis.utils import guess_coord_axis
+        grid = None
+        guessed_axis = guess_coord_axis(coord)
+        if coord.name() in self._grid:
+            grid = self._grid.pop(coord.name())
+        elif hasattr(coord, 'var_name') and coord.var_name in self._grid:
+            grid = self._grid.pop(coord.var_name)
+        elif coord.standard_name in self._grid:
+            grid = self._grid.pop(coord.standard_name)
+        elif coord.long_name in self._grid:
+            grid = self._grid.pop(coord.long_name)
+        elif guessed_axis is not None:
+            if guessed_axis in self._grid:
+                grid = self._grid.pop(guessed_axis)
+            elif guessed_axis.lower() in self._grid:
+                grid = self._grid.pop(guessed_axis.lower())
 
-        :param variables: One or more variables to read from the files
-        :type variables: string or list
-        :param filenames: One or more filenames of the files to read
-        :type filenames: string or list
-        :param str product: Name of data product to use (optional)
-        :param str kernel: Name of kernel to use (the default is 'moments')
-        """
-        # Set the default kernel here rather than in the signature as the input_group dict passes None by default
-        kernel_name = kernel or 'moments'
-        # Read the input data - the parser limits the number of data groups to one for this command.
-        try:
-            # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
-            # the specified files.
-            logging.info("Reading data for variables: %s", variables)
-            data = self._data_reader.read_data_list(filenames, variables, product)
-        except (IrisError, InvalidVariableError) as e:
-            raise CISError("There was an error reading in data: \n" + str(e))
-        except IOError as e:
-            raise CISError("There was an error reading one of the files: \n" + str(e))
-
-        aggregator = self._create_aggregator(data, self._grid)
-
-        if isinstance(data, iris.cube.CubeList):
-            kernel_inst = cube_aggregation_kernels[kernel_name]
-            data = aggregator.aggregate_gridded(kernel_inst)
-        else:
-            kernel_class = get_kernel(kernel_name)
-            kernel_inst = kernel_class()
-            data = aggregator.aggregate_ungridded(kernel_inst)
-
-        # TODO Tidy up output of grid in the history
-        history = "Aggregated using CIS version " + __version__ + \
-                  "\n variables: " + str(variables) + \
-                  "\n from files: " + str(filenames) + \
-                  "\n using new grid: " + str(self._grid) + \
-                  "\n with kernel: " + kernel_name + "."
-        data.add_history(history)
-
-        self._data_writer.write_data(data, self._output_file)
+        return grid, guessed_axis

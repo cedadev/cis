@@ -1,206 +1,20 @@
 import logging
-from abc import ABCMeta, abstractmethod
-
-import datetime
-
-# TODO: Make these imports more local
-import iris.coord_categorisation
-import iris.analysis.cartography
-from iris.coords import DimCoord
+from cis.aggregation.aggregate import Aggregator
 import numpy as np
+from datetime import datetime
 
-from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
-from cis.subsetting.subset import _fix_non_circular_limits, _convert_datetime_to_coord_unit
-from cis.utils import isnan, guess_coord_axis
-from cis.exceptions import ClassNotFoundError, CoordinateNotFoundError
-from cis.aggregation.aggregation_kernels import MultiKernel
-from cis.data_io.gridded_data import GriddedDataList
-from functools import reduce
-
-
-def aggregate(aggregator, data, kernel, **kwargs):
-    """
-
-    :param Aggregator aggregator: The aggregator class to instantiate
-    :param CommonData or CommonDataList data: The data to aggregate
-    :param cis.collocation.col_framework.Kernel or iris.Analysis.Aggregator kernel:
-    :param kwargs:
-    :return:
-    """
-    from cis import __version__
-
-    aggregator = aggregator(data, kwargs)
-    data = aggregator.aggregate_ungridded(kernel)
-
-    # TODO Tidy up output of grid in the history
-    history = "Aggregated using CIS version " + __version__ + \
-              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
-              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
-              "\n using new grid: " + str(kwargs) + \
-              "\n with kernel: " + kernel + "."
-    data.add_history(history)
-
-    return data
-
-
-class Aggregator(object):
-    """
-    Class which provides a method for performing collocation. This just defines the interface which
-    the subclasses must implement.
-    """
-    __metaclass__ = ABCMeta
-
-    def __init__(self, data, grid):
-        self.data = data
-        self._grid = grid
-
-
-    @abstractmethod
-    def aggregate(self):
-        pass
-
-#TODO: Check which methods belong to which class - maybe split into separate modules
 
 class UngriddedAggregator(Aggregator):
-
-    @staticmethod
-    def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN):
-        import operator
-
-        # First calculate our new shape and dims
-        dims_to_collapse = sorted(dims_to_collapse)
-        end_size = reduce(operator.mul, (coord.shape[dim] for dim in dims_to_collapse))
-        untouched_dims = list(set(range(coord.ndim)) - set(dims_to_collapse))
-        untouched_shape = [coord.shape[dim] for dim in untouched_dims]
-        new_shape = untouched_shape + [end_size]
-        dims = untouched_dims + dims_to_collapse
-
-        # Then reshape the data so that the dimensions being aggregated
-        # over are grouped 'at the end' (i.e. axis=-1).
-        unrolled_data = np.transpose(coord.points, dims).reshape(new_shape)
-
-        new_points = kernel.aggregate(unrolled_data, axis=-1)
-        new_coord = coord.copy(points=new_points)
-        return new_coord
-
-    @staticmethod
-    def _calc_new_dims(coord_dims, dims_to_collapse):
-        """
-            Calculate the new dimensions for the coordinate.
-        :param coord_dims: the original dimensions
-        :param dims_to_collapse: The dimensions which are being collapsed over
-        :return: The new coordinates which the coord will take on the collapsed cube
-        """
-        new_dims = []
-        # For each original dimension subtract one for every collapsed coordinate which came before it.
-        # TODO: There must be a cleaner way to do this...
-        for d in coord_dims:
-            new_d = d
-            for dc in dims_to_collapse:
-                if d > dc:
-                    new_d -= 1
-            # If the dimension is one being collapsed then we don't include it in the new dimensions
-            if d not in dims_to_collapse:
-                new_dims.append(new_d)
-
-        return new_dims
-
-    @staticmethod
-    def _update_aux_factories(data, *args, **kwargs):
-        from cis.utils import listify
-        d_list = listify(data)
-        for d in d_list:
-            for factory in d.aux_factories:
-                factory.update(*args, **kwargs)
-
-    def _gridded_full_collapse(self, coords, kernel):
-        from copy import deepcopy
-        ag_args = {}
-        if isinstance(kernel, iris.analysis.WeightedAggregator):
-            # If this is a list we can calculate weights using the first item (all variables should be on
-            # same grid)
-            data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
-            # Weights to correctly calculate areas.
-            ag_args['weights'] = iris.analysis.cartography.area_weights(data_for_weights)
-        elif not isinstance(kernel, iris.analysis.Aggregator):
-            raise ClassNotFoundError('Error - unexpected aggregator type.')
-
-        dims_to_collapse = set()
-        for coord in coords:
-            dims_to_collapse.update(self.data.coord_dims(coord))
-
-        coords_for_partial_collapse = []
-
-        # Collapse any coords that span the dimension(s) being collapsed
-        for coord in self.data.aux_coords:
-            coord_dims = self.data.coord_dims(coord)
-            # If a coordinate has any of the dimensions we wan't to collapse AND has some dimensions we don't...
-            if set(dims_to_collapse).intersection(coord_dims) and \
-                    set(coord_dims).difference(dims_to_collapse):
-                # ... add it to our list of partial coordinates to collapse.
-                coords_for_partial_collapse.append((coord, coord_dims))
-
-        # Before we remove the coordinates which need to be partially collapsed we take a copy of the data. We need
-        #  this so that the aggregation doesn't have any side effects on the input data. This is particularly important
-        #  when using a MultiKernel for which this routine gets called multiple times.
-        data_for_collapse = deepcopy(self.data)
-
-        for coord, _ in coords_for_partial_collapse:
-            data_for_collapse.remove_coord(coord)
-
-        new_data = data_for_collapse.collapsed(coords, kernel, **ag_args)
-
-        for coord, old_dims in coords_for_partial_collapse:
-            collapsed_coord = Aggregator._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
-            new_dims = Aggregator._calc_new_dims(old_dims, dims_to_collapse)
-
-            new_data.add_aux_coord(collapsed_coord, new_dims)
-            # If the coordinate we had to collapse manually was a dependency in an aux factory (which is quite likely)
-            #  then we need to put it back in and fix the factory, this will update any missing dependencies.
-            self._update_aux_factories(new_data, None, collapsed_coord)
-
-        return new_data
-
-    def aggregate(self, kernel):
-        # Make sure all coordinate have bounds - important for weighting and aggregating
-        # Only try and guess bounds on Dim Coords
-        for coord in self.data.coords(dim_coords=True):
-            if not coord.has_bounds() and len(coord.points) > 1:
-                coord.guess_bounds()
-                logging.warning("Creating guessed bounds as none exist in file")
-                new_coord_number = self.data.coord_dims(coord)
-                self.data.remove_coord(coord.name())
-                self.data.add_dim_coord(coord, new_coord_number)
-        coords = []
-        for coord in self.data.coords():
-            grid, guessed_axis = self.get_grid(coord)
-
-            if grid is not None:
-                if isnan(grid.delta):
-                    logging.info('Aggregating on ' + coord.name() + ', collapsing completely and using ' +
-                                 kernel.cell_method + ' kernel.')
-                    coords.append(coord)
-                else:
-                    raise NotImplementedError("Aggregation using partial collapse of "
-                                              "coordinates is not supported for GriddedData")
-
-        output = GriddedDataList([])
-        if isinstance(kernel, MultiKernel):
-            for sub_kernel in kernel.sub_kernels:
-                sub_kernel_out = self._gridded_full_collapse(coords, sub_kernel)
-                output.append_or_extend(sub_kernel_out)
-        else:
-            output.append_or_extend(self._gridded_full_collapse(coords, kernel))
-        return output
-
-
-class GriddedAggregator(Aggregator):
 
     def aggregate(self, kernel):
         """
         Performs aggregation for ungridded data by first generating a new grid, converting it into a cube, then
         collocating using the appropriate kernel and a cube cell constraint
         """
+        from cis.exceptions import CoordinateNotFoundError
+        from cis.utils import isnan
+        from iris.cube import Cube
+        from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
         new_cube_coords = []
         new_cube_shape = []
 
@@ -211,6 +25,7 @@ class GriddedAggregator(Aggregator):
             if grid is None:
                 new_coord = self._make_fully_collapsed_coord(coord)
             if grid is not None and isnan(grid.delta):
+                # TODO: Remove this isnan - the delta should just be None if not specified
                 # Issue a warning and then still collapse fully
                 logging.warning('Coordinate ' + guessed_axis + ' was given without a grid. No need to specify '
                                 'coordinates for complete collapse, all coordinates without a grid specified are '
@@ -227,7 +42,7 @@ class GriddedAggregator(Aggregator):
                                           "name.".format("' or '".join(list(self._grid.keys()))))
 
         dummy_data = np.reshape(np.arange(int(np.prod(new_cube_shape))) + 1.0, tuple(new_cube_shape))
-        aggregation_cube = iris.cube.Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
+        aggregation_cube = Cube(dummy_data, dim_coords_and_dims=new_cube_coords)
 
         collocator = GeneralGriddedCollocator()
         constraint = BinnedCubeCellOnlyConstraint()
@@ -279,6 +94,7 @@ class GriddedAggregator(Aggregator):
         :param coord:
         :return:
         """
+        from iris.coords import DimCoord
         cell_start, cell_end, cell_centre = self._get_coord_start_end_centre(coord)
         cell_points = np.array([cell_centre])
         cell_bounds = np.array([[-np.inf, np.inf]])
@@ -298,8 +114,10 @@ class GriddedAggregator(Aggregator):
         :param guessed_axis: String identifier of the axis to which this coordinate belongs (e.g. 'T', 'X')
         :return: DimCoord
         """
+        from cis.subsetting.subset import _convert_datetime_to_coord_unit, _fix_non_circular_limits
+        from iris.coords import DimCoord
         from cis.time_util import PartialDateTime
-        if isinstance(grid.start, datetime.datetime):
+        if isinstance(grid.start, datetime):
             # Ensure that the limits are date/times.
             grid_start = _convert_datetime_to_coord_unit(coord, grid.start)
             grid_end = _convert_datetime_to_coord_unit(coord, grid.end)
@@ -347,31 +165,11 @@ class GriddedAggregator(Aggregator):
         centre = start + (end - start) / 2.0
         return start, end, centre
 
-    def get_grid(self, coord):
-
-        grid = None
-        guessed_axis = guess_coord_axis(coord)
-        if coord.name() in self._grid:
-            grid = self._grid.pop(coord.name())
-        elif hasattr(coord, 'var_name') and coord.var_name in self._grid:
-            grid = self._grid.pop(coord.var_name)
-        elif coord.standard_name in self._grid:
-            grid = self._grid.pop(coord.standard_name)
-        elif coord.long_name in self._grid:
-            grid = self._grid.pop(coord.long_name)
-        elif guessed_axis is not None:
-            if guessed_axis in self._grid:
-                grid = self._grid.pop(guessed_axis)
-            elif guessed_axis.lower() in self._grid:
-                grid = self._grid.pop(guessed_axis.lower())
-
-        return grid, guessed_axis
-
 
 def add_year_midpoint(dt_object, years):
     if not isinstance(years, int):
         raise TypeError
-    if not isinstance(dt_object, datetime.datetime):
+    if not isinstance(dt_object, datetime):
         raise TypeError
 
     new_month = dt_object.month + 6 * (years % 2)
@@ -383,9 +181,10 @@ def add_year_midpoint(dt_object, years):
 
 
 def add_month_midpoint(dt_object, months):
+    from datetime import timedelta
     if not isinstance(months, int):
         raise TypeError
-    if not isinstance(dt_object, datetime.datetime):
+    if not isinstance(dt_object, datetime):
         raise TypeError
 
     new_month = dt_object.month + months // 2
@@ -396,8 +195,7 @@ def add_month_midpoint(dt_object, months):
     dt_object = dt_object.replace(year=new_year, month=new_month)
 
     if months % 2 != 0:
-        dt_object += datetime.timedelta(days=14, seconds=0, microseconds=0, milliseconds=0,
-                                        minutes=0, hours=0, weeks=0)
+        dt_object += timedelta(days=14, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0)
 
     return dt_object
 
@@ -412,7 +210,8 @@ def month_past_end_of_year(month, year):
 
 
 def aggregation_grid_array(start, end, delta, is_time, coordinate):
-    from cis.subsetting.subset import _convert_coord_unit_to_datetime
+    from cis.subsetting.subset import _convert_coord_unit_to_datetime, _convert_datetime_to_coord_unit
+    from datetime import timedelta
     if is_time:
         start_dt = _convert_coord_unit_to_datetime(coordinate, start)
         end_dt = _convert_coord_unit_to_datetime(coordinate, end)
@@ -425,7 +224,7 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
         if delta.month > 0:
             start_dt = add_month_midpoint(start_dt, delta.month)
 
-        dt = datetime.timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
+        dt = timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
                                 minutes=delta.minute, hours=delta.hour, weeks=0)
 
         start_dt += dt / 2
@@ -445,8 +244,8 @@ def aggregation_grid_array(start, end, delta, is_time, coordinate):
             try:
                 new_time = new_time.replace(year=new_year, month=new_month)
             except ValueError:
-                new_time += datetime.timedelta(days=28)
-            new_time += datetime.timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
+                new_time += timedelta(days=28)
+            new_time += timedelta(days=delta.day, seconds=delta.second, microseconds=0, milliseconds=0,
                                            minutes=delta.minute, hours=delta.hour, weeks=0)
 
         new_time_grid = np.array(new_time_grid)

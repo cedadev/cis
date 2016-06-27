@@ -355,6 +355,7 @@ def get_eval_datagroups(datagroups, parser):
 
 
 def get_aggregate_grid(aggregategrid, parser):
+    # TODO: This should just return a dict of lists
     """
     :param aggregategrid: List of aggregate grid specifications
     :param parser:        The parser used to report errors

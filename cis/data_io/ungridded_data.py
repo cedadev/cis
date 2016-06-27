@@ -626,7 +626,7 @@ class UngriddedData(LazyData, CommonData):
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
         """
-        from cis.aggregation.aggregator import aggregate, Aggregator
+        from cis.aggregation.gridded_aggregator import aggregate, Aggregator
         pass
         # TODO
 
@@ -1017,6 +1017,6 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
 # TODO: Add calls to this method above
 
 def _aggregate_ungridded(data, kernel, **kwargs):
-    from cis.aggregation.aggregator import UngriddedAggregator, aggregate
+    from cis.aggregation.gridded_aggregator import UngriddedAggregator, aggregate
     from cis.collocation.col import get_kernel
     return aggregate(UngriddedAggregator, data, get_kernel(kernel), **kwargs)
