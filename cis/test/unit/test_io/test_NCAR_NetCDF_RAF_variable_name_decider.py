@@ -437,6 +437,7 @@ class TestDataReader(TestCase):
             expected_var: time_dims,
             "extra_dim": [time_dims[0], "aux_coord"],
             "two_extra": [time_dims[0], "aux_coord", "another_aux"],
+            "aux_coord": ["aux_coord"],
         }
         attributes = {"Time_Coordinate": time_var,
                       "Station_Lat": "27.1",
@@ -447,6 +448,34 @@ class TestDataReader(TestCase):
 
         assert_that(decider.find_auxiliary_coordinate(expected_var), is_(None))
         assert_that(decider.find_auxiliary_coordinate('extra_dim'), is_('aux_coord'))
+
+        # Don't return variables with more than one aux coord (which would have to be more than 2D)
+        with self.assertRaises(InvalidVariableError) as cm:
+            decider.find_auxiliary_coordinate('two_extra')
+
+    def test_GIVEN_valid_file_w_var_with_unnamed_aux_WHEN_find_auxiliary_coordinates_THEN_returns_aux_coords(self):
+        """
+        Test if we can find the right variable even if the auxiliary dimension has a different name
+        """
+        time_dims = ["Time"]
+        time_var = "time_var"
+        expected_var = "good_shape"
+        variable_dimensions = {
+            time_var: time_dims,
+            expected_var: time_dims,
+            "extra_dim": [time_dims[0], "aux_coord"],
+            "two_extra": [time_dims[0], "aux_coord", "another_aux"],
+            "aux_var": ["aux_coord"]
+        }
+        attributes = {"Time_Coordinate": time_var,
+                      "Station_Lat": "27.1",
+                      "Station_Lon": "10"}
+
+        variables = [{key: self.MockVar(val) for key, val in list(variable_dimensions.items())}]
+        decider = NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
+
+        assert_that(decider.find_auxiliary_coordinate(expected_var), is_(None))
+        assert_that(decider.find_auxiliary_coordinate('extra_dim'), is_('aux_var'))
 
         # Don't return variables with more than one aux coord (which would have to be more than 2D)
         with self.assertRaises(InvalidVariableError) as cm:

@@ -229,16 +229,32 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             = coordinates_vars
 
     def find_auxiliary_coordinate(self, variable):
+        """
+        Find the variable name of an auxiliary coordinate for the given variable (if there is one).
+
+        :param str variable: The data variable we're checking for any auxiliary coordinates
+        :return str or None: The name of the variable holding the auxiliary coordinate or None
+        """
+        aux_coord_name = None
         dim_coord_names = [self.latitude_variable_name, self.longitude_variable_name,
                            self.altitude_variable_name, self.pressure_variable_name] + list(self.time_dimensions)
+        # Find the *dimension* which corresponds to the auxiliary coordinate
         aux_coords = [dim for dim in self._variable_dimensions[0][variable] if dim not in dim_coord_names]
         if len(aux_coords) > 1:
             raise InvalidVariableError("CIS currently only supports reading data variables with one auxilliary "
                                        "coordinate")
-        elif len(aux_coords) == 0:
-            return None
-        else:
-            return aux_coords[0]
+        elif len(aux_coords) == 1:
+            # If there is also a variable named after that dimension then this is the variable we're after
+            if aux_coords[0] in self._variable_dimensions[0]:
+                aux_coord_name = aux_coords[0]
+            # Otherwise we need to look through all the variables and choose the first variable whose dimension is only
+            #  the auxiliary dimension.
+            else:
+                for v, dims in self._variable_dimensions[0].items():
+                    if dims == [aux_coords[0]]:
+                        aux_coord_name = v
+                        break
+        return aux_coord_name
 
     def get_variable_names_which_have_time_coord(self):
         variables = []
