@@ -633,8 +633,6 @@ class UngriddedCoordinates(CommonData):
         else:
             raise ValueError("Invalid Coords type")
         self._post_process()
-        all_coords = self._coords.find_standard_coords()
-        self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
 
     def _post_process(self):
         """
@@ -656,6 +654,11 @@ class UngriddedCoordinates(CommonData):
                 coord.data = numpy.ma.masked_array(coord.data_flattened, mask=combined_mask).compressed()
                 coord.update_shape()
                 coord.update_range()
+
+    @property
+    def coords_flattened(self):
+        all_coords = self.coords().find_standard_coords()
+        return [(c.data_flattened if c is not None else None) for c in all_coords]
 
     @property
     def history(self):
