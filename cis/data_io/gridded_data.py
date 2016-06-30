@@ -10,11 +10,21 @@ from cis.data_io.hyperpoint_view import GriddedHyperPointView
 
 
 def load_cube(*args, **kwargs):
+    from iris.exceptions import MergeError, ConcatenateError
     # Don't automatically promote variables which define reference surfaces for dimensionless vertical coordinates
     # as independent Cubes - it's just confusing for users I think
     iris.FUTURE.netcdf_promote = False
 
-    iris_cube = iris.load_cube(*args, **kwargs)
+    cubes = iris.load(*args, **kwargs)
+    try:
+        iris_cube = cubes.merge_cube()
+    except MergeError as e:
+        logging.warn("Unable to merge cubes on load: \n {}\nAttempting to concatenate instead.".format(e))
+        try:
+            iris_cube = cubes.concatenate_cube()
+        except ConcatenateError as e:
+            logging.error("Unable to concatenate cubes on load: \n {}".format(e))
+            raise ValueError("Unable to create a single cube from arguments given: {}".format(args))
     return make_from_cube(iris_cube)
 
 
