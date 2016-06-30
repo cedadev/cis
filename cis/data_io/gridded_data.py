@@ -19,7 +19,7 @@ def load_cube(*args, **kwargs):
     try:
         iris_cube = cubes.merge_cube()
     except MergeError as e:
-        logging.warn("Unable to merge cubes on load: \n {}\nAttempting to concatenate instead.".format(e))
+        logging.info("Unable to merge cubes on load: \n {}\nAttempting to concatenate instead.".format(e))
         try:
             iris_cube = cubes.concatenate_cube()
         except ConcatenateError as e:
