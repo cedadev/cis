@@ -230,7 +230,6 @@ class GriddedUngriddedCollocator(Collocator):
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
                                                       self.var_standard_name, self.var_units)
         sample_points_count = len(sample_points)
-        values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
         log_memory_profile("GriddedUngriddedCollocator after output array creation")
 
         logging.info("    {} sample points".format(sample_points_count))
@@ -247,18 +246,19 @@ class GriddedUngriddedCollocator(Collocator):
                 self.hybrid_coord = 'air_pressure'
 
             # TODO: bounds_error and fill_value control the extrapolation between them - I'll need to think about them
-            self.interpolator = RegularGridInterpolator([data.coord(c).data for c in coord_names], data.data,
+            self.interpolator = RegularGridInterpolator([data.coord(c).data for c in coord_names], sample_points,
                                                         method=kernel, bounds_error=False, fill_value=self.fill_value)
 
         # Return the data from the result of interpolating over those coordinates which are on the cube.
         if self.hybrid_coord:
-            slice = self.interpolator(sample_points)
+            slice = self.interpolator(data.data)
             # interp = self.vertical_interp.interpolator(slice, [self.hybrid_coord])
             # values = interp._points([getattr(point, self.hybrid_coord)], slice.data)
-            interp = RegularGridInterpolator(data.coord(self.hybrid_coord).data, slice, method=kernel)
-            values = interp(sample_points)
+            # TODO: This should pass only the altitude sample points somehow...
+            interp = RegularGridInterpolator(data.coord(self.hybrid_coord).data, sample_points, method=kernel)
+            values = interp(slice)
         else:
-            values = self.interpolator(sample_points)
+            values = self.interpolator(data.data)
             # values = self.interpolator._points([getattr(point, c) for c in self.coord_names], data.data)
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
