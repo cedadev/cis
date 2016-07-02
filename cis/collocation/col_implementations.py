@@ -165,6 +165,7 @@ class GriddedUngriddedCollocator(Collocator):
         self.var_long_name = var_long_name
         self.var_units = var_units
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
+        self.interpolator = None
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -240,26 +241,18 @@ class GriddedUngriddedCollocator(Collocator):
             for coord_name, val in sample_points[0].coord_tuple:
                 if len(data.coords(coord_name, dim_coords=True)) > 0:
                     coord_names.append(coord_name)
+
             if len(data.coords('altitude', dim_coords=False)) > 0 and sample_points[0].altitude is not None:
-                self.hybrid_coord = 'altitude'
+                hybrid_coord = data.coords('altitude', dim_coords=False).points
             elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample_points[0].air_pressure is not None:
-                self.hybrid_coord = 'air_pressure'
+                hybrid_coord = data.coords('air_pressure', dim_coords=False).points
+            else:
+                hybrid_coord = None
 
-            # TODO: bounds_error and fill_value control the extrapolation between them - I'll need to think about them
-            self.interpolator = RegularGridInterpolator([data.coord(c).data for c in coord_names], sample_points,
-                                                        method=kernel, bounds_error=False, fill_value=self.fill_value)
+            self.interpolator = RegularGridInterpolator([data.coord(c).points for c in coord_names], sample_points,
+                                                        hybrid_coord=hybrid_coord, method=kernel)
 
-        # Return the data from the result of interpolating over those coordinates which are on the cube.
-        if self.hybrid_coord:
-            slice = self.interpolator(data.data)
-            # interp = self.vertical_interp.interpolator(slice, [self.hybrid_coord])
-            # values = interp._points([getattr(point, self.hybrid_coord)], slice.data)
-            # TODO: This should pass only the altitude sample points somehow...
-            interp = RegularGridInterpolator(data.coord(self.hybrid_coord).data, sample_points, method=kernel)
-            values = interp(slice)
-        else:
-            values = self.interpolator(data.data)
-            # values = self.interpolator._points([getattr(point, c) for c in self.coord_names], data.data)
+        values = self.interpolator(data.data, fill_value=self.fill_value)
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
