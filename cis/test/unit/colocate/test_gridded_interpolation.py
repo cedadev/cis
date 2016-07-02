@@ -144,8 +144,6 @@ class TestRegularGridInterpolator(TestCase):
         assert_raises(ValueError, RegularGridInterpolator, points, values)
         points = [(0., .5, .75, 1.), (0., .5, 1.)]
         assert_raises(ValueError, RegularGridInterpolator, points, values)
-        points = [(0., .5, 1.), (0., .5, 1.), (0., .5, 1.)]
-        assert_raises(ValueError, RegularGridInterpolator, points, values)
         points = [(0., .5, 1.), (0., .5, 1.)]
         assert_raises(ValueError, RegularGridInterpolator, points, values,
                       method="undefmethod")
@@ -158,15 +156,12 @@ class TestRegularGridInterpolator(TestCase):
         # This is actually an error on creation now
         sample = np.asarray([[0., 0., 0.], [1., 1., 1.]])
         assert_raises(ValueError, RegularGridInterpolator, points, sample)
-        # As is this
-        sample = np.asarray([[0., 0., 0., 0.], [1., 1., 1., 1.1]])
-        assert_raises(ValueError, RegularGridInterpolator, points, sample)
 
     def test_out_of_bounds_extrap(self):
         points, values = self._get_sample_4d()
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [21, 2.1, -1.1, -11], [2.1, 2.1, -1.1, -1.1]])
-        interp = RegularGridInterpolator(points, sample, bounds_error=False)
+        interp = RegularGridInterpolator(points, sample)
         wanted = np.asarray([0., 1111., 11., 11.])
         assert_array_almost_equal(interp(values, method="nearest", fill_value=None), wanted)
         wanted = np.asarray([-111.1, 1222.1, -11068., -1186.9])
@@ -177,7 +172,7 @@ class TestRegularGridInterpolator(TestCase):
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [21, 2.1, -1.1, -11], [2.1, 2.1, -1.1, -1.1]])
 
-        interp = RegularGridInterpolator(points, sample, bounds_error=False)
+        interp = RegularGridInterpolator(points, sample)
         wanted = np.asarray([0., 11., 11., 11.])
         assert_array_almost_equal(interp(values, method="nearest", fill_value=None), wanted)
         wanted = np.asarray([-12.1, 133.1, -1069., -97.9])
@@ -188,14 +183,14 @@ class TestRegularGridInterpolator(TestCase):
 
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [2.1, 2.1, -1.1, -1.1]])
-        interp = RegularGridInterpolator(points, sample, bounds_error=False)
+        interp = RegularGridInterpolator(points, sample)
         wanted = np.asarray([np.nan, np.nan, np.nan])
         assert_array_almost_equal(interp(values, method="nearest", fill_value=np.nan), wanted)
         assert_array_almost_equal(interp(values, method="linear", fill_value=np.nan), wanted)
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                              [0.5, 0.5, .5, .5]])
         wanted = np.asarray([1001.1, 846.2, 555.5])
-        interp = RegularGridInterpolator(points, sample, bounds_error=False)
+        interp = RegularGridInterpolator(points, sample)
         assert_array_almost_equal(interp(values, fill_value=np.nan), wanted)
 
     def test_nearest_compare_qhull(self):

@@ -68,10 +68,6 @@ class RegularGridInterpolator(object):
         The method of interpolation to perform. Supported are "linear" and
         "nearest". This parameter will become the default for the object's
         ``__call__`` method. Default is "linear".
-    bounds_error : bool, optional
-        If True, when interpolated values are requested outside of the
-        domain of the input data, a ValueError is raised.
-        If False, then `fill_value` is used.
     fill_value : number, optional
         If provided, the value to use for points outside of the
         interpolation domain. If None, values outside
@@ -126,11 +122,10 @@ class RegularGridInterpolator(object):
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
-    def __init__(self, coords, points, hybrid_coord=None, method="linear", bounds_error=True):
+    def __init__(self, coords, points, hybrid_coord=None, method="linear"):
         if method not in ["linear", "nearest"]:
             raise ValueError("Method '%s' is not defined" % method)
         self.method = method
-        self.bounds_error = bounds_error
 
         for i, c in enumerate(coords):
             if not np.all(np.diff(c) > 0.):
@@ -139,26 +134,18 @@ class RegularGridInterpolator(object):
             if not np.asarray(c).ndim == 1:
                 raise ValueError("The points in dimension %d must be "
                                  "1-dimensional" % i)
-        grid = tuple([np.asarray(c) for c in coords])
+        self.grid = tuple([np.asarray(c) for c in coords])
 
-        ndim = len(grid)
+        ndim = len(self.grid)
 
         points = _ndim_coords_from_arrays(points, ndim=ndim)
-        if points.shape[-1] != len(grid):
+        if points.shape[-1] != len(self.grid):
             raise ValueError("The requested sample points xi have dimension "
                              "%d, but this RegularGridInterpolator has "
                              "dimension %d" % (points.shape[1], ndim))
 
         self.xi_shape = points.shape
         points = points.reshape(-1, self.xi_shape[-1])
-
-        # TODO Think about this - I don't want it failing if one point is out of bounds. It's also an expensive check
-        # if self.bounds_error:
-        #     for i, p in enumerate(points.T):
-        #         if not np.logical_and(np.all(grid[i][0] <= p),
-        #                               np.all(p <= grid[i][-1])):
-        #             raise ValueError("One of the requested xi is out of bounds "
-        #                              "in dimension %d" % i)
 
         if hybrid_coord is not None:
             # Find the indices and weights of altitude columns
@@ -181,7 +168,7 @@ class RegularGridInterpolator(object):
                 self.out_of_bounds[i] += vert_out_of_bounds
 
         else:
-            self.indices, self.norm_distances, self.out_of_bounds = self._find_indices(points.T, grid)
+            self.indices, self.norm_distances, self.out_of_bounds = self._find_indices(points.T, self.grid)
 
     def __call__(self, values, method=None, fill_value=np.nan):
         """
@@ -228,7 +215,8 @@ class RegularGridInterpolator(object):
             result = self._evaluate_linear(values)
         elif method == "nearest":
             result = self._evaluate_nearest(values)
-        if not self.bounds_error and self.fill_value is not None:
+
+        if self.fill_value is not None:
             result[self.out_of_bounds] = self.fill_value
 
         return result.reshape(self.xi_shape[:-1] + values.shape[len(self.grid):])
@@ -269,8 +257,8 @@ class RegularGridInterpolator(object):
             indices.append(i)
             norm_distances.append((x - coord[i]) /
                                   (coord[i + 1] - coord[i]))
-            if not self.bounds_error:
-                out_of_bounds += x < coord[0]
-                out_of_bounds += x > coord[-1]
+
+            out_of_bounds += x < coord[0]
+            out_of_bounds += x > coord[-1]
         return indices, norm_distances, out_of_bounds
 
