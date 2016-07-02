@@ -60,10 +60,10 @@ class RegularGridInterpolator(object):
     *nearest*) may be chosen at each evaluation.
     Parameters
     ----------
-    points : tuple of ndarray of float, with shapes (m1, ), ..., (mn, )
-        The points defining the regular grid in n dimensions.
-    xi : ndarray of shape (..., ndim)
-        The coordinates to sample the gridded data at
+    coords : tuple of ndarray of float, with shapes (m1, ), ..., (mn, )
+        The coords defining the regular grid in n dimensions.
+    points : ndarray of shape (..., ndim)
+        The points to sample the gridded data at
     method : str, optional
         The method of interpolation to perform. Supported are "linear" and
         "nearest". This parameter will become the default for the object's
@@ -126,40 +126,62 @@ class RegularGridInterpolator(object):
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
-    def __init__(self, points, xi, method="linear", bounds_error=True):
+    def __init__(self, coords, points, hybrid_coord=None, method="linear", bounds_error=True):
         if method not in ["linear", "nearest"]:
             raise ValueError("Method '%s' is not defined" % method)
         self.method = method
         self.bounds_error = bounds_error
 
-        for i, p in enumerate(points):
-            if not np.all(np.diff(p) > 0.):
+        for i, c in enumerate(coords):
+            if not np.all(np.diff(c) > 0.):
                 raise ValueError("The points in dimension %d must be strictly "
                                  "ascending" % i)
-            if not np.asarray(p).ndim == 1:
+            if not np.asarray(c).ndim == 1:
                 raise ValueError("The points in dimension %d must be "
                                  "1-dimensional" % i)
-        self.grid = tuple([np.asarray(p) for p in points])
+        grid = tuple([np.asarray(c) for c in coords])
 
-        ndim = len(self.grid)
+        ndim = len(grid)
 
-        xi = _ndim_coords_from_arrays(xi, ndim=ndim)
-        if xi.shape[-1] != len(self.grid):
+        points = _ndim_coords_from_arrays(points, ndim=ndim)
+        if points.shape[-1] != len(grid):
             raise ValueError("The requested sample points xi have dimension "
                              "%d, but this RegularGridInterpolator has "
-                             "dimension %d" % (xi.shape[1], ndim))
+                             "dimension %d" % (points.shape[1], ndim))
 
-        self.xi_shape = xi.shape
-        xi = xi.reshape(-1, self.xi_shape[-1])
+        self.xi_shape = points.shape
+        points = points.reshape(-1, self.xi_shape[-1])
 
-        if self.bounds_error:
-            for i, p in enumerate(xi.T):
-                if not np.logical_and(np.all(self.grid[i][0] <= p),
-                                      np.all(p <= self.grid[i][-1])):
-                    raise ValueError("One of the requested xi is out of bounds "
-                                     "in dimension %d" % i)
+        # TODO Think about this - I don't want it failing if one point is out of bounds. It's also an expensive check
+        # if self.bounds_error:
+        #     for i, p in enumerate(points.T):
+        #         if not np.logical_and(np.all(grid[i][0] <= p),
+        #                               np.all(p <= grid[i][-1])):
+        #             raise ValueError("One of the requested xi is out of bounds "
+        #                              "in dimension %d" % i)
 
-        self.indices, self.norm_distances, self.out_of_bounds = self._find_indices(xi.T)
+        if hybrid_coord is not None:
+            # Find the indices and weights of altitude columns
+            # TODO: I think for hybrid altitude coords (as opposed to pressure) I'll have to work out which hybrid
+            #  dimensions to interpolate over (as it doesn't vary with time).
+            self.indices, self.norm_distances, self.out_of_bounds = \
+                self._find_indices(points[:-1].T, hybrid_coord[..., 0])
+
+            # Create a column for the altitude indices and weights
+            self.indices.append(np.zeros(len(points)))
+            self.norm_distances.append(np.zeros(len(points)))
+
+            # Calculate and store the verticlal index and weight for each point
+            # TODO: This could be a bottle-neck for many points, maybe move to Cython?
+            for i, p in enumerate(points.T):
+                vert_index, vert_norm_distance, vert_out_of_bounds = \
+                    self._find_indices(p[-1].T, hybrid_coord[[self.indices[i]]])
+                self.indices[-1][i] = vert_index
+                self.norm_distances[-1][i] = vert_norm_distance
+                self.out_of_bounds[i] += vert_out_of_bounds
+
+        else:
+            self.indices, self.norm_distances, self.out_of_bounds = self._find_indices(points.T, grid)
 
     def __call__(self, values, method=None, fill_value=np.nan):
         """
@@ -232,23 +254,23 @@ class RegularGridInterpolator(object):
             idx_res.append(np.where(yi <= .5, i, i + 1))
         return values[idx_res]
 
-    def _find_indices(self, xi):
+    def _find_indices(self, points, coords):
         # find relevant edges between which xi are situated
         indices = []
         # compute distance to lower edge in unity units
         norm_distances = []
         # check for out of bounds xi
-        out_of_bounds = np.zeros((xi.shape[1]), dtype=bool)
+        out_of_bounds = np.zeros((points.shape[1]), dtype=bool)
         # iterate through dimensions
-        for x, grid in zip(xi, self.grid):
-            i = np.searchsorted(grid, x) - 1
+        for x, coord in zip(points, coords):
+            i = np.searchsorted(coord, x) - 1
             i[i < 0] = 0
-            i[i > grid.size - 2] = grid.size - 2
+            i[i > coord.size - 2] = coord.size - 2
             indices.append(i)
-            norm_distances.append((x - grid[i]) /
-                                  (grid[i + 1] - grid[i]))
+            norm_distances.append((x - coord[i]) /
+                                  (coord[i + 1] - coord[i]))
             if not self.bounds_error:
-                out_of_bounds += x < grid[0]
-                out_of_bounds += x > grid[-1]
+                out_of_bounds += x < coord[0]
+                out_of_bounds += x > coord[-1]
         return indices, norm_distances, out_of_bounds
 
