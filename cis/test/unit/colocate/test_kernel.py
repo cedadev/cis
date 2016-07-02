@@ -676,6 +676,9 @@ class TestMean(unittest.TestCase):
 
 
 class TestLi(unittest.TestCase):
+
+    #TODO: Update these to point to the new collocator
+
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
 

@@ -217,6 +217,25 @@ class TestRegularGridInterpolator(TestCase):
         interp_qhull = LinearNDInterpolator(points_qhull, values_qhull)
         assert_array_almost_equal(interp(values), interp_qhull(sample))
 
+    def test_hybrid_Coord(self):
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.ungridded_data import UngriddedData
+        from cis.data_io.hyperpoint import HyperPoint
+        import datetime as dt
+        cube = make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+
+        interp = RegularGridInterpolator([c.points for c in cube.coords(dim_coords=True)], sample_points,
+                                         hybrid_coord=cube.coords('atmosphere_hybrid_sigma_pressure_coordinate'),
+                                         method='linear')
+        wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
+        assert_array_almost_equal(interp(cube.data, method="nearest", fill_value=None), wanted)
+
     def test_duck_typed_values(self):
         x = np.linspace(0, 2, 5)
         y = np.linspace(0, 1, 7)

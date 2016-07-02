@@ -54,6 +54,7 @@ class GeneralUngriddedCollocator(Collocator):
                        a single value
         :return: A single LazyData object
         """
+        # TODO: I can probably do some tidying up here now that it's only used for ungridded-ungridded
         log_memory_profile("GeneralUngriddedCollocator Initial")
 
         if isinstance(data, list):
@@ -228,8 +229,8 @@ class GriddedUngriddedCollocator(Collocator):
         self.var_long_name = metadata.long_name
         self.var_standard_name = metadata.standard_name
         self.var_units = data.units
-        var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
-                                                      self.var_standard_name, self.var_units)
+        var_set_details = (self.var_name, self.var_long_name,
+                           self.var_standard_name, self.var_units)
         sample_points_count = len(sample_points)
         log_memory_profile("GriddedUngriddedCollocator after output array creation")
 

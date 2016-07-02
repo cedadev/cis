@@ -136,13 +136,17 @@ class RegularGridInterpolator(object):
                                  "1-dimensional" % i)
         self.grid = tuple([np.asarray(c) for c in coords])
 
-        ndim = len(self.grid)
+        if hybrid_coord is None:
+            ndim = len(self.grid)
 
-        points = _ndim_coords_from_arrays(points, ndim=ndim)
-        if points.shape[-1] != len(self.grid):
-            raise ValueError("The requested sample points xi have dimension "
-                             "%d, but this RegularGridInterpolator has "
-                             "dimension %d" % (points.shape[1], ndim))
+            points = _ndim_coords_from_arrays(points, ndim=ndim)
+            if points.shape[-1] != len(self.grid):
+                raise ValueError("The requested sample points xi have dimension "
+                                 "%d, but this RegularGridInterpolator has "
+                                 "dimension %d" % (points.shape[1], ndim))
+        else:
+            pass
+            #TODO: Think about how to calculate ndim coords when there is a hybrid coord
 
         self.xi_shape = points.shape
         points = points.reshape(-1, self.xi_shape[-1])
