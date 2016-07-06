@@ -23,6 +23,40 @@ import itertools
 import numpy as np
 
 
+def interpolate(data, sample, method, fill_value=np.nan):
+    """
+    Interpolate a given GriddedData source onto an UngriddedData sample
+
+     This method should take care of any
+    :param GriddedData data:
+    :param UngriddedData source:
+    :param str method:
+    :return ndarray: Interpolated values
+    """
+    # TODO Finish me! I should either take many gridded objects or allow caching of the interpolator somehow
+    coords = []
+    # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
+    for coord in sample.coords():
+        if len(data.coords(coord.name(), dim_coords=True)) > 0:
+            coords.append(coord.name())
+
+    sample_points = [sample.coord(c).points for c in coords]
+
+    if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude') is not None:
+        hybrid_coord = data.coord('altitude').points
+        sample_points.append(sample.coord("altitude").points)
+    elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure') is not None:
+        hybrid_coord = data.coord('air_pressure').points
+        sample_points.append(sample.coord("air_pressure").points)
+    else:
+        hybrid_coord=None
+
+    interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
+                                     hybrid_coord=hybrid_coord, method=method)
+
+    return interp(data.data, fill_value=fill_value)
+
+
 def _ndim_coords_from_arrays(points, ndim=None):
     """
     Convert a tuple of coordinate arrays to a (..., ndim)-shaped array.
@@ -139,34 +173,35 @@ class RegularGridInterpolator(object):
         if hybrid_coord is None:
             ndim = len(self.grid)
 
-            points = _ndim_coords_from_arrays(points, ndim=ndim)
+            # points = _ndim_coords_from_arrays(points, ndim=ndim)
+            points = np.vstack(points).T
             if points.shape[-1] != len(self.grid):
                 raise ValueError("The requested sample points xi have dimension "
                                  "%d, but this RegularGridInterpolator has "
                                  "dimension %d" % (points.shape[1], ndim))
         else:
-            pass
-            #TODO: Think about how to calculate ndim coords when there is a hybrid coord
+            # TODO: Think about how to calculate ndim coords when there is a hybrid coord
+            ndim = len(self.grid)
+            points = _ndim_coords_from_arrays(points, ndim=ndim)
 
-        self.xi_shape = points.shape
-        points = points.reshape(-1, self.xi_shape[-1])
 
         if hybrid_coord is not None:
             # Find the indices and weights of altitude columns
             # TODO: I think for hybrid altitude coords (as opposed to pressure) I'll have to work out which hybrid
             #  dimensions to interpolate over (as it doesn't vary with time).
-            self.indices, self.norm_distances, self.out_of_bounds = \
-                self._find_indices(points[:-1].T, hybrid_coord[..., 0])
+            # Create an array to store the indices in. The _find_indices method returns a list of arrays but we can
+            #  still unpack these into an array - we need to transpose it later on for the vertical part...
+            self.indices = np.zeros((ndim+1, len(points)), dtype=np.int64)
+            self.indices[:-1, :], self.norm_distances, self.out_of_bounds = \
+                self._find_indices(points[:-1], self.grid)
 
-            # Create a column for the altitude indices and weights
-            self.indices.append(np.zeros(len(points)))
             self.norm_distances.append(np.zeros(len(points)))
 
             # Calculate and store the verticlal index and weight for each point
-            # TODO: This could be a bottle-neck for many points, maybe move to Cython?
+            # TODO: This loop could be a bottle-neck for many points, maybe move to Cython?
             for i, p in enumerate(points.T):
                 vert_index, vert_norm_distance, vert_out_of_bounds = \
-                    self._find_indices(p[-1].T, hybrid_coord[[self.indices[i]]])
+                    self._find_vertical_index(p[-1], hybrid_coord[tuple(self.indices.T[i][:-1])])
                 self.indices[-1][i] = vert_index
                 self.norm_distances[-1][i] = vert_norm_distance
                 self.out_of_bounds[i] += vert_out_of_bounds
@@ -223,7 +258,7 @@ class RegularGridInterpolator(object):
         if self.fill_value is not None:
             result[self.out_of_bounds] = self.fill_value
 
-        return result.reshape(self.xi_shape[:-1] + values.shape[len(self.grid):])
+        return result
 
     def _evaluate_linear(self, values):
         # slice for broadcasting over trailing dimensions in self.values
@@ -252,7 +287,7 @@ class RegularGridInterpolator(object):
         # compute distance to lower edge in unity units
         norm_distances = []
         # check for out of bounds xi
-        out_of_bounds = np.zeros((points.shape[1]), dtype=bool)
+        out_of_bounds = np.zeros((points.shape[1]), dtype=bool) if isinstance(points, np.ndarray) else 0
         # iterate through dimensions
         for x, coord in zip(points, coords):
             i = np.searchsorted(coord, x) - 1
@@ -266,3 +301,13 @@ class RegularGridInterpolator(object):
             out_of_bounds += x > coord[-1]
         return indices, norm_distances, out_of_bounds
 
+    def _find_vertical_index(self, point, coord):
+        i = np.searchsorted(coord, point) - 1
+        if i < 0:
+            i = 0
+        if i > coord.size - 2:
+            i = coord.size - 2
+        norm_distances = ((point - coord[i]) / (coord[i + 1] - coord[i]))
+
+        out_of_bounds = point < coord[0] or point > coord[-1]
+        return i, norm_distances, out_of_bounds

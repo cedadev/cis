@@ -25,11 +25,13 @@ import numpy as np
 from numpy.testing import (assert_array_almost_equal, assert_raises,
                            TestCase, assert_allclose)
 
-from cis.collocation.gridded_interpolation import RegularGridInterpolator
+from cis.collocation.gridded_interpolation import RegularGridInterpolator, interpolate
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
 
 class TestRegularGridInterpolator(TestCase):
+
+    # TODO: I've now broken a lot of these tests, I need to decide wether to keep them or not
     def _get_sample_4d(self):
         # create a 4d grid of 3 points in each dimension
         points = [(0., .5, 1.)] * 4
@@ -217,6 +219,19 @@ class TestRegularGridInterpolator(TestCase):
         interp_qhull = LinearNDInterpolator(points_qhull, values_qhull)
         assert_array_almost_equal(interp(values), interp_qhull(sample))
 
+    def test_2d_cube(self):
+        from cis.test.util.mock import make_square_5x3_2d_cube
+        from cis.data_io.ungridded_data import UngriddedData
+        from cis.data_io.hyperpoint import HyperPoint
+
+        cube = make_square_5x3_2d_cube()
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+
+        values = interpolate(cube, sample_points, 'linear')
+        wanted = np.asarray([8.8, 11.2, 4.8])
+        assert_array_almost_equal(values, wanted)
+
     def test_hybrid_Coord(self):
         from cis.test.util.mock import make_mock_cube
         from cis.data_io.ungridded_data import UngriddedData
@@ -230,11 +245,9 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
 
-        interp = RegularGridInterpolator([c.points for c in cube.coords(dim_coords=True)], sample_points,
-                                         hybrid_coord=cube.coords('atmosphere_hybrid_sigma_pressure_coordinate'),
-                                         method='linear')
+        values = interpolate(cube, sample_points, "linear")
         wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
-        assert_array_almost_equal(interp(cube.data, method="nearest", fill_value=None), wanted)
+        assert_array_almost_equal(values, wanted)
 
     def test_duck_typed_values(self):
         x = np.linspace(0, 2, 5)
