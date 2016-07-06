@@ -238,6 +238,7 @@ class TestRegularGridInterpolator(TestCase):
         from cis.data_io.hyperpoint import HyperPoint
         import datetime as dt
         cube = make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
+        # cube = make_mock_cube()
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),

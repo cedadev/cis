@@ -54,6 +54,9 @@ def interpolate(data, sample, method, fill_value=np.nan):
     interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
                                      hybrid_coord=hybrid_coord, method=method)
 
+    # indices = [[1 1 2 1] [ 0 0 1 0]]
+    # These seem right, so it must be something to do with the vertical interp. The pressure does increase as expected
+    #  so it can't be that...
     return interp(data.data, fill_value=fill_value)
 
 
