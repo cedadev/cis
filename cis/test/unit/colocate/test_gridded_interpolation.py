@@ -273,6 +273,8 @@ class TestRegularGridInterpolator(TestCase):
         interpolator = RegularGridInterpolator(points, xi)
         interpolator(values, fill_value=0.)
 
+    # TODO: Add some tests for data/coords with missing data.
+    # We are probably finding the nearest point with or without missing data, this is fine but needs documenting
 
 class MyValue(object):
     """
