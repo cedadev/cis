@@ -52,15 +52,19 @@ def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=Fa
 
     if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude') is not None:
         hybrid_coord = data.coord('altitude').points
+        hybrid_dims = data.coord_dims(data.coord('altitude'))
         sample_points.append(sample.coord("altitude").points)
     elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure') is not None:
         hybrid_coord = data.coord('air_pressure').points
+        hybrid_dims = data.coord_dims(data.coord('air_pressure'))
         sample_points.append(sample.coord("air_pressure").points)
     else:
-        hybrid_coord=None
+        hybrid_coord = None
+        hybrid_dims = None
 
     interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
-                                     hybrid_coord=hybrid_coord, vertical_method=vertical_method)
+                                     hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims,
+                                     vertical_method=vertical_method)
 
     return interp(data.data, method=method, fill_value=fill_value)
 
@@ -159,7 +163,7 @@ class RegularGridInterpolator(object):
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
-    def __init__(self, coords, points, hybrid_coord=None, vertical_method="linear"):
+    def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, vertical_method="linear"):
         if vertical_method not in ["linear", "nearest"]:
             raise ValueError("Method '%s' is not defined" % vertical_method)
 
@@ -190,19 +194,18 @@ class RegularGridInterpolator(object):
             # Find the indices and weights of altitude columns
             # TODO: I think for hybrid altitude coords (as opposed to pressure) I'll have to work out which hybrid
             #  dimensions to interpolate over (as it doesn't vary with time).
-            # Create an array to store the indices in. The _find_indices method returns a list of arrays but we can
-            #  still unpack these into an array - we need to transpose it later on for the vertical part...
-            self.indices = np.zeros((ndim+1, len(points)), dtype=np.int64)
-            self.indices[:-1, :], self.norm_distances, self.out_of_bounds = \
-                self._find_indices(points[:-1], self.grid)
 
-            self.norm_distances.append(np.zeros(len(points)))
+            self.indices, self.norm_distances, self.out_of_bounds = \
+                self._find_indices(points[:-1], self.grid)
 
             # Find all of the interpolated vertical columns (one for each point)
             if vertical_method == 'linear':
-                v_coords = self._evaluate_linear(hybrid_coord, self.indices[:-1, :], self.norm_distances)
+                v_coords = self._evaluate_linear(hybrid_coord, self.indices, self.norm_distances)
             elif vertical_method == 'nearest':
-                v_coords = self._evaluate_nearest(hybrid_coord, self.indices[:-1, :], self.norm_distances)
+                v_coords = self._evaluate_nearest(hybrid_coord, self.indices, self.norm_distances)
+
+            self.indices.append(np.zeros(len(points), dtype=self.indices[0].dtype))
+            self.norm_distances.append(np.zeros(len(points)))
 
             # Calculate and store the verticlal index and weight for each point based on the interpolated vertical
             # column
@@ -216,7 +219,7 @@ class RegularGridInterpolator(object):
         else:
             self.indices, self.norm_distances, self.out_of_bounds = self._find_indices(points.T, self.grid)
 
-    def __call__(self, values, method=None, fill_value=np.nan):
+    def __call__(self, values, method="linear", fill_value=np.nan):
         """
         Interpolation at coordinates
         Parameters
@@ -225,7 +228,7 @@ class RegularGridInterpolator(object):
             The data on the regular grid in n dimensions.
         method : str
             The method of interpolation to perform. Supported are "linear" and
-            "nearest".
+            "nearest". Default is "linear".
         fill_value : number, optional
             If provided, the value to use for points outside of the
             interpolation domain. If None, values outside
