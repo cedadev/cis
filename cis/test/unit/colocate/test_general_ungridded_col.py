@@ -8,97 +8,11 @@ from nose.tools import eq_
 import numpy as np
 
 from cis.data_io.gridded_data import make_from_cube, GriddedDataList
-from cis.collocation.col_implementations import GeneralUngriddedCollocator, DummyConstraint, moments, li, \
-    SepConstraintKdtree, mean, nn_gridded, GriddedUngriddedCollocator
+from cis.collocation.col_implementations import GeneralUngriddedCollocator, DummyConstraint, moments, \
+    SepConstraintKdtree, GriddedUngriddedCollocator
 from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 from cis.test.util import mock
-
-
-class TestGriddedUngriddedCollocator(unittest.TestCase):
-
-    def test_gridded_ungridded_nn(self):
-        data = make_from_cube(mock.make_mock_cube())
-        data.name = lambda: 'Name'
-        data.var_name = 'var_name'
-        data._standard_name = 'y_wind'
-        sample = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
-        constraint = None
-
-        col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, data, constraint, 'nearest')
-
-        expected_result = np.array([8, 12, 8])
-        assert len(output) == 1
-        assert isinstance(output, UngriddedDataList)
-        assert np.allclose(output[0].data, expected_result)
-
-    def test_gridded_ungridded_lin(self):
-        data = make_from_cube(mock.make_mock_cube())
-        data.name = lambda: 'Name'
-        data.var_name = 'var_name'
-        data._standard_name = 'y_wind'
-        sample = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
-        constraint = None
-
-        col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, data, constraint, 'linear')
-
-        expected_result = np.array([8.8, 10.4, 7.2])
-        assert len(output) == 1
-        assert isinstance(output, UngriddedDataList)
-        assert np.allclose(output[0].data, expected_result)
-
-    # TODO: Move these tests somewhere else - should we still support box?
-    # def test_gridded_ungridded_box_mean(self):
-    #     data = make_from_cube(mock.make_mock_cube())
-    #     data.name = lambda: 'Name'
-    #     data.var_name = 'var_name'
-    #     data._standard_name = 'y_wind'
-    #     sample = UngriddedData.from_points_array(
-    #         [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-    #          HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-    #          HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
-    #     constraint = SepConstraintKdtree('500km')
-    #     kernel = mean()
-    #
-    #     col = GriddedUngriddedCollocator()
-    #     output = col.collocate(sample, data, constraint, kernel)
-    #
-    #     expected_result = np.array([28.0/3, 10.0, 20.0/3])
-    #     assert len(output) == 1
-    #     assert isinstance(output, UngriddedDataList)
-    #     assert np.allclose(output[0].data, expected_result)
-    #
-    # def test_gridded_ungridded_box_moments(self):
-    #     data = make_from_cube(mock.make_mock_cube())
-    #     data.name = lambda: 'Name'
-    #     data.var_name = 'var_name'
-    #     data._standard_name = 'y_wind'
-    #     sample = UngriddedData.from_points_array(
-    #         [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-    #          HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-    #          HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
-    #     constraint = SepConstraintKdtree('500km')
-    #     kernel = moments()
-    #
-    #     col = GriddedUngriddedCollocator()
-    #     output = col.collocate(sample, data, constraint, kernel)
-    #
-    #     expected_result = np.array([28.0/3, 10.0, 20.0/3])
-    #     expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
-    #     expected_n = np.array([3, 4, 3])
-    #     assert len(output) == 3
-    #     assert isinstance(output, UngriddedDataList)
-    #     assert np.allclose(output[0].data, expected_result)
-    #     assert np.allclose(output[1].data, expected_stddev)
-    #     assert np.allclose(output[2].data, expected_n)
 
 
 class TestGeneralUngriddedCollocator(unittest.TestCase):
