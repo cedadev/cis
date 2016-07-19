@@ -22,6 +22,8 @@
 import itertools
 import numpy as np
 
+from scipy.interpolate import interp1d
+
 
 def interpolate(data, sample, method, fill_value=np.nan):
     """
@@ -184,7 +186,6 @@ class RegularGridInterpolator(object):
             ndim = len(self.grid)
             points = _ndim_coords_from_arrays(points, ndim=ndim)
 
-
         if hybrid_coord is not None:
             # Find the indices and weights of altitude columns
             # TODO: I think for hybrid altitude coords (as opposed to pressure) I'll have to work out which hybrid
@@ -197,11 +198,17 @@ class RegularGridInterpolator(object):
 
             self.norm_distances.append(np.zeros(len(points)))
 
-            # Calculate and store the verticlal index and weight for each point
+            # Find all of the interpolated vertical columns (one for each point)
+            if method == 'linear':
+                v_coords = self._evaluate_linear(hybrid_coord, self.indices[:-1, :], self.norm_distances)
+            elif method == 'nearest':
+                v_coords = self._evaluate_nearest(hybrid_coord, self.indices[:-1, :], self.norm_distances)
+
+            # Calculate and store the verticlal index and weight for each point based on the interpolated vertical
+            # column
             # TODO: This loop could be a bottle-neck for many points, maybe move to Cython?
             for i, p in enumerate(points.T):
-                vert_index, vert_norm_distance, vert_out_of_bounds = \
-                    self._find_vertical_index(p[-1], hybrid_coord[tuple(self.indices.T[i][:-1])])
+                vert_index, vert_norm_distance, vert_out_of_bounds = self._find_vertical_index(p[-1], v_coords[i])
                 self.indices[-1][i] = vert_index
                 self.norm_distances[-1][i] = vert_norm_distance
                 self.out_of_bounds[i] += vert_out_of_bounds
@@ -250,37 +257,40 @@ class RegularGridInterpolator(object):
                                  "dimension %d" % (len(p), values.shape[i], i))
 
         if method == "linear":
-            result = self._evaluate_linear(values)
+            result = self._evaluate_linear(values, self.indices, self.norm_distances)
         elif method == "nearest":
-            result = self._evaluate_nearest(values)
+            result = self._evaluate_nearest(values, self.indices, self.norm_distances)
 
         if fill_value is not None:
             result[self.out_of_bounds] = fill_value
 
         return result
 
-    def _evaluate_linear(self, values):
+    @staticmethod
+    def _evaluate_linear(values, indices, norm_distances):
         # slice for broadcasting over trailing dimensions in self.values
-        vslice = (slice(None),) + (None,)*(values.ndim - len(self.indices))
+        vslice = (slice(None),) + (None,)*(values.ndim - len(indices))
 
         # find relevant values
         # each i and i+1 represents a edge
-        edges = itertools.product(*[[i, i + 1] for i in self.indices])
+        edges = itertools.product(*[[i, i + 1] for i in indices])
         value = 0.
         for edge_indices in edges:
             weight = 1.
-            for ei, i, yi in zip(edge_indices, self.indices, self.norm_distances):
+            for ei, i, yi in zip(edge_indices, indices, norm_distances):
                 weight *= np.where(ei == i, 1 - yi, yi)
             value += np.asarray(values[edge_indices]) * weight[vslice]
         return value
 
-    def _evaluate_nearest(self, values):
+    @staticmethod
+    def _evaluate_nearest(values, indices, norm_distances):
         idx_res = []
-        for i, yi in zip(self.indices, self.norm_distances):
+        for i, yi in zip(indices, norm_distances):
             idx_res.append(np.where(yi <= .5, i, i + 1))
         return values[idx_res]
 
-    def _find_indices(self, points, coords):
+    @staticmethod
+    def _find_indices(points, coords):
         # find relevant edges between which xi are situated
         indices = []
         # compute distance to lower edge in unity units
@@ -292,22 +302,16 @@ class RegularGridInterpolator(object):
             i = np.searchsorted(coord, x) - 1
             i[i < 0] = 0
             i[i > coord.size - 2] = coord.size - 2
-            distances = (x - coord[i]) / (coord[i + 1] - coord[i])
 
-            # If the normed distance to the next index is one, then reset the distance and increment the index. This is
-            #  a bit of a cludge but is needed to ensure we use the right indices when finding vertical columns.
-            shift_by_one = np.isclose(distances, 1.0)
-            i[shift_by_one] += 1
-            distances[shift_by_one] = 0.0
-
-            norm_distances.append(distances)
+            norm_distances.append((x - coord[i]) / (coord[i + 1] - coord[i]))
             indices.append(i)
 
             out_of_bounds += x < coord[0]
             out_of_bounds += x > coord[-1]
         return indices, norm_distances, out_of_bounds
 
-    def _find_vertical_index(self, point, coord):
+    @staticmethod
+    def _find_vertical_index(point, coord):
         i = np.searchsorted(coord, point) - 1
         if i < 0:
             i = 0
