@@ -195,6 +195,9 @@ class RegularGridInterpolator(object):
             # TODO: I think for hybrid altitude coords (as opposed to pressure) I'll have to work out which hybrid
             #  dimensions to interpolate over (as it doesn't vary with time).
 
+            # The problem as I see it at the moment is that although I can probably figure out how to choose the right
+            #  parts of the points to use here, and get sensible vertical coordinates, I'm not then actually interpolating
+            #  in time anywhere. I need to catch any un-interpolated dimensions and do those too...
             self.indices, self.norm_distances, self.out_of_bounds = \
                 self._find_indices(points[:-1], self.grid)
 
