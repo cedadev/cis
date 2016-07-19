@@ -69,7 +69,21 @@ class GeneralUngriddedCollocator(Collocator):
 
         sample_points = points.get_all_points()
 
-        data_points = data.get_non_masked_points()
+        # Convert ungridded data to a list of points if kernel needs it.
+        # Special case checks for kernels that use a cube - this could be done more elegantly.
+        if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
+            if hasattr(kernel, "interpolator"):
+                # If we have an interpolator on the kernel we need to reset it as it depends on the actual values
+                #  as well as the coordinates
+                kernel.interpolator = None
+                kernel.coord_names = []
+            if not isinstance(data, iris.cube.Cube):
+                raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
+            if constraint is not None and not isinstance(constraint, DummyConstraint):
+                raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
+            data_points = data
+        else:
+            data_points = data.get_non_masked_points()
 
         # First fix the sample points so that they all fall within the same 360 degree longitude range
         _fix_longitude_range(points.coords(), sample_points)
@@ -137,6 +151,7 @@ class GeneralUngriddedCollocator(Collocator):
                 cis.utils.set_cube_standard_name_if_valid(new_data, var_details[2])
                 new_data.metadata.shape = (len(sample_points),)
                 new_data.metadata.missing_value = self.fill_value
+                # TODO: This looks wrong
                 new_data.units = var_details[2]
             else:
                 var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
@@ -154,7 +169,7 @@ class GriddedUngriddedCollocator(Collocator):
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False):
+                 missing_data_for_missing_sample=False, extrapolate=False, nn_vertical=False):
         super(GriddedUngriddedCollocator, self).__init__()
         if fill_value is not None:
             try:
@@ -166,7 +181,8 @@ class GriddedUngriddedCollocator(Collocator):
         self.var_long_name = var_long_name
         self.var_units = var_units
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
-        self.interpolator = None
+        self.extrapolate = extrapolate
+        self.nn_vertical = nn_vertical
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -183,7 +199,7 @@ class GriddedUngriddedCollocator(Collocator):
                        a single value
         :return: A single LazyData object
         """
-        from cis.collocation.gridded_interpolation import RegularGridInterpolator
+        from cis.collocation.gridded_interpolation import interpolate
         log_memory_profile("GriddedUngriddedCollocator Initial")
 
         if isinstance(data, list):
@@ -229,49 +245,27 @@ class GriddedUngriddedCollocator(Collocator):
         self.var_long_name = metadata.long_name
         self.var_standard_name = metadata.standard_name
         self.var_units = data.units
-        var_set_details = (self.var_name, self.var_long_name,
-                           self.var_standard_name, self.var_units)
+
         sample_points_count = len(sample_points)
         log_memory_profile("GriddedUngriddedCollocator after output array creation")
 
         logging.info("    {} sample points".format(sample_points_count))
 
-        coord_names = []
-        if not self.interpolator:
-            # TODO: We can actually do this a bit more nicely now since we still have the Ungridded object available
-            for coord_name, val in sample_points[0].coord_tuple:
-                if len(data.coords(coord_name, dim_coords=True)) > 0:
-                    coord_names.append(coord_name)
-
-            if len(data.coords('altitude', dim_coords=False)) > 0 and sample_points[0].altitude is not None:
-                hybrid_coord = data.coords('altitude', dim_coords=False).points
-            elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample_points[0].air_pressure is not None:
-                hybrid_coord = data.coords('air_pressure', dim_coords=False).points
-            else:
-                hybrid_coord = None
-
-            self.interpolator = RegularGridInterpolator([data.coord(c).points for c in coord_names], sample_points,
-                                                        hybrid_coord=hybrid_coord, method=kernel)
-
-        values = self.interpolator(data.data, fill_value=self.fill_value)
+        values = interpolate(data, points, method=kernel, fill_value=self.fill_value,
+                             extrapolate=self.extrapolate, nn_vertical=self.nn_vertical)
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
-        return_data = UngriddedDataList()
-        for idx, var_details in enumerate(var_set_details):
-            if idx == 0:
-                new_data = UngriddedData(values[0, :], metadata, points.coords())
-                new_data.metadata._name = var_details[0]
-                new_data.metadata.long_name = var_details[1]
-                cis.utils.set_cube_standard_name_if_valid(new_data, var_details[2])
-                new_data.metadata.shape = (len(sample_points),)
-                new_data.metadata.missing_value = self.fill_value
-                new_data.units = var_details[2]
-            else:
-                var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
-                                        missing_value=self.fill_value, units=var_details[2])
-                new_data = UngriddedData(values[idx, :], var_metadata, points.coords())
-            return_data.append(new_data)
+        new_data = UngriddedData(values, metadata, points.coords())
+        new_data.metadata._name = self.var_name
+        new_data.metadata.long_name = self.var_long_name
+        cis.utils.set_cube_standard_name_if_valid(new_data, self.var_standard_name)
+        new_data.metadata.shape = (len(sample_points),)
+        new_data.metadata.missing_value = self.fill_value
+        new_data.units = self.var_units
+
+        return_data = UngriddedDataList([new_data])
+
         log_memory_profile("GriddedUngriddedCollocator final")
 
         return return_data

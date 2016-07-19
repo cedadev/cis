@@ -25,7 +25,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 
-def interpolate(data, sample, method, fill_value=np.nan):
+def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=False, nn_vertical=False):
     """
     Interpolate a given GriddedData source onto an UngriddedData sample
 
@@ -36,6 +36,12 @@ def interpolate(data, sample, method, fill_value=np.nan):
     :return ndarray: Interpolated values
     """
     # TODO Finish me! I should either take many gridded objects or allow caching of the interpolator somehow
+
+    if extrapolate:
+        fill_value = None
+
+    vertical_method = 'nearest' if nn_vertical else method
+
     coords = []
     # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
     for coord in sample.coords():
@@ -54,9 +60,9 @@ def interpolate(data, sample, method, fill_value=np.nan):
         hybrid_coord=None
 
     interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
-                                     hybrid_coord=hybrid_coord, method=method)
+                                     hybrid_coord=hybrid_coord, vertical_method=vertical_method)
 
-    return interp(data.data, fill_value=fill_value)
+    return interp(data.data, method=method, fill_value=fill_value)
 
 
 def _ndim_coords_from_arrays(points, ndim=None):
@@ -100,14 +106,9 @@ class RegularGridInterpolator(object):
         The coords defining the regular grid in n dimensions.
     points : ndarray of shape (..., ndim)
         The points to sample the gridded data at
-    method : str, optional
-        The method of interpolation to perform. Supported are "linear" and
-        "nearest". This parameter will become the default for the object's
-        ``__call__`` method. Default is "linear".
-    fill_value : number, optional
-        If provided, the value to use for points outside of the
-        interpolation domain. If None, values outside
-        the domain are extrapolated.
+    vertical_method : str, optional
+        The method of interpolation to perform over vertical (hybrid) coordinates. Supported are "linear" and
+        "nearest". Default is "linear".
     Methods
     -------
     __call__
@@ -158,10 +159,9 @@ class RegularGridInterpolator(object):
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
-    def __init__(self, coords, points, hybrid_coord=None, method="linear"):
-        if method not in ["linear", "nearest"]:
-            raise ValueError("Method '%s' is not defined" % method)
-        self.method = method
+    def __init__(self, coords, points, hybrid_coord=None, vertical_method="linear"):
+        if vertical_method not in ["linear", "nearest"]:
+            raise ValueError("Method '%s' is not defined" % vertical_method)
 
         for i, c in enumerate(coords):
             if not np.all(np.diff(c) > 0.):
@@ -199,9 +199,9 @@ class RegularGridInterpolator(object):
             self.norm_distances.append(np.zeros(len(points)))
 
             # Find all of the interpolated vertical columns (one for each point)
-            if method == 'linear':
+            if vertical_method == 'linear':
                 v_coords = self._evaluate_linear(hybrid_coord, self.indices[:-1, :], self.norm_distances)
-            elif method == 'nearest':
+            elif vertical_method == 'nearest':
                 v_coords = self._evaluate_nearest(hybrid_coord, self.indices[:-1, :], self.norm_distances)
 
             # Calculate and store the verticlal index and weight for each point based on the interpolated vertical
@@ -226,8 +226,11 @@ class RegularGridInterpolator(object):
         method : str
             The method of interpolation to perform. Supported are "linear" and
             "nearest".
+        fill_value : number, optional
+            If provided, the value to use for points outside of the
+            interpolation domain. If None, values outside
+            the domain are extrapolated.
         """
-        method = self.method if method is None else method
         if method not in ["linear", "nearest"]:
             raise ValueError("Method '%s' is not defined" % method)
 

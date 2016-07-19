@@ -849,6 +849,28 @@ class TestLi(unittest.TestCase):
         # Outside of the pressure bounds - extrapolation off
         assert_equal(new_data.data[3], np.inf)
 
+    def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_nn(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
+        import datetime as dt
+
+        cube = gridded_data.make_from_cube(mock.make_mock_cube(time_dim_length=3))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 8, 27))])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, li())[0]
+        # Exactly on the lat, lon, time points, interpolated over pressure
+        assert_almost_equal(new_data.data[0], 23.0, decimal=5)
+        # Exactly on the lat, lon, points, interpolated over time and pressure
+        assert_almost_equal(new_data.data[1], 23.5, decimal=7)
+        # Exactly on the lat, time points, interpolated over longitude and pressure
+        assert_almost_equal(new_data.data[2], 33.5, decimal=7)
+        # Outside of the pressure bounds - extrapolation off
+        assert_almost_equal(new_data.data[3], 12.4, decimal=7)
+
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_multi_var(self):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, li
         import datetime as dt
