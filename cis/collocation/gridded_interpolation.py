@@ -54,9 +54,6 @@ def interpolate(data, sample, method, fill_value=np.nan):
     interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
                                      hybrid_coord=hybrid_coord, method=method)
 
-    # indices = [[1 1 2 1] [ 0 0 1 0]]
-    # These seem right, so it must be something to do with the vertical interp. The pressure does increase as expected
-    #  so it can't be that...
     return interp(data.data, fill_value=fill_value)
 
 
@@ -239,7 +236,6 @@ class RegularGridInterpolator(object):
             if not np.issubdtype(values.dtype, np.inexact):
                 values = values.astype(float)
 
-        self.fill_value = fill_value
         if fill_value is not None:
             fill_value_dtype = np.asarray(fill_value).dtype
             if (hasattr(values, 'dtype') and not
@@ -258,8 +254,8 @@ class RegularGridInterpolator(object):
         elif method == "nearest":
             result = self._evaluate_nearest(values)
 
-        if self.fill_value is not None:
-            result[self.out_of_bounds] = self.fill_value
+        if fill_value is not None:
+            result[self.out_of_bounds] = fill_value
 
         return result
 
@@ -296,9 +292,16 @@ class RegularGridInterpolator(object):
             i = np.searchsorted(coord, x) - 1
             i[i < 0] = 0
             i[i > coord.size - 2] = coord.size - 2
+            distances = (x - coord[i]) / (coord[i + 1] - coord[i])
+
+            # If the normed distance to the next index is one, then reset the distance and increment the index. This is
+            #  a bit of a cludge but is needed to ensure we use the right indices when finding vertical columns.
+            shift_by_one = np.isclose(distances, 1.0)
+            i[shift_by_one] += 1
+            distances[shift_by_one] = 0.0
+
+            norm_distances.append(distances)
             indices.append(i)
-            norm_distances.append((x - coord[i]) /
-                                  (coord[i + 1] - coord[i]))
 
             out_of_bounds += x < coord[0]
             out_of_bounds += x > coord[-1]
