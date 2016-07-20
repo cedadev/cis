@@ -191,24 +191,23 @@ class RegularGridInterpolator(object):
             points = _ndim_coords_from_arrays(points, ndim=ndim)
 
         if hybrid_coord is not None:
-            # Find the indices and weights of altitude columns
-            # TODO: I think for hybrid altitude coords (as opposed to pressure) I'll have to work out which hybrid
-            #  dimensions to interpolate over (as it doesn't vary with time).
 
-            # The problem as I see it at the moment is that although I can probably figure out how to choose the right
-            #  parts of the points to use here, and get sensible vertical coordinates, I'm not then actually interpolating
-            #  in time anywhere. I need to catch any un-interpolated dimensions and do those too...
+            # Firstly interpolate over all of the dimensions except the vertical (which we assume to be the last...)
             self.indices, self.norm_distances, self.out_of_bounds = \
                 self._find_indices(points[:-1], self.grid)
 
+            # Find the dims to interpolate over for the hybrid coord
+            hybrid_interp_dims = hybrid_dims[:-1]
+            hybrid_indices = [self.indices[i] for i in hybrid_interp_dims]
+
             # Find all of the interpolated vertical columns (one for each point)
             if vertical_method == 'linear':
-                v_coords = self._evaluate_linear(hybrid_coord, self.indices, self.norm_distances)
+                v_coords = self._evaluate_linear(hybrid_coord, hybrid_indices, self.norm_distances)
             elif vertical_method == 'nearest':
-                v_coords = self._evaluate_nearest(hybrid_coord, self.indices, self.norm_distances)
+                v_coords = self._evaluate_nearest(hybrid_coord, hybrid_indices, self.norm_distances)
 
-            self.indices.append(np.zeros(len(points), dtype=self.indices[0].dtype))
-            self.norm_distances.append(np.zeros(len(points)))
+            self.indices.append(np.zeros(len(points.T), dtype=self.indices[0].dtype))
+            self.norm_distances.append(np.zeros(len(points.T)))
 
             # Calculate and store the verticlal index and weight for each point based on the interpolated vertical
             # column

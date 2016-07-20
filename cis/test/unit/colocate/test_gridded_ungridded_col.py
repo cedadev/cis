@@ -646,7 +646,6 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 330.5, decimal=7)
 
     def test_nearest_neighbour_vertical_interpolation_on_hybrid_pressure(self):
-        
         import datetime as dt
 
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
@@ -662,7 +661,6 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[2], 124.0)
 
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates(self):
-        
         import datetime as dt
 
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
