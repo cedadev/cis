@@ -79,7 +79,8 @@ where:
         the source data are hybrid height or hybrid pressure.
 
       * ``nn`` For use with gridded source data only. The data point closest to each sample point is found, and the
-        data value is set at the sample point.
+        data value is set at the sample point. As with linear interpolation the extrapolation mode can be controlled
+        with the ``extrapolate`` keyword.
 
       * ``dummy`` For use with ungridded data only. Returns the source data as the collocated data irrespective of the
         sample points. This might be useful if variables from the original sample file are wanted in the output file but
@@ -147,7 +148,7 @@ Collocation type
 ====================== ========================= =================== =================
 Gridded -> gridded     ``lin``, ``nn``, ``box``  ``lin``             *None*
 Ungridded -> gridded   ``bin``, ``box``          ``bin``             ``moments``
-Gridded -> ungridded   ``nn``, ``lin``           ``nn``              *None*
+Gridded -> ungridded   ``lin``, ``nn``           ``lin``             *None*
 Ungridded -> ungridded ``box``                   ``box``             ``moments``
 ====================== ========================= =================== =================
 
