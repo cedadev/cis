@@ -9,7 +9,7 @@ import numpy as np
 
 from cis.data_io.gridded_data import make_from_cube, GriddedDataList
 from cis.collocation.col_implementations import GeneralUngriddedCollocator, DummyConstraint, moments, \
-    SepConstraintKdtree, GriddedUngriddedCollocator
+    SepConstraintKdtree
 from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 from cis.test.util import mock
@@ -23,7 +23,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
 
-        col = GriddedUngriddedCollocator()
+        col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, DummyConstraint(), moments())
         means = new_data[0]
         std_dev = new_data[1]
