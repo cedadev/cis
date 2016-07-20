@@ -610,6 +610,16 @@ class UngriddedData(LazyData, CommonData):
     def __unicode__(self):
         return self.summary()
 
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        from cis.utils import fix_longitude_range
+        self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
+
 
 class UngriddedCoordinates(CommonData):
     """
@@ -742,6 +752,16 @@ class UngriddedCoordinates(CommonData):
         """Returns value indicating whether the data/coordinates are gridded.
         """
         return False
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        from cis.utils import fix_longitude_range
+        self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
 
 class UngriddedDataList(CommonDataList):

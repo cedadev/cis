@@ -212,8 +212,6 @@ class GriddedUngriddedCollocator(Collocator):
 
         metadata = data.metadata
 
-        sample_points = points.get_all_points()
-
         if hasattr(kernel, "interpolator"):
             # If we have an interpolator on the kernel we need to reset it as it depends on the actual values
             #  as well as the coordinates
@@ -226,7 +224,7 @@ class GriddedUngriddedCollocator(Collocator):
         data_points = data
 
         # First fix the sample points so that they all fall within the same 360 degree longitude range
-        _fix_longitude_range(points.coords(), sample_points)
+        _fix_longitude_range(points.coords(), points)
         # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
         _fix_longitude_range(points.coords(), data_points)
 
@@ -246,7 +244,7 @@ class GriddedUngriddedCollocator(Collocator):
         self.var_standard_name = metadata.standard_name
         self.var_units = data.units
 
-        sample_points_count = len(sample_points)
+        sample_points_count = points.data.size
         log_memory_profile("GriddedUngriddedCollocator after output array creation")
 
         logging.info("    {} sample points".format(sample_points_count))
@@ -260,7 +258,7 @@ class GriddedUngriddedCollocator(Collocator):
         new_data.metadata._name = self.var_name
         new_data.metadata.long_name = self.var_long_name
         cis.utils.set_cube_standard_name_if_valid(new_data, self.var_standard_name)
-        new_data.metadata.shape = (len(sample_points),)
+        new_data.metadata.shape = values.shape
         new_data.metadata.missing_value = self.fill_value
         new_data.units = self.var_units
 
