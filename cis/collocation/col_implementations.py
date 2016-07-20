@@ -169,7 +169,7 @@ class GriddedUngriddedCollocator(Collocator):
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False, extrapolate=False, nn_vertical=False):
+                 missing_data_for_missing_sample=False, extrapolate=False):
         super(GriddedUngriddedCollocator, self).__init__()
         if fill_value is not None:
             try:
@@ -182,7 +182,6 @@ class GriddedUngriddedCollocator(Collocator):
         self.var_units = var_units
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
         self.extrapolate = extrapolate
-        self.nn_vertical = nn_vertical
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -249,8 +248,7 @@ class GriddedUngriddedCollocator(Collocator):
 
         logging.info("    {} sample points".format(sample_points_count))
 
-        values = interpolate(data, points, method=kernel, fill_value=self.fill_value,
-                             extrapolate=self.extrapolate, nn_vertical=self.nn_vertical)
+        values = interpolate(data, points, method=kernel, fill_value=self.fill_value, extrapolate=self.extrapolate)
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 

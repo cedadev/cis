@@ -17,30 +17,28 @@
 
 
 # There is no algorithmic change, just a restructuring to allow caching of the weights for calculating many
-#  interpolations of different datasets using the same points.
+#  interpolations of different datasets using the same points, and support for hybrid coordinates.
 
 import itertools
 import numpy as np
 
-from scipy.interpolate import interp1d
 
-
-def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=False, nn_vertical=False):
+def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=False):
     """
     Interpolate a given GriddedData source onto an UngriddedData sample
 
      This method should take care of any
     :param GriddedData data:
-    :param UngriddedData source:
+    :param UngriddedData sample:
     :param str method:
+    :param float fill_value:
+    :param bool extrapolate:
     :return ndarray: Interpolated values
     """
     # TODO Finish me! I should either take many gridded objects or allow caching of the interpolator somehow
 
     if extrapolate:
         fill_value = None
-
-    vertical_method = 'nearest' if nn_vertical else method
 
     coords = []
     # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
@@ -67,10 +65,9 @@ def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=Fa
                          " respectively".format(len(sample_points), len(data.shape)))
 
     interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
-                                     hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims,
-                                     vertical_method=vertical_method)
+                                     hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
 
-    return interp(data.data, method=method, fill_value=fill_value)
+    return interp(data.data, fill_value=fill_value)
 
 
 def _ndim_coords_from_arrays(points, ndim=None):
@@ -114,9 +111,8 @@ class RegularGridInterpolator(object):
         The coords defining the regular grid in n dimensions.
     points : ndarray of shape (..., ndim)
         The points to sample the gridded data at
-    vertical_method : str, optional
-        The method of interpolation to perform over vertical (hybrid) coordinates. Supported are "linear" and
-        "nearest". Default is "linear".
+    method : str
+        The method of interpolation to perform. Supported are "linear" and "nearest". Default is "linear".
     Methods
     -------
     __call__
@@ -167,9 +163,13 @@ class RegularGridInterpolator(object):
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
-    def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, vertical_method="linear"):
-        if vertical_method not in ["linear", "nearest"]:
-            raise ValueError("Method '%s' is not defined" % vertical_method)
+    def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, method="linear"):
+        if method == "linear":
+            self._interp = self._evaluate_linear
+        elif method == "nearest":
+            self._interp = self._evaluate_nearest
+        else:
+            raise ValueError("Method '%s' is not defined" % method)
 
         for i, c in enumerate(coords):
             if not np.all(np.diff(c) > 0.):
@@ -205,15 +205,12 @@ class RegularGridInterpolator(object):
             hybrid_indices = [self.indices[i] for i in hybrid_interp_dims]
 
             # Find all of the interpolated vertical columns (one for each point)
-            if vertical_method == 'linear':
-                v_coords = self._evaluate_linear(hybrid_coord, hybrid_indices, self.norm_distances)
-            elif vertical_method == 'nearest':
-                v_coords = self._evaluate_nearest(hybrid_coord, hybrid_indices, self.norm_distances)
+            v_coords = self._interp(hybrid_coord, hybrid_indices, self.norm_distances)
 
             self.indices.append(np.zeros(len(points.T), dtype=self.indices[0].dtype))
             self.norm_distances.append(np.zeros(len(points.T)))
 
-            # Calculate and store the verticlal index and weight for each point based on the interpolated vertical
+            # Calculate and store the vertical index and weight for each point based on the interpolated vertical
             # column
             # TODO: This loop could be a bottle-neck for many points, maybe move to Cython?
             for i, p in enumerate(points.T):
@@ -225,24 +222,18 @@ class RegularGridInterpolator(object):
         else:
             self.indices, self.norm_distances, self.out_of_bounds = self._find_indices(points.T, self.grid)
 
-    def __call__(self, values, method="linear", fill_value=np.nan):
+    def __call__(self, values, fill_value=np.nan):
         """
         Interpolation at coordinates
         Parameters
         ----------
         values : array_like, shape (m1, ..., mn, ...)
             The data on the regular grid in n dimensions.
-        method : str
-            The method of interpolation to perform. Supported are "linear" and
-            "nearest". Default is "linear".
         fill_value : number, optional
             If provided, the value to use for points outside of the
             interpolation domain. If None, values outside
             the domain are extrapolated.
         """
-        if method not in ["linear", "nearest"]:
-            raise ValueError("Method '%s' is not defined" % method)
-
         if not hasattr(values, 'ndim'):
             # allow reasonable duck-typed values
             values = np.asarray(values)
@@ -268,10 +259,7 @@ class RegularGridInterpolator(object):
                 raise ValueError("There are %d points and %d values in "
                                  "dimension %d" % (len(p), values.shape[i], i))
 
-        if method == "linear":
-            result = self._evaluate_linear(values, self.indices, self.norm_distances)
-        elif method == "nearest":
-            result = self._evaluate_nearest(values, self.indices, self.norm_distances)
+        result = self._interp(values, self.indices, self.norm_distances)
 
         if fill_value is not None:
             result[self.out_of_bounds] = fill_value
