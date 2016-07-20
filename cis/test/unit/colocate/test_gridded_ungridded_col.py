@@ -9,7 +9,7 @@ from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 from cis.test.util import mock
 
-from numpy.testing import assert_almost_equal, assert_equal
+from numpy.testing import assert_almost_equal, assert_equal, assert_raises
 from nose.tools import eq_
 
 
@@ -52,6 +52,18 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         assert len(output) == 1
         assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
+
+    def test_collocation_of_pres_points_on_hybrid_altitude_coordinates(self):
+        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=-4.0, lon=-4.0, pres=100.0, t=dt.datetime(1984, 8, 27))])
+
+        col = GriddedUngriddedCollocator(fill_value=np.NAN)
+
+        # Since there is no corresponding pressure field in the source data a ValueError should be raised
+        assert_raises(ValueError, col.collocate, sample_points, cube, None, 'linear')
+
 
 
 class TestNN(unittest.TestCase):
@@ -184,17 +196,6 @@ class TestNN(unittest.TestCase):
         eq_(new_data.data[0], 2501.0)  # float(cube[2,11,1,0].data))
         eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
         eq_(new_data.data[2], 2139.0)  # float(cube[1,35,0,8].data))
-
-    def test_collocation_of_pres_points_on_hybrid_altitude_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
-
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, pres=5000.0, t=dt.datetime(1984, 8, 28, 8, 34))])
-
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
-        # There is no pressure coordinate on the cube so no single value could be returned by the kernel
-        eq_(new_data.data[0], np.inf)
 
     def test_collocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
         """
@@ -387,17 +388,6 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
         assert_equal(new_data.data[2], np.NAN)
-
-    def test_collocation_of_pres_points_on_hybrid_altitude_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
-
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=-4.0, lon=-4.0, pres=100.0, t=dt.datetime(1984, 8, 27))])
-
-        col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
-        # The kernel can't return a unique point and so should raise a ValueError - leaving the data point blank
-        assert_equal(new_data.data[0], np.NAN)
 
     def test_alt_extrapolation(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))

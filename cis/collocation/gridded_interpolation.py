@@ -50,17 +50,21 @@ def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=Fa
 
     sample_points = [sample.coord(c).points for c in coords]
 
-    if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude') is not None:
+    if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude'):
         hybrid_coord = data.coord('altitude').points
         hybrid_dims = data.coord_dims(data.coord('altitude'))
         sample_points.append(sample.coord("altitude").points)
-    elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure') is not None:
+    elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure'):
         hybrid_coord = data.coord('air_pressure').points
         hybrid_dims = data.coord_dims(data.coord('air_pressure'))
         sample_points.append(sample.coord("air_pressure").points)
     else:
         hybrid_coord = None
         hybrid_dims = None
+
+    if len(sample_points) != len(data.shape):
+        raise ValueError("Sample points do not uniquely define gridded data source points, invalid dimenions: {} and {}"
+                         " respectively".format(len(sample_points), len(data.shape)))
 
     interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
                                      hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims,
