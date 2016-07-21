@@ -192,15 +192,12 @@ class RegularGridInterpolator(object):
 
         if hybrid_coord is None:
             ndim = len(self.grid)
-
-            # points = _ndim_coords_from_arrays(points, ndim=ndim)
             points = np.vstack(points).T
             if points.shape[-1] != len(self.grid):
                 raise ValueError("The requested sample points xi have dimension "
                                  "%d, but this RegularGridInterpolator has "
                                  "dimension %d" % (points.shape[1], ndim))
         else:
-            # TODO: Think about how to calculate ndim coords when there is a hybrid coord
             ndim = len(self.grid)
             points = _ndim_coords_from_arrays(points, ndim=ndim)
 
