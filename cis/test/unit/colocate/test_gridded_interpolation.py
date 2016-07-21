@@ -25,7 +25,7 @@ import numpy as np
 from numpy.testing import (assert_array_almost_equal, assert_raises,
                            TestCase, assert_allclose)
 
-from cis.collocation.gridded_interpolation import RegularGridInterpolator, interpolate, _ndim_coords_from_arrays
+from cis.collocation.gridded_interpolation import RegularGridInterpolator, GriddedUngriddedInterpolator
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
 
@@ -222,7 +222,8 @@ class TestRegularGridInterpolator(TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
 
-        values = interpolate(cube, sample_points, 'linear')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        values = interpolator(cube)
         wanted = np.asarray([8.8, 11.2, 4.8])
         assert_array_almost_equal(values, wanted)
 
@@ -239,7 +240,8 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
 
-        values = interpolate(cube, sample_points, "nearest")
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        values = interpolator(cube)
         wanted = np.asarray([221.0, 223.0, 318.0, np.nan])
         assert_array_almost_equal(values, wanted)
 
@@ -256,7 +258,8 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 8, 27))])
 
-        values = interpolate(cube, sample_points, "linear")
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        values = interpolator(cube)
         wanted = np.asarray([23.0, 23.5, 33.5, 12.4])
         assert_array_almost_equal(values, wanted)
 
@@ -273,7 +276,8 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
 
-        values = interpolate(cube, sample_points, "linear")
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        values = interpolator(cube)
         wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
         assert_array_almost_equal(values, wanted)
 

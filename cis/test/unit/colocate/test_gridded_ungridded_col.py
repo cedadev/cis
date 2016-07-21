@@ -98,9 +98,11 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         output = col.collocate(sample, source, None, 'nearest')[0]
 
         source.transpose()
+        col = GriddedUngriddedCollocator()
         assert_equal(col.collocate(sample, source, None, 'nearest')[0].data, output.data)
 
         source.transpose((2, 1, 0, 3))
+        col = GriddedUngriddedCollocator()
         assert_equal(col.collocate(sample, source, None, 'nearest')[0].data, output.data)
 
 

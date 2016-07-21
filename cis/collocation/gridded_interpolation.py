@@ -19,55 +19,65 @@
 # There is no algorithmic change, just a restructuring to allow caching of the weights for calculating many
 #  interpolations of different datasets using the same points, and support for hybrid coordinates.
 
-import itertools
 import numpy as np
 
 
-def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=False):
-    """
-    Interpolate a given GriddedData source onto an UngriddedData sample
+class GriddedUngriddedInterpolator(object):
 
-     This method should take care of any
-    :param GriddedData data:
-    :param UngriddedData sample:
-    :param str method:
-    :param float fill_value:
-    :param bool extrapolate:
-    :return ndarray: Interpolated values
-    """
-    # TODO Finish me! I should either take many gridded objects or allow caching of the interpolator somehow
+    def __init__(self, data, sample, method='linear'):
+        """
+        Prepare an interpolation over the grid defined by a GriddedData source onto an UngriddedData sample.
 
-    if extrapolate:
-        fill_value = None
+        Indices are calculated but no interpolation is performed until the resulting object is called. Note that
+        if the source contains a hybrid vertical coordinate these ARE interpolated to find a single vertical index.
 
-    coords = []
-    # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
-    for coord in data.coords(dim_coords=True):
-        if len(sample.coords(coord.name())) > 0:
-            coords.append(coord.name())
+        :param GriddedData data: The source data, only the coordinates are used from this at initialisation.
+        :param UngriddedData sample: The points to sample the source data at.
+        :param str method: The interpolation method to use (either 'linear' or 'nearest'). Default is 'linear'.
+        """
+        coords = []
+        # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
+        for coord in data.coords(dim_coords=True):
+            if len(sample.coords(coord.name())) > 0:
+                coords.append(coord.name())
 
-    sample_points = [sample.coord(c).points for c in coords]
+        sample_points = [sample.coord(c).points for c in coords]
 
-    if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude'):
-        hybrid_coord = data.coord('altitude').points
-        hybrid_dims = data.coord_dims(data.coord('altitude'))
-        sample_points.append(sample.coord("altitude").points)
-    elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure'):
-        hybrid_coord = data.coord('air_pressure').points
-        hybrid_dims = data.coord_dims(data.coord('air_pressure'))
-        sample_points.append(sample.coord("air_pressure").points)
-    else:
-        hybrid_coord = None
-        hybrid_dims = None
+        if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude'):
+            hybrid_coord = data.coord('altitude').points
+            hybrid_dims = data.coord_dims(data.coord('altitude'))
+            sample_points.append(sample.coord("altitude").points)
+        elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure'):
+            hybrid_coord = data.coord('air_pressure').points
+            hybrid_dims = data.coord_dims(data.coord('air_pressure'))
+            sample_points.append(sample.coord("air_pressure").points)
+        else:
+            hybrid_coord = None
+            hybrid_dims = None
 
-    if len(sample_points) != len(data.shape):
-        raise ValueError("Sample points do not uniquely define gridded data source points, invalid dimenions: {} and {}"
-                         " respectively".format(len(sample_points), len(data.shape)))
+        if len(sample_points) != len(data.shape):
+            raise ValueError("Sample points do not uniquely define gridded data source points, invalid "
+                             "dimenions: {} and {} respectively".format(len(sample_points), len(data.shape)))
 
-    interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
-                                     hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
+        self._interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
+                                               hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
 
-    return interp(data.data, fill_value=fill_value)
+    def __call__(self, data, fill_value=np.nan, extrapolate=False):
+        """
+         Perform the prepared interpolation over the given data GriddedData object - this assumes that the coordinates
+          used to initialise the interpolator are identical as those in this data object.
+
+        If extrapolate is True then fill_value is ignored (since there will be no invalid values).
+
+        :param GriddedData data: Data values to interpolate
+        :param float fill_value: The fill value to use for sample points outside of the bounds of the data
+        :param bool extrapolate: Extrapolate points outside the bounds of the data? Default False.
+        :return ndarray: Interpolated values.
+        """
+        if extrapolate:
+            fill_value = None
+
+        return self._interp(data.data, fill_value=fill_value)
 
 
 def _ndim_coords_from_arrays(points, ndim=None):
@@ -268,12 +278,13 @@ class RegularGridInterpolator(object):
 
     @staticmethod
     def _evaluate_linear(values, indices, norm_distances):
+        from itertools import product
         # slice for broadcasting over trailing dimensions in self.values
         vslice = (slice(None),) + (None,)*(values.ndim - len(indices))
 
         # find relevant values
         # each i and i+1 represents a edge
-        edges = itertools.product(*[[i, i + 1] for i in indices])
+        edges = product(*[[i, i + 1] for i in indices])
         value = 0.
         for edge_indices in edges:
             weight = 1.

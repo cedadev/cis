@@ -182,6 +182,7 @@ class GriddedUngriddedCollocator(Collocator):
         self.var_units = var_units
         self.missing_data_for_missing_sample = missing_data_for_missing_sample
         self.extrapolate = extrapolate
+        self.interpolator = None
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -198,7 +199,7 @@ class GriddedUngriddedCollocator(Collocator):
                        a single value
         :return: A single LazyData object
         """
-        from cis.collocation.gridded_interpolation import interpolate
+        from cis.collocation.gridded_interpolation import GriddedUngriddedInterpolator
         log_memory_profile("GriddedUngriddedCollocator Initial")
 
         if isinstance(data, list):
@@ -225,7 +226,11 @@ class GriddedUngriddedCollocator(Collocator):
         logging.info("--> Collocating...")
         logging.info("    {} sample points".format(points.size))
 
-        values = interpolate(data, points, method=kernel, fill_value=self.fill_value, extrapolate=self.extrapolate)
+        if self.interpolator is None:
+            # Cache the interpolator
+            self.interpolator = GriddedUngriddedInterpolator(data, points, method=kernel)
+
+        values = self.interpolator(data, fill_value=self.fill_value, extrapolate=self.extrapolate)
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
