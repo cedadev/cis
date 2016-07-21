@@ -199,6 +199,7 @@ class GriddedUngriddedCollocator(Collocator):
         :return: A single LazyData object
         """
         from cis.collocation.gridded_interpolation import interpolate
+        from cis.utils import set_standard_name_if_valid
         log_memory_profile("GriddedUngriddedCollocator Initial")
 
         if isinstance(data, list):
@@ -209,13 +210,6 @@ class GriddedUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        metadata = data.metadata
-
-        if hasattr(kernel, "interpolator"):
-            # If we have an interpolator on the kernel we need to reset it as it depends on the actual values
-            #  as well as the coordinates
-            kernel.interpolator = None
-            kernel.coord_names = []
         if not isinstance(data, iris.cube.Cube):
             raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
         if constraint is not None and not isinstance(constraint, DummyConstraint):
@@ -229,36 +223,20 @@ class GriddedUngriddedCollocator(Collocator):
 
         log_memory_profile("GriddedUngriddedCollocator after data retrieval")
 
-        # Create index if constraint and/or kernel require one.
-        coord_map = None
-        data_index.create_indexes(constraint, points, data_points, coord_map)
-        data_index.create_indexes(kernel, points, data_points, coord_map)
-        log_memory_profile("GriddedUngriddedCollocator after indexing")
-
         logging.info("--> Collocating...")
-
-        # Create output arrays.
-        self.var_name = data.name()
-        self.var_long_name = metadata.long_name
-        self.var_standard_name = metadata.standard_name
-        self.var_units = data.units
-
-        sample_points_count = points.data.size
-        log_memory_profile("GriddedUngriddedCollocator after output array creation")
-
-        logging.info("    {} sample points".format(sample_points_count))
+        logging.info("    {} sample points".format(points.size))
 
         values = interpolate(data, points, method=kernel, fill_value=self.fill_value, extrapolate=self.extrapolate)
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
-        new_data = UngriddedData(values, metadata, points.coords())
-        new_data.metadata._name = self.var_name
-        new_data.metadata.long_name = self.var_long_name
-        cis.utils.set_cube_standard_name_if_valid(new_data, self.var_standard_name)
+        new_data = UngriddedData(values, data.metadata, points.coords())
+        new_data.metadata._name = self.var_name or data.name()
+        new_data.metadata.long_name = self.var_long_name or data.metadata.long_name
+        set_standard_name_if_valid(new_data, data.standard_name)
         new_data.metadata.shape = values.shape
         new_data.metadata.missing_value = self.fill_value
-        new_data.units = self.var_units
+        new_data.units = self.var_units or data.units
 
         return_data = UngriddedDataList([new_data])
 
