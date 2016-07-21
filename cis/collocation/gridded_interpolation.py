@@ -35,11 +35,20 @@ class GriddedUngriddedInterpolator(object):
         :param UngriddedData sample: The points to sample the source data at.
         :param str method: The interpolation method to use (either 'linear' or 'nearest'). Default is 'linear'.
         """
+        from iris.analysis._interpolation import extend_circular_coord
         coords = []
+        grid_points = []
+        self.circular_coord_dims = []
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         for coord in data.coords(dim_coords=True):
             if len(sample.coords(coord.name())) > 0:
                 coords.append(coord.name())
+                if getattr(coord, 'circular', False):
+                    grid_points.append(extend_circular_coord(coord, coord.points))
+                    # The circular coord must be a dim coord so we pop the value out of the tuple
+                    self.circular_coord_dims.append(data.coord_dims(coord)[0])
+                else:
+                    grid_points.append(coord.points)
 
         sample_points = [sample.coord(c).points for c in coords]
 
@@ -59,7 +68,7 @@ class GriddedUngriddedInterpolator(object):
             raise ValueError("Sample points do not uniquely define gridded data source points, invalid "
                              "dimenions: {} and {} respectively".format(len(sample_points), len(data.shape)))
 
-        self._interp = RegularGridInterpolator([data.coord(c).points for c in coords], sample_points,
+        self._interp = RegularGridInterpolator(grid_points, sample_points,
                                                hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
 
     def __call__(self, data, fill_value=np.nan, extrapolate=False):
@@ -74,10 +83,16 @@ class GriddedUngriddedInterpolator(object):
         :param bool extrapolate: Extrapolate points outside the bounds of the data? Default False.
         :return ndarray: Interpolated values.
         """
+        from iris.analysis._interpolation import extend_circular_data
         if extrapolate:
             fill_value = None
 
-        return self._interp(data.data, fill_value=fill_value)
+        # Account for any circular coords present
+        data_array = data.data
+        for dim in self.circular_coord_dims:
+            data_array = extend_circular_data(data_array, dim)
+
+        return self._interp(data_array, fill_value=fill_value)
 
 
 def _ndim_coords_from_arrays(points, ndim=None):

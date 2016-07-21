@@ -193,6 +193,21 @@ def make_dummy_2d_cube():
     return cube
 
 
+def make_dummy_2d_cube_with_circular_lon():
+    """
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    """
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(np.arange(-90., 100., 10.), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(0., 360., 10.), standard_name='longitude', units='degrees', circular=True)
+    cube = Cube(np.reshape(np.arange(19 * 36) + 1.0, (19, 36)),
+                dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
 def make_dummy_2d_cube_with_small_offset_in_lat():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36

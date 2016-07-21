@@ -121,6 +121,20 @@ class TestNN(unittest.TestCase):
         eq_(new_data.data[1], 12.0)  # float(cube[3,2].data))
         eq_(new_data.data[2], 4.0)  # float(cube[1,0].data))
 
+    def test_basic_col_with_circular_lon(self):
+        cube = make_from_cube(mock.make_dummy_2d_cube_with_circular_lon())
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(0.0, 0.0), HyperPoint(0.0, 355.0), HyperPoint(0.0, 360.0),
+             HyperPoint(80.0, 0.0), HyperPoint(85.0, 355.0), HyperPoint(90.0, 360.0),
+             HyperPoint(-80.0, 0.0), HyperPoint(-85.0, 355.0), HyperPoint(-90.0, 360.0)])
+        col = GriddedUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        wanted = np.asarray([325.0, 360.0, 325.0,
+                             613.0, 648.0, 649.0,
+                             37.0, 36.0, 1.0])
+        assert_almost_equal(new_data.data, wanted)
+
     def test_negative_lon_points_dont_matter_with_0_360_grid_in_2d(self):
         # This cube is defined over a 0-360 longitude grid
         cube = make_from_cube(mock.make_dummy_2d_cube())
@@ -360,8 +374,6 @@ class TestNN(unittest.TestCase):
 
 class TestLinear(unittest.TestCase):
 
-    # TODO: Add some tests of circular longitude coordinates
-
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
         cube = make_from_cube(mock.make_square_5x3_2d_cube())
         sample_points = UngriddedData.from_points_array(
@@ -371,6 +383,20 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)
         assert_almost_equal(new_data.data[2], 4.8)
+
+    def test_basic_col_with_circular_lon(self):
+        cube = make_from_cube(mock.make_dummy_2d_cube_with_circular_lon())
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(0.0, 0.0), HyperPoint(0.0, 355.0), HyperPoint(0.0, 360.0),
+             HyperPoint(80.0, 0.0), HyperPoint(85.0, 355.0), HyperPoint(90.0, 360.0),
+             HyperPoint(-80.0, 0.0), HyperPoint(-85.0, 355.0), HyperPoint(-90.0, 360.0)])
+        col = GriddedUngriddedCollocator()
+        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        wanted = np.asarray([325.0, 342.5, 325.0,
+                             613.0, (630.5 + 666.5)/2, 649.0,
+                             37.0, (54.5 + 18.5)/2, 1.0])
+        assert_almost_equal(new_data.data, wanted)
 
     def test_negative_lon_points_in_2d_dont_matter(self):
         """
