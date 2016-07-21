@@ -447,6 +447,13 @@ class UngriddedData(LazyData, CommonData):
         return UngriddedData(data=data, metadata=self.metadata, coords=coords)
 
     @property
+    def size(self):
+        return self.data.size
+
+    def count(self):
+        return self.data.count() if hasattr(self.data, 'count') else self.data.size
+
+    @property
     def history(self):
         return self.metadata.history
 
@@ -590,9 +597,8 @@ class UngriddedData(LazyData, CommonData):
         """
         summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
         summary += '     Shape = {}\n'.format(self.data.shape) + '\n'
-        summary += '     Total number of points = {}\n'.format(self.data.size)
-        num_non_masked_points = self.data.count() if hasattr(self.data, 'count') else self.data.size
-        summary += '     Number of non-masked points = {}\n'.format(num_non_masked_points)
+        summary += '     Total number of points = {}\n'.format(self.size)
+        summary += '     Number of non-masked points = {}\n'.format(self.count())
 
         summary += str(self.metadata)
 
@@ -673,6 +679,17 @@ class UngriddedCoordinates(CommonData):
     @property
     def history(self):
         return "UngriddedCoordinates have no history"
+
+    @property
+    def size(self):
+        if len(self._coords) > 1:
+            return self._coords[0].data.size
+        else:
+            return 0
+
+    def count(self):
+        # There can be no masked coordinate points
+        return self.size
 
     @property
     def x(self):
