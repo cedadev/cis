@@ -44,17 +44,14 @@ class GeneralUngriddedCollocator(Collocator):
         constraint and kernel objects. The metadata for the output LazyData object is copied from
         the input data object.
 
-        :param points: UngriddedData or UngriddedCoordinates defining the sample points
-        :param data: An UngriddedData object or Cube, or any other object containing metadata that
-                     the constraint object can read. May also be a list of objects, in which case a list will
-                     be returned
+        :param UngriddedData or UngriddedCoordinates points: Object defining the sample points
+        :param UngriddedData data: The source data to collocate from
         :param constraint: An instance of a Constraint subclass which takes a data object and
                            returns a subset of that data based on it's internal parameters
         :param kernel: An instance of a Kernel subclass which takes a number of points and returns
                        a single value
-        :return: A single LazyData object
+        :return UngriddedData or UngriddedDataList: Depending on the input
         """
-        # TODO: I can probably do some tidying up here now that it's only used for ungridded-ungridded
         log_memory_profile("GeneralUngriddedCollocator Initial")
 
         if isinstance(data, list):
@@ -69,21 +66,7 @@ class GeneralUngriddedCollocator(Collocator):
 
         sample_points = points.get_all_points()
 
-        # Convert ungridded data to a list of points if kernel needs it.
-        # Special case checks for kernels that use a cube - this could be done more elegantly.
-        if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
-            if hasattr(kernel, "interpolator"):
-                # If we have an interpolator on the kernel we need to reset it as it depends on the actual values
-                #  as well as the coordinates
-                kernel.interpolator = None
-                kernel.coord_names = []
-            if not isinstance(data, iris.cube.Cube):
-                raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
-            if constraint is not None and not isinstance(constraint, DummyConstraint):
-                raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
-            data_points = data
-        else:
-            data_points = data.get_non_masked_points()
+        data_points = data.get_non_masked_points()
 
         # First fix the sample points so that they all fall within the same 360 degree longitude range
         _fix_longitude_range(points.coords(), sample_points)
@@ -101,12 +84,11 @@ class GeneralUngriddedCollocator(Collocator):
         logging.info("--> Collocating...")
 
         # Create output arrays.
-        self.var_name = data.name()
-        self.var_long_name = metadata.long_name
-        self.var_standard_name = metadata.standard_name
-        self.var_units = data.units
+        self.var_name = self.var_name or data.name()
+        self.var_long_name = self.var_long_name or metadata.long_name
+        self.var_units = self.var_units or data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
-                                                      self.var_standard_name, self.var_units)
+                                                      metadata.standard_name, self.var_units)
         sample_points_count = len(sample_points)
         values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
         log_memory_profile("GeneralUngriddedCollocator after output array creation")
@@ -151,11 +133,10 @@ class GeneralUngriddedCollocator(Collocator):
                 set_standard_name_if_valid(new_data, var_details[2])
                 new_data.metadata.shape = (len(sample_points),)
                 new_data.metadata.missing_value = self.fill_value
-                # TODO: This looks wrong
-                new_data.units = var_details[2]
+                new_data.units = var_details[3]
             else:
                 var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
-                                        missing_value=self.fill_value, units=var_details[2])
+                                        missing_value=self.fill_value, units=var_details[3])
                 new_data = UngriddedData(values[idx, :], var_metadata, points.coords())
             return_data.append(new_data)
         log_memory_profile("GeneralUngriddedCollocator final")
