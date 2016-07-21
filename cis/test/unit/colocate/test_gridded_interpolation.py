@@ -302,8 +302,48 @@ class TestRegularGridInterpolator(TestCase):
         interpolator = RegularGridInterpolator(points, xi.T)
         interpolator(values, fill_value=0.)
 
-    # TODO: Add some tests for data/coords with missing data.
-    # We are probably finding the nearest point with or without missing data, this is fine but needs documenting
+    def test_missing_values(self):
+        from cis.test.util.mock import make_square_5x3_2d_cube_with_missing_data
+
+        from cis.data_io.ungridded_data import UngriddedData
+        from cis.data_io.hyperpoint import HyperPoint
+
+        cube = make_square_5x3_2d_cube_with_missing_data()
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0),
+             HyperPoint(lat=0.0, lon=4.0),
+             HyperPoint(lat=-4.0, lon=1.0)])
+
+        wanted = np.ma.array([8.0, np.nan, np.nan], mask=[False, True, True])
+
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        assert_array_almost_equal(interpolator(cube), wanted)
+
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        assert_array_almost_equal(interpolator(cube), wanted)
+
+    def test_missing_values_with_extrapolation(self):
+        from cis.test.util.mock import make_square_5x3_2d_cube_with_missing_data
+
+        from cis.data_io.ungridded_data import UngriddedData
+        from cis.data_io.hyperpoint import HyperPoint
+
+        cube = make_square_5x3_2d_cube_with_missing_data()
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=-5.0, lon=10.0),
+             HyperPoint(lat=0.0, lon=10.0),
+             HyperPoint(lat=-4.0, lon=1.0)])
+
+        wanted = np.ma.array([6.0, np.nan, np.nan], mask=[False, True, True])
+
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        assert_array_almost_equal(interpolator(cube, extrapolate=True), wanted)
+
+        wanted = np.ma.array([7.0, np.nan, np.nan], mask=[False, True, True])
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        assert_array_almost_equal(interpolator(cube, extrapolate=True), wanted)
 
 
 class MyValue(object):
