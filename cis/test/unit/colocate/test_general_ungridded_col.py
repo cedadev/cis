@@ -29,9 +29,9 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         std_dev = new_data[1]
         no_points = new_data[2]
 
-        eq_(means.name(), 'rain')
-        eq_(std_dev.name(), 'rain_std_dev')
-        eq_(no_points.name(), 'rain_num_points')
+        eq_(means.name(), 'rainfall_flux')
+        eq_(std_dev.name(), 'rainfall_flux_std_dev')
+        eq_(no_points.name(), 'rainfall_flux_num_points')
         assert means.coords()
         assert std_dev.coords()
         assert no_points.coords()
@@ -61,7 +61,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         ug_data_1 = mock.make_regular_2d_ungridded_data()
         ug_data_2 = mock.make_regular_2d_ungridded_data(data_offset=3)
         ug_data_2.long_name = 'TOTAL SNOWFALL RATE: LS+CONV KG/M2/S'
-        ug_data_2.standard_name = 'snowfall_rate'
+        ug_data_2.standard_name = 'snowfall_flux'
         ug_data_2.metadata._name = 'snow'
 
         data_list = UngriddedDataList([ug_data_1, ug_data_2])

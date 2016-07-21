@@ -726,14 +726,14 @@ def set_standard_name_if_valid(data, standard_name):
     """
     Set a data object's standard name if it is a valid CF compliant name, otherwise set it to None
 
-    :param CommonData data: Data to set standard name on
+    :param CommonData or Metadata data: Data to set standard name on
     :param standard_name: Standard name to set
     :return:
     """
     try:
         data.standard_name = standard_name
     except ValueError:
-        # If the standard name is not valid CF compliant standard name
+        logging.info("Not setting standard name '{}' as it is not CF compliant.".format(standard_name))
         data.standard_name = None
 
 

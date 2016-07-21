@@ -24,10 +24,13 @@ class Metadata(object):
     def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='',
                  missing_value='', calendar='', history='', misc=None):
         self._name = name
+
+        self._standard_name = ''
         if standard_name:
             self.standard_name = standard_name
         elif name:
             self.standard_name = Metadata.guess_standard_name(name)
+
         self.long_name = long_name
         self.shape = shape
         self.units = units
@@ -70,26 +73,23 @@ class Metadata(object):
     def __unicode__(self):
         return self.summary()
 
-    def alter_standard_name(self, new_standard_name):
-        """
-        Alter the standard name and log an info line to say this is happening if the standard name is not empty.
-        Also changes internal name for metadata or the same.
+    @property
+    def standard_name(self):
+        return self._standard_name
 
-        :param new_standard_name:
-        """
-        if self.standard_name is not None \
-                and self.standard_name.strip() is not "" \
-                and self.standard_name != new_standard_name:
-            logging.info("Changing standard name for dataset from '{}' to '{}'"
-                         .format(self.standard_name, new_standard_name))
-        self.standard_name = new_standard_name
-
-        if self._name is not None \
-                and self._name.strip() is not "" \
-                and self._name != new_standard_name:
-            logging.info("Changing variable name for dataset from '{}' to '{}'"
-                         .format(self._name, new_standard_name))
-        self._name = new_standard_name
+    @standard_name.setter
+    def standard_name(self, standard_name):
+        from iris.std_names import STD_NAMES
+        if standard_name is None or standard_name in STD_NAMES:
+            # If the standard name is actually changing from one to another then log the fact
+            if self.standard_name is not None \
+                    and self.standard_name.strip() is not "" \
+                    and self.standard_name != standard_name:
+                logging.debug("Changing standard name for dataset from '{}' to '{}'".format(self.standard_name,
+                                                                                            standard_name))
+            self._standard_name = standard_name
+        else:
+            raise ValueError('%r is not a valid standard_name' % standard_name)
 
     @staticmethod
     def guess_standard_name(name):

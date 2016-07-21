@@ -203,6 +203,7 @@ def get_metadata(var):
     :return: A metadata object
     """
     from cis.data_io.ungridded_data import Metadata
+    from cis.utils import set_standard_name_if_valid
 
     standard_name = getattr(var, 'standard_name', "")
     missing_value = find_missing_value(var)
@@ -219,12 +220,14 @@ def get_metadata(var):
 
     metadata = Metadata(
         var._name,
-        standard_name,
-        long_name,
+        long_name=long_name,
         units=units,
         missing_value=missing_value,
         shape=shape,
         history=history)
+
+    # Only set the standard name if it's CF compliant
+    set_standard_name_if_valid(metadata, standard_name)
 
     return metadata
 

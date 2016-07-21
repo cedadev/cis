@@ -497,7 +497,7 @@ class NCAR_NetCDF_RAF(AProduct):
         coordinate_data_objects = []
         for d in data_variables[data_variable_name]:
             m = get_metadata(d)
-            m.alter_standard_name(standard_name)
+            m.standard_name = standard_name
             coordinate_data_objects.append(Coord(d, m, coord_axis))
         
         return Coord.from_many_coordinates(coordinate_data_objects)
@@ -520,7 +520,7 @@ class NCAR_NetCDF_RAF(AProduct):
         # Create a coordinate for each separate file to account for differing timestamps
         for file_time_var, timestamp in map(None, time_variables, timestamps):
             metadata = get_metadata(file_time_var)
-            metadata.alter_standard_name(standard_name)
+            metadata.standard_name = standard_name
             coord = Coord(file_time_var, metadata, coord_axis)
             coord.convert_to_std_time(timestamp)
             time_coords.append(coord)

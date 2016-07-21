@@ -945,15 +945,6 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
         out_cube = col.collocate(points=sample_cube, data=data_points, constraint=con, kernel=SlowMean())[0]
 
-    def test_data_with_invalid_standard_name(self):
-        sample_cube = make_mock_cube()
-        data_points = make_dummy_1d_ungridded_data_with_invalid_standard_name()
-
-        col = GeneralGriddedCollocator(fill_value=-999.9)
-        con = CubeCellConstraint()
-
-        out_cube = col.collocate(points=sample_cube, data=data_points, constraint=con, kernel=SlowMean())[0]
-
     def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude(self):
         con = CubeCellConstraint()
         kernel = SlowMean()

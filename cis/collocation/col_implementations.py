@@ -15,7 +15,7 @@ from cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataLis
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
 import cis.collocation.data_index as data_index
-from cis.utils import log_memory_profile
+from cis.utils import log_memory_profile, set_standard_name_if_valid
 
 
 class GeneralUngriddedCollocator(Collocator):
@@ -148,7 +148,7 @@ class GeneralUngriddedCollocator(Collocator):
                 new_data = UngriddedData(values[0, :], metadata, points.coords())
                 new_data.metadata._name = var_details[0]
                 new_data.metadata.long_name = var_details[1]
-                cis.utils.set_cube_standard_name_if_valid(new_data, var_details[2])
+                set_standard_name_if_valid(new_data, var_details[2])
                 new_data.metadata.shape = (len(sample_points),)
                 new_data.metadata.missing_value = self.fill_value
                 # TODO: This looks wrong
@@ -199,7 +199,6 @@ class GriddedUngriddedCollocator(Collocator):
         :return: A single LazyData object
         """
         from cis.collocation.gridded_interpolation import interpolate
-        from cis.utils import set_standard_name_if_valid
         log_memory_profile("GriddedUngriddedCollocator Initial")
 
         if isinstance(data, list):
@@ -995,7 +994,7 @@ class GeneralGriddedCollocator(Collocator):
             cube.data = data_with_nan_and_inf_removed
             cube.var_name = kernel_var_details[idx][0]
             cube.long_name = kernel_var_details[idx][1]
-            cis.utils.set_cube_standard_name_if_valid(cube, kernel_var_details[idx][2])
+            set_standard_name_if_valid(cube, kernel_var_details[idx][2])
             try:
                 cube.units = kernel_var_details[idx][3]
             except ValueError:

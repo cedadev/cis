@@ -284,7 +284,7 @@ class TestUngriddedSubsetConstraint(TestCase):
 
     def test_GIVEN_UngriddedDataList_WHEN_constrain_THEN_correctly_subsetted_UngriddedDataList_returned(self):
         ug_data = cis.test.util.mock.make_regular_2d_ungridded_data()
-        ug_data2 = UngriddedData(ug_data.data + 1, Metadata(name='snow', standard_name='snowfall_rate',
+        ug_data2 = UngriddedData(ug_data.data + 1, Metadata(name='snowfall_flux', standard_name='snowfall_flux',
                                                             long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
                                                             units="kg m-2 s-1", missing_value=-999), ug_data.coords())
         constraint = subset_constraint.UngriddedSubsetConstraint()
