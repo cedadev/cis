@@ -64,6 +64,45 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         # Since there is no corresponding pressure field in the source data a ValueError should be raised
         assert_raises(ValueError, col.collocate, sample_points, cube, None, 'linear')
 
+    def test_order_of_coords_doesnt_matter(self):
+        from iris.cube import Cube
+        from iris.coords import DimCoord
+        import numpy as np
+        from cis.data_io.gridded_data import make_from_cube
+        from cis.data_io.ungridded_data import UngriddedCoordinates, Metadata
+        from cis.data_io.Coord import Coord
+
+        cube_lat = DimCoord(np.linspace(-90, 90, 180), standard_name='latitude', units='degrees')
+        cube_lon = DimCoord(np.linspace(0, 359, 360), standard_name='longitude', units='degrees', circular=True)
+        cube_alt = DimCoord(np.linspace(0, 10000, 100), standard_name='altitude', units='meters')
+
+        times = np.linspace(0, 30, 12)
+        cube_time = DimCoord(times, standard_name='time', units='days since 1970-01-01 00:00:00')
+
+        data = np.arange(12 * 180 * 360 * 100).reshape(12, 180, 360, 100)
+        source = make_from_cube(Cube(data,
+                                     dim_coords_and_dims=[(cube_time, 0), (cube_lat, 1), (cube_lon, 2), (cube_alt, 3)]))
+
+        n = 10
+        sample_lats = np.linspace(-9.1, 9.9, n)
+        sample_longs = np.linspace(-9.1, 9.9, n)
+        sample_alts = np.linspace(99, 599, n)
+        sample_times = np.linspace(0, 30, n)
+
+        sample = UngriddedCoordinates(
+            [Coord(sample_lats, Metadata('latitude')), Coord(sample_longs, Metadata('longitude')),
+             Coord(sample_alts, Metadata('altitude')),
+             Coord(sample_times, Metadata('time', units='days since 1970-01-01 00:00:00'))])
+
+        col = GriddedUngriddedCollocator()
+        output = col.collocate(sample, source, None, 'nearest')[0]
+
+        source.transpose()
+        assert_equal(col.collocate(sample, source, None, 'nearest')[0].data, output.data)
+
+        source.transpose((2, 1, 0, 3))
+        assert_equal(col.collocate(sample, source, None, 'nearest')[0].data, output.data)
+
 
 class TestNN(unittest.TestCase):
 

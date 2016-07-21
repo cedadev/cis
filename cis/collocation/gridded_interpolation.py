@@ -42,8 +42,8 @@ def interpolate(data, sample, method='linear', fill_value=np.nan, extrapolate=Fa
 
     coords = []
     # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
-    for coord in sample.coords():
-        if len(data.coords(coord.name(), dim_coords=True)) > 0:
+    for coord in data.coords(dim_coords=True):
+        if len(sample.coords(coord.name())) > 0:
             coords.append(coord.name())
 
     sample_points = [sample.coord(c).points for c in coords]
