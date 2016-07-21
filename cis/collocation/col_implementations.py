@@ -84,11 +84,13 @@ class GeneralUngriddedCollocator(Collocator):
         logging.info("--> Collocating...")
 
         # Create output arrays.
-        self.var_name = self.var_name or data.name()
-        self.var_long_name = self.var_long_name or metadata.long_name
-        self.var_units = self.var_units or data.units
+        self.var_name = data.name()
+        self.var_long_name = metadata.long_name
+        self.var_standard_name = metadata.standard_name
+        self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
-                                                      metadata.standard_name, self.var_units)
+                                                      self.var_standard_name, self.var_units)
+
         sample_points_count = len(sample_points)
         values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
         log_memory_profile("GeneralUngriddedCollocator after output array creation")
