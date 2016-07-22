@@ -236,7 +236,7 @@ def stats_cmd(main_arguments):
 
 
 def version_cmd(_main_arguments):
-    print("Using CIS version:", __version__, "(" + __status__ + ")")
+    print("Using CIS version: {ver} ({stat})".format(ver=__version__, stat=__status__ ))
 
 
 commands = {'plot': plot_cmd,
