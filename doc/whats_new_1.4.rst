@@ -9,6 +9,7 @@ This page documents the new features added, and bugs fixed in CIS since version 
 CIS 1.4 features
 ================
 
+ * CIS now includes full support for Python 3, as well as Python 2.7
  * CIS no longer prepends ungridded output files with 'cis-'. Instead CIS creates a global attribute in the output file
    called source which contains 'CIS<version>'. This is checked in the updated CIS plugin when reading any NetCDF file.
 
