@@ -513,12 +513,13 @@ class NCAR_NetCDF_RAF(AProduct):
         :return: Coordinate
         """
         from cis.data_io.Coord import Coord
+        from six.moves import zip_longest
 
         timestamps = listify(timestamp)
         time_variables = data_variables[time_variable_name]
         time_coords = []
         # Create a coordinate for each separate file to account for differing timestamps
-        for file_time_var, timestamp in map(None, time_variables, timestamps):
+        for file_time_var, timestamp in zip_longest(time_variables, timestamps):
             metadata = get_metadata(file_time_var)
             metadata.standard_name = standard_name
             coord = Coord(file_time_var, metadata, coord_axis)
