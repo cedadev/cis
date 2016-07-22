@@ -25,7 +25,7 @@ import numpy as np
 from numpy.testing import (assert_array_almost_equal, assert_raises,
                            TestCase, assert_allclose)
 
-from cis.collocation.gridded_interpolation import RegularGridInterpolator, GriddedUngriddedInterpolator
+from cis.collocation.gridded_interpolation import _RegularGridInterpolator, GriddedUngriddedInterpolator
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
 
@@ -60,10 +60,10 @@ class TestRegularGridInterpolator(TestCase):
                                           [0.5, 0.5, .5, .5]])
 
         for method in ['linear', 'nearest']:
-            interp = RegularGridInterpolator(points,
+            interp = _RegularGridInterpolator(points,
                                              sample.T.tolist(), method=method)
             v1 = interp(values.tolist())
-            interp = RegularGridInterpolator(points,
+            interp = _RegularGridInterpolator(points,
                                              sample.T, method=method)
             v2 = interp(values)
             assert_allclose(v1, v2)
@@ -74,9 +74,9 @@ class TestRegularGridInterpolator(TestCase):
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8], [0.5, 0.5, .5, .5]])
 
         for method in ['linear', 'nearest']:
-            interp = RegularGridInterpolator(points, sample.T, method=method)
-            rinterp = RegularGridInterpolator(points, sample.real.T, method=method)
-            iinterp = RegularGridInterpolator(points, sample.imag.T, method=method)
+            interp = _RegularGridInterpolator(points, sample.T, method=method)
+            rinterp = _RegularGridInterpolator(points, sample.real.T, method=method)
+            iinterp = _RegularGridInterpolator(points, sample.imag.T, method=method)
 
             v1 = interp(values)
             v2 = rinterp(values) + 1j*iinterp(values)
@@ -86,7 +86,7 @@ class TestRegularGridInterpolator(TestCase):
         points, values = self._get_sample_4d_2()
         sample = np.asarray([0.1, 0.1, 10., 9.])
         wanted = 1001.1
-        interp = RegularGridInterpolator(points, sample.T)
+        interp = _RegularGridInterpolator(points, sample.T)
         assert_array_almost_equal(interp(values), wanted)
 
     def test_linear_xi3d(self):
@@ -94,37 +94,37 @@ class TestRegularGridInterpolator(TestCase):
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                                                      [0.5, 0.5, .5, .5]])
         wanted = np.asarray([1001.1, 846.2, 555.5])
-        interp = RegularGridInterpolator(points, sample.T)
+        interp = _RegularGridInterpolator(points, sample.T)
         assert_array_almost_equal(interp(values), wanted)
 
     def test_nearest(self):
         points, values = self._get_sample_4d()
         sample = np.asarray([0.1, 0.1, .9, .9])
         wanted = 1100.
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([0.1, 0.1, 0.1, 0.1])
         wanted = 0.
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([0., 0., 0., 0.])
         wanted = 0.
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([1., 1., 1., 1.])
         wanted = 1111.
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([0.1, 0.4, 0.6, 0.9])
         wanted = 1055.
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         assert_array_almost_equal(interp(values), wanted)
 
     def test_linear_edges(self):
         points, values = self._get_sample_4d()
         sample = np.asarray([[0., 0., 0., 0.], [1., 1., 1., 1.]])
         wanted = np.asarray([0., 1111.])
-        interp = RegularGridInterpolator(points, sample.T)
+        interp = _RegularGridInterpolator(points, sample.T)
         assert_array_almost_equal(interp(values), wanted)
 
     def test_valid_create(self):
@@ -134,29 +134,29 @@ class TestRegularGridInterpolator(TestCase):
         values0 = values[:, np.newaxis]
         values1 = values[np.newaxis, :]
         values = (values0 + values1 * 10)
-        assert_raises(ValueError, RegularGridInterpolator, points, values)
+        assert_raises(ValueError, _RegularGridInterpolator, points, values)
         points = [((0., .5, 1.), ), (0., .5, 1.)]
-        assert_raises(ValueError, RegularGridInterpolator, points, values)
+        assert_raises(ValueError, _RegularGridInterpolator, points, values)
         points = [(0., .5, .75, 1.), (0., .5, 1.)]
-        assert_raises(ValueError, RegularGridInterpolator, points, values)
+        assert_raises(ValueError, _RegularGridInterpolator, points, values)
 
     def test_valid_call(self):
         points, values = self._get_sample_4d()
         sample = np.asarray([[0., 0., 0., 0.], [1., 1., 1., 1.]])
-        interp = RegularGridInterpolator(points, sample.T)
+        interp = _RegularGridInterpolator(points, sample.T)
         assert_raises(ValueError, interp, values, "undefmethod")
         # This is actually an error on creation now
         sample = np.asarray([[0., 0., 0.], [1., 1., 1.]])
-        assert_raises(ValueError, RegularGridInterpolator, points, sample)
+        assert_raises(ValueError, _RegularGridInterpolator, points, sample)
 
     def test_out_of_bounds_extrap(self):
         points, values = self._get_sample_4d()
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [21, 2.1, -1.1, -11], [2.1, 2.1, -1.1, -1.1]])
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         wanted = np.asarray([0., 1111., 11., 11.])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
-        interp = RegularGridInterpolator(points, sample.T, method="linear")
+        interp = _RegularGridInterpolator(points, sample.T, method="linear")
         wanted = np.asarray([-111.1, 1222.1, -11068., -1186.9])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
 
@@ -165,10 +165,10 @@ class TestRegularGridInterpolator(TestCase):
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [21, 2.1, -1.1, -11], [2.1, 2.1, -1.1, -1.1]])
 
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         wanted = np.asarray([0., 11., 11., 11.])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
-        interp = RegularGridInterpolator(points, sample.T, method="linear")
+        interp = _RegularGridInterpolator(points, sample.T, method="linear")
         wanted = np.asarray([-12.1, 133.1, -1069., -97.9])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
 
@@ -177,23 +177,23 @@ class TestRegularGridInterpolator(TestCase):
 
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [2.1, 2.1, -1.1, -1.1]])
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         wanted = np.asarray([np.nan, np.nan, np.nan])
         assert_array_almost_equal(interp(values, fill_value=np.nan), wanted)
-        interp = RegularGridInterpolator(points, sample.T, method="linear")
+        interp = _RegularGridInterpolator(points, sample.T, method="linear")
         assert_array_almost_equal(interp(values, fill_value=np.nan), wanted)
 
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                              [0.5, 0.5, .5, .5]])
         wanted = np.asarray([1001.1, 846.2, 555.5])
-        interp = RegularGridInterpolator(points, sample.T)
+        interp = _RegularGridInterpolator(points, sample.T)
         assert_array_almost_equal(interp(values, fill_value=np.nan), wanted)
 
     def test_nearest_compare_qhull(self):
         points, values = self._get_sample_4d()
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                              [0.5, 0.5, .5, .5]])
-        interp = RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
         points_qhull = itertools.product(*points)
         points_qhull = [p for p in points_qhull]
         points_qhull = np.asarray(points_qhull)
@@ -205,7 +205,7 @@ class TestRegularGridInterpolator(TestCase):
         points, values = self._get_sample_4d()
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                              [0.5, 0.5, .5, .5]])
-        interp = RegularGridInterpolator(points, sample.T)
+        interp = _RegularGridInterpolator(points, sample.T)
         points_qhull = itertools.product(*points)
         points_qhull = [p for p in points_qhull]
         points_qhull = np.asarray(points_qhull)
@@ -288,7 +288,7 @@ class TestRegularGridInterpolator(TestCase):
         values = np.random.rand(5, 7)
 
         # integers can be cast to floats
-        interp = RegularGridInterpolator((x, y), [0.4, 0.7])
+        interp = _RegularGridInterpolator((x, y), [0.4, 0.7])
         interp(values, fill_value=1)
 
         # complex values cannot
@@ -299,7 +299,7 @@ class TestRegularGridInterpolator(TestCase):
         values = np.ones((10, 20, 30), dtype='>f4')
         points = [np.arange(n) for n in values.shape]
         xi = np.asarray([1, 1, 1])
-        interpolator = RegularGridInterpolator(points, xi.T)
+        interpolator = _RegularGridInterpolator(points, xi.T)
         interpolator(values, fill_value=0.)
 
     def test_missing_values(self):

@@ -73,11 +73,11 @@ class CollocatorFactory(object):
         options = {
             'lin_False_False': None,
             'lin_True_False': None,
-            'lin_False_True': [ci.GriddedUngriddedCollocator, None, None],
+            'lin_False_True': [ci.GriddedUngriddedCollocator, None, 'linear'],
             'lin_True_True': [ci.GriddedCollocator, None, ci.gridded_gridded_li],
             'nn_False_False': None,
             'nn_True_False': None,
-            'nn_False_True': [ci.GriddedUngriddedCollocator, None, None],
+            'nn_False_True': [ci.GriddedUngriddedCollocator, None, 'nearest'],
             'nn_True_True': [ci.GriddedCollocator, None, ci.gridded_gridded_nn],
             'bin_False_False': None,
             'bin_True_False': [ci.GeneralGriddedCollocator, ci.BinnedCubeCellOnlyConstraint, _GenericKernel],
@@ -128,7 +128,9 @@ class CollocatorFactory(object):
         :return: object or None if class is None
         """
         obj = None
-        if cls is not None:
+        if isinstance(cls, str):
+            obj = cls
+        elif cls is not None:
             if params is not None:
                 obj = cls(**params)
             else:

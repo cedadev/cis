@@ -48,4 +48,4 @@ class TestCollocateFactory(unittest.TestCase):
             None, None, {'missing_data_for_missing_sample': "false"}, {}, False, True)
         assert_that(collocator, instance_of(GriddedUngriddedCollocator))
         assert_that(constraint, is_(None))
-        assert_that(kernel, is_(None))
+        assert_that(kernel, is_('linear'))
