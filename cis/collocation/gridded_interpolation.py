@@ -38,17 +38,27 @@ class GriddedUngriddedInterpolator(object):
         from iris.analysis._interpolation import extend_circular_coord
         coords = []
         grid_points = []
-        self.circular_coord_dims = []
+        self._circular_coord_dims = []
+        self._decreasing_coord_dims = []
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         for coord in data.coords(dim_coords=True):
             if len(sample.coords(standard_name=coord.name())) > 0:
                 coords.append(coord.name())
+                # The circular coord must be a dim coord so we pop the value out of the tuple
+                coord_dim = data.coord_dims(coord)[0]
+                coord_points = coord.points
+
+                decreasing = (coord_points.size > 1 and
+                              coord_points[1] < coord_points[0])
+                if decreasing:
+                    self._decreasing_coord_dims.append(decreasing)
+                    coord_points = coord_points[::-1]
+
                 if getattr(coord, 'circular', False):
-                    grid_points.append(extend_circular_coord(coord, coord.points))
-                    # The circular coord must be a dim coord so we pop the value out of the tuple
-                    self.circular_coord_dims.append(data.coord_dims(coord)[0])
-                else:
-                    grid_points.append(coord.points)
+                    self._circular_coord_dims.append(coord_dim)
+                    coord_points = extend_circular_coord(coord, coord_points)
+
+                grid_points.append(coord_points)
 
         sample_points = [sample.coord(c).points for c in coords]
 
@@ -71,6 +81,13 @@ class GriddedUngriddedInterpolator(object):
         self._interp = _RegularGridInterpolator(grid_points, sample_points,
                                                hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
 
+    def _account_for_inverted(self, data):
+        dim_slices = [slice(None)] * data.ndim
+        for dim in self._decreasing_coord_dims:
+                dim_slices[dim] = slice(-1, None, -1)
+        data = data[dim_slices]
+        return data
+
     def __call__(self, data, fill_value=np.nan, extrapolate=False):
         """
          Perform the prepared interpolation over the given data GriddedData object - this assumes that the coordinates
@@ -89,8 +106,10 @@ class GriddedUngriddedInterpolator(object):
 
         # Account for any circular coords present
         data_array = data.data
-        for dim in self.circular_coord_dims:
+        for dim in self._circular_coord_dims:
             data_array = extend_circular_data(data_array, dim)
+
+        data_array = self._account_for_inverted(data_array)
 
         return self._interp(data_array, fill_value=fill_value)
 
@@ -167,8 +186,8 @@ class _RegularGridInterpolator(object):
             ndim = len(self.grid)
             points = np.vstack(points).T
             if points.shape[-1] != len(self.grid):
-                raise ValueError("The requested sample points xi have dimension "
-                                 "%d, but this RegularGridInterpolator has "
+                raise ValueError("The requested sample points have dimension "
+                                 "%d, but the interpolation grid has "
                                  "dimension %d" % (points.shape[1], ndim))
         else:
             ndim = len(self.grid)
