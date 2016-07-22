@@ -281,6 +281,26 @@ class TestRegularGridInterpolator(TestCase):
         wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
         assert_array_almost_equal(values, wanted)
 
+    def test_hybrid_Coord_order_doesnt_matter(self):
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.ungridded_data import UngriddedData
+        from cis.data_io.hyperpoint import HyperPoint
+        import datetime as dt
+        cube = make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
+
+        cube.transpose()
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        values = interpolator(cube)
+        wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
+        assert_array_almost_equal(values, wanted)
+
     def test_invalid_fill_value(self):
         np.random.seed(1234)
         x = np.linspace(0, 2, 5)

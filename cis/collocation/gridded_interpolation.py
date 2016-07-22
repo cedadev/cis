@@ -40,6 +40,7 @@ class GriddedUngriddedInterpolator(object):
         grid_points = []
         self._circular_coord_dims = []
         self._decreasing_coord_dims = []
+        self._data_transpose = list(range(data.ndim))
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         for coord in data.coords(dim_coords=True):
             if len(sample.coords(standard_name=coord.name())) > 0:
@@ -65,10 +66,15 @@ class GriddedUngriddedInterpolator(object):
         if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude'):
             hybrid_coord = data.coord('altitude').points
             hybrid_dims = data.coord_dims(data.coord('altitude'))
+            # TODO: This doesn't work as the transpose isn't the right length for the hybrid coord...
+            self._get_dims_order(data, coords)
+            hybrid_coord = hybrid_coord.transpose(self._data_transpose)
             sample_points.append(sample.coord("altitude").points)
         elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure'):
             hybrid_coord = data.coord('air_pressure').points
             hybrid_dims = data.coord_dims(data.coord('air_pressure'))
+            self._get_dims_order(data, coords)
+            hybrid_coord = hybrid_coord.transpose(self._data_transpose)
             sample_points.append(sample.coord("air_pressure").points)
         else:
             hybrid_coord = None
@@ -80,6 +86,17 @@ class GriddedUngriddedInterpolator(object):
 
         self._interp = _RegularGridInterpolator(grid_points, sample_points,
                                                hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
+
+    def _get_dims_order(self, data, coords):
+        """
+        Return the dims with the vertical coord last. There must be a nicer way of doing this...
+        """
+        # Find the only dimension coordinate we haven't yet accounted for - this must be the vertical
+        vertical_coord = list(set([c.name() for c in data.coords(dim_coords=True)]).difference(set(coords)))[0]
+        vertical_dim = data.coord_dims(vertical_coord)[0]
+        # The dim order is just the range of the dims with the vertical dim moved to the end.
+        self._data_transpose.pop(vertical_dim)
+        self._data_transpose.append(vertical_dim)
 
     def _account_for_inverted(self, data):
         dim_slices = [slice(None)] * data.ndim
@@ -105,7 +122,7 @@ class GriddedUngriddedInterpolator(object):
             fill_value = None
 
         # Account for any circular coords present
-        data_array = data.data
+        data_array = data.data.transpose(self._data_transpose)
         for dim in self._circular_coord_dims:
             data_array = extend_circular_data(data_array, dim)
 
