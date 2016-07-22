@@ -68,7 +68,7 @@ class GriddedUngriddedInterpolator(object):
             raise ValueError("Sample points do not uniquely define gridded data source points, invalid "
                              "dimenions: {} and {} respectively".format(len(sample_points), len(data.shape)))
 
-        self._interp = RegularGridInterpolator(grid_points, sample_points,
+        self._interp = _RegularGridInterpolator(grid_points, sample_points,
                                                hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
 
     def __call__(self, data, fill_value=np.nan, extrapolate=False):
@@ -123,72 +123,30 @@ def _ndim_coords_from_arrays(points, ndim=None):
     return points
 
 
-class RegularGridInterpolator(object):
+class _RegularGridInterpolator(object):
     """
     Interpolation on a regular grid in arbitrary dimensions
     The data must be defined on a regular grid; the grid spacing however may be
     uneven.  Linear and nearest-neighbour interpolation are supported. After
-    setting up the interpolator object, the interpolation method (*linear* or
-    *nearest*) may be chosen at each evaluation.
-    Parameters
-    ----------
-    coords : tuple of ndarray of float, with shapes (m1, ), ..., (mn, )
-        The coords defining the regular grid in n dimensions.
-    points : ndarray of shape (..., ndim)
-        The points to sample the gridded data at
-    method : str
-        The method of interpolation to perform. Supported are "linear" and "nearest". Default is "linear".
-    Methods
-    -------
-    __call__
-    Notes
-    -----
-    Contrary to LinearNDInterpolator and NearestNDInterpolator, this class
-    avoids expensive triangulation of the input data by taking advantage of the
-    regular grid structure.
-    .. versionadded:: 0.14
-    Examples
-    --------
-    Evaluate a simple example function on the points of a 3D grid:
-    >>> from scipy.interpolate import RegularGridInterpolator
-    >>> def f(x,y,z):
-    ...     return 2 * x**3 + 3 * y**2 - z
-    >>> x = np.linspace(1, 4, 11)
-    >>> y = np.linspace(4, 7, 22)
-    >>> z = np.linspace(7, 9, 33)
-    >>> data = f(*np.meshgrid(x, y, z, indexing='ij', sparse=True))
-    ``data`` is now a 3D array with ``data[i,j,k] = f(x[i], y[j], z[k])``.
-    Next, define an interpolating function from this data:
-    >>> my_interpolating_function = RegularGridInterpolator((x, y, z), data)
-    Evaluate the interpolating function at the two points
-    ``(x,y,z) = (2.1, 6.2, 8.3)`` and ``(3.3, 5.2, 7.1)``:
-    >>> pts = np.array([[2.1, 6.2, 8.3], [3.3, 5.2, 7.1]])
-    >>> my_interpolating_function(pts)
-    array([ 125.80469388,  146.30069388])
-    which is indeed a close approximation to
-    ``[f(2.1, 6.2, 8.3), f(3.3, 5.2, 7.1)]``.
-    See also
-    --------
-    NearestNDInterpolator : Nearest neighbour interpolation on unstructured
-                            data in N dimensions
-    LinearNDInterpolator : Piecewise linear interpolant on unstructured data
-                           in N dimensions
-    References
-    ----------
-    .. [1] Python package *regulargrid* by Johannes Buchner, see
-           https://pypi.python.org/pypi/regulargrid/
-    .. [2] Trilinear interpolation. (2013, January 17). In Wikipedia, The Free
-           Encyclopedia. Retrieved 27 Feb 2013 01:28.
-           http://en.wikipedia.org/w/index.php?title=Trilinear_interpolation&oldid=533448871
-    .. [3] Weiser, Alan, and Sergio E. Zarantonello. "A note on piecewise linear
-           and multilinear table interpolation in many dimensions." MATH.
-           COMPUT. 50.181 (1988): 189-196.
-           http://www.ams.org/journals/mcom/1988-50-181/S0025-5718-1988-0917826-0/S0025-5718-1988-0917826-0.pdf
+    setting up the interpolator object, the interpolation can be performed for
+    multiple data arrays with cached indices - this assumes they have the same
+    coordinates.
     """
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
     def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, method="linear"):
+        """
+        Initialise the itnerpolator - this will calculate and cache the indices of the interpolation. It will
+        also interpolate the hybrid coordinate if needed to determine a unique vertical index.
+
+        :param iterable coords: The coords defining the regular grid in n dimensions. Should be a tuple of ndarrays
+        :param ndarray points: The points to sample the gridded data at.
+        :param ndarray hybrid_coord: An (optional) array describing a single vertical hybrid coordinate
+        :param iterable hybrid_dims: The grid dimensions over which the hybrid coordinate is defined
+        :param str method: The method of interpolation to perform. Supported are "linear" and "nearest". Default is
+        "linear".
+        """
         if method == "linear":
             self._interp = self._evaluate_linear
         elif method == "nearest":
@@ -246,15 +204,12 @@ class RegularGridInterpolator(object):
 
     def __call__(self, values, fill_value=np.nan):
         """
-        Interpolation at coordinates
-        Parameters
-        ----------
-        values : array_like, shape (m1, ..., mn, ...)
-            The data on the regular grid in n dimensions.
-        fill_value : number, optional
-            If provided, the value to use for points outside of the
-            interpolation domain. If None, values outside
-            the domain are extrapolated.
+        Interpolation of values at cached coordinates
+
+        :param ndarray values: The data on the regular grid in n dimensions
+        :param float fill_value: If provided, the value to use for points outside of the interpolation domain. If None,
+        values outside the domain are extrapolated.
+        :return ndarray: The interpolated values
         """
         if not hasattr(values, 'ndim'):
             # allow reasonable duck-typed values
