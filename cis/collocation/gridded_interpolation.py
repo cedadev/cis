@@ -60,7 +60,7 @@ class GriddedUngriddedInterpolator(object):
 
                 grid_points.append(coord_points)
 
-        sample_points = [sample.coord(c).points for c in coords]
+        sample_points = [sample.coord(c).data_flattened for c in coords]
 
         if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude'):
             hybrid_coord = data.coord('altitude').points
