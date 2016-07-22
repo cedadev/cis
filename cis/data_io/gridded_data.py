@@ -10,6 +10,12 @@ from cis.data_io.hyperpoint_view import GriddedHyperPointView
 
 
 def load_cube(*args, **kwargs):
+    """
+    Load a single GriddedData object through the iris load interface, but also attempt concatenation if merging fails
+
+    :return GriddedData: A single GriddedData object
+    :raises ValueError: If 0 or more than one cube is found
+    """
     from iris.exceptions import MergeError, ConcatenateError
     # Don't automatically promote variables which define reference surfaces for dimensionless vertical coordinates
     # as independent Cubes - it's just confusing for users I think
@@ -25,6 +31,8 @@ def load_cube(*args, **kwargs):
         except ConcatenateError as e:
             logging.error("Unable to concatenate cubes on load: \n {}".format(e))
             raise ValueError("Unable to create a single cube from arguments given: {}".format(args))
+    except ValueError as e:
+        raise ValueError("No cubes found")
     return make_from_cube(iris_cube)
 
 

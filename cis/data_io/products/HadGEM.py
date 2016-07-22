@@ -31,7 +31,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
         from cis.exceptions import InvalidVariableError
         from cis.data_io.products.gridded_NetCDF import DisplayConstraint
         from cis.data_io.gridded_data import load_cube
-        from iris.exceptions import ConstraintMismatchError, CoordinateNotFoundError
+        from iris.exceptions import CoordinateNotFoundError
 
         # Check if the files given actually exist.
         for filename in filenames:
@@ -51,17 +51,15 @@ class HadGEM_CONVSH(NetCDF_Gridded):
 
         try:
             cube = load_cube(filenames, variable_constraint, callback=callback_function)
-        except ConstraintMismatchError as e:
+        except ValueError as e:
             if variable is None:
                 message = "File contains more than one cube variable name must be specified"
-            elif e.message == "no cubes found":
+            elif e.args[0] == "No cubes found":
                 message = "Variable not found: {} \nTo see a list of variables run: cis info {}" \
                     .format(str(variable), filenames[0])
             else:
                 message = e.args[0]
             raise InvalidVariableError(message)
-        except ValueError as e:
-            raise IOError(str(e))
 
         try:
             hybrid_ht = cube.coord(name_or_coord='Hybrid height')
