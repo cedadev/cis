@@ -58,7 +58,7 @@ class TestWriteNetcdf(unittest.TestCase):
         write(data, tmp_file)
         self.d = Dataset(tmp_file)
         for key, val in attrs.items():
-            assert getattr(self.d.variables['rain'], key) == val
+            assert getattr(self.d.variables['rainfall_flux'], key) == val
 
     def test_gridded_write_attributes(self):
         data = make_from_cube(make_mock_cube())
@@ -78,7 +78,7 @@ class TestWriteNetcdf(unittest.TestCase):
         data.units = 'kg'
         write(data, tmp_file)
         self.d = Dataset(tmp_file)
-        assert self.d.variables['rain'].units == 'kg'
+        assert self.d.variables['rainfall_flux'].units == 'kg'
 
     def test_gridded_write_units(self):
         data = make_from_cube(make_mock_cube())

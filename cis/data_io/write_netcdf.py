@@ -70,8 +70,7 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
             var[:] = data.data.flatten()
         except IndexError as e:
             raise InconsistentDimensionsError(str(e) + "\nInconsistent dimensions in output file, unable to write "
-                                                       "" + data.standard_name + " to file (it's shape is " + str(
-                data.shape) + ").")
+                                                       "{} to file (it's shape is {}).".format(data.name(), data.shape))
         return var
     else:
         return nc_file.variables[name]

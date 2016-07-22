@@ -825,7 +825,6 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
-    @unittest.skip("Very resource intensive")
     def test_NetCDF_Gridded_onto_CALIOP_L1(self):
         vars = valid_hadgem_variable,
         filename = valid_hadgem_filename
@@ -840,7 +839,6 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
-    @unittest.skip("Very resource intensive")
     def test_NetCDF_Gridded_onto_CALIOP_L2(self):
         vars = valid_echamham_variable_1, valid_echamham_variable_2
         filename = valid_echamham_filename

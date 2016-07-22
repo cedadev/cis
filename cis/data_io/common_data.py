@@ -99,6 +99,16 @@ class CommonData(object):
         """
         pass
 
+    @abstractmethod
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        pass
+
 
 class CommonDataList(list):
     """

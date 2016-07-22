@@ -32,9 +32,6 @@ class CollocatorFactory(object):
         import cis.collocation.col_implementations as ci
         col_cls, constraint_cls, kernel_cls = self._get_collocator_classes_for_method(method_name, kernel_name,
                                                                                       sample_gridded, data_gridded)
-        # We aren't able to pass any arguments to the li kernel when using the lin collocator so we pop them off here...
-        if kernel_cls is ci.li:
-            kernel_params = {k: collocator_params.get(k, None) for k in ('nn_vertical', 'extrapolate')}
         collocator_params, constraint_params = self._get_collocator_params(collocator_params)
         col = self._instantiate_with_params(col_cls, collocator_params)
         del constraint_params['missing_data_for_missing_sample']
@@ -46,7 +43,7 @@ class CollocatorFactory(object):
         # Default collocators - (sample_gridded, data_gridded) : collocator_name
         default_methods = {(True, True): 'lin',
                            (True, False): 'bin',
-                           (False, True): 'nn',
+                           (False, True): 'lin',
                            (False, False): 'box'}
 
         if method_name is None:
@@ -76,11 +73,11 @@ class CollocatorFactory(object):
         options = {
             'lin_False_False': None,
             'lin_True_False': None,
-            'lin_False_True': [ci.GeneralUngriddedCollocator, None, ci.li],
+            'lin_False_True': [ci.GriddedUngriddedCollocator, None, 'linear'],
             'lin_True_True': [ci.GriddedCollocator, None, ci.gridded_gridded_li],
             'nn_False_False': None,
             'nn_True_False': None,
-            'nn_False_True': [ci.GeneralUngriddedCollocator, None, ci.nn_gridded],
+            'nn_False_True': [ci.GriddedUngriddedCollocator, None, 'nearest'],
             'nn_True_True': [ci.GriddedCollocator, None, ci.gridded_gridded_nn],
             'bin_False_False': None,
             'bin_True_False': [ci.GeneralGriddedCollocator, ci.BinnedCubeCellOnlyConstraint, _GenericKernel],
@@ -131,7 +128,9 @@ class CollocatorFactory(object):
         :return: object or None if class is None
         """
         obj = None
-        if cls is not None:
+        if isinstance(cls, str):
+            obj = cls
+        elif cls is not None:
             if params is not None:
                 obj = cls(**params)
             else:

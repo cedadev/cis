@@ -722,19 +722,19 @@ def dimensions_compatible(dimensions, other_dimensions):
     return True
 
 
-def set_cube_standard_name_if_valid(cube, standard_name):
+def set_standard_name_if_valid(data, standard_name):
     """
-    Set a cube's standard name if it is a valid CF compliant name, otherwise set it to None
+    Set a data object's standard name if it is a valid CF compliant name, otherwise set it to None
 
-    :param cube: Cube to set standard name on
+    :param CommonData or Metadata data: Data to set standard name on
     :param standard_name: Standard name to set
     :return:
     """
     try:
-        cube.standard_name = standard_name
+        data.standard_name = standard_name
     except ValueError:
-        # If the standard name is not valid CF compliant standard name
-        cube.standard_name = None
+        logging.info("Not setting standard name '{}' as it is not CF compliant.".format(standard_name))
+        data.standard_name = None
 
 
 def deprecated(func):

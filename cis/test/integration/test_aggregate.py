@@ -253,7 +253,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lat_min, lat_max, lat_delta = 30, 50, 5
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='latitude', lon_name='longitude')
+                                    lat_name='LATC', lon_name='LONC')
 
     def test_aggregate_GASSP(self):
         variable = '*'
@@ -262,7 +262,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lat_min, lat_max, lat_delta = 30, 31, 0.1
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='latitude', lon_name='longitude')
+                                    lat_name='GpsLat', lon_name='GpsLon')
 
     def test_aggregate_GASSP2(self):
         # see issue JASCIS-144
@@ -272,7 +272,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lat_min, lat_max, lat_delta = -90, 90, 10
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='latitude', lon_name='longitude')
+                                    lat_name='LAT_500', lon_name='LON_502')
 
     def test_aggregate_Aeronet(self):
         # Takes 50s
@@ -441,7 +441,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_NCAR_RAF_with_named_time_variable_standard_name(self):
@@ -458,7 +458,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_GASSP(self):
@@ -468,7 +468,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='UTC_mid')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_GASSP_aux_coord(self):
@@ -479,7 +479,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='TIME')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Aeronet(self):

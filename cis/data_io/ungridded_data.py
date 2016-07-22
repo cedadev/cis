@@ -24,10 +24,13 @@ class Metadata(object):
     def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='',
                  missing_value='', calendar='', history='', misc=None):
         self._name = name
+
+        self._standard_name = ''
         if standard_name:
             self.standard_name = standard_name
         elif name:
             self.standard_name = Metadata.guess_standard_name(name)
+
         self.long_name = long_name
         self.shape = shape
         self.units = units
@@ -70,26 +73,23 @@ class Metadata(object):
     def __unicode__(self):
         return self.summary()
 
-    def alter_standard_name(self, new_standard_name):
-        """
-        Alter the standard name and log an info line to say this is happening if the standard name is not empty.
-        Also changes internal name for metadata or the same.
+    @property
+    def standard_name(self):
+        return self._standard_name
 
-        :param new_standard_name:
-        """
-        if self.standard_name is not None \
-                and self.standard_name.strip() is not "" \
-                and self.standard_name != new_standard_name:
-            logging.info("Changing standard name for dataset from '{}' to '{}'"
-                         .format(self.standard_name, new_standard_name))
-        self.standard_name = new_standard_name
-
-        if self._name is not None \
-                and self._name.strip() is not "" \
-                and self._name != new_standard_name:
-            logging.info("Changing variable name for dataset from '{}' to '{}'"
-                         .format(self._name, new_standard_name))
-        self._name = new_standard_name
+    @standard_name.setter
+    def standard_name(self, standard_name):
+        from iris.std_names import STD_NAMES
+        if standard_name is None or standard_name in STD_NAMES:
+            # If the standard name is actually changing from one to another then log the fact
+            if self.standard_name is not None \
+                    and self.standard_name.strip() is not "" \
+                    and self.standard_name != standard_name:
+                logging.debug("Changing standard name for dataset from '{}' to '{}'".format(self.standard_name,
+                                                                                            standard_name))
+            self._standard_name = standard_name
+        else:
+            raise ValueError('%r is not a valid standard_name' % standard_name)
 
     @staticmethod
     def guess_standard_name(name):
@@ -447,6 +447,13 @@ class UngriddedData(LazyData, CommonData):
         return UngriddedData(data=data, metadata=self.metadata, coords=coords)
 
     @property
+    def size(self):
+        return self.data.size
+
+    def count(self):
+        return self.data.count() if hasattr(self.data, 'count') else self.data.size
+
+    @property
     def history(self):
         return self.metadata.history
 
@@ -590,9 +597,8 @@ class UngriddedData(LazyData, CommonData):
         """
         summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
         summary += '     Shape = {}\n'.format(self.data.shape) + '\n'
-        summary += '     Total number of points = {}\n'.format(self.data.size)
-        num_non_masked_points = self.data.count() if hasattr(self.data, 'count') else self.data.size
-        summary += '     Number of non-masked points = {}\n'.format(num_non_masked_points)
+        summary += '     Total number of points = {}\n'.format(self.size)
+        summary += '     Number of non-masked points = {}\n'.format(self.count())
 
         summary += str(self.metadata)
 
@@ -609,6 +615,16 @@ class UngriddedData(LazyData, CommonData):
 
     def __unicode__(self):
         return self.summary()
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        from cis.utils import fix_longitude_range
+        self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
 
 class UngriddedCoordinates(CommonData):
@@ -663,6 +679,17 @@ class UngriddedCoordinates(CommonData):
     @property
     def history(self):
         return "UngriddedCoordinates have no history"
+
+    @property
+    def size(self):
+        if len(self._coords) > 1:
+            return self._coords[0].data.size
+        else:
+            return 0
+
+    def count(self):
+        # There can be no masked coordinate points
+        return self.size
 
     @property
     def x(self):
@@ -742,6 +769,16 @@ class UngriddedCoordinates(CommonData):
         """Returns value indicating whether the data/coordinates are gridded.
         """
         return False
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        from cis.utils import fix_longitude_range
+        self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
 
 class UngriddedDataList(CommonDataList):
