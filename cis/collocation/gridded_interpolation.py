@@ -41,7 +41,7 @@ class GriddedUngriddedInterpolator(object):
         self.circular_coord_dims = []
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         for coord in data.coords(dim_coords=True):
-            if len(sample.coords(coord.name())) > 0:
+            if len(sample.coords(standard_name=coord.name())) > 0:
                 coords.append(coord.name())
                 if getattr(coord, 'circular', False):
                     grid_points.append(extend_circular_coord(coord, coord.points))
