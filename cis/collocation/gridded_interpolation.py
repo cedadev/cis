@@ -24,23 +24,37 @@ import numpy as np
 
 class GriddedUngriddedInterpolator(object):
 
-    def __init__(self, data, sample, method='linear'):
+    def __init__(self, _data, sample, method='linear'):
         """
         Prepare an interpolation over the grid defined by a GriddedData source onto an UngriddedData sample.
 
         Indices are calculated but no interpolation is performed until the resulting object is called. Note that
         if the source contains a hybrid vertical coordinate these ARE interpolated to find a single vertical index.
 
-        :param GriddedData data: The source data, only the coordinates are used from this at initialisation.
+        :param GriddedData _data: The source data, only the coordinates are used from this at initialisation.
         :param UngriddedData sample: The points to sample the source data at.
         :param str method: The interpolation method to use (either 'linear' or 'nearest'). Default is 'linear'.
         """
         from iris.analysis._interpolation import extend_circular_coord
+        from cis.utils import move_item_to_end
         coords = []
         grid_points = []
         self._circular_coord_dims = []
         self._decreasing_coord_dims = []
-        self._data_transpose = list(range(data.ndim))
+
+        # If we have hybrid coordinates then ensure that the vertical dimension of the cube is last, as we will be
+        #  performing partial interpolations to pull out vertical columns - which only works if the vertical dim is last
+        # We do this first so that the coordinates are pulled out in the correct, new, order.
+        if len(_data.aux_factories) > 0:
+            vertical_dim = _data.coord_dims(_data.aux_factories[0].sigma)[0]
+            self._data_transpose = move_item_to_end(range(_data.ndim), vertical_dim)
+        else:
+            self._data_transpose = list(range(_data.ndim))
+
+        # Unfortunately transpose works in place, so make a copy of the data first
+        data = _data.copy()
+        data.transpose(self._data_transpose)
+
         # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
         for coord in data.coords(dim_coords=True):
             if len(sample.coords(standard_name=coord.name())) > 0:
@@ -66,15 +80,10 @@ class GriddedUngriddedInterpolator(object):
         if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude'):
             hybrid_coord = data.coord('altitude').points
             hybrid_dims = data.coord_dims(data.coord('altitude'))
-            # TODO: This doesn't work as the transpose isn't the right length for the hybrid coord...
-            self._get_dims_order(data, coords)
-            hybrid_coord = hybrid_coord.transpose(self._data_transpose)
             sample_points.append(sample.coord("altitude").points)
         elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure'):
             hybrid_coord = data.coord('air_pressure').points
             hybrid_dims = data.coord_dims(data.coord('air_pressure'))
-            self._get_dims_order(data, coords)
-            hybrid_coord = hybrid_coord.transpose(self._data_transpose)
             sample_points.append(sample.coord("air_pressure").points)
         else:
             hybrid_coord = None
@@ -121,8 +130,9 @@ class GriddedUngriddedInterpolator(object):
         if extrapolate:
             fill_value = None
 
-        # Account for any circular coords present
+        # Apply a transpose if we need to so that the indices line-up correctly
         data_array = data.data.transpose(self._data_transpose)
+        # Account for any circular coords present
         for dim in self._circular_coord_dims:
             data_array = extend_circular_data(data_array, dim)
 
@@ -212,7 +222,7 @@ class _RegularGridInterpolator(object):
 
         if hybrid_coord is not None:
 
-            # Firstly interpolate over all of the dimensions except the vertical (which we assume to be the last...)
+            # Firstly interpolate over all of the dimensions except the vertical (which will always be the last...)
             self.indices, self.norm_distances, self.out_of_bounds = \
                 self._find_indices(points[:-1], self.grid)
 

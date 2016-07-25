@@ -789,3 +789,17 @@ def log_memory_profile(location):
         logging.debug("App Memory MB ({}): {}".format(location, mem))
     except ImportError:
         pass
+
+
+def move_item_to_end(iter, item):
+    """
+    Move an item in an iterable to the end of a list
+    :param iterable iter: iterable container (list or tuple) contianing item
+    :param item: item to move to end
+    :return list: rearranged list
+    """
+    if not isinstance(iter, list):
+        iter = list(iter)
+    dim = iter.pop(iter.index(item))
+    iter.append(dim)
+    return iter

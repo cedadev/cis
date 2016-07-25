@@ -281,7 +281,7 @@ class TestRegularGridInterpolator(TestCase):
         wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
         assert_array_almost_equal(values, wanted)
 
-    def test_hybrid_Coord_order_doesnt_matter(self):
+    def test_hybrid_pres_Coord_order_doesnt_matter(self):
         from cis.test.util.mock import make_mock_cube
         from cis.data_io.ungridded_data import UngriddedData
         from cis.data_io.hyperpoint import HyperPoint
@@ -299,6 +299,28 @@ class TestRegularGridInterpolator(TestCase):
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
         values = interpolator(cube)
         wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
+        assert_array_almost_equal(values, wanted)
+
+    def test_hybrid_alt_Coord_order_doesnt_matter(self):
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.ungridded_data import UngriddedData
+        from cis.data_io.hyperpoint import HyperPoint
+        import datetime as dt
+        cube = make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
+
+        cube.transpose()
+
+        sample_points = UngriddedData.from_points_array(
+            # This point actually lies outside the lower bounds for altitude at this point in space
+            [HyperPoint(lat=1.0, lon=1.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies in the middle of the altitude bounds at this point
+             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
+             # This point lies outside the upper bounds for altitude at this point
+             HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
+
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        values = interpolator(cube, fill_value=None)
+        wanted = np.asarray([221.0, 345.0, 100.0])
         assert_array_almost_equal(values, wanted)
 
     def test_invalid_fill_value(self):
