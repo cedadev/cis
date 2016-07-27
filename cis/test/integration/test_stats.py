@@ -5,14 +5,6 @@ from cis.cis_main import stats_cmd, col_cmd
 from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 
-try:
-    import pyhdf
-except ImportError:
-    # Disable all these tests if pandas is not installed.
-    pyhdf = None
-
-skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
-
 
 class TestStats(BaseIntegrationTest):
 
@@ -34,7 +26,7 @@ class TestStats(BaseIntegrationTest):
 
     def test_Aeronet_wavelength_stats(self):
         # Takes 3s
-        args = ['stats', '%s,%s:%s' % ('AOT_500', 'AOT_440', another_valid_aeronet_filename),
+        args = ['stats', '%s,%s:%s' % ('AOT_500', 'AOT_440', escape_colons(another_valid_aeronet_filename)),
                 '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         stats_cmd(arguments)
@@ -42,13 +34,13 @@ class TestStats(BaseIntegrationTest):
 
     def test_no_output_file(self):
         # Takes 3s
-        args = ['stats', '%s,%s:%s' % ('AOT_500', 'AOT_440', another_valid_aeronet_filename)]
+        args = ['stats', '%s,%s:%s' % ('AOT_500', 'AOT_440', escape_colons(another_valid_aeronet_filename))]
         arguments = parse_args(args)
         stats_cmd(arguments)
 
     def test_ECHAMHAM_wavelength_stats(self):
         # Takes 0.7s
-        args = ['stats', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
+        args = ['stats', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, escape_colons(valid_echamham_filename)),
                 '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         stats_cmd(arguments)
@@ -60,8 +52,8 @@ class TestStats(BaseIntegrationTest):
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
         collocator_and_opts = 'nn,variable=%s' % sample_var
-        arguments = ['col', '%s:%s' % (valid_echamham_variable_1, valid_echamham_filename),
-                     sample_file + ':collocator=' + collocator_and_opts,
+        arguments = ['col', '%s:%s' % (valid_echamham_variable_1, escape_colons(valid_echamham_filename)),
+                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', 'collocated_gassp']
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
@@ -79,7 +71,7 @@ class TestStats(BaseIntegrationTest):
     def test_CloudSat(self):
         # Takes 140s
         args = ['stats', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,
-                                       valid_cloudsat_RVOD_file),
+                                       escape_colons(valid_cloudsat_RVOD_file)),
                 '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         stats_cmd(arguments)

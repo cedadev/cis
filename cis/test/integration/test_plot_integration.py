@@ -89,7 +89,7 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_subset_ECHAM_over_0_360_boundary_plots_OK(self):
         var = valid_echamham_variable_1
         filename = valid_echamham_filename
-        args = ['subset', var + ':' + filename, 'x=[-10,10]', '-o', self.OUTPUT_FILENAME]
+        args = ['subset', var + ':' + escape_colons(filename), 'x=[-10,10]', '-o', self.OUTPUT_FILENAME]
         args = parse_args(args)
         subset_cmd(args)
         out_name = 'subset_echam_boundary.png'
@@ -104,14 +104,14 @@ class TestPlotIntegration(BaseIntegrationTest):
         variable = valid_cis_gridded_output_variable
         filename = valid_cis_gridded_output_filename
         out_name = '3d_out.png'
-        args = ['plot', variable + ':' + filename, '-o', out_name]
+        args = ['plot', variable + ':' + escape_colons(filename), '-o', out_name]
         main_arguments = parse_args(args)
         plot_cmd(main_arguments)
 
     def test_plot_gridded_2d_with_flattened_time(self):
         variable = valid_cis_gridded_output_variable
         filename = valid_cis_gridded_output_filename
-        args = ['subset', variable + ':' + filename, 't=[2007-06-07T15]', '-o', self.OUTPUT_FILENAME]
+        args = ['subset', variable + ':' + escape_colons(filename), 't=[2007-06-07T15]', '-o', self.OUTPUT_FILENAME]
         args = parse_args(args)
         subset_cmd(args)
         out_name = '3d_out.png'
@@ -126,7 +126,7 @@ class TestPlotIntegration(BaseIntegrationTest):
         # JASCIS-183
         variable = 'Solar_Zenith_Angle'
         filename = valid_aeronet_filename
-        agg_args = ['aggregate', variable + ':' + filename,
+        agg_args = ['aggregate', variable + ':' + escape_colons(filename),
                     't=[2003-09-24T07:00:00,2003-11-04T07:00:00,P1D]', '-o', self.OUTPUT_FILENAME]
         args = parse_args(agg_args)
         aggregate_cmd(args)
@@ -142,7 +142,7 @@ class TestPlotIntegration(BaseIntegrationTest):
         filename = valid_GASSP_station_filename
         variable = valid_GASSP_station_vars[0]
         out_name = 'histogram2d.png'
-        args = ['plot', variable + ':' + filename, '--type', 'histogram2d', '-o', out_name]
+        args = ['plot', variable + ':' + escape_colons(filename), '--type', 'histogram2d', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
 
@@ -152,7 +152,7 @@ class TestPlotIntegration(BaseIntegrationTest):
     def test_plot_ungridded_heatmap(self):
         filename = valid_GASSP_station_filename
         variable = valid_GASSP_station_vars[0]
-        args = ['plot', variable + ':' + filename, '--type', 'heatmap']
+        args = ['plot', variable + ':' + escape_colons(filename), '--type', 'heatmap']
         args = parse_args(args)
         plot_cmd(args)
 
@@ -160,7 +160,7 @@ class TestPlotIntegration(BaseIntegrationTest):
         var = valid_echamham_variable_1
         filename = valid_echamham_filename
         out_name = 'cbarh.png'
-        args = ['plot', var + ':' + filename, '--cbarorient', 'horizontal', '-o', out_name]
+        args = ['plot', var + ':' + escape_colons(filename), '--cbarorient', 'horizontal', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
 
@@ -170,7 +170,7 @@ class TestPlotIntegration(BaseIntegrationTest):
         var = valid_echamham_variable_1
         filename = valid_echamham_filename
         out_name = 'cbarv.png'
-        args = ['plot', var + ':' + filename, '--cbarorient', 'vertical', '-o', out_name]
+        args = ['plot', var + ':' + escape_colons(filename), '--cbarorient', 'vertical', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
 
@@ -180,7 +180,7 @@ class TestPlotIntegration(BaseIntegrationTest):
         var = valid_echamham_variable_1
         filename = valid_echamham_filename
         out_name = 'cbarscale.png'
-        args = ['plot', var + ':' + filename, '--cbarscale', '0.75', '-o', out_name]
+        args = ['plot', var + ':' + escape_colons(filename), '--cbarscale', '0.75', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
 

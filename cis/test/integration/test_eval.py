@@ -10,13 +10,6 @@ from cis.test.integration_test_data import *
 from cis.parse import parse_args
 from cis.test.unit.eval.test_calc import compare_masked_arrays
 
-try:
-    import pyhdf
-except ImportError:
-    # Disable all these tests if pandas is not installed.
-    pyhdf = None
-
-skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
 
 class TestEval(BaseIntegrationTest):
 
@@ -25,7 +18,7 @@ class TestEval(BaseIntegrationTest):
         # ... a user should be able to write a plugin to calculate the Aeronet AOD at 550nm from the AOD at 500 nm as
         # AOD550 = AOD500 * (550/500)^(-1*Angstrom500-870)"
         # Takes 3s
-        args = ['eval', 'AOT_500,500-870Angstrom=a550to870:' + another_valid_aeronet_filename,
+        args = ['eval', 'AOT_500,500-870Angstrom=a550to870:' + escape_colons(another_valid_aeronet_filename),
                 'AOT_500 * (550.0/500)**(-1*a550to870)', '1', '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
@@ -41,7 +34,7 @@ class TestEval(BaseIntegrationTest):
         assert numpy.allclose(expected_result, calculated_result[0:20])
 
     def test_ECHAMHAM_wavelength_sum(self):
-        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
+        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, escape_colons(valid_echamham_filename)),
                 '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), '1', '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         evaluate_cmd(arguments)
@@ -58,8 +51,8 @@ class TestEval(BaseIntegrationTest):
     def test_collocated_NetCDF_Gridded_onto_GASSP(self):
         # First do a collocation of ECHAMHAM onto GASSP
         vars = valid_echamham_variable_1, valid_echamham_variable_2
-        filename = valid_echamham_filename
-        sample_file = valid_GASSP_aeroplane_filename
+        filename = escape_colons(valid_echamham_filename)
+        sample_file = escape_colons(valid_GASSP_aeroplane_filename)
         sample_var = valid_GASSP_aeroplane_variable
         collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
@@ -103,7 +96,7 @@ class TestEval(BaseIntegrationTest):
     @skip_pyhdf
     def test_CloudSat(self):
         args = ['eval', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,
-                                      valid_cloudsat_RVOD_file),
+                                      escape_colons(valid_cloudsat_RVOD_file)),
                 '%s/%s' % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable), 'ppm', '-o',
                 'cloudsat_var:' + self.OUTPUT_FILENAME]
         arguments = parse_args(args)
@@ -112,7 +105,7 @@ class TestEval(BaseIntegrationTest):
         assert_that(self.ds.variables['cloudsat_var'].units, is_('ppm'))
 
     def test_can_specify_output_variable(self):
-        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
+        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, escape_colons(valid_echamham_filename)),
                 '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), 'kg m^-3',
                 '-o', 'var_out:' + self.OUTPUT_FILENAME]
         arguments = parse_args(args)
@@ -122,7 +115,7 @@ class TestEval(BaseIntegrationTest):
         assert 'var_out' in self.ds.variables
 
     def test_can_specify_attributes_gridded(self):
-        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
+        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, escape_colons(valid_echamham_filename)),
                 '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), 'kg m^-3',
                 '-o', 'var_out:' + self.OUTPUT_FILENAME, '-a', 'att1=val1,att2=val2']
         arguments = parse_args(args)
@@ -133,7 +126,7 @@ class TestEval(BaseIntegrationTest):
         assert_that(self.ds.variables['var_out'].att2, is_('val2'))
 
     def test_can_specify_units_gridded(self):
-        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, valid_echamham_filename),
+        args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2, escape_colons(valid_echamham_filename)),
                 '%s+%s' % (valid_echamham_variable_1, valid_echamham_variable_2), 'kg m^-3',
                 '-o', 'var_out:' + self.OUTPUT_FILENAME, '-a', 'att1=val1,att2=val2']
         arguments = parse_args(args)
@@ -143,7 +136,7 @@ class TestEval(BaseIntegrationTest):
         assert_that(self.ds.variables['var_out'].units, is_('kg m^-3'))
 
     def test_can_specify_units_gridded_no_output_var(self):
-        args = ['eval', "%s:%s" % (valid_hadgem_variable, valid_hadgem_filename), "od550aer", "ppm", "-o",
+        args = ['eval', "%s:%s" % (valid_hadgem_variable, escape_colons(valid_hadgem_filename)), "od550aer", "ppm", "-o",
                 self.OUTPUT_FILENAME, "-a", "att1=val1"]
         arguments = parse_args(args)
         evaluate_cmd(arguments)

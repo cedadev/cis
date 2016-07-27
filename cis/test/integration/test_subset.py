@@ -11,14 +11,6 @@ from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.time_util import convert_time_since_to_std_time
 from cis.exceptions import CoordinateNotFoundError, NoDataInSubsetError
 
-try:
-    import pyhdf
-except ImportError:
-    # Disable all these tests if pandas is not installed.
-    pyhdf = None
-
-skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
-
 
 class TestSubsetIntegration(BaseIntegrationTest):
     def test_GIVEN_single_variable_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
@@ -26,7 +18,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_aerosol_cci_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable + ':' + filename,
+        arguments = ['subset', variable + ':' + escape_colons(filename),
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -38,7 +30,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_aerosol_cci_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable + ':' + filename,
+        arguments = ['subset', variable + ':' + escape_colons(filename),
                      'lon=[%s,%s],lat=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -50,7 +42,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_hadgem_filename
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable + ':' + filename,
+        arguments = ['subset', variable + ':' + escape_colons(filename),
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -62,7 +54,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_hadgem_filename
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable + ':' + filename,
+        arguments = ['subset', variable + ':' + escape_colons(filename),
                      'longitude=[%s,%s],latitude=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -75,7 +67,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_aerosol_cci_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
+        arguments = ['subset', variable1 + ',' + variable2 + ':' + escape_colons(filename),
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -88,7 +80,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_echamham_filename
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
+        arguments = ['subset', variable1 + ',' + variable2 + ':' + escape_colons(filename),
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -100,7 +92,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         variable2 = 'rh'
         filename = valid_1d_filename
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
+        arguments = ['subset', variable1 + ',' + variable2 + ':' + escape_colons(filename),
                      'y=[%s,%s]' % (lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -119,7 +111,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
         filename = valid_aerosol_cci_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
-        arguments = ['subset', variable1 + ',' + variable2 + ':' + filename,
+        arguments = ['subset', variable1 + ',' + variable2 + ':' + escape_colons(filename),
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -130,7 +122,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
 
 class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
     def do_subset(self, filename, time_min, time_max, variable):
-        arguments = ['subset', variable + ':' + filename, 't=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_FILENAME]
+        arguments = ['subset', variable + ':' + escape_colons(filename), 't=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 
@@ -183,7 +175,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         filename = valid_NCAR_NetCDF_RAF_filename
         variable = "LATC,LONC,GGALTC,Time,PSXC,WSC,ATX,ATHR2,CONCD_LWI"
         time_min, time_max = '2009-01-14T20:15:00', '2009-01-15T02:45:00'
-        arguments = ['subset', variable + ':' + filename, 'time=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_FILENAME]
+        arguments = ['subset', variable + ':' + escape_colons(filename), 'time=[%s,%s]' % (time_min, time_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
         self.check_temporal_subsetting(time_min, time_max)
@@ -326,7 +318,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
 
 class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
     def do_subset(self, filename, lat_max, lat_min, lon_max, lon_min, variable):
-        arguments = ['subset', variable + ':' + filename,
+        arguments = ['subset', variable + ':' + escape_colons(filename),
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
@@ -490,7 +482,7 @@ class TestEmptySubsets(BaseIntegrationTest):
     def do_subset(self, filename, variable, alt_bounds='', pres_bounds=''):
         # Join the bounds with a comma if they are both specified
         joint_bounds = ','.join([alt_bounds, pres_bounds]) if alt_bounds and pres_bounds else alt_bounds or pres_bounds
-        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_FILENAME]
+        arguments = ['subset', variable + ':' + escape_colons(filename), joint_bounds, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 
@@ -510,7 +502,7 @@ class TestVerticalSubsetAllProducts(BaseIntegrationTest):
     def do_subset(self, filename, variable, alt_bounds='', pres_bounds=''):
         # Join the bounds with a comma if they are both specified
         joint_bounds = ','.join([alt_bounds, pres_bounds]) if alt_bounds and pres_bounds else alt_bounds or pres_bounds
-        arguments = ['subset', variable + ':' + filename, joint_bounds, '-o', self.OUTPUT_FILENAME]
+        arguments = ['subset', variable + ':' + escape_colons(filename), joint_bounds, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 
@@ -625,7 +617,7 @@ class TestAuxSubset(BaseIntegrationTest):
 
     def do_subset(self, filename, variable, aux_bounds):
         # Join the bounds with a comma if they are both specified
-        arguments = ['subset', variable + ':' + filename, aux_bounds, '-o', self.OUTPUT_FILENAME]
+        arguments = ['subset', variable + ':' + escape_colons(filename), aux_bounds, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
 

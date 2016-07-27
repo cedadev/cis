@@ -10,14 +10,6 @@ from cis.test.integration_test_data import *
 from cis.test.utils_for_testing import *
 from cis.parse import parse_args
 
-try:
-    import pyhdf
-except ImportError:
-    # Disable all these tests if pandas is not installed.
-    pyhdf = None
-
-skip_pyhdf = unittest.skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
-
 
 class BaseAggregationTest(BaseIntegrationTest):
     def check_grid_aggregation(self, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta,
@@ -61,13 +53,13 @@ class BaseAggregationTest(BaseIntegrationTest):
 
     def do_spatial_aggregate(self, variable, filename, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta):
         grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_start, lon_end, lon_delta, lat_start, lat_end, lat_delta)
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
     def do_temporal_aggregate(self, variable, filename, t_start, t_end, str_delta):
         grid = 't=[%s,%s,%s]' % (t_start.isoformat(), t_end.isoformat(), str_delta)
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
@@ -237,7 +229,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         variables = ','.join([valid_cloud_cci_variable, valid_cloud_cci_8_bit_variable])
         filename = valid_cloud_cci_filename
         grid = 'x=[0, 358.125, 1.875],y=[-90, 90, 1.25],t=[2007-06-01,2007-06-30,PT3H]'
-        arguments = ['aggregate', variables + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variables + ':' + escape_colons(filename) + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
@@ -288,7 +280,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         # Takes 1s
         variable = '*'
         filename = valid_hadgem_filename
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 'x,y', '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 'x,y', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, ['od550aer'])
@@ -390,7 +382,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         # Takes 1s
         variable = '*'
         filename = valid_cis_gridded_output_filename
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 'x,y', '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 'x,y', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, ['TAU_2D_550nm'])
@@ -454,7 +446,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         str_delta = 'PT30M'
 
         grid = 'time=[%s,%s,%s]' % (time_min.isoformat(), time_max.isoformat(), str_delta)
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', grid, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
@@ -510,7 +502,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 1s
         variable = 'od550aer'
         filename = valid_hadgem_filename
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 't', '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 't', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
@@ -519,7 +511,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 2s
         variable = valid_hybrid_height_variable
         filename = valid_hybrid_height_filename
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 't,x,y', '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 't,x,y', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
@@ -529,7 +521,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 2s
         variable = valid_hybrid_height_variable
         filename = valid_hybrid_height_filename
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=mean', 't', '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 't', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
@@ -538,7 +530,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         # Takes 2s
         variable = valid_hybrid_height_variable
         filename = valid_hybrid_height_filename
-        arguments = ['aggregate', variable + ':' + filename, 't', '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename), 't', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
@@ -662,7 +654,7 @@ class TestMomentsKernel(BaseAggregationTest):
         lon_min, lon_max, lon_delta = 1, 3, 0.3
         lat_min, lat_max, lat_delta = 41, 42, 0.1
         grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_min, lon_max, lon_delta, lat_min, lat_max, lat_delta)
-        arguments = ['aggregate', variable + ':' + filename, grid, '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename), grid, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
@@ -675,7 +667,7 @@ class TestMomentsKernel(BaseAggregationTest):
         variable = 'od550aer'
         filename = valid_hadgem_filename
         grid = 'x,y'
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=moments', grid, '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=moments', grid, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         expected_vars = ['od550aer', 'od550aer_std_dev', 'od550aer_num_points']
@@ -688,7 +680,7 @@ class TestMomentsKernel(BaseAggregationTest):
         lon_min, lon_max, lon_delta = 1, 3, 0.3
         lat_min, lat_max, lat_delta = 41, 42, 0.1
         grid = 'x=[%s,%s,%s],y=[%s,%s,%s]' % (lon_min, lon_max, lon_delta, lat_min, lat_max, lat_delta)
-        arguments = ['aggregate', variable + ':' + filename + ':kernel=moments', grid, '-o', self.OUTPUT_FILENAME]
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=moments', grid, '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,

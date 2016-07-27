@@ -3,8 +3,16 @@ Module that contains various strings that are used in tests
 """
 from collections import namedtuple
 from datetime import datetime
-
+from unittest import skipIf
 import os
+
+try:
+    import pyhdf
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pyhdf = None
+
+skip_pyhdf = skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
 
 # A dictionary of test file tuples indexed by characteristic name
 cis_test_files = {}
@@ -29,10 +37,14 @@ TestFileTestData = namedtuple('TestFile',
 data_directory = os.environ.get("CIS_DATA_HOME", os.path.dirname(__file__))
 
 
+def escape_colons(filename):
+    if os.name == 'nt':
+        filename = filename.replace(':', '\:')
+    return filename
+
+
 def make_pathname(filename):
     path = os.path.join(data_directory, filename)
-    if os.name == 'nt':
-        path = path.replace(':', '\:')
     return path
 
 
