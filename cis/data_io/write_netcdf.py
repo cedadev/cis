@@ -45,6 +45,42 @@ def __get_missing_value(coord):
     return f
 
 
+def sizeof_fmt(num, suffix='B'):
+    """
+    Return a human readable size from an integer number of bytes
+
+    From http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
+    :param int num: Number of bytes
+    :param str suffix: Little or big B
+    :return str: Formatted human readable size
+    """
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
+def __check_disk_space(filepath, data):
+    """
+    Warn if there is insufficient disk space to write the data to the filapath - if the OS supports it
+    :param str filepath: Path of file to write
+    :param ndarray data: Numpy array of data to write
+    :return: None
+    """
+    try:
+        from os import statvfs
+        stats = statvfs(filepath)
+    except (ImportError, OSError):
+        logging.debug("Unable to determine free disk space on this OS.")
+    else:
+        # available space is the number of available blocks times the fundamental block size
+        available = stats.f_bavail * stats.f_frsize
+        if available < data.nbytes:
+            logging.warning("Free disk space at {path} is {free}, but the array being saved is {size}."
+                            .format(path=filepath, free=sizeof_fmt(available), size=sizeof_fmt(data.data.nbytes)))
+
+
 def __create_variable(nc_file, data, prefer_standard_name=False):
     """Creates and writes a variable to a netCDF file.
     :param nc_file: netCDF file to which to write
@@ -61,9 +97,12 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
     if (name is None) or prefer_standard_name:
         if (data.metadata.standard_name is not None) and (len(data.metadata.standard_name) > 0):
             name = data.metadata.standard_name
-    logging.info("Creating variable: " + name + "(" + index_name + ")" + " " + types[str(data.data.dtype)])
+    out_type = types[str(data.data.dtype)]
+    logging.info("Creating variable: {name}({index}) {type}".format(name=name, index=index_name, type=out_type))
     if name not in nc_file.variables:
-        var = nc_file.createVariable(name, types[str(data.data.dtype)], index_name,
+        # Generate a warning if we have insufficient disk space
+        __check_disk_space(nc_file.filepath(), data.data)
+        var = nc_file.createVariable(name, datatype=out_type, dimensions=index_name,
                                      fill_value=__get_missing_value(data))
         var = __add_metadata(var, data)
         try:
@@ -71,6 +110,9 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
         except IndexError as e:
             raise InconsistentDimensionsError(str(e) + "\nInconsistent dimensions in output file, unable to write "
                                                        "{} to file (it's shape is {}).".format(data.name(), data.shape))
+        except:
+            logging.error("Error writing data to disk.")
+            raise
         return var
     else:
         return nc_file.variables[name]
