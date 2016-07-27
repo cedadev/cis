@@ -600,7 +600,7 @@ class Generic_Plot(object):
         :return: Can we access natural earth?
         """
         from cartopy.io.shapereader import natural_earth
-        from urllib.error import HTTPError
+        from six.moves.urllib.error import HTTPError
         try:
             natural_earth_available = natural_earth()
         except HTTPError:
