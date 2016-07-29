@@ -142,7 +142,7 @@ class abstract_Caliop(AProduct):
         '''
         return None
 
-    def get_calipso_data(self, sds):
+    def _get_calipso_data(self, sds):
         """
         Reads raw data from an SD instance. Automatically applies the
         scaling factors and offsets to the data arrays found in Calipso data.
@@ -193,11 +193,11 @@ class abstract_Caliop(AProduct):
         # Offsets and scaling.
         offset = attributes.get('add_offset', 0)
         scale_factor = attributes.get('scale_factor', 1)
-        data = self.apply_scaling_factor_CALIPSO(data, scale_factor, offset)
+        data = self._apply_scaling_factor_CALIPSO(data, scale_factor, offset)
 
         return data
 
-    def apply_scaling_factor_CALIPSO(self, data, scale_factor, offset):
+    def _apply_scaling_factor_CALIPSO(self, data, scale_factor, offset):
         """
         Apply scaling factor Calipso data
         :param data:
@@ -229,7 +229,7 @@ class Caliop_L2(abstract_Caliop):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, self.get_calipso_data)
+        return UngriddedData(var, metadata, coords, self._get_calipso_data)
 
     def get_file_format(self, filename):
         return "HDF4/CaliopL2"
@@ -256,7 +256,7 @@ class Caliop_L1(abstract_Caliop):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, self.get_calipso_data)
+        return UngriddedData(var, metadata, coords, self._get_calipso_data)
 
     def get_file_format(self, filename):
         return "HDF4/CaliopL1"
