@@ -125,7 +125,7 @@ def get_data(vds, first_record=False, missing_values=None):
 
     # dealing with missing data
     if missing_values is None:
-        missing_values = [__get_attribute_value(vd, 'missing')]
+        missing_values = [_get_attribute_value(vd, 'missing')]
 
     data = create_masked_array_for_missing_values(data, missing_values)
 
@@ -151,14 +151,14 @@ def get_metadata(vds):
     vd = vs.attach(variable)
 
     name = variable
-    long_name = __get_attribute_value(vd, 'long_name')
+    long_name = _get_attribute_value(vd, 'long_name')
     # VD data are always 1D, so the shape is simply the length of the data vector
     shape = [len(vd.read(nRec=vd.inquire()[0]))]
-    units = __get_attribute_value(vd, 'units')
-    valid_range = __get_attribute_value(vd, 'valid_range')
-    factor = __get_attribute_value(vd, 'factor')
-    offset = __get_attribute_value(vd, 'offset')
-    missing = __get_attribute_value(vd, 'missing')
+    units = _get_attribute_value(vd, 'units')
+    valid_range = _get_attribute_value(vd, 'valid_range')
+    factor = _get_attribute_value(vd, 'factor')
+    offset = _get_attribute_value(vd, 'offset')
+    missing = _get_attribute_value(vd, 'missing')
 
     # put the whole dictionary of attributes into 'misc'
     # so that other metadata of interest can still be retrieved if need be
@@ -175,11 +175,11 @@ def get_metadata(vds):
     return metadata
 
 
-def __get_attribute_value(vd, name):
+def _get_attribute_value(vd, name, default=None):
     val = vd.attrinfo().get(name, None)
     # if the attribute is not present
     if val is None:
-        return val
+        return default
     else:
         # attrinfo() returns a tuple in which the value of interest is the 3rd item, hence the '[2]'
         return val[2]
