@@ -258,13 +258,14 @@ def get_data(var):
     """
     import numpy as np
     import logging
-    # Note that this will automatically apply any specified scalings and
-    #  return a masked array based on _FillValue
+    # Turn off scaling as we need to apply the valid_min, max and range masks first
+    var.set_auto_scale(False)
+    # This will still automatically return a masked array based on _FillValue and missing_value
     data = var[:]
 
     if hasattr(var, 'valid_max'):
         try:
-            v_max = float(var.valid_max)
+            v_max = np.array(var.valid_max, var.dtype)
         except ValueError:
             logging.warning("Unable to parse valid_max metadata for {}. Not applying mask.".format(var._name))
         else:
@@ -272,7 +273,7 @@ def get_data(var):
 
     if hasattr(var, 'valid_min'):
         try:
-            v_min = float(var.valid_min)
+            v_min = np.array(var.valid_min, var.dtype)
         except ValueError:
             logging.warning("Unable to parse valid_min metadata for {}. Not applying mask.".format(var._name))
         else:
@@ -283,10 +284,36 @@ def get_data(var):
             if isinstance(var.valid_range, np.ndarray):
                 v_range = var.valid_range
             elif hasattr(var.valid_range, 'split'):
-                v_range = [float(i) for i in var.valid_range.split()]
+                v_range = np.fromstring(var.valid_range, var.dtype, 2, sep=' ')
         except ValueError:
             logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
         else:
             data = np.ma.masked_outside(data, *v_range)
 
+    # Now apply any scaling
+    data = apply_offset_and_scaling(data, getattr(var, 'add_offset', None), getattr(var, 'scale_factor', None))
+
+    return data
+
+
+def apply_offset_and_scaling(data, add_offset=None, scale_factor=None):
+    """
+    Apply a standard offset and scaling to the data, taking care not to perform the operation (which may lead to type
+    promotion) if it's not needed.
+
+    :param ndarray data: Data to scale
+    :param float add_offset:
+    :param float scale_factor:
+    :return ndarray: Scaled data
+    """
+    # if variable has scale_factor and add_offset attributes, rescale.
+    if scale_factor is not None and add_offset is not None and \
+            (add_offset != 0.0 or scale_factor != 1.0):
+        data = data * scale_factor + add_offset
+    # else if variable has only scale_factor attributes, rescale.
+    elif scale_factor is not None and scale_factor != 1.0:
+        data *= scale_factor
+    # else if variable has only add_offset attributes, rescale.
+    elif add_offset is not None and add_offset != 0.0:
+        data += add_offset
     return data
