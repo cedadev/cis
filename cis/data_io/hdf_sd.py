@@ -146,57 +146,6 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 
-def get_calipso_data(sds):
-    """
-    Reads raw data from an SD instance. Automatically applies the
-    scaling factors and offsets to the data arrays found in Calipso data.
-
-    :param sds: The specific sds instance to read
-    :returns: A numpy array containing the raw data with missing data is replaced by NaN.
-    """
-    from cis.utils import create_masked_array_for_missing_data
-    import numpy as np
-
-    calipso_fill_values = {'Float_32': -9999.0,
-                           # 'Int_8' : 'See SDS description',
-                           'Int_16': -9999,
-                           'Int_32': -9999,
-                           'UInt_8': -127,
-                           # 'UInt_16' : 'See SDS description',
-                           # 'UInt_32' : 'See SDS description',
-                           'ExtinctionQC Fill Value': 32768,
-                           'FeatureFinderQC No Features Found': 32767,
-                           'FeatureFinderQC Fill Value': 65535}
-
-    data = sds.get()
-    attributes = sds.attributes()
-
-    # Missing data. First try 'fillvalue'
-    missing_val = attributes.get('fillvalue', None)
-    if missing_val is None:
-        try:
-            # Now try and lookup the fill value based on the data type
-            missing_val = calipso_fill_values[attributes.get('format', None)]
-        except KeyError:
-            # Last guess
-            missing_val = attributes.get('_FillValue', None)
-
-    data = create_masked_array_for_missing_data(data, missing_val)
-
-    # Now handle valid range mask
-    valid_range = attributes.get('valid_range', None)
-    if valid_range is not None:
-        v_range = np.asarray(valid_range.split("..."), dtype=data.dtype)
-        data = np.ma.masked_outside(data, *v_range)
-
-    # Offsets and scaling.
-    offset = attributes.get('add_offset', 0)
-    scale_factor = attributes.get('scale_factor', 1)
-    data = __apply_scaling_factor_CALIPSO(data, scale_factor, offset)
-
-    return data
-
-
 def get_data(sds, missing_values=None):
     """
     Reads raw data from an SD instance. Automatically applies the
@@ -243,21 +192,6 @@ def get_metadata(sds):
                         factor=factor, offset=offset, missing_value=missing, misc=misc)
 
     return metadata
-
-
-def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
-    """
-    Apply scaling factor (applicable to Calipso data) of the form:
-    ``data = (data/scale_factor) + offset``
-
-    :param data: A numpy array like object
-    :param scale_factor:
-    :param offset:
-    :return: Scaled data
-    """
-
-    data = (data/scale_factor) + offset
-    return data
 
 
 def __apply_scaling_factor_MODIS(data, scale_factor, offset):
