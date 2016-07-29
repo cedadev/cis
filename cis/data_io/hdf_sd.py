@@ -155,6 +155,7 @@ def get_calipso_data(sds):
     :returns: A numpy array containing the raw data with missing data is replaced by NaN.
     """
     from cis.utils import create_masked_array_for_missing_data
+    import numpy as np
 
     calipso_fill_values = {'Float_32': -9999.0,
                            # 'Int_8' : 'See SDS description',
@@ -170,16 +171,23 @@ def get_calipso_data(sds):
     data = sds.get()
     attributes = sds.attributes()
 
-    # Missing data.
+    # Missing data. First try 'fillvalue'
     missing_val = attributes.get('fillvalue', None)
     if missing_val is None:
         try:
+            # Now try and lookup the fill value based on the data type
             missing_val = calipso_fill_values[attributes.get('format', None)]
         except KeyError:
             # Last guess
             missing_val = attributes.get('_FillValue', None)
 
     data = create_masked_array_for_missing_data(data, missing_val)
+
+    # Now handle valid range mask
+    valid_range = attributes.get('valid_range', None)
+    if valid_range is not None:
+        v_range = np.asarray(valid_range.split("..."), dtype=data.dtype)
+        data = np.ma.masked_outside(data, *v_range)
 
     # Offsets and scaling.
     offset = attributes.get('add_offset', 0)
