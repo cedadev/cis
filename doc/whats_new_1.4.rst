@@ -26,7 +26,9 @@ CIS 1.4 features
    ``valid_min`` or ``valid_max`` attributes is also masked appropriately.
  * CloudSat ``missing`` and ``missop`` attributes are now read and combined to mask out values which don't conform to the
    inequality defined.
-
+ * New verbose and quiet flags allow for control over how much CIS commands output to the screen. The default verbosity
+   has also changed so that by default only warnings and errors will be output to the screen. The full debug output
+   remains for the cis.log file.
 
 Bugs fixed
 ==========

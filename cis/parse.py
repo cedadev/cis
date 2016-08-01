@@ -16,6 +16,11 @@ def initialise_top_parser():
     The parser to which all arguments are initially passed
     """
     parser = argparse.ArgumentParser("cis")
+    # Add verbosity arguments to the root parser
+    verbosity_group = parser.add_mutually_exclusive_group()
+    verbosity_group.add_argument("-v", "--verbose", action='count')
+    verbosity_group.add_argument("-q", "--quiet", action='store_true')
+
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help="Create plots")
     add_plot_parser_arguments(plot_parser)
@@ -966,6 +971,14 @@ def parse_args(arguments=None):
         # sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)
+    # Firstly deal with logging verbosity - in case we log anything in the validation
+    if main_args.quiet:
+        logging.getLogger('screen').setLevel(logging.ERROR)
+    elif main_args.verbose == 1:
+        logging.getLogger('screen').setLevel(logging.INFO)
+    elif main_args.verbose == 2:
+        logging.getLogger('screen').setLevel(logging.DEBUG)
+
     main_args = validators[main_args.command](main_args, parser)
 
     return main_args
