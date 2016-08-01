@@ -3,7 +3,7 @@ Module containing NetCDF file reading functions
 """
 from cis.exceptions import InvalidVariableError
 from cis.utils import listify
-
+import logging
 
 def get_netcdf_file_attributes(filename):
     """
@@ -269,6 +269,7 @@ def get_data(var):
         except ValueError:
             logging.warning("Unable to parse valid_max metadata for {}. Not applying mask.".format(var._name))
         else:
+            logging.debug("Masking all values > {}.".format(v_max))
             data = np.ma.masked_greater(data, v_max)
 
     if hasattr(var, 'valid_min'):
@@ -277,6 +278,7 @@ def get_data(var):
         except ValueError:
             logging.warning("Unable to parse valid_min metadata for {}. Not applying mask.".format(var._name))
         else:
+            logging.debug("Masking all values < {}.".format(v_min))
             data = np.ma.masked_less(data, v_min)
 
     if hasattr(var, 'valid_range'):
@@ -285,9 +287,12 @@ def get_data(var):
                 v_range = var.valid_range
             elif hasattr(var.valid_range, 'split'):
                 v_range = np.fromstring(var.valid_range, var.dtype, 2, sep=' ')
+            else:
+                raise ValueError
         except ValueError:
             logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
         else:
+            logging.debug("Masking all values {} > v > {}.".format(*v_range))
             data = np.ma.masked_outside(data, *v_range)
 
     # Now apply any scaling
@@ -309,8 +314,12 @@ def apply_offset_and_scaling(data, add_offset=None, scale_factor=None):
     if scale_factor is not None and add_offset is not None and \
             (add_offset != 0.0 or scale_factor != 1.0):
         data = data * scale_factor + add_offset
+        logging.debug("Applying 'data = data * {scale} + {offset}' transformation to data.".format(scale=scale_factor,
+                                                                                                   offset=add_offset))
     elif scale_factor is not None and scale_factor != 1.0:
         data *= scale_factor
+        logging.debug("Applying 'data *= {scale}' transformation to data.".format(scale=scale_factor))
     elif add_offset is not None and add_offset != 0.0:
         data += add_offset
+        logging.debug("Applying 'data += {offset}' transformation to data.".format(offset=add_offset))
     return data
