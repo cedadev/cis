@@ -231,7 +231,7 @@ class MODIS_L2(AProduct):
         time_metadata = hdf.read_metadata(time, "SD")
         # Ensure the standard name is set
         time_metadata.standard_name = 'time'
-        time_coord = Coord(time, time_metadata, "T")
+        time_coord = Coord(time, time_metadata, "T", self._get_MODIS_SDS_data)
         time_coord.convert_TAI_time_to_std_time(dt.datetime(1993, 1, 1, 0, 0, 0))
 
         return CoordList([lat_coord, lon_coord, time_coord])
