@@ -298,22 +298,19 @@ def get_data(var):
 
 def apply_offset_and_scaling(data, add_offset=None, scale_factor=None):
     """
-    Apply a standard offset and scaling to the data, taking care not to perform the operation (which may lead to type
-    promotion) if it's not needed.
+    Apply a standard offset and scaling to the data. This is deliberately very similar to the python-NetCDF4
+    implementation as it is anticipated that we can remove it if/when that library implements valid_range masking.
 
     :param ndarray data: Data to scale
     :param float add_offset:
     :param float scale_factor:
     :return ndarray: Scaled data
     """
-    # if variable has scale_factor and add_offset attributes, rescale.
     if scale_factor is not None and add_offset is not None and \
             (add_offset != 0.0 or scale_factor != 1.0):
         data = data * scale_factor + add_offset
-    # else if variable has only scale_factor attributes, rescale.
     elif scale_factor is not None and scale_factor != 1.0:
         data *= scale_factor
-    # else if variable has only add_offset attributes, rescale.
     elif add_offset is not None and add_offset != 0.0:
         data += add_offset
     return data
