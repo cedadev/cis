@@ -72,14 +72,14 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         from cis.data_io.ungridded_data import UngriddedCoordinates, Metadata
         from cis.data_io.Coord import Coord
 
-        cube_lat = DimCoord(np.linspace(-90, 90, 180), standard_name='latitude', units='degrees')
-        cube_lon = DimCoord(np.linspace(0, 359, 360), standard_name='longitude', units='degrees', circular=True)
-        cube_alt = DimCoord(np.linspace(0, 10000, 100), standard_name='altitude', units='meters')
+        cube_lat = DimCoord(np.linspace(-90, 90, 18), standard_name='latitude', units='degrees')
+        cube_lon = DimCoord(np.linspace(0, 359, 36), standard_name='longitude', units='degrees', circular=True)
+        cube_alt = DimCoord(np.linspace(0, 10000, 10), standard_name='altitude', units='meters')
 
         times = np.linspace(0, 30, 12)
         cube_time = DimCoord(times, standard_name='time', units='days since 1970-01-01 00:00:00')
 
-        data = np.arange(12 * 180 * 360 * 100).reshape(12, 180, 360, 100)
+        data = np.arange(12 * 18 * 36 * 10).reshape(12, 18, 36, 10)
         source = make_from_cube(Cube(data,
                                      dim_coords_and_dims=[(cube_time, 0), (cube_lat, 1), (cube_lon, 2), (cube_alt, 3)]))
 
