@@ -74,7 +74,7 @@ class abstract_Caliop(AProduct):
         alt_data *= 1000.0  # Convert to m
         len_x = alt_data.shape[0]
 
-        lat_data = hdf.read_data(sdata['Latitude'], "SD")
+        lat_data = hdf.read_data(sdata['Latitude'], self._get_calipso_data)
         len_y = lat_data.shape[0]
 
         new_shape = (len_x, len_y)
@@ -85,7 +85,7 @@ class abstract_Caliop(AProduct):
         alt_coord = Coord(alt_data, alt_metadata)
 
         # pressure
-        pres_data = hdf.read_data(sdata['Pressure'], "SD")
+        pres_data = hdf.read_data(sdata['Pressure'], self._get_calipso_data)
         pres_metadata = hdf.read_metadata(sdata['Pressure'], "SD")
         # Fix badly formatted units which aren't CF compliant and will break if they are aggregated
         if pres_metadata.units == "hPA":
@@ -101,7 +101,7 @@ class abstract_Caliop(AProduct):
 
         # longitude
         lon = sdata['Longitude']
-        lon_data = hdf.read_data(lon, "SD")
+        lon_data = hdf.read_data(lon, self._get_calipso_data)
         lon_data = utils.expand_1d_to_2d_array(lon_data[:, index_offset], len_x, axis=1)
         lon_metadata = hdf.read_metadata(lon, "SD")
         lon_metadata.shape = new_shape
@@ -109,7 +109,7 @@ class abstract_Caliop(AProduct):
 
         # profile time, x
         time = sdata['Profile_Time']
-        time_data = hdf.read_data(time, "SD")
+        time_data = hdf.read_data(time, self._get_calipso_data)
         time_data = convert_sec_since_to_std_time(time_data, dt.datetime(1993, 1, 1, 0, 0, 0))
         time_data = utils.expand_1d_to_2d_array(time_data[:, index_offset], len_x, axis=1)
         time_coord = Coord(time_data, Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
@@ -188,7 +188,12 @@ class abstract_Caliop(AProduct):
         if valid_range is not None:
             # Split the range into two numbers of the right type
             v_range = np.asarray(valid_range.split("..."), dtype=data.dtype)
-            data = np.ma.masked_outside(data, *v_range)
+            # Some valid_ranges appear to have only one value, so ignore those...
+            if len(v_range) == 2:
+                logging.debug("Masking all values {} > v > {}.".format(*v_range))
+                data = np.ma.masked_outside(data, *v_range)
+            else:
+                logging.warning("Invalid valid_range: {}. Not masking values.".format(valid_range))
 
         # Offsets and scaling.
         offset = attributes.get('add_offset', 0)
@@ -205,6 +210,8 @@ class abstract_Caliop(AProduct):
         :param offset:
         :return:
         """
+        logging.debug("Applying 'data = (data / {scale}) + {offset}' transformation to data.".format(scale=scale_factor,
+                                                                                                     offset=offset))
         return (data / scale_factor) + offset
 
 
@@ -238,9 +245,6 @@ class Caliop_L2(abstract_Caliop):
 class Caliop_L1(abstract_Caliop):
     def get_file_signature(self):
         return [r'CAL_LID_L1-ValStage1-V3.*hdf']
-
-    def offset(self):
-        return 0
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)

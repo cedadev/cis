@@ -70,7 +70,7 @@ class CloudSat(AProduct):
 
             # altitude coordinate
             height = sdata['Height']
-            height_data = hdf.read_data(height, "SD")
+            height_data = hdf.read_data(height, self._get_cloudsat_sds_data)
             height_metadata = hdf.read_metadata(height, "SD")
             height_coord = Coord(height_data, height_metadata, "Y")
 
@@ -85,7 +85,7 @@ class CloudSat(AProduct):
 
         # latitude
         lat = vdata['Latitude']
-        lat_data = hdf.read_data(lat, "VD")
+        lat_data = hdf.read_data(lat, self._get_cloudsat_vds_data)
         if height_data is not None:
             lat_data = utils.expand_1d_to_2d_array(lat_data, len(height_data[0]), axis=1)
         lat_metadata = hdf.read_metadata(lat, "VD")
@@ -94,7 +94,7 @@ class CloudSat(AProduct):
 
         # longitude
         lon = vdata['Longitude']
-        lon_data = hdf.read_data(lon, "VD")
+        lon_data = hdf.read_data(lon, self._get_cloudsat_vds_data)
         if height_data is not None:
             lon_data = utils.expand_1d_to_2d_array(lon_data, len(height_data[0]), axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
@@ -123,7 +123,6 @@ class CloudSat(AProduct):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
-
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -137,13 +136,13 @@ class CloudSat(AProduct):
             # vdata should be expanded in the same way as the coordinates are expanded
             try:
                 height_length = coords.get_coord('Height').shape[1]
-                var = utils.expand_1d_to_2d_array(self._get_cloudsat_vds_data(vdata[variable]),
+                var = utils.expand_1d_to_2d_array(hdf.read_data(vdata[variable], self._get_cloudsat_vds_data),
                                                   height_length, axis=1)
             except CoordinateNotFoundError:
-                var = self._get_cloudsat_vds_data(vdata[variable])
+                var = hdf.read_data(vdata[variable], self._get_cloudsat_vds_data)
             metadata = hdf.read_metadata(vdata[variable], "VD")
         elif variable in sdata:
-            var = self._get_cloudsat_sds_data(sdata[variable])
+            var = hdf.read_data(sdata[variable], self._get_cloudsat_sds_data)
             metadata = hdf.read_metadata(sdata[variable], "SD")
         else:
             raise ValueError("variable not found")
@@ -151,25 +150,46 @@ class CloudSat(AProduct):
         return UngriddedData(var, metadata, coords)
 
     def _get_cloudsat_vds_data(self, vds):
-        from cis.data_io.hdf_vd import get_data, _get_attribute_value
+        from cis.data_io.hdf_vd import _get_attribute_value, HDF, HDF4Error
+        from cis.utils import create_masked_array_for_missing_data
         import numpy as np
 
-        # TODO: Does this check the right places for missing values?
-        # We can just call this method to read the actual data and mask out the missing value
-        data = get_data(vds)
+        # get file and variable reference from tuple
+        filename = vds.filename
+        variable = vds.variable
 
-        factor = _get_attribute_value(vds, "factor", 1)
-        offset = _get_attribute_value(vds, "offset", 0)
-        valid_range = _get_attribute_value(vds, "valid_range")
+        try:
+            datafile = HDF(filename)
+        except HDF4Error as e:
+            raise IOError(e)
 
+        vs = datafile.vstart()
+        vd = vs.attach(variable)
+        data = vd.read(nRec=vd.inquire()[0])
+
+        # create numpy array from data
+        data = np.array(data).flatten()
+
+        missing_value = _get_attribute_value(vd, 'missing', None)
+
+        if missing_value is not None:
+            data = create_masked_array_for_missing_data(data, missing_value)
+
+        valid_range = _get_attribute_value(vd, "valid_range")
         if valid_range is not None:
             # Assume it's the right data type already
             data = np.ma.masked_outside(data, *valid_range)
 
+        factor = _get_attribute_value(vd, "factor", 1)
+        offset = _get_attribute_value(vd, "offset", 0)
         data = self._apply_scaling_factor_CLOUDSAT(data, factor, offset)
 
-        return data
+        # detach and close
+        vd.detach()
+        vs.end()
+        datafile.close()
 
+        return data
 
     def _get_cloudsat_sds_data(self, sds):
         """
@@ -203,6 +223,7 @@ class CloudSat(AProduct):
         missop = attributes.get('missop', None)
         if missing is not None and missop is not None:
             try:
+                logging.debug("Masking all values v {} {}".format(missop, missing))
                 data = missop_fn[missop](data, missing)
             except KeyError:
                 logging.warning("Unable to identify missop {}, unable to "
@@ -212,6 +233,7 @@ class CloudSat(AProduct):
         valid_range = attributes.get('valid_range', None)
         if valid_range is not None:
             # Assume it's the right data type already
+            logging.debug("Masking all values {} > v > {}.".format(*valid_range))
             data = np.ma.masked_outside(data, *valid_range)
 
         # Offsets and scaling.
@@ -230,6 +252,8 @@ class CloudSat(AProduct):
         :param offset:
         :return:
         """
+        logging.debug("Applying 'data = (data / {scale}) + {offset}' transformation to data.".format(scale=scale_factor,
+                                                                                                     offset=offset))
         return (data / scale_factor) + offset
 
     def get_file_format(self, filename):
