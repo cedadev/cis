@@ -66,7 +66,7 @@ class MODIS_L3(AProduct):
         import numpy as np
         from cis.data_io.hdf import _read_hdf4
         from iris.cube import Cube, CubeList
-        from iris.coords import DimCoord, AuxCoord
+        from iris.coords import DimCoord
         from cis.time_util import calculate_mid_time, cis_standard_time_unit
         from cis.data_io.hdf_sd import get_data, get_metadata
         from cf_units import Unit
@@ -75,6 +75,7 @@ class MODIS_L3(AProduct):
         logging.info("Listing coordinates: " + str(variables))
 
         cube_list = CubeList()
+        # Read each file individually, let Iris do the merging at the end.
         for f in filenames:
             sdata, vdata = _read_hdf4(f, variables)
 
@@ -95,6 +96,7 @@ class MODIS_L3(AProduct):
                 logging.warning("Unable to parse units '{}' in {} for {}.".format(metadata.units, f, variable))
                 units = None
 
+            # Read the raw data, and then add a length one dimension at the start - for the scalar time coordinate
             data = get_data(sdata[variable])
             cube = Cube(data[np.newaxis],
                         dim_coords_and_dims=[(time_coord, 0), (lon_coord, 2), (lat_coord, 1)],
@@ -102,6 +104,7 @@ class MODIS_L3(AProduct):
 
             cube_list.append(cube)
 
+        # Merge the cube list across the scalar time coordinates before returning a single cube.
         return cube_list.merge_cube()
 
     def create_coords(self, filenames, variable=None):
