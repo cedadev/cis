@@ -2,7 +2,7 @@
 Module containing hdf file utility functions for the SD object
 """
 import logging
-from cis.utils import create_masked_array_for_missing_values, listify
+from cis.utils import listify
 # Optional HDF import, if the module isn't found we defer raising ImportError until it is actually needed.
 try:
     from pyhdf import SD
@@ -146,28 +146,35 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 
-def get_data(sds, missing_values=None):
+def get_data(sds):
     """
-    Reads raw data from an SD instance. Automatically applies the
-    scaling factors and offsets to the data arrays often found in NASA HDF-EOS
-    data (e.g. MODIS)
+    Reads raw data from an SD instance.
 
     :param sds: The specific sds instance to read
     :return: A numpy array containing the raw data with missing data is replaced by NaN.
     """
+    from cis.utils import create_masked_array_for_missing_data
+    from cis.data_io.netcdf import apply_offset_and_scaling
+    import numpy as np
+
     data = sds.get()
     attributes = sds.attributes()
 
-    # Missing data.
-    if missing_values is None:
-        missing_values = [attributes.get('_FillValue', None)]
+    # Apply Fill Value
+    missing_value = attributes.get('_FillValue', None)
+    if missing_value is not None:
+        data = create_masked_array_for_missing_data(data, missing_value)
 
-    data = create_masked_array_for_missing_values(data, missing_values)
+    # Check for valid_range
+    valid_range = attributes.get('valid_range', None)
+    if valid_range is not None:
+        data = np.ma.masked_outside(data, *valid_range)
 
     # Offsets and scaling.
-    offset = attributes.get('add_offset', 0)
-    scale_factor = attributes.get('scale_factor', 1)
-    data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
+    add_offset = attributes.get('add_offset', 0.0)
+    scale_factor = attributes.get('scale_factor', 1.0)
+    logging.warning("Applying standard offset and scaling for dataset - this may not be appropriate for HDF_EOS data!")
+    data = apply_offset_and_scaling(data, add_offset=add_offset, scale_factor=scale_factor)
 
     return data
 
@@ -192,17 +199,3 @@ def get_metadata(sds):
                         factor=factor, offset=offset, missing_value=missing, misc=misc)
 
     return metadata
-
-
-def __apply_scaling_factor_MODIS(data, scale_factor, offset):
-    """
-    Apply scaling factor (applicable to MODIS data) of the form:
-    ``data = (data - offset) * scale_factor``
-
-    :param data: A numpy array like object
-    :param scale_factor:
-    :param offset:
-    :return: Scaled data
-    """
-    data = (data - offset) * scale_factor
-    return data

@@ -213,14 +213,17 @@ class MODIS_L2(AProduct):
             apply_interpolation = True if scale is "1km" else False
 
         lat = sdata['Latitude']
-        sd_lat = hdf.read_data(lat, "SD")
+        sd_lat = hdf.read_data(lat, self._get_MODIS_SDS_data)
         lat_data = self.__field_interpolate(sd_lat) if apply_interpolation else sd_lat
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata, 'Y')
 
         lon = sdata['Longitude']
-        lon_data = self.__field_interpolate(hdf.read_data(lon, "SD")) if apply_interpolation else hdf.read_data(lon,
-                                                                                                                "SD")
+        if apply_interpolation:
+            lon_data = self.__field_interpolate(hdf.read_data(lon, self._get_MODIS_SDS_data))
+        else:
+            lon_data = hdf.read_data(lon, self._get_MODIS_SDS_data)
+
         lon_metadata = hdf.read_metadata(lon, "SD")
         lon_coord = Coord(lon_data, lon_metadata, 'X')
 
@@ -250,7 +253,53 @@ class MODIS_L2(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords)
+        return UngriddedData(var, metadata, coords, self._get_MODIS_SDS_data)
+
+    def _get_MODIS_SDS_data(self, sds):
+        """
+        Reads raw data from an SD instance.
+
+        :param sds: The specific sds instance to read
+        :return: A numpy array containing the raw data with missing data is replaced by NaN.
+        """
+        from cis.utils import create_masked_array_for_missing_data
+        import numpy as np
+
+        data = sds.get()
+        attributes = sds.attributes()
+
+        # Apply Fill Value
+        missing_value = attributes.get('_FillValue', None)
+        if missing_value is not None:
+            data = create_masked_array_for_missing_data(data, missing_value)
+
+        # Check for valid_range
+        valid_range = attributes.get('valid_range', None)
+        if valid_range is not None:
+            logging.debug("Masking all values {} > v > {}.".format(*valid_range))
+            data = np.ma.masked_outside(data, *valid_range)
+
+        # Offsets and scaling.
+        add_offset = attributes.get('add_offset', 0.0)
+        scale_factor = attributes.get('scale_factor', 1.0)
+        data = self._apply_scaling_factor_MODIS(data, scale_factor, add_offset)
+
+        return data
+
+    def _apply_scaling_factor_MODIS(self, data, scale_factor, offset):
+        """
+        Apply scaling factor (applicable to MODIS data) of the form:
+        ``data = (data - offset) * scale_factor``
+
+        :param data: A numpy array like object
+        :param scale_factor:
+        :param offset:
+        :return: Scaled data
+        """
+        logging.debug("Applying 'data = (data - {offset}) * {scale}' transformation to data.".format(scale=scale_factor,
+                                                                                                     offset=offset))
+        data = (data - offset) * scale_factor
+        return data
 
     def get_file_format(self, filenames):
         """

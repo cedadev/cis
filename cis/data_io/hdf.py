@@ -107,13 +107,23 @@ def read(filenames, variables):
     return sdata, vdata
 
 
-def read_data(data_dict, data_type, missing_values=None):
-    if data_type == 'VD':
-        out = utils.concatenate([hdf_vd.get_data(i, missing_values=missing_values) for i in data_dict])
-    elif data_type == 'SD':
-        out = utils.concatenate([hdf_sd.get_data(i, missing_values=missing_values) for i in data_dict])
+def read_data(data_list, read_function):
+    """
+    Wrapper for calling an HDF reading function for each dataset, and then concatenating the result.
+
+    :param list data_list: A list of data objects to read
+    :param callable or str read_function: A function for reading the data, or 'SD' or 'VD' for default reading routines.
+    :return: A single numpy array of concatenated data values.
+    """
+    if callable(read_function):
+        out = utils.concatenate([read_function(i) for i in data_list])
+    elif read_function == 'VD':
+        out = utils.concatenate([hdf_vd.get_data(i) for i in data_list])
+    elif read_function == 'SD':
+        out = utils.concatenate([hdf_sd.get_data(i) for i in data_list])
     else:
-        raise ValueError("Invalid data-type: %s, HDF variables must be VD or SD only" % data_type)
+        raise ValueError("Invalid read-function: {}, please supply a callable read "
+                         "function, 'VD' or 'SD' only".format(read_function))
     return out
 
 
