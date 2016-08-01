@@ -382,15 +382,12 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
 
     @skip_pyhdf
     def test_subset_MODIS_L3(self):
-        # (All variables takes 23 mins)
-        variable = '*'  # Would like to run this but it takes up a lot of memory on Jenkins.
-        variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
-                   'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
-                   'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
+        variable = '*'
         filename = valid_modis_l3_filename
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
 
     def test_subset_netCDF_gridded_HadGem(self):
         # Takes 1s

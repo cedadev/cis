@@ -31,3 +31,4 @@ CIS 1.4 features
 Bugs fixed
 ==========
 
+ * [JASCIS-34] MODIS L3 data is now correctly treated as gridded data.

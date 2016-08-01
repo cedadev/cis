@@ -308,18 +308,13 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
 
     @skip_pyhdf
     def test_aggregate_MODIS_L3(self):
-        # (All variables takes 23 mins)
         # Takes 27s
-        variable = '*'  # Would like to run this but it takes up a lot of memory on Jenkins.
-        variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
-                   'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
-                   'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
+        variable = '*'
         filename = valid_modis_l3_filename
-        lon_min, lon_max, lon_delta = -10, 10, 2
-        lat_min, lat_max, lat_delta = 40, 60, 2
-        self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='latitude', lon_name='longitude')
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 'x,y',
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
@@ -566,11 +561,9 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
                    'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
                    'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
         filename = valid_modis_l3_filename
-        time_min, time_max = dt.datetime(2010, 1, 13, 0, 0, 1), dt.datetime(2010, 1, 13, 0, 1, 44)
-        time_delta = dt.timedelta(seconds=20)
-        str_delta = 'PT20S'
-        self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
+        arguments = ['aggregate', variable + ':' + escape_colons(filename), 't', '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf

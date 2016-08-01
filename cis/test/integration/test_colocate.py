@@ -295,22 +295,6 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, out_vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, out_vars)
 
-    @skip_pyhdf
-    def test_MODIS_L3_onto_NetCDF_Gridded(self):
-        # Takes 27s
-        vars = [valid_modis_l3_variable]
-        filename = valid_modis_l3_filename
-        sample_file = valid_hadgem_filename
-        sample_var = valid_hadgem_variable
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
-        arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
-                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
-                     '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        col_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
-        self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
-
 
 class TestGriddedGriddedCollocate(BaseIntegrationTest):
     """
@@ -419,6 +403,22 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars, (192, 145))
+
+    @skip_pyhdf
+    def test_MODIS_L3_onto_NetCDF_Gridded(self):
+        # Takes 27s
+        vars = [valid_modis_l3_variable]
+        filename = valid_modis_l3_filename
+        sample_file = valid_hadgem_filename
+        sample_var = valid_hadgem_variable
+        collocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
+                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
 
 class TestUngriddedUngriddedCollocate(BaseIntegrationTest):

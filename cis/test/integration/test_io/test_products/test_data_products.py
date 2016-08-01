@@ -241,6 +241,16 @@ class TestMODIS_L3(ProductTests, unittest.TestCase):
     def check_valid_vars(self, vars):
         assert len(vars) == 700
 
+    @nottest
+    def test_write_coords(self):
+        # Model data is gridded so IRIS takes care of this
+        pass
+
+    @nottest
+    def test_create_pandas_object(self):
+        # Cannot create pandas objects for data with > 2 dimensions
+        pass
+
 
 @skip_pyhdf
 class TestMODIS_L2(ProductTests, unittest.TestCase):

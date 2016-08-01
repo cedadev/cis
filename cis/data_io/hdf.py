@@ -41,7 +41,7 @@ def get_hdf4_file_metadata(filename):
     return SD(filename).attributes()
 
 
-def __read_hdf4(filename, variables):
+def _read_hdf4(filename, variables):
     """
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
          for each VD and SD data types.
@@ -98,7 +98,7 @@ def read(filenames, variables):
         # reading in all variables into a 2 dictionaries:
         # sdata, key: variable name, value: list of sds
         # vdata, key: variable name, value: list of vds
-        sds_dict, vds_dict = __read_hdf4(filename, variables)
+        sds_dict, vds_dict = _read_hdf4(filename, variables)
         for var in list(sds_dict.keys()):
             utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
         for var in list(vds_dict.keys()):
