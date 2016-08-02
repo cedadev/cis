@@ -5,6 +5,61 @@ from cis.data_io.products import AProduct
 from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData
 
 
+def _get_MODIS_SDS_data(sds):
+    """
+    Reads raw data from an SD instance.
+
+    :param sds: The specific sds instance to read
+    :return: A numpy array containing the raw data with missing data is replaced by NaN.
+    """
+    from cis.utils import create_masked_array_for_missing_data
+    import numpy as np
+
+    data = sds.get()
+    attributes = sds.attributes()
+
+    # Apply Fill Value
+    missing_value = attributes.get('_FillValue', None)
+    if missing_value is not None:
+        data = create_masked_array_for_missing_data(data, missing_value)
+
+    # Check for valid_range
+    valid_range = attributes.get('valid_range', None)
+    if valid_range is not None:
+        logging.debug("Masking all values {} > v > {}.".format(*valid_range))
+        data = np.ma.masked_outside(data, *valid_range)
+
+    # Offsets and scaling.
+    add_offset = attributes.get('add_offset', 0.0)
+    scale_factor = attributes.get('scale_factor', 1.0)
+    data = _apply_scaling_factor_MODIS(data, scale_factor, add_offset)
+
+    return data
+
+
+def _apply_scaling_factor_MODIS(data, scale_factor, offset):
+    """
+    Apply scaling factor (applicable to MODIS data) of the form:
+    ``data = (data - offset) * scale_factor``
+
+    Ref:
+    MODIS Atmosphere L3 Gridded Product Algorithm Theoretical Basis Document,
+    MODIS Algorithm Theoretical Basis Document No. ATBD-MOD-30 for
+    Level-3 Global Gridded Atmosphere Products (08_D3, 08_E3, 08_M3)
+    by PAUL A. HUBANKS, MICHAEL D. KING, STEVEN PLATNICK, AND ROBERT PINCUS
+    (Collection 005 Version 1.1, 4 December 2008)
+
+    :param data: A numpy array like object
+    :param scale_factor:
+    :param offset:
+    :return: Scaled data
+    """
+    logging.debug("Applying 'data = (data - {offset}) * {scale}' transformation to data.".format(scale=scale_factor,
+                                                                                                 offset=offset))
+    data = (data - offset) * scale_factor
+    return data
+
+
 class MODIS_L3(AProduct):
     """
     Data product for MODIS Level 3 data
@@ -68,7 +123,7 @@ class MODIS_L3(AProduct):
         from iris.cube import Cube, CubeList
         from iris.coords import DimCoord, AuxCoord
         from cis.time_util import calculate_mid_time, cis_standard_time_unit
-        from cis.data_io.hdf_sd import get_data, get_metadata
+        from cis.data_io.hdf_sd import get_metadata
         from cf_units import Unit
 
         variables = ['XDim', 'YDim', variable]
@@ -79,8 +134,8 @@ class MODIS_L3(AProduct):
         for f in filenames:
             sdata, vdata = _read_hdf4(f, variables)
 
-            lat_coord = DimCoord(get_data(sdata['YDim']), standard_name='latitude', units='degrees')
-            lon_coord = DimCoord(get_data(sdata['XDim']), standard_name='longitude', units='degrees')
+            lat_coord = DimCoord(_get_MODIS_SDS_data(sdata['YDim']), standard_name='latitude', units='degrees')
+            lon_coord = DimCoord(_get_MODIS_SDS_data(sdata['XDim']), standard_name='longitude', units='degrees')
 
             # create time coordinate using the midpoint of the time delta between the start date and the end date
             start_datetime = self._get_start_date(f)
@@ -99,7 +154,7 @@ class MODIS_L3(AProduct):
                 logging.warning("Unable to parse units '{}' in {} for {}.".format(metadata.units, f, variable))
                 units = None
 
-            cube = Cube(get_data(sdata[variable]),
+            cube = Cube(_get_MODIS_SDS_data(sdata[variable]),
                         dim_coords_and_dims=[(lon_coord, 1), (lat_coord, 0)],
                         aux_coords_and_dims=[(time_coord, None)],
                         var_name=metadata._name, long_name=metadata.long_name, units=units)
@@ -211,16 +266,16 @@ class MODIS_L2(AProduct):
             apply_interpolation = True if scale is "1km" else False
 
         lat = sdata['Latitude']
-        sd_lat = hdf.read_data(lat, self._get_MODIS_SDS_data)
+        sd_lat = hdf.read_data(lat, _get_MODIS_SDS_data)
         lat_data = self.__field_interpolate(sd_lat) if apply_interpolation else sd_lat
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata, 'Y')
 
         lon = sdata['Longitude']
         if apply_interpolation:
-            lon_data = self.__field_interpolate(hdf.read_data(lon, self._get_MODIS_SDS_data))
+            lon_data = self.__field_interpolate(hdf.read_data(lon, _get_MODIS_SDS_data))
         else:
-            lon_data = hdf.read_data(lon, self._get_MODIS_SDS_data)
+            lon_data = hdf.read_data(lon, _get_MODIS_SDS_data)
 
         lon_metadata = hdf.read_metadata(lon, "SD")
         lon_coord = Coord(lon_data, lon_metadata, 'X')
@@ -229,7 +284,7 @@ class MODIS_L2(AProduct):
         time_metadata = hdf.read_metadata(time, "SD")
         # Ensure the standard name is set
         time_metadata.standard_name = 'time'
-        time_coord = Coord(time, time_metadata, "T", self._get_MODIS_SDS_data)
+        time_coord = Coord(time, time_metadata, "T", _get_MODIS_SDS_data)
         time_coord.convert_TAI_time_to_std_time(dt.datetime(1993, 1, 1, 0, 0, 0))
 
         return CoordList([lat_coord, lon_coord, time_coord])
@@ -251,53 +306,8 @@ class MODIS_L2(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, self._get_MODIS_SDS_data)
+        return UngriddedData(var, metadata, coords, _get_MODIS_SDS_data)
 
-    def _get_MODIS_SDS_data(self, sds):
-        """
-        Reads raw data from an SD instance.
-
-        :param sds: The specific sds instance to read
-        :return: A numpy array containing the raw data with missing data is replaced by NaN.
-        """
-        from cis.utils import create_masked_array_for_missing_data
-        import numpy as np
-
-        data = sds.get()
-        attributes = sds.attributes()
-
-        # Apply Fill Value
-        missing_value = attributes.get('_FillValue', None)
-        if missing_value is not None:
-            data = create_masked_array_for_missing_data(data, missing_value)
-
-        # Check for valid_range
-        valid_range = attributes.get('valid_range', None)
-        if valid_range is not None:
-            logging.debug("Masking all values {} > v > {}.".format(*valid_range))
-            data = np.ma.masked_outside(data, *valid_range)
-
-        # Offsets and scaling.
-        add_offset = attributes.get('add_offset', 0.0)
-        scale_factor = attributes.get('scale_factor', 1.0)
-        data = self._apply_scaling_factor_MODIS(data, scale_factor, add_offset)
-
-        return data
-
-    def _apply_scaling_factor_MODIS(self, data, scale_factor, offset):
-        """
-        Apply scaling factor (applicable to MODIS data) of the form:
-        ``data = (data - offset) * scale_factor``
-
-        :param data: A numpy array like object
-        :param scale_factor:
-        :param offset:
-        :return: Scaled data
-        """
-        logging.debug("Applying 'data = (data - {offset}) * {scale}' transformation to data.".format(scale=scale_factor,
-                                                                                                     offset=offset))
-        data = (data - offset) * scale_factor
-        return data
 
     def get_file_format(self, filenames):
         """
