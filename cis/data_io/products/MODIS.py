@@ -66,7 +66,7 @@ class MODIS_L3(AProduct):
         import numpy as np
         from cis.data_io.hdf import _read_hdf4
         from iris.cube import Cube, CubeList
-        from iris.coords import DimCoord
+        from iris.coords import DimCoord, AuxCoord
         from cis.time_util import calculate_mid_time, cis_standard_time_unit
         from cis.data_io.hdf_sd import get_data, get_metadata
         from cf_units import Unit
@@ -83,9 +83,12 @@ class MODIS_L3(AProduct):
             lon_coord = DimCoord(get_data(sdata['XDim']), standard_name='longitude', units='degrees')
 
             # create time coordinate using the midpoint of the time delta between the start date and the end date
-            mid_datetime = calculate_mid_time(self._get_start_date(f), self._get_end_date(f))
+            start_datetime = self._get_start_date(f)
+            end_datetime = self._get_end_date(f)
+            mid_datetime = calculate_mid_time(start_datetime, end_datetime)
             logging.debug("Using {} as datetime for file {}".format(mid_datetime, f))
-            time_coord = DimCoord(mid_datetime, standard_name='time', units=cis_standard_time_unit)
+            time_coord = AuxCoord(mid_datetime, standard_name='time', units=cis_standard_time_unit,
+                                  bounds=[start_datetime, end_datetime])
 
             var = sdata[variable]
             metadata = get_metadata(var)
@@ -96,10 +99,9 @@ class MODIS_L3(AProduct):
                 logging.warning("Unable to parse units '{}' in {} for {}.".format(metadata.units, f, variable))
                 units = None
 
-            # Read the raw data, and then add a length one dimension at the start - for the scalar time coordinate
-            data = get_data(sdata[variable])
-            cube = Cube(data[np.newaxis],
-                        dim_coords_and_dims=[(time_coord, 0), (lon_coord, 2), (lat_coord, 1)],
+            cube = Cube(get_data(sdata[variable]),
+                        dim_coords_and_dims=[(lon_coord, 1), (lat_coord, 0)],
+                        aux_coords_and_dims=[(time_coord, None)],
                         var_name=metadata._name, long_name=metadata.long_name, units=units)
 
             cube_list.append(cube)
