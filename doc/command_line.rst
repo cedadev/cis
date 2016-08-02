@@ -20,7 +20,10 @@ The following should be displayed::
       version        Display the CIS version number
     
   optional arguments:
-    -h, --help   show this help message and exit
+    -h, --help     Show this help message and exit
+    -v, --verbose  Increase the level of logging information output to screen to include 'Info' statements
+    -vv            All log messages will be output to the screen including 'Debug' statements
+    -q  --quiet    Suppress all output to the screen, only 'Error' messages will be displayed (which are always fatal).
 
 
 There are 8 commands the program can execute:
@@ -35,8 +38,8 @@ There are 8 commands the program can execute:
   * ``version`` which is used to display the version number of CIS
 
 
-If an error occurs while running any of these commands, you may wish to check the log file 'cis.log'; the default
-location for this is the current user's home directory.
+If an error occurs while running any of these commands, you may wish to increase the level of output using the verbose
+option, or check the log file 'cis.log'; the default location for this is the current user's home directory.
 
 LSF Batch Job Submission
 ------------------------
