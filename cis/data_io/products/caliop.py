@@ -204,7 +204,13 @@ class abstract_Caliop(AProduct):
 
     def _apply_scaling_factor_CALIPSO(self, data, scale_factor, offset):
         """
-        Apply scaling factor Calipso data
+        Apply scaling factor Calipso data.
+
+        This isn't explicitly documented, but is referred to in the CALIOP docs here:
+        http://www-calipso.larc.nasa.gov/resources/calipso_users_guide/data_summaries/profile_data.php#cloud_layer_fraction
+
+        And also confirmed by email with jason.l.tackett@nasa.gov
+
         :param data:
         :param scale_factor:
         :param offset:
