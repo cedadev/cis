@@ -34,3 +34,4 @@ Bugs fixed
 ==========
 
  * [JASCIS-34] MODIS L3 data is now correctly treated as gridded data.
+ * [JASCIS-345] Product regular expression matching now matches the whole string rather than just the start.
