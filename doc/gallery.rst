@@ -53,7 +53,7 @@ Gallery
 
    Aerosol CCI
 
-.. figure:: img/cloudcci.png
+.. figure:: img/Cloud_CCI.png
    :width: 400px
 
    Cloud CCI
