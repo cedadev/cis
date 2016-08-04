@@ -2,6 +2,8 @@
 Gallery
 =======
 
+A collection of example CIS plots along with the commands used to generate them.
+
 .. figure:: img/model.png
    :width: 400px
 
