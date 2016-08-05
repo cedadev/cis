@@ -33,24 +33,26 @@ def find_plugins(plugin_dir, parent_class_name, verbose):
         logging.info("Looking for plugins... ")
 
     plugin_files = []
-    for f in os.listdir(plugin_dir):
+    try:
+        for f in os.listdir(plugin_dir):
 
-        if f.lower().endswith(('.pyc', '__init__.py')):
-            continue
+            if f.lower().endswith(('.pyc', '__init__.py')):
+                continue
 
-        if f.endswith(".py"):
-            plugin_files.append(f[:-3])
+            if f.endswith(".py"):
+                plugin_files.append(f[:-3])
+    except OSError:
+        logging.warning("Unable to read plugin path: {}".format(plugin_dir))
 
     if len(plugin_files) == 0:
         return []
-
-    if verbose:
-        logging.info("importing plugin " + str(plugin_files))
 
     sys.path.insert(0, plugin_dir)
 
     product_classes = []
     for plugin in plugin_files:
+        if verbose:
+            logging.info("Importing plugin: " + str(plugin))
         module = __import__(plugin)
         classes = [getattr(module, x) for x in dir(module) if isinstance(getattr(module, x), type)]
         product_classes = [cls for cls in classes if parent_class_name in str(cls.__bases__[0])]
