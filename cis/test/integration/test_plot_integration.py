@@ -9,6 +9,7 @@ from cis.test.integration_test_data import *
 from cis.test.integration.base_integration_test import BaseIntegrationTest
 from nose.tools import raises
 
+
 class TestPlotIntegration(BaseIntegrationTest):
 
     def test_should_do_scatter_plot_of_file_valid_aerosol_cci_file(self):
