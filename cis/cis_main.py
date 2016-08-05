@@ -61,7 +61,6 @@ def plot_cmd(main_arguments):
     """
     from cis.plotting.plot import Plotter
     from cis.data_io.data_reader import DataReader
-    import cis.exceptions as ex
 
     try:
         data = DataReader().read_datagroups(main_arguments.datagroups)
@@ -70,10 +69,14 @@ def plot_cmd(main_arguments):
                          "of data to be plotted, increase the swap space available on your machine or use a machine "
                          "with more memory (for example the JASMIN facility).")
 
+    # We have to pop off the arguments which plot isn't expecting so that it treats everything else as an mpl kwarg
     main_arguments = vars(main_arguments)
     main_arguments.pop('command')  # Remove the command argument now it is not needed
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
+    # Also pop off the verbosity kwargs
+    _ = main_arguments.pop("quiet")
+    _ = main_arguments.pop("verbose")
 
     main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
     main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")
