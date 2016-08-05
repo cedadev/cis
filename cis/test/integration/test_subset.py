@@ -462,7 +462,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         # Takes 1.3s
         filename = cis_test_files['GASSP_aux_coord'].master_filename
         variable = ",".join(cis_test_files['GASSP_aux_coord'].all_variable_names)
-        lon_min, lon_max = -155, -156
+        lon_min, lon_max = -156, -155
         lat_min, lat_max = 5, 10
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
