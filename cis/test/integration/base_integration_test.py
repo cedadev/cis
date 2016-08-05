@@ -43,10 +43,10 @@ class BaseIntegrationTest(unittest.TestCase):
         assert string in att_string
         self.ds.close()
 
-    def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min):
+    def check_latlon_subsetting(self, lat_max, lat_min, lon_max, lon_min, lat_var='latitude', lon_var='longitude'):
         self.ds = Dataset(self.OUTPUT_FILENAME)
-        lat = self.ds.variables['latitude'][:]
-        lon = self.ds.variables['longitude'][:]
+        lat = self.ds.variables[lat_var][:]
+        lon = self.ds.variables[lon_var][:]
         assert_that(min(lon), greater_than_or_equal_to(lon_min))
         assert_that(max(lon), less_than_or_equal_to(lon_max))
         assert_that(min(lat), greater_than_or_equal_to(lat_min))

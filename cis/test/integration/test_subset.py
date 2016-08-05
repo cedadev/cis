@@ -46,7 +46,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, 'lat', 'lon')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
 
     def test_GIVEN_single_variable_as_var_name_in_gridded_file_WHEN_subset_THEN_subsetted_correctly(self):
@@ -58,7 +58,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
                      'longitude=[%s,%s],latitude=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, 'lat', 'lon')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
 
     def test_GIVEN_multiple_variables_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
@@ -84,7 +84,7 @@ class TestSubsetIntegration(BaseIntegrationTest):
                      'x=[%s,%s],y=[%s,%s]' % (lon_min, lon_max, lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         subset_cmd(main_arguments)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, 'lat', 'lon')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable1, variable2])
 
     def test_GIVEN_multiple_gridded_variables_on_different_grids_WHEN_subset_THEN_subset_correctly(self):
@@ -396,7 +396,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 0, 120
         lat_min, lat_max = 40, 60
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, 'lat', 'lon')
 
     @skip_pyhdf
     def test_subset_Caliop_L2(self):
@@ -425,7 +425,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
         lon_min, lon_max = 0, 10
         lat_min, lat_max = 40, 60
         self.do_subset(filename, lat_max, lat_min, lon_max, lon_min, variable)
-        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, 'lat', 'lon')
 
     def test_subset_cis_ungridded(self):
         # Takes 1s
