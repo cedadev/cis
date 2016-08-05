@@ -377,7 +377,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         # Takes 1s
         variable = '*'
         filename = valid_cis_gridded_output_filename
-        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean,product=cis', 'x,y',
+        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean,product=NetCDF_Gridded', 'x,y',
                      '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
