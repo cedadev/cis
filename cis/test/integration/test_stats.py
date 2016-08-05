@@ -60,7 +60,7 @@ class TestStats(BaseIntegrationTest):
 
         # Then do a statistics calculation using the collocated data:
         args = ['stats', "%s:%s" % (valid_echamham_variable_1, 'collocated_gassp.nc'),
-                "%s:%s" % (valid_GASSP_aeroplane_variable, valid_GASSP_aeroplane_filename),
+                "%s:%s" % (valid_GASSP_aeroplane_variable, escape_colons(valid_GASSP_aeroplane_filename)),
                 '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
         stats_cmd(arguments)
