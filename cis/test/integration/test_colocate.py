@@ -387,6 +387,7 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars, (192, 145))
 
+    @unittest.skip("Ths takes a very long time and is a pretty unlikely usage")
     def test_ECHAMHAM_onto_HadGem_box(self):
         # Sampling ECHAMHAM (lower dimensionality) with HadGEM (higher dimensionality) results in a lower dimensional
         #  dataset
