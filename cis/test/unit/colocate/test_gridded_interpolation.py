@@ -178,10 +178,10 @@ class TestRegularGridInterpolator(TestCase):
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [2.1, 2.1, -1.1, -1.1]])
         interp = _RegularGridInterpolator(points, sample.T, method="nearest")
-        wanted = np.asarray([np.nan, np.nan, np.nan])
-        assert_array_almost_equal(interp(values, fill_value=np.nan), wanted)
+        # Assert that all of the elements are masked
+        assert all(interp(values, fill_value=np.nan).mask)
         interp = _RegularGridInterpolator(points, sample.T, method="linear")
-        assert_array_almost_equal(interp(values, fill_value=np.nan), wanted)
+        assert all(interp(values, fill_value=np.nan).mask)
 
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                              [0.5, 0.5, .5, .5]])

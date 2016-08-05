@@ -23,15 +23,10 @@ class GeneralUngriddedCollocator(Collocator):
     Collocator for locating onto ungridded sample points
     """
 
-    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
         super(GeneralUngriddedCollocator, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise cis.exceptions.InvalidCommandLineOptionError(
-                    'Dummy Constraint fill_value must be a valid float')
+        self.fill_value = float(fill_value)
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -92,7 +87,9 @@ class GeneralUngriddedCollocator(Collocator):
                                                       self.var_standard_name, self.var_units)
 
         sample_points_count = len(sample_points)
-        values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
+        # Create an empty masked array to store the collocated values. The elements will be unmasked by assignment.
+        values = np.ma.masked_all((len(var_set_details), sample_points_count))
+        values.fill_value = self.fill_value
         log_memory_profile("GeneralUngriddedCollocator after output array creation")
 
         logging.info("    {} sample points".format(sample_points_count))
@@ -151,15 +148,10 @@ class GriddedUngriddedCollocator(Collocator):
     Collocator for locating GriddedData onto ungridded sample points
     """
 
-    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False, extrapolate=False):
         super(GriddedUngriddedCollocator, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise cis.exceptions.InvalidCommandLineOptionError(
-                    'Dummy Constraint fill_value must be a valid float')
+        self.fill_value = float(fill_value)
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -790,15 +782,10 @@ class GeneralGriddedCollocator(Collocator):
     """Performs collocation of data on to the points of a cube (ie onto a gridded dataset).
     """
 
-    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
         super(GeneralGriddedCollocator, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise cis.exceptions.InvalidCommandLineOptionError(
-                    'Dummy Constraint fill_value must be a valid float')
+        self.fill_value = float(fill_value)
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units

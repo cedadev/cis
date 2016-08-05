@@ -285,7 +285,7 @@ class _RegularGridInterpolator(object):
         result = self._interp(values, self.indices, self.norm_distances)
 
         if fill_value is not None:
-            result[self.out_of_bounds] = fill_value
+            result = np.ma.array(result, mask=self.out_of_bounds, fill_value=fill_value)
 
         return result
 

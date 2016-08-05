@@ -424,7 +424,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
-        assert_equal(new_data.data[2], np.NAN)
+        assert np.ma.is_masked(new_data.data[2])
 
     def test_negative_lon_points_on_hybrid_altitude_coordinates_dont_matter(self):
         """
@@ -455,7 +455,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
-        assert_equal(new_data.data[2], np.NAN)
+        assert np.ma.is_masked(new_data.data[2])
 
     def test_alt_extrapolation(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
@@ -484,7 +484,7 @@ class TestLinear(unittest.TestCase):
         # Exactly on the lat, time points, interpolated over longitude and pressure
         assert_almost_equal(new_data.data[2], 330.5, decimal=7)
         # Outside of the pressure bounds - extrapolation off
-        assert_equal(new_data.data[3], np.inf)
+        assert np.ma.is_masked(new_data.data[3])
 
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
@@ -503,7 +503,7 @@ class TestLinear(unittest.TestCase):
         # Exactly on the lat, time points, interpolated over longitude and pressure
         assert_almost_equal(new_data.data[2], 330.5, decimal=7)
         # Outside of the pressure bounds - extrapolation off
-        assert_equal(new_data.data[3], np.inf)
+        assert np.ma.is_masked(new_data.data[3])
 
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_nn(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3))
@@ -546,7 +546,7 @@ class TestLinear(unittest.TestCase):
         # Exactly on the lat, time points, interpolated over longitude and pressure
         assert_almost_equal(new_data.data[2], 330.5, decimal=7)
         # Outside of the pressure bounds - extrapolation off
-        assert_equal(new_data.data[3], np.inf)
+        assert np.ma.is_masked(new_data.data[3])
 
         # Second dataset:
         new_data = outlist[1]
@@ -557,7 +557,7 @@ class TestLinear(unittest.TestCase):
         # Exactly on the lat, time points, interpolated over longitude and pressure
         assert_almost_equal(new_data.data[2],430.5, decimal=7)
         # Outside of the pressure bounds - extrapolation off
-        assert_equal(new_data.data[3], np.inf)
+        assert np.ma.is_masked(new_data.data[3])
 
     def test_negative_lon_points_on_hybrid_pressure_coordinates_dont_matter(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))

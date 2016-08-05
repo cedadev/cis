@@ -520,13 +520,13 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
         out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=SlowMean())[0]
 
-        expected_result = numpy.array([[float('Inf'), float('Inf'), float('Inf')],
-                                       [float('Inf'), float('Inf'), float('Inf')],
-                                       [float('Inf'), float('Inf'), float('Inf')],
-                                       [float('Inf'), float('Inf'), float('Inf')],
-                                       [float('Inf'), float('Inf'), float('Inf')]])
+        expected_result = numpy.array([[float('nan'), float('nan'), float('nan')],
+                                       [float('nan'), float('nan'), float('nan')],
+                                       [float('nan'), float('nan'), float('nan')],
+                                       [float('nan'), float('nan'), float('nan')],
+                                       [float('nan'), float('nan'), float('nan')]])
 
-        assert numpy.array_equal(out_cube.data.filled(), expected_result)
+        numpy.testing.assert_array_equal(out_cube.data.filled(), expected_result)
 
     def test_single_point_results_in_single_value_in_cell(self):
         con = CubeCellConstraint()

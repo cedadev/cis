@@ -14,7 +14,7 @@ class Collocator(object):
         """
         Initialise the fill_value, missing data flag and variable attributes.
 
-        :param fill_value: The value to use when the kernel is unable to return a value. The default is inf.
+        :param fill_value: The value to use when the kernel is unable to return a value. The default is NaN.
         :param var_name: The name of the variable to use when creating the output data object
         :param var_long_name: The long name of the variable to use when creating the output data object
         :param var_units: The units of the variable to use when creating the output data object
@@ -23,7 +23,7 @@ class Collocator(object):
         :return:
         """
         import numpy as np
-        self.fill_value = float(fill_value) if fill_value is not None else np.inf
+        self.fill_value = float(fill_value) if fill_value is not None else np.nan
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units

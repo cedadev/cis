@@ -72,7 +72,6 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         output = col.collocate(sample_points, data_list, constraint, kernel)
 
         expected_result = np.array(list(range(1, 16)))
-        expected_stddev = np.array(15 * [float('inf')])
         expected_n = np.array(15 * [1])
         assert len(output) == 6
         assert isinstance(output, UngriddedDataList)
@@ -80,10 +79,10 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         assert output[4].var_name == 'snow_std_dev'
         assert output[5].var_name == 'snow_num_points'
         assert np.allclose(output[0].data, expected_result)
-        assert np.allclose(output[1].data, expected_stddev)
+        assert all(output[1].data.mask)
         assert np.allclose(output[2].data, expected_n)
         assert np.allclose(output[3].data, expected_result + 3)
-        assert np.allclose(output[4].data, expected_stddev)
+        assert all(output[4].data.mask)
         assert np.allclose(output[5].data, expected_n)
 
     def test_list_gridded_ungridded_box_moments(self):
