@@ -238,7 +238,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         self.check_temporal_subsetting(time_min, time_max)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
-    @raises(NoDataInSubsetError)
+    @raises(CoordinateNotFoundError)
     def test_subset_MODIS_L3(self):
         # Takes 5s
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
@@ -246,7 +246,9 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
                    'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
         filename = valid_modis_l3_filename
         time_min, time_max = '2010-01-13T00:00:01', '2010-01-13T00:01:44'
-        # This is a single timestamp so the best we can do is exclude it and confirm no data is returned.
+        # This is a single scalar timestamp so trying to subset on time will result in CoordinateNotFound (as we only
+        # look for extended coordinates). We may want to revisit this if there is some good reason for subsetting scalar
+        # coordinates...
         self.do_subset(filename, time_min, time_max, variable)
 
     @skip_pyhdf
