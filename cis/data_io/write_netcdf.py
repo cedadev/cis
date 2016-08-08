@@ -15,7 +15,7 @@ types = {'int8': 'i1',
          'float32': "f4",
          'float64': "f8"}
 
-index_name = 'pixel_number'
+index_name = 'obs'
 
 
 def __add_metadata(var, data):
@@ -119,17 +119,6 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
         return nc_file.variables[name]
 
 
-def __create_index(nc_file, length):
-    import numpy as np
-
-    dimension = nc_file.createDimension(index_name, length)
-    dimensions = (index_name, )
-    var = nc_file.createVariable(index_name, np.int32, dimensions)
-    var[:] = np.arange(length)
-
-    return dimensions
-
-
 def write(data_object, filename):
     """
 
@@ -162,7 +151,7 @@ def write_coordinate_list(coord_list, filename):
         length = len(coord_list[0].data.flatten())
     except AttributeError:
         length = len(coord_list[0].points.flatten())
-    index_dim = __create_index(netcdf_file, length)
+    _ = netcdf_file.createDimension(index_name, length)
     for coord in coord_list:
         __create_variable(netcdf_file, coord, prefer_standard_name=True)
     netcdf_file.close()
