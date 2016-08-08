@@ -407,7 +407,7 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
 
     @skip_pyhdf
     def test_MODIS_L3_onto_NetCDF_Gridded(self):
-        # Takes 27s
+        # Takes 3s
         vars = [valid_modis_l3_variable]
         filename = valid_modis_l3_filename
         sample_file = valid_hadgem_filename
@@ -419,6 +419,26 @@ class TestGriddedGriddedCollocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
+        # The hadgem file has an extended time coord, which is ignored in the collocation because the
+        #  MODIS L3 file only has a scalar time (so you can't resample it).
+        self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars, (145, 192))
+
+    @skip_pyhdf
+    def test_NetCDF_Gridded_onto_MODIS_L3(self):
+        # Takes 5s
+        vars = [valid_hadgem_variable]
+        filename = valid_hadgem_filename
+        sample_var = valid_modis_l3_variable
+        sample_file = valid_modis_l3_filename
+        collocator_and_opts = 'nn,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
+                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
+        # The hadgem file has an extended time coord, which is sampled in the collocation from the
+        #  MODIS L3 scalar time.
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
 
