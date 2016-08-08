@@ -45,6 +45,13 @@ class TestNCAR_NetCDF_RAF_with_GASSP_aux_coord(ProductTests, unittest.TestCase):
     def setUp(self):
         self.setup(cis_test_files["GASSP_aux_coord"], NCAR_NetCDF_RAF)
 
+    def test_variable_wildcarding(self):
+        # We get all of the variables from the file like this - but this isn't the same as the set defined in the
+        #  test data because they are all the same shape. These aren't.
+        vars = [u'AREADIST_DMA_OPC', u'VOLDIST_DMA_OPC', u'DYNAMIC_PRESSURE', u'NUMDIST_DMA_OPC', u'PRESSURE_ALTITUDE',
+                u'LONGITUDE', u'RELATIVE_HUMIDITY', u'AIR_TEMPERATURE', u'AIR_PRESSURE', u'TIME', u'LATITUDE']
+        self.check_valid_vars(vars)
+
 
 class TestNCAR_NetCDF_RAF_with_GASSP_aeroplane(ProductTests, unittest.TestCase):
 
