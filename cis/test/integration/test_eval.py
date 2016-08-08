@@ -54,7 +54,7 @@ class TestEval(BaseIntegrationTest):
         filename = escape_colons(valid_echamham_filename)
         sample_file = escape_colons(valid_GASSP_aeroplane_filename)
         sample_var = valid_GASSP_aeroplane_variable
-        collocator_and_opts = 'nn,variable=%s' % sample_var
+        collocator_and_opts = 'nn[missing_data_for_missing_sample=False],variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,
                      '-o', 'collocated_gassp']
@@ -67,16 +67,16 @@ class TestEval(BaseIntegrationTest):
         col_var2 = self.ds.variables[valid_echamham_variable_2][:]
         # A hand calculated selection of values
         expected_col1 = numpy.ma.masked_invalid(
-            [float('Nan'), float('Nan'), float('Nan'), 0.0815568640828, 0.0815568640828])
+            [float('Nan'), float('Nan'), float('Nan'), 0.0814601778984, 0.0814601778984])
         compare_masked_arrays(expected_col1, col_var1[:][0:5])
         expected_col2 = numpy.ma.masked_invalid(
-            [float('Nan'), float('Nan'), float('Nan'), 0.0605319179595, 0.0605319179595])
+            [float('Nan'), float('Nan'), float('Nan'), 0.0741240680218, 0.0741240680218])
         compare_masked_arrays(expected_col2, col_var2[:][0:5])
 
         # Then do an evaluation using the collocated data:
         args = ['eval', "%s,%s:%s" % (valid_echamham_variable_1, valid_echamham_variable_2,
                                       'collocated_gassp.nc'),
-                "%s=gassp_alias:%s" % (valid_GASSP_aeroplane_variable, valid_GASSP_aeroplane_filename),
+                "%s=gassp_alias:%s" % (valid_GASSP_aeroplane_variable, escape_colons(valid_GASSP_aeroplane_filename)),
                 "(%s + %s) / gassp_alias " % (valid_echamham_variable_1, valid_echamham_variable_2),
                 '1', '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)
@@ -87,10 +87,11 @@ class TestEval(BaseIntegrationTest):
         self.ds = netCDF4.Dataset(self.OUTPUT_FILENAME)
         calculated_result = self.ds.variables['calculated_variable'][:]
         # A hand calculated selection of values
-        expected_result = numpy.ma.masked_invalid([float('Nan'), float('Nan'), float('Nan'), 0.0004584692, 0.000697334])
+        expected_result = numpy.ma.masked_invalid([0.00196121983491, 0.00197255626472, 0.00120850731992])
 
         assert_that(calculated_result.shape, is_((311,)))
-        compare_masked_arrays(expected_result, calculated_result[:][0:5])
+        # Check the first 3 vald values
+        compare_masked_arrays(expected_result, calculated_result[:][10:13])
         os.remove('collocated_gassp.nc')
 
     @skip_pyhdf

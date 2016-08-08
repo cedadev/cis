@@ -57,6 +57,48 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)
 
+    def test_ungridded_ungridded_box_moments_missing_data_for_missing_sample(self):
+        data = mock.make_regular_2d_ungridded_data()
+        sample = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        constraint = SepConstraintKdtree('500km')
+        kernel = moments()
+
+        sample_mask = [False, True, False]
+        sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
+
+        col = GeneralUngriddedCollocator(missing_data_for_missing_sample=True)
+        output = col.collocate(sample, data, constraint, kernel)
+
+        assert len(output) == 3
+        assert isinstance(output, UngriddedDataList)
+        assert np.array_equal(output[0].data.mask, sample_mask)
+        assert np.array_equal(output[1].data.mask, sample_mask)
+        assert np.array_equal(output[2].data.mask, sample_mask)
+
+    def test_ungridded_ungridded_box_moments_no_missing_data_for_missing_sample(self):
+        data = mock.make_regular_2d_ungridded_data()
+        sample = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        constraint = SepConstraintKdtree('500km')
+        kernel = moments()
+
+        sample_mask = [False, True, False]
+        sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
+
+        col = GeneralUngriddedCollocator(missing_data_for_missing_sample=False)
+        output = col.collocate(sample, data, constraint, kernel)
+
+        assert len(output) == 3
+        assert isinstance(output, UngriddedDataList)
+        assert not any(output[0].data.mask)
+        assert not any(output[1].data.mask)
+        assert not any(output[2].data.mask)
+
     def test_list_ungridded_ungridded_box_mean(self):
         ug_data_1 = mock.make_regular_2d_ungridded_data()
         ug_data_2 = mock.make_regular_2d_ungridded_data(data_offset=3)

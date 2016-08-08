@@ -23,15 +23,6 @@ class GeneralUngriddedCollocator(Collocator):
     Collocator for locating onto ungridded sample points
     """
 
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False):
-        super(GeneralUngriddedCollocator, self).__init__()
-        self.fill_value = float(fill_value)
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
-
     def collocate(self, points, data, constraint, kernel):
         """
         This collocator takes a list of HyperPoints and a data object (currently either Ungridded
@@ -96,7 +87,14 @@ class GeneralUngriddedCollocator(Collocator):
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
         total_count = 0
-        for i, point in sample_points.enumerate_non_masked_points():
+
+        # Check if we want to sample missing points
+        if self.missing_data_for_missing_sample:
+            sample_enumerator = sample_points.enumerate_non_masked_points
+        else:
+            sample_enumerator = sample_points.enumerate_all_points
+
+        for i, point in sample_enumerator():
             # Log progress periodically.
             cell_count += 1
             if cell_count == 1000:
@@ -150,12 +148,8 @@ class GriddedUngriddedCollocator(Collocator):
 
     def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False, extrapolate=False):
-        super(GriddedUngriddedCollocator, self).__init__()
-        self.fill_value = float(fill_value)
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
+        super(GriddedUngriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
+                                                         missing_data_for_missing_sample)
         self.extrapolate = extrapolate
         self.interpolator = None
 
@@ -203,7 +197,7 @@ class GriddedUngriddedCollocator(Collocator):
 
         if self.interpolator is None:
             # Cache the interpolator
-            self.interpolator = GriddedUngriddedInterpolator(data, points, method=kernel)
+            self.interpolator = GriddedUngriddedInterpolator(data, points, kernel, self.missing_data_for_missing_sample)
 
         values = self.interpolator(data, fill_value=self.fill_value, extrapolate=self.extrapolate)
 
@@ -591,12 +585,6 @@ class nn_t(nn_time):
 
 
 class GriddedCollocator(Collocator):
-    def __init__(self, var_name='', var_long_name='', var_units='', missing_data_for_missing_sample=False):
-        super(Collocator, self).__init__()
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
     @staticmethod
     def _check_for_valid_kernel(kernel):
@@ -781,15 +769,6 @@ class gridded_gridded_li(Kernel):
 class GeneralGriddedCollocator(Collocator):
     """Performs collocation of data on to the points of a cube (ie onto a gridded dataset).
     """
-
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False):
-        super(GeneralGriddedCollocator, self).__init__()
-        self.fill_value = float(fill_value)
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
     def collocate(self, points, data, constraint, kernel):
         """

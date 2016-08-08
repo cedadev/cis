@@ -53,6 +53,67 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         assert isinstance(output, UngriddedDataList)
         assert np.allclose(output[0].data, expected_result)
 
+    def test_missing_data_for_missing_sample(self):
+        data = make_from_cube(mock.make_mock_cube())
+        data.name = lambda: 'Name'
+        data.var_name = 'var_name'
+        data._standard_name = 'y_wind'
+        sample = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        constraint = None
+
+        sample_mask = [False, True, False]
+        sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
+
+        col = GriddedUngriddedCollocator(missing_data_for_missing_sample=True)
+        output = col.collocate(sample, data, constraint, 'nearest')
+
+        assert len(output) == 1
+        assert isinstance(output, UngriddedDataList)
+        assert np.array_equal(output[0].data.mask, sample_mask)
+
+    def test_no_missing_data_for_missing_sample(self):
+        data = make_from_cube(mock.make_mock_cube())
+        data.name = lambda: 'Name'
+        data.var_name = 'var_name'
+        data._standard_name = 'y_wind'
+        sample = UngriddedData.from_points_array(
+            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
+             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        constraint = None
+
+        sample_mask = [False, True, False]
+        sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
+
+        col = GriddedUngriddedCollocator(missing_data_for_missing_sample=False)
+        output = col.collocate(sample, data, constraint, 'nearest')
+
+        assert len(output) == 1
+        assert isinstance(output, UngriddedDataList)
+        assert not any(output[0].data.mask)
+
+    def test_missing_data_for_missing_sample_with_no_extrapolation(self):
+        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=0.0, alt=5550.0, t=dt.datetime(1984, 8, 28)),
+             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28)),
+             HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27))])
+
+        sample_mask = [False, True, False]
+        sample_points.data = np.ma.array([0, 0, 0], mask=sample_mask)
+
+        col = GriddedUngriddedCollocator(fill_value=np.NAN, missing_data_for_missing_sample=True)
+        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
+        # This point should be masked because of the sampling
+        assert np.ma.is_masked(new_data.data[1])
+        # And this one because of the extrapolation
+        assert np.ma.is_masked(new_data.data[2])
+
     def test_collocation_of_pres_points_on_hybrid_altitude_coordinates(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
 

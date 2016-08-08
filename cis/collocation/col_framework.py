@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
+import numpy as np
 
 
 class Collocator(object):
@@ -9,7 +10,7 @@ class Collocator(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
         """
         Initialise the fill_value, missing data flag and variable attributes.
@@ -22,8 +23,7 @@ class Collocator(object):
          data points with a missing value - regardless of the collocation result. The default is False.
         :return:
         """
-        import numpy as np
-        self.fill_value = float(fill_value) if fill_value is not None else np.nan
+        self.fill_value = float(fill_value)
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units

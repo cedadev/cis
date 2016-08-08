@@ -34,7 +34,8 @@ where:
     * ``variable`` is an optional argument used to specify which variable's coordinates to use for collocation.
       If a variable is specified, a missing value will be set in the output file at every point for which the sample
       variable has a missing value. If a variable is not specified, non-missing values will be set at all sample points
-      unless collocation at a point does not result in a valid value.
+      unless collocation at a point does not result in a valid value. This can be overridden by using the
+      ``missing_data_for_missing_sample`` argument described below.
 
     * ``collocator`` is an optional argument that specifies the collocation method. Parameters for the collocator, if any,
       are placed in square brackets after the collocator name, for example, ``collocator=box[fill_value=-999,h_sep=1km]``.
@@ -86,6 +87,8 @@ where:
       * ``var_name`` - Specifies the name of the variable in the resulting NetCDF file.
       * ``var_long_name`` - Specifies the variable's long name.
       * ``var_units`` - Specifies the variable's units.
+      * ``missing_data_for_missing_sample`` - Allows the user to specify explicitly whether masked sample data points
+        should be used for sampling. This only applies when a variable has been specified in the samplegroup.
 
     * ``kernel`` is used to specify the kernel to use for collocation methods that create an intermediate set of points for
       further processing, that is box and bin. The default kernel for box and bin is *moments*. The built-in kernel

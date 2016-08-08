@@ -118,9 +118,9 @@ def col_cmd(main_arguments):
     if main_arguments.samplevariable is not None:
         sample_data = data_reader.read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
                                                  main_arguments.sampleproduct)[0]
+        missing_data_for_missing_samples = True
     else:
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
-        missing_data_for_missing_samples = True
 
     try:
         col = Collocate(sample_data, missing_data_for_missing_samples)

@@ -34,7 +34,6 @@ class CollocatorFactory(object):
                                                                                       sample_gridded, data_gridded)
         collocator_params, constraint_params = self._get_collocator_params(collocator_params)
         col = self._instantiate_with_params(col_cls, collocator_params)
-        del constraint_params['missing_data_for_missing_sample']
         con = self._instantiate_with_params(constraint_cls, constraint_params)
         kernel = self._instantiate_with_params(kernel_cls, kernel_params)
         return col, con, kernel
@@ -111,7 +110,7 @@ class CollocatorFactory(object):
         :param params: combined collocator/constraint parameters
         :return: tuple containing (dict of collocator parameters, dict of constraint parameters)
         """
-        col_param_names = ['fill_value', 'var_name', 'var_long_name', 'var_units']
+        col_param_names = ['fill_value', 'var_name', 'var_long_name', 'var_units', 'missing_data_for_missing_sample']
         col_params = {}
         con_params = {}
         for key, value in params.items():
@@ -173,8 +172,11 @@ class Collocate(object):
         from time import time
         from cis import __version__
 
+        # Set the missing data flag - if the user hasn't overridden it
+        col_params['missing_data_for_missing_sample'] = col_params['missing_data_for_missing_sample'] == 'True' \
+            if 'missing_data_for_missing_sample' in col_params else self.missing_data_for_missing_sample
+
         # Find collocator, constraint and kernel to use
-        col_params['missing_data_for_missing_sample'] = self.missing_data_for_missing_sample
         col, con, kernel = self.collocator_factory.get_collocator_instances_for_method(col_name, kern, col_params,
                                                                                        kern_params,
                                                                                        self.sample_points.is_gridded,

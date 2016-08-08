@@ -24,7 +24,7 @@ import numpy as np
 
 class GriddedUngriddedInterpolator(object):
 
-    def __init__(self, _data, sample, method='linear'):
+    def __init__(self, _data, sample, method='linear', missing_data_for_missing_sample=False):
         """
         Prepare an interpolation over the grid defined by a GriddedData source onto an UngriddedData sample.
 
@@ -93,8 +93,15 @@ class GriddedUngriddedInterpolator(object):
             raise ValueError("Sample points do not uniquely define gridded data source points, invalid "
                              "dimenions: {} and {} respectively".format(len(sample_points), len(data.shape)))
 
+        # Check if we want to sample missing points
+        if missing_data_for_missing_sample and hasattr(sample.data, 'mask'):
+            self.missing_mask = sample.data.mask
+            sample_points = [p[~self.missing_mask] for p in sample_points]
+        else:
+            self.missing_mask = None
+
         self._interp = _RegularGridInterpolator(grid_points, sample_points,
-                                               hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
+                                                hybrid_coord=hybrid_coord, hybrid_dims=hybrid_dims, method=method)
 
     def _get_dims_order(self, data, coords):
         """
@@ -138,7 +145,18 @@ class GriddedUngriddedInterpolator(object):
 
         data_array = self._account_for_inverted(data_array)
 
-        return self._interp(data_array, fill_value=fill_value)
+        result = self._interp(data_array, fill_value=fill_value)
+
+        if self.missing_mask is not None:
+            # Pack the interpolated values back into the original shape
+            expanded_result = np.ma.masked_array(np.zeros(self.missing_mask.shape), mask=self.missing_mask,
+                                                 fill_value=fill_value)
+            expanded_result[~self.missing_mask] = result
+            if hasattr(result, 'mask'):
+                expanded_result.mask[~self.missing_mask] = result.mask
+            result = expanded_result
+
+        return result
 
 
 def _ndim_coords_from_arrays(points, ndim=None):
