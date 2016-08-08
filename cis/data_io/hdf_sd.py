@@ -183,16 +183,15 @@ def get_metadata(sds):
     from cis.data_io.ungridded_data import Metadata
 
     name = sds.info()[0]
-    long_name = sds.attributes().get('long_name', None)
-    shape = sds.info()[2]
-    units = sds.attributes().get('units')
-    factor = sds.attributes().get('scale_factor')
-    offset = sds.attributes().get('add_offset')
-    missing = sds.attributes().get('_FillValue')
 
-    # put the whole dictionary of attributes into 'misc'
-    # so that other metadata of interest can still be retrieved if need be
     misc = sds.attributes()
+    long_name = misc.pop('long_name', '')
+    units = misc.pop('units', '')
+    factor = misc.pop('scale_factor', None)
+    offset = misc.pop('add_offset', None)
+    missing = misc.pop('_FillValue', None)
+
+    shape = sds.info()[2]
 
     metadata = Metadata(name=name, long_name=long_name, shape=shape, units=units,
                         factor=factor, offset=offset, missing_value=missing, misc=misc)

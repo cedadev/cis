@@ -151,17 +151,19 @@ def get_metadata(vds):
     vd = vs.attach(variable)
 
     name = variable
-    long_name = _get_attribute_value(vd, 'long_name')
+    misc = vd.attrinfo()
+
+    long_name = _pop_attribute_value(misc, 'long_name', '')
+    units = _pop_attribute_value(misc, 'units', '')
+    factor = _pop_attribute_value(misc, 'factor')
+    offset = _pop_attribute_value(misc, 'offset')
+    missing = _pop_attribute_value(misc, 'missing')
+
     # VD data are always 1D, so the shape is simply the length of the data vector
     shape = [len(vd.read(nRec=vd.inquire()[0]))]
-    units = _get_attribute_value(vd, 'units')
-    factor = _get_attribute_value(vd, 'factor')
-    offset = _get_attribute_value(vd, 'offset')
-    missing = _get_attribute_value(vd, 'missing')
 
-    # put the whole dictionary of attributes into 'misc'
-    # so that other metadata of interest can still be retrieved if need be
-    misc = vd.attrinfo()
+    # Tidy up the rest of the data in misc:
+    misc = {k: v[2] for k, v in misc.items()}
 
     metadata = Metadata(name=name, long_name=long_name, shape=shape, units=units,
                         factor=factor, offset=offset, missing_value=missing, misc=misc)
@@ -176,6 +178,16 @@ def get_metadata(vds):
 
 def _get_attribute_value(vd, name, default=None):
     val = vd.attrinfo().get(name, None)
+    # if the attribute is not present
+    if val is None:
+        return default
+    else:
+        # attrinfo() returns a tuple in which the value of interest is the 3rd item, hence the '[2]'
+        return val[2]
+
+
+def _pop_attribute_value(att_dict, name, default=None):
+    val = att_dict.pop(name, None)
     # if the attribute is not present
     if val is None:
         return default
