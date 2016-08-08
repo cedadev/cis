@@ -5,7 +5,7 @@ import logging
 from time import gmtime, strftime
 import numpy
 
-from cis import utils
+import six
 from cis.data_io.netcdf import get_data as netcdf_get_data
 from cis.data_io.hdf_vd import get_data as hdf_vd_get_data
 from cis.data_io.hdf_sd import get_data as hdf_sd_get_data
@@ -68,7 +68,11 @@ class Metadata(object):
         return string
 
     def __str__(self):
-        return self.summary().encode(errors='replace')
+        # six has a decorator for this bit, but it doesn't do errors='replace'.
+        if six.PY3:
+            return self.summary()
+        else:
+            return self.summary().encode(errors='replace')
 
     def __unicode__(self):
         return self.summary()
@@ -611,7 +615,11 @@ class UngriddedData(LazyData, CommonData):
         return summary
 
     def __str__(self):
-        return self.summary().encode(errors='replace')
+        # six has a decorator for this bit, but it doesn't do errors='replace'.
+        if six.PY3:
+            return self.summary()
+        else:
+            return self.summary().encode(errors='replace')
 
     def __unicode__(self):
         return self.summary()
