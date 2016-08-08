@@ -80,11 +80,11 @@ class GriddedUngriddedInterpolator(object):
         if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords('altitude'):
             hybrid_coord = data.coord('altitude').points
             hybrid_dims = data.coord_dims(data.coord('altitude'))
-            sample_points.append(sample.coord("altitude").points)
+            sample_points.append(sample.coord("altitude").data_flattened)
         elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords('air_pressure'):
             hybrid_coord = data.coord('air_pressure').points
             hybrid_dims = data.coord_dims(data.coord('air_pressure'))
-            sample_points.append(sample.coord("air_pressure").points)
+            sample_points.append(sample.coord("air_pressure").data_flattened)
         else:
             hybrid_coord = None
             hybrid_dims = None
@@ -95,7 +95,7 @@ class GriddedUngriddedInterpolator(object):
 
         # Check if we want to sample missing points
         if missing_data_for_missing_sample and hasattr(sample.data, 'mask'):
-            self.missing_mask = sample.data.mask
+            self.missing_mask = sample.data.mask.flatten()
             sample_points = [p[~self.missing_mask] for p in sample_points]
         else:
             self.missing_mask = None
