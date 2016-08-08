@@ -123,19 +123,10 @@ class GeneralUngriddedCollocator(Collocator):
 
         return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
-            if idx == 0:
-                new_data = UngriddedData(values[0, :], metadata, points.coords())
-                new_data.metadata._name = var_details[0]
-                new_data.metadata.long_name = var_details[1]
-                set_standard_name_if_valid(new_data, var_details[2])
-                new_data.metadata.shape = (len(sample_points),)
-                new_data.metadata.missing_value = self.fill_value
-                new_data.units = var_details[3]
-            else:
-                var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
-                                        missing_value=self.fill_value, units=var_details[3])
-                new_data = UngriddedData(values[idx, :], var_metadata, points.coords())
-            return_data.append(new_data)
+            var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
+                                    missing_value=self.fill_value, units=var_details[3])
+            set_standard_name_if_valid(var_metadata, var_details[2])
+            return_data.append(UngriddedData(values[idx, :], var_metadata, points.coords()))
         log_memory_profile("GeneralUngriddedCollocator final")
 
         return return_data
@@ -203,15 +194,10 @@ class GriddedUngriddedCollocator(Collocator):
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
-        new_data = UngriddedData(values, data.metadata, points.coords())
-        new_data.metadata._name = self.var_name or data.name()
-        new_data.metadata.long_name = self.var_long_name or data.metadata.long_name
-        set_standard_name_if_valid(new_data, data.standard_name)
-        new_data.metadata.shape = values.shape
-        new_data.metadata.missing_value = self.fill_value
-        new_data.units = self.var_units or data.units
-
-        return_data = UngriddedDataList([new_data])
+        metadata = Metadata(self.var_name or data.name(), long_name=self.var_long_name or data.metadata.long_name,
+                            shape=values.shape, missing_value=self.fill_value, units=self.var_units or data.units)
+        set_standard_name_if_valid(metadata, data.standard_name)
+        return_data = UngriddedDataList([UngriddedData(values, metadata, points.coords())])
 
         log_memory_profile("GriddedUngriddedCollocator final")
 

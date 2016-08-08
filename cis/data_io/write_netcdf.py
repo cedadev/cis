@@ -25,8 +25,6 @@ def __add_metadata(var, data):
         var.units = str(data.units)
     if data.long_name:
         var.long_name = data.long_name
-    if data.metadata.range:
-        var.valid_range = data.metadata.range
     if data.metadata.missing_value:
         var.missing_value = data.metadata.missing_value
     if data.metadata.calendar:
@@ -35,6 +33,9 @@ def __add_metadata(var, data):
         var.history = data.metadata.history
     for name, value in data.attributes.items():
         setattr(var, name, value)
+    for name, value in data.metadata.misc.items():
+        if name not in var.ncattrs():
+            setattr(var, name, value)
     return var
 
 
@@ -124,8 +125,6 @@ def __create_index(nc_file, length):
     dimension = nc_file.createDimension(index_name, length)
     dimensions = (index_name, )
     var = nc_file.createVariable(index_name, np.int32, dimensions)
-
-    var.valid_range = (0, length)
     var[:] = np.arange(length)
 
     return dimensions

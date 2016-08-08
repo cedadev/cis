@@ -205,12 +205,12 @@ def get_metadata(var):
     from cis.data_io.ungridded_data import Metadata
     from cis.utils import set_standard_name_if_valid
 
-    standard_name = getattr(var, 'standard_name', "")
     missing_value = find_missing_value(var)
-    long_name = getattr(var, 'long_name', "")
-    units = getattr(var, 'units', "")
 
-    history = getattr(var, "history", "")
+    standard_attributes = ['standard_name', 'long_name', 'history', 'units']
+
+    attrs = {attr: getattr(var, attr, "") for attr in standard_attributes}
+
     shape = getattr(var, "shape", None)
     if shape is None:
         try:
@@ -220,14 +220,15 @@ def get_metadata(var):
 
     metadata = Metadata(
         var._name,
-        long_name=long_name,
-        units=units,
+        long_name=attrs['long_name'],
+        units=attrs['units'],
         missing_value=missing_value,
         shape=shape,
-        history=history)
+        history=attrs['history'],
+        misc={k: getattr(var, k) for k in var.ncattrs() if k not in standard_attributes})
 
     # Only set the standard name if it's CF compliant
-    set_standard_name_if_valid(metadata, standard_name)
+    set_standard_name_if_valid(metadata, attrs['standard_name'])
 
     return metadata
 
@@ -283,17 +284,10 @@ def get_data(var):
 
     if hasattr(var, 'valid_range'):
         try:
-            if isinstance(var.valid_range, np.ndarray):
-                v_range = var.valid_range
-            elif hasattr(var.valid_range, 'split'):
-                v_range = np.fromstring(var.valid_range, var.dtype, 2, sep=' ')
-            else:
-                raise ValueError
-        except ValueError:
+            data = np.ma.masked_outside(data, *var.valid_range)
+            logging.debug("Masking all values {} > v > {}.".format(*var.valid_range))
+        except (ValueError, TypeError):
             logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
-        else:
-            logging.debug("Masking all values {} > v > {}.".format(*v_range))
-            data = np.ma.masked_outside(data, *v_range)
 
     # Now apply any scaling
     data = apply_offset_and_scaling(data, getattr(var, 'add_offset', None), getattr(var, 'scale_factor', None))

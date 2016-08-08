@@ -320,15 +320,15 @@ class LazyData(object):
 
             try:
                 if standard_time:
-                    range = (str(cis_standard_time_unit.num2date(self.data.min())),
-                             str(cis_standard_time_unit.num2date(self.data.max())))
+                    range = (cis_standard_time_unit.num2date(self.data.min()),
+                             cis_standard_time_unit.num2date(self.data.max()))
                 else:
                     range = (self.data.min(), self.data.max())
             except ValueError as e:
                 # If we can't set a range for some reason then just leave it blank
                 range = ()
 
-        self.metadata.range = str(range)
+        self.metadata.range = range
 
 
 class UngriddedData(LazyData, CommonData):
