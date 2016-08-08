@@ -308,8 +308,10 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
 
     @skip_pyhdf
     def test_aggregate_MODIS_L3(self):
-        # Takes 27s
-        variable = '*'
+        # Takes 15s
+        variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
+                   'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
+                   'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
         filename = valid_modis_l3_filename
         arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 'x,y',
                      '-o', self.OUTPUT_FILENAME]
@@ -556,11 +558,11 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
 
     @skip_pyhdf
     def test_aggregate_MODIS_L3(self):
-        # Takes 8s
+        # Takes 30s
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
                    'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
                    'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
-        filename = valid_modis_l3_filename
+        filename = valid_modis_l3_filename + ',' + valid_modis_l3_filename2
         arguments = ['aggregate', variable + ':' + escape_colons(filename), 't', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
