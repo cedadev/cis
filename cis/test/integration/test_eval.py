@@ -54,7 +54,7 @@ class TestEval(BaseIntegrationTest):
         filename = escape_colons(valid_echamham_filename)
         sample_file = escape_colons(valid_GASSP_aeroplane_filename)
         sample_var = valid_GASSP_aeroplane_variable
-        collocator_and_opts = 'nn[missing_data_for_missing_sample=False],variable=%s' % sample_var
+        collocator_and_opts = 'nn[missing_data_for_missing_sample=True],variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + filename,
                      sample_file + ':collocator=' + collocator_and_opts,
                      '-o', 'collocated_gassp']
