@@ -78,7 +78,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         filename = valid_GASSP_aeroplane_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -92,7 +92,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         var = cis_test_files['GASSP_aux_coord'].data_variable_name
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', var + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -107,7 +107,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         filename = valid_GASSP_ship_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -122,7 +122,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         filename = valid_GASSP_station_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', var + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -137,7 +137,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         filename = valid_cis_ungridded_output_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -152,7 +152,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         filename = valid_ascii_filename
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
