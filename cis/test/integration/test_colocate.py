@@ -36,7 +36,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         variables = valid_aerosol_cci_variable, valid_aerosol_cci_variable_2,
         filename = valid_aerosol_cci_filename
         sample_file = valid_echamham_filename
-        collocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ','.join(variables) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -48,7 +48,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         variables = valid_aerosol_cci_variable, valid_aerosol_cci_variable_2, 'time'
         filename = valid_aerosol_cci_filename
         sample_file = valid_echamham_filename
-        collocator_and_opts = 'bin,kernel=mean,variable=TAU_2D_550nm'
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ','.join(variables) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -63,7 +63,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         filename = valid_aeronet_filename
         sample_file = valid_echamham_filename
         sample_var = valid_echamham_variable_1
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -220,7 +220,7 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         filename = valid_cloudsat_RVOD_file
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
-        collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        collocator_and_opts = 'bin,kernel=mean'
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
@@ -661,8 +661,8 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
 
     def test_hybrid_height_onto_GASSP_nn(self):
         # Takes 1s
-        vars = [valid_hybrid_height_variable]
-        filename = valid_hybrid_height_filename
+        vars = [valid_hybrid_height_flat_variable]
+        filename = valid_hybrid_height_flat_filename
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
         collocator_and_opts = 'nn,variable=%s' % sample_var
@@ -678,8 +678,8 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         # Takes 1s
         vars = [valid_hybrid_pressure_variable]
         filename = valid_hybrid_pressure_filename
-        sample_file = valid_GASSP_aeroplane_filename
-        sample_var = valid_GASSP_aeroplane_variable
+        sample_file = valid_GASSP_aircraft_files_with_different_timestamps
+        sample_var = valid_GASSP_aircraft_var_with_different_timestamps
         collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
@@ -691,8 +691,8 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
 
     def test_hybrid_height_onto_GASSP_li(self):
         # Takes 1s
-        vars = [valid_hybrid_height_variable]
-        filename = valid_hybrid_height_filename
+        vars = [valid_hybrid_height_flat_variable]
+        filename = valid_hybrid_height_flat_filename
         sample_file = valid_GASSP_aeroplane_filename
         sample_var = valid_GASSP_aeroplane_variable
         collocator_and_opts = 'lin,variable=%s' % sample_var
@@ -708,8 +708,8 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         # Takes 1s
         vars = [valid_hybrid_pressure_variable]
         filename = valid_hybrid_pressure_filename
-        sample_file = valid_GASSP_aeroplane_filename
-        sample_var = valid_GASSP_aeroplane_variable
+        sample_file = valid_GASSP_aircraft_files_with_different_timestamps
+        sample_var = valid_GASSP_aircraft_var_with_different_timestamps
         collocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
