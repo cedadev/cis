@@ -659,6 +659,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
         self.check_output_vars_are_different(self.OUTPUT_FILENAME, vars)
 
+    @unittest.skip("We don't have any hybrid height files to test this currently")
     def test_hybrid_height_onto_GASSP_nn(self):
         # Takes 1s
         vars = [valid_hybrid_height_flat_variable]
@@ -678,7 +679,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         # Takes 1s
         vars = [valid_hybrid_pressure_variable]
         filename = valid_hybrid_pressure_filename
-        sample_file = valid_GASSP_aircraft_files_with_different_timestamps
+        sample_file = valid_GASSP_aircraft_files_with_different_timestamps[0]
         sample_var = valid_GASSP_aircraft_var_with_different_timestamps
         collocator_and_opts = 'nn,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
@@ -689,6 +690,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, ['mmrbc'])
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, ['mmrbc'])
 
+    @unittest.skip("We don't have any hybrid height files to test this currently")
     def test_hybrid_height_onto_GASSP_li(self):
         # Takes 1s
         vars = [valid_hybrid_height_flat_variable]
@@ -708,7 +710,7 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         # Takes 1s
         vars = [valid_hybrid_pressure_variable]
         filename = valid_hybrid_pressure_filename
-        sample_file = valid_GASSP_aircraft_files_with_different_timestamps
+        sample_file = valid_GASSP_aircraft_files_with_different_timestamps[0]
         sample_var = valid_GASSP_aircraft_var_with_different_timestamps
         collocator_and_opts = 'lin,variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
