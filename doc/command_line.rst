@@ -20,10 +20,12 @@ The following should be displayed::
       version        Display the CIS version number
     
   optional arguments:
-    -h, --help     Show this help message and exit
-    -v, --verbose  Increase the level of logging information output to screen to include 'Info' statements
-    -vv            All log messages will be output to the screen including 'Debug' statements
-    -q  --quiet    Suppress all output to the screen, only 'Error' messages will be displayed (which are always fatal).
+    -h, --help        Show this help message and exit
+    -v, --verbose     Increase the level of logging information output to screen to include 'Info' statements
+    -vv               All log messages will be output to the screen including 'Debug' statements
+    -q  --quiet       Suppress all output to the screen, only 'Error' messages will be displayed (which are always fatal).
+    --force-overwrite Do not prompt when an output file already exists - always overwrite. This can also be set by
+                      setting the 'CIS_FORCE_OVERWRITE' environment variable to 'TRUE'
 
 
 There are 8 commands the program can execute:

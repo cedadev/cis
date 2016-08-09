@@ -3,7 +3,7 @@
 What's new in CIS 1.4
 =====================
 
-This page documents the new features added, and bugs fixed in CIS since version 1.3. See all changes here: https://github.com/cedadev/cis/compare/1.3.1...1.4.0
+This page documents the new features added, and bugs fixed in CIS since version 1.3.1. See all changes here: https://github.com/cedadev/cis/compare/1.3.1...1.4.0
 
 
 CIS 1.4 features
@@ -32,6 +32,8 @@ CIS 1.4 features
  * [JASCIS-342] The extrapolation modes are now consistent across both gridded->gridded and gridded->ungridded collocation
    modes. The default is no extrapolation (gridded->gridded would previously extrapolate). This can still be overridden
    by the user.
+ * [JASCIS-128] If the output file already exists the user is now prompted to overwrite it. This prompt can be disabled
+   by using the --force-overwrite argument, or setting the ``CIS_FORCE_OVERWRITE`` environment variable to 'TRUE'.
 
 Bugs fixed
 ==========
@@ -40,4 +42,5 @@ Bugs fixed
  * [JASCIS-345] Product regular expression matching now matches the whole string rather than just the start.
  * [JASCIS-360] Collocation now correctly applies the 'missing_data_for_missing_sample' logic for all collocations.
  * [JASCIS-361] Fixed the CloudSat scale and offset transformation so that they are now applied correctly.
+ * [JASCIS-281] Fixed a caching error when aggregating multiple ungridded datasets which could lead to incorrect values
  * CIS no longer crashes when the CIS_PLUGIN_HOME path cannot be found

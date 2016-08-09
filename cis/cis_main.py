@@ -77,6 +77,7 @@ def plot_cmd(main_arguments):
     # Also pop off the verbosity kwargs
     _ = main_arguments.pop("quiet")
     _ = main_arguments.pop("verbose")
+    _ = main_arguments.pop("force_overwrite")
 
     main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
     main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")

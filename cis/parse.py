@@ -18,9 +18,15 @@ def initialise_top_parser():
     parser = argparse.ArgumentParser("cis")
     # Add verbosity arguments to the root parser
     verbosity_group = parser.add_mutually_exclusive_group()
-    verbosity_group.add_argument("-v", "--verbose", action='count')
-    verbosity_group.add_argument("-q", "--quiet", action='store_true')
-    parser.add_argument("--force-overwrite", action='store_true')
+    verbosity_group.add_argument("-v", "--verbose", action='count',
+                                 help="Increase the level of logging information output to screen to include "
+                                      "'Info' statements")
+    verbosity_group.add_argument("-q", "--quiet", action='store_true',
+                                 help="Suppress all output to the screen, only 'Error' messages will be displayed "
+                                      "(which are always fatal).")
+    parser.add_argument("--force-overwrite", action='store_true',
+                        help="Do not prompt when an output file already exists - always overwrite. This can also be "
+                             "set by setting the 'CIS_FORCE_OVERWRITE' environment variable to 'TRUE'")
 
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help="Create plots")
@@ -809,20 +815,27 @@ def _split_output_if_includes_variable_name(arguments, parser):
 
 
 def _validate_output_file(arguments, parser, default_ext='.nc'):
-    from six.moves import input
     _split_output_if_includes_variable_name(arguments, parser)
-    # TODO: I've changed the logic here so that we add the extension if there isn't one. This needs testing
-    if not os.path.splitext(arguments.output):
+    if not os.path.splitext(arguments.output)[1]:
         arguments.output += default_ext
-    if os.path.isfile(arguments.output) and not arguments.force_overwrite or os.getenv("CIS_FORCE_OVERWRITE", False):
+    if _file_already_exists_and_no_overwrite(arguments):
+        parser.error("No operation performed")
+    if _output_file_matches_an_input_file(arguments):
+        parser.error("The input file must not be the same as the output file")
+
+
+def _file_already_exists_and_no_overwrite(arguments):
+    from six.moves import input
+    # If the file already exists, and we haven't set the overwrite flag or env var, then prompt
+    if os.path.isfile(arguments.output) and \
+            not (arguments.force_overwrite or os.environ.get("CIS_FORCE_OVERWRITE", "false").lower() == "true"):
         overwrite = None
         while overwrite not in ['y', 'n', '']:
             overwrite = input("The file: {} already exists. Overwrite? (y/[n])")
         if overwrite != 'y':
-            parser.error("No operation performed")
-        # Otherwise carry on...
-    if _output_file_matches_an_input_file(arguments):
-        parser.error("The input file must not be the same as the output file")
+            return True
+        # Otherwise False
+    return False
 
 
 def _output_file_matches_an_input_file(arguments):
@@ -892,7 +905,9 @@ def validate_plot_args(arguments, parser):
     arguments.ytickangle = parse_float(arguments.ytickangle, "y tick angle", parser)
     arguments.xbinwidth = parse_float(arguments.xbinwidth, "x bin width", parser)
     arguments.ybinwidth = parse_float(arguments.ybinwidth, "y bin width", parser)
-    _validate_output_file(arguments, parser, '.png')
+
+    if arguments.output is not None:
+        _validate_output_file(arguments, parser, '.png')
 
     return arguments
 
