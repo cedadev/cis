@@ -33,10 +33,10 @@ def test_that_can_get_variable_metadata():
     eq_(metadata.long_name, "Digital Elevation Map")
     eq_(metadata.shape, [37081])
     eq_(metadata.units, "meters")
-    eq_(metadata.range, [-9999, 8850])
     eq_(metadata.factor, 1.0)
     eq_(metadata.offset, 0.0)
     eq_(metadata.missing_value, 9999)
+    eq_(metadata.misc['valid_range'], [-9999, 8850])
 
 
 @istest
@@ -49,7 +49,7 @@ def test_that_can_get_coord_metadata():
     eq_(metadata.long_name, "Spacecraft Longitude")
     eq_(metadata.shape, [37081])
     eq_(metadata.units, "degrees")
-    eq_(metadata.range, [-180.0, 180.0])
     eq_(metadata.factor, 1.0)
     eq_(metadata.offset, 0.0)
     eq_(metadata.missing_value, None)
+    eq_(metadata.misc['valid_range'], [-180.0, 180.0])
