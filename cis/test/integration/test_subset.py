@@ -87,24 +87,6 @@ class TestSubsetIntegration(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min, 'lat', 'lon')
         self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable1, variable2])
 
-    def test_GIVEN_multiple_gridded_variables_on_different_grids_WHEN_subset_THEN_subset_correctly(self):
-        variable1 = 'v_1'
-        variable2 = 'rh'
-        filename = valid_1d_filename
-        lat_min, lat_max = 40, 60
-        arguments = ['subset', variable1 + ',' + variable2 + ':' + escape_colons(filename),
-                     'y=[%s,%s]' % (lat_min, lat_max), '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        subset_cmd(main_arguments)
-        self.ds = Dataset(self.OUTPUT_FILENAME)
-        lat = self.ds.variables['latitude'][:]
-        assert_that(min(lat), greater_than_or_equal_to(lat_min))
-        assert_that(max(lat), less_than_or_equal_to(lat_max))
-        lat_1 = self.ds.variables['latitude_1'][:]
-        assert_that(min(lat_1), greater_than_or_equal_to(lat_min))
-        assert_that(max(lat_1), less_than_or_equal_to(lat_max))
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable1, variable2])
-
     def test_GIVEN_variables_specified_by_wildcard_WHEN_subset_THEN_subsetted_correctly(self):
         variable1 = 'surface_albedo???'
         variable2 = 'AOD*'
