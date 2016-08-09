@@ -80,11 +80,11 @@ class GriddedUngriddedInterpolator(object):
         if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords(standard_name='altitude'):
             hybrid_coord = data.coord('altitude').points
             hybrid_dims = data.coord_dims(data.coord('altitude'))
-            sample_points.append(sample.coord("altitude").data_flattened)
+            sample_points.append(sample.coord(standard_name="altitude").data_flattened)
         elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords(standard_name='air_pressure'):
             hybrid_coord = data.coord('air_pressure').points
             hybrid_dims = data.coord_dims(data.coord('air_pressure'))
-            sample_points.append(sample.coord("air_pressure").data_flattened)
+            sample_points.append(sample.coord(standard_name="air_pressure").data_flattened)
         else:
             hybrid_coord = None
             hybrid_dims = None
