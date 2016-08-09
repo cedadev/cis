@@ -351,7 +351,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     """
 
     def setUp(self):
-        self.collocator = GriddedCollocator()
+        self.collocator = GriddedCollocator(extrapolate=True)
 
     @istest
     def test_gridded_gridded_nn_with_both_grids_containing_time_and_small_offset(self):
