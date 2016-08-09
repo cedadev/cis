@@ -20,6 +20,7 @@ def initialise_top_parser():
     verbosity_group = parser.add_mutually_exclusive_group()
     verbosity_group.add_argument("-v", "--verbose", action='count')
     verbosity_group.add_argument("-q", "--quiet", action='store_true')
+    parser.add_argument("--force-overwrite", action='store_true')
 
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help="Create plots")
@@ -807,10 +808,19 @@ def _split_output_if_includes_variable_name(arguments, parser):
             parser.error("Invalid output path: should be a filename with one optional variable prefix.")
 
 
-def _validate_output_file(arguments, parser):
+def _validate_output_file(arguments, parser, default_ext='.nc'):
+    from six.moves import input
     _split_output_if_includes_variable_name(arguments, parser)
-    if not arguments.output.endswith('.nc'):
-        arguments.output += '.nc'
+    # TODO: I've changed the logic here so that we add the extension if there isn't one. This needs testing
+    if not os.path.splitext(arguments.output):
+        arguments.output += default_ext
+    if os.path.isfile(arguments.output) and not arguments.force_overwrite or os.getenv("CIS_FORCE_OVERWRITE", False):
+        overwrite = None
+        while overwrite not in ['y', 'n', '']:
+            overwrite = input("The file: {} already exists. Overwrite? (y/[n])")
+        if overwrite != 'y':
+            parser.error("No operation performed")
+        # Otherwise carry on...
     if _output_file_matches_an_input_file(arguments):
         parser.error("The input file must not be the same as the output file")
 
@@ -882,6 +892,7 @@ def validate_plot_args(arguments, parser):
     arguments.ytickangle = parse_float(arguments.ytickangle, "y tick angle", parser)
     arguments.xbinwidth = parse_float(arguments.xbinwidth, "x bin width", parser)
     arguments.ybinwidth = parse_float(arguments.ybinwidth, "y bin width", parser)
+    _validate_output_file(arguments, parser, '.png')
 
     return arguments
 
