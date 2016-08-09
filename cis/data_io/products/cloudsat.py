@@ -245,16 +245,16 @@ class CloudSat(AProduct):
 
     def _apply_scaling_factor_CLOUDSAT(self, data, scale_factor, offset):
         """
-        Assumed to be the same as caliop...
+        Using transformation supplied by Phil Partain (cloudsat@colostate.edu) by email on 5th August 2016
 
         :param data:
         :param scale_factor:
         :param offset:
         :return:
         """
-        logging.debug("Applying 'data = (data / {scale}) + {offset}' transformation to data.".format(scale=scale_factor,
-                                                                                                     offset=offset))
-        return (data / scale_factor) + offset
+        logging.debug("Applying 'science_data = (packed_data - {offset}) / {scale}' "
+                      "transformation to data.".format(scale=scale_factor, offset=offset))
+        return (data - offset) / scale_factor
 
     def get_file_format(self, filename):
         return "HDF4/CloudSat"

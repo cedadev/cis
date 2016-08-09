@@ -54,10 +54,9 @@ def _apply_scaling_factor_MODIS(data, scale_factor, offset):
     :param offset:
     :return: Scaled data
     """
-    logging.debug("Applying 'data = (data - {offset}) * {scale}' transformation to data.".format(scale=scale_factor,
-                                                                                                 offset=offset))
-    data = (data - offset) * scale_factor
-    return data
+    logging.debug("Applying 'science_data = (packed_data - {offset}) * {scale}' "
+                  "transformation to data.".format(scale=scale_factor, offset=offset))
+    return (data - offset) * scale_factor
 
 
 class MODIS_L3(AProduct):
