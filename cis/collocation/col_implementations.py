@@ -572,6 +572,12 @@ class nn_t(nn_time):
 
 class GriddedCollocator(Collocator):
 
+    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+                 missing_data_for_missing_sample=False, extrapolate=False):
+        super(GriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
+                                                         missing_data_for_missing_sample)
+        self.extrapolate = 'extrapolate' if extrapolate else 'mask'
+
     @staticmethod
     def _check_for_valid_kernel(kernel):
         from cis.exceptions import ClassNotFoundError
@@ -667,7 +673,7 @@ class GriddedCollocator(Collocator):
 
         output_cube = self._iris_interpolate(coord_names_and_sizes_for_output_grid,
                                              coord_names_and_sizes_for_sample_grid, data,
-                                             kernel, output_mask, points)
+                                             kernel, output_mask, points, self.extrapolate)
 
         if not isinstance(output_cube, list):
             return GriddedDataList([output_cube])
@@ -700,7 +706,7 @@ class GriddedCollocator(Collocator):
 
     @staticmethod
     def _iris_interpolate(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
-                          output_mask, points):
+                          output_mask, points, extrapolate):
         """ Collocates using iris.analysis.interpolate
         """
         coordinate_point_pairs = []
@@ -712,7 +718,8 @@ class GriddedCollocator(Collocator):
 
         # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
         # in coord_names_and_sizes_for_output_grid.
-        output_cube = make_from_cube(data.interpolate(coordinate_point_pairs, kernel.interpolater()))
+        output_cube = make_from_cube(data.interpolate(coordinate_point_pairs,
+                                                      kernel.interpolater(extrapolation_mode=extrapolate)))
 
         # Iris outputs interpolated cubes with the dimensions in the order of the data grid, not the sample grid,
         # so we need to rearrange the order of the dimensions.

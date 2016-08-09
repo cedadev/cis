@@ -29,10 +29,10 @@ class CollocatorFactory(object):
         :param data_gridded: Is the collocation data gridded?
         :return: Collocator, Constrain and Kernel instances
         """
-        import cis.collocation.col_implementations as ci
+
         col_cls, constraint_cls, kernel_cls = self._get_collocator_classes_for_method(method_name, kernel_name,
                                                                                       sample_gridded, data_gridded)
-        collocator_params, constraint_params = self._get_collocator_params(collocator_params)
+        collocator_params, constraint_params = self._get_collocator_params(collocator_params, col_cls)
         col = self._instantiate_with_params(col_cls, collocator_params)
         con = self._instantiate_with_params(constraint_cls, constraint_params)
         kernel = self._instantiate_with_params(kernel_cls, kernel_params)
@@ -104,17 +104,23 @@ class CollocatorFactory(object):
                     'A kernel cannot be specified for collocator "{}"'.format(method_name))
         return option
 
-    def _get_collocator_params(self, params):
+    def _get_collocator_params(self, params, col_cls):
         """
         Separates the parameters understood by the collocator from those for the constraint.
         :param params: combined collocator/constraint parameters
+        :param col_cls: The collocator class to check for parameters against
         :return: tuple containing (dict of collocator parameters, dict of constraint parameters)
         """
-        col_param_names = ['fill_value', 'var_name', 'var_long_name', 'var_units', 'missing_data_for_missing_sample']
+        import inspect
+        # Python 2/3 compatibility
+        if hasattr(inspect, 'signature'):
+            args = inspect.signature(col_cls.__init__).parameters
+        else:
+            args = inspect.getargspec(col_cls.__init__).args
         col_params = {}
         con_params = {}
         for key, value in params.items():
-            if key in col_param_names:
+            if key in args:
                 col_params[key] = value
             else:
                 con_params[key] = value

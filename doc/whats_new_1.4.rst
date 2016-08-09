@@ -10,6 +10,9 @@ CIS 1.4 features
 ================
 
  * CIS now includes full support for Python 3, as well as Python 2.7
+ * New verbose and quiet flags allow for control over how much CIS commands output to the screen. The default verbosity
+   has also changed so that by default only warnings and errors will be output to the screen. The full debug output
+   remains for the cis.log file.
  * Significant optimizations have been made in gridded -> ungridded collocation which should now be considerably faster.
    Also, when collocating multiple gridded source datasets the interpolation indices are now cached internally leading
    to further time savings.
@@ -26,9 +29,9 @@ CIS 1.4 features
    ``valid_min`` or ``valid_max`` attributes is also masked appropriately.
  * CloudSat ``missing`` and ``missop`` attributes are now read and combined to mask out values which don't conform to the
    inequality defined.
- * New verbose and quiet flags allow for control over how much CIS commands output to the screen. The default verbosity
-   has also changed so that by default only warnings and errors will be output to the screen. The full debug output
-   remains for the cis.log file.
+ * [JASCIS-342] The extrapolation modes are now consistent across both gridded->gridded and gridded->ungridded collocation
+   modes. The default is no extrapolation (gridded->gridded would previously extrapolate). This can still be overridden
+   by the user.
 
 Bugs fixed
 ==========
