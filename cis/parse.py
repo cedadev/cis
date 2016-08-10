@@ -915,7 +915,10 @@ def validate_plot_args(arguments, parser):
 def validate_info_args(arguments, parser):
     split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', arguments.datagroups[0])]
     if len(split_input) == 1:
-        arguments.datagroups.filenames = expand_file_list(','.join(arguments.filenames), parser)
+        # If there is only one part of the datagroup then it must be a file (or list of files). Return it as a dict to
+        #  match the behaviour of the datagroup parser.
+        arguments.datagroups = [{'filenames': expand_file_list(arguments.datagroups[0], parser),
+                                 'variables': None, 'product': None}]
     else:
         arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     return arguments

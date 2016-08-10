@@ -18,7 +18,8 @@ where:
     * ``filenames`` is a mandatory file or list of files to read from.
     * ``product`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
 
-  See :ref:`datagroups` for a more detailed explanation of datagroups.
+  Note that the product can only be specified if a variable is specified. See :ref:`datagroups` for a more detailed explanation
+  of datagroups.
 
 ``--type`` allows the user to list only ``SD`` or ``VD`` variables from an HDF file, the default is ``All``
 
