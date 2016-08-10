@@ -1002,12 +1002,13 @@ def parse_args(arguments=None):
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)
     # Firstly deal with logging verbosity - in case we log anything in the validation
+    # The 'screen' handler is the first in the list
     if main_args.quiet:
-        logging.getLogger('screen').setLevel(logging.ERROR)
+        logging.getLogger().handlers[0].setLevel(logging.ERROR)
     elif main_args.verbose == 1:
-        logging.getLogger('screen').setLevel(logging.INFO)
+        logging.getLogger().handlers[0].setLevel(logging.INFO)
     elif main_args.verbose == 2:
-        logging.getLogger('screen').setLevel(logging.DEBUG)
+        logging.getLogger().handlers[0].setLevel(logging.DEBUG)
 
     main_args = validators[main_args.command](main_args, parser)
 
