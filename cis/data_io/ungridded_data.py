@@ -52,6 +52,7 @@ class Metadata(object):
         :param offset: The left hand padding to apply to the text
         :return: The summary
         """
+        from datetime import datetime
         string = ''
         string += '{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
         string += '{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
@@ -59,7 +60,13 @@ class Metadata(object):
         if self.calendar:
             string += '{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
         string += '{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
-        string += '{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=self.range)
+        # str(tuple) returns repr(obj) on each item in the tuple, if we have a datetime tuple then we want str(obj)
+        #  instead. Just make that ourselves here instead (as a str to avoid the extra quotes if we make a 'real' tuple)
+        if isinstance(self.range[0], datetime):
+            range_tuple = '({}, {})'.format(*self.range)
+        else:
+            range_tuple = self.range
+        string += '{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=range_tuple)
         string += '{pad:{width}}History = {history}\n'.format(pad=' ', width=offset, history=self.history)
         if self.misc:
             string += '{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
