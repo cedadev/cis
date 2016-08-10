@@ -4,6 +4,8 @@ import logging
 import warnings
 import numpy as np
 from cis.exceptions import InvalidCommandLineOptionError
+import contextlib
+
 
 # number of bytes in a MB
 BYTES_IN_A_MB = 1048576.0
@@ -804,3 +806,13 @@ def move_item_to_end(iter, item):
     dim = iter.pop(iter.index(item))
     iter.append(dim)
     return iter
+
+
+@contextlib.contextmanager
+def demote_warnings(level=logging.INFO):
+    import warnings
+    with warnings.catch_warnings(record=True) as ws:
+        warnings.simplefilter("always")
+        yield
+        for w in ws:
+            logging.log(level, w.message)

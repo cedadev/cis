@@ -2,7 +2,11 @@ import logging
 
 import numpy as np
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
-import matplotlib.pyplot as plt
+
+# Matplotlib at v1.5 keeps throwing warnings about building the font cache - these are INFO level at best.
+from cis.utils import demote_warnings
+with demote_warnings():
+    import matplotlib.pyplot as plt
 
 from cis.exceptions import CISError
 from cis.utils import find_longitude_wrap_start
