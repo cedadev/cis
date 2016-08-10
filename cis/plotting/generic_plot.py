@@ -560,7 +560,7 @@ class Generic_Plot(object):
             try:
                 self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
             except AttributeError:
-                logging.warning("Couldn't apply scientific notation to axes")
+                logging.debug("Couldn't apply scientific notation to axes")
 
         draw_grid = self.plot_args.pop("grid", False)
         if draw_grid:
