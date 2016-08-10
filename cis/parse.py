@@ -819,7 +819,7 @@ def _validate_output_file(arguments, parser, default_ext='.nc'):
     if not os.path.splitext(arguments.output)[1]:
         arguments.output += default_ext
     if _file_already_exists_and_no_overwrite(arguments):
-        parser.error("No operation performed")
+        parser.exit(status=0, message="No operation performed")
     if _output_file_matches_an_input_file(arguments):
         parser.error("The input file must not be the same as the output file")
 
