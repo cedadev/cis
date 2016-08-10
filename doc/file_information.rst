@@ -2,7 +2,29 @@
 Getting file information
 ========================
 
-Running ``$ cis info <filenames>`` will print a list of the variables available in those files such as::
+The info command provides a visual summary of the data within any of the data files CIS supports.
+
+To get this summary, run a command of the format::
+
+  $ cis info <datagroup> [--type ["VD" | "SD"]]
+
+where:
+
+``<datagroup>``
+  is a :ref:`CIS datagroup <datagroups>` specifying the variables and files to read and is of the format
+  ``[<variable>...:]<filename>[:product=<productname>]`` where:
+
+    * ``variable`` is an optional variable or list of variables to use.
+    * ``filenames`` is a mandatory file or list of files to read from.
+    * ``product`` is an optional CIS data product to use (see :ref:`Data Products <data-products-reading>`):
+
+  See :ref:`datagroups` for a more detailed explanation of datagroups.
+
+``--type`` allows the user to list only ``SD`` or ``VD`` variables from an HDF file, the default is ``All``
+
+
+Running without a variable (``$ cis info <filenames>``) will print a list of the variables available in those files
+such as::
 
   Trop
   latitude
@@ -14,17 +36,13 @@ Running ``$ cis info <filenames>`` will print a list of the variables available 
   msl
   latitude_1
 
-To get more specific information about a given variable, simply run::
+To get more specific information about one or more variables in those files, simply pass those as well::
 
-  $ cis info <filenames> -v $var1 $var2 $var3
+  $ cis info var1,var2:<filenames>
 
-where ``$var1``, ``$var2`` and ``$var3`` are the names of the variables to get the information for.
+where ``$var1`` and ``$var2`` are the names of the variables to get the information for.
 
-Other options available include:
-  * ``--product`` which allows the user to override the default product for the files, and
-  * ``--type`` which allows the user to list only ``SD`` or ``VD`` variables from an HDF file, the default is ``All``
-
-Here is an example::
+Here is an example output::
 
     Ungridded data: SO4 / (ug m-3)
          Shape = (6478,)
