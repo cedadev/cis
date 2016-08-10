@@ -80,9 +80,8 @@ class HadGEM_CONVSH(NetCDF_Gridded):
     def get_variable_names(self, filenames, data_type=None):
         # Don't do any checks on valid variables at the moment as iris can't parse the hybrid height dimension units...
         import iris
-        # Don't automatically promote variables which define reference surfaces for dimensionless vertical coordinates
-        # as independent Cubes - it's just confusing for users I think
-        iris.FUTURE.netcdf_promote = False
+        # Removes warnings and prepares for future Iris change
+        iris.FUTURE.netcdf_promote = True
 
         cubes = iris.load(filenames)
 
