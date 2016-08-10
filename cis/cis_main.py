@@ -100,8 +100,8 @@ def info_cmd(main_arguments):
     :param main_arguments:    The command line arguments (minus the info command)
     """
     from cis.info import info
-
-    info(main_arguments.filenames, main_arguments.variables, main_arguments.product, main_arguments.type)
+    dg = main_arguments.datagroups[0]
+    info(dg['filenames'], dg['variables'], dg['product'], main_arguments.type)
 
 
 def col_cmd(main_arguments):

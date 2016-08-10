@@ -15,33 +15,35 @@ def initialise_top_parser():
     """
     The parser to which all arguments are initially passed
     """
-    parser = argparse.ArgumentParser("cis")
-    # Add verbosity arguments to the root parser
-    verbosity_group = parser.add_mutually_exclusive_group()
+    global_options = argparse.ArgumentParser(add_help=False)
+    verbosity_group = global_options.add_mutually_exclusive_group()
     verbosity_group.add_argument("-v", "--verbose", action='count',
                                  help="Increase the level of logging information output to screen to include "
                                       "'Info' statements")
     verbosity_group.add_argument("-q", "--quiet", action='store_true',
                                  help="Suppress all output to the screen, only 'Error' messages will be displayed "
                                       "(which are always fatal).")
-    parser.add_argument("--force-overwrite", action='store_true',
-                        help="Do not prompt when an output file already exists - always overwrite. This can also be "
-                             "set by setting the 'CIS_FORCE_OVERWRITE' environment variable to 'TRUE'")
+    global_options.add_argument("--force-overwrite", action='store_true',
+                                help="Do not prompt when an output file already exists - always overwrite. This can "
+                                     "also be set by setting the 'CIS_FORCE_OVERWRITE' environment variable to 'TRUE'")
+
+    parser = argparse.ArgumentParser("cis", parents=[global_options])
 
     subparsers = parser.add_subparsers(dest='command')
-    plot_parser = subparsers.add_parser("plot", help="Create plots")
+    plot_parser = subparsers.add_parser("plot", help="Create plots", parents=[global_options])
     add_plot_parser_arguments(plot_parser)
-    info_parser = subparsers.add_parser("info", help="Get information about a file")
+    info_parser = subparsers.add_parser("info", help="Get information about a file", parents=[global_options])
     add_info_parser_arguments(info_parser)
-    col_parser = subparsers.add_parser("col", help="Perform collocation")
+    col_parser = subparsers.add_parser("col", help="Perform collocation", parents=[global_options])
     add_col_parser_arguments(col_parser)
-    aggregate_parser = subparsers.add_parser("aggregate", help="Perform aggregation")
+    aggregate_parser = subparsers.add_parser("aggregate", help="Perform aggregation", parents=[global_options])
     add_aggregate_parser_arguments(aggregate_parser)
-    subset_parser = subparsers.add_parser("subset", help="Perform subsetting")
+    subset_parser = subparsers.add_parser("subset", help="Perform subsetting", parents=[global_options])
     add_subset_parser_arguments(subset_parser)
-    eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression")
+    eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression", parents=[global_options])
     add_eval_parser_arguments(eval_parser)
-    stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets")
+    stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets",
+                                         parents=[global_options])
     add_stats_parser_arguments(stats_parser)
     subparsers.add_parser("version", help="Display the CIS version number")
     return parser
@@ -133,11 +135,9 @@ def add_plot_parser_arguments(parser):
 
 
 def add_info_parser_arguments(parser):
-    parser.add_argument("filenames", metavar="Filenames", help="The filenames of the files to inspect", nargs='*')
-    parser.add_argument("-v", "--variables", metavar="Variable(s)", nargs="+", help="The variable(s) to inspect")
-    parser.add_argument("--product", metavar="The specific data product to use", nargs="?",
-                        help="CIS will try and automatically determine the best product to use, but this option can"
-                             "override CIS to specify a different data product to use for reading the data..")
+    parser.add_argument("datagroups", metavar="DataGroups", nargs=1,
+                        help="Variables and files to inspect, which needs to be entered in the format "
+                             "[variables:]filename[:product=].")
     parser.add_argument("--type", metavar="Type of HDF data", nargs="?",
                         help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
@@ -913,7 +913,11 @@ def validate_plot_args(arguments, parser):
 
 
 def validate_info_args(arguments, parser):
-    arguments.filenames = expand_file_list(','.join(arguments.filenames), parser)
+    split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', arguments.datagroups[0])]
+    if len(split_input) == 1:
+        arguments.datagroups.filenames = expand_file_list(','.join(arguments.filenames), parser)
+    else:
+        arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     return arguments
 
 
