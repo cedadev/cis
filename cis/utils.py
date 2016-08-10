@@ -138,7 +138,8 @@ def create_masked_array_for_missing_values(data, missing_values):
 
     mdata = data
     for missing_value in missing_values:
-        mdata = ma.masked_where(missing_value == mdata, mdata)
+        if missing_value is not None:
+            mdata = ma.masked_where(missing_value == mdata, mdata)
 
     return mdata
 

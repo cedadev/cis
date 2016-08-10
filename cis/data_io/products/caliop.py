@@ -181,7 +181,8 @@ class abstract_Caliop(AProduct):
                 # Last guess
                 missing_val = attributes.get('_FillValue', None)
 
-        data = create_masked_array_for_missing_data(data, missing_val)
+        if missing_val is not None:
+            data = create_masked_array_for_missing_data(data, missing_val)
 
         # Now handle valid range mask
         valid_range = attributes.get('valid_range', None)
