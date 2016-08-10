@@ -861,7 +861,9 @@ class Generic_Plot(object):
             if y_variable.startswith(lat_or_lon):
                 lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
                 if self.is_map():
-                    self.cartopy_axis.set_yticks(lat_locator.tick_values(ymin, ymax), crs=self.transform)
+                    # Get best guess tick values - as long as they are in a sensible range...
+                    tick_values = [v for v in lat_locator.tick_values(ymin, ymax) if abs(v) <= 90.0]
+                    self.cartopy_axis.set_yticks(tick_values, crs=self.transform)
                     self.cartopy_axis.yaxis.set_major_formatter(LatitudeFormatter())
                 else:
                     self.matplotlib.axes().yaxis.set_major_locator(lat_locator)
