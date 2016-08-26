@@ -7,7 +7,7 @@ CIS
 [![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
 [![Downloads](https://anaconda.org/cistools/cis/badges/downloads.svg)](https://anaconda.org/CISTools/cis/files)
 
-v1.3.2 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.44573.svg)](http://dx.doi.org/10.5281/zenodo.44573)
+v1.4.0 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.59939.svg)](http://dx.doi.org/10.5281/zenodo.59939)
 
 CIS is an open source command-line tool for the easy collocation, visualization, analysis, and comparison of a
 diverse set of gridded and ungridded datasets used across earth sciences. Visit our homepage at www.cistools.net.
@@ -17,11 +17,11 @@ For issue tracking and improvement suggestions please see our JIRA project at: h
 Installation
 ------------
 
-A pre-packaged version of CIS is available for installation using conda for 64-bit Linux, Mac OSX and Windows.
+A pre-packaged version of CIS is available for installation using conda for Linux, Mac OSX and Windows.
 
 Once conda is installed, you can easily install CIS with the following command:
 
-    conda install -c cistools -c scitools cis
+    conda install -c conda-forge cis
 
 If you don’t already have conda, you must first download and install it.
 Anaconda is a free conda package that includes Python and many common scientific and data analysis libraries, and is available here: http://continuum.io/downloads.
