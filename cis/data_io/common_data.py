@@ -156,7 +156,7 @@ class CommonDataList(list):
             for this_coord, that_coord in zip(self.coords(), p_object.coords()):
                 if any([(a != b) for a, b in zip(this_coord.points.shape, that_coord.points.shape)]):
                     raise ValueError("Given coordinate {} has shape {} which is "
-                                     "incompatible with {}.".format(that_coord.name,
+                                     "incompatible with {}.".format(that_coord.name(),
                                                                     that_coord.shape,
                                                                     this_coord.shape))
 
