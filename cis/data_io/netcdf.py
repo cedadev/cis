@@ -159,7 +159,7 @@ def read_many_files_individually(filenames, usr_variables):
     return var_data
 
 
-def read(filename, usr_variables):
+def read(filename, usr_variables, defer_loading=False):
     """
     Reads a Variable from a NetCDF file
 
@@ -188,13 +188,20 @@ def read(filename, usr_variables):
         for group in groups:
             current_group = current_group.groups[group]
         try:
-            data[full_variable] = current_group.variables[variable]
+            var = current_group.variables[variable]
+            if defer_loading:
+                data[full_variable] = var
+            else:
+                data[full_variable] = get_data(var)
         except:
             raise InvalidVariableError(full_variable + ' could not be found in ' + filename)
 
+    if not defer_loading:
+        datafile.close()
+
     return data
 
-
+# TODO: Make this take either a string and a filename, or a variable handle
 def get_metadata(var):
     """
     Retrieves all metadata
