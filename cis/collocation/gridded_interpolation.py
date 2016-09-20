@@ -35,7 +35,7 @@ class GriddedUngriddedInterpolator(object):
         :param UngriddedData sample: The points to sample the source data at.
         :param str method: The interpolation method to use (either 'linear' or 'nearest'). Default is 'linear'.
         """
-        from iris.analysis._interpolation import extend_circular_coord
+        from iris.analysis._interpolation import extend_circular_coord, extend_circular_data
         from cis.utils import move_item_to_end
         coords = []
         grid_points = []
@@ -78,11 +78,17 @@ class GriddedUngriddedInterpolator(object):
         sample_points = [sample.coord(c).data_flattened for c in coords]
 
         if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords(standard_name='altitude'):
-            hybrid_coord = data.coord('altitude').points
             hybrid_dims = data.coord_dims(data.coord('altitude'))
+            hybrid_coord = data.coord('altitude').points
+            for coord_dim in self._circular_coord_dims:
+                # Lookup the dimension on the hybrid data array
+                hybrid_coord_dim = hybrid_dims.index(coord_dim)
+                hybrid_coord = extend_circular_data(hybrid_coord, hybrid_coord_dim)
             sample_points.append(sample.coord(standard_name="altitude").data_flattened)
         elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords(standard_name='air_pressure'):
             hybrid_coord = data.coord('air_pressure').points
+            for coord_dim in self._circular_coord_dims:
+                hybrid_coord = extend_circular_data(hybrid_coord, coord_dim)
             hybrid_dims = data.coord_dims(data.coord('air_pressure'))
             sample_points.append(sample.coord(standard_name="air_pressure").data_flattened)
         else:
