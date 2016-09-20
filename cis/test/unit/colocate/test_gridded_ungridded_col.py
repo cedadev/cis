@@ -214,7 +214,7 @@ class TestNN(unittest.TestCase):
 
     def test_guessing_the_bounds_on_a_cube_doesnt_matter_for_negative_lon_points_on_a_0_360_grid_in_2d(self):
         """This should be identical to above but there was an issue in iris where this caused a problem"""
-        
+
         # This cube is defined over a 0-360 longitude grid
         cube = make_from_cube(mock.make_dummy_2d_cube())
         cube.coord(standard_name='longitude').guess_bounds()
@@ -257,7 +257,7 @@ class TestNN(unittest.TestCase):
 
     def test_collocation_of_alt_points_on_hybrid_altitude_coordinates(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10,
-                                                               geopotential_height=True))
+                                                  geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -288,7 +288,7 @@ class TestNN(unittest.TestCase):
 
     def test_collocation_of_alt_points_on_hybrid_altitude_coordinates_on_0_360_grid(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
-                                                               lon_range=(0., 350.)))
+                                                  lon_range=(0., 350.)))
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=111.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
@@ -300,7 +300,7 @@ class TestNN(unittest.TestCase):
 
     def test_negative_lon_points_on_hybrid_altitude_coordinates_with_0_360_grid(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
-                                                               lon_range=(0., 350.)))
+                                                  lon_range=(0., 350.)))
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=111.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
@@ -356,7 +356,7 @@ class TestNN(unittest.TestCase):
             collocation
         """
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
-                                                               geopotential_height=True))
+                                                  geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -376,7 +376,7 @@ class TestNN(unittest.TestCase):
             Kernel should use the auxilliary altitude dimension when altitude is present in the coordinates
         """
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
-                                                               geopotential_height=True))
+                                                  geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -434,7 +434,6 @@ class TestNN(unittest.TestCase):
 
 
 class TestLinear(unittest.TestCase):
-
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
         cube = make_from_cube(mock.make_square_5x3_2d_cube())
         sample_points = UngriddedData.from_points_array(
@@ -455,8 +454,8 @@ class TestLinear(unittest.TestCase):
         col = GriddedUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, 'linear')[0]
         wanted = np.asarray([325.0, 342.5, 325.0,
-                             613.0, (630.5 + 666.5)/2, 649.0,
-                             37.0, (54.5 + 18.5)/2, 1.0])
+                             613.0, (630.5 + 666.5) / 2, 649.0,
+                             37.0, (54.5 + 18.5) / 2, 1.0])
         assert_almost_equal(new_data.data, wanted)
 
     def test_negative_lon_points_in_2d_dont_matter(self):
@@ -502,6 +501,24 @@ class TestLinear(unittest.TestCase):
         new_data = col.collocate(sample_points, cube, None, 'linear')[0]
         assert_almost_equal(new_data.data[0], 321.0467626, decimal=7)
         assert_almost_equal(new_data.data[1], 222.4814815, decimal=7)
+
+    def test_wrapping_of_alt_points_on_hybrid_height_coordinates_on_0_360_grid(self):
+        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
+                                                  lon_range=(0., 350.)))
+
+        # Shift the cube around so that the dim which isn't hybrid (time) is at the front. This breaks the fix we used
+        #  for air pressure...
+        cube.transpose([2, 0, 1, 3])
+        # Ensure the longitude coord is circular
+        cube.coord(standard_name='longitude').circular = True
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=4.0, lon=355.0, alt=11438.0, t=dt.datetime(1984, 8, 28)),
+             HyperPoint(lat=0.0, lon=2.0, alt=10082.0, t=dt.datetime(1984, 8, 28))])
+        col = GriddedUngriddedCollocator(extrapolate=False)
+        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        eq_(new_data.data[0], 3563.0)
+        eq_(new_data.data[1], 2185.0)
 
     def test_collocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
@@ -588,8 +605,8 @@ class TestLinear(unittest.TestCase):
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_multi_var(self):
         cube_list = [make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))]
         cube_list.append(make_from_cube(mock.make_mock_cube(time_dim_length=3,
-                                                                         hybrid_pr_len=10,
-                                                                         data_offset=100)))
+                                                            hybrid_pr_len=10,
+                                                            data_offset=100)))
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
@@ -616,7 +633,7 @@ class TestLinear(unittest.TestCase):
         # Exactly on the lat, lon, points, interpolated over time and pressure
         assert_almost_equal(new_data.data[1], 326.5, decimal=7)
         # Exactly on the lat, time points, interpolated over longitude and pressure
-        assert_almost_equal(new_data.data[2],430.5, decimal=7)
+        assert_almost_equal(new_data.data[2], 430.5, decimal=7)
         # Outside of the pressure bounds - extrapolation off
         assert np.ma.is_masked(new_data.data[3])
 
@@ -633,6 +650,21 @@ class TestLinear(unittest.TestCase):
         # Exactly on the lat, time points, interpolated over latitude and pressure
         assert_almost_equal(new_data.data[1], 330.5, decimal=7)
 
+    def test_wrapping_of_pres_points_on_hybrid_pressure_coordinates_on_0_360_grid(self):
+        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10, lon_dim_length=36,
+                                                  lon_range=(0., 350.)))
+
+        # Ensure the longitude coord is circular
+        cube.coord(standard_name='longitude').circular = True
+
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(lat=0.0, lon=355.0, pres=1482280045.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
+             HyperPoint(lat=5.0, lon=2.5, pres=1879350048.0, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
+        col = GriddedUngriddedCollocator(extrapolate=False)
+        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        eq_(new_data.data[0], 2701.0011131725005)
+        eq_(new_data.data[1], 3266.1930161260775)
+
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
 
@@ -646,8 +678,8 @@ class TestLinear(unittest.TestCase):
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates_multi_var(self):
         cube_list = [make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))]
         cube_list.append(make_from_cube(mock.make_mock_cube(time_dim_length=3,
-                                                                         hybrid_pr_len=10,
-                                                                         data_offset=100)))
+                                                            hybrid_pr_len=10,
+                                                            data_offset=100)))
 
         sample_points = UngriddedData.from_points_array(
             # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
@@ -660,7 +692,7 @@ class TestLinear(unittest.TestCase):
 
     def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
-                                                               geopotential_height=True))
+                                                  geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
@@ -675,7 +707,7 @@ class TestLinear(unittest.TestCase):
 
     def test_collocation_of_alt_pres_points_on_hybrid_altitude_and_pressure_coordinates(self):
         cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
-                                                               geopotential_height=True))
+                                                  geopotential_height=True))
 
         sample_points = UngriddedData.from_points_array(
             # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
