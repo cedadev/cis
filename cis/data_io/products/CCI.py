@@ -28,9 +28,9 @@ class CCI(object):
         logging.info("Listing coordinates: " + str(variables))
 
         coords = CoordList()
-        coords.append(Coord(data[variables[0]], get_metadata(data[variables[0]][0]), "X"))
-        coords.append(Coord(data[variables[1]], get_metadata(data[variables[1]][0]), "Y"))
-        coords.append(self._fix_time(Coord(data[variables[2]], get_metadata(data[variables[2]][0]), "T")))
+        coords.append(Coord(data[variables[0]], get_metadata(variables[0], filenames[0]), "X"))
+        coords.append(Coord(data[variables[1]], get_metadata(variables[1], filenames[0]), "Y"))
+        coords.append(self._fix_time(Coord(data[variables[2]], get_metadata(variables[2], filenames[0]), "T")))
 
         return coords
 
@@ -46,7 +46,7 @@ class CCI(object):
 
         coords = self._create_coord_list(filenames)
         var = read_many_files_individually(filenames, [variable])
-        metadata = get_metadata(var[variable][0])
+        metadata = get_metadata(variable, filenames[0])
 
         return UngriddedData(var[variable], metadata, coords)
 

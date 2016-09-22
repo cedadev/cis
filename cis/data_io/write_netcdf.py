@@ -79,7 +79,7 @@ def __check_disk_space(filepath, data):
         available = stats.f_bavail * stats.f_frsize
         if available < data.nbytes:
             logging.warning("Free disk space at {path} is {free}, but the array being saved is {size}."
-                            .format(path=filepath, free=sizeof_fmt(available), size=sizeof_fmt(data.data.nbytes)))
+                            .format(path=filepath, free=sizeof_fmt(available), size=sizeof_fmt(data.nbytes)))
 
 
 def __create_variable(nc_file, data, prefer_standard_name=False):
@@ -102,7 +102,7 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
     logging.info("Creating variable: {name}({index}) {type}".format(name=name, index=index_name, type=out_type))
     if name not in nc_file.variables:
         # Generate a warning if we have insufficient disk space
-        __check_disk_space(nc_file.filepath(), data.data)
+        # __check_disk_space(nc_file.filepath(), data.data)
         var = nc_file.createVariable(name, datatype=out_type, dimensions=index_name,
                                      fill_value=__get_missing_value(data))
         var = __add_metadata(var, data)

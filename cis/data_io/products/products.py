@@ -26,7 +26,7 @@ class cis(AProduct):
         for variable in variables:
             try:
                 var_data = read_many_files_individually(filenames, variable[0])[variable[0]]
-                coords.append(Coord(var_data, get_metadata(var_data[0]), axis=variable[1]))
+                coords.append(Coord(var_data, get_metadata(variable[0], filenames[0]), axis=variable[1]))
             except InvalidVariableError:
                 pass
 
@@ -37,7 +37,7 @@ class cis(AProduct):
             res = UngriddedCoordinates(coords)
         else:
             usr_var_data = read_many_files_individually(filenames, usr_variable)[usr_variable]
-            res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
+            res = UngriddedData(usr_var_data, get_metadata(usr_variable, filenames[0]), coords)
 
         return res
 
@@ -54,7 +54,7 @@ class cis(AProduct):
         :return: list fo errors or None
         """
         from cis.data_io.netcdf import get_netcdf_file_attributes
-        atts = get_netcdf_file_attributes(filename)
+        f, atts = get_netcdf_file_attributes(filename)
         errors = None
         try:
             source = atts['source']
@@ -63,6 +63,7 @@ class cis(AProduct):
         else:
             if not source.startswith('CIS'):
                 errors = ['Source ({}) does not match CIS in {}'.format(source, filename)]
+        f.close()
         return errors
 
 

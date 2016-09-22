@@ -141,6 +141,7 @@ class LazyData(object):
         from cis.exceptions import InvalidDataTypeError
         from iris.cube import CubeMetadata
         import numpy as np
+        from cis.utils import concatenate
 
         self._data_flattened = None
 
@@ -151,6 +152,11 @@ class LazyData(object):
         if isinstance(data, np.ndarray):
             # If the data input is a numpy array we can just copy it in and ignore the data_manager
             self._data = data
+            self._data_manager = None
+            self._post_process()
+        elif isinstance(data, list) and isinstance(data[0], np.ndarray):
+            # If we have a list of numpy arrays then concat them together first
+            self._data = concatenate(data, axis=0)
             self._data_manager = None
             self._post_process()
         else:

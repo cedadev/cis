@@ -83,8 +83,9 @@ class AProduct(object):
         for filename in filenames:
             file_variables = None
             if filename.endswith(".nc"):
-                file_variables = get_netcdf_file_variables(filename)
+                f, file_variables = get_netcdf_file_variables(filename)
                 remove_variables_with_non_spatiotemporal_dimensions(file_variables, self.valid_dimensions)
+                f.close()
             elif filename.endswith(".hdf"):
                 if data_type is None:
                     data_type = "SD"

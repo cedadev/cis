@@ -5,21 +5,27 @@ from cis.exceptions import InvalidVariableError
 from cis.utils import listify
 import logging
 
+
+#TODO: I need to think about this interface, I'd rather not have the file left open. Perhaps it could accept a filename,
+#  or handle. Same goes for the variables. I should probably refactor the products to keep handles to the files.
 def get_netcdf_file_attributes(filename):
     """
     Get all the global attributes from a NetCDF file
 
-    :param filename: The filename of the file to get the variables from
+    :param filename: The handle or filename of the file to get the variables from
     :return: a dictionary of attributes and their values
     """
 
     from netCDF4 import Dataset
+
     try:
         f = Dataset(filename)
     except RuntimeError as e:
         raise IOError(e)
 
-    return f.__dict__
+    atts = f.__dict__
+
+    return f, atts
 
 
 def get_netcdf_file_variables(filename, exclude_coords=False):
@@ -45,7 +51,7 @@ def get_netcdf_file_variables(filename, exclude_coords=False):
                 del variables[var]
             except KeyError:
                 pass
-    return variables
+    return f, variables
 
 
 def _get_all_fully_qualified_variables(dataset):
@@ -97,39 +103,6 @@ def remove_variables_with_non_spatiotemporal_dimensions(variables, spatiotempora
                 if dim not in spatiotemporal_var_names:
                     del variables[var]
                     break
-
-
-def read_many_files(filenames, usr_variables, dim=None):
-    """
-    Reads a single Variable from many NetCDF files. This method uses the netCDF4 MFDataset class and so is NOT
-    suitable for NetCDF4 datasets (only 'CLASSIC' netcdf).
-
-    :param filenames: A list of NetCDF filenames to read, or a string with wildcards.
-    :param usr_variables: A list of variable (dataset) names to read from the files.
-      The names must appear exactly as in in the NetCDF file.
-    :param dim: The name of the dimension on which to aggregate the data. None is the default
-      which tries to aggregate over the unlimited dimension
-    :return: A list of variable instances constructed from all of the input files
-    """
-    from netCDF4 import MFDataset
-    from cis.exceptions import InvalidVariableError
-
-    usr_variables = listify(usr_variables)
-
-    try:
-        datafile = MFDataset(filenames, aggdim=dim)
-    except RuntimeError as e:
-        raise IOError(e)
-
-    data = {}
-    for variable in usr_variables:
-        # Get data.
-        try:
-            data[variable] = datafile.variables[variable]
-        except:
-            raise InvalidVariableError('Variable {} not found in file {}.'.format(variable, filenames))
-
-    return data
 
 
 def read_many_files_individually(filenames, usr_variables):
@@ -201,16 +174,26 @@ def read(filename, usr_variables, defer_loading=False):
 
     return data
 
-# TODO: Make this take either a string and a filename, or a variable handle
-def get_metadata(var):
+
+#TODO Consider creating a combined method for reading data and the metadata in one open/close.
+def get_metadata(var, filename=None):
     """
     Retrieves all metadata
 
-    :param var: the Variable to read metadata from
+    :param str or Variable var: the Variable to read metadata from
+    :param filename: the file to read the metadata from (if var is str)
     :return: A metadata object
     """
     from cis.data_io.ungridded_data import Metadata
     from cis.utils import set_standard_name_if_valid
+    from netCDF4 import Dataset
+
+    if filename is not None:
+        try:
+            datafile = Dataset(filename)
+        except RuntimeError as e:
+            raise IOError(str(e))
+        var = datafile[var]
 
     missing_value = find_missing_value(var)
 
@@ -236,6 +219,9 @@ def get_metadata(var):
 
     # Only set the standard name if it's CF compliant
     set_standard_name_if_valid(metadata, attrs['standard_name'])
+
+    if filename is not None:
+        datafile.close()
 
     return metadata
 

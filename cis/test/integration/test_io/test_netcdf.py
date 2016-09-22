@@ -29,8 +29,7 @@ class TestNetCDF(unittest.TestCase):
         eq_(data['latitude'].shape, (145,))
 
     def test_that_can_get_metadata_for_known_variable(self):
-        data = read(valid_2d_filename, 'rain')
-        metadata = get_metadata(data['rain'])
+        metadata = get_metadata('rain', valid_2d_filename)
 
         eq_(str(metadata.missing_value), "2e+20")
         eq_(metadata.long_name, "TOTAL RAINFALL RATE: LS+CONV KG/M2/S")

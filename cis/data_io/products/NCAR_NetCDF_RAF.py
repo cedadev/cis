@@ -8,8 +8,6 @@ from cis.exceptions import InvalidVariableError, FileFormatError
 from cis.data_io.products import AProduct
 from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata
 from cis.utils import add_to_list_if_not_none, dimensions_compatible, listify
-from cis.data_io.netcdf import get_metadata, get_netcdf_file_attributes, read_many_files_individually, \
-    get_netcdf_file_variables
 
 
 class NCAR_NetCDF_RAF_variable_name_selector(object):
@@ -306,10 +304,11 @@ class NCAR_NetCDF_RAF(AProduct):
         :return: filetype
         :raises: FileFormatError if there is an error
         """
+        from cis.data_io.netcdf import get_netcdf_file_attributes
         if not os.path.isfile(filename):
             raise FileFormatError(["File does not exist"])
         try:
-            attributes = get_netcdf_file_attributes(filename)
+            f, attributes = get_netcdf_file_attributes(filename)
         except (RuntimeError, IOError) as ex:
             raise FileFormatError(["File is unreadable", ex.args[0]])
 
@@ -330,7 +329,7 @@ class NCAR_NetCDF_RAF(AProduct):
         else:
             raise FileFormatError(["File does not appear to be NCAR RAF or GASSP. No attributes for either '{}' or '{}'"
                                   .format(self.GASSP_VERSION_ATTRIBUTE_NAME, self.NCAR_RAF_CONVENTIONS_ATTRIBUTE_NAME)])
-
+        f.close()
         return file_type
 
     def get_file_type_error(self, filename):
@@ -351,10 +350,26 @@ class NCAR_NetCDF_RAF(AProduct):
         :param filenames: filenames from which to load the data
         :return: variable selector containing the data definitions
         """
-        variables_list = [get_netcdf_file_variables(f) for f in filenames]
-        attributes = [get_netcdf_file_attributes(f) for f in filenames]
+        from cis.data_io.netcdf import get_netcdf_file_attributes, get_netcdf_file_variables
+
+        handles = []
+        variables_list = []
+        attributes = []
+
+        for f in filenames:
+            handle, f_vars = get_netcdf_file_variables(f)
+            handles.append(handle)
+            variables_list.append(f_vars)
+            attributes.append(handle.__dict__)
+
+        # variables_list = [get_netcdf_file_variables(f) for f in filenames]
+        # attributes = [get_netcdf_file_attributes(f) for f in filenames]
 
         variable_selector = self.variableSelectorClass(attributes, variables_list)
+
+        for f in handles:
+            f.close()
+
         return variable_selector
 
     def _load_data(self, filenames, variable):
@@ -364,14 +379,11 @@ class NCAR_NetCDF_RAF(AProduct):
         :param variable: an extra variable to load
         :return: a list of load data and the variable selector used to load name it
         """
+        from cis.data_io.netcdf import read_many_files_individually
 
         variable_selector = self._load_data_definition(filenames)
 
         variables_list = [variable_selector.time_variable_name]
-        add_to_list_if_not_none(variable_selector.latitude_variable_name, variables_list)
-        add_to_list_if_not_none(variable_selector.longitude_variable_name, variables_list)
-        add_to_list_if_not_none(variable_selector.altitude_variable_name, variables_list)
-        add_to_list_if_not_none(variable_selector.pressure_variable_name, variables_list)
 
         logging.info("Listing coordinates: " + str(variables_list))
         add_to_list_if_not_none(variable, variables_list)
@@ -380,7 +392,7 @@ class NCAR_NetCDF_RAF(AProduct):
 
         return data_variables, variable_selector
 
-    def _create_coordinates_list(self, data_variables, variable_selector):
+    def _create_coordinates_list(self, data_variables, variable_selector, filenames):
         """
         Create a co-ordinate list for the data
         :param data_variables: the load data
@@ -391,7 +403,7 @@ class NCAR_NetCDF_RAF(AProduct):
 
         # Time
         time_coord = self._create_time_coord(variable_selector.time_stamp_info, variable_selector.time_variable_name,
-                                             data_variables)
+                                             filenames)
         coords.append(time_coord)
 
         # Lat and Lon
@@ -403,14 +415,14 @@ class NCAR_NetCDF_RAF(AProduct):
             lon_coord = self._create_fixed_value_coord("X", variable_selector.station_longitude, "degrees_east",
                                                        points_count, "longitude")
         else:
-            lat_coord = self._create_coord("Y", variable_selector.latitude_variable_name, data_variables, "latitude")
-            lon_coord = self._create_coord("X", variable_selector.longitude_variable_name, data_variables, "longitude")
+            lat_coord = self._create_coord("Y", variable_selector.latitude_variable_name, filenames, "latitude")
+            lon_coord = self._create_coord("X", variable_selector.longitude_variable_name, filenames, "longitude")
         coords.append(lat_coord)
         coords.append(lon_coord)
 
         # Altitude
         if variable_selector.altitude is None:
-            altitude_coord = self._create_coord("Z", variable_selector.altitude_variable_name, data_variables,
+            altitude_coord = self._create_coord("Z", variable_selector.altitude_variable_name, filenames,
                                                 "altitude")
         else:
             altitude_coord = self._create_fixed_value_coord("Z", variable_selector.altitude, "meters", points_count,
@@ -420,7 +432,7 @@ class NCAR_NetCDF_RAF(AProduct):
         # Pressure
         if variable_selector.pressure_variable_name is not None:
             coords.append(
-                self._create_coord("P", variable_selector.pressure_variable_name, data_variables, "air_pressure"))
+                self._create_coord("P", variable_selector.pressure_variable_name, filenames, "air_pressure"))
         return coords
 
     @staticmethod
@@ -436,7 +448,7 @@ class NCAR_NetCDF_RAF(AProduct):
         """
         from cis.data_io.Coord import Coord
         from cis.utils import expand_1d_to_2d_array
-        from cis.data_io.netcdf import read
+        from cis.data_io.netcdf import read, get_metadata
 
         # We assume that the auxilliary coordinate is the same shape across files
         d = read(filename, [aux_coord_name])[aux_coord_name]
@@ -448,7 +460,7 @@ class NCAR_NetCDF_RAF(AProduct):
         for dim_coord in dim_coords:
             dim_coord.data = expand_1d_to_2d_array(dim_coord.data, len_y, axis=1)
 
-        all_coords = dim_coords + [Coord(aux_data, get_metadata(d))]
+        all_coords = dim_coords + [Coord(aux_data, get_metadata(aux_coord_name, filename))]
 
         return all_coords
 
@@ -459,9 +471,10 @@ class NCAR_NetCDF_RAF(AProduct):
         :param variable: load a variable for the data
         :return: Coordinates
         """
+        from cis.data_io.netcdf import get_metadata
         data_variables, variable_selector = self._load_data(filenames, variable)
 
-        dim_coords = self._create_coordinates_list(data_variables, variable_selector)
+        dim_coords = self._create_coordinates_list(data_variables, variable_selector, filenames)
 
         if variable is None:
             return UngriddedCoordinates(dim_coords)
@@ -472,7 +485,7 @@ class NCAR_NetCDF_RAF(AProduct):
                                                       dim_coords.get_coord(standard_name='time').data.size)
             else:
                 all_coords = dim_coords
-            return UngriddedData(data_variables[variable], get_metadata(data_variables[variable][0]), all_coords)
+            return UngriddedData(data_variables[variable], get_metadata(variable, filenames[0]), all_coords)
 
     def create_data_object(self, filenames, variable):
         """
@@ -483,7 +496,7 @@ class NCAR_NetCDF_RAF(AProduct):
         """
         return self.create_coords(filenames, variable)
 
-    def _create_coord(self, coord_axis, data_variable_name, data_variables, standard_name):
+    def _create_coord(self, coord_axis, data_variable_name, filenames, standard_name):
         """
         Create a coordinate for the co-ordinate list
         :param coord_axis: axis of the coordinate in the coords
@@ -493,16 +506,17 @@ class NCAR_NetCDF_RAF(AProduct):
         :return: a coords object
         """
         from cis.data_io.Coord import Coord
+        from cis.data_io.netcdf import read, get_metadata
 
         coordinate_data_objects = []
-        for d in data_variables[data_variable_name]:
-            m = get_metadata(d)
+        for f in filenames:
+            m = get_metadata(data_variable_name, f)
             m.standard_name = standard_name
-            coordinate_data_objects.append(Coord(d, m, coord_axis))
+            coordinate_data_objects.append(Coord(read(f, data_variable_name)[data_variable_name], m, coord_axis))
         
         return Coord.from_many_coordinates(coordinate_data_objects)
 
-    def _create_time_coord(self, timestamp, time_variable_name, data_variables, coord_axis='T', standard_name='time'):
+    def _create_time_coord(self, timestamp, time_variable_name, filenames, coord_axis='T', standard_name='time'):
         """
         Create a time coordinate, taking into account the fact that each file may have a different timestamp.
         :param timestamp: Timestamp or list of timestamps for
@@ -514,15 +528,16 @@ class NCAR_NetCDF_RAF(AProduct):
         """
         from cis.data_io.Coord import Coord
         from six.moves import zip_longest
+        from cis.data_io.netcdf import read, get_metadata
 
         timestamps = listify(timestamp)
-        time_variables = data_variables[time_variable_name]
+        # time_variables = data_variables[time_variable_name]
         time_coords = []
         # Create a coordinate for each separate file to account for differing timestamps
-        for file_time_var, timestamp in zip_longest(time_variables, timestamps):
-            metadata = get_metadata(file_time_var)
+        for file, timestamp in zip_longest(filenames, timestamps):
+            metadata = get_metadata(time_variable_name, file)
             metadata.standard_name = standard_name
-            coord = Coord(file_time_var, metadata, coord_axis)
+            coord = Coord(read(file, time_variable_name)[time_variable_name], metadata, coord_axis)
             coord.convert_to_std_time(timestamp)
             time_coords.append(coord)
 
