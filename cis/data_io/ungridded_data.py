@@ -390,26 +390,21 @@ class UngriddedData(LazyData, CommonData):
             data = self.data
         else:
             # Remove any points with missing coordinate values:
-            combined_mask = numpy.zeros(self._data.shape, dtype=bool).flatten()
+            combined_mask = numpy.zeros(self._data.shape, dtype=bool)
             for coord in self._coords:
-                combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
+                combined_mask |= numpy.ma.getmaskarray(coord.data)
                 if coord.data.dtype != 'object':
-                    combined_mask |= numpy.isnan(coord.data).flatten()
+                    combined_mask |= numpy.isnan(coord.data)
             if combined_mask.any():
                 n_points = numpy.count_nonzero(combined_mask)
                 logging.warning(
                     "Identified {n_points} point(s) which were missing values for some or all coordinates - "
                     "these points have been removed from the data.".format(n_points=n_points))
                 for coord in self._coords:
-                    coord.data = numpy.ma.masked_array(coord.data.flatten(), mask=combined_mask).compressed()
+                    coord._data = coord._data[~combined_mask.any(axis=1)]
                     coord.update_shape()
                     coord.update_range()
-                if numpy.ma.is_masked(self._data):
-                    new_data_mask = numpy.ma.masked_array(self._data.mask.flatten(), mask=combined_mask).compressed()
-                    new_data = numpy.ma.masked_array(self._data.data.flatten(), mask=combined_mask).compressed()
-                    self._data = numpy.ma.masked_array(new_data, mask=new_data_mask)
-                else:
-                    self._data = numpy.ma.masked_array(self._data.flatten(), mask=combined_mask).compressed()
+                self._data = self._data[~combined_mask.any(axis=1)]
             self.update_shape()
             self.update_range()
 
@@ -672,17 +667,17 @@ class UngriddedCoordinates(CommonData):
         :return:
         """
         # Remove any points with missing coordinate values:
-        combined_mask = numpy.zeros(self._coords[0].data_flattened.shape, dtype=bool)
+        combined_mask = numpy.zeros(self._coords[0].data.shape, dtype=bool)
         for coord in self._coords:
-            combined_mask |= numpy.ma.getmaskarray(coord.data_flattened)
+            combined_mask |= numpy.ma.getmaskarray(coord.data)
             if coord.data.dtype != 'object':
-                combined_mask |= numpy.isnan(coord.data).flatten()
+                combined_mask |= numpy.isnan(coord.data)
         if combined_mask.any():
             n_points = numpy.count_nonzero(combined_mask)
             logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
                             "these points have been removed from the data.".format(n_points=n_points))
             for coord in self._coords:
-                coord.data = numpy.ma.masked_array(coord.data_flattened, mask=combined_mask).compressed()
+                coord.data = coord.data[~combined_mask.any(axis=1)]
                 coord.update_shape()
                 coord.update_range()
 

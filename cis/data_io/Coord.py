@@ -269,3 +269,14 @@ class CoordList(list):
         for coord in self:
             copied.append(coord.copy())
         return copied
+
+    def flatten(self):
+        """
+        Return a view of the coordinates with their data arrays flattened
+
+        :return: Flattened :class:`CoordList`
+        """
+        flattened = CoordList()
+        for coord in self:
+            flattened.append(Coord(coord.data_flattened, metadata=coord.metadata))
+        return flattened

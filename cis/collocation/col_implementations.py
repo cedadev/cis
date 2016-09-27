@@ -126,7 +126,7 @@ class GeneralUngriddedCollocator(Collocator):
             var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
                                     missing_value=self.fill_value, units=var_details[3])
             set_standard_name_if_valid(var_metadata, var_details[2])
-            return_data.append(UngriddedData(values[idx, :], var_metadata, points.coords()))
+            return_data.append(UngriddedData(values[idx, :], var_metadata, points._coords.flatten()))
         log_memory_profile("GeneralUngriddedCollocator final")
 
         return return_data
@@ -197,7 +197,7 @@ class GriddedUngriddedCollocator(Collocator):
         metadata = Metadata(self.var_name or data.name(), long_name=self.var_long_name or data.metadata.long_name,
                             shape=values.shape, missing_value=self.fill_value, units=self.var_units or data.units)
         set_standard_name_if_valid(metadata, data.standard_name)
-        return_data = UngriddedDataList([UngriddedData(values, metadata, points.coords())])
+        return_data = UngriddedDataList([UngriddedData(values, metadata, points._coords.flatten())])
 
         log_memory_profile("GriddedUngriddedCollocator final")
 
