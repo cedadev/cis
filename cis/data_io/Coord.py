@@ -31,8 +31,8 @@ class Coord(LazyData):
         """
         super(Coord, self).__init__(data, metadata, data_retrieval_callback)
         self.axis = axis.upper()
-        # Fix an issue where IRIS cannot parse units 'deg' (should be degrees).
-        if self.units == 'deg':
+        # Fix an issue where cf_units cannot parse units 'deg' (should be degrees).
+        if isinstance(self.units, str) and self.units == 'deg':
             self.units = 'degrees'
 
     @property
