@@ -401,10 +401,16 @@ class UngriddedData(LazyData, CommonData):
     #                 "Identified {n_points} point(s) which were missing values for some or all coordinates - "
     #                 "these points have been removed from the data.".format(n_points=n_points))
     #             for coord in self._coords:
-    #                 coord._data = coord._data[~combined_mask.any(axis=1)]
+    #                 if coord._data.ndim > 1:
+    #                     coord._data = coord._data[~combined_mask.any(axis=1)]
+    #                 else:
+    #                     coord._data = coord._data[~combined_mask]
     #                 coord.update_shape()
     #                 coord.update_range()
-    #             self._data = self._data[~combined_mask.any(axis=1)]
+    #             if self._data.ndim > 1:
+    #                 self._data = self._data[~combined_mask.any(axis=1)]
+    #             else:
+    #                 self._data = self._data[~combined_mask]
     #         self.update_shape()
     #         self.update_range()
 
@@ -677,7 +683,11 @@ class UngriddedCoordinates(CommonData):
     #         logging.warning("Identified {n_points} point(s) which were missing values for some or all coordinates - "
     #                         "these points have been removed from the data.".format(n_points=n_points))
     #         for coord in self._coords:
-    #             coord.data = coord.data[~combined_mask.any(axis=1)]
+    #             if coord._data.ndim > 1:
+    #                 coord._data = coord._data[~combined_mask.any(axis=1)]
+    #             else:
+    #                 coord._data = coord._data[~combined_mask]
+    #             # coord.data = coord.data[~combined_mask.any(axis=1)]
     #             coord.update_shape()
     #             coord.update_range()
 
