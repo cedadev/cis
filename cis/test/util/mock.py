@@ -193,6 +193,21 @@ def make_dummy_2d_cube():
     return cube
 
 
+def make_dummy_2d_cube_with_circular_lon():
+    """
+        Makes a dummy cube filled with random datapoints of shape 19x36
+    """
+    from iris.cube import Cube
+    from iris.coords import DimCoord
+
+    latitude = DimCoord(np.arange(-90., 100., 10.), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(0., 360., 10.), standard_name='longitude', units='degrees', circular=True)
+    cube = Cube(np.reshape(np.arange(19 * 36) + 1.0, (19, 36)),
+                dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+
+    return cube
+
+
 def make_dummy_2d_cube_with_small_offset_in_lat():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36
@@ -728,7 +743,7 @@ def make_dummy_ungridded_data_time_series(len=10):
     t = Coord(times, Metadata(standard_name='time', units='DateTime Object'), axis='x')
     data = np.arange(len) + 1.0
 
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), CoordList([x, y, t]))
 
 
@@ -807,7 +822,7 @@ def make_dummy_2d_ungridded_data():
     y = Coord(gen_random_lon_array((5, 5)), Metadata('longitude'), 'y')
     coords = CoordList([x, y])
     data = gen_random_data_array((5, 5), 4.0, 1.0)
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 
@@ -959,7 +974,7 @@ def make_regular_2d_with_time_ungridded_data():
     data = np.reshape(np.arange(15) + 1.0, (5, 3))
 
     coords = CoordList([x, y, t])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 
@@ -981,7 +996,7 @@ def make_MODIS_time_steps():
     data = np.arange(4.0)
 
     coords = CoordList([x, t])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 
@@ -1092,7 +1107,7 @@ def make_regular_4d_ungridded_data():
     t = Coord(t, Metadata(standard_name='time', units=str(cis_standard_time_unit)))
 
     coords = CoordList([x, y, a, p, t])
-    return UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 

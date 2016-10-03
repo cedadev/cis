@@ -46,6 +46,6 @@ class TestCollocateFactory(unittest.TestCase):
     def test_GIVEN_no_collocator_WHEN_get_col_instances_for_gridded_to_ungridded_THEN_correct_default_returned(self):
         collocator, constraint, kernel = self.factory.get_collocator_instances_for_method(
             None, None, {'missing_data_for_missing_sample': "false"}, {}, False, True)
-        assert_that(collocator, instance_of(GeneralUngriddedCollocator))
+        assert_that(collocator, instance_of(GriddedUngriddedCollocator))
         assert_that(constraint, is_(None))
-        assert_that(kernel, instance_of(nn_gridded))
+        assert_that(kernel, is_('linear'))

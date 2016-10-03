@@ -15,27 +15,13 @@ from cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataLis
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
 import cis.collocation.data_index as data_index
-from cis.utils import log_memory_profile
+from cis.utils import log_memory_profile, set_standard_name_if_valid
 
 
 class GeneralUngriddedCollocator(Collocator):
     """
     Collocator for locating onto ungridded sample points
     """
-
-    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False):
-        super(GeneralUngriddedCollocator, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise cis.exceptions.InvalidCommandLineOptionError(
-                    'Dummy Constraint fill_value must be a valid float')
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -44,15 +30,13 @@ class GeneralUngriddedCollocator(Collocator):
         constraint and kernel objects. The metadata for the output LazyData object is copied from
         the input data object.
 
-        :param points: UngriddedData or UngriddedCoordinates defining the sample points
-        :param data: An UngriddedData object or Cube, or any other object containing metadata that
-                     the constraint object can read. May also be a list of objects, in which case a list will
-                     be returned
+        :param UngriddedData or UngriddedCoordinates points: Object defining the sample points
+        :param UngriddedData data: The source data to collocate from
         :param constraint: An instance of a Constraint subclass which takes a data object and
                            returns a subset of that data based on it's internal parameters
         :param kernel: An instance of a Kernel subclass which takes a number of points and returns
                        a single value
-        :return: A single LazyData object
+        :return UngriddedData or UngriddedDataList: Depending on the input
         """
         log_memory_profile("GeneralUngriddedCollocator Initial")
 
@@ -68,21 +52,7 @@ class GeneralUngriddedCollocator(Collocator):
 
         sample_points = points.get_all_points()
 
-        # Convert ungridded data to a list of points if kernel needs it.
-        # Special case checks for kernels that use a cube - this could be done more elegantly.
-        if isinstance(kernel, nn_gridded) or isinstance(kernel, li):
-            if hasattr(kernel, "interpolator"):
-                # If we have an interpolator on the kernel we need to reset it as it depends on the actual values
-                #  as well as the coordinates
-                kernel.interpolator = None
-                kernel.coord_names = []
-            if not isinstance(data, iris.cube.Cube):
-                raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
-            if constraint is not None and not isinstance(constraint, DummyConstraint):
-                raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
-            data_points = data
-        else:
-            data_points = data.get_non_masked_points()
+        data_points = data.get_non_masked_points()
 
         # First fix the sample points so that they all fall within the same 360 degree longitude range
         _fix_longitude_range(points.coords(), sample_points)
@@ -106,15 +76,25 @@ class GeneralUngriddedCollocator(Collocator):
         self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
                                                       self.var_standard_name, self.var_units)
+
         sample_points_count = len(sample_points)
-        values = np.zeros((len(var_set_details), sample_points_count)) + self.fill_value
+        # Create an empty masked array to store the collocated values. The elements will be unmasked by assignment.
+        values = np.ma.masked_all((len(var_set_details), sample_points_count))
+        values.fill_value = self.fill_value
         log_memory_profile("GeneralUngriddedCollocator after output array creation")
 
         logging.info("    {} sample points".format(sample_points_count))
         # Apply constraint and/or kernel to each sample point.
         cell_count = 0
         total_count = 0
-        for i, point in sample_points.enumerate_non_masked_points():
+
+        # Check if we want to sample missing points
+        if self.missing_data_for_missing_sample:
+            sample_enumerator = sample_points.enumerate_non_masked_points
+        else:
+            sample_enumerator = sample_points.enumerate_all_points
+
+        for i, point in sample_enumerator():
             # Log progress periodically.
             cell_count += 1
             if cell_count == 1000:
@@ -143,20 +123,83 @@ class GeneralUngriddedCollocator(Collocator):
 
         return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
-            if idx == 0:
-                new_data = UngriddedData(values[0, :], metadata, points.coords())
-                new_data.metadata._name = var_details[0]
-                new_data.metadata.long_name = var_details[1]
-                cis.utils.set_cube_standard_name_if_valid(new_data, var_details[2])
-                new_data.metadata.shape = (len(sample_points),)
-                new_data.metadata.missing_value = self.fill_value
-                new_data.units = var_details[2]
-            else:
-                var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
-                                        missing_value=self.fill_value, units=var_details[2])
-                new_data = UngriddedData(values[idx, :], var_metadata, points.coords())
-            return_data.append(new_data)
+            var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
+                                    missing_value=self.fill_value, units=var_details[3])
+            set_standard_name_if_valid(var_metadata, var_details[2])
+            return_data.append(UngriddedData(values[idx, :], var_metadata, points.coords()))
         log_memory_profile("GeneralUngriddedCollocator final")
+
+        return return_data
+
+
+class GriddedUngriddedCollocator(Collocator):
+    """
+    Collocator for locating GriddedData onto ungridded sample points
+    """
+
+    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+                 missing_data_for_missing_sample=False, extrapolate=False):
+        super(GriddedUngriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
+                                                         missing_data_for_missing_sample)
+        self.extrapolate = extrapolate
+        self.interpolator = None
+
+    def collocate(self, points, data, constraint, kernel):
+        """
+        This collocator takes a list of HyperPoints and a data object (currently either Ungridded
+        data or a Cube) and returns one new LazyData object with the values as determined by the
+        constraint and kernel objects. The metadata for the output LazyData object is copied from
+        the input data object.
+
+        :param UngriddedData or UngriddedCoordinates points: Objects defining the sample points
+        :param GriddedData or GriddedDataList data: Data to resample
+        :param constraint: An instance of a Constraint subclass which takes a data object and
+                           returns a subset of that data based on it's internal parameters
+        :param kernel: An instance of a Kernel subclass which takes a number of points and returns
+                       a single value
+        :return: A single LazyData object
+        """
+        from cis.collocation.gridded_interpolation import GriddedUngriddedInterpolator
+        log_memory_profile("GriddedUngriddedCollocator Initial")
+
+        if isinstance(data, list):
+            # Indexing and constraints (for SepConstraintKdTree) will only take place on the first iteration,
+            # so we really can just call this method recursively if we've got a list of data.
+            output = UngriddedDataList()
+            for var in data:
+                output.extend(self.collocate(points, var, constraint, kernel))
+            return output
+
+        if not isinstance(data, iris.cube.Cube):
+            raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
+        if constraint is not None and not isinstance(constraint, DummyConstraint):
+            raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
+        data_points = data
+
+        # First fix the sample points so that they all fall within the same 360 degree longitude range
+        _fix_longitude_range(points.coords(), points)
+        # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
+        _fix_longitude_range(points.coords(), data_points)
+
+        log_memory_profile("GriddedUngriddedCollocator after data retrieval")
+
+        logging.info("--> Collocating...")
+        logging.info("    {} sample points".format(points.size))
+
+        if self.interpolator is None:
+            # Cache the interpolator
+            self.interpolator = GriddedUngriddedInterpolator(data, points, kernel, self.missing_data_for_missing_sample)
+
+        values = self.interpolator(data, fill_value=self.fill_value, extrapolate=self.extrapolate)
+
+        log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
+
+        metadata = Metadata(self.var_name or data.name(), long_name=self.var_long_name or data.metadata.long_name,
+                            shape=values.shape, missing_value=self.fill_value, units=self.var_units or data.units)
+        set_standard_name_if_valid(metadata, data.standard_name)
+        return_data = UngriddedDataList([UngriddedData(values, metadata, points.coords())])
+
+        log_memory_profile("GriddedUngriddedCollocator final")
 
         return return_data
 
@@ -527,91 +570,13 @@ class nn_t(nn_time):
     pass
 
 
-class nn_gridded(Kernel):
-    def __init__(self):
-        self.coord_names = []
-        self.hybrid_coord = ''
-
-    def get_value(self, point, data):
-        """
-        Co-location routine using nearest neighbour algorithm optimized for gridded data.
-        This calls out to iris to do the work.
-        """
-        from iris.analysis.interpolate import extract_nearest_neighbour, nearest_neighbour_data_value
-
-        if not self.coord_names:
-            # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
-            for coord_name, val in point.coord_tuple:
-                if len(data.coords(coord_name, dim_coords=True)) > 0:
-                    self.coord_names.append(coord_name)
-            if len(data.coords('altitude', dim_coords=False)) > 0 and point.altitude is not None:
-                self.hybrid_coord = 'altitude'
-            elif len(data.coords('air_pressure', dim_coords=False)) > 0 and point.air_pressure is not None:
-                self.hybrid_coord = 'air_pressure'
-
-        new_coord_tuple_list = [(c, getattr(point, c)) for c in self.coord_names]
-
-        if self.hybrid_coord:
-            slice = extract_nearest_neighbour(data, new_coord_tuple_list)
-            val = nearest_neighbour_data_value(slice, [(self.hybrid_coord, getattr(point, self.hybrid_coord))])
-        else:
-            val = nearest_neighbour_data_value(data, new_coord_tuple_list)
-
-        return val
-
-
-# noinspection PyPep8Naming
-class li(Kernel):
-    """
-    Linear Interpolation Kernel
-    """
-
-    def __init__(self, extrapolate=False, nn_vertical=False):
-        self.coord_names = []
-        self.hybrid_coord = ''
-        self.interpolator = None
-        self.extrapolation_mode = 'linear' if extrapolate else 'error'
-        if nn_vertical:
-            logging.warn("The extrapolate option is incompatible with nearest neighbour interpolation and will be "
-                         "ignored for the vertical collocation")
-            self.vertical_interp = iris.analysis.Nearest()
-        else:
-            self.vertical_interp = iris.analysis.Linear(self.extrapolation_mode)
-
-    def get_value(self, point, data):
-        """
-        Co-location routine using iris' linear interpolation algorithm. This only makes sense for gridded data.
-        """
-        # Setup the interpolator if not already done
-        if not self.interpolator:
-            # Remove any tuples in the list that do not correspond to a dimension coordinate in the cube 'data'.
-            for coord_name, val in point.coord_tuple:
-                if len(data.coords(coord_name, dim_coords=True)) > 0:
-                    self.coord_names.append(coord_name)
-            if len(data.coords('altitude', dim_coords=False)) > 0 and point.altitude is not None:
-                self.hybrid_coord = 'altitude'
-            elif len(data.coords('air_pressure', dim_coords=False)) > 0 and point.air_pressure is not None:
-                self.hybrid_coord = 'air_pressure'
-
-            self.interpolator = iris.analysis.Linear(self.extrapolation_mode).interpolator(data, self.coord_names)
-
-        # Return the data from the result of interpolating over those coordinates which are on the cube.
-        if self.hybrid_coord:
-            slice = self.interpolator([getattr(point, c) for c in self.coord_names])
-            interp = self.vertical_interp.interpolator(slice, [self.hybrid_coord])
-            val = interp._points([getattr(point, self.hybrid_coord)], slice.data)
-        else:
-            val = self.interpolator._points([getattr(point, c) for c in self.coord_names], data.data)
-        return val
-
-
 class GriddedCollocator(Collocator):
-    def __init__(self, var_name='', var_long_name='', var_units='', missing_data_for_missing_sample=False):
-        super(Collocator, self).__init__()
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
+
+    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+                 missing_data_for_missing_sample=False, extrapolate=False):
+        super(GriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
+                                                         missing_data_for_missing_sample)
+        self.extrapolate = 'extrapolate' if extrapolate else 'mask'
 
     @staticmethod
     def _check_for_valid_kernel(kernel):
@@ -708,7 +673,7 @@ class GriddedCollocator(Collocator):
 
         output_cube = self._iris_interpolate(coord_names_and_sizes_for_output_grid,
                                              coord_names_and_sizes_for_sample_grid, data,
-                                             kernel, output_mask, points)
+                                             kernel, output_mask, points, self.extrapolate)
 
         if not isinstance(output_cube, list):
             return GriddedDataList([output_cube])
@@ -741,7 +706,7 @@ class GriddedCollocator(Collocator):
 
     @staticmethod
     def _iris_interpolate(coord_names_and_sizes_for_output_grid, coord_names_and_sizes_for_sample_grid, data, kernel,
-                          output_mask, points):
+                          output_mask, points, extrapolate):
         """ Collocates using iris.analysis.interpolate
         """
         coordinate_point_pairs = []
@@ -753,7 +718,8 @@ class GriddedCollocator(Collocator):
 
         # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
         # in coord_names_and_sizes_for_output_grid.
-        output_cube = make_from_cube(data.interpolate(coordinate_point_pairs, kernel.interpolater()))
+        output_cube = make_from_cube(data.interpolate(coordinate_point_pairs,
+                                                      kernel.interpolater(extrapolation_mode=extrapolate)))
 
         # Iris outputs interpolated cubes with the dimensions in the order of the data grid, not the sample grid,
         # so we need to rearrange the order of the dimensions.
@@ -796,20 +762,6 @@ class gridded_gridded_li(Kernel):
 class GeneralGriddedCollocator(Collocator):
     """Performs collocation of data on to the points of a cube (ie onto a gridded dataset).
     """
-
-    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False):
-        super(GeneralGriddedCollocator, self).__init__()
-        if fill_value is not None:
-            try:
-                self.fill_value = float(fill_value)
-            except ValueError:
-                raise cis.exceptions.InvalidCommandLineOptionError(
-                    'Dummy Constraint fill_value must be a valid float')
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -911,7 +863,7 @@ class GeneralGriddedCollocator(Collocator):
             cube.data = data_with_nan_and_inf_removed
             cube.var_name = kernel_var_details[idx][0]
             cube.long_name = kernel_var_details[idx][1]
-            cis.utils.set_cube_standard_name_if_valid(cube, kernel_var_details[idx][2])
+            set_standard_name_if_valid(cube, kernel_var_details[idx][2])
             try:
                 cube.units = kernel_var_details[idx][3]
             except ValueError:

@@ -6,7 +6,7 @@ Each test therefore ignores SystemExit exceptions with code 2 as they are expect
 import argparse
 from unittest import TestCase
 import os
-
+from mock import patch
 from hamcrest import is_, assert_that, contains_inanyorder
 from nose.tools import eq_, raises
 
@@ -198,6 +198,69 @@ class TestParse(ParseTestFiles):
         args = ['plot', 'my\:var:{0}:product=cis'.format(self.escaped_single_valid_file)]
         parsed = parse_args(args)
         assert_that('my:var' in parsed.datagroups[0]['variables'])
+
+    def test_GIVEN_plot_output_missing_file_extension_WHEN_parse_THEN_extension_added(self):
+        args = ['plot', 'var1:%s:product=cis' % self.escaped_single_valid_file,
+                '-o', 'output_name']
+        parsed = parse_args(args)
+        assert_that(parsed.output, is_('output_name.png'))
+
+    def test_output_file_matches_an_existing_file_with_force_overwrite_option(self):
+        from cis.parse import _file_already_exists_and_no_overwrite
+        from argparse import Namespace
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as tmpfile:
+            existing_file = tmpfile.name
+            arguments = Namespace(force_overwrite=True)
+            # Test output file is the same as input file
+            arguments.output = existing_file
+            assert not _file_already_exists_and_no_overwrite(arguments)
+
+    def test_output_file_matches_an_existing_file_with_force_overwrite_env(self):
+        from cis.parse import _file_already_exists_and_no_overwrite
+        from argparse import Namespace
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as tmpfile:
+            existing_file = tmpfile.name
+            arguments = Namespace(force_overwrite=False)
+            # Test output file is the same as input file
+            arguments.output = existing_file
+            os.environ["CIS_FORCE_OVERWRITE"] = "True"
+            assert not _file_already_exists_and_no_overwrite(arguments)
+            os.environ["CIS_FORCE_OVERWRITE"] = ""
+
+    def test_output_file_matches_an_existing_file_with_no_force_overwrite_will_prompt(self):
+        from cis.parse import _file_already_exists_and_no_overwrite
+        from argparse import Namespace
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as tmpfile:
+            existing_file = tmpfile.name
+            arguments = Namespace(force_overwrite=False)
+            # Test output file is the same as input file
+            arguments.output = existing_file
+
+            # Choose yes to overwrite - so return false
+            with patch('six.moves.input', return_value='y'):
+                assert not _file_already_exists_and_no_overwrite(arguments)
+
+            # Choose no to not overwrite - return True
+            with patch('six.moves.input', return_value='n'):
+                assert _file_already_exists_and_no_overwrite(arguments)
+
+            # Choose yes, eventually
+            with patch('six.moves.input', side_effect=['blah', 'blah', 'y']):
+                assert not _file_already_exists_and_no_overwrite(arguments)
+
+            # Choose the default (no)
+            with patch('six.moves.input', return_value=''):
+                assert _file_already_exists_and_no_overwrite(arguments)
+
+            # Choose the default, eventually
+            with patch('six.moves.input', side_effect=['yo', 'nope', '']):
+                assert _file_already_exists_and_no_overwrite(arguments)
 
 
 class TestParsePlot(ParseTestFiles):
@@ -561,7 +624,6 @@ class TestParseAggregate(ParseTestFiles):
             # Test output file is different (and doesn't exist)
             arguments.output = 'blah'
             assert not _output_file_matches_an_input_file(arguments)
-
 
 class TestParseCollocate(ParseTestFiles):
     """

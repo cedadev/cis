@@ -162,8 +162,9 @@ def __get_class(filename, product=None):
             class_instance = cls()
             patterns = class_instance.get_file_signature()
             for pattern in patterns:
-                # Match the pattern - re.I allows for case insensitive matches
-                if re.match(pattern, basename, re.I) is not None:
+                # Match the pattern - re.I allows for case insensitive matches.
+                # Appending '$' to the pattern ensures we match the whole string
+                if re.match(pattern+'$', basename, re.I) is not None:
                     logging.debug("Found product class " + cls.__name__ + " matching regex pattern " + pattern)
                     errors = class_instance.get_file_type_error(filename)
                     if errors is None:

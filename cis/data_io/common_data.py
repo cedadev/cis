@@ -99,10 +99,22 @@ class CommonData(object):
         """
         pass
 
+    @abstractmethod
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        pass
+
 
 class CommonDataList(list):
     """
-    Interface for common list methods implemented for both gridded and ungridded data
+    Interface for common list methods implemented for both gridded and ungridded data.
+
+    Note that all objects in a CommonDataList must have the same coordinates and coordinate values.
     """
     __metaclass__ = ABCMeta
 
@@ -121,17 +133,35 @@ class CommonDataList(list):
         raise NotImplementedError
 
     def append(self, p_object):
-        # This will raise a TypeError if the objects being added are of the wrong type (i.e. Gridded versus Ungridded).
+        """
+        Append a compatible object to this list
+
+        :param UngriddedData or GriddedData p_object:
+        :return: None
+        :raises TypeError: If the objects being added are of the wrong type (i.e. Gridded versus Ungridded).
+        :raises ValueError: If the coordinates aren't compatible with each other.
+        """
         this_class = self.__class__.__name__
         that_class = p_object.__class__.__name__
-        try:
-            if p_object.is_gridded == self.is_gridded:
-                super(CommonDataList, self).append(p_object)
-                return
-        except AttributeError:
-            pass
-        raise TypeError("Appending {that_class} to {this_class} is not allowed".format(
-            that_class=that_class, this_class=this_class))
+        other_gridded = getattr(p_object, 'is_gridded', None)
+
+        if other_gridded is None or other_gridded != self.is_gridded:
+            raise TypeError("Appending {that_class} to {this_class} is not allowed".format(
+                that_class=that_class, this_class=this_class))
+
+        if len(self) > 0:
+            if len(self.coords()) != len(p_object.coords()):
+                raise ValueError("Incompatible data: {} must have the same number of coordinates as the first element "
+                                 "in this list.".format(that_class))
+            for this_coord, that_coord in zip(self.coords(), p_object.coords()):
+                if any([(a != b) for a, b in zip(this_coord.points.shape, that_coord.points.shape)]):
+                    raise ValueError("Given coordinate {} has shape {} which is "
+                                     "incompatible with {}.".format(that_coord.name(),
+                                                                    that_coord.shape,
+                                                                    this_coord.shape))
+
+        super(CommonDataList, self).append(p_object)
+        return
 
     def extend(self, iterable):
         # This will raise a TypeError if the objects being added are of the wrong type (i.e. Gridded versus Ungridded).

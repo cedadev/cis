@@ -2,7 +2,7 @@
 Module containing hdf file utility functions for the SD object
 """
 import logging
-from cis.utils import create_masked_array_for_missing_values, listify
+from cis.utils import listify
 # Optional HDF import, if the module isn't found we defer raising ImportError until it is actually needed.
 try:
     from pyhdf import SD
@@ -146,71 +146,35 @@ def read(filename, variables=None, datadict=None):
     return datadict
 
 
-def get_calipso_data(sds):
+def get_data(sds):
     """
-    Reads raw data from an SD instance. Automatically applies the
-    scaling factors and offsets to the data arrays found in Calipso data.
-
-    :param sds: The specific sds instance to read
-    :returns: A numpy array containing the raw data with missing data is replaced by NaN.
-    """
-    from cis.utils import create_masked_array_for_missing_data
-
-    calipso_fill_values = {'Float_32': -9999.0,
-                           # 'Int_8' : 'See SDS description',
-                           'Int_16': -9999,
-                           'Int_32': -9999,
-                           'UInt_8': -127,
-                           # 'UInt_16' : 'See SDS description',
-                           # 'UInt_32' : 'See SDS description',
-                           'ExtinctionQC Fill Value': 32768,
-                           'FeatureFinderQC No Features Found': 32767,
-                           'FeatureFinderQC Fill Value': 65535}
-
-    data = sds.get()
-    attributes = sds.attributes()
-
-    # Missing data.
-    missing_val = attributes.get('fillvalue', None)
-    if missing_val is None:
-        try:
-            missing_val = calipso_fill_values[attributes.get('format', None)]
-        except KeyError:
-            # Last guess
-            missing_val = attributes.get('_FillValue', None)
-
-    data = create_masked_array_for_missing_data(data, missing_val)
-
-    # Offsets and scaling.
-    offset = attributes.get('add_offset', 0)
-    scale_factor = attributes.get('scale_factor', 1)
-    data = __apply_scaling_factor_CALIPSO(data, scale_factor, offset)
-
-    return data
-
-
-def get_data(sds, missing_values=None):
-    """
-    Reads raw data from an SD instance. Automatically applies the
-    scaling factors and offsets to the data arrays often found in NASA HDF-EOS
-    data (e.g. MODIS)
+    Reads raw data from an SD instance.
 
     :param sds: The specific sds instance to read
     :return: A numpy array containing the raw data with missing data is replaced by NaN.
     """
+    from cis.utils import create_masked_array_for_missing_data
+    from cis.data_io.netcdf import apply_offset_and_scaling
+    import numpy as np
+
     data = sds.get()
     attributes = sds.attributes()
 
-    # Missing data.
-    if missing_values is None:
-        missing_values = [attributes.get('_FillValue', None)]
+    # Apply Fill Value
+    missing_value = attributes.get('_FillValue', None)
+    if missing_value is not None:
+        data = create_masked_array_for_missing_data(data, missing_value)
 
-    data = create_masked_array_for_missing_values(data, missing_values)
+    # Check for valid_range
+    valid_range = attributes.get('valid_range', None)
+    if valid_range is not None:
+        data = np.ma.masked_outside(data, *valid_range)
 
     # Offsets and scaling.
-    offset = attributes.get('add_offset', 0)
-    scale_factor = attributes.get('scale_factor', 1)
-    data = __apply_scaling_factor_MODIS(data, scale_factor, offset)
+    add_offset = attributes.get('add_offset', 0.0)
+    scale_factor = attributes.get('scale_factor', 1.0)
+    logging.warning("Applying standard offset and scaling for dataset - this may not be appropriate for HDF_EOS data!")
+    data = apply_offset_and_scaling(data, add_offset=add_offset, scale_factor=scale_factor)
 
     return data
 
@@ -219,48 +183,17 @@ def get_metadata(sds):
     from cis.data_io.ungridded_data import Metadata
 
     name = sds.info()[0]
-    long_name = sds.attributes().get('long_name', None)
-    shape = sds.info()[2]
-    units = sds.attributes().get('units')
-    valid_range = sds.attributes().get('valid_range')
-    factor = sds.attributes().get('scale_factor')
-    offset = sds.attributes().get('add_offset')
-    missing = sds.attributes().get('_FillValue')
 
-    # put the whole dictionary of attributes into 'misc'
-    # so that other metadata of interest can still be retrieved if need be
     misc = sds.attributes()
+    long_name = misc.pop('long_name', '')
+    units = misc.pop('units', '')
+    factor = misc.pop('scale_factor', None)
+    offset = misc.pop('add_offset', None)
+    missing = misc.pop('_FillValue', None)
 
-    metadata = Metadata(name=name, long_name=long_name, shape=shape, units=units, range=valid_range,
+    shape = sds.info()[2]
+
+    metadata = Metadata(name=name, long_name=long_name, shape=shape, units=units,
                         factor=factor, offset=offset, missing_value=missing, misc=misc)
 
     return metadata
-
-
-def __apply_scaling_factor_CALIPSO(data, scale_factor, offset):
-    """
-    Apply scaling factor (applicable to Calipso data) of the form:
-    ``data = (data/scale_factor) + offset``
-
-    :param data: A numpy array like object
-    :param scale_factor:
-    :param offset:
-    :return: Scaled data
-    """
-
-    data = (data/scale_factor) + offset
-    return data
-
-
-def __apply_scaling_factor_MODIS(data, scale_factor, offset):
-    """
-    Apply scaling factor (applicable to MODIS data) of the form:
-    ``data = (data - offset) * scale_factor``
-
-    :param data: A numpy array like object
-    :param scale_factor:
-    :param offset:
-    :return: Scaled data
-    """
-    data = (data - offset) * scale_factor
-    return data

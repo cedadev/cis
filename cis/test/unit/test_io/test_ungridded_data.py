@@ -78,10 +78,10 @@ class TestUngriddedData(TestCase):
         ug_data = make_regular_4d_ungridded_data()
         df = ug_data.as_data_frame()
 
-        assert_that(df['rain'][5] == 6)
+        assert_that(df['rainfall_flux'][5] == 6)
         assert_that(df['latitude'][17] == 0)
         assert_that(df['latitude'].ix[datetime(1984,8,31)][0] == 10)
-        assert_that(df['rain'].median() == 25.5)
+        assert_that(df['rainfall_flux'].median() == 25.5)
 
     @skip_pandas
     def test_GIVEN_ungridded_data_with_no_time_WHEN_call_as_data_frame_THEN_returns_valid_data_frame(self):
@@ -289,9 +289,9 @@ class TestUngriddedDataList(TestCase):
         data = np.reshape(np.arange(15) + 1.0, (5, 3))
         self.coords = CoordList([x, y])
 
-        ug1 = UngriddedData(data, Metadata(standard_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+        ug1 = UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                            units="kg m-2 s-1", missing_value=-999), self.coords)
-        ug2 = UngriddedData(data * 0.1, Metadata(standard_name='snow', long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
+        ug2 = UngriddedData(data * 0.1, Metadata(standard_name='snowfall_flux', long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
                                                  units="kg m-2 s-1", missing_value=-999), self.coords)
         self.ungridded_data_list = UngriddedDataList([ug1, ug2])
 
@@ -309,8 +309,8 @@ class TestUngriddedDataList(TestCase):
 
         df = self.ungridded_data_list.as_data_frame()
 
-        assert_that(df['rain'][5] == 6)
-        assert_almost_equal(df['snow'][5], 0.6)
+        assert_that(df['rainfall_flux'][5] == 6)
+        assert_almost_equal(df['snowfall_flux'][5], 0.6)
         assert_that(df['lat'][13] == 10)
         assert_that(df['lon'][0] == -5)
 
@@ -321,15 +321,15 @@ class TestUngriddedDataList(TestCase):
         data = np.ma.masked_array(d, np.zeros(d.shape, dtype=bool))
         data.mask[1,2] = True
 
-        ug3 = UngriddedData(data, Metadata(standard_name='hail', long_name="TOTAL HAIL RATE: LS+CONV KG/M2/S",
+        ug3 = UngriddedData(data, Metadata(name='hail', long_name="TOTAL HAIL RATE: LS+CONV KG/M2/S",
                                            units="kg m-2 s-1", missing_value=-999), self.coords)
 
         self.ungridded_data_list.append(ug3)
 
         df = self.ungridded_data_list.as_data_frame()
 
-        assert_that(df['rain'][5] == 6)
-        assert_almost_equal(df['snow'][5], 0.6)
+        assert_that(df['rainfall_flux'][5] == 6)
+        assert_almost_equal(df['snowfall_flux'][5], 0.6)
         assert_that(df['lat'][13] == 10)
         assert_that(df['lon'][0] == -5)
         assert_almost_equal(df['hail'][1], 11.0)

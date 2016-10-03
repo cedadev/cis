@@ -107,6 +107,14 @@ class UngriddedHyperPointView(HyperPointView):
         for idx in range(self.length):
             yield self.__getitem__(idx)
 
+    def enumerate_all_points(self):
+        """Iterates over non-masked points returning the index in the full
+        data array and the corresponding HyperPoint.
+        :return: tuple(index of point, HyperPoint)
+        """
+        for idx in range(self.length):
+            yield (idx, self.__getitem__(idx))
+
     def iter_non_masked_points(self):
         """Iterates over non-masked points regardless of the value of non_masked_iteration
         :return: next HyperPoint

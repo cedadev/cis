@@ -545,9 +545,9 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         cube_out = agg.aggregate_ungridded(self.kernel)
 
-        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
+        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_can_name_variables_by_standard_name(self):
@@ -561,9 +561,9 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         cube_out = agg.aggregate_ungridded(self.kernel)
 
-        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
+        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_aggregating_single_point_in_one_dimension_lower_bound_edge_case(self):
@@ -578,9 +578,9 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         cube_out = agg.aggregate_ungridded(self.kernel)
 
-        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
+        result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_aggregating_single_point_in_one_dimension_upper_bound_edge_case(self):
@@ -595,9 +595,9 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         cube_out = agg.aggregate_ungridded(self.kernel)
 
-        result = numpy.ma.array([[0], [0], [0.0], [1.0], [0]], mask=[[1], [1], [1], [0], [1]], fill_value=float('inf'))
+        result = numpy.ma.array([[0], [0], [0.0], [1.0], [0]], mask=[[1], [1], [1], [0], [1]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_aggregating_edge_cases(self):
@@ -619,7 +619,7 @@ class TestUngriddedAggregation(TestCase):
                               [10.0, 11.0]])  # 12.0],
         # [13.0, 14.0, 15.0]],
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
@@ -639,9 +639,9 @@ class TestUngriddedAggregation(TestCase):
                                       [0, 1, 0],
                                       [0, 0, 1],
                                       [0, 0, 0],
-                                      [1, 0, 0]], fill_value=float('inf'))
+                                      [1, 0, 0]], fill_value=float('nan'))
 
-        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_mean_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -655,9 +655,9 @@ class TestUngriddedAggregation(TestCase):
         result = numpy.ma.array([[2.5, 2.0, 4.5],
                                  [8.5, 11.0, 13.5]],
                                 mask=[[0, 0, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
+                                      [0, 0, 0]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_max_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -673,9 +673,9 @@ class TestUngriddedAggregation(TestCase):
         result = numpy.ma.array([[4.0, 2.0, 6.0],
                                  [10.0, 14.0, 15.0]],
                                 mask=[[0, 0, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
+                                      [0, 0, 0]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_min_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -691,9 +691,9 @@ class TestUngriddedAggregation(TestCase):
         result = numpy.ma.array([[1.0, 2.0, 3.0],
                                  [7.0, 8.0, 12.0]],
                                 mask=[[0, 0, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
+                                      [0, 0, 0]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     @istest
     def test_stddev_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -709,9 +709,9 @@ class TestUngriddedAggregation(TestCase):
         result = numpy.ma.array([[numpy.sqrt(4.5), float('NaN'), numpy.sqrt(4.5)],
                                  [numpy.sqrt(4.5), 3.0, numpy.sqrt(4.5)]],
                                 mask=[[0, 1, 0],
-                                      [0, 0, 0]], fill_value=float('inf'))
+                                      [0, 0, 0]], fill_value=float('nan'))
 
-        assert_arrays_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
 
     def test_aggregation_one_dim_using_moments_kernel(self):
         self.kernel = moments()
@@ -763,14 +763,14 @@ class TestUngriddedAggregation(TestCase):
         grid = {'x': AggregationGrid(125, 270, 40, False)}
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
-        assert_arrays_equal(output[0].data, [[13.5, 5.5, 6.5, 7.5]])
+        numpy.testing.assert_array_equal(output[0].data, [[13.5, 5.5, 6.5, 7.5]])
 
     def test_aggregating_on_grid_minus_180_to_180_when_data_is_0_to_360(self):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=5., lon_max=325.)
         grid = {'x': AggregationGrid(-75, 125, 40, False)}
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
-        assert_arrays_equal(output[0].data, [[12.5, 13.5, 5.5, 6.5, 7.5]])
+        numpy.testing.assert_array_equal(output[0].data, [[12.5, 13.5, 5.5, 6.5, 7.5]])
 
     def test_collapsed_coords_get_output_as_length_1(self):
         data = make_regular_2d_ungridded_data()
@@ -786,7 +786,7 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
         lon = output.coord('longitude')
-        assert_arrays_equal(lon.bounds, [[-5, 5]])
+        numpy.testing.assert_array_equal(lon.bounds, [[-5, 5]])
 
     def test_aggregating_coord_to_length_one_with_explicit_bounds_gets_output_as_length_one(self):
         data = make_regular_2d_ungridded_data()
@@ -802,7 +802,7 @@ class TestUngriddedAggregation(TestCase):
         agg = Aggregator(data, grid)
         output = agg.aggregate_ungridded(self.kernel)
         lon = output.coord('longitude')
-        assert_arrays_equal(lon.bounds, [[-180, 180]])
+        numpy.testing.assert_array_equal(lon.bounds, [[-180, 180]])
 
 
 class TestUngriddedListAggregation(TestCase):
@@ -828,12 +828,12 @@ class TestUngriddedListAggregation(TestCase):
                                       [0, 1, 0],
                                       [0, 0, 1],
                                       [0, 0, 0],
-                                      [1, 0, 0]], fill_value=float('inf'))
+                                      [1, 0, 0]], fill_value=float('nan'))
 
         print(cube_out[0].data.fill_value)
         assert len(cube_out) == 2
-        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
-        assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result))
 
     def test_aggregation_one_dim_using_moments_kernel(self):
         self.kernel = moments()
@@ -923,7 +923,7 @@ class TestUngriddedListAggregation(TestCase):
                                       [0, 1, 0],
                                       [0, 0, 1],
                                       [0, 0, 0],
-                                      [1, 0, 0]], fill_value=float('inf'))
+                                      [1, 0, 0]], fill_value=float('nan'))
 
         result_1 = numpy.ma.array([[1.0, 2.0, 3.0],
                                    [4.0, 5.0, 6.0],
@@ -934,9 +934,9 @@ class TestUngriddedListAggregation(TestCase):
                                         [1, 1, 1],
                                         [1, 1, 1],
                                         [1, 1, 1],
-                                        [1, 1, 1]], fill_value=float('inf'))
+                                        [1, 1, 1]], fill_value=float('nan'))
 
         print(cube_out[0].data.fill_value)
         assert len(cube_out) == 2
-        assert numpy.array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result_1))
-        assert numpy.array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result_0))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[0].data), numpy.ma.filled(result_1))
+        numpy.testing.assert_array_equal(numpy.ma.filled(cube_out[1].data), numpy.ma.filled(result_0))

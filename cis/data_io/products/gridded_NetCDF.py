@@ -24,6 +24,9 @@ class NetCDF_Gridded(AProduct):
     def get_variable_names(self, filenames, data_type=None):
         import iris
         import cf_units as unit
+        # Removes warnings and prepares for future Iris change
+        iris.FUTURE.netcdf_promote = True
+
         variables = []
         cubes = iris.load(filenames)
 
@@ -113,17 +116,15 @@ class NetCDF_Gridded(AProduct):
 
         try:
             cube = gridded_data.load_cube(filenames, variable_constraint, callback=callback_function)
-        except iris.exceptions.ConstraintMismatchError as e:
+        except ValueError as e:
             if variable is None:
                 message = "File contains more than one cube variable name must be specified"
-            elif e.message == "no cubes found":
+            elif e.args[0] == "No cubes found":
                 message = "Variable not found: {} \nTo see a list of variables run: cis info {}" \
                     .format(str(variable), filenames[0])
             else:
                 message = e.args[0]
             raise InvalidVariableError(message)
-        except ValueError as e:
-            raise IOError(str(e))
 
         self._add_available_aux_coords(cube, filenames)
 
@@ -180,7 +181,7 @@ class NetCDF_Gridded(AProduct):
                 aux_cube = gridded_data.load_cube(filenames, constraint)
                 aux_coord, dims = make_aux_coord(aux_cube)
                 cube.add_aux_coord(aux_coord, dims)
-            except iris.exceptions.ConstraintMismatchError:
+            except ValueError:
                 pass  # The field doesn't exist; that's OK we just won't add it.
 
 

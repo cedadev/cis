@@ -72,6 +72,7 @@ class Aggregator(object):
                 factory.update(*args, **kwargs)
 
     def _gridded_full_collapse(self, coords, kernel):
+        from cis.utils import demote_warnings
         from copy import deepcopy
         ag_args = {}
         if isinstance(kernel, iris.analysis.WeightedAggregator):
@@ -79,7 +80,11 @@ class Aggregator(object):
             # same grid)
             data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
             # Weights to correctly calculate areas.
-            ag_args['weights'] = iris.analysis.cartography.area_weights(data_for_weights)
+            logging.info("Calculating area weights for gridded collapse")
+            # Iris throws warnings about which radius it's using to calculate the weights, but these are really just
+            #  INFO level things.
+            with demote_warnings():
+                ag_args['weights'] = iris.analysis.cartography.area_weights(data_for_weights)
         elif not isinstance(kernel, iris.analysis.Aggregator):
             raise ClassNotFoundError('Error - unexpected aggregator type.')
 

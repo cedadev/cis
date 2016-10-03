@@ -2,8 +2,61 @@ import logging
 from cis.data_io import hdf as hdf
 from cis.data_io.Coord import CoordList, Coord
 from cis.data_io.products import AProduct
-from cis.data_io.ungridded_data import Metadata, UngriddedCoordinates, UngriddedData
-import cis.utils as utils
+from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData
+
+
+def _get_MODIS_SDS_data(sds):
+    """
+    Reads raw data from an SD instance.
+
+    :param sds: The specific sds instance to read
+    :return: A numpy array containing the raw data with missing data is replaced by NaN.
+    """
+    from cis.utils import create_masked_array_for_missing_data
+    import numpy as np
+
+    data = sds.get()
+    attributes = sds.attributes()
+
+    # Apply Fill Value
+    missing_value = attributes.get('_FillValue', None)
+    if missing_value is not None:
+        data = create_masked_array_for_missing_data(data, missing_value)
+
+    # Check for valid_range
+    valid_range = attributes.get('valid_range', None)
+    if valid_range is not None:
+        logging.debug("Masking all values {} > v > {}.".format(*valid_range))
+        data = np.ma.masked_outside(data, *valid_range)
+
+    # Offsets and scaling.
+    add_offset = attributes.get('add_offset', 0.0)
+    scale_factor = attributes.get('scale_factor', 1.0)
+    data = _apply_scaling_factor_MODIS(data, scale_factor, add_offset)
+
+    return data
+
+
+def _apply_scaling_factor_MODIS(data, scale_factor, offset):
+    """
+    Apply scaling factor (applicable to MODIS data) of the form:
+    ``data = (data - offset) * scale_factor``
+
+    Ref:
+    MODIS Atmosphere L3 Gridded Product Algorithm Theoretical Basis Document,
+    MODIS Algorithm Theoretical Basis Document No. ATBD-MOD-30 for
+    Level-3 Global Gridded Atmosphere Products (08_D3, 08_E3, 08_M3)
+    by PAUL A. HUBANKS, MICHAEL D. KING, STEVEN PLATNICK, AND ROBERT PINCUS
+    (Collection 005 Version 1.1, 4 December 2008)
+
+    :param data: A numpy array like object
+    :param scale_factor:
+    :param offset:
+    :return: Scaled data
+    """
+    logging.debug("Applying 'science_data = (packed_data - {offset}) * {scale}' "
+                  "transformation to data.".format(scale=scale_factor, offset=offset))
+    return (data - offset) * scale_factor
 
 
 class MODIS_L3(AProduct):
@@ -63,76 +116,75 @@ class MODIS_L3(AProduct):
 
         return variables
 
-    def _create_coord_list(self, filenames):
+    def _create_cube(self, filenames, variable):
         import numpy as np
+        from cis.data_io.hdf import _read_hdf4
+        from iris.cube import Cube, CubeList
+        from iris.coords import DimCoord, AuxCoord
         from cis.time_util import calculate_mid_time, cis_standard_time_unit
+        from cis.data_io.hdf_sd import get_metadata
+        from cf_units import Unit
 
-        variables = ['XDim', 'YDim']
+        variables = ['XDim', 'YDim', variable]
         logging.info("Listing coordinates: " + str(variables))
 
-        sdata, vdata = hdf.read(filenames, variables)
+        cube_list = CubeList()
+        # Read each file individually, let Iris do the merging at the end.
+        for f in filenames:
+            sdata, vdata = _read_hdf4(f, variables)
 
-        lat = sdata['YDim']
-        lat_metadata = hdf.read_metadata(lat, "SD")
+            lat_coord = DimCoord(_get_MODIS_SDS_data(sdata['YDim']), standard_name='latitude', units='degrees')
+            lon_coord = DimCoord(_get_MODIS_SDS_data(sdata['XDim']), standard_name='longitude', units='degrees')
 
-        lon = sdata['XDim']
-        lon_metadata = hdf.read_metadata(lon, "SD")
+            # create time coordinate using the midpoint of the time delta between the start date and the end date
+            start_datetime = self._get_start_date(f)
+            end_datetime = self._get_end_date(f)
+            mid_datetime = calculate_mid_time(start_datetime, end_datetime)
+            logging.debug("Using {} as datetime for file {}".format(mid_datetime, f))
+            time_coord = AuxCoord(mid_datetime, standard_name='time', units=cis_standard_time_unit,
+                                  bounds=[start_datetime, end_datetime])
 
-        # expand lat and lon data array so that they have the same shape
-        lat_data = utils.expand_1d_to_2d_array(hdf.read_data(lat, "SD"), lon_metadata.shape,
-                                               axis=1)  # expand latitude column wise
-        lon_data = utils.expand_1d_to_2d_array(hdf.read_data(lon, "SD"), lat_metadata.shape,
-                                               axis=0)  # expand longitude row wise
+            var = sdata[variable]
+            metadata = get_metadata(var)
 
-        lat_metadata.shape = lat_data.shape
-        lon_metadata.shape = lon_data.shape
+            try:
+                units = Unit(metadata.units)
+            except ValueError:
+                logging.warning("Unable to parse units '{}' in {} for {}.".format(metadata.units, f, variable))
+                units = None
 
-        # to make sure "Latitude" and "Longitude", i.e. the standard_name is displayed instead of "YDim"and "XDim"
-        lat_metadata.standard_name = "latitude"
-        lat_metadata._name = ""
-        lon_metadata.standard_name = "longitude"
-        lon_metadata._name = ""
+            cube = Cube(_get_MODIS_SDS_data(sdata[variable]),
+                        dim_coords_and_dims=[(lon_coord, 1), (lat_coord, 0)],
+                        aux_coords_and_dims=[(time_coord, None)],
+                        var_name=metadata._name, long_name=metadata.long_name, units=units)
 
-        # create arrays for time coordinate using the midpoint of the time delta between the start date and the end date
-        time_data_array = []
-        for filename in filenames:
-            mid_datetime = calculate_mid_time(self._get_start_date(filename), self._get_end_date(filename))
-            logging.debug("Using " + str(mid_datetime) + " as datetime for file " + str(filename))
-            # Only use part of the full lat shape as it has already been concatenated
-            time_data = np.empty((lat_metadata.shape[0] / len(filenames), lat_metadata.shape[1]), dtype='float64')
-            time_data.fill(mid_datetime)
-            time_data_array.append(time_data)
-        time_data = utils.concatenate(time_data_array)
-        time_metadata = Metadata(name='DateTime', standard_name='time', shape=time_data.shape,
-                                 units=str(cis_standard_time_unit), calendar=cis_standard_time_unit.calendar)
+            cube_list.append(cube)
 
-        coords = CoordList()
-        coords.append(Coord(lon_data, lon_metadata, 'X'))
-        coords.append(Coord(lat_data, lat_metadata, 'Y'))
-        coords.append(Coord(time_data, time_metadata, 'T'))
-
-        return coords
+        # Merge the cube list across the scalar time coordinates before returning a single cube.
+        return cube_list.merge_cube()
 
     def create_coords(self, filenames, variable=None):
-        return UngriddedCoordinates(self._create_coord_list(filenames))
+        """Reads the coordinates on which a variable depends.
+        Note: This calls create_data_object because the coordinates are returned as a Cube.
+        :param filenames: list of names of files from which to read coordinates
+        :param variable: name of variable for which the coordinates are required
+        :return: iris.cube.Cube
+        """
+        if variable is None:
+            variable_names = self.get_variable_names(filenames)
+            variable_name = str(variable_names.pop())
+            logging.debug("Reading an IRIS Cube for the coordinates based on the variable %s" % variable_names)
+        else:
+            variable_name = variable
+
+        return self.create_data_object(filenames, variable_name)
 
     def create_data_object(self, filenames, variable):
-
+        from cis.data_io.gridded_data import make_from_cube
         logging.debug("Creating data object for variable " + variable)
 
-        # reading coordinates
-        # the variable here is needed to work out whether to apply interpolation to the lat/lon data or not
-        coords = self._create_coord_list(filenames)
-
-        # reading of variables
-        sdata, vdata = hdf.read(filenames, variable)
-
-        # retrieve data + its metadata
-        var = sdata[variable]
-        metadata = hdf.read_metadata(var, "SD")
-
-        data = UngriddedData(var, metadata, coords)
-        return data
+        cube = self._create_cube(filenames, variable)
+        return make_from_cube(cube)
 
     def get_file_format(self, filename):
         return "HDF4/ModisL3"
@@ -213,14 +265,17 @@ class MODIS_L2(AProduct):
             apply_interpolation = True if scale is "1km" else False
 
         lat = sdata['Latitude']
-        sd_lat = hdf.read_data(lat, "SD")
+        sd_lat = hdf.read_data(lat, _get_MODIS_SDS_data)
         lat_data = self.__field_interpolate(sd_lat) if apply_interpolation else sd_lat
         lat_metadata = hdf.read_metadata(lat, "SD")
         lat_coord = Coord(lat_data, lat_metadata, 'Y')
 
         lon = sdata['Longitude']
-        lon_data = self.__field_interpolate(hdf.read_data(lon, "SD")) if apply_interpolation else hdf.read_data(lon,
-                                                                                                                "SD")
+        if apply_interpolation:
+            lon_data = self.__field_interpolate(hdf.read_data(lon, _get_MODIS_SDS_data))
+        else:
+            lon_data = hdf.read_data(lon, _get_MODIS_SDS_data)
+
         lon_metadata = hdf.read_metadata(lon, "SD")
         lon_coord = Coord(lon_data, lon_metadata, 'X')
 
@@ -228,7 +283,7 @@ class MODIS_L2(AProduct):
         time_metadata = hdf.read_metadata(time, "SD")
         # Ensure the standard name is set
         time_metadata.standard_name = 'time'
-        time_coord = Coord(time, time_metadata, "T")
+        time_coord = Coord(time, time_metadata, "T", _get_MODIS_SDS_data)
         time_coord.convert_TAI_time_to_std_time(dt.datetime(1993, 1, 1, 0, 0, 0))
 
         return CoordList([lat_coord, lon_coord, time_coord])
@@ -250,7 +305,8 @@ class MODIS_L2(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords)
+        return UngriddedData(var, metadata, coords, _get_MODIS_SDS_data)
+
 
     def get_file_format(self, filenames):
         """

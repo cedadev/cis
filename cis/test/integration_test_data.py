@@ -3,8 +3,16 @@ Module that contains various strings that are used in tests
 """
 from collections import namedtuple
 from datetime import datetime
-
+from unittest import skipIf
 import os
+
+try:
+    import pyhdf
+except ImportError:
+    # Disable all these tests if pandas is not installed.
+    pyhdf = None
+
+skip_pyhdf = skipIf(pyhdf is None, 'Test(s) require "pandas", which is not available.')
 
 # A dictionary of test file tuples indexed by characteristic name
 cis_test_files = {}
@@ -29,10 +37,14 @@ TestFileTestData = namedtuple('TestFile',
 data_directory = os.environ.get("CIS_DATA_HOME", os.path.dirname(__file__))
 
 
+def escape_colons(filename):
+    if os.name == 'nt':
+        filename = filename.replace(':', '\:')
+    return filename
+
+
 def make_pathname(filename):
     path = os.path.join(data_directory, filename)
-    if os.name == 'nt':
-        path = path.replace(':', '\:')
     return path
 
 
@@ -89,6 +101,7 @@ modis_myd06_l2_filenames = [make_pathname("MYD06_L2.A2011100.1720.051.2011102130
 modis_myd06_l2_variable = "Surface_Temperature"
 
 valid_modis_l3_filename = make_pathname("MOD08_E3.A2010009.005.2010026072315.hdf")
+valid_modis_l3_filename2 = make_pathname("MOD08_E3.A2010017.005.2010029140340.hdf")
 valid_modis_l3_variable = "Solar_Zenith_Std_Deviation_Mean"
 cis_test_files["modis_L3"] = TestFileTestData(
     master_filename=valid_modis_l3_filename,
@@ -149,7 +162,7 @@ cis_test_files["Aerosol_CCI"] = TestFileTestData(
     lon_min=-22.25,
     lon_max=160.48,
     valid_vars_count=32,
-    all_variable_names=None,
+    all_variable_names=[valid_aerosol_cci_variable, valid_aerosol_cci_variable_2],
     data_variable_name=valid_aerosol_cci_variable,
     data_variable_standard_name='atmosphere_optical_thickness_due_to_aerosol',
     data_variable_properties={}
@@ -413,7 +426,7 @@ cis_test_files["NCAR_NetCDF_RAF"] = TestFileTestData(
     lon_max=62,
     #    alt_min=20.5,
     #    alt_max=3678.5,
-    valid_vars_count=117,
+    valid_vars_count=121,
     all_variable_names=None,
     data_variable_name='ATX',
     data_variable_standard_name="ATX",
@@ -438,8 +451,7 @@ cis_test_files["GASSP_aux_coord"] = TestFileTestData(
     lon_max=-155.102,
     #    alt_min=20.5,
     #    alt_max=3678.5,
-    all_variable_names=["TIME", "LATITUDE", "LONGITUDE", "PRESSURE_ALTITUDE", "NUMDIST_DMA_OPC", "AREADIST_DMA_OPC",
-                        "VOLDIST_DMA_OPC", "AIR_TEMPERATURE", "RELATIVE_HUMIDITY", "DYNAMIC_PRESSURE", "AIR_PRESSURE"],
+    all_variable_names=["NUMDIST_DMA_OPC", "AREADIST_DMA_OPC", "VOLDIST_DMA_OPC",],
     valid_vars_count=11,
     data_variable_name='NUMDIST_DMA_OPC',
     data_variable_standard_name='NUMDIST_DMA_OPC',

@@ -2,18 +2,36 @@ from time import gmtime, strftime
 import logging
 
 import iris
-from iris.cube import CubeList
 import numpy as np
 
 from cis.data_io.common_data import CommonData, CommonDataList
 from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.hyperpoint_view import GriddedHyperPointView
 
-from iris.std_names import STD_NAMES
-
 
 def load_cube(*args, **kwargs):
-    iris_cube = iris.load_cube(*args, **kwargs)
+    """
+    Load a single GriddedData object through the iris load interface, but also attempt concatenation if merging fails
+
+    :return GriddedData: A single GriddedData object
+    :raises ValueError: If 0 or more than one cube is found
+    """
+    from iris.exceptions import MergeError, ConcatenateError
+    # Removes warnings and prepares for future Iris change
+    iris.FUTURE.netcdf_promote = True
+
+    cubes = iris.load(*args, **kwargs)
+    try:
+        iris_cube = cubes.merge_cube()
+    except MergeError as e:
+        logging.info("Unable to merge cubes on load: \n {}\nAttempting to concatenate instead.".format(e))
+        try:
+            iris_cube = cubes.concatenate_cube()
+        except ConcatenateError as e:
+            logging.error("Unable to concatenate cubes on load: \n {}".format(e))
+            raise ValueError("Unable to create a single cube from arguments given: {}".format(args))
+    except ValueError as e:
+        raise ValueError("No cubes found")
     return make_from_cube(iris_cube)
 
 
