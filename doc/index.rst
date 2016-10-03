@@ -22,6 +22,7 @@ Contents:
    collocation
    collocation_examples
    plotting
+   gallery
    evaluation
    statistics
    overlay_examples

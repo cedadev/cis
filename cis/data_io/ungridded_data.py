@@ -5,7 +5,7 @@ import logging
 from time import gmtime, strftime
 import numpy
 
-from cis import utils
+import six
 from cis.data_io.netcdf import get_data as netcdf_get_data
 from cis.data_io.hdf_vd import get_data as hdf_vd_get_data
 from cis.data_io.hdf_sd import get_data as hdf_sd_get_data
@@ -21,13 +21,16 @@ class Metadata(object):
         return cls(name=cube_meta.var_name, standard_name=cube_meta.standard_name, long_name=cube_meta.long_name,
                    units=str(cube_meta.units), misc=cube_meta.attributes)
 
-    def __init__(self, name='', standard_name='', long_name='', shape='', units='', range='', factor='', offset='',
-                 missing_value='', calendar='', history='', misc=None):
+    def __init__(self, name='', standard_name='', long_name='', shape=None, units='', range=None, factor=None,
+                 offset=None, missing_value=None, calendar='', history='', misc=None):
         self._name = name
+
+        self._standard_name = ''
         if standard_name:
             self.standard_name = standard_name
         elif name:
             self.standard_name = Metadata.guess_standard_name(name)
+
         self.long_name = long_name
         self.shape = shape
         self.units = units
@@ -49,6 +52,7 @@ class Metadata(object):
         :param offset: The left hand padding to apply to the text
         :return: The summary
         """
+        from datetime import datetime
         string = ''
         string += '{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
         string += '{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
@@ -56,7 +60,13 @@ class Metadata(object):
         if self.calendar:
             string += '{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
         string += '{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
-        string += '{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=self.range)
+        # str(tuple) returns repr(obj) on each item in the tuple, if we have a datetime tuple then we want str(obj)
+        #  instead. Just make that ourselves here instead (as a str to avoid the extra quotes if we make a 'real' tuple)
+        if isinstance(self.range[0], datetime):
+            range_tuple = '({}, {})'.format(*self.range)
+        else:
+            range_tuple = self.range
+        string += '{pad:{width}}Range = {range}\n'.format(pad=' ', width=offset, range=range_tuple)
         string += '{pad:{width}}History = {history}\n'.format(pad=' ', width=offset, history=self.history)
         if self.misc:
             string += '{pad:{width}}Misc attributes: \n'.format(pad=' ', width=offset)
@@ -65,31 +75,32 @@ class Metadata(object):
         return string
 
     def __str__(self):
-        return self.summary().encode(errors='replace')
+        # six has a decorator for this bit, but it doesn't do errors='replace'.
+        if six.PY3:
+            return self.summary()
+        else:
+            return self.summary().encode(errors='replace')
 
     def __unicode__(self):
         return self.summary()
 
-    def alter_standard_name(self, new_standard_name):
-        """
-        Alter the standard name and log an info line to say this is happening if the standard name is not empty.
-        Also changes internal name for metadata or the same.
+    @property
+    def standard_name(self):
+        return self._standard_name
 
-        :param new_standard_name:
-        """
-        if self.standard_name is not None \
-                and self.standard_name.strip() is not "" \
-                and self.standard_name != new_standard_name:
-            logging.info("Changing standard name for dataset from '{}' to '{}'"
-                         .format(self.standard_name, new_standard_name))
-        self.standard_name = new_standard_name
-
-        if self._name is not None \
-                and self._name.strip() is not "" \
-                and self._name != new_standard_name:
-            logging.info("Changing variable name for dataset from '{}' to '{}'"
-                         .format(self._name, new_standard_name))
-        self._name = new_standard_name
+    @standard_name.setter
+    def standard_name(self, standard_name):
+        from iris.std_names import STD_NAMES
+        if standard_name is None or standard_name in STD_NAMES:
+            # If the standard name is actually changing from one to another then log the fact
+            if self.standard_name is not None \
+                    and self.standard_name.strip() is not "" \
+                    and self.standard_name != standard_name:
+                logging.debug("Changing standard name for dataset from '{}' to '{}'".format(self.standard_name,
+                                                                                            standard_name))
+            self._standard_name = standard_name
+        else:
+            raise ValueError('%r is not a valid standard_name' % standard_name)
 
     @staticmethod
     def guess_standard_name(name):
@@ -320,15 +331,15 @@ class LazyData(object):
 
             try:
                 if standard_time:
-                    range = (str(cis_standard_time_unit.num2date(self.data.min())),
-                             str(cis_standard_time_unit.num2date(self.data.max())))
+                    range = (cis_standard_time_unit.num2date(self.data.min()),
+                             cis_standard_time_unit.num2date(self.data.max()))
                 else:
                     range = (self.data.min(), self.data.max())
             except ValueError as e:
                 # If we can't set a range for some reason then just leave it blank
                 range = ()
 
-        self.metadata.range = str(range)
+        self.metadata.range = range
 
 
 class UngriddedData(LazyData, CommonData):
@@ -445,6 +456,13 @@ class UngriddedData(LazyData, CommonData):
         data = numpy.ma.copy(self.data)  # This will load the data if lazy load
         coords = self.coords().copy()
         return UngriddedData(data=data, metadata=self.metadata, coords=coords)
+
+    @property
+    def size(self):
+        return self.data.size
+
+    def count(self):
+        return self.data.count() if hasattr(self.data, 'count') else self.data.size
 
     @property
     def history(self):
@@ -590,9 +608,8 @@ class UngriddedData(LazyData, CommonData):
         """
         summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
         summary += '     Shape = {}\n'.format(self.data.shape) + '\n'
-        summary += '     Total number of points = {}\n'.format(self.data.size)
-        num_non_masked_points = self.data.count() if hasattr(self.data, 'count') else self.data.size
-        summary += '     Number of non-masked points = {}\n'.format(num_non_masked_points)
+        summary += '     Total number of points = {}\n'.format(self.size)
+        summary += '     Number of non-masked points = {}\n'.format(self.count())
 
         summary += str(self.metadata)
 
@@ -605,10 +622,24 @@ class UngriddedData(LazyData, CommonData):
         return summary
 
     def __str__(self):
-        return self.summary().encode(errors='replace')
+        # six has a decorator for this bit, but it doesn't do errors='replace'.
+        if six.PY3:
+            return self.summary()
+        else:
+            return self.summary().encode(errors='replace')
 
     def __unicode__(self):
         return self.summary()
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        from cis.utils import fix_longitude_range
+        self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
     def subset(self, **kwargs):
         """
@@ -671,8 +702,6 @@ class UngriddedCoordinates(CommonData):
         else:
             raise ValueError("Invalid Coords type")
         self._post_process()
-        all_coords = self._coords.find_standard_coords()
-        self.coords_flattened = [(c.data_flattened if c is not None else None) for c in all_coords]
 
     def _post_process(self):
         """
@@ -696,8 +725,24 @@ class UngriddedCoordinates(CommonData):
                 coord.update_range()
 
     @property
+    def coords_flattened(self):
+        all_coords = self.coords().find_standard_coords()
+        return [(c.data_flattened if c is not None else None) for c in all_coords]
+
+    @property
     def history(self):
         return "UngriddedCoordinates have no history"
+
+    @property
+    def size(self):
+        if len(self._coords) > 1:
+            return self._coords[0].data.size
+        else:
+            return 0
+
+    def count(self):
+        # There can be no masked coordinate points
+        return self.size
 
     @property
     def x(self):
@@ -781,6 +826,16 @@ class UngriddedCoordinates(CommonData):
         """Returns value indicating whether the data/coordinates are gridded.
         """
         return False
+
+    def set_longitude_range(self, range_start):
+        """
+        Rotates the longitude coordinate array and changes its values by
+        360 as necessary to force the values to be within a 360 range starting
+        at the specified value.
+        :param range_start: starting value of required longitude range
+        """
+        from cis.utils import fix_longitude_range
+        self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
     def subset(self, **kwargs):
         raise NotImplementedError("Subset is not available for UngriddedCoordinates objects")

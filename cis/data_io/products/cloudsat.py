@@ -70,7 +70,7 @@ class CloudSat(AProduct):
 
             # altitude coordinate
             height = sdata['Height']
-            height_data = hdf.read_data(height, "SD")
+            height_data = hdf.read_data(height, self._get_cloudsat_sds_data)
             height_metadata = hdf.read_metadata(height, "SD")
             height_coord = Coord(height_data, height_metadata, "Y")
 
@@ -85,7 +85,7 @@ class CloudSat(AProduct):
 
         # latitude
         lat = vdata['Latitude']
-        lat_data = hdf.read_data(lat, "VD")
+        lat_data = hdf.read_data(lat, self._get_cloudsat_vds_data)
         if height_data is not None:
             lat_data = utils.expand_1d_to_2d_array(lat_data, len(height_data[0]), axis=1)
         lat_metadata = hdf.read_metadata(lat, "VD")
@@ -94,7 +94,7 @@ class CloudSat(AProduct):
 
         # longitude
         lon = vdata['Longitude']
-        lon_data = hdf.read_data(lon, "VD")
+        lon_data = hdf.read_data(lon, self._get_cloudsat_vds_data)
         if height_data is not None:
             lon_data = utils.expand_1d_to_2d_array(lon_data, len(height_data[0]), axis=1)
         lon_metadata = hdf.read_metadata(lon, "VD")
@@ -123,7 +123,6 @@ class CloudSat(AProduct):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
-
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -132,26 +131,130 @@ class CloudSat(AProduct):
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
 
-        # missing values
-        missing_values = [0, -9999, -4444, -3333]
-
         # retrieve data + its metadata
         if variable in vdata:
             # vdata should be expanded in the same way as the coordinates are expanded
             try:
                 height_length = coords.get_coord('Height').shape[1]
-                var = utils.expand_1d_to_2d_array(hdf.read_data(vdata[variable], "VD", missing_values),
+                var = utils.expand_1d_to_2d_array(hdf.read_data(vdata[variable], self._get_cloudsat_vds_data),
                                                   height_length, axis=1)
             except CoordinateNotFoundError:
-                var = hdf.read_data(vdata[variable], "VD", missing_values)
+                var = hdf.read_data(vdata[variable], self._get_cloudsat_vds_data)
             metadata = hdf.read_metadata(vdata[variable], "VD")
         elif variable in sdata:
-            var = hdf.read_data(sdata[variable], "SD", missing_values)
+            var = hdf.read_data(sdata[variable], self._get_cloudsat_sds_data)
             metadata = hdf.read_metadata(sdata[variable], "SD")
         else:
             raise ValueError("variable not found")
 
         return UngriddedData(var, metadata, coords)
+
+    def _get_cloudsat_vds_data(self, vds):
+        from cis.data_io.hdf_vd import _get_attribute_value, HDF, HDF4Error
+        from cis.utils import create_masked_array_for_missing_data
+        import numpy as np
+
+        # get file and variable reference from tuple
+        filename = vds.filename
+        variable = vds.variable
+
+        try:
+            datafile = HDF(filename)
+        except HDF4Error as e:
+            raise IOError(e)
+
+        vs = datafile.vstart()
+        vd = vs.attach(variable)
+        data = vd.read(nRec=vd.inquire()[0])
+
+        # create numpy array from data
+        data = np.array(data).flatten()
+
+        missing_value = _get_attribute_value(vd, 'missing', None)
+
+        if missing_value is not None:
+            data = create_masked_array_for_missing_data(data, missing_value)
+
+        valid_range = _get_attribute_value(vd, "valid_range")
+        if valid_range is not None:
+            # Assume it's the right data type already
+            data = np.ma.masked_outside(data, *valid_range)
+
+        factor = _get_attribute_value(vd, "factor", 1)
+        offset = _get_attribute_value(vd, "offset", 0)
+        data = self._apply_scaling_factor_CLOUDSAT(data, factor, offset)
+
+        # detach and close
+        vd.detach()
+        vs.end()
+        datafile.close()
+
+        return data
+
+    def _get_cloudsat_sds_data(self, sds):
+        """
+        Reads raw data from an SD instance. Automatically applies the
+        scaling factors and offsets to the data arrays often found in NASA HDF-EOS
+        data (e.g. MODIS)
+
+        :param sds: The specific sds instance to read
+        :return: A numpy array containing the raw data with missing data is replaced by NaN.
+        """
+        from cis.utils import create_masked_array_for_missing_data
+        import numpy as np
+        data = sds.get()
+        attributes = sds.attributes()
+
+        # First deal with the Fill value
+        fill_value = attributes.get('_FillValue', None)
+
+        if fill_value is not None:
+            data = create_masked_array_for_missing_data(data, fill_value)
+
+        # TODO: This needs some explict integration and unit tests
+        # Then deal with missing values
+        missop_fn = {'<': np.ma.masked_less,
+                     '<=': np.ma.masked_less_equal,
+                     '==': np.ma.masked_equal,
+                     '=>': np.ma.masked_greater_equal,
+                     '>': np.ma.masked_greater}
+
+        missing = attributes.get('missing', None)
+        missop = attributes.get('missop', None)
+        if missing is not None and missop is not None:
+            try:
+                logging.debug("Masking all values v {} {}".format(missop, missing))
+                data = missop_fn[missop](data, missing)
+            except KeyError:
+                logging.warning("Unable to identify missop {}, unable to "
+                                "mask missing values for {}.".format(missop, sds.info()[0]))
+
+        # Now handle valid range mask
+        valid_range = attributes.get('valid_range', None)
+        if valid_range is not None:
+            # Assume it's the right data type already
+            logging.debug("Masking all values {} > v > {}.".format(*valid_range))
+            data = np.ma.masked_outside(data, *valid_range)
+
+        # Offsets and scaling.
+        offset = attributes.get('offset', 0)
+        scale_factor = attributes.get('factor', 1)
+        data = self._apply_scaling_factor_CLOUDSAT(data, scale_factor, offset)
+
+        return data
+
+    def _apply_scaling_factor_CLOUDSAT(self, data, scale_factor, offset):
+        """
+        Using transformation supplied by Phil Partain (cloudsat@colostate.edu) by email on 5th August 2016
+
+        :param data:
+        :param scale_factor:
+        :param offset:
+        :return:
+        """
+        logging.debug("Applying 'science_data = (packed_data - {offset}) / {scale}' "
+                      "transformation to data.".format(scale=scale_factor, offset=offset))
+        return (data - offset) / scale_factor
 
     def get_file_format(self, filename):
         return "HDF4/CloudSat"

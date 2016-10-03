@@ -15,21 +15,35 @@ def initialise_top_parser():
     """
     The parser to which all arguments are initially passed
     """
-    parser = argparse.ArgumentParser("cis")
+    global_options = argparse.ArgumentParser(add_help=False)
+    verbosity_group = global_options.add_mutually_exclusive_group()
+    verbosity_group.add_argument("-v", "--verbose", action='count',
+                                 help="Increase the level of logging information output to screen to include "
+                                      "'Info' statements")
+    verbosity_group.add_argument("-q", "--quiet", action='store_true',
+                                 help="Suppress all output to the screen, only 'Error' messages will be displayed "
+                                      "(which are always fatal).")
+    global_options.add_argument("--force-overwrite", action='store_true',
+                                help="Do not prompt when an output file already exists - always overwrite. This can "
+                                     "also be set by setting the 'CIS_FORCE_OVERWRITE' environment variable to 'TRUE'")
+
+    parser = argparse.ArgumentParser("cis", parents=[global_options])
+
     subparsers = parser.add_subparsers(dest='command')
-    plot_parser = subparsers.add_parser("plot", help="Create plots")
+    plot_parser = subparsers.add_parser("plot", help="Create plots", parents=[global_options])
     add_plot_parser_arguments(plot_parser)
-    info_parser = subparsers.add_parser("info", help="Get information about a file")
+    info_parser = subparsers.add_parser("info", help="Get information about a file", parents=[global_options])
     add_info_parser_arguments(info_parser)
-    col_parser = subparsers.add_parser("col", help="Perform collocation")
+    col_parser = subparsers.add_parser("col", help="Perform collocation", parents=[global_options])
     add_col_parser_arguments(col_parser)
-    aggregate_parser = subparsers.add_parser("aggregate", help="Perform aggregation")
+    aggregate_parser = subparsers.add_parser("aggregate", help="Perform aggregation", parents=[global_options])
     add_aggregate_parser_arguments(aggregate_parser)
-    subset_parser = subparsers.add_parser("subset", help="Perform subsetting")
+    subset_parser = subparsers.add_parser("subset", help="Perform subsetting", parents=[global_options])
     add_subset_parser_arguments(subset_parser)
-    eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression")
+    eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression", parents=[global_options])
     add_eval_parser_arguments(eval_parser)
-    stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets")
+    stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets",
+                                         parents=[global_options])
     add_stats_parser_arguments(stats_parser)
     subparsers.add_parser("version", help="Display the CIS version number")
     return parser
@@ -121,11 +135,9 @@ def add_plot_parser_arguments(parser):
 
 
 def add_info_parser_arguments(parser):
-    parser.add_argument("filenames", metavar="Filenames", help="The filenames of the files to inspect", nargs='*')
-    parser.add_argument("-v", "--variables", metavar="Variable(s)", nargs="+", help="The variable(s) to inspect")
-    parser.add_argument("--product", metavar="The specific data product to use", nargs="?",
-                        help="CIS will try and automatically determine the best product to use, but this option can"
-                             "override CIS to specify a different data product to use for reading the data..")
+    parser.add_argument("datagroups", metavar="DataGroups", nargs=1,
+                        help="Variables and files to inspect, which needs to be entered in the format "
+                             "[variables:]filename[:product=].")
     parser.add_argument("--type", metavar="Type of HDF data", nargs="?",
                         help="Can be 'VD' or 'SD'. Use 'All' for both.")
     return parser
@@ -803,12 +815,28 @@ def _split_output_if_includes_variable_name(arguments, parser):
             parser.error("Invalid output path: should be a filename with one optional variable prefix.")
 
 
-def _validate_output_file(arguments, parser):
+def _validate_output_file(arguments, parser, default_ext='.nc'):
     _split_output_if_includes_variable_name(arguments, parser)
-    if not arguments.output.endswith('.nc'):
-        arguments.output += '.nc'
+    if not os.path.splitext(arguments.output)[1]:
+        arguments.output += default_ext
+    if _file_already_exists_and_no_overwrite(arguments):
+        parser.exit(status=0, message="No operation performed")
     if _output_file_matches_an_input_file(arguments):
         parser.error("The input file must not be the same as the output file")
+
+
+def _file_already_exists_and_no_overwrite(arguments):
+    from six.moves import input
+    # If the file already exists, and we haven't set the overwrite flag or env var, then prompt
+    if os.path.isfile(arguments.output) and \
+            not (arguments.force_overwrite or os.environ.get("CIS_FORCE_OVERWRITE", "false").lower() == "true"):
+        overwrite = None
+        while overwrite not in ['y', 'n', '']:
+            overwrite = input("The file: {} already exists. Overwrite? (y/[n])")
+        if overwrite != 'y':
+            return True
+        # Otherwise False
+    return False
 
 
 def _output_file_matches_an_input_file(arguments):
@@ -879,11 +907,21 @@ def validate_plot_args(arguments, parser):
     arguments.xbinwidth = parse_float(arguments.xbinwidth, "x bin width", parser)
     arguments.ybinwidth = parse_float(arguments.ybinwidth, "y bin width", parser)
 
+    if arguments.output is not None:
+        _validate_output_file(arguments, parser, '.png')
+
     return arguments
 
 
 def validate_info_args(arguments, parser):
-    arguments.filenames = expand_file_list(','.join(arguments.filenames), parser)
+    split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', arguments.datagroups[0])]
+    if len(split_input) == 1:
+        # If there is only one part of the datagroup then it must be a file (or list of files). Return it as a dict to
+        #  match the behaviour of the datagroup parser.
+        arguments.datagroups = [{'filenames': expand_file_list(arguments.datagroups[0], parser),
+                                 'variables': None, 'product': None}]
+    else:
+        arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     return arguments
 
 
@@ -967,6 +1005,15 @@ def parse_args(arguments=None):
         # sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)
+    # Firstly deal with logging verbosity - in case we log anything in the validation
+    # The 'screen' handler is the first in the list
+    if main_args.quiet:
+        logging.getLogger().handlers[0].setLevel(logging.ERROR)
+    elif main_args.verbose == 1:
+        logging.getLogger().handlers[0].setLevel(logging.INFO)
+    elif main_args.verbose == 2:
+        logging.getLogger().handlers[0].setLevel(logging.DEBUG)
+
     main_args = validators[main_args.command](main_args, parser)
 
     return main_args

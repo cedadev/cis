@@ -21,7 +21,7 @@ class Coord(LazyData):
         metadata.shape = data.shape  # But update the shape
         return cls(data, metadata, coords[0].axis)
 
-    def __init__(self, data, metadata, axis=''):
+    def __init__(self, data, metadata, axis='', data_retrieval_callback=None):
         """
 
         :param data:
@@ -29,10 +29,10 @@ class Coord(LazyData):
         :param axis: A string label for the axis, e.g. 'X', 'Y', 'Z', or 'T'
         :return:
         """
-        super(Coord, self).__init__(data, metadata)
+        super(Coord, self).__init__(data, metadata, data_retrieval_callback)
         self.axis = axis.upper()
-        # Fix an issue where IRIS cannot parse units 'deg' (should be degrees).
-        if self.units == 'deg':
+        # Fix an issue where cf_units cannot parse units 'deg' (should be degrees).
+        if isinstance(self.units, str) and self.units == 'deg':
             self.units = 'degrees'
 
     @property

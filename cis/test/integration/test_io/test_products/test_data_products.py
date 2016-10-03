@@ -13,7 +13,7 @@ from iris.exceptions import TranslationError
 
 from cis.data_io.products import *
 from cis.exceptions import InvalidVariableError
-from cis.test.integration_test_data import non_netcdf_file, cis_test_files
+from cis.test.integration_test_data import non_netcdf_file, cis_test_files, skip_pyhdf
 from cis.data_io.products import CloudSat
 
 try:
@@ -144,6 +144,7 @@ class ProductTests(object):
         assert_that(file_format, is_(expected_file_format), "File format")
 
 
+@skip_pyhdf
 class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
     def setUp(self):
         from cis.test.integration_test_data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_sdata_variable, \
@@ -158,6 +159,7 @@ class TestCloudsatRVODsdata(ProductTests, unittest.TestCase):
         assert len(vars) == 47 + 22  # Expect 47 valid SD vars and 22 valid VD vars
 
 
+@skip_pyhdf
 class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
     def setUp(self):
         from cis.test.integration_test_data import valid_cloudsat_RVOD_file, valid_cloudsat_RVOD_vdata_variable, \
@@ -172,6 +174,7 @@ class TestCloudsatRVODvdata(ProductTests, unittest.TestCase):
         assert len(vars) == 47 + 22  # Expect 47 valid SD vars and 22 valid VD vars
 
 
+@skip_pyhdf
 class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
     def setUp(self):
         from cis.test.integration_test_data import valid_cloudsat_PRECIP_file, valid_cloudsat_PRECIP_variable, \
@@ -217,16 +220,20 @@ class TestCloudsatPRECIP(ProductTests, unittest.TestCase):
                      'Aux_dist_AMSR']
 
 
+
+@skip_pyhdf
 class TestCaliop_L2(ProductTests, unittest.TestCase):
     def setUp(self):
         self.setup(cis_test_files["caliop_L2"], Caliop_L2)
 
 
+@skip_pyhdf
 class TestCaliop_L1(ProductTests, unittest.TestCase):
     def setUp(self):
         self.setup(cis_test_files["caliop_L1"], Caliop_L1)
 
 
+@skip_pyhdf
 class TestMODIS_L3(ProductTests, unittest.TestCase):
     def setUp(self):
         self.setup(cis_test_files["modis_L3"], MODIS_L3)
@@ -234,7 +241,18 @@ class TestMODIS_L3(ProductTests, unittest.TestCase):
     def check_valid_vars(self, vars):
         assert len(vars) == 700
 
+    @nottest
+    def test_write_coords(self):
+        # Model data is gridded so IRIS takes care of this
+        pass
 
+    @nottest
+    def test_create_pandas_object(self):
+        # Cannot create pandas objects for data with > 2 dimensions
+        pass
+
+
+@skip_pyhdf
 class TestMODIS_L2(ProductTests, unittest.TestCase):
     def setUp(self):
 

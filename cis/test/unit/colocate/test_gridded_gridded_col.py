@@ -8,8 +8,7 @@ from iris.exceptions import CoordinateNotFoundError
 import numpy
 
 from cis.exceptions import ClassNotFoundError
-from cis.collocation.col_implementations import GriddedCollocator, gridded_gridded_nn, \
-    gridded_gridded_li, nn_gridded
+from cis.collocation.col_implementations import GriddedCollocator, gridded_gridded_nn, gridded_gridded_li, nn_p
 import cis.data_io.gridded_data as gridded_data
 from cis.test.util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
     make_dummy_2d_cube_with_small_offset_in_lat, make_dummy_2d_cube_with_small_offset_in_lon, \
@@ -36,7 +35,7 @@ class GriddedGriddedCollocatorTests(object):
 
         col = self.collocator
 
-        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=nn_gridded())[0]
+        out_cube = col.collocate(points=sample_cube, data=data_cube, constraint=None, kernel=nn_p())[0]
 
     @istest
     def test_gridded_gridded_nn_for_same_grids_check_returns_original_data(self):
@@ -352,7 +351,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     """
 
     def setUp(self):
-        self.collocator = GriddedCollocator()
+        self.collocator = GriddedCollocator(extrapolate=True)
 
     @istest
     def test_gridded_gridded_nn_with_both_grids_containing_time_and_small_offset(self):

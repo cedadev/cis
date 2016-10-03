@@ -61,7 +61,6 @@ def plot_cmd(main_arguments):
     """
     from cis.plotting.plot import Plotter
     from cis.data_io.data_reader import DataReader
-    import cis.exceptions as ex
 
     try:
         data = DataReader().read_datagroups(main_arguments.datagroups)
@@ -70,10 +69,15 @@ def plot_cmd(main_arguments):
                          "of data to be plotted, increase the swap space available on your machine or use a machine "
                          "with more memory (for example the JASMIN facility).")
 
+    # We have to pop off the arguments which plot isn't expecting so that it treats everything else as an mpl kwarg
     main_arguments = vars(main_arguments)
     main_arguments.pop('command')  # Remove the command argument now it is not needed
     plot_type = main_arguments.pop("type")
     output = main_arguments.pop("output")
+    # Also pop off the verbosity kwargs
+    _ = main_arguments.pop("quiet")
+    _ = main_arguments.pop("verbose")
+    _ = main_arguments.pop("force_overwrite")
 
     main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
     main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")
@@ -96,8 +100,8 @@ def info_cmd(main_arguments):
     :param main_arguments:    The command line arguments (minus the info command)
     """
     from cis.info import info
-
-    info(main_arguments.filenames, main_arguments.variables, main_arguments.product, main_arguments.type)
+    dg = main_arguments.datagroups[0]
+    info(dg['filenames'], dg['variables'], dg['product'], main_arguments.type)
 
 
 def col_cmd(main_arguments):
@@ -114,9 +118,9 @@ def col_cmd(main_arguments):
     if main_arguments.samplevariable is not None:
         sample_data = data_reader.read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
                                                  main_arguments.sampleproduct)[0]
+        missing_data_for_missing_samples = True
     else:
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
-        missing_data_for_missing_samples = True
 
     col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup[
                                                                   'collocator'] is not None else ''
@@ -264,7 +268,7 @@ def stats_cmd(main_arguments):
 
 
 def version_cmd(_main_arguments):
-    print("Using CIS version:", __version__, "(" + __status__ + ")")
+    print("Using CIS version: {ver} ({stat})".format(ver=__version__, stat=__status__ ))
 
 
 commands = {'plot': plot_cmd,
@@ -313,7 +317,7 @@ def main():
     except IOError as e:
         # If we don't have permission to write to the log file, all we can do is inform the user
         # All future calls to the logging module will be ignored (?)
-        print(("WARNING: Unable to write to the log: %s" % e))
+        print("WARNING: Unable to write to the log: %s" % e)
     logging.captureWarnings(True)  # to catch warning from 3rd party libraries
 
     try:

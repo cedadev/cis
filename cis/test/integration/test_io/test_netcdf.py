@@ -41,17 +41,17 @@ class TestNetCDF(unittest.TestCase):
         data = read(netcdf_cf_compliant_ranges_filename, netcdf_cf_compliant_ranges_vars)
 
         valid_min_data_array = get_data(data["CL_1944"])
-        valid_min = float(data["CL_1944"].valid_min)
+        valid_min = data["CL_1944"].valid_min
 
         assert valid_min_data_array.min() >= valid_min
 
         valid_max_data_array = get_data(data["SO4_1950"])
-        valid_max = float(data["SO4_1950"].valid_max)
+        valid_max = data["SO4_1950"].valid_max
 
         assert valid_max_data_array.max() <= valid_max
 
         valid_range_data_array = get_data(data["LON_502"])
-        valid_range = [float(i) for i in data["LON_502"].valid_range.split()]
+        valid_range = data["LON_502"].valid_range
 
         assert valid_range_data_array.min() >= valid_range[0]
         assert valid_range_data_array.max() <= valid_range[1]

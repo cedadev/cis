@@ -2,7 +2,11 @@ import logging
 
 import numpy as np
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
-import matplotlib.pyplot as plt
+
+# Matplotlib at v1.5 keeps throwing warnings about building the font cache - these are INFO level at best.
+from cis.utils import demote_warnings
+with demote_warnings():
+    import matplotlib.pyplot as plt
 
 from cis.exceptions import CISError
 from cis.utils import find_longitude_wrap_start
@@ -556,7 +560,7 @@ class Generic_Plot(object):
             try:
                 self.matplotlib.gca().ticklabel_format(style='sci', scilimits=(-3, 3), axis='both')
             except AttributeError:
-                logging.warning("Couldn't apply scientific notation to axes")
+                logging.debug("Couldn't apply scientific notation to axes")
 
         draw_grid = self.plot_args.pop("grid", False)
         if draw_grid:
@@ -600,7 +604,7 @@ class Generic_Plot(object):
         :return: Can we access natural earth?
         """
         from cartopy.io.shapereader import natural_earth
-        from urllib.error import HTTPError
+        from six.moves.urllib.error import HTTPError
         try:
             natural_earth_available = natural_earth()
         except HTTPError:
@@ -861,7 +865,9 @@ class Generic_Plot(object):
             if y_variable.startswith(lat_or_lon):
                 lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
                 if self.is_map():
-                    self.cartopy_axis.set_yticks(lat_locator.tick_values(ymin, ymax), crs=self.transform)
+                    # Get best guess tick values - as long as they are in a sensible range...
+                    tick_values = [v for v in lat_locator.tick_values(ymin, ymax) if abs(v) <= 90.0]
+                    self.cartopy_axis.set_yticks(tick_values, crs=self.transform)
                     self.cartopy_axis.yaxis.set_major_formatter(LatitudeFormatter())
                 else:
                     self.matplotlib.axes().yaxis.set_major_locator(lat_locator)

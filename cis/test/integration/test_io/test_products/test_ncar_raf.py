@@ -11,13 +11,6 @@ class TestNCAR_NetCDF_RAF(ProductTests, unittest.TestCase):
     def setUp(self):
         self.setup(cis_test_files["NCAR_NetCDF_RAF"], NCAR_NetCDF_RAF)
 
-    def check_valid_vars(self, vars):
-        exclude_vars = ["ACDP_LWI", "AUHSAS_RWI", "CCDP_LWI",
-                        "CUHSAS_RWI"]  # , "LATC", "LONC", "GGALTC", "Time", "PSXC"]
-        assert_that(len(vars), is_(self.test_file_metadata.valid_vars_count), "Number of valid variables in the file")
-        for key in exclude_vars:
-            assert key not in vars
-
     def test_can_concatenate_files_with_different_time_stamps(self):
         from cis import read_data
         import numpy as np
@@ -44,6 +37,13 @@ class TestNCAR_NetCDF_RAF_with_GASSP_aux_coord(ProductTests, unittest.TestCase):
 
     def setUp(self):
         self.setup(cis_test_files["GASSP_aux_coord"], NCAR_NetCDF_RAF)
+
+    def test_variable_wildcarding(self):
+        # We get all of the variables from the file like this - but this isn't the same as the set defined in the
+        #  test data because they are all the same shape. These aren't.
+        self.vars = [u'AREADIST_DMA_OPC', u'VOLDIST_DMA_OPC', u'DYNAMIC_PRESSURE', u'NUMDIST_DMA_OPC', u'PRESSURE_ALTITUDE',
+                     u'LONGITUDE', u'RELATIVE_HUMIDITY', u'AIR_TEMPERATURE', u'AIR_PRESSURE', u'TIME', u'LATITUDE']
+        super(TestNCAR_NetCDF_RAF_with_GASSP_aux_coord, self).test_variable_wildcarding()
 
 
 class TestNCAR_NetCDF_RAF_with_GASSP_aeroplane(ProductTests, unittest.TestCase):

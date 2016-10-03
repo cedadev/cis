@@ -3,7 +3,7 @@ Module containing NetCDF file reading functions
 """
 from cis.exceptions import InvalidVariableError
 from cis.utils import listify
-
+import logging
 
 def get_netcdf_file_attributes(filename):
     """
@@ -203,13 +203,14 @@ def get_metadata(var):
     :return: A metadata object
     """
     from cis.data_io.ungridded_data import Metadata
+    from cis.utils import set_standard_name_if_valid
 
-    standard_name = getattr(var, 'standard_name', "")
     missing_value = find_missing_value(var)
-    long_name = getattr(var, 'long_name', "")
-    units = getattr(var, 'units', "")
 
-    history = getattr(var, "history", "")
+    standard_attributes = ['standard_name', 'long_name', 'history', 'units']
+
+    attrs = {attr: getattr(var, attr, "") for attr in standard_attributes}
+
     shape = getattr(var, "shape", None)
     if shape is None:
         try:
@@ -219,12 +220,15 @@ def get_metadata(var):
 
     metadata = Metadata(
         var._name,
-        standard_name,
-        long_name,
-        units=units,
+        long_name=attrs['long_name'],
+        units=attrs['units'],
         missing_value=missing_value,
         shape=shape,
-        history=history)
+        history=attrs['history'],
+        misc={k: getattr(var, k) for k in var.ncattrs() if k not in standard_attributes})
+
+    # Only set the standard name if it's CF compliant
+    set_standard_name_if_valid(metadata, attrs['standard_name'])
 
     return metadata
 
@@ -255,35 +259,61 @@ def get_data(var):
     """
     import numpy as np
     import logging
-    # Note that this will automatically apply any specified scalings and
-    #  return a masked array based on _FillValue
+    # Turn off scaling as we need to apply the valid_min, max and range masks first
+    var.set_auto_scale(False)
+    # This will still automatically return a masked array based on _FillValue and missing_value
     data = var[:]
 
     if hasattr(var, 'valid_max'):
         try:
-            v_max = float(var.valid_max)
+            v_max = np.array(var.valid_max, var.dtype)
         except ValueError:
             logging.warning("Unable to parse valid_max metadata for {}. Not applying mask.".format(var._name))
         else:
+            logging.debug("Masking all values > {}.".format(v_max))
             data = np.ma.masked_greater(data, v_max)
 
     if hasattr(var, 'valid_min'):
         try:
-            v_min = float(var.valid_min)
+            v_min = np.array(var.valid_min, var.dtype)
         except ValueError:
             logging.warning("Unable to parse valid_min metadata for {}. Not applying mask.".format(var._name))
         else:
+            logging.debug("Masking all values < {}.".format(v_min))
             data = np.ma.masked_less(data, v_min)
 
     if hasattr(var, 'valid_range'):
         try:
-            if isinstance(var.valid_range, np.ndarray):
-                v_range = var.valid_range
-            elif hasattr(var.valid_range, 'split'):
-                v_range = [float(i) for i in var.valid_range.split()]
-        except ValueError:
+            data = np.ma.masked_outside(data, *var.valid_range)
+            logging.debug("Masking all values {} > v > {}.".format(*var.valid_range))
+        except (ValueError, TypeError):
             logging.warning("Unable to parse valid_range metadata for {}. Not applying mask.".format(var._name))
-        else:
-            data = np.ma.masked_outside(data, *v_range)
 
+    # Now apply any scaling
+    data = apply_offset_and_scaling(data, getattr(var, 'add_offset', None), getattr(var, 'scale_factor', None))
+
+    return data
+
+
+def apply_offset_and_scaling(data, add_offset=None, scale_factor=None):
+    """
+    Apply a standard offset and scaling to the data. This is deliberately very similar to the python-NetCDF4
+    implementation as it is anticipated that we can remove it if/when that library implements valid_range masking.
+
+    :param ndarray data: Data to scale
+    :param float add_offset:
+    :param float scale_factor:
+    :return ndarray: Scaled data
+    """
+    if scale_factor is not None and add_offset is not None and \
+            (add_offset != 0.0 or scale_factor != 1.0):
+        data = data * scale_factor + add_offset
+        logging.debug("Applying 'data = data * {scale} + {offset}' transformation to data.".format(scale=scale_factor,
+                                                                                                   offset=add_offset))
+    elif scale_factor is not None and scale_factor != 1.0:
+        data *= scale_factor
+        logging.debug("Applying 'data *= {scale}' transformation to data.".format(scale=scale_factor))
+    elif add_offset is not None and add_offset != 0.0:
+        data += add_offset
+        logging.debug("Applying 'data += {offset}' transformation to data.".format(offset=add_offset))
     return data

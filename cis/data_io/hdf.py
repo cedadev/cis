@@ -41,7 +41,7 @@ def get_hdf4_file_metadata(filename):
     return SD(filename).attributes()
 
 
-def __read_hdf4(filename, variables):
+def _read_hdf4(filename, variables):
     """
         A wrapper method for reading raw data from hdf4 files. This returns a dictionary of io handles
          for each VD and SD data types.
@@ -98,7 +98,7 @@ def read(filenames, variables):
         # reading in all variables into a 2 dictionaries:
         # sdata, key: variable name, value: list of sds
         # vdata, key: variable name, value: list of vds
-        sds_dict, vds_dict = __read_hdf4(filename, variables)
+        sds_dict, vds_dict = _read_hdf4(filename, variables)
         for var in list(sds_dict.keys()):
             utils.add_element_to_list_in_dict(sdata, var, sds_dict[var])
         for var in list(vds_dict.keys()):
@@ -107,13 +107,23 @@ def read(filenames, variables):
     return sdata, vdata
 
 
-def read_data(data_dict, data_type, missing_values=None):
-    if data_type == 'VD':
-        out = utils.concatenate([hdf_vd.get_data(i, missing_values=missing_values) for i in data_dict])
-    elif data_type == 'SD':
-        out = utils.concatenate([hdf_sd.get_data(i, missing_values=missing_values) for i in data_dict])
+def read_data(data_list, read_function):
+    """
+    Wrapper for calling an HDF reading function for each dataset, and then concatenating the result.
+
+    :param list data_list: A list of data objects to read
+    :param callable or str read_function: A function for reading the data, or 'SD' or 'VD' for default reading routines.
+    :return: A single numpy array of concatenated data values.
+    """
+    if callable(read_function):
+        out = utils.concatenate([read_function(i) for i in data_list])
+    elif read_function == 'VD':
+        out = utils.concatenate([hdf_vd.get_data(i) for i in data_list])
+    elif read_function == 'SD':
+        out = utils.concatenate([hdf_sd.get_data(i) for i in data_list])
     else:
-        raise ValueError("Invalid data-type: %s, HDF variables must be VD or SD only" % data_type)
+        raise ValueError("Invalid read-function: {}, please supply a callable read "
+                         "function, 'VD' or 'SD' only".format(read_function))
     return out
 
 

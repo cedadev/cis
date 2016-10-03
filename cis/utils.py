@@ -4,6 +4,8 @@ import logging
 import warnings
 import numpy as np
 from cis.exceptions import InvalidCommandLineOptionError
+import contextlib
+
 
 # number of bytes in a MB
 BYTES_IN_A_MB = 1048576.0
@@ -138,7 +140,8 @@ def create_masked_array_for_missing_values(data, missing_values):
 
     mdata = data
     for missing_value in missing_values:
-        mdata = ma.masked_where(missing_value == mdata, mdata)
+        if missing_value is not None:
+            mdata = ma.masked_where(missing_value == mdata, mdata)
 
     return mdata
 
@@ -722,19 +725,19 @@ def dimensions_compatible(dimensions, other_dimensions):
     return True
 
 
-def set_cube_standard_name_if_valid(cube, standard_name):
+def set_standard_name_if_valid(data, standard_name):
     """
-    Set a cube's standard name if it is a valid CF compliant name, otherwise set it to None
+    Set a data object's standard name if it is a valid CF compliant name, otherwise set it to None
 
-    :param cube: Cube to set standard name on
+    :param CommonData or Metadata data: Data to set standard name on
     :param standard_name: Standard name to set
     :return:
     """
     try:
-        cube.standard_name = standard_name
+        data.standard_name = standard_name
     except ValueError:
-        # If the standard name is not valid CF compliant standard name
-        cube.standard_name = None
+        logging.info("Not setting standard name '{}' as it is not CF compliant.".format(standard_name))
+        data.standard_name = None
 
 
 def deprecated(func):
@@ -789,3 +792,27 @@ def log_memory_profile(location):
         logging.debug("App Memory MB ({}): {}".format(location, mem))
     except ImportError:
         pass
+
+
+def move_item_to_end(iter, item):
+    """
+    Move an item in an iterable to the end of a list
+    :param iterable iter: iterable container (list or tuple) contianing item
+    :param item: item to move to end
+    :return list: rearranged list
+    """
+    if not isinstance(iter, list):
+        iter = list(iter)
+    dim = iter.pop(iter.index(item))
+    iter.append(dim)
+    return iter
+
+
+@contextlib.contextmanager
+def demote_warnings(level=logging.INFO):
+    import warnings
+    with warnings.catch_warnings(record=True) as ws:
+        warnings.simplefilter("always")
+        yield
+        for w in ws:
+            logging.log(level, w.message)

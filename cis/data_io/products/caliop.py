@@ -74,7 +74,7 @@ class abstract_Caliop(AProduct):
         alt_data *= 1000.0  # Convert to m
         len_x = alt_data.shape[0]
 
-        lat_data = hdf.read_data(sdata['Latitude'], "SD")
+        lat_data = hdf.read_data(sdata['Latitude'], self._get_calipso_data)
         len_y = lat_data.shape[0]
 
         new_shape = (len_x, len_y)
@@ -85,7 +85,7 @@ class abstract_Caliop(AProduct):
         alt_coord = Coord(alt_data, alt_metadata)
 
         # pressure
-        pres_data = hdf.read_data(sdata['Pressure'], "SD")
+        pres_data = hdf.read_data(sdata['Pressure'], self._get_calipso_data)
         pres_metadata = hdf.read_metadata(sdata['Pressure'], "SD")
         # Fix badly formatted units which aren't CF compliant and will break if they are aggregated
         if pres_metadata.units == "hPA":
@@ -101,7 +101,7 @@ class abstract_Caliop(AProduct):
 
         # longitude
         lon = sdata['Longitude']
-        lon_data = hdf.read_data(lon, "SD")
+        lon_data = hdf.read_data(lon, self._get_calipso_data)
         lon_data = utils.expand_1d_to_2d_array(lon_data[:, index_offset], len_x, axis=1)
         lon_metadata = hdf.read_metadata(lon, "SD")
         lon_metadata.shape = new_shape
@@ -109,7 +109,7 @@ class abstract_Caliop(AProduct):
 
         # profile time, x
         time = sdata['Profile_Time']
-        time_data = hdf.read_data(time, "SD")
+        time_data = hdf.read_data(time, self._get_calipso_data)
         time_data = convert_sec_since_to_std_time(time_data, dt.datetime(1993, 1, 1, 0, 0, 0))
         time_data = utils.expand_1d_to_2d_array(time_data[:, index_offset], len_x, axis=1)
         time_coord = Coord(time_data, Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
@@ -142,7 +142,7 @@ class abstract_Caliop(AProduct):
         '''
         return None
 
-    def get_calipso_data(self, sds):
+    def _get_calipso_data(self, sds):
         """
         Reads raw data from an SD instance. Automatically applies the
         scaling factors and offsets to the data arrays found in Calipso data.
@@ -155,6 +155,7 @@ class abstract_Caliop(AProduct):
 
         """
         from cis.utils import create_masked_array_for_missing_data
+        import numpy as np
 
         calipso_fill_values = {'Float_32': -9999.0,
                                # 'Int_8' : 'See SDS description',
@@ -170,32 +171,54 @@ class abstract_Caliop(AProduct):
         data = sds.get()
         attributes = sds.attributes()
 
-        # Missing data.
+        # Missing data. First try 'fillvalue'
         missing_val = attributes.get('fillvalue', None)
         if missing_val is None:
             try:
+                # Now try and lookup the fill value based on the data type
                 missing_val = calipso_fill_values[attributes.get('format', None)]
             except KeyError:
                 # Last guess
                 missing_val = attributes.get('_FillValue', None)
 
-        data = create_masked_array_for_missing_data(data, missing_val)
+        if missing_val is not None:
+            data = create_masked_array_for_missing_data(data, missing_val)
+
+        # Now handle valid range mask
+        valid_range = attributes.get('valid_range', None)
+        if valid_range is not None:
+            # Split the range into two numbers of the right type
+            v_range = np.asarray(valid_range.split("..."), dtype=data.dtype)
+            # Some valid_ranges appear to have only one value, so ignore those...
+            if len(v_range) == 2:
+                logging.debug("Masking all values {} > v > {}.".format(*v_range))
+                data = np.ma.masked_outside(data, *v_range)
+            else:
+                logging.warning("Invalid valid_range: {}. Not masking values.".format(valid_range))
 
         # Offsets and scaling.
         offset = attributes.get('add_offset', 0)
         scale_factor = attributes.get('scale_factor', 1)
-        data = self.apply_scaling_factor_CALIPSO(data, scale_factor, offset)
+        data = self._apply_scaling_factor_CALIPSO(data, scale_factor, offset)
 
         return data
 
-    def apply_scaling_factor_CALIPSO(self, data, scale_factor, offset):
-        '''
-        Apply scaling factor Calipso data
+    def _apply_scaling_factor_CALIPSO(self, data, scale_factor, offset):
+        """
+        Apply scaling factor Calipso data.
+
+        This isn't explicitly documented, but is referred to in the CALIOP docs here:
+        http://www-calipso.larc.nasa.gov/resources/calipso_users_guide/data_summaries/profile_data.php#cloud_layer_fraction
+
+        And also confirmed by email with jason.l.tackett@nasa.gov
+
         :param data:
         :param scale_factor:
         :param offset:
         :return:
-        '''
+        """
+        logging.debug("Applying 'science_data = (packed_data / {scale}) + {offset}' "
+                      "transformation to data.".format(scale=scale_factor, offset=offset))
         return (data / scale_factor) + offset
 
 
@@ -220,7 +243,7 @@ class Caliop_L2(abstract_Caliop):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, self.get_calipso_data)
+        return UngriddedData(var, metadata, coords, self._get_calipso_data)
 
     def get_file_format(self, filename):
         return "HDF4/CaliopL2"
@@ -229,9 +252,6 @@ class Caliop_L2(abstract_Caliop):
 class Caliop_L1(abstract_Caliop):
     def get_file_signature(self):
         return [r'CAL_LID_L1-ValStage1-V3.*hdf']
-
-    def offset(self):
-        return 0
 
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
@@ -247,7 +267,7 @@ class Caliop_L1(abstract_Caliop):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, self.get_calipso_data)
+        return UngriddedData(var, metadata, coords, self._get_calipso_data)
 
     def get_file_format(self, filename):
         return "HDF4/CaliopL1"
