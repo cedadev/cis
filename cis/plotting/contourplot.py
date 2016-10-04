@@ -5,7 +5,7 @@ class ContourPlot(Generic2DPlot):
 
     def __init__(self, packed_data_items, contnlevels=None,
                  contlevels=None, contlabel=None, contwidth=None, contfontsize=None, *args, **kwargs):
-        super().__init__(packed_data_items, *args, **kwargs)
+        super(ContourPlot).__init__(packed_data_items, *args, **kwargs)
         self.filled = False
         self.contnlevels = contnlevels
         self.contlevels = contlevels

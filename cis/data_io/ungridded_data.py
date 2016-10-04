@@ -395,6 +395,8 @@ class UngriddedData(LazyData, CommonData):
                 combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
                 if coord.data.dtype != 'object':
                     combined_mask |= numpy.isnan(coord.data).flatten()
+                coord.update_shape()
+                coord.update_range()
             if combined_mask.any():
                 n_points = numpy.count_nonzero(combined_mask)
                 logging.warning(
@@ -641,6 +643,51 @@ class UngriddedData(LazyData, CommonData):
         from cis.utils import fix_longitude_range
         self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
+    def plot(self, how=None, ax=None, x=None, y=None, projection=None, *args, **kwargs):
+        from cis.plotting.plot import get_default_plot_type, plot_types, guess_x_axis, \
+            guess_y_axis, is_map, get_x_wrap_start, set_x_axis_as_time, drawbluemarble, \
+            auto_set_map_ticks, auto_set_ticks
+        import cartopy.crs as ccrs
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            _, ax = plt.subplots(subplot_kw={'projection': projection})
+
+        how = get_default_plot_type(self) if how is None else how
+
+        # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
+        x = x or guess_x_axis(self)
+        if isinstance(y, CommonData):
+            if how is not None and how != 'comparativescatter':
+                raise ValueError("....")
+        elif y is None:
+            y = guess_y_axis(self, x)
+
+        # TODO: Check that projection=None is a valid default.
+        transform = None
+        if is_map(self, x, y):
+            if projection is None:
+                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(self, self.metadata.range[0]) + 180.0))
+                transform = ccrs.PlateCarree()
+                kwargs['transform'] = transform
+
+        try:
+            plot_types[how](self, ax, xaxis=x, yaxis=y, *args, **kwargs)
+        except KeyError:
+            raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
+
+        # TODO: I need a better test for the xaxis being time...
+        if x == 'time':
+            set_x_axis_as_time(ax)
+
+        if is_map(self, x, y):
+            drawbluemarble(ax, transform)
+            auto_set_map_ticks(ax, transform)
+        else:
+            # TODO WHat's wrong with the matplotlib one...?
+            auto_set_ticks(ax, 'x', x.startswith('lon'))
+            auto_set_ticks(ax, 'y', x.startswith('lat'))
+
 
 class UngriddedCoordinates(CommonData):
     """
@@ -885,6 +932,22 @@ class UngriddedDataList(CommonDataList):
             df[d.name()] = data
 
         return df
+
+    def plot(self, how=None, ax=None, y=None, layer_opts=None, *args, **kwargs):
+        if how == 'comparativescatter':
+            if y is not None:
+                raise ValueError("...")
+                #TODO
+            y = self[1]
+
+        layer_opts = [{}] if layer_opts is None else layer_opts
+
+        if not isinstance(y, list):
+            y = [y for i in self]
+
+        for d, yaxis, opts in zip(self, y, layer_opts):
+            layer_kwargs = dict(list(kwargs.items()) + list(opts.items()))
+            ax = d.plot(how, ax, y=yaxis, *args, **layer_kwargs)
 
 
 def _coords_as_data_frame(coord_list, copy=True):

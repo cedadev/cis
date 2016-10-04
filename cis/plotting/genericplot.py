@@ -129,8 +129,10 @@ class Generic2DPlot(APlot):
             self.mplkwargs["norm"] = LogNorm()
 
         logging.debug("Unpacking the data items")
+        # TODO I shouldn't need to do this
         self.unpack_data_items(packed_data_items, x_wrap_start)
 
+        # TODO Why do I even need to do this - surely matplotlib can work it out for itself...?
         self.mplkwargs["vmin"], self.mplkwargs["vmax"] = self.calculate_min_and_max_values()
 
         self.plot()

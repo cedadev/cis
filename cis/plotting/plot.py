@@ -25,8 +25,8 @@ def is_map(data, xaxis, yaxis):
     from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
     from cis.exceptions import CoordinateNotFoundError as cisNotFoundError
     try:
-        x = data[0].coord(xaxis)
-        y = data[0].coord(yaxis)
+        x = data.coord(xaxis)
+        y = data.coord(yaxis)
     except (cisNotFoundError, irisNotFoundError):
         return False
 
@@ -52,8 +52,8 @@ def guess_y_axis(data, xaxis):
         try:
             return name_preferring_standard(data.coord(axis="Y"))
         except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-            if len(data[0].shape) > 1:
-                number_of_points_in_dimension = data[0].shape[1]
+            if len(data.shape) > 1:
+                number_of_points_in_dimension = data.shape[1]
                 for coord in data.coords():
                     if coord.shape[0] == number_of_points_in_dimension:
                         yaxis = "search:" + str(number_of_points_in_dimension)
@@ -75,7 +75,7 @@ def guess_x_axis(data):
     try:
         xaxis = name_preferring_standard(data.coord(axis='X'))
     except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-        number_of_points_in_dimension = data[0].shape[0]
+        number_of_points_in_dimension = data.shape[0]
 
         for coord in data.coords():
             if coord.shape[0] == number_of_points_in_dimension:
@@ -179,9 +179,31 @@ def _test_natural_earth_available():
     return natural_earth_available
 
 
-def drawcoastlines(ax, nasabluemarble, coastlinescolour, transform):
+def drawcoastlines(ax, coastlinescolour):
     """
-    Adds coastlines or nasa blue marble back ground to a plot (no coastlines are plotted over nasa blue marble).
+    Adds coastlines to a plot.
+    There are three levels of resolution used based on the spatial scale of the plot. These are determined using
+    values determined by eye for bluemarble and the coastlines independently.
+    """
+    coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
+
+    ext = _get_extent(ax)
+
+    if _test_natural_earth_available():
+        coastline_res = coastline_scales[0][1]
+        for scale, res in coastline_scales[1:]:
+            if scale > ext:
+                coastline_res = res
+
+        ax.coastlines(color=coastlinescolour, resolution=coastline_res)
+    else:
+        logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
+                        'Check internet connectivity and try again')
+
+
+def drawbluemarble(ax, transform):
+    """
+    Adds nasa blue marble back ground to a plot
     There are three levels of resolution used based on the spatial scale of the plot. These are determined using
     values determined by eye for bluemarble and the coastlines independently.
     """
@@ -195,28 +217,17 @@ def drawcoastlines(ax, nasabluemarble, coastlinescolour, transform):
 
     ext = _get_extent(ax)
 
-    if nasabluemarble is not False:
-        bluemarble_res = bluemarble_scales[0][1]
-        for scale, res in bluemarble_scales[1:]:
-            if scale > ext:
-                bluemarble_res = res
+    # Search for the right resolution
+    bluemarble_res = bluemarble_scales[0][1]
+    for scale, res in bluemarble_scales[1:]:
+        if scale > ext:
+            bluemarble_res = res
 
-        img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
-        ax.imshow(img, origin='upper', transform=transform, extent=[-180, 180, -90, 90])
-    else:
-        if _test_natural_earth_available():
-            coastline_res = coastline_scales[0][1]
-            for scale, res in coastline_scales[1:]:
-                if scale > ext:
-                    coastline_res = res
-
-            ax.coastlines(color=coastlinescolour, resolution=coastline_res)
-        else:
-            logging.warning('Unable to access the natural earth topographies required for plotting coastlines. '
-                            'Check internet connectivity and try again')
+    img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
+    ax.imshow(img, origin='upper', transform=transform, extent=[-180, 180, -90, 90])
 
 
-def auto_set_map_ticks(ax, xstep, ystep, logx, logy, transform):
+def auto_set_map_ticks(ax, transform):
     """
     Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
     Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
@@ -250,15 +261,13 @@ def auto_set_map_ticks(ax, xstep, ystep, logx, logy, transform):
         max_x_bins = 14
         max_y_bins = 4
 
-    if xstep is None and not logx:
-        lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
-        ax.set_xticks(lon_locator.tick_values(xmin, xmax), crs=transform)
-        ax.xaxis.set_major_formatter(LongitudeFormatter())
+    lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
+    ax.set_xticks(lon_locator.tick_values(xmin, xmax), crs=transform)
+    ax.xaxis.set_major_formatter(LongitudeFormatter())
 
-    if ystep is None and not logy:
-        lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
-        ax.set_yticks(lat_locator.tick_values(ymin, ymax), crs=transform)
-        ax.yaxis.set_major_formatter(LatitudeFormatter())
+    lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
+    ax.set_yticks(lat_locator.tick_values(ymin, ymax), crs=transform)
+    ax.yaxis.set_major_formatter(LatitudeFormatter())
 
 
 def auto_set_ticks(ax, axis, lat_lon=False):
@@ -286,15 +295,6 @@ def auto_set_ticks(ax, axis, lat_lon=False):
 
 
 class Plotter(object):
-    plot_types = {"contour": ContourPlot,
-                  "contourf": ContourfPlot,
-                  "heatmap": Heatmap,
-                  "line": LinePlot,
-                  "scatter": ScatterPlot,
-                  "comparativescatter": ComparativeScatter,
-                  "overlay": Overlay,
-                  "histogram2d": Histogram,
-                  "histogram3d": Histogram2D}
 
     def __init__(self, data, type=None, out_filename=None, xaxis=None, yaxis=None, layer_opts=None, plotheight=None,
                  plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False, nasabluemarble=False,
@@ -318,72 +318,42 @@ class Plotter(object):
 
         layer_opts = layer_opts or [{}]
 
-        if type in self.plot_types:
+        if type in plot_types:
             type = type
         elif type is None:
-            type = self.set_default_plot_type(data)
+            type = get_default_plot_type(data)
         else:
-            raise ValueError("Invalid plot type, must be one of: {}".format(list(self.plot_types.keys())))
+            raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
 
-        if not self.plot_types[type].valid_number_of_datagroups(len(data)):
+        if not plot_types[type].valid_number_of_datagroups(len(data)):
             raise InvalidNumberOfDatagroupsSpecifiedError("Invalid number of datagroups specified. Only one datagroup "
                                                           "can be plotted for a {}.".format(type))
 
-        # TODO: This could become an argument in the future
-        # Create figure and a single axis (we assume for now not more than one 'subplot').
-
-        # TODO: A lot of the axis and plot type guesses are based on the first datagroup. It would be nice to be able to
-        # specify at least the axis name separately. Especially once supporting multiple subplots.
-        xaxis = xaxis or guess_x_axis(data)
-        yaxis = yaxis or guess_y_axis(data, xaxis)
-
-        # TODO: Check that projection=None is a valid default.
-        transform = None
-        if is_map(data, xaxis, yaxis):
-            xlabel = xlabel or "Longitude"
-            ylabel = ylabel or "Latitude"
-            if projection is None:
-                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, xmin) + 180.0))
-                transform = ccrs.PlateCarree()
-                kwargs['transform'] = transform
-
-        xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
-        ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
-
-        self.fig, ax = plt.subplots(subplot_kw={'projection': projection})
-
         self.set_width_and_height(plotwidth, plotheight)
+
+        # Initially we have no axis
+        ax = None
 
         # Each plot is really just one 'layer', it should only get arguments relevant for that layer.
         # TODO: I'll have to choose colors for each layer if they haven't been set already...
         for d, params in zip(data, layer_opts):
             layer_args = dict(list(kwargs.items()) + list(params.items()))
-            plot = self.plot_types[type](d, ax, xaxis=xaxis, yaxis=yaxis, *args, **layer_args)
+            # TODO Move xaxis and yaxis into layer_opts
+        ax = data.plot(how=plot_types[type], ax=ax, x=xaxis, y=yaxis, layer_opts=layer_opts, *args, **kwargs)
 
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
         # instance
         apply_axis_limits(ax, xmin, xmax, ymin, ymax, projection=projection, reverse_y=(yaxis == 'air_pressure'))
 
+        xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
+        ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
+
         # TODO figure out what to do about the transforms floating about the place.
-        format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title,
-                    transform, legend=len(data)>1)
+        format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title, transform, legend=len(data)>1)
+
         if isinstance(self.plot_types[type], Generic2DPlot) and not nocolourbar:
             self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units), cbarscale=cbarscale,
                                                 cbarorient=cbarorient)
-
-        # TODO: I need a better test for the xaxis being time...
-        if xaxis == 'time':
-            set_x_axis_as_time(ax)
-
-        if is_map(data, xaxis, yaxis):
-            drawcoastlines(ax, nasabluemarble, coastlinescolour, transform)
-            auto_set_map_ticks(ax, xstep, ystep, logx, logy, transform)
-
-        if xstep is None and not logx:
-            auto_set_ticks(ax, 'x', xaxis.startswith('lon'))
-
-        if ystep is None and not logy:
-            auto_set_ticks(ax, 'y', xaxis.startswith('lat'))
 
         self.output_to_file_or_screen(out_filename)
 
@@ -422,44 +392,56 @@ class Plotter(object):
         self.fig.set_figheight(height)
         self.fig.set_figwidth(width)
 
-    @staticmethod
-    def set_default_plot_type(data):
-        """
-        Sets the default plot type based on the number of dimensions of the data
-        :param data: A list of packed data items
-        :return: The default plot type as a string
-        """
-        from cis.exceptions import InvalidPlotTypeError
-        from iris.cube import Cube
-        import logging
-        number_of_coords = 0
-        for coord in data[0].coords(dim_coords=True):
-            if len(coord.shape) != 1 or coord.shape[0] != 1:
-                number_of_coords += 1
-        try:
-            if number_of_coords == 1:
-                plot_type = "line"
-            elif isinstance(data[0], Cube):
-                plot_type = "heatmap"
-            else:
-                plot_type = "scatter"
-            logging.info("No plot type specified. Plotting data as a " + plot_type)
-            return plot_type
-        except KeyError:
-            coord_shape = None
-            all_coords_are_of_same_shape = False
-            for coord in data[0].coords():
-                if coord_shape is None:
-                    coord_shape = coord.shape
-                    all_coords_are_of_same_shape = True
-                elif coord_shape != coord.shape:
-                    all_coords_are_of_same_shape = False
-                    break
 
-            error_message = "There is no valid plot type for this variable\nIts shape is: " + str(data[0].shape)
-            if all_coords_are_of_same_shape:
-                error_message += "\nThe shape of its coordinates is: " + str(data[0].coords()[0].shape)
-            raise InvalidPlotTypeError(error_message)
+plot_types = {"contour": ContourPlot,
+              "contourf": ContourfPlot,
+              "heatmap": Heatmap,
+              "line": LinePlot,
+              "scatter": ScatterPlot,
+              "comparativescatter": ComparativeScatter,
+              "overlay": Overlay,
+              "histogram2d": Histogram,
+              "histogram3d": Histogram2D}
+
+
+def get_default_plot_type(data):
+    """
+    Sets the default plot type based on the number of dimensions of the data
+    :param CommonData data: The data to plot
+    :return: The default plot type as a string
+    """
+    from cis.exceptions import InvalidPlotTypeError
+    from iris.cube import Cube
+    import logging
+    number_of_coords = 0
+    for coord in data.coords(dim_coords=True):
+        if len(coord.shape) != 1 or coord.shape[0] != 1:
+            number_of_coords += 1
+    try:
+        if number_of_coords == 1:
+            plot_type = "line"
+        elif isinstance(data, Cube):
+            plot_type = "heatmap"
+        else:
+            plot_type = "scatter"
+        logging.info("No plot type specified. Plotting data as a " + plot_type)
+        return plot_type
+    except KeyError:
+        # TODO: When is this code actually hit...?
+        coord_shape = None
+        all_coords_are_of_same_shape = False
+        for coord in data.coords():
+            if coord_shape is None:
+                coord_shape = coord.shape
+                all_coords_are_of_same_shape = True
+            elif coord_shape != coord.shape:
+                all_coords_are_of_same_shape = False
+                break
+
+        error_message = "There is no valid plot type for this variable\nIts shape is: " + str(data.shape)
+        if all_coords_are_of_same_shape:
+            error_message += "\nThe shape of its coordinates is: " + str(data.coords()[0].shape)
+        raise InvalidPlotTypeError(error_message)
 
 
 def get_x_wrap_start(data, user_xmin=None):

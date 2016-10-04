@@ -790,3 +790,17 @@ class TestPlotVisual(VisualTest):
         plot_cmd(main_arguments)
 
         self.check_graphic()
+
+
+class TestPlotAPIVisual(VisualTest):
+
+    def test_iris_comparative_scatter(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        from cis.data_io.ungridded_data import UngriddedDataList
+
+        d = UngriddedDataList([make_regular_2d_ungridded_data(), make_regular_2d_ungridded_data(data_offset=2)])
+        _ = d[0].data
+        _ = d[1].data
+        d.plot()
+
+        # self.check_graphic()
