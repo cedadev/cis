@@ -43,51 +43,36 @@ def name_preferring_standard(coord_item):
     return ''
 
 
-def guess_y_axis(data, xaxis):
+def _try_coord(data, coord_dict):
     import cis.exceptions as cis_ex
     import iris.exceptions as iris_ex
-    yaxis = 'default'
-    # If we're not dealing with the case where the xaxis is time and we have many y layers (which should be default)...
-    if not (xaxis.lower().endswith('time') and len(data) > 1):
-        try:
-            return name_preferring_standard(data.coord(axis="Y"))
-        except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-            if len(data.shape) > 1:
-                number_of_points_in_dimension = data.shape[1]
-                for coord in data.coords():
-                    if coord.shape[0] == number_of_points_in_dimension:
-                        yaxis = "search:" + str(number_of_points_in_dimension)
-            else:
-                yaxis = "default"
-
-    if "search" in yaxis:
-        logging.info("Plotting unknown on the y axis")
-    else:
-        logging.info("Plotting " + yaxis + " on the y axis")
-    return yaxis
-
-
-def guess_x_axis(data):
-    import cis.exceptions as cis_ex
-    import iris.exceptions as iris_ex
-
-    xaxis = "default"
     try:
-        xaxis = name_preferring_standard(data.coord(axis='X'))
+        coord = data.coord(**coord_dict)
     except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-        number_of_points_in_dimension = data.shape[0]
+        coord = None
+    return coord
 
-        for coord in data.coords():
-            if coord.shape[0] == number_of_points_in_dimension:
-                xaxis = "search:" + str(number_of_points_in_dimension)
-                break
 
-    if "search" in xaxis:
-        logging.info("Plotting unknown on the x axis")
-    else:
-        logging.info("Plotting " + xaxis + " on the x axis")
+def get_axis(d, axis, name=None):
 
-    return xaxis
+    coord = _try_coord(d, dict(name_or_coord=name)) or _try_coord(d, dict(standard_name=name)) \
+            or _try_coord(d, dict(axis=axis))
+
+    # This is primarily for gridded data, but for Ungridded Data should just pick out the first Coord in the list.
+    if coord is None:
+        for c in d.coords():
+            if axis == 'X':
+                if c.shape[0] == d.shape[0]:
+                    coord = c
+                    break
+            elif axis == 'Y' and len(d.shape) > 1:
+                if c.shape[1] == d.shape[1]:
+                    coord = c
+                    break
+
+    logging.info("Plotting " + coord.name() + " on the {} axis".format(axis))
+
+    return coord
 
 
 def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=None, projection=None, reverse_y=False):
@@ -122,7 +107,6 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=
         ax.set_ylim(ymin=ymin, ymax=ymax)
 
 
-
 def set_x_axis_as_time(ax):
     from matplotlib import ticker
     from cis.time_util import convert_std_time_to_datetime
@@ -150,8 +134,9 @@ def set_x_axis_as_time(ax):
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
     # ax.set_xticks(rotation=45, ha="right")
     # Give extra spacing at bottom of plot due to rotated labels
-    ax.get_figure().subplots_adjust(bottom=0.3)
-
+    # ax.get_figure().subplots_adjust(bottom=0.3)
+    # Just let matplotlib do it...
+    ax.get_figure().autofmt_xdate()
     # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
 

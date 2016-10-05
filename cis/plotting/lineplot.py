@@ -37,25 +37,25 @@ class LinePlot(GenericPlot):
         self.ax.plot(self.x, self.data, *self.mplargs, **self.mplkwargs)
 
 
-    @staticmethod
-    def guess_axis_label(data, axisvar=None, axis=None):
-        import cis.exceptions as cisex
-        import iris.exceptions as irisex
-        from .APlot import format_units
-
-        try:
-            units = data[0].coord(axisvar).units
-        except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-            units = data[0].units
-
-        if len(data) == 1:
-            try:
-                name = data[0].coord(axisvar).name()
-            except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-                name = data[0].name()
-            # only 1 data to plot, display
-            label = name + " " + format_units(units)
-        else:
-            # if more than 1 data, legend will tell us what the name is. so just displaying units
-            label = format_units(units)
-        return label
+    # @staticmethod
+    # def guess_axis_label(data, axisvar=None, axis=None):
+    #     import cis.exceptions as cisex
+    #     import iris.exceptions as irisex
+    #     from .APlot import format_units
+    #
+    #     try:
+    #         units = data[0].coord(axisvar).units
+    #     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+    #         units = data[0].units
+    #
+    #     if len(data) == 1:
+    #         try:
+    #             name = data[0].coord(axisvar).name()
+    #         except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
+    #             name = data[0].name()
+    #         # only 1 data to plot, display
+    #         label = name + " " + format_units(units)
+    #     else:
+    #         # if more than 1 data, legend will tell us what the name is. so just displaying units
+    #         label = format_units(units)
+    #     return label

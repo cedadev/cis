@@ -45,7 +45,7 @@ class APlot(object):
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
     def __init__(self, packed_data_items, ax, xaxis, yaxis, color=None,
-                 edgecolor='None', itemstyle=None, itemwidth=1, label=None, *mplargs, **mplkwargs):
+                 edgecolor=None, itemstyle=None, itemwidth=None, label=None, *mplargs, **mplkwargs):
         """
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -104,10 +104,6 @@ class APlot(object):
 
         # in general, display both name and units in brackets
         return name + " " + format_units(units)
-
-    def unpack_data_items(self, packed_data_items, x_wrap_start=None):
-        from cis.utils import unpack_data_object
-        self.data, self.x, self.y = unpack_data_object(packed_data_items, self.xaxis, self.yaxis, x_wrap_start)
 
     @staticmethod
     def valid_number_of_datagroups(number_of_datagroups):

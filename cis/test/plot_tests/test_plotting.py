@@ -19,9 +19,9 @@ import matplotlib.testing.compare as mcompare
 import matplotlib.pyplot as plt
 
 # Whether to display matplotlib output to the screen.
-_DISPLAY_FIGURES = False
+_DISPLAY_FIGURES = True
 
-plt.switch_backend('agg')
+# plt.switch_backend('agg')
 
 skip_osx = skipIf(platform == 'darwin', 'Binary install of shapely is creating a number of failing tests on OS X.')
 
@@ -794,13 +794,68 @@ class TestPlotVisual(VisualTest):
 
 class TestPlotAPIVisual(VisualTest):
 
-    def test_iris_comparative_scatter(self):
+    def test_implicit_comparative_scatter(self):
         from cis.test.util.mock import make_regular_2d_ungridded_data
         from cis.data_io.ungridded_data import UngriddedDataList
 
         d = UngriddedDataList([make_regular_2d_ungridded_data(), make_regular_2d_ungridded_data(data_offset=2)])
+        # This is needed to setup the coord shapes unfortunately...
         _ = d[0].data
         _ = d[1].data
+        d[0].metadata._name = 'snow'
+        d[1].plot(x=d[0])
+
+        self.check_graphic()
+
+    def test_explicit_comparative_scatter(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        from cis.data_io.ungridded_data import UngriddedDataList
+
+        d = UngriddedDataList([make_regular_2d_ungridded_data(), make_regular_2d_ungridded_data(data_offset=2)])
+        # This is needed to setup the coord shapes unfortunately...
+        _ = d[0].data
+        _ = d[1].data
+        d[0].metadata._name = 'snow'
+        d.plot(how='comparativescatter')
+
+        self.check_graphic()
+
+    def test_iris_comparative_scatter(self):
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.gridded_data import GriddedDataList
+
+        d = GriddedDataList([make_mock_cube(), make_mock_cube(data_offset=2)])
         d.plot()
 
-        # self.check_graphic()
+        self.check_graphic()
+
+    def test_heatmap(self):
+        from cis.test.util.mock import make_mock_cube
+
+        d = make_mock_cube()
+        d.plot()
+
+        self.check_graphic()
+
+    def test_contour_over_bluemarble(self):
+        from cis.test.util.mock import make_mock_cube
+
+        d = make_mock_cube()
+        d.plot(how='contour', bluemarble=True)
+
+        self.check_graphic()
+
+    def test_multiple_line(self):
+        from cis.test.util.mock import make_dummy_ungridded_data_time_series
+        from cis.data_io.ungridded_data import UngriddedDataList
+
+        d = UngriddedDataList([make_dummy_ungridded_data_time_series(), make_dummy_ungridded_data_time_series()])
+        d[0].time.convert_datetime_to_standard_time()
+        d[1].time.convert_datetime_to_standard_time()
+        _ = d[0].data
+        d[1].data += 2.0
+        d[1].metadata._name = 'snow'
+
+        d.plot(how='line')
+
+        self.check_graphic()
