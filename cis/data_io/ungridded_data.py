@@ -643,56 +643,11 @@ class UngriddedData(LazyData, CommonData):
         from cis.utils import fix_longitude_range
         self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
-    def plot(self, how=None, ax=None, x=None, y=None, projection=None, *args, **kwargs):
-        from cis.plotting.plot import get_default_plot_type, plot_types, get_axis, \
-            is_map, get_x_wrap_start, set_x_axis_as_time, drawbluemarble, \
-            auto_set_map_ticks, auto_set_ticks
-        import cartopy.crs as ccrs
-        import matplotlib.pyplot as plt
-
-        if ax is None:
-            _, ax = plt.subplots(subplot_kw={'projection': projection})
-
-        # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
-
-        if isinstance(x, CommonData):
-            if how is not None and how != 'comparativescatter':
-                raise ValueError("....")
-            how = 'comparativescatter'
+    def _get_default_plot_type(self, lat_lon=False):
+        if lat_lon:
+            return 'scatter2d'
         else:
-            x = get_axis(self, 'X', x)
-        # TODO: THe y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
-        # elif y is None:
-        #     y = get_axis(self, x)
-
-        how = get_default_plot_type(self) if how is None else how
-
-        # TODO: Check that projection=None is a valid default.
-        transform = None
-        if is_map(self, x, y):
-            if projection is None:
-                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(self, self.metadata.range[0]) + 180.0))
-                transform = ccrs.PlateCarree()
-                kwargs['transform'] = transform
-
-        try:
-            plot_types[how](self, ax, xaxis=x, yaxis=y, *args, **kwargs)
-        except KeyError:
-            raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
-
-        if x.standard_name == 'time':
-            set_x_axis_as_time(ax)
-
-        if is_map(self, x, y):
-            drawbluemarble(ax, transform)
-            auto_set_map_ticks(ax, transform)
-        else:
-            # TODO What's wrong with the matplotlib one...?
-            pass
-            # auto_set_ticks(ax, 'x', x.name().startswith('lon'))
-            # auto_set_ticks(ax, 'y', x.name().startswith('lat'))
-
-        return ax
+            return 'line'
 
 
 class UngriddedCoordinates(CommonData):
@@ -938,25 +893,6 @@ class UngriddedDataList(CommonDataList):
             df[d.name()] = data
 
         return df
-
-    def plot(self, how=None, ax=None, y=None, layer_opts=None, *args, **kwargs):
-        if how == 'comparativescatter':
-            if y is not None:
-                raise ValueError("...")
-                #TODO
-            ax = self[1].plot(how, ax, x=self[0], *args, **kwargs)
-        else:
-            layer_opts = [{} for i in self] if layer_opts is None else layer_opts
-
-            if not isinstance(y, list):
-                y = [y for i in self]
-
-            for d, yaxis, opts in zip(self, y, layer_opts):
-                layer_kwargs = dict(list(kwargs.items()) + list(opts.items()))
-                ax = d.plot(how, ax, y=yaxis, *args, **layer_kwargs)
-
-            legend = ax.legend(loc="best")
-            legend.draggable(state=True)
 
 
 def _coords_as_data_frame(coord_list, copy=True):

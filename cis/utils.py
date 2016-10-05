@@ -226,16 +226,15 @@ def fix_longitude_range(lons, range_start):
     return wrap_lons(lons, range_start, 360)
 
 
-def find_longitude_wrap_start(packed_data_items):
+def find_longitude_wrap_start(packed_data_item):
     """
     ONLY WORK OUT THE WRAP START OF THE DATA
-    :param packed_data_items:
+    :param packed_data_item:
     :return:
     """
     from iris.exceptions import CoordinateNotFoundError
-    # They either all have longitude coordinates in, or none of them do.
     try:
-        x_points_min = min([d.coord('longitude').points.min() for d in packed_data_items])
+        x_points_min = packed_data_item.coord(standard_name='longitude').points.min()
     except CoordinateNotFoundError:
         x_wrap_start = None
     else:

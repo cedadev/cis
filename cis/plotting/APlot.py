@@ -78,7 +78,7 @@ class APlot(object):
         self.color_axis = []
 
     @abstractmethod
-    def plot(self):
+    def __call__(self):
         """
         The method that will do the plotting. To be implemented by each subclass of Generic_Plot.
         """
@@ -94,6 +94,9 @@ class APlot(object):
         import cis.exceptions as cisex
         import iris.exceptions as irisex
         try:
+            if axisvar is None:
+                # If axisvar is None data.coord will happily return a Coord if only one Coord is there
+                raise cisex.CoordinateNotFoundError
             coord = data.coord(axisvar)
         except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
             name = data.name()
@@ -103,6 +106,7 @@ class APlot(object):
             units = coord.units
 
         # in general, display both name and units in brackets
+        name = "" if name is None else name
         return name + " " + format_units(units)
 
     @staticmethod

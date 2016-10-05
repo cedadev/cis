@@ -3,9 +3,9 @@ from .genericplot import Generic2DPlot
 
 class ContourPlot(Generic2DPlot):
 
-    def __init__(self, packed_data_items, contnlevels=None,
+    def __init__(self, packed_data_items, ax, contnlevels=None,
                  contlevels=None, contlabel=None, contwidth=None, contfontsize=None, *args, **kwargs):
-        super(ContourPlot).__init__(packed_data_items, *args, **kwargs)
+        super(ContourPlot, self).__init__(packed_data_items, ax, *args, **kwargs)
         self.filled = False
         self.contnlevels = contnlevels
         self.contlevels = contlevels
@@ -13,7 +13,7 @@ class ContourPlot(Generic2DPlot):
         self.contwidth = contwidth
         self.contfontsize = contfontsize
 
-    def plot(self):
+    def __call__(self):
         import numpy as np
 
         # Set the options specific to a datagroup with the contour type
@@ -53,10 +53,6 @@ class ContourPlot(Generic2DPlot):
         else:
             contour_type = self.ax.contour
 
-        if self.is_map() and self.data.ndim == 2:
-            # This fails for an unknown reason on one dimensional data
-            mplkwargs["latlon"] = True
-
         self.color_axis.append(contour_type(self.x, self.y,
                                             self.data, contour_level_list, **mplkwargs))
         if mplkwargs["contlabel"] and not self.filled:
@@ -64,9 +60,11 @@ class ContourPlot(Generic2DPlot):
         elif mplkwargs["contlabel"] and self.filled:
             self.ax.clabel(self.color_axis[0], fontsize=mplkwargs["cfontsize"], inline=0, fmt='%.3g')
 
+        super(ContourPlot, self).__call__()
+
 
 class ContourfPlot(ContourPlot):
 
     def __init__(self, packed_data_items, *args, **kwargs):
-        super().__init__(packed_data_items, *args, **kwargs)
+        super(ContourfPlot, self).__init__(packed_data_items, *args, **kwargs)
         self.filled = False

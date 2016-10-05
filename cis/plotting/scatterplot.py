@@ -29,11 +29,12 @@ class GenericScatter(APlot):
 
 class ScatterPlot(GenericPlot, GenericScatter):
 
-    def plot(self):
+    def __call__(self):
         """
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
+        super(ScatterPlot, self).__call__()
         # TODO: This is better now but I'm still not convinced about having mplkwargs being changed globably like this
         if self.itemwidth is not None:
             self.mplkwargs["s"] = self.itemwidth
@@ -49,16 +50,18 @@ class ScatterPlot(GenericPlot, GenericScatter):
 
         # By plotting the data as flat arrays with a line style of 'o' we get a scatter plot - with the added
         #  benefit of not having to keep track of the layers ourselves.
-        self.color_axis.append(self.ax.plot(self.x.flat, self.data.flat, 'o', *self.mplargs, **self.mplkwargs))
+        self.ax.plot(self.x.flat, self.data.flat, 'o', *self.mplargs, **self.mplkwargs)
 
 
 class ScatterPlot2D(Generic2DPlot, GenericScatter):
 
-    def plot(self):
+    def __call__(self):
         """
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
+        super(ScatterPlot2D, self).__call__()
+
         self.mplkwargs["s"] = self.itemwidth
 
         self.mplkwargs["marker"] = self.itemstyle
@@ -69,5 +72,4 @@ class ScatterPlot2D(Generic2DPlot, GenericScatter):
 
         self.mplkwargs["c"] = self.data
 
-        self.color_axis.append(
-            self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs))
+        self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)

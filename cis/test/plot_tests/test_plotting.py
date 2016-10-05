@@ -820,28 +820,47 @@ class TestPlotAPIVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_iris_multiple_scatter(self):
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.gridded_data import GriddedDataList
+
+        # This only works with one dimensional gridded data
+        d = GriddedDataList([make_mock_cube(lat_dim_length=0), make_mock_cube(lat_dim_length=0, data_offset=2)])
+        d[0].var_name = 'snow'
+        d[1].var_name = 'rain'
+
+        # Will default to line plots
+        d.plot()
+
+        self.check_graphic()
+
     def test_iris_comparative_scatter(self):
         from cis.test.util.mock import make_mock_cube
         from cis.data_io.gridded_data import GriddedDataList
 
         d = GriddedDataList([make_mock_cube(), make_mock_cube(data_offset=2)])
-        d.plot()
+        d[0].var_name = 'snow'
+        d[1].var_name = 'rain'
+
+        d.plot(how='comparativescatter')
 
         self.check_graphic()
 
     def test_heatmap(self):
         from cis.test.util.mock import make_mock_cube
+        from cis.data_io.gridded_data import GriddedData
 
-        d = make_mock_cube()
+        d = GriddedData.make_from_cube(make_mock_cube())
         d.plot()
 
         self.check_graphic()
 
     def test_contour_over_bluemarble(self):
         from cis.test.util.mock import make_mock_cube
+        from cis.data_io.gridded_data import GriddedData
 
-        d = make_mock_cube()
-        d.plot(how='contour', bluemarble=True)
+        d = GriddedData.make_from_cube(make_mock_cube())
+        d.plot(how='contour')
 
         self.check_graphic()
 

@@ -6,7 +6,7 @@ All plot types need to be imported and added to the plot_types dictionary in ord
 from cis.plotting.contourplot import ContourPlot, ContourfPlot
 from cis.plotting.heatmap import Heatmap
 from cis.plotting.lineplot import LinePlot
-from cis.plotting.scatterplot import ScatterPlot
+from cis.plotting.scatterplot import ScatterPlot, ScatterPlot2D
 from cis.plotting.comparativescatter import ComparativeScatter
 from cis.plotting.overlay import Overlay
 from cis.plotting.histogram import Histogram
@@ -18,18 +18,10 @@ from .genericplot import format_plot
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 
-def is_map(data, xaxis, yaxis):
+def is_map(x, y):
     """
     :return: A boolean saying if the first packed data item contains lat and lon coordinates
     """
-    from iris.exceptions import CoordinateNotFoundError as irisNotFoundError
-    from cis.exceptions import CoordinateNotFoundError as cisNotFoundError
-    try:
-        x = data.coord(xaxis)
-        y = data.coord(yaxis)
-    except (cisNotFoundError, irisNotFoundError):
-        return False
-
     if x.name().lower().startswith("lon") and y.name().lower().startswith("lat"):
         return True
     else:
@@ -383,50 +375,11 @@ plot_types = {"contour": ContourPlot,
               "heatmap": Heatmap,
               "line": LinePlot,
               "scatter": ScatterPlot,
+              "scatter2d": ScatterPlot2D,
               "comparativescatter": ComparativeScatter,
               "overlay": Overlay,
               "histogram2d": Histogram,
               "histogram3d": Histogram2D}
-
-
-def get_default_plot_type(data):
-    """
-    Sets the default plot type based on the number of dimensions of the data
-    :param CommonData data: The data to plot
-    :return: The default plot type as a string
-    """
-    from cis.exceptions import InvalidPlotTypeError
-    from iris.cube import Cube
-    import logging
-    number_of_coords = 0
-    for coord in data.coords(dim_coords=True):
-        if len(coord.shape) != 1 or coord.shape[0] != 1:
-            number_of_coords += 1
-    try:
-        if number_of_coords == 1:
-            plot_type = "line"
-        elif isinstance(data, Cube):
-            plot_type = "heatmap"
-        else:
-            plot_type = "scatter"
-        logging.info("No plot type specified. Plotting data as a " + plot_type)
-        return plot_type
-    except KeyError:
-        # TODO: When is this code actually hit...?
-        coord_shape = None
-        all_coords_are_of_same_shape = False
-        for coord in data.coords():
-            if coord_shape is None:
-                coord_shape = coord.shape
-                all_coords_are_of_same_shape = True
-            elif coord_shape != coord.shape:
-                all_coords_are_of_same_shape = False
-                break
-
-        error_message = "There is no valid plot type for this variable\nIts shape is: " + str(data.shape)
-        if all_coords_are_of_same_shape:
-            error_message += "\nThe shape of its coordinates is: " + str(data.coords()[0].shape)
-        raise InvalidPlotTypeError(error_message)
 
 
 def get_x_wrap_start(data, user_xmin=None):
