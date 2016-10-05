@@ -1,33 +1,7 @@
 from cis.plotting.genericplot import GenericPlot, Generic2DPlot
-from cis.plotting.APlot import APlot
 
 
-# TODO: The generic scatter shouldn't have any of the if 2D stuff in...
-class GenericScatter(APlot):
-
-    pass
-    # @staticmethod
-    # def guess_axis_label(data, axisvar=None, axis=None):
-    #     import cis.exceptions as cisex
-    #     import iris.exceptions as irisex
-    #     from .APlot import format_units
-    #
-    #     try:
-    #         units = data.coord(axisvar).units
-    #     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-    #         units = data.units
-    #
-    #     try:
-    #         name = data[0].coord(axisvar).name()
-    #     except (cisex.CoordinateNotFoundError, irisex.CoordinateNotFoundError):
-    #         name = data[0].name()
-    #     # only 1 data to plot, display
-    #     label = name + " " + format_units(units)
-    #
-    #     return label
-
-
-class ScatterPlot(GenericPlot, GenericScatter):
+class ScatterPlot(GenericPlot):
 
     def __call__(self):
         """
@@ -52,8 +26,10 @@ class ScatterPlot(GenericPlot, GenericScatter):
         #  benefit of not having to keep track of the layers ourselves.
         self.ax.plot(self.x.flat, self.data.flat, 'o', *self.mplargs, **self.mplkwargs)
 
+        super(ScatterPlot, self).__call__()
 
-class ScatterPlot2D(Generic2DPlot, GenericScatter):
+
+class ScatterPlot2D(Generic2DPlot):
 
     def __call__(self):
         """
@@ -73,3 +49,5 @@ class ScatterPlot2D(Generic2DPlot, GenericScatter):
         self.mplkwargs["c"] = self.data
 
         self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
+
+        super(ScatterPlot2D, self).__call__()

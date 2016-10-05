@@ -5,10 +5,10 @@ class Histogram(GenericPlot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
 
     def __init__(self, packed_data_items, xbinwidth=None, *args, **kwargs):
-        super().__init__(packed_data_items, *args, **kwargs)
+        super(Histogram, self).__init__(packed_data_items, *args, **kwargs)
         self.xbinwidth = xbinwidth
 
-    def plot(self):
+    def __call__(self):
         """
         Plots a 2D histogram
         """
@@ -46,6 +46,8 @@ class Histogram(GenericPlot):
 
         self.mplkwargs["vmin"] = vmin
         self.mplkwargs["vmax"] = vmax
+
+        super(Histogram, self).__call__()
 
     def unpack_data_items(self, packed_data_items, x_wrap_start=None):
         self.data = packed_data_items.data

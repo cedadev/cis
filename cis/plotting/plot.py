@@ -53,7 +53,7 @@ def get_axis(d, axis, name=None):
     # This is primarily for gridded data, but for Ungridded Data should just pick out the first Coord in the list.
     if coord is None:
         for c in d.coords():
-            if axis == 'X':
+            if axis == 'X' or len(d.shape) == 1:
                 if c.shape[0] == d.shape[0]:
                     coord = c
                     break

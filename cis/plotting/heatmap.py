@@ -11,7 +11,7 @@ class Heatmap(Generic2DPlot):
         # Do this here because if this is ungridded data, we won't be able to complete the super() call
         super(Heatmap, self).__init__(packed_data_items, ax, *args, **kwargs)
 
-    def plot(self):
+    def __call__(self):
         """
         Plots a heatmap
         """
@@ -37,7 +37,9 @@ class Heatmap(Generic2DPlot):
         # if self.is_map():
         #     self.mplkwargs["latlon"] = True
 
-        self.color_axis.append(self.ax.pcolormesh(self.x, self.y, self.data, *self.mplargs, **self.mplkwargs))
+        self.ax.pcolormesh(self.x, self.y, self.data, *self.mplargs, **self.mplkwargs)
+
+        super(Heatmap, self).__call__()
 
     def unpack_data_items(self, packed_data_items, x_wrap_start=None):
         self.data, self.x, self.y = make_color_mesh_cells(packed_data_items, self.xaxis, self.yaxis)

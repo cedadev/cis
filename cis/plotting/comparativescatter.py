@@ -12,12 +12,10 @@ class ComparativeScatter(APlot):
 
         self.mplkwargs['label'] = self.label or packed_data_items.long_name
 
-        self.plot()
+        self.xlabel = self.xaxis.name()
+        self.ylabel = packed_data_items.name()
 
-        self.ax.set_xlabel(self.xaxis.name())
-        self.ax.set_ylabel(packed_data_items.name())
-
-    def plot(self):
+    def __call__(self):
         if self.itemwidth is not None:
             self.mplkwargs["s"] = self.itemwidth
 
@@ -33,6 +31,9 @@ class ComparativeScatter(APlot):
         self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
 
         self._plot_xy_line()
+
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
 
     def _plot_xy_line(self):
         import numpy as np

@@ -4,7 +4,7 @@ from cis.plotting.genericplot import GenericPlot
 class LinePlot(GenericPlot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
 
-    def plot(self):
+    def __call__(self):
         """
         Plots one or many line graphs
         """
@@ -36,6 +36,7 @@ class LinePlot(GenericPlot):
 
         self.ax.plot(self.x, self.data, *self.mplargs, **self.mplkwargs)
 
+        super(LinePlot, self).__call__()
 
     # @staticmethod
     # def guess_axis_label(data, axisvar=None, axis=None):

@@ -878,3 +878,18 @@ class TestPlotAPIVisual(VisualTest):
         d.plot(how='line')
 
         self.check_graphic()
+
+    def test_scatter2d_over_bluemarble(self):
+        pass
+
+    def test_mpl_kwargs(self):
+        pass
+
+    def test_layer_opts(self):
+        pass
+
+    def test_histogram(self):
+        pass
+
+    def test_histogram_2d(self):
+        pass
