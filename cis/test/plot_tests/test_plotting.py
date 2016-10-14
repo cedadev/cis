@@ -172,7 +172,7 @@ class TestPlotVisual(VisualTest):
     def test_iris_histogram2d(self):
         opts = "--xmin=-50 --xmax 50 --xbinwidth 10 --ymin 1 --logy --output".split() + [self.id() + ".png"]
         arguments = ["plot", "rain:" + valid_1d_filename + ":color=red,itemstyle=step,label=overridenlabel",
-                    "snow:" + valid_1d_filename + ":color=green,itemstyle=step", "--type", "histogram2d"] + opts
+                    "snow:" + valid_1d_filename + ":color=green,itemstyle=step", "--type", "histogram"] + opts
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
@@ -182,7 +182,7 @@ class TestPlotVisual(VisualTest):
     def test_iris_histogram3d(self):
         opts = "--cmap RdBu --ylabel overiddeny --title overiddentitle --xmin 0.000002 --xmax 0.000006 " \
                "--ybinwidth 0.000001 --output ".split() + [self.id() + ".png"]
-        arguments = ["plot", "rain:" + valid_1d_filename, "snow:" + valid_1d_filename, "--type", "histogram3d"] + opts
+        arguments = ["plot", "rain:" + valid_1d_filename, "snow:" + valid_1d_filename, "--type", "histogram2d"] + opts
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
@@ -278,9 +278,9 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_histogram2d(self):
+    def test_other_histogram(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type histogram2d --xlabel overiddenx --fontsize 10 --height 10 --width 10 --xmin 0 --xmax 1.5" \
+        opts = "--type histogram --xlabel overiddenx --fontsize 10 --height 10 --width 10 --xmin 0 --xmax 1.5" \
                " --xbinwidth 0.1 --grid".split()
         arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":itemstyle=step"]
 
@@ -289,9 +289,9 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_histogram2d_bin_width(self):
+    def test_other_histogram_bin_width(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = " --type histogram2d --xbinwidth 0.5".split()
+        opts = " --type histogram --xbinwidth 0.5".split()
         arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":itemstyle=step",
                      "AOT_870:" + valid_aeronet_filename + ":itemstyle=step"]
 
@@ -300,9 +300,9 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_histogram3d(self):
+    def test_other_histogram2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type histogram3d --xlabel overridenx --ylabel overiddeny --cbarlabel overiddencbarlabel " \
+        opts = "--type histogram2d --xlabel overridenx --ylabel overiddeny --cbarlabel overiddencbarlabel " \
                "--title overiddentitle --fontsize 7 --width 10 --xmin 0 --xmax 2 --xbinwidth 0.1 --ymin 0 --ymax 1.5" \
                " --ybinwidth 0.1 --vmin 60 --vmax 480 --vstep 30 --cbarorient Vertical --grid".split()
         arguments = ["plot", "AOT_440:" + valid_aeronet_filename, "AOT_870:" + valid_aeronet_filename]
@@ -312,9 +312,9 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_histogram3d_doesnt_plot_coastlines(self):
+    def test_other_histogram2d_doesnt_plot_coastlines(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type histogram3d".split()
+        opts = "--type histogram2d".split()
         arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file, "Height:" + valid_cloudsat_RVOD_file]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -939,12 +939,21 @@ class TestPlotAPIVisual(VisualTest):
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         d = make_regular_2d_ungridded_data()
-        d.plot(how='histogram2d')
+        d.plot(how='histogram')
 
         self.check_graphic()
 
     def test_histogram_2d(self):
-        pass
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.gridded_data import GriddedDataList
+
+        d = GriddedDataList([make_mock_cube(), make_mock_cube(data_offset=2)])
+        d[0].var_name = 'snow'
+        d[1].var_name = 'rain'
+
+        d.plot(how='histogram2d')
+
+        self.check_graphic()
 
     def test_invalid_args(self):
         from cis.test.util.mock import make_regular_2d_ungridded_data
@@ -952,11 +961,11 @@ class TestPlotAPIVisual(VisualTest):
 
         d = make_regular_2d_ungridded_data()
         # with assert_raises(ValueError):
-        d.plot(how='histogram2d', bluemarble=True)
+        d.plot(how='histogram', bluemarble=True)
 
         self.check_graphic()
 
         # with assert_raises(ValueError):
-        d.plot(how='histogram2d', x=d.lat)
+        d.plot(how='histogram', x=d.lat)
 
         #TODO: There must be more of these

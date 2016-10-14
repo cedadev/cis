@@ -377,8 +377,8 @@ plot_types = {"contour": ContourPlot,
               "scatter2d": ScatterPlot2D,
               "comparativescatter": ComparativeScatter,
               "overlay": Overlay,
-              "histogram2d": Histogram,
-              "histogram3d": Histogram2D}
+              "histogram": Histogram,
+              "histogram2d": Histogram2D}
 
 
 def get_x_wrap_start(data, user_xmin=None):
