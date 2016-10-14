@@ -4,9 +4,13 @@ from cis.plotting.genericplot import GenericPlot
 class Histogram(GenericPlot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
 
-    def __init__(self, packed_data_items, xbinwidth=None, *args, **kwargs):
+    def __init__(self, packed_data_items, *args, xbinwidth=None, **kwargs):
         super(Histogram, self).__init__(packed_data_items, *args, **kwargs)
         self.xbinwidth = xbinwidth
+        #
+        self.xlabel = packed_data_items.name()
+        self.ylabel = "Frequency"
+
 
     def __call__(self):
         """
@@ -14,10 +18,11 @@ class Histogram(GenericPlot):
         """
         from numpy.ma import MaskedArray
         # TODO: What is going on here..?
-        vmin = self.mplkwargs.pop("vmin")
-        vmax = self.mplkwargs.pop("vmax")
+        # vmin = self.mplkwargs.pop("vmin")
+        # vmax = self.mplkwargs.pop("vmax")
 
-        self.mplkwargs["bins"] = self.calculate_bin_edges()
+        # TODO: Delete this routine - it's trying to be too clever by half
+        # self.mplkwargs["bins"] = self.calculate_bin_edges()
 
         if self.itemstyle:
             if self.itemstyle in self.valid_histogram_styles:
@@ -44,8 +49,8 @@ class Histogram(GenericPlot):
 
         self.ax.hist(data, *self.mplargs, **self.mplkwargs)
 
-        self.mplkwargs["vmin"] = vmin
-        self.mplkwargs["vmax"] = vmax
+        # self.mplkwargs["vmin"] = vmin
+        # self.mplkwargs["vmax"] = vmax
 
         super(Histogram, self).__call__()
 

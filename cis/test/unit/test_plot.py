@@ -47,85 +47,81 @@ class TestGenericPlot(unittest.TestCase):
         self.plot.xaxis = 'longitude'
         self.plot.yaxis = 'latitude'
 
-        self.plot.set_x_wrap_start = ScatterPlot.set_x_wrap_start
+        # self.plot.set_x_wrap_start = ScatterPlot.set_x_wrap_start
 
-    def test_GIVEN_data_range_minus_180_to_180_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
-        from cis.test.util.mock import make_regular_2d_ungridded_data
-
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
-
-        self.plot.packed_data_items = [data]
-        self.plot.set_x_wrap_start(self.plot, -180)
-
-        eq_(self.plot.x_wrap_start, -180)
-
-    def test_GIVEN_range_0_to_360_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
-        from cis.test.util.mock import make_regular_2d_ungridded_data
-
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
-
-        self.plot.packed_data_items = [data]
-        self.plot.set_x_wrap_start(self.plot, 0)
-
-        eq_(self.plot.x_wrap_start, 0)
-
-    def test_GIVEN_NO_range_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
-        from cis.test.util.mock import make_regular_2d_ungridded_data
-
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
-
-        self.plot.packed_data_items = [data]
-        self.plot.set_x_wrap_start(self.plot, None)
-
-        eq_(self.plot.x_wrap_start, -180)
-
-    def test_GIVEN_NO_range_WHEN_data_is_minus_0_to_360_THEN_returns_0(self):
-        from cis.test.util.mock import make_regular_2d_ungridded_data
-
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5, lon_max=345.)
-
-        self.plot.packed_data_items = [data]
-        self.plot.set_x_wrap_start(self.plot, None)
-
-        eq_(self.plot.x_wrap_start, 0)
-
-    def test_GIVEN_range_minus_180_to_180_WHEN_data_is_0_to_360_THEN_returns_minus_180(self):
-        from cis.test.util.mock import make_regular_2d_ungridded_data
-
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
-
-        self.plot.packed_data_items = [data]
-        self.plot.set_x_wrap_start(self.plot, -180)
-
-        eq_(self.plot.x_wrap_start, -180)
-
-    def test_GIVEN_range_15_to_45_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
-        from cis.test.util.mock import make_regular_2d_ungridded_data
-
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
-
-        self.plot.packed_data_items = [data]
-        self.plot.set_x_wrap_start(self.plot, 15)
-
-        eq_(self.plot.x_wrap_start, 0)
-
-    def test_GIVEN_range_15_to_45_WHEN_data_is_0_to_360_THEN_returns_0(self):
-        from cis.test.util.mock import make_regular_2d_ungridded_data
-
-        data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
-
-        self.plot.packed_data_items = [data]
-        self.plot.set_x_wrap_start(self.plot, 15)
-
-        eq_(self.plot.x_wrap_start, 0)
+    # def test_GIVEN_data_range_minus_180_to_180_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
+    #     from cis.test.util.mock import make_regular_2d_ungridded_data
+    #
+    #     data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+    #
+    #     self.plot.packed_data_items = [data]
+    #     self.plot.set_x_wrap_start(self.plot, -180)
+    #
+    #     eq_(self.plot.x_wrap_start, -180)
+    #
+    # def test_GIVEN_range_0_to_360_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
+    #     from cis.test.util.mock import make_regular_2d_ungridded_data
+    #
+    #     data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+    #
+    #     self.plot.packed_data_items = [data]
+    #     self.plot.set_x_wrap_start(self.plot, 0)
+    #
+    #     eq_(self.plot.x_wrap_start, 0)
+    #
+    # def test_GIVEN_NO_range_WHEN_data_is_minus_180_to_180_THEN_returns_0(self):
+    #     from cis.test.util.mock import make_regular_2d_ungridded_data
+    #
+    #     data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+    #
+    #     self.plot.packed_data_items = [data]
+    #     self.plot.set_x_wrap_start(self.plot, None)
+    #
+    #     eq_(self.plot.x_wrap_start, -180)
+    #
+    # def test_GIVEN_NO_range_WHEN_data_is_minus_0_to_360_THEN_returns_0(self):
+    #     from cis.test.util.mock import make_regular_2d_ungridded_data
+    #
+    #     data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5, lon_max=345.)
+    #
+    #     self.plot.packed_data_items = [data]
+    #     self.plot.set_x_wrap_start(self.plot, None)
+    #
+    #     eq_(self.plot.x_wrap_start, 0)
+    #
+    # def test_GIVEN_range_minus_180_to_180_WHEN_data_is_0_to_360_THEN_returns_minus_180(self):
+    #     from cis.test.util.mock import make_regular_2d_ungridded_data
+    #
+    #     data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
+    #
+    #     self.plot.packed_data_items = [data]
+    #     self.plot.set_x_wrap_start(self.plot, -180)
+    #
+    #     eq_(self.plot.x_wrap_start, -180)
+    #
+    # def test_GIVEN_range_15_to_45_WHEN_data_is_minus_180_to_180_THEN_returns_180(self):
+    #     from cis.test.util.mock import make_regular_2d_ungridded_data
+    #
+    #     data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
+    #
+    #     self.plot.packed_data_items = [data]
+    #     self.plot.set_x_wrap_start(self.plot, 15)
+    #
+    #     eq_(self.plot.x_wrap_start, 0)
+    #
+    # def test_GIVEN_range_15_to_45_WHEN_data_is_0_to_360_THEN_returns_0(self):
+    #     from cis.test.util.mock import make_regular_2d_ungridded_data
+    #
+    #     data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5., lon_max=345.)
+    #
+    #     self.plot.packed_data_items = [data]
+    #     self.plot.set_x_wrap_start(self.plot, 15)
+    #
+    #     eq_(self.plot.x_wrap_start, 0)
 
 
 class TestHeatMap(unittest.TestCase):
     kwargs = {}
-
-    def setUp(self):
-        import matplotlib.pyplot as plt
-        self.fig, self.ax = plt.subplots()
 
     def test_lat_lon_increasing_no_bounds_over_greenwich(self):
         x = np.array([-0.5, 0.5])
@@ -148,8 +144,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.ax)
-        map.plot()
+        data.plot('heatmap', bluemarble=False)
 
     def test_lat_lon_increasing_no_bounds(self):
         x = np.array([0.5, 1.5])
@@ -172,8 +167,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.ax)
-        map.plot()
+        data.plot('heatmap', bluemarble=False)
 
     def test_lat_lon_decreasing_no_bounds(self):
         x = np.array([0.5, -0.5])
@@ -196,8 +190,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.ax)
-        map.plot()
+        data.plot('heatmap', bluemarble=False)
 
     def test_wide_longitude(self):
         x = np.arange(-174, 186, 10)
@@ -214,8 +207,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.ax)
-        map.plot()
+        data.plot('heatmap', bluemarble=False)
 
     def test_longitude_0_360(self):
         x = np.arange(10, 370, 20)
@@ -232,8 +224,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data], self.ax)
-        map.plot()
+        data.plot('heatmap', bluemarble=False)
 
     def test_longitude_0_360_one_degree(self):
         x = np.arange(0.5, 360.5, 1)
@@ -250,5 +241,4 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        map = Heatmap([data])
-        map.plot()
+        data.plot('heatmap', bluemarble=False)

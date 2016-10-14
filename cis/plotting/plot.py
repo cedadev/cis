@@ -18,12 +18,13 @@ from .genericplot import format_plot
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 
-def is_map(x, y):
+def is_map(x, y, how):
     """
     :return: A boolean saying if the first packed data item contains lat and lon coordinates
     """
     if x.name().lower().startswith("lon") and y.name().lower().startswith("lat"):
-        return True
+        if how in ['contour', 'heatmap', 'contourf', 'scatter2d']:
+            return True
     else:
         return False
 
@@ -189,8 +190,6 @@ def drawbluemarble(ax, transform):
     bluemarble_scales = [(0, 'raster/world.topo.bathy.200407.3x1350x675.png'),
                          (5000, 'raster/world.topo.bathy.200407.3x2700x1350.png'),
                          (2500, 'raster/world.topo.bathy.200407.3x5400x2700.png')]
-
-    coastline_scales = [(0, '110m'), (500, '50m'), (100, '10m')]
 
     ext = _get_extent(ax)
 

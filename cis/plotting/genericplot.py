@@ -150,16 +150,15 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, ti
 
 class GenericPlot(APlot):
 
-    def __init__(self, packed_data_items, *mplargs, **mplkwargs):
-        super(GenericPlot, self).__init__(packed_data_items, *mplargs, **mplkwargs)
+    def __init__(self, packed_data_items, *args, **kwargs):
+        from cis.plotting.APlot import get_label
+        super(GenericPlot, self).__init__(packed_data_items, *args, **kwargs)
 
         logging.debug("Unpacking the data items")
         self.x, self.data = self.xaxis.points, packed_data_items.data
 
-        self.mplkwargs['label'] = self.label or packed_data_items.long_name
-
-        self.xlabel = self.guess_axis_label(packed_data_items, self.xaxis)
-        self.ylabel = self.guess_axis_label(packed_data_items)
+        self.mplkwargs['label'] = self.label or packed_data_items.name()
+        self.xlabel, self.ylabel = get_label(self.xaxis), get_label(packed_data_items)
 
     def __call__(self):
         self.ax.set_xlabel(self.xlabel)

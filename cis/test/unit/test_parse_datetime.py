@@ -5,28 +5,17 @@ from nose.tools import istest, raises, assert_almost_equal, eq_
 from cis.parse_datetime import parse_as_number_or_datetime, find_last_day_of_month, \
                                convert_datetime_components_to_datetime, parse_datetimestr_delta_to_float_days, \
                                parse_datetimestr_to_std_time
-
-
-class MockParserError(Exception):
-    pass
-
-
-class MockParser(object):
-    def error(self, message):
-        raise MockParserError(message)
-
+from argparse import ArgumentTypeError
 
 # Tests for parse_datetime
 @istest
 def parse_datetime_can_parse_year():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010')
-    assert (dt == [2010])
+    assert (dt == 2010)
 
 
 @istest
 def parse_datetime_can_parse_year_month():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07')
     print(dt)
     assert (dt == [2010, 7])
@@ -34,104 +23,81 @@ def parse_datetime_can_parse_year_month():
 
 @istest
 def parse_datetime_can_parse_date():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01')
     assert (dt == [2010, 7, 1])
 
 
 @istest
 def parse_datetime_can_parse_date_hour():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01T13')
     assert (dt == [2010, 7, 1, 13])
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01T13:27')
     assert (dt == [2010, 7, 1, 13, 27])
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min_sec():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01T13:27:43')
     assert (dt == [2010, 7, 1, 13, 27, 43])
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min_sec_no_leading_zeros():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-3-4T5:6:7')
     assert (dt == [2010, 3, 4, 5, 6, 7])
 
 
 @istest
 def parse_datetime_can_parse_date_time_with_space_separator():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01 13:27:43')
     assert (dt == [2010, 7, 1, 13, 27, 43])
 
 
 @istest
 def parse_datetime_can_parse_date_time_with_colon_separator():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01:13:27:43')
     assert (dt == [2010, 7, 1, 13, 27, 43])
 
 
-@istest
-def parse_datetime_passed_error_message_to_parser():
-    parser = MockParser()
-    name = 'date/time arg'
-    try:
-        dt = parse_as_number_or_datetime('2X10')
-    except MockParserError as e:
-        assert e.args[0].index(name) > 0
-
-
 # parse_datetime: Parse errors
 @istest
-@raises(MockParserError)
+@raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_invalid_character_in_year():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2X10')
 
 
 @istest
-@raises(MockParserError)
+@raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_time_but_incomplete_date():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-10T12:00')
 
 
 @istest
-@raises(MockParserError)
+@raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_too_many_date_components():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-10-05-06')
 
 
 @istest
-@raises(MockParserError)
+@raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_too_many_time_components():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-10-05T12:01:02:03')
 
 
 # parse_datetime: Strings that parse correctly but correspond to invalid date/times
 @istest
-@raises(MockParserError)
+@raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_invalid_month():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-13')
 
 
 @istest
-@raises(MockParserError)
+@raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_invalid_day():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-06-31')
 
 
@@ -139,22 +105,18 @@ def parse_datetime_raises_error_if_invalid_day():
 @istest
 def parse_as_number_or_datetime_can_parse_date_as_datetime():
     from datetime import datetime
-    from cis.time_util import cis_standard_time_unit
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010-07-01')
     assert (datetime(*dt) == datetime(2010, 7, 1))
 
 
 @istest
 def parse_as_number_or_datetime_can_parse_integer():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('2010')
     assert (dt == 2010)
 
 
 @istest
 def parse_as_number_or_datetime_can_parse_float():
-    parser = MockParser()
     dt = parse_as_number_or_datetime('12.345')
     assert (dt == 12.345)
 

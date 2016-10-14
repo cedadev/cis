@@ -869,8 +869,8 @@ def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lo
     y_points = np.linspace(lon_min, lon_max, lon_dim_length)
     y, x = np.meshgrid(y_points, x_points)
 
-    x = Coord(x, Metadata(name='lat', standard_name='latitude', units='degrees'))
-    y = Coord(y, Metadata(name='lon', standard_name='longitude', units='degrees'))
+    x = Coord(x, Metadata(name='lat', standard_name='latitude', units='degrees'), axis='Y')
+    y = Coord(y, Metadata(name='lon', standard_name='longitude', units='degrees'), axis= 'X')
     data = np.reshape(np.arange(lat_dim_length * lon_dim_length) + data_offset + 1.0, (lat_dim_length, lon_dim_length))
     if mask:
         data = np.ma.asarray(data)

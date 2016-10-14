@@ -42,7 +42,7 @@ class Heatmap(Generic2DPlot):
         super(Heatmap, self).__call__()
 
     def unpack_data_items(self, packed_data_items, x_wrap_start=None):
-        self.data, self.x, self.y = make_color_mesh_cells(packed_data_items, self.xaxis, self.yaxis)
+        self.x, self.y, self.data = make_color_mesh_cells(packed_data_items, self.xaxis, self.yaxis)
 
 
 def make_color_mesh_cells(packed_data_item, xvar, yvar):
@@ -98,4 +98,4 @@ def make_color_mesh_cells(packed_data_item, xvar, yvar):
     #     xv = np.append(xv, xv[:, 0:1] + 360 * direction, axis=1)
     #     data = ma.concatenate([data, data[:, 0:1]], axis=1)
 
-    return data, xv, yv
+    return xv, yv, data

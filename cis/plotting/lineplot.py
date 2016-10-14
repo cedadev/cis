@@ -4,6 +4,11 @@ from cis.plotting.genericplot import GenericPlot
 class LinePlot(GenericPlot):
     line_styles = ["solid", "dashed", "dashdot", "dotted"]
 
+    # def __init__(self, *args, **kwargs):
+    #     super(LinePlot, self).__init__(*args, **kwargs)
+    #     self.xlabel = self.x.name()
+    #     self.ylabel = self.data.name()
+
     def __call__(self):
         """
         Plots one or many line graphs

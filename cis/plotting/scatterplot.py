@@ -3,6 +3,11 @@ from cis.plotting.genericplot import GenericPlot, Generic2DPlot
 
 class ScatterPlot(GenericPlot):
 
+    # def __init__(self, packed_data, *args, **kwargs):
+    #     super(ScatterPlot, self).__init__(packed_data, *args, **kwargs)
+    #     self.xlabel = self.x.name()
+    #     self.ylabel = self.data.name()
+
     def __call__(self):
         """
         Plots one or many scatter plots
@@ -38,13 +43,19 @@ class ScatterPlot2D(Generic2DPlot):
         """
         super(ScatterPlot2D, self).__call__()
 
-        self.mplkwargs["s"] = self.itemwidth
+        # TODO: Refactor these checks, maybe create a dict of mplkwargs and local attributes to loop over, and probably
+        #  combine with the normal scatter plot above
+        if self.itemwidth is not None:
+            self.mplkwargs["s"] = self.itemwidth
 
-        self.mplkwargs["marker"] = self.itemstyle
+        if self.itemstyle is not None:
+            self.mplkwargs["marker"] = self.itemstyle
 
-        self.mplkwargs["cmap"] = self.cmap
+        if self.cmap is not None:
+            self.mplkwargs["cmap"] = self.cmap
 
-        self.mplkwargs["edgecolors"] = self.edgecolor
+        if self.edgecolor is not None:
+            self.mplkwargs["edgecolors"] = self.edgecolor
 
         self.mplkwargs["c"] = self.data
 

@@ -8,7 +8,7 @@ import os.path
 import logging
 
 from cis.exceptions import InvalidCommandLineOptionError
-from cis.plotting.plot import Plotter
+from cis.plotting.plot import plot_types
 
 
 def initialise_top_parser():
@@ -67,8 +67,8 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("-o", "--output", metavar="Output filename", nargs="?", default="out",
                         help="The filename of the output file for the plot image")
     parser.add_argument("--type", metavar="Chart type", nargs="?",
-                        help="The chart type, one of: " + str(Plotter.plot_types.keys()),
-                        choices=Plotter.plot_types.keys())
+                        help="The chart type, one of: " + str(plot_types.keys()),
+                        choices=plot_types.keys())
 
     parser.add_argument("--xlabel", metavar="X axis label", nargs="?", help="The label for the x axis")
     parser.add_argument("--ylabel", metavar="Y axis label", nargs="?", help="The label for the y axis")
@@ -697,9 +697,9 @@ def check_plot_type(plot_type, parser):
     """
 
     if plot_type is not None:
-        if plot_type not in list(Plotter.plot_types.keys()):
+        if plot_type not in plot_types.keys():
             parser.error(
-                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(list(Plotter.plot_types.keys())))
+                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(plot_types.keys()))
 
     return plot_type
 

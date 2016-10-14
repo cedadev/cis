@@ -115,6 +115,7 @@ class CommonData(object):
             auto_set_map_ticks, auto_set_ticks
         import cartopy.crs as ccrs
         import matplotlib.pyplot as plt
+        import numpy as np
 
         # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
 
@@ -124,7 +125,10 @@ class CommonData(object):
             how = 'comparativescatter'
         else:
             x = get_axis(self, 'X', x)
-        # TODO: THe y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
+        # TODO: The y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
+        # TODO: In fact, I might be better off combining the get axis calls into one method, since they are interdependant
+        # for example it doesn't give sensible axis for make_regular_2d_ungridded_data with no coord axis metadata
+        #  (even though they have standard names)
         y = get_axis(self, 'Y', y)
 
         how = self._get_default_plot_type(x.standard_name == 'longitude'
@@ -132,9 +136,9 @@ class CommonData(object):
 
         # TODO: Check that projection=None is a valid default.
         transform = None
-        if is_map(x, y):
+        if is_map(x, y, how):
             if projection is None:
-                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(self, min(x.points) + 180.0)))
+                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(self, np.min(x.points) + 180.0)))
                 transform = ccrs.PlateCarree()
                 kwargs['transform'] = transform
 
@@ -152,7 +156,7 @@ class CommonData(object):
         if x.standard_name == 'time':
             set_x_axis_as_time(ax)
 
-        if is_map(x, y):
+        if is_map(x, y, how):
             if bluemarble:
                 drawbluemarble(ax, transform)
             auto_set_map_ticks(ax, transform)

@@ -18,6 +18,13 @@ def format_units(units):
         return ""
 
 
+def get_label(common_data):
+    # in general, display both name and units in brackets
+    name = common_data.name()
+    name = "" if name is None else name + " "
+    return name + format_units(common_data.units)
+
+
 def calc_min_and_max_vals_of_array_incl_log(array, log=False):
     """
     Calculates the min and max values of a given array.
@@ -106,8 +113,8 @@ class APlot(object):
             units = coord.units
 
         # in general, display both name and units in brackets
-        name = "" if name is None else name
-        return name + " " + format_units(units)
+        name = "" if name is None else name + " "
+        return name + format_units(units)
 
     @staticmethod
     def valid_number_of_datagroups(number_of_datagroups):

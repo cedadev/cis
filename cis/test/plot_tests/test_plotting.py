@@ -19,7 +19,7 @@ import matplotlib.testing.compare as mcompare
 import matplotlib.pyplot as plt
 
 # Whether to display matplotlib output to the screen.
-_DISPLAY_FIGURES = True
+_DISPLAY_FIGURES = False
 
 # plt.switch_backend('agg')
 
@@ -813,6 +813,7 @@ class TestPlotAPIVisual(VisualTest):
 
         d = UngriddedDataList([make_regular_2d_ungridded_data(), make_regular_2d_ungridded_data(data_offset=2)])
         # This is needed to setup the coord shapes unfortunately...
+        # TODO: Fix this in the Coord somewhere
         _ = d[0].data
         _ = d[1].data
         d[0].metadata._name = 'snow'
@@ -880,16 +881,82 @@ class TestPlotAPIVisual(VisualTest):
         self.check_graphic()
 
     def test_scatter2d_over_bluemarble(self):
-        pass
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        d = make_regular_2d_ungridded_data()
+        d.plot(how='scatter2d', bluemarble=True)
+
+        self.check_graphic()
+
+    def test_scatter2d_over_bluemarble_explicit_axis(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        d = make_regular_2d_ungridded_data()
+        d.lat.axis = ''
+        d.lon.axis=''
+        d.plot(how='scatter2d', x='longitude', y='latitude', bluemarble=True)
+
+        self.check_graphic()
+
+    def test_scatter2d_over_bluemarble_coord_axis(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        d = make_regular_2d_ungridded_data()
+        d.lat.axis = ''
+        d.lon.axis=''
+        d.plot(how='scatter2d', x=d.lon, y=d.lat, bluemarble=True)
+
+        self.check_graphic()
 
     def test_mpl_kwargs(self):
-        pass
+        from cis.test.util.mock import make_dummy_ungridded_data_time_series
+
+        d = make_dummy_ungridded_data_time_series()
+        d.time.convert_datetime_to_standard_time()
+
+        d.plot(how='line', c='purple', itemstyle='dashed')
+
+        self.check_graphic()
 
     def test_layer_opts(self):
-        pass
+        from cis.test.util.mock import make_dummy_ungridded_data_time_series
+        from cis.data_io.ungridded_data import UngriddedDataList
+
+        d = UngriddedDataList([make_dummy_ungridded_data_time_series(),
+                               make_dummy_ungridded_data_time_series()])
+        d[0].time.convert_datetime_to_standard_time()
+        d[1].time.convert_datetime_to_standard_time()
+        _ = d[0].data
+        d[1].data += 2.0
+        d[1].metadata._name = 'snow'
+
+        d.plot(how='line', layer_opts=[dict(c='yellow', itemstyle='dotted'),
+                                       dict(c='purple', itemstyle='dashed')])
+
+        self.check_graphic()
 
     def test_histogram(self):
-        pass
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+
+        d = make_regular_2d_ungridded_data()
+        d.plot(how='histogram2d')
+
+        self.check_graphic()
 
     def test_histogram_2d(self):
         pass
+
+    def test_invalid_args(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        from nose.tools import assert_raises
+
+        d = make_regular_2d_ungridded_data()
+        # with assert_raises(ValueError):
+        d.plot(how='histogram2d', bluemarble=True)
+
+        self.check_graphic()
+
+        # with assert_raises(ValueError):
+        d.plot(how='histogram2d', x=d.lat)
+
+        #TODO: There must be more of these

@@ -11,7 +11,7 @@ from hamcrest import is_, assert_that, contains_inanyorder
 from nose.tools import eq_, raises
 
 from cis.parse import parse_args, expand_file_list
-from cis.plotting.plot import Plotter
+from cis.plotting.plot import plot_types
 
 
 def escape_colons(string):
@@ -270,7 +270,7 @@ class TestParsePlot(ParseTestFiles):
 
     def test_can_specify_valid_chart_type(self):
         args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                list(Plotter.plot_types.keys())[0]]
+                list(plot_types.keys())[0]]
         parse_args(args)
 
     def test_should_raise_error_with_an_invalid_chart_type(self):
@@ -285,7 +285,7 @@ class TestParsePlot(ParseTestFiles):
     def test_should_raise_error_with_more_than_one_chart_type(self):
         try:
             args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                    list(Plotter.plot_types.keys())[0], list(Plotter.plot_types.keys())[1]]
+                    list(plot_types.keys())[0], list(plot_types.keys())[1]]
             parse_args(args)
             assert False
         except SystemExit as e:
