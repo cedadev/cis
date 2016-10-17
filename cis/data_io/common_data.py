@@ -109,66 +109,9 @@ class CommonData(object):
         """
         pass
 
-    def plot(self, how=None, ax=None, x=None, y=None, projection=None, bluemarble=True, *args, **kwargs):
-        from cis.plotting.plot import plot_types, get_axis, \
-            is_map, get_x_wrap_start, set_x_axis_as_time, drawbluemarble, \
-            auto_set_map_ticks, auto_set_ticks
-        import cartopy.crs as ccrs
-        import matplotlib.pyplot as plt
-        import numpy as np
-
-        # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
-
-        if isinstance(x, CommonData):
-            if how is not None:
-                if how not in ['comparativescatter', 'histogram2d']:
-                    raise ValueError("....")
-            else:
-                how = 'comparativescatter'
-        else:
-            x = get_axis(self, 'X', x)
-        # TODO: The y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
-        # TODO: In fact, I might be better off combining the get axis calls into one method, since they are interdependant
-        # for example it doesn't give sensible axis for make_regular_2d_ungridded_data with no coord axis metadata
-        #  (even though they have standard names)
-        y = get_axis(self, 'Y', y)
-
-        how = self._get_default_plot_type(x.standard_name == 'longitude'
-                                    and y.standard_name == 'latitude') if how is None else how
-
-        # TODO: Check that projection=None is a valid default.
-        transform = None
-        if is_map(x, y, how):
-            if projection is None:
-                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(self, np.min(x.points) + 180.0)))
-                transform = ccrs.PlateCarree()
-                kwargs['transform'] = transform
-
-        if ax is None:
-            _, ax = plt.subplots(subplot_kw={'projection': projection})
-
-        try:
-            plt = plot_types[how](self, ax, xaxis=x, yaxis=y, label=self.var_name, *args, **kwargs)
-        except KeyError:
-            raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
-
-        # Make the plot
-        plt()
-
-        if x.standard_name == 'time':
-            set_x_axis_as_time(ax)
-
-        if is_map(x, y, how):
-            if bluemarble:
-                drawbluemarble(ax, transform)
-            auto_set_map_ticks(ax, transform)
-        else:
-            # TODO What's wrong with the matplotlib one...?
-            pass
-            # auto_set_ticks(ax, 'x', x.name().startswith('lon'))
-            # auto_set_ticks(ax, 'y', x.name().startswith('lat'))
-
-        return ax
+    def plot(self, *args, **kwargs):
+        from cis.plotting.plot import basic_plot
+        return basic_plot(self, *args, **kwargs)
 
     @abstractmethod
     def _get_default_plot_type(self, lat_lon=False):

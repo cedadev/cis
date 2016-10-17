@@ -8,12 +8,12 @@ from cis.plotting.heatmap import Heatmap
 from cis.plotting.lineplot import LinePlot
 from cis.plotting.scatterplot import ScatterPlot, ScatterPlot2D
 from cis.plotting.comparativescatter import ComparativeScatter
-from cis.plotting.overlay import Overlay
 from cis.plotting.histogram import Histogram
 from cis.plotting.histogram2d import Histogram2D
 import logging
 from .APlot import format_units
 from .genericplot import format_plot
+from .formatter import LogFormatterMathtextSpecial
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
@@ -68,7 +68,7 @@ def get_axis(d, axis, name=None):
     return coord
 
 
-def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=None, projection=None, reverse_y=False):
+def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=None, projection=None):
     """
     Applies the specified limits to the given axis
     """
@@ -77,9 +77,6 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=
     # First make sure all of the data fits
     ax.relim()
     ax.autoscale()
-
-    if reverse_y:
-        ax.invert_yaxis()
 
     # Then apply user limits (using different interfaces for different axes types...)
     if isinstance(ax, GeoAxes):
@@ -270,12 +267,121 @@ def auto_set_ticks(ax, axis, lat_lon=False):
     mpl_axis.grid(False, which='minor')
 
 
+def add_color_bar(cbarorient, cbarscale, cbarlabel, logv, vstep):
+    """
+    Adds a colour bar to a plot
+    Allows specifying of tick spacing and orientation
+    """
+    from .APlot import format_units
+    from matplotlib.colorbar import ColorbarBase
+    import matplotlib.pyplot as plt
+
+    plt.colorbar()
+    step = vstep
+    if step is None:
+        ticks = None
+    else:
+        from matplotlib.ticker import MultipleLocator
+        ticks = MultipleLocator(step)
+
+    if logv:
+        formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
+    else:
+        formatter = None
+    #
+    scale = cbarscale
+    orientation = cbarorient
+    if scale is None:
+        default_scales = {"horizontal": 1.0, "vertical": 0.55}
+        scale = default_scales.get(orientation, 1.0)
+    else:
+        scale = float(scale)
+
+    cbar = plt.colorbar(orientation=orientation, ticks=ticks,
+                        shrink=scale, format=formatter)
+
+    if not logv:
+        cbar.formatter.set_scientific(True)
+        cbar.formatter.set_powerlimits((-3, 3))
+        cbar.update_ticks()
+
+    cbar.set_label(cbarlabel)
+
+
+def basic_plot(data, how=None, ax=None, x=None, y=None, projection=None, nasabluemarble=True, *args, **kwargs):
+    import cartopy.crs as ccrs
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from cis.data_io.common_data import CommonData
+
+    # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
+
+    if isinstance(x, CommonData):
+        if how is not None:
+            if how not in ['comparativescatter', 'histogram2d']:
+                raise ValueError("....")
+        else:
+            how = 'comparativescatter'
+    else:
+        x = get_axis(data, 'X', x)
+    # TODO: The y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
+    # TODO: In fact, I might be better off combining the get axis calls into one method, since they are interdependant
+    # for example it doesn't give sensible axis for make_regular_2d_ungridded_data with no coord axis metadata
+    #  (even though they have standard names)
+    y = get_axis(data, 'Y', y)
+
+    how = data._get_default_plot_type(x.standard_name == 'longitude'
+                                      and y.standard_name == 'latitude') if how is None else how
+
+    # TODO: Check that projection=None is a valid default.
+    transform = None
+    if is_map(x, y, how):
+        if projection is None:
+            projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, np.min(x.points) + 180.0)))
+            transform = ccrs.PlateCarree()
+            kwargs['transform'] = transform
+
+    if ax is None:
+        _, ax = plt.subplots(subplot_kw={'projection': projection})
+
+    try:
+        plt = plot_types[how](data, ax, xaxis=x, yaxis=y, label=data.var_name, *args, **kwargs)
+    except KeyError:
+        raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
+
+    # Make the plot
+    plt()
+
+    if x.standard_name == 'time':
+        set_x_axis_as_time(ax)
+
+    if y.standard_name == 'air_pressure':
+        ax.invert_yaxis()
+
+    if is_map(x, y, how):
+        if nasabluemarble:
+            drawbluemarble(ax, transform)
+        auto_set_map_ticks(ax, transform)
+    else:
+        # TODO What's wrong with the matplotlib one...?
+        pass
+        # auto_set_ticks(ax, 'x', x.name().startswith('lon'))
+        # auto_set_ticks(ax, 'y', x.name().startswith('lat'))
+
+    return ax
+
+
+def map_kwargs_to_mplkwargs(**kwargs):
+    pass
+
+
 class Plotter(object):
 
-    def __init__(self, data, type=None, out_filename=None, xaxis=None, yaxis=None, layer_opts=None, plotheight=None,
-                 plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False, nasabluemarble=False,
+    def __init__(self, data, type=None, output=None, layer_opts=None, plotheight=None,
+                 plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False,
                  xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, cbarlabel=None, coastlinescolour='k',
                  grid=False, xlabel=None, ylabel=None, title=None, fontsize=None,
+                 logv=False, vstep=None,
                  cbarscale=None, cbarorient=None, projection=None, *args, **kwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
@@ -287,51 +393,38 @@ class Plotter(object):
         :param args: Any other arguments received from the parser
         :param kwargs: Any other keyword arguments received from the plotter
         """
-        from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
-        import matplotlib.pyplot as plt
-        import cartopy.crs as ccrs
         from .genericplot import Generic2DPlot
 
-        layer_opts = layer_opts or [{}]
+        map_kwargs_to_mplkwargs()
 
-        if type in plot_types:
-            type = type
-        elif type is None:
-            type = get_default_plot_type(data)
-        else:
-            raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
+        try:
+            self.ax = data.plot(how=type, *args, **kwargs)
+        except ValueError:
+            raise ValueError("...")
 
-        if not plot_types[type].valid_number_of_datagroups(len(data)):
-            raise InvalidNumberOfDatagroupsSpecifiedError("Invalid number of datagroups specified. Only one datagroup "
-                                                          "can be plotted for a {}.".format(type))
+        self.fig = self.ax.get_figure()
+        # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
+        # instance
 
         self.set_width_and_height(plotwidth, plotheight)
 
-        # Initially we have no axis
-        ax = None
+        apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
 
-        # Each plot is really just one 'layer', it should only get arguments relevant for that layer.
-        # TODO: I'll have to choose colors for each layer if they haven't been set already...
-        for d, params in zip(data, layer_opts):
-            layer_args = dict(list(kwargs.items()) + list(params.items()))
-            # TODO Move xaxis and yaxis into layer_opts
-        ax = data.plot(how=plot_types[type], ax=ax, x=xaxis, y=yaxis, layer_opts=layer_opts, *args, **kwargs)
+        # xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
+        # ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
 
-        # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
-        # instance
-        apply_axis_limits(ax, xmin, xmax, ymin, ymax, projection=projection, reverse_y=(yaxis == 'air_pressure'))
+        # TODO: THere is some formatting stuff which is really plot dependant - e.g. the color bars, and the
+        #  contour levels, but shouldn't happen in a default plot.
+        # Perhaps I can create a format method on the plot types - but the plotter doesn't see that.
+        # OR have a static plotting method which CommonData calls which can then do the formatting...?
 
-        xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
-        ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
-
-        # TODO figure out what to do about the transforms floating about the place.
-        format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title, transform, legend=len(data)>1)
+        format_plot(self.ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title, legend=len(data)>1)
 
         if isinstance(self.plot_types[type], Generic2DPlot) and not nocolourbar:
-            self.plot_types[type].add_color_bar(cbarlabel=cbarlabel or format_units(data[0].units), cbarscale=cbarscale,
-                                                cbarorient=cbarorient)
+            add_color_bar(cbarorient=cbarorient, cbarscale=cbarscale, cbarlabel=cbarlabel or format_units(data[0].units),
+                          logv=logv, vstep=vstep)
 
-        self.output_to_file_or_screen(out_filename)
+        self.output_to_file_or_screen(output)
 
     def output_to_file_or_screen(self, out_filename=None):
         """
@@ -376,7 +469,6 @@ plot_types = {"contour": ContourPlot,
               "scatter": ScatterPlot,
               "scatter2d": ScatterPlot2D,
               "comparativescatter": ComparativeScatter,
-              "overlay": Overlay,
               "histogram": Histogram,
               "histogram2d": Histogram2D}
 

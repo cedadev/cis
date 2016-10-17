@@ -15,28 +15,6 @@ class Heatmap(Generic2DPlot):
         """
         Plots a heatmap
         """
-        from cis.exceptions import InvalidNumberOfDatagroupsSpecifiedError
-        from cartopy.crs import PlateCarree
-        # TODO: Move these checks into Plotter
-        # if len(self.packed_data_items) != 1:
-        #     raise InvalidNumberOfDatagroupsSpecifiedError("Invalid number of datagroups specified. Only one datagroup "
-        #                                                   "can be plotted for a heatmap.")
-        #
-        # if not self.packed_data_items[0].is_gridded:
-        #     raise UserPrintableException("Heatmap can only be plotted for gridded data")
-
-        # Set the options specific to a datagroup with the heatmap type
-        self.mplkwargs['cmap'] = self.cmap
-
-        # TODO: Figure out what cmin is supposed to do and where it should be used
-        # if self.datagroups[self.datagroup]['cmin'] is not None:
-        #     self.vmin = self.datagroups[self.datagroup]['cmin']
-        # if self.datagroups[self.datagroup]['cmax'] is not None:
-        #     self.vmax = self.datagroups[self.datagroup]['cmax']
-
-        # if self.is_map():
-        #     self.mplkwargs["latlon"] = True
-
         self.ax.pcolormesh(self.x, self.y, self.data, *self.mplargs, **self.mplkwargs)
 
         super(Heatmap, self).__call__()

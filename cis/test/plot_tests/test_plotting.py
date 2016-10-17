@@ -116,8 +116,8 @@ class VisualTest(BaseIntegrationTest):
 class TestPlotVisual(VisualTest):
 
     def test_iris_comparative_scatter(self):
-        arguments = ["plot", "rain:" + valid_2d_filename + ":color=green,itemstyle=^,itemwidth=400",
-                    "snow:" + valid_2d_filename, "--type", "comparativescatter",
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":color=green,itemstyle=^,itemwidth=400",
+                    "snow:" + escape_colons(valid_2d_filename), "--type", "comparativescatter",
                     "--logx", "--logy", "--output", self.id() + ".png"]
 
         main_arguments = parse_args(arguments)
@@ -127,7 +127,7 @@ class TestPlotVisual(VisualTest):
 
     @skip_osx
     def test_iris_contour(self):
-        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "contour",
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=RdBu", "--type", "contour",
                      "--xlabel", "Overidden X Label", "--title", "Overidded Title",
                     "--height", "5", "--width", "5", "--xmin", "15", "--xmax", "45", "--xstep", "20", "--cbarorient",
                      "vertical", "--fontsize", "10", "--output", self.id() + ".png"]
@@ -139,7 +139,7 @@ class TestPlotVisual(VisualTest):
 
     @skip_osx
     def test_iris_contourf(self):
-        arguments = ["plot", "rain:" + valid_2d_filename, "--type", "contourf",
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename), "--type", "contourf",
                      "--ylabel", "Overidden Y Label", "--height", "5", "--width", "10", "--ymin", "15", "--ymax", "45",
                      "--ystep", "10", "--nocolourbar", "--output", self.id() + ".png"]
 
@@ -149,7 +149,7 @@ class TestPlotVisual(VisualTest):
         self.check_graphic()
 
     def test_iris_heatmap(self):
-        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "heatmap",
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=RdBu", "--type", "heatmap",
                      "--ylabel", "Overidden Y", "--title", "OveriddenTitle",
                      "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output",
                      self.id() + ".png"]
@@ -160,7 +160,7 @@ class TestPlotVisual(VisualTest):
         self.check_graphic()
 
     def test_iris_heatmap_force_minus_180_to_180(self):
-        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu", "--type", "heatmap",
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=RdBu", "--type", "heatmap",
                      "--ylabel", "Overidden Y", "--title", "OveriddenTitle", "--xmin", "-180", "--xmax", "180",
                      "--height", "3.5", "--width", "3.5", "--vmax", "0.000135", "--fontsize", "10", "--output",
                      self.id() + ".png"]
@@ -172,8 +172,8 @@ class TestPlotVisual(VisualTest):
 
     def test_iris_histogram2d(self):
         opts = "--xmin=-50 --xmax 50 --xbinwidth 10 --ymin 1 --logy --output".split() + [self.id() + ".png"]
-        arguments = ["plot", "rain:" + valid_1d_filename + ":color=red,itemstyle=step,label=overridenlabel",
-                    "snow:" + valid_1d_filename + ":color=green,itemstyle=step", "--type", "histogram"] + opts
+        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":color=red,itemstyle=step,label=overridenlabel",
+                    "snow:" + escape_colons(valid_1d_filename) + ":color=green,itemstyle=step", "--type", "histogram"] + opts
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
@@ -183,7 +183,8 @@ class TestPlotVisual(VisualTest):
     def test_iris_histogram3d(self):
         opts = "--cmap RdBu --ylabel overiddeny --title overiddentitle --xmin 0.000002 --xmax 0.000006 " \
                "--ybinwidth 0.000001 --output ".split() + [self.id() + ".png"]
-        arguments = ["plot", "rain:" + valid_1d_filename, "snow:" + valid_1d_filename, "--type", "histogram2d"] + opts
+        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename), 
+                     "snow:" + escape_colons(valid_1d_filename), "--type", "histogram2d"] + opts
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
@@ -193,8 +194,8 @@ class TestPlotVisual(VisualTest):
     def test_iris_many_lines(self):
         opts = "--xlabel overiddenxlabel --ylabel overiddenylabel --width 10 --logy --grid " \
                "--ymin 0.00000000001 --xmax 50 --output".split() + [self.id() + ".png"]
-        arguments = ["plot", "rain:" + valid_1d_filename + ":color=red,itemwidth=5",
-                     "snow:" + valid_1d_filename + ":itemstyle=dashed,itemwidth=5,label=overiddenlabel2"] + opts
+        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":color=red,itemwidth=5",
+                     "snow:" + escape_colons(valid_1d_filename) + ":itemstyle=dashed,itemwidth=5,label=overiddenlabel2"] + opts
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)
@@ -205,7 +206,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--xlabel overiddenxlabel --title overiddentitle --height 5 --width 10 --logx" \
                " --grid".split()
-        arguments = ["plot", "rain:" + valid_1d_filename + ":itemstyle=dashed,label=overiddenlabel,itemwidth=4"]
+        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":itemstyle=dashed,label=overiddenlabel,itemwidth=4"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -215,7 +216,7 @@ class TestPlotVisual(VisualTest):
     def test_iris_one_line_with_step(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--ystep 0.00001 --xstep 25".split()
-        arguments = ["plot", "rain:" + valid_1d_filename ]
+        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) ]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -226,7 +227,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --title overiddentitle --fontsize 10 --width 7 --ymin=-0.0005" \
                " --ymax 0.0005".split()
-        arguments = ["plot", "rain:" + valid_1d_filename + ":itemstyle=^,itemwidth=300"]
+        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":itemstyle=^,itemwidth=300"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -237,8 +238,8 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --fontsize 7 --cbarorient vertical --grid --ymin 0 --ymax 90 --vmin 0" \
                " --cbarorient vertical".split()
-        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=RdBu",
-                     "snow:" + valid_2d_filename + ":label=snowlabel,cmap=RdBu"]
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=RdBu",
+                     "snow:" + escape_colons(valid_2d_filename) + ":label=snowlabel,cmap=RdBu"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -249,8 +250,8 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = " --type comparativescatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle --fontsize 7" \
                " --height 5 --width 5 --xmin 0 --xmax 1 --ymin 0 --ymax 0.5 --grid".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":color=red,itemstyle=s,itemwidth=400",
-                     "AOT_870:" + valid_aeronet_filename]
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename) + ":color=red,itemstyle=s,itemwidth=400",
+                     "AOT_870:" + escape_colons(valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -261,7 +262,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type contour --ylabel overiddenylabel --title overiddentitle --vmin 0 --cbarorient vertical --grid" \
                " --xaxis Latitude --yaxis Height".split()
-        arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file + ":cmap=RdBu"]
+        arguments = ["plot", "RVOD_liq_water_content:" + escape_colons(valid_cloudsat_RVOD_file) + ":cmap=RdBu"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -272,7 +273,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type contourf --xlabel overiddenxlabel --fontsize 15 --height 10 --ymin 0 --ymax 10000" \
                " --vmin 0 --vstep 300 --cbarorient horizontal --grid --xaxis Latitude --yaxis Height".split()
-        arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file + ":cmap=RdBu,itemwidth=4"]
+        arguments = ["plot", "RVOD_liq_water_content:" + escape_colons(valid_cloudsat_RVOD_file) + ":cmap=RdBu,itemwidth=4"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -283,7 +284,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type histogram --xlabel overiddenx --fontsize 10 --height 10 --width 10 --xmin 0 --xmax 1.5" \
                " --xbinwidth 0.1 --grid".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":itemstyle=step"]
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename) + ":itemstyle=step"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -293,8 +294,9 @@ class TestPlotVisual(VisualTest):
     def test_other_histogram_bin_width(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = " --type histogram --xbinwidth 0.5".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":itemstyle=step",
-                     "AOT_870:" + valid_aeronet_filename + ":itemstyle=step"]
+        arguments = ["plot", 
+                     "AOT_440:" + escape_colons(valid_aeronet_filename) + ":itemstyle=step",
+                     "AOT_870:" + escape_colons(valid_aeronet_filename) + ":itemstyle=step"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -306,7 +308,9 @@ class TestPlotVisual(VisualTest):
         opts = "--type histogram2d --xlabel overridenx --ylabel overiddeny --cbarlabel overiddencbarlabel " \
                "--title overiddentitle --fontsize 7 --width 10 --xmin 0 --xmax 2 --xbinwidth 0.1 --ymin 0 --ymax 1.5" \
                " --ybinwidth 0.1 --vmin 60 --vmax 480 --vstep 30 --cbarorient Vertical --grid".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename, "AOT_870:" + valid_aeronet_filename]
+        arguments = ["plot", 
+                     "AOT_440:" + escape_colons(valid_aeronet_filename), 
+                     "AOT_870:" + escape_colons(valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -316,7 +320,9 @@ class TestPlotVisual(VisualTest):
     def test_other_histogram2d_doesnt_plot_coastlines(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type histogram2d".split()
-        arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file, "Height:" + valid_cloudsat_RVOD_file]
+        arguments = ["plot", 
+                     "RVOD_liq_water_content:" + escape_colons(valid_cloudsat_RVOD_file), 
+                     "Height:" + escape_colons(valid_cloudsat_RVOD_file)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -326,8 +332,8 @@ class TestPlotVisual(VisualTest):
     def test_other_many_scatter_points(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --ylabel overiddenylabel --ymin 0.1 --ymax 1 --logx --logy".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename,
-                     "AOT_870:" + valid_aeronet_filename + ":itemstyle=x,itemwidth=20"]
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename),
+                     "AOT_870:" + escape_colons(valid_aeronet_filename) + ":itemstyle=x,itemwidth=20"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -337,8 +343,8 @@ class TestPlotVisual(VisualTest):
     def test_other_many_scatter_points_given_color(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --ylabel overiddenylabel --ymin 0.1 --ymax 1 --logx --logy".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename,
-                     "AOT_870:" + valid_aeronet_filename + ":color=blue,itemstyle=x,itemwidth=4"]
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename),
+                     "AOT_870:" + escape_colons(valid_aeronet_filename) + ":color=blue,itemstyle=x,itemwidth=4"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -348,9 +354,9 @@ class TestPlotVisual(VisualTest):
     def test_other_many_lines(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type line --ylabel overiddenylabel --ymin 0.1 --ymax 1 --logx --logy".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":color=green,itemstyle=dotted,itemwidth=2",
-                     "AOT_870:" + valid_aeronet_filename + ":itemstyle=dashed,itemwidth=2",
-                     "AOT_1020:" + valid_aeronet_filename + ":color=red,itemwidth=2"]
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename) + ":color=green,itemstyle=dotted,itemwidth=2",
+                     "AOT_870:" + escape_colons(valid_aeronet_filename) + ":itemstyle=dashed,itemwidth=2",
+                     "AOT_1020:" + escape_colons(valid_aeronet_filename) + ":color=red,itemwidth=2"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -361,7 +367,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type line --xlabel overiddenx --title overiddentitle --fontsize 7 --height 7" \
                " --ymin 0.1 --ymax 1 --logx --logy".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":itemstyle=dashed,label=overiddenlabel,itemwidth=4"]
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename) + ":itemstyle=dashed,label=overiddenlabel,itemwidth=4"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -372,7 +378,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle" \
                " --fontsize 15 --height 5 --width 6 --logy --grid".split()
-        arguments = ["plot", "AOT_440:" + valid_aeronet_filename + ":itemwidth=2"]
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename) + ":itemwidth=2"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -383,7 +389,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --title overiddentitle --vmax 175 --logy --xaxis Latitude" \
                " --yaxis Height".split()
-        arguments = ["plot", "RVOD_liq_water_content:" + valid_cloudsat_RVOD_file + ":cmap=RdBu,itemwidth=20"]
+        arguments = ["plot", "RVOD_liq_water_content:" + escape_colons(valid_cloudsat_RVOD_file) + ":cmap=RdBu,itemwidth=20"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -525,8 +531,8 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
 
-        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap",
-                     "solarupclear:" + valid_2d_filename + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap",
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -538,8 +544,8 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
 
-        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap,cmap=binary",
-                     "solarupclear:" + valid_2d_filename + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cmap=binary",
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -552,7 +558,7 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5" \
                " --nasabluemarble".split()
 
-        arguments = ["plot", "rain:" + valid_2d_filename + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.000075"]
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.000075"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -565,8 +571,8 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
                " --ymin 0 --ymax 90".split()
 
-        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter,itemwidth=20",
-                     "solarupclear:" + valid_2d_filename + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter,itemwidth=20",
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
                                               "contlabel=true,contfontsize=18"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -580,8 +586,8 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180" \
                " --xmax -90 --ymin 0 --ymax 90 --nasabluemarble".split()
 
-        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":type=scatter,itemwidth=20",
-                     "solarupclear:" + valid_2d_filename + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter,itemwidth=20",
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
                                               "contfontsize=18,cmap=Reds"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -594,8 +600,8 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
                " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split() + \
                ["--title=Overlay test"]
-        arguments = ["plot", "rain:" + valid_2d_filename + ":type=contour" ,
-                     "snow:" + valid_2d_filename + ":type=scatter,itemstyle=^,label=snowlabel,itemwidth=3"]
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=contour" ,
+                     "snow:" + escape_colons(valid_2d_filename) + ":type=scatter,itemstyle=^,label=snowlabel,itemwidth=3"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -607,8 +613,8 @@ class TestPlotVisual(VisualTest):
         opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
                " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split() + \
                ["--title=Overlay test"]
-        arguments = ["plot", "rain:" + valid_2d_filename + ":type=heatmap" ,
-                     "snow:" + valid_2d_filename + ":type=scatter,itemstyle=^,label=snowlabel,itemwidth=3"]
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap" ,
+                     "snow:" + escape_colons(valid_2d_filename) + ":type=scatter,itemstyle=^,label=snowlabel,itemwidth=3"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -620,7 +626,7 @@ class TestPlotVisual(VisualTest):
         opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
                " --ymin 50 --ymax 70".split()
 
-        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":itemwidth=10"]
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -632,7 +638,7 @@ class TestPlotVisual(VisualTest):
         opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
                " --ymin 59 --ymax 61".split()
 
-        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":itemwidth=10"]
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -644,7 +650,7 @@ class TestPlotVisual(VisualTest):
         opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -151.5 --xmax -151.2" \
                " --ymin 60.4 --ymax 60.8".split()
 
-        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":itemwidth=10"]
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -656,7 +662,7 @@ class TestPlotVisual(VisualTest):
         opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
                " --ymin 50 --ymax 70 --nasabluemarble".split()
 
-        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename]
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -668,7 +674,7 @@ class TestPlotVisual(VisualTest):
         opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
                " --ymin 59 --ymax 61 --nasabluemarble".split()
 
-        arguments = ["plot", "GGALT:" + valid_NCAR_NetCDF_RAF_filename + ":itemwidth=10"]
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -690,7 +696,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = ["--xmin=2003-08-01",  "--xmax=2003-12-01T12:30:12"]
 
-        arguments = ["plot", valid_aeronet_variable + ":" + valid_aeronet_filename]
+        arguments = ["plot", valid_aeronet_variable + ":" + escape_colons(valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -701,7 +707,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = []
 
-        arguments = ["plot", valid_aeronet_variable + ":" + valid_aeronet_filename]
+        arguments = ["plot", valid_aeronet_variable + ":" + escape_colons(valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -714,8 +720,8 @@ class TestPlotVisual(VisualTest):
         opts = []
 
         # This guesses the axes based on the first datagroup, and then the second one based on the shape.
-        arguments = ["plot", valid_aeronet_variable + ":" + another_valid_aeronet_filename,
-                     'AOT_440:' + aggregated_aeronet_filename]
+        arguments = ["plot", valid_aeronet_variable + ":" + escape_colons(another_valid_aeronet_filename),
+                     'AOT_440:' + escape_colons(aggregated_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -730,8 +736,8 @@ class TestPlotVisual(VisualTest):
 
         # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
         #  correspond to the other aeronet file, so this should be caught and related to the user.
-        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
-                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+        arguments = ["plot", 'AOT_440_std_dev:' + escape_colons(aggregated_aeronet_filename),
+                     valid_aeronet_variable + ":" + escape_colons(another_valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -746,8 +752,8 @@ class TestPlotVisual(VisualTest):
 
         # The aggregated data has some guessed axis labels (x and y are lon and lat respectively) which don't
         #  correspond to the other aeronet file, so this should be caught and related to the user.
-        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
-                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+        arguments = ["plot", 'AOT_440_std_dev:' + escape_colons(aggregated_aeronet_filename),
+                     valid_aeronet_variable + ":" + escape_colons(another_valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -759,8 +765,8 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = ['--xaxis=time']
 
-        arguments = ["plot", 'AOT_440_std_dev:' + aggregated_aeronet_filename,
-                     valid_aeronet_variable + ":" + another_valid_aeronet_filename]
+        arguments = ["plot", 'AOT_440_std_dev:' + escape_colons(aggregated_aeronet_filename),
+                     valid_aeronet_variable + ":" + escape_colons(another_valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -785,7 +791,7 @@ class TestPlotVisual(VisualTest):
         opts = []
 
         # Plotting doesn't support multiple variables
-        arguments = ["plot", "AOT_532,AOT_551" + ":" + valid_aeronet_filename]
+        arguments = ["plot", "AOT_532,AOT_551" + ":" + escape_colons(valid_aeronet_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)

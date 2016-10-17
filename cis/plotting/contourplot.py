@@ -4,23 +4,22 @@ from .genericplot import Generic2DPlot
 class ContourPlot(Generic2DPlot):
 
     def __init__(self, packed_data_items, ax, contnlevels=None,
-                 contlevels=None, contlabel=None, contwidth=None, contfontsize=None, *args, **kwargs):
+                 contlevels=None, contlabel=None, contwidth=None, cont_label_kwargs=None, vstep=None, *args, **kwargs):
         super(ContourPlot, self).__init__(packed_data_items, ax, *args, **kwargs)
+        self.vstep = vstep
         self.filled = False
         self.contnlevels = contnlevels
         self.contlevels = contlevels
         self.contlabel = contlabel
         self.contwidth = contwidth
-        self.contfontsize = contfontsize
+        self.cont_label_kwargs = cont_label_kwargs if cont_label_kwargs is not None else {}
 
     def __call__(self):
         import numpy as np
 
         # Set the options specific to a datagroup with the contour type
         mplkwargs = self.mplkwargs
-        mplkwargs['cmap'] = self.cmap
-        mplkwargs["contlabel"] = self.contlabel
-        mplkwargs["cfontsize"] = self.contfontsize
+
         mplkwargs["colors"] = self.color
 
         mplkwargs["linewidths"] = self.contwidth
@@ -28,9 +27,6 @@ class ContourPlot(Generic2DPlot):
             vmin = self.cmin
         if self.cmax is not None:
             vmax = self.cmax
-
-        vmin = mplkwargs.pop("vmin")
-        vmax = mplkwargs.pop("vmax")
 
         if self.vstep is None and \
                         self.contnlevels is None:
@@ -48,17 +44,12 @@ class ContourPlot(Generic2DPlot):
         else:
             contour_level_list = self.contlevels
 
-        if self.filled:
-            contour_type = self.ax.contourf
-        else:
-            contour_type = self.ax.contour
+        contour_type = self.ax.contourf if self.filled else self.ax.contour
 
-        self.color_axis.append(contour_type(self.x, self.y,
-                                            self.data, contour_level_list, **mplkwargs))
-        if mplkwargs["contlabel"] and not self.filled:
-            self.ax.clabel(self.color_axis[0], fontsize=mplkwargs["cfontsize"], inline=1, fmt='%.3g')
-        elif mplkwargs["contlabel"] and self.filled:
-            self.ax.clabel(self.color_axis[0], fontsize=mplkwargs["cfontsize"], inline=0, fmt='%.3g')
+        contours = contour_type(self.x, self.y, self.data, contour_level_list, **mplkwargs)
+
+        if self.contlabel:
+            self.ax.clabel(contours, **self.cont_label_kwargs)
 
         super(ContourPlot, self).__call__()
 
@@ -67,4 +58,4 @@ class ContourfPlot(ContourPlot):
 
     def __init__(self, packed_data_items, *args, **kwargs):
         super(ContourfPlot, self).__init__(packed_data_items, *args, **kwargs)
-        self.filled = False
+        self.filled = True

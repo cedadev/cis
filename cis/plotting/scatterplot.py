@@ -51,9 +51,6 @@ class ScatterPlot2D(Generic2DPlot):
         if self.itemstyle is not None:
             self.mplkwargs["marker"] = self.itemstyle
 
-        if self.cmap is not None:
-            self.mplkwargs["cmap"] = self.cmap
-
         if self.edgecolor is not None:
             self.mplkwargs["edgecolors"] = self.edgecolor
 

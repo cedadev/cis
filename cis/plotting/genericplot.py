@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from .APlot import APlot
 from cis.exceptions import CISError
-from .formatter import LogFormatterMathtextSpecial
+
 
 # TODO: Carry on splitting out the 2d and 3d plot methods. Make the relavant plots subclass the right one. Pull out any
 # obviously static methods. and split files. This should make the classes more manageable and easier to test.
@@ -171,8 +171,7 @@ class Generic2DPlot(APlot):
 
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
-    def __init__(self, packed_data_items, ax=None, logv=False, vmin=None, vmax=None, vstep=None,
-                 transparency=None, cmap=None, cmin=None, cmax=None, x_wrap_start=None, *args, **kwargs):
+    def __init__(self, packed_data_items, ax=None, transparency=None, logv=None, *args, **kwargs):
         """
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -188,13 +187,7 @@ class Generic2DPlot(APlot):
         super(Generic2DPlot, self).__init__(packed_data_items, ax, *args, **kwargs)
 
         self.logv = logv
-        self.vmin = vmin
-        self.vmax = vmax
-        self.vstep = vstep
 
-        self.cmin = cmin
-        self.cmax = cmax
-        self.cmap = cmap
         self.transparency = transparency
 
         if self.logv:
@@ -204,9 +197,6 @@ class Generic2DPlot(APlot):
         logging.debug("Unpacking the data items")
         # TODO I shouldn't need to do this
         self.data, self.x, self.y = unpack_data_items(packed_data_items, self.xaxis, self.yaxis)
-
-        # TODO Why do I even need to do this - surely matplotlib can work it out for itself...?
-        self.mplkwargs["vmin"], self.mplkwargs["vmax"] = self.calculate_min_and_max_values()
 
         self.xlabel = self.guess_axis_label(packed_data_items, self.xaxis)
         self.ylabel = self.guess_axis_label(packed_data_items, self.yaxis)
@@ -231,43 +221,4 @@ class Generic2DPlot(APlot):
         vmax = self.vmax if self.vmax is not None else data_max
 
         return vmin, vmax
-
-    @staticmethod
-    def add_color_bar(fig, mappable, cbarorient, cbarscale, cbarlabel, logv, vstep):
-        """
-        Adds a colour bar to a plot
-        Allows specifying of tick spacing and orientation
-        """
-        from .APlot import format_units
-        from matplotlib.colorbar import ColorbarBase
-
-        step = vstep
-        if step is None:
-            ticks = None
-        else:
-            from matplotlib.ticker import MultipleLocator
-            ticks = MultipleLocator(step)
-
-        if logv:
-            formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
-        else:
-            formatter = None
-        #
-        scale = cbarscale
-        orientation = cbarorient
-        if scale is None:
-            default_scales = {"horizontal": 1.0, "vertical": 0.55}
-            scale = default_scales.get(orientation, 1.0)
-        else:
-            scale = float(scale)
-
-        cbar = fig.colorbar(mappable, orientation=orientation, ticks=ticks,
-                                        shrink=scale, format=formatter)
-
-        if not logv:
-            cbar.formatter.set_scientific(True)
-            cbar.formatter.set_powerlimits((-3, 3))
-            cbar.update_ticks()
-
-        cbar.set_label(cbarlabel)
 
