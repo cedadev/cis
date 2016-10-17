@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class SubsetConstraintInterface(object):
     """Interface for subset constraint classes.
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def constrain(self, data):

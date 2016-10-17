@@ -3,15 +3,15 @@ from cis.data_io.Coord import CoordList
 from cis.data_io.products import AProduct
 from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData
 from abc import ABCMeta, abstractmethod
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class CCI(object):
     """
     Abstract class for the various possible data products. This just defines the interface which
     the subclasses must implement.
     """
-    __metaclass__ = ABCMeta
-
     def _create_coord_list(self, filenames):
 
         from cis.data_io.netcdf import read_many_files_individually, get_metadata

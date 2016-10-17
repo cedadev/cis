@@ -1,16 +1,15 @@
 import abc
-
+import six
 import numpy
 import scipy.stats.mstats
 from iris.cube import Cube
 
 
+@six.add_metaclass(abc.ABCMeta)
 class StatisticsResult(object):
     """
     Holds statistical calculations performed by a statistics analysis on two files.
     """
-
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def pprint(self):

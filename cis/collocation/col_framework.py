@@ -1,15 +1,15 @@
 from abc import ABCMeta, abstractmethod
+import six
 from cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
 import numpy as np
 
 
+@six.add_metaclass(ABCMeta)
 class Collocator(object):
     """
     Class which provides a method for performing collocation. This just defines the interface which
     the subclasses must implement.
     """
-    __metaclass__ = ABCMeta
-
     def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
         """

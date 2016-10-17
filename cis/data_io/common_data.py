@@ -1,12 +1,12 @@
 from abc import ABCMeta, abstractmethod
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class CommonData(object):
     """
     Interface of common methods implemented for gridded and ungridded data.
     """
-    __metaclass__ = ABCMeta
-
     filenames = []
 
     _alias = None
@@ -52,7 +52,7 @@ class CommonData(object):
         """
         Return the variable name associated with this data object
 
-        :return: The ariable name
+        :return: The variable name
         """
         return None
 
@@ -175,14 +175,13 @@ class CommonData(object):
         pass
 
 
+@six.add_metaclass(ABCMeta)
 class CommonDataList(list):
     """
     Interface for common list methods implemented for both gridded and ungridded data.
 
     Note that all objects in a CommonDataList must have the same coordinates and coordinate values.
     """
-    __metaclass__ = ABCMeta
-
     filenames = []
 
     def __init__(self, iterable=()):

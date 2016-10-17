@@ -1,7 +1,7 @@
 from abc import ABCMeta
 import logging
 from collections import namedtuple
-
+import six
 import numpy as np
 import iris
 import iris.coords
@@ -21,6 +21,7 @@ class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constrain
     pass
 
 
+@six.add_metaclass(ABCMeta)
 class SubsetConstraint(SubsetConstraintInterface):
     """Abstract Constraint for subsetting.
 
@@ -30,8 +31,6 @@ class SubsetConstraint(SubsetConstraintInterface):
         This is not used for the ungridded subsetting which uses fixed numpy comparisons for speed.
 
     """
-    __metaclass__ = ABCMeta
-
     def __init__(self):
         self._limits = {}
         logging.debug("Created SubsetConstraint of type %s", self.__class__.__name__)

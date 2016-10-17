@@ -806,6 +806,10 @@ class UngriddedCoordinates(CommonData):
     def _get_default_plot_type(self, lat_lon=False):
         raise NotImplementedError("UngriddedCoordinates have no default plot type")
 
+    def var_name(self):
+        raise NotImplementedError("UngriddedCoordinates have no var name")
+
+
 class UngriddedDataList(CommonDataList):
     """
     Class which represents multiple UngriddedData objects (e.g. from reading multiple variables)

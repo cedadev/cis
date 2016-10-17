@@ -1,6 +1,6 @@
 import logging
 from abc import abstractmethod, ABCMeta
-
+import six
 from matplotlib.ticker import MaxNLocator, AutoMinorLocator
 
 
@@ -45,9 +45,8 @@ def calc_min_and_max_vals_of_array_incl_log(array, log=False):
     return min_val, max_val
 
 
+@six.add_metaclass(ABCMeta)
 class APlot(object):
-
-    __metaclass__ = ABCMeta
 
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
