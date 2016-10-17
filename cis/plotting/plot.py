@@ -382,6 +382,10 @@ class Plotter(object):
         :param kwargs: Any other keyword arguments received from the plotter
         """
 
+        # Turn data into a single object if it is one - otherwise we end up with an overlay plot
+        if isinstance(data, list) and len(data) == 1:
+            data = data[0]
+
         try:
             self.ax = data.plot(how=type, *args, **kwargs)
         except ValueError:

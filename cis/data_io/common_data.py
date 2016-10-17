@@ -251,3 +251,4 @@ class CommonDataList(list):
             if legend is not None:
                 legend.draggable(state=True)
 
+        return ax
