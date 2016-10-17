@@ -387,23 +387,11 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     :param array2: Another (optionally masked) array
     :return: Two masked arrays with a common mask
     """
-
     import numpy.ma as ma
-    if isinstance(array1, ma.MaskedArray):
-        if isinstance(array2, ma.MaskedArray):
-            intersection_mask = ma.mask_or(array1.mask, array2.mask)
-        else:
-            intersection_mask = array1.mask
-    else:
-        if isinstance(array2, ma.MaskedArray):
-            intersection_mask = array2.mask
-        else:
-            intersection_mask = False
-
-    array1 = ma.array(array1, mask=intersection_mask)
-    array2 = ma.array(array2, mask=intersection_mask)
-
-    return array1, array2
+    mask1 = ma.getmaskarray(array1)
+    mask2 = ma.getmaskarray(array2)
+    # a new masked array combines the masks and preserves the originals
+    return ma.masked_array(array1, mask2), ma.masked_array(array2, mask1)
 
 
 def index_iterator_nditer(shape, points):

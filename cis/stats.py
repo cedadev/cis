@@ -314,14 +314,6 @@ class StatsAnalyzer(object):
         # Keep a record of whether we have already combined the masks so that we don't unnecessarily repeat it
         self._masks_combined = False
 
-    def _get_data_for_combined_masks(self):
-        if numpy.ma.is_masked(self._data1) or numpy.ma.is_masked(self._data2):
-            mask1 = numpy.ma.getmaskarray(self._data1)
-            mask2 = numpy.ma.getmaskarray(self._data2)
-            # Creating a new masked array combines the masks and preserves the originals
-            return numpy.ma.masked_array(self._data1, mask2), numpy.ma.masked_array(self._data2, mask1)
-        return self._data1, self._data2
-
     def analyze(self):
         """
         Perform a statistical analysis on two data sets.
@@ -356,8 +348,9 @@ class StatsAnalyzer(object):
 
         :return: List of StatisticsResults
         """
+        from cis.utils import apply_intersection_mask_to_two_arrays
         # This command requires the masks to be combined
-        data1_combined, data2_combined = self._get_data_for_combined_masks()
+        data1_combined, data2_combined = apply_intersection_mask_to_two_arrays(self._data1, self._data2)
         return [DatasetMean(numpy.mean(data1_combined), self._var_name_1, 1),
                 DatasetMean(numpy.mean(data2_combined), self._var_name_2, 2)]
 
@@ -367,8 +360,9 @@ class StatsAnalyzer(object):
 
         :return: List of StatisticsResults
         """
+        from cis.utils import apply_intersection_mask_to_two_arrays
         # This command requires the masks to be combined
-        data1_combined, data2_combined = self._get_data_for_combined_masks()
+        data1_combined, data2_combined = apply_intersection_mask_to_two_arrays(self._data1, self._data2)
         return [DatasetStddev(numpy.std(data1_combined, ddof=1), self._var_name_1, 1),
                 DatasetStddev(numpy.std(data2_combined, ddof=1), self._var_name_2, 2)]
 

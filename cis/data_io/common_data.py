@@ -120,9 +120,11 @@ class CommonData(object):
         # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
 
         if isinstance(x, CommonData):
-            if how is not None and how != 'comparativescatter':
-                raise ValueError("....")
-            how = 'comparativescatter'
+            if how is not None:
+                if how not in ['comparativescatter', 'histogram2d']:
+                    raise ValueError("....")
+            else:
+                how = 'comparativescatter'
         else:
             x = get_axis(self, 'X', x)
         # TODO: The y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
@@ -288,7 +290,7 @@ class CommonDataList(list):
             data.set_longitude_range(range_start)
 
     def plot(self, how=None, ax=None, y=None, layer_opts=None, *args, **kwargs):
-        if how == 'comparativescatter':
+        if how in ['comparativescatter', 'histogram2d']:
             if y is not None:
                 raise ValueError("...")
                 #TODO

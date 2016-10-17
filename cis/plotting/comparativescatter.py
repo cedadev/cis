@@ -10,7 +10,7 @@ class ComparativeScatter(APlot):
         logging.debug("Unpacking the data items")
         self.x, self.y = self.xaxis.data, packed_data_items.data
 
-        self.mplkwargs['label'] = self.label or packed_data_items.long_name
+        self.label = packed_data_items.long_name if self.label is None else self.label
 
         self.xlabel = self.xaxis.name()
         self.ylabel = packed_data_items.name()
@@ -27,6 +27,9 @@ class ComparativeScatter(APlot):
 
         if self.color is not None:
             self.mplkwargs["c"] = self.color
+
+        if self.label is not None:
+            self.mplkwargs['label'] = self.label
 
         self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
 
