@@ -16,6 +16,7 @@ class ContourPlot(Generic2DPlot):
 
     def __call__(self):
         import numpy as np
+        from matplotlib import colors, ticker
 
         # Set the options specific to a datagroup with the contour type
         mplkwargs = self.mplkwargs
@@ -23,33 +24,24 @@ class ContourPlot(Generic2DPlot):
         mplkwargs["colors"] = self.color
 
         mplkwargs["linewidths"] = self.contwidth
-        if self.cmin is not None:
-            vmin = self.cmin
-        if self.cmax is not None:
-            vmax = self.cmax
 
-        if self.vstep is None and \
-                        self.contnlevels is None:
-            nconts = self.DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS + 1
-        elif self.vstep is None:
-            nconts = self.contnlevels
-        else:
-            nconts = (vmax - vmin) / self.vstep
+        if self.logv:
+            mplkwargs['locator'] = ticker.LogLocator()
 
-        if self.contlevels is None:
-            if self.logv is None:
-                contour_level_list = np.linspace(vmin, vmax, nconts)
-            else:
-                contour_level_list = np.logspace(np.log10(vmin), np.log10(vmax), nconts)
-        else:
-            contour_level_list = self.contlevels
+        if self.contlevels:
+            mplkwargs['levels'] = self.contlevels
+        elif self.contnlevels:
+            mplkwargs['levels'] = self.contnlevels
+        elif self.vstep:
+            mplkwargs['levels'] = (mplkwargs.get('vmin', self.data.min) -
+                                   mplkwargs.get('vmax', self.data.max)) / self.vstep
 
         contour_type = self.ax.contourf if self.filled else self.ax.contour
 
-        contours = contour_type(self.x, self.y, self.data, contour_level_list, **mplkwargs)
+        self.map = contour_type(self.x, self.y, self.data, **mplkwargs)
 
         if self.contlabel:
-            self.ax.clabel(contours, **self.cont_label_kwargs)
+            self.ax.clabel(self.map, **self.cont_label_kwargs)
 
         super(ContourPlot, self).__call__()
 

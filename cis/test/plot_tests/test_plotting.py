@@ -891,7 +891,7 @@ class TestPlotAPIVisual(VisualTest):
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         d = make_regular_2d_ungridded_data()
-        d.plot(how='scatter2d', bluemarble=True)
+        d.plot(how='scatter2d', nasabluemarble=True)
 
         self.check_graphic()
 
@@ -901,7 +901,7 @@ class TestPlotAPIVisual(VisualTest):
         d = make_regular_2d_ungridded_data()
         d.lat.axis = ''
         d.lon.axis=''
-        d.plot(how='scatter2d', x='longitude', y='latitude', bluemarble=True)
+        d.plot(how='scatter2d', x='longitude', y='latitude', nasabluemarble=True)
 
         self.check_graphic()
 
@@ -911,7 +911,7 @@ class TestPlotAPIVisual(VisualTest):
         d = make_regular_2d_ungridded_data()
         d.lat.axis = ''
         d.lon.axis=''
-        d.plot(how='scatter2d', x=d.lon, y=d.lat, bluemarble=True)
+        d.plot(how='scatter2d', x=d.lon, y=d.lat, nasabluemarble=True)
 
         self.check_graphic()
 
@@ -968,7 +968,7 @@ class TestPlotAPIVisual(VisualTest):
 
         d = make_regular_2d_ungridded_data()
         # with assert_raises(ValueError):
-        d.plot(how='histogram', bluemarble=True)
+        d.plot(how='histogram', nasabluemarble=True)
 
         self.check_graphic()
 

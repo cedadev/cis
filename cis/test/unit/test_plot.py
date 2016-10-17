@@ -144,7 +144,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        data.plot('heatmap', bluemarble=False)
+        data.plot('heatmap', nasabluemarble=False)
 
     def test_lat_lon_increasing_no_bounds(self):
         x = np.array([0.5, 1.5])
@@ -167,7 +167,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        data.plot('heatmap', bluemarble=False)
+        data.plot('heatmap', nasabluemarble=False)
 
     def test_lat_lon_decreasing_no_bounds(self):
         x = np.array([0.5, -0.5])
@@ -190,7 +190,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_values, expected_v)
 
         # Test that a plot doesn't fail.
-        data.plot('heatmap', bluemarble=False)
+        data.plot('heatmap', nasabluemarble=False)
 
     def test_wide_longitude(self):
         x = np.arange(-174, 186, 10)
@@ -207,7 +207,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        data.plot('heatmap', bluemarble=False)
+        data.plot('heatmap', nasabluemarble=False)
 
     def test_longitude_0_360(self):
         x = np.arange(10, 370, 20)
@@ -224,7 +224,7 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        data.plot('heatmap', bluemarble=False)
+        data.plot('heatmap', nasabluemarble=False)
 
     def test_longitude_0_360_one_degree(self):
         x = np.arange(0.5, 360.5, 1)
@@ -241,4 +241,4 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
 
         # Test that a plot doesn't fail.
-        data.plot('heatmap', bluemarble=False)
+        data.plot('heatmap', nasabluemarble=False)

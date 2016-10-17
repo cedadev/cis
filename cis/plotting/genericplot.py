@@ -167,11 +167,10 @@ class GenericPlot(APlot):
 
 class Generic2DPlot(APlot):
 
-    DEFAULT_NUMBER_OF_COLOUR_BAR_STEPS = 5
-
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
-    def __init__(self, packed_data_items, ax=None, transparency=None, logv=None, *args, **kwargs):
+    def __init__(self, packed_data_items, ax=None, transparency=None, logv=None, vstep=None,
+                 cbarscale=None, cbarorient=None, colourbar=True, cbarlabel=None, *args, **kwargs):
         """
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -184,9 +183,15 @@ class Generic2DPlot(APlot):
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
+        from .APlot import format_units
         super(Generic2DPlot, self).__init__(packed_data_items, ax, *args, **kwargs)
 
         self.logv = logv
+        self.vstep = vstep
+        self.cbarscale = cbarscale
+        self.cbarorient = cbarorient
+        self.colourbar = colourbar
+        self.cbarlabel = cbarlabel or format_units(packed_data_items.units)
 
         self.transparency = transparency
 
@@ -203,22 +208,10 @@ class Generic2DPlot(APlot):
         self.label = packed_data_items.name()
 
     def __call__(self):
+        from .plot import add_color_bar
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
-
         self.ax.set_title(self.label)
-
-    def calculate_min_and_max_values(self):
-        """
-        Calculates the min and max values of all the data given
-        Stores the values in the matplotlib keyword args to be directly passed into the plot methods.
-        """
-        from .APlot import calc_min_and_max_vals_of_array_incl_log
-
-        data_min, data_max = calc_min_and_max_vals_of_array_incl_log(self.data)
-
-        vmin = self.vmin if self.vmin is not None else data_min
-        vmax = self.vmax if self.vmax is not None else data_max
-
-        return vmin, vmax
+        if self.colourbar:
+            add_color_bar(self.map, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
 

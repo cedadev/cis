@@ -13,7 +13,6 @@ from cis.plotting.histogram2d import Histogram2D
 import logging
 from .APlot import format_units
 from .genericplot import format_plot
-from .formatter import LogFormatterMathtextSpecial
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
@@ -146,7 +145,7 @@ def _test_natural_earth_available():
     :return: Can we access natural earth?
     """
     from cartopy.io.shapereader import natural_earth
-    from urllib.error import HTTPError
+    from six.moves.urllib.error import HTTPError
     try:
         natural_earth_available = natural_earth()
     except HTTPError:
@@ -267,38 +266,30 @@ def auto_set_ticks(ax, axis, lat_lon=False):
     mpl_axis.grid(False, which='minor')
 
 
-def add_color_bar(cbarorient, cbarscale, cbarlabel, logv, vstep):
+def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
     """
     Adds a colour bar to a plot
     Allows specifying of tick spacing and orientation
     """
-    from .APlot import format_units
-    from matplotlib.colorbar import ColorbarBase
     import matplotlib.pyplot as plt
+    from .formatter import LogFormatterMathtextSpecial
+    from matplotlib.ticker import MultipleLocator
 
-    plt.colorbar()
-    step = vstep
-    if step is None:
-        ticks = None
-    else:
-        from matplotlib.ticker import MultipleLocator
-        ticks = MultipleLocator(step)
+    cbar_kwargs = {}
+
+    if vstep is not None:
+        cbar_kwargs['ticks'] = MultipleLocator(vstep)
 
     if logv:
-        formatter = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
-    else:
-        formatter = None
+        cbar_kwargs['formatter'] = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
     #
-    scale = cbarscale
-    orientation = cbarorient
-    if scale is None:
-        default_scales = {"horizontal": 1.0, "vertical": 0.55}
-        scale = default_scales.get(orientation, 1.0)
-    else:
-        scale = float(scale)
+    if cbarscale is not None:
+        cbar_kwargs['shrink'] = cbarscale
 
-    cbar = plt.colorbar(orientation=orientation, ticks=ticks,
-                        shrink=scale, format=formatter)
+    if cbarorient is not None:
+        cbar_kwargs['orientation'] = cbarorient
+
+    cbar = plt.colorbar(mappable, **cbar_kwargs)
 
     if not logv:
         cbar.formatter.set_scientific(True)
@@ -308,7 +299,8 @@ def add_color_bar(cbarorient, cbarscale, cbarlabel, logv, vstep):
     cbar.set_label(cbarlabel)
 
 
-def basic_plot(data, how=None, ax=None, x=None, y=None, projection=None, nasabluemarble=True, *args, **kwargs):
+def basic_plot(data, how=None, ax=None, x=None, y=None, projection=None, nasabluemarble=True, coastlines=None,
+               coastlinescolour='k', *args, **kwargs):
     import cartopy.crs as ccrs
     import matplotlib.pyplot as plt
     import numpy as np
@@ -361,6 +353,8 @@ def basic_plot(data, how=None, ax=None, x=None, y=None, projection=None, nasablu
     if is_map(x, y, how):
         if nasabluemarble:
             drawbluemarble(ax, transform)
+        if coastlines or (coastlines is None and not nasabluemarble):
+            drawcoastlines(ax, coastlinescolour)
         auto_set_map_ticks(ax, transform)
     else:
         # TODO What's wrong with the matplotlib one...?
@@ -371,18 +365,12 @@ def basic_plot(data, how=None, ax=None, x=None, y=None, projection=None, nasablu
     return ax
 
 
-def map_kwargs_to_mplkwargs(**kwargs):
-    pass
-
-
 class Plotter(object):
 
-    def __init__(self, data, type=None, output=None, layer_opts=None, plotheight=None,
-                 plotwidth=None, logx=False, logy=False, xmin=None, nocolourbar=False,
-                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, cbarlabel=None, coastlinescolour='k',
-                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None,
-                 logv=False, vstep=None,
-                 cbarscale=None, cbarorient=None, projection=None, *args, **kwargs):
+    def __init__(self, data, type=None, output=None, plotheight=None,
+                 plotwidth=None, logx=False, logy=False, xmin=None,
+                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None,
+                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None, *args, **kwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
 
@@ -393,9 +381,6 @@ class Plotter(object):
         :param args: Any other arguments received from the parser
         :param kwargs: Any other keyword arguments received from the plotter
         """
-        from .genericplot import Generic2DPlot
-
-        map_kwargs_to_mplkwargs()
 
         try:
             self.ax = data.plot(how=type, *args, **kwargs)
@@ -410,19 +395,7 @@ class Plotter(object):
 
         apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
 
-        # xlabel = xlabel or self.plot_types[type].guess_axis_label(data, xaxis)
-        # ylabel = ylabel or self.plot_types[type].guess_axis_label(data, yaxis)
-
-        # TODO: THere is some formatting stuff which is really plot dependant - e.g. the color bars, and the
-        #  contour levels, but shouldn't happen in a default plot.
-        # Perhaps I can create a format method on the plot types - but the plotter doesn't see that.
-        # OR have a static plotting method which CommonData calls which can then do the formatting...?
-
         format_plot(self.ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title, legend=len(data)>1)
-
-        if isinstance(self.plot_types[type], Generic2DPlot) and not nocolourbar:
-            add_color_bar(cbarorient=cbarorient, cbarscale=cbarscale, cbarlabel=cbarlabel or format_units(data[0].units),
-                          logv=logv, vstep=vstep)
 
         self.output_to_file_or_screen(output)
 
