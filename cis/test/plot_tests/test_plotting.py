@@ -117,8 +117,8 @@ class TestPlotVisual(VisualTest):
 
     def test_iris_comparative_scatter(self):
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":color=green,itemstyle=^,itemwidth=400",
-                    "snow:" + escape_colons(valid_2d_filename), "--type", "comparativescatter",
-                    "--logx", "--logy", "--output", self.id() + ".png"]
+                     "snow:" + escape_colons(valid_2d_filename), "--type", "comparativescatter",
+                     "--logx", "--logy", "--output", self.id() + ".png"]
 
         main_arguments = parse_args(arguments)
         plot_cmd(main_arguments)

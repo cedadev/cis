@@ -109,8 +109,10 @@ class CommonData(object):
         """
         pass
 
-    def plot(self, *args, **kwargs):
+    def plot(self, layer_opts=None, *args, **kwargs):
         from cis.plotting.plot import basic_plot
+        if layer_opts is not None:
+            kwargs.update(layer_opts[0])
         return basic_plot(self, *args, **kwargs)
 
     @abstractmethod

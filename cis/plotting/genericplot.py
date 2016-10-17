@@ -8,45 +8,6 @@ from cis.exceptions import CISError
 # TODO: Carry on splitting out the 2d and 3d plot methods. Make the relavant plots subclass the right one. Pull out any
 # obviously static methods. and split files. This should make the classes more manageable and easier to test.
 
-
-def set_yaxis_ticks(ax, step=None, transform=None):
-    from cartopy.mpl.ticker import LatitudeFormatter
-    from cartopy.mpl.geoaxes import GeoAxes
-    from numpy import arange
-
-    tick_kwargs = {}
-
-    if isinstance(ax, GeoAxes):
-        ax.yaxis.set_major_formatter(LatitudeFormatter())
-        tick_kwargs['crs'] = transform
-
-    # TODO: this should be checked outside of this function
-    if step is not None:
-        min_val, max_val = ax.get_ylim()
-        ticks = arange(min_val, max_val + step, step)
-
-        ax.set_yticks(ticks, **tick_kwargs)
-
-
-def set_xaxis_ticks(ax, step=None, transform=None):
-    from cartopy.mpl.ticker import LongitudeFormatter
-    from cartopy.mpl.geoaxes import GeoAxes
-    from numpy import arange
-
-    tick_kwargs = {}
-
-    if isinstance(ax, GeoAxes):
-        ax.xaxis.set_major_formatter(LongitudeFormatter())
-        tick_kwargs['crs'] = transform
-
-    # TODO: this should be checked outside of this function
-    if step is not None:
-        min_val, max_val = ax.get_xlim()
-        ticks = arange(min_val, max_val + step, step)
-
-        ax.set_xticks(ticks, **tick_kwargs)
-
-
 def unpack_data_items(data_object, x, y):
     """
     :param data_object    A cube or an UngriddedData object
@@ -116,8 +77,7 @@ def unpack_data_items(data_object, x, y):
     return data, x, y
 
 
-def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title,
-                transform=None, legend=False):
+def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title):
     """
     Used by 2d subclasses to format the plot
     """
@@ -131,21 +91,29 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, ti
     if grid:
         ax.grid(True, which="both")
 
-    set_xaxis_ticks(ax, xstep, transform)
-    set_yaxis_ticks(ax, ystep, transform)
+    if xstep is not None:
+        min_val, max_val = ax.get_xlim()
+        ticks = np.arange(min_val, max_val + xstep, xstep)
+
+        ax.set_xticks(ticks)
+
+    if ystep is not None:
+        min_val, max_val = ax.get_ylim()
+        ticks = np.arange(min_val, max_val + ystep, ystep)
+
+        ax.set_yticks(ticks)
 
     if fontsize is not None:
         matplotlib.rcParams.update({'font.size': fontsize})
 
-    # If any of the options have not been specified, then use the defaults
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
 
-    ax.set_title(title)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
 
-    if legend:
-        legend = ax.legend(loc="best")
-        legend.draggable(state=True)
+    if title is not None:
+        ax.set_title(title)
 
 
 class GenericPlot(APlot):

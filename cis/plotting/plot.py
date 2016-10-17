@@ -388,7 +388,7 @@ class Plotter(object):
 
         try:
             self.ax = data.plot(how=type, *args, **kwargs)
-        except ValueError:
+        except ValueError as e:
             raise ValueError("...")
 
         self.fig = self.ax.get_figure()
@@ -399,7 +399,7 @@ class Plotter(object):
 
         apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
 
-        format_plot(self.ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title, legend=len(data)>1)
+        format_plot(self.ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title)
 
         self.output_to_file_or_screen(output)
 
