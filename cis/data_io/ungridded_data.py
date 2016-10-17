@@ -803,6 +803,8 @@ class UngriddedCoordinates(CommonData):
         from cis.utils import fix_longitude_range
         self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
+    def _get_default_plot_type(self, lat_lon=False):
+        raise NotImplementedError("UngriddedCoordinates have no default plot type")
 
 class UngriddedDataList(CommonDataList):
     """

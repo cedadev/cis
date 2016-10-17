@@ -4,13 +4,12 @@ from cis.plotting.genericplot import GenericPlot
 class Histogram(GenericPlot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
 
-    def __init__(self, packed_data_items, *args, xbinwidth=None, **kwargs):
-        super(Histogram, self).__init__(packed_data_items, *args, **kwargs)
+    def __init__(self, packed_data_items, ax, xbinwidth=None, *args, **kwargs):
+        super(Histogram, self).__init__(packed_data_items, ax, *args, **kwargs)
         self.xbinwidth = xbinwidth
         #
         self.xlabel = packed_data_items.name()
         self.ylabel = "Frequency"
-
 
     def __call__(self):
         """
