@@ -31,12 +31,16 @@ class VisualTest(BaseIntegrationTest):
     _DEFAULT_IMAGE_TOLERANCE = 0.2
 
     def setUp(self):
+        # Set force overwrite in case working files are still present
+        os.environ['CIS_FORCE_OVERWRITE'] = "True"
         # Make sure we have no unclosed plots from previous tests before
         # generating this one.
         if _DISPLAY_FIGURES:
             plt.close('all')
 
     def tearDown(self):
+        # Pop off the environemnt variable
+        os.environ.pop('CIS_FORCE_OVERWRITE')
         # If a plotting test bombs out it can leave the current figure
         # in an odd state, so we make sure it's been disposed of.
         if _DISPLAY_FIGURES:
@@ -406,7 +410,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90)
 
         self.check_graphic()
@@ -420,7 +424,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90, xmin=-180, xmax=180)
 
         self.check_graphic()
@@ -434,7 +438,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90)
 
         self.check_graphic()
@@ -448,7 +452,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90, xmin=0, xmax=360)
 
         self.check_graphic()
@@ -462,7 +466,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90, nasabluemarble=True)
 
         self.check_graphic()
@@ -476,7 +480,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90, nasabluemarble=True)
 
         self.check_graphic()
@@ -490,7 +494,7 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 ymin=-90, ymax=90, coastlinescolour='red', layer_opts=[{'itemwidth': 50}])
 
         self.check_graphic()
@@ -505,7 +509,7 @@ class TestPlotVisual(VisualTest):
         datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
                  make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
 
-        Plotter(datas, xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter(datas, xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 ymin=-90, ymax=90, xmin=-180, xmax=180,
                 layer_opts=[{'label': '-180to180', 'itemwidth': 50}, {'label': '0to360', 'itemwidth': 50}])
 
@@ -521,7 +525,7 @@ class TestPlotVisual(VisualTest):
         datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
                  make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=30, lat_max=60)]
 
-        Plotter(datas, xaxis='longitude', yaxis='latitude', plotwidth=8, plotheight=6, cbarscale=None,
+        Plotter(datas, xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
                 ymin=-90, ymax=90, xmin=-180, xmax=180,
                 layer_opts=[{'label': '-180to180', 'itemwidth': 50}, {'label': '0to360', 'itemwidth': 50}])
 
@@ -530,7 +534,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_iris_contour_over_heatmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
+        opts = "--type overlay --width 20 --height 15 --cbarscale 0.5".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
@@ -543,7 +547,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_iris_contour_over_heatmap_binary_cmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5".split()
+        opts = "--type overlay --xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cmap=binary",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
@@ -556,7 +560,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_transparent_contour_over_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --xmin -180 --xmax 180 --plotwidth 20 --plotheight 15 --cbarscale 0.5" \
+        opts = "--type overlay --xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5" \
                " --nasabluemarble".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.000075"]
@@ -569,7 +573,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_filled_contour_over_scatter(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
+        opts = "--type overlay --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
                " --ymin 0 --ymax 90".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter,itemwidth=20",
@@ -584,7 +588,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_filled_contour_over_scatter_with_cmin(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -180" \
+        opts = "--type overlay --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180" \
                " --xmax -90 --ymin 0 --ymax 90 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter,itemwidth=20",
@@ -624,7 +628,7 @@ class TestPlotVisual(VisualTest):
 
     def test_medium_plot_region(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
                " --ymin 50 --ymax 70".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -636,7 +640,7 @@ class TestPlotVisual(VisualTest):
 
     def test_small_plot_region(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
                " --ymin 59 --ymax 61".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -648,7 +652,7 @@ class TestPlotVisual(VisualTest):
 
     def test_very_small_plot_region(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -151.5 --xmax -151.2" \
+        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -151.5 --xmax -151.2" \
                " --ymin 60.4 --ymax 60.8".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -660,7 +664,7 @@ class TestPlotVisual(VisualTest):
 
     def test_medium_plot_region_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
                " --ymin 50 --ymax 70 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename)]
@@ -672,7 +676,7 @@ class TestPlotVisual(VisualTest):
 
     def test_small_plot_region_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --plotwidth 20 --plotheight 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
                " --ymin 59 --ymax 61 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -686,7 +690,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = []
 
-        arguments = ["plot", valid_aerosol_cci_variable + ":" + valid_aerosol_cci_filename]
+        arguments = ["plot", valid_aerosol_cci_variable + ":" + escape_colons(valid_aerosol_cci_filename)]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
