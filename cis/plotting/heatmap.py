@@ -4,9 +4,9 @@ from cis.plotting.genericplot import Generic2DPlot
 
 class Heatmap(Generic2DPlot):
 
-    def __init__(self, packed_data_items, ax, nasabluemarble=None, *args, **kwargs):
+    def __init__(self, packed_data_items, nasabluemarble=None, *args, **kwargs):
         # Do this here because if this is ungridded data, we won't be able to complete the super() call
-        super(Heatmap, self).__init__(packed_data_items, ax, nasabluemarble, *args, **kwargs)
+        super(Heatmap, self).__init__(packed_data_items, nasabluemarble, *args, **kwargs)
         self.nasabluemarble = False if nasabluemarble is None else nasabluemarble
 
     def __call__(self, ax):

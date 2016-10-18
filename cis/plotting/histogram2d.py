@@ -4,9 +4,9 @@ import numpy
 
 class Histogram2D(ComparativeScatter):
 
-    def __init__(self, packed_data_items, ax, logv=None, vstep=None,
+    def __init__(self, packed_data_items, logv=None, vstep=None,
                  cbarscale=None, cbarorient=None, colourbar=True, cbarlabel=None, *args, **kwargs):
-        super(Histogram2D, self).__init__(packed_data_items, ax, *args, **kwargs)
+        super(Histogram2D, self).__init__(packed_data_items, *args, **kwargs)
 
         self.logv = logv
         self.vstep = vstep
