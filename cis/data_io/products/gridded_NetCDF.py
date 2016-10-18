@@ -24,11 +24,15 @@ class NetCDF_Gridded(AProduct):
     def get_variable_names(self, filenames, data_type=None):
         import iris
         import cf_units as unit
+        from cis.utils import single_warnings_only
         # Removes warnings and prepares for future Iris change
         iris.FUTURE.netcdf_promote = True
 
         variables = []
-        cubes = iris.load(filenames)
+
+        # Filter the warnings so that they only appear once - otherwise you get lots of repeated warnings
+        with single_warnings_only:
+            cubes = iris.load(filenames)
 
         for cube in cubes:
             is_time_lat_lon_pressure_altitude_or_has_only_1_point = True
