@@ -31,7 +31,7 @@ class NetCDF_Gridded(AProduct):
         variables = []
 
         # Filter the warnings so that they only appear once - otherwise you get lots of repeated warnings
-        with single_warnings_only:
+        with single_warnings_only():
             cubes = iris.load(filenames)
 
         for cube in cubes:
