@@ -85,7 +85,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
         iris.FUTURE.netcdf_promote = True
 
         # Filter the warnings so that they only appear once - otherwise you get lots of repeated warnings
-        with single_warnings_only:
+        with single_warnings_only():
             cubes = iris.load(filenames)
 
         return set(cube.name() for cube in cubes)
