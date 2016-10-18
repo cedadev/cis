@@ -13,7 +13,6 @@ class ScatterPlot(GenericPlot):
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
         """
-        super(ScatterPlot, self).__call__()
         # TODO: This is better now but I'm still not convinced about having mplkwargs being changed globably like this
         if self.itemwidth is not None:
             self.mplkwargs["s"] = self.itemwidth
@@ -54,6 +53,9 @@ class ScatterPlot2D(Generic2DPlot):
 
         self.mplkwargs["c"] = self.data
 
-        self.map = ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
+        self.mappable = ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
 
-        super(ScatterPlot2D, self).__call__()
+        super(ScatterPlot2D, self).__call__(ax)
+
+    def unpack_data_items(self, packed_data_items):
+        return packed_data_items.data, self.xaxis.points, self.yaxis.points

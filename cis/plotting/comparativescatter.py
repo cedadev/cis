@@ -51,3 +51,6 @@ class ComparativeScatter(APlot):
 
         # Turn scaling back on
         ax.set_autoscale_on(True)
+
+    def is_map(self):
+        return False

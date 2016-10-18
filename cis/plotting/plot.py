@@ -322,7 +322,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     # TODO: Check that projection=None is a valid default.
 
     try:
-        plot = plot_types[how](data, ax, xaxis=xaxis, yaxis=yaxis, label=kwargs.get('label', None) or data.var_name,
+        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=kwargs.get('label', None) or data.var_name,
                                *args, **kwargs)
     except KeyError:
         raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))

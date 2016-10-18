@@ -137,3 +137,6 @@ class Generic2DPlot(APlot):
     def is_map(self):
         if self.xaxis.name().lower().startswith("lon") and self.yaxis.name().lower().startswith("lat"):
             return True
+
+    def unpack_data_items(self, packed_data_items):
+        raise NotImplementedError("Subclass of Generic2DPlot must define an 'unpack_data_items method")
