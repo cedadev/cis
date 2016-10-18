@@ -109,10 +109,8 @@ class CommonData(object):
         """
         pass
 
-    def plot(self, layer_opts=None, *args, **kwargs):
+    def plot(self, *args, **kwargs):
         from cis.plotting.plot import basic_plot
-        if layer_opts is not None:
-            kwargs.update(layer_opts[0])
         return basic_plot(self, *args, **kwargs)
 
     @abstractmethod
@@ -233,24 +231,6 @@ class CommonDataList(list):
         for data in self:
             data.set_longitude_range(range_start)
 
-    def plot(self, how=None, ax=None, y=None, layer_opts=None, *args, **kwargs):
-        if how in ['comparativescatter', 'histogram2d']:
-            if y is not None:
-                raise ValueError("...")
-                #TODO
-            ax = self[1].plot(how, ax, x=self[0], *args, **kwargs)
-        else:
-            layer_opts = [{} for i in self] if layer_opts is None else layer_opts
-
-            if not isinstance(y, list):
-                y = [y for i in self]
-
-            for d, yaxis, opts in zip(self, y, layer_opts):
-                layer_kwargs = dict(list(kwargs.items()) + list(opts.items()))
-                ax = d.plot(how, ax, y=yaxis, *args, **layer_kwargs)
-
-            legend = ax.legend(loc="best")
-            if legend is not None:
-                legend.draggable(state=True)
-
-        return ax
+    def plot(self, *args, **kwargs):
+        from cis.plotting.plot import multilayer_plot
+        multilayer_plot(self, *args, **kwargs)

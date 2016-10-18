@@ -70,7 +70,7 @@ def plot_cmd(main_arguments):
     _ = main_arguments.pop("quiet")
     _ = main_arguments.pop("verbose")
     _ = main_arguments.pop("force_overwrite")
-    _ = main_arguments.pop("output_var")
+    _ = main_arguments.pop("output_var", None)
 
     layer_opts = [{k: v for k, v in d.items() if k not in ['variables', 'filenames', 'product']}
                   for d in main_arguments.pop('datagroups')]

@@ -9,7 +9,7 @@ class LinePlot(GenericPlot):
     #     self.xlabel = self.x.name()
     #     self.ylabel = self.data.name()
 
-    def __call__(self):
+    def __call__(self, ax):
         """
         Plots one or many line graphs
         """
@@ -39,9 +39,9 @@ class LinePlot(GenericPlot):
             raise InvalidDimensionError("The plot axes are incompatible, please check and specify at least one "
                                         "axis manually.")
 
-        self.ax.plot(self.x, self.data, *self.mplargs, **self.mplkwargs)
+        ax.plot(self.x, self.data, *self.mplargs, **self.mplkwargs)
 
-        super(LinePlot, self).__call__()
+        super(LinePlot, self).__call__(ax)
 
     # @staticmethod
     # def guess_axis_label(data, axisvar=None, axis=None):

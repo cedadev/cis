@@ -50,7 +50,7 @@ class APlot(object):
 
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
-    def __init__(self, packed_data_items, ax, xaxis, yaxis, color=None,
+    def __init__(self, packed_data_items, xaxis, yaxis, color=None,
                  edgecolor=None, itemstyle=None, itemwidth=None, label=None, *mplargs, **mplkwargs):
         """
         Constructor for Generic_Plot.
@@ -68,8 +68,6 @@ class APlot(object):
         self.x = None
         self.y = None
 
-        self.ax = ax
-
         self.xaxis = xaxis
         self.yaxis = yaxis
         self.color = color
@@ -84,7 +82,7 @@ class APlot(object):
         self.color_axis = []
 
     @abstractmethod
-    def __call__(self):
+    def __call__(self, ax):
         """
         The method that will do the plotting. To be implemented by each subclass of Generic_Plot.
         """
@@ -118,3 +116,10 @@ class APlot(object):
     @staticmethod
     def valid_number_of_datagroups(number_of_datagroups):
         return number_of_datagroups == 1
+
+    @abstractmethod
+    def is_map(self):
+        """
+        :return: A boolean saying if this plot should be represented as a map
+        """
+        pass

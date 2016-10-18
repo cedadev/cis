@@ -116,6 +116,7 @@ class VisualTest(BaseIntegrationTest):
 class TestPlotVisual(VisualTest):
 
     def test_iris_comparative_scatter(self):
+        # This doesn't look right currently because of this bug: https://github.com/matplotlib/matplotlib/issues/6015
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":color=green,itemstyle=^,itemwidth=400",
                      "snow:" + escape_colons(valid_2d_filename), "--type", "comparativescatter",
                      "--logx", "--logy", "--output", self.id() + ".png"]

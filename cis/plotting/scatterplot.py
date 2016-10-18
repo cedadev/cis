@@ -8,7 +8,7 @@ class ScatterPlot(GenericPlot):
     #     self.xlabel = self.x.name()
     #     self.ylabel = self.data.name()
 
-    def __call__(self):
+    def __call__(self, ax):
         """
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
@@ -29,14 +29,14 @@ class ScatterPlot(GenericPlot):
 
         # By plotting the data as flat arrays with a line style of 'o' we get a scatter plot - with the added
         #  benefit of not having to keep track of the layers ourselves.
-        self.ax.plot(self.x.flat, self.data.flat, 'o', *self.mplargs, **self.mplkwargs)
+        ax.plot(self.x.flat, self.data.flat, 'o', *self.mplargs, **self.mplkwargs)
 
-        super(ScatterPlot, self).__call__()
+        super(ScatterPlot, self).__call__(ax)
 
 
 class ScatterPlot2D(Generic2DPlot):
 
-    def __call__(self):
+    def __call__(self, ax):
         """
         Plots one or many scatter plots
         Stores the plot in a list to be used for when adding the legend
@@ -54,6 +54,6 @@ class ScatterPlot2D(Generic2DPlot):
 
         self.mplkwargs["c"] = self.data
 
-        self.map = self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
+        self.map = ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
 
         super(ScatterPlot2D, self).__call__()

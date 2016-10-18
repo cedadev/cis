@@ -8,14 +8,14 @@ class ComparativeScatter(APlot):
         super(ComparativeScatter, self).__init__(packed_data_items, *mplargs, **mplkwargs)
 
         logging.debug("Unpacking the data items")
-        self.x, self.y = self.xaxis.data, packed_data_items.data
+        self.x, self.y = getattr(self.xaxis, 'points', None) or self.xaxis.data, packed_data_items.data
 
         self.label = packed_data_items.long_name if self.label is None else self.label
 
         self.xlabel = self.xaxis.name()
         self.ylabel = packed_data_items.name()
 
-    def __call__(self):
+    def __call__(self, ax):
         if self.itemwidth is not None:
             self.mplkwargs["s"] = self.itemwidth
 
@@ -31,23 +31,23 @@ class ComparativeScatter(APlot):
         if self.label is not None:
             self.mplkwargs['label'] = self.label
 
-        self.ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
+        ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
 
-        self._plot_xy_line()
+        self._plot_xy_line(ax)
 
-        self.ax.set_xlabel(self.xlabel)
-        self.ax.set_ylabel(self.ylabel)
+        ax.set_xlabel(self.xlabel)
+        ax.set_ylabel(self.ylabel)
 
-    def _plot_xy_line(self):
+    def _plot_xy_line(self, ax):
         import numpy as np
         # Turn the scaling off so that we don't change the limits by plotting the line
-        self.ax.set_autoscale_on(False)
+        ax.set_autoscale_on(False)
 
-        lims = [np.min([self.ax.get_xlim(), self.ax.get_ylim()]),  # min of both axes
-                np.max([self.ax.get_xlim(), self.ax.get_ylim()])]  # max of both axes
+        lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+                np.max([ax.get_xlim(), ax.get_ylim()])]  # max of both axes
 
         # now plot both limits against each other for the x=y line
-        self.ax.plot(lims, lims, color="black", linestyle="dashed")
+        ax.plot(lims, lims, color="black", linestyle="dashed")
 
         # Turn scaling back on
-        self.ax.set_autoscale_on(True)
+        ax.set_autoscale_on(True)

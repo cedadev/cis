@@ -4,23 +4,24 @@ from cis.plotting.genericplot import Generic2DPlot
 
 class Heatmap(Generic2DPlot):
 
-    def __init__(self, packed_data_items, ax, *args, **kwargs):
+    def __init__(self, packed_data_items, ax, nasabluemarble=None, *args, **kwargs):
         # Do this here because if this is ungridded data, we won't be able to complete the super() call
-        super(Heatmap, self).__init__(packed_data_items, ax, *args, **kwargs)
+        super(Heatmap, self).__init__(packed_data_items, ax, nasabluemarble, *args, **kwargs)
+        self.nasabluemarble = False if nasabluemarble is None else nasabluemarble
 
-    def __call__(self):
+    def __call__(self, ax):
         """
         Plots a heatmap
         """
-        self.map = self.ax.pcolormesh(self.x, self.y, self.data, *self.mplargs, **self.mplkwargs)
+        self.mappable = ax.pcolormesh(self.x, self.y, self.data, *self.mplargs, **self.mplkwargs)
 
-        super(Heatmap, self).__call__()
+        super(Heatmap, self).__call__(ax)
 
-    def unpack_data_items(self, packed_data_items, x_wrap_start=None):
-        self.x, self.y, self.data = make_color_mesh_cells(packed_data_items, self.xaxis, self.yaxis)
+    def unpack_data_items(self, packed_data_items):
+        return make_color_mesh_cells(packed_data_items, self.xaxis, self.yaxis)
 
 
-def make_color_mesh_cells(packed_data_item, xvar, yvar):
+def make_color_mesh_cells(packed_data_item, x, y):
     """
     Generate the correct cell corners for use with a heatmap, since heatmap doesn't take
     cell centers but cell corners
@@ -28,11 +29,8 @@ def make_color_mesh_cells(packed_data_item, xvar, yvar):
     :param plot_args: dictionary of plot arguments
     :return:
     """
-    from cis.utils import get_coord
 
     data = packed_data_item.data
-    x = get_coord(packed_data_item, xvar, data)
-    y = get_coord(packed_data_item, yvar, data)
 
     x_dim = packed_data_item.coord_dims(x)
     y_dim = packed_data_item.coord_dims(y)
@@ -46,4 +44,4 @@ def make_color_mesh_cells(packed_data_item, xvar, yvar):
     else:
         yv, xv = numpy.meshgrid(y_vals, x_vals)
 
-    return xv, yv, data
+    return data, xv, yv

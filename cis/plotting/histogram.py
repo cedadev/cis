@@ -11,7 +11,7 @@ class Histogram(GenericPlot):
         self.xlabel = packed_data_items.name()
         self.ylabel = "Frequency"
 
-    def __call__(self):
+    def __call__(self, ax):
         """
         Plots a 2D histogram
         """
@@ -46,14 +46,14 @@ class Histogram(GenericPlot):
         else:
             data = self.data.flatten()
 
-        self.ax.hist(data, *self.mplargs, **self.mplkwargs)
+        ax.hist(data, *self.mplargs, **self.mplkwargs)
 
         # self.mplkwargs["vmin"] = vmin
         # self.mplkwargs["vmax"] = vmax
 
-        super(Histogram, self).__call__()
+        super(Histogram, self).__call__(ax)
 
-    def unpack_data_items(self, packed_data_items, x_wrap_start=None):
+    def unpack_data_items(self, packed_data_items):
         self.data = packed_data_items.data
 
     def calculate_bin_edges(self):

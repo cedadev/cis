@@ -17,17 +17,6 @@ from .genericplot import format_plot
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 
-def is_map(x, y, how):
-    """
-    :return: A boolean saying if the first packed data item contains lat and lon coordinates
-    """
-    if x.name().lower().startswith("lon") and y.name().lower().startswith("lat"):
-        if how in ['contour', 'heatmap', 'contourf', 'scatter2d']:
-            return True
-    else:
-        return False
-
-
 def name_preferring_standard(coord_item):
     for name in [coord_item.standard_name, coord_item.var_name, coord_item.long_name]:
         if name:
@@ -299,76 +288,94 @@ def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
     cbar.set_label(cbarlabel)
 
 
-def basic_plot(data, how=None, ax=None, x=None, y=None, projection=None, nasabluemarble=True, coastlines=None,
-               coastlinescolour='k', *args, **kwargs):
+def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None, *args, **kwargs):
     import cartopy.crs as ccrs
     import matplotlib.pyplot as plt
     import numpy as np
     from cis.data_io.common_data import CommonData
+    from cis.data_io.gridded_data import GriddedData
+    from iris.util import squeeze
 
     # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
 
-    if isinstance(x, CommonData):
+    # Remove any extra gridded data dimensions
+    if isinstance(data, GriddedData):
+        data = squeeze(data)
+
+    if isinstance(xaxis, CommonData):
         if how is not None:
             if how not in ['comparativescatter', 'histogram2d']:
                 raise ValueError("....")
         else:
             how = 'comparativescatter'
     else:
-        x = get_axis(data, 'X', x)
+        xaxis = get_axis(data, 'X', xaxis)
     # TODO: The y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
     # TODO: In fact, I might be better off combining the get axis calls into one method, since they are interdependant
     # for example it doesn't give sensible axis for make_regular_2d_ungridded_data with no coord axis metadata
     #  (even though they have standard names)
-    y = get_axis(data, 'Y', y)
+    yaxis = get_axis(data, 'Y', yaxis)
 
-    how = data._get_default_plot_type(x.standard_name == 'longitude'
-                                      and y.standard_name == 'latitude') if how is None else how
+    how = data._get_default_plot_type(xaxis.standard_name == 'longitude'
+                                      and yaxis.standard_name == 'latitude') if how is None else how
 
     # TODO: Check that projection=None is a valid default.
+
+    try:
+        plot = plot_types[how](data, ax, xaxis=xaxis, yaxis=yaxis, label=kwargs.get('label', None) or data.var_name,
+                               *args, **kwargs)
+    except KeyError:
+        raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
+
     transform = None
-    if is_map(x, y, how):
+    if plot.is_map():
         if projection is None:
-            projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, np.min(x.points) + 180.0)))
+            projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, np.min(xaxis.points) + 180.0)))
             transform = ccrs.PlateCarree()
-            kwargs['transform'] = transform
+            plot.mplkwargs['transform'] = transform
 
     if ax is None:
         _, ax = plt.subplots(subplot_kw={'projection': projection})
 
-    try:
-        plt = plot_types[how](data, ax, xaxis=x, yaxis=y, label=data.var_name, *args, **kwargs)
-    except KeyError:
-        raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
-
     # Make the plot
-    plt()
+    plot(ax)
 
-    if x.standard_name == 'time':
+    if xaxis.standard_name == 'time':
         set_x_axis_as_time(ax)
 
-    if y.standard_name == 'air_pressure':
+    if yaxis.standard_name == 'air_pressure':
         ax.invert_yaxis()
 
-    if is_map(x, y, how):
-        if nasabluemarble:
-            drawbluemarble(ax, transform)
-        if coastlines or (coastlines is None and not nasabluemarble):
-            drawcoastlines(ax, coastlinescolour)
-        auto_set_map_ticks(ax, transform)
+    return ax
+
+
+def multilayer_plot(data_list, how=None, ax=None, y=None, layer_opts=None, *args, **kwargs):
+    if how in ['comparativescatter', 'histogram2d']:
+        if y is not None:
+            raise ValueError("...")
+            # TODO
+        ax = data_list[1].plot(how, ax, xaxis=data_list[0], *args, **kwargs)
     else:
-        # TODO What's wrong with the matplotlib one...?
-        pass
-        # auto_set_ticks(ax, 'x', x.name().startswith('lon'))
-        # auto_set_ticks(ax, 'y', x.name().startswith('lat'))
+        layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
+
+        if not isinstance(y, list):
+            y = [y for i in data_list]
+
+        for d, yaxis, opts in zip(data_list, y, layer_opts):
+            layer_kwargs = dict(list(kwargs.items()) + list(opts.items()))
+            ax = d.plot(how, ax, yaxis=yaxis, *args, **layer_kwargs)
+
+        legend = ax.legend(loc="best")
+        if legend is not None:
+            legend.draggable(state=True)
 
     return ax
 
 
 class Plotter(object):
 
-    def __init__(self, data, type=None, output=None, plotheight=None,
-                 plotwidth=None, logx=False, logy=False, xmin=None,
+    def __init__(self, data, type=None, output=None, height=None,
+                 width=None, logx=False, logy=False, xmin=None,
                  xmax=None, xstep=None, ymin=None, ymax=None, ystep=None,
                  grid=False, xlabel=None, ylabel=None, title=None, fontsize=None, *args, **kwargs):
         """
@@ -386,16 +393,20 @@ class Plotter(object):
         if isinstance(data, list) and len(data) == 1:
             data = data[0]
 
-        try:
-            self.ax = data.plot(how=type, *args, **kwargs)
-        except ValueError as e:
-            raise ValueError("...")
+        # If it's still a list... We don't use the object methods because in the case of the command line API
+        #  we allow mixed Gridded and Ungridded data sets - which we don't allow for CommonDataLists
+        if isinstance(data, list):
+            self.ax = multilayer_plot(data, how=type, *args, **kwargs)
+        else:
+            if 'layer_opts' in kwargs:
+                kwargs.update(kwargs.pop('layer_opts')[0])
+            self.ax = basic_plot(data, how=type, *args, **kwargs)
 
         self.fig = self.ax.get_figure()
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
         # instance
 
-        self.set_width_and_height(plotwidth, plotheight)
+        self.set_width_and_height(width, height)
 
         apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
 
@@ -411,8 +422,10 @@ class Plotter(object):
          png being the default
         """
         import logging
+        import matplotlib.pyplot as plt
+
         if out_filename is None:
-            self.fig.show()
+            plt.show()
         else:
             logging.info("saving plot to file: " + out_filename)
             width = self.fig.get_figwidth()

@@ -64,7 +64,7 @@ def add_plot_parser_arguments(parser):
                              "colour and product is one of the options listed below. For example 'cis plot "
                              "var1:file:product=NetCDF_CF_Gridded,colour=red'. Products: " +
                              str([cls().__class__.__name__ for cls in product_classes]))
-    parser.add_argument("-o", "--output", metavar="Output filename", nargs="?", default="out",
+    parser.add_argument("-o", "--output", metavar="Output filename", nargs="?", default=None,
                         help="The filename of the output file for the plot image")
     parser.add_argument("--type", metavar="Chart type", nargs="?",
                         help="The chart type, one of: " + str(plot_types.keys()),

@@ -15,7 +15,7 @@ class Histogram2D(ComparativeScatter):
         self.colourbar = colourbar
         self.cbarlabel = cbarlabel or "Frequency"
 
-    def __call__(self):
+    def __call__(self, ax):
         """
         Plots a 2d histogram.
         """
@@ -30,12 +30,12 @@ class Histogram2D(ComparativeScatter):
         # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
         histogram2ddata, x, y = numpy.histogram2d(first_data_item, second_data_item)
         histogram2ddata = numpy.ma.masked_equal(histogram2ddata, 0)
-        self.map = self.ax.pcolor(x, y, histogram2ddata.T, *self.mplargs, **self.mplkwargs)
+        self.map = ax.pcolor(x, y, histogram2ddata.T, *self.mplargs, **self.mplkwargs)
 
-        self._plot_xy_line()
+        self._plot_xy_line(ax)
 
-        self.ax.set_xlabel(self.xlabel)
-        self.ax.set_ylabel(self.ylabel)
+        ax.set_xlabel(self.xlabel)
+        ax.set_ylabel(self.ylabel)
 
         if self.colourbar:
             add_color_bar(self.map, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
