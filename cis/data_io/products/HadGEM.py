@@ -80,10 +80,13 @@ class HadGEM_CONVSH(NetCDF_Gridded):
     def get_variable_names(self, filenames, data_type=None):
         # Don't do any checks on valid variables at the moment as iris can't parse the hybrid height dimension units...
         import iris
+        from cis.utils import single_warnings_only
         # Removes warnings and prepares for future Iris change
         iris.FUTURE.netcdf_promote = True
 
-        cubes = iris.load(filenames)
+        # Filter the warnings so that they only appear once - otherwise you get lots of repeated warnings
+        with single_warnings_only:
+            cubes = iris.load(filenames)
 
         return set(cube.name() for cube in cubes)
 
