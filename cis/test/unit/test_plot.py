@@ -130,7 +130,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
+        out_x, out_y, out_values = make_color_mesh_cells(data, longitude, latitude)
         expected_x = np.array([[-1, 0, 1],
                                [-1, 0, 1],
                                [-1, 0, 1]])
@@ -153,7 +153,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
+        out_x, out_y, out_values = make_color_mesh_cells(data, longitude, latitude)
         expected_x = np.array([[0, 1, 2],
                                [0, 1, 2],
                                [0, 1, 2]])
@@ -176,7 +176,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
+        out_x, out_y, out_values = make_color_mesh_cells(data, longitude, latitude)
         expected_x = np.array([[1, 0, -1],
                                [1, 0, -1],
                                [1, 0, -1]])
@@ -199,7 +199,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
+        out_x, out_y, out_values = make_color_mesh_cells(data, longitude, latitude)
         x_bounds = np.arange(-179, 190, 10)
         y_bounds = np.array([50, 51, 52])
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
@@ -216,7 +216,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
+        out_x, out_y, out_values = make_color_mesh_cells(data, longitude, latitude)
         x_bounds = np.arange(0, 380, 20)
         y_bounds = np.array([50, 51, 52])
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
@@ -233,7 +233,7 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_x, out_y, out_values = make_color_mesh_cells(data, 'longitude', 'latitude')
+        out_x, out_y, out_values = make_color_mesh_cells(data, longitude, latitude)
         x_bounds = np.arange(0, 361, 1)
         y_bounds = np.array([50, 51, 52])
         expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
