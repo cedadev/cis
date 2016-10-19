@@ -2,7 +2,7 @@
 """
 import datetime
 from nose.tools import istest, raises, assert_almost_equal, eq_
-from cis.parse_datetime import parse_as_number_or_datetime, find_last_day_of_month, \
+from cis.parse_datetime import parse_as_number_or_partial_datetime, find_last_day_of_month, \
                                convert_datetime_components_to_datetime, parse_datetimestr_delta_to_float_days, \
                                parse_datetimestr_to_std_time
 from argparse import ArgumentTypeError
@@ -10,56 +10,56 @@ from argparse import ArgumentTypeError
 # Tests for parse_datetime
 @istest
 def parse_datetime_can_parse_year():
-    dt = parse_as_number_or_datetime('2010')
+    dt = parse_as_number_or_partial_datetime('2010')
     assert (dt == 2010)
 
 
 @istest
 def parse_datetime_can_parse_year_month():
-    dt = parse_as_number_or_datetime('2010-07')
+    dt = parse_as_number_or_partial_datetime('2010-07')
     print(dt)
     assert (dt == [2010, 7])
 
 
 @istest
 def parse_datetime_can_parse_date():
-    dt = parse_as_number_or_datetime('2010-07-01')
+    dt = parse_as_number_or_partial_datetime('2010-07-01')
     assert (dt == [2010, 7, 1])
 
 
 @istest
 def parse_datetime_can_parse_date_hour():
-    dt = parse_as_number_or_datetime('2010-07-01T13')
+    dt = parse_as_number_or_partial_datetime('2010-07-01T13')
     assert (dt == [2010, 7, 1, 13])
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min():
-    dt = parse_as_number_or_datetime('2010-07-01T13:27')
+    dt = parse_as_number_or_partial_datetime('2010-07-01T13:27')
     assert (dt == [2010, 7, 1, 13, 27])
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min_sec():
-    dt = parse_as_number_or_datetime('2010-07-01T13:27:43')
+    dt = parse_as_number_or_partial_datetime('2010-07-01T13:27:43')
     assert (dt == [2010, 7, 1, 13, 27, 43])
 
 
 @istest
 def parse_datetime_can_parse_date_hour_min_sec_no_leading_zeros():
-    dt = parse_as_number_or_datetime('2010-3-4T5:6:7')
+    dt = parse_as_number_or_partial_datetime('2010-3-4T5:6:7')
     assert (dt == [2010, 3, 4, 5, 6, 7])
 
 
 @istest
 def parse_datetime_can_parse_date_time_with_space_separator():
-    dt = parse_as_number_or_datetime('2010-07-01 13:27:43')
+    dt = parse_as_number_or_partial_datetime('2010-07-01 13:27:43')
     assert (dt == [2010, 7, 1, 13, 27, 43])
 
 
 @istest
 def parse_datetime_can_parse_date_time_with_colon_separator():
-    dt = parse_as_number_or_datetime('2010-07-01:13:27:43')
+    dt = parse_as_number_or_partial_datetime('2010-07-01:13:27:43')
     assert (dt == [2010, 7, 1, 13, 27, 43])
 
 
@@ -67,57 +67,57 @@ def parse_datetime_can_parse_date_time_with_colon_separator():
 @istest
 @raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_invalid_character_in_year():
-    dt = parse_as_number_or_datetime('2X10')
+    dt = parse_as_number_or_partial_datetime('2X10')
 
 
 @istest
 @raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_time_but_incomplete_date():
-    dt = parse_as_number_or_datetime('2010-10T12:00')
+    dt = parse_as_number_or_partial_datetime('2010-10T12:00')
 
 
 @istest
 @raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_too_many_date_components():
-    dt = parse_as_number_or_datetime('2010-10-05-06')
+    dt = parse_as_number_or_partial_datetime('2010-10-05-06')
 
 
 @istest
 @raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_too_many_time_components():
-    dt = parse_as_number_or_datetime('2010-10-05T12:01:02:03')
+    dt = parse_as_number_or_partial_datetime('2010-10-05T12:01:02:03')
 
 
 # parse_datetime: Strings that parse correctly but correspond to invalid date/times
 @istest
 @raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_invalid_month():
-    dt = parse_as_number_or_datetime('2010-13')
+    dt = parse_as_number_or_partial_datetime('2010-13')
 
 
 @istest
 @raises(ArgumentTypeError)
 def parse_datetime_raises_error_if_invalid_day():
-    dt = parse_as_number_or_datetime('2010-06-31')
+    dt = parse_as_number_or_partial_datetime('2010-06-31')
 
 
 # Tests for parse_as_number_or_datetime
 @istest
 def parse_as_number_or_datetime_can_parse_date_as_datetime():
     from datetime import datetime
-    dt = parse_as_number_or_datetime('2010-07-01')
+    dt = parse_as_number_or_partial_datetime('2010-07-01')
     assert (datetime(*dt) == datetime(2010, 7, 1))
 
 
 @istest
 def parse_as_number_or_datetime_can_parse_integer():
-    dt = parse_as_number_or_datetime('2010')
+    dt = parse_as_number_or_partial_datetime('2010')
     assert (dt == 2010)
 
 
 @istest
 def parse_as_number_or_datetime_can_parse_float():
-    dt = parse_as_number_or_datetime('12.345')
+    dt = parse_as_number_or_partial_datetime('12.345')
     assert (dt == 12.345)
 
 

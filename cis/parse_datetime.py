@@ -4,6 +4,7 @@ import re
 from cis.time_util import cis_standard_time_unit
 import argparse
 
+
 def parse_datetimestr_to_std_time(s):
     import dateutil.parser as du
     return cis_standard_time_unit.date2num(du.parse(s))
@@ -143,10 +144,33 @@ def parse_datetimestr_delta_to_float_days(string):
 def parse_as_number_or_datetime(string):
     """Parse a string as a number from the command line, or if that fails, as a datetime, reporting parse errors.
 
+    The string should be in an ISO 8601 format except that the date and time parts may be separated by a space or
+     colon instead of T.
+
+    :param in_string: String to parse
+    :return: int, or float value (possibly converted to the standard time from a time string)
+    """
+    from datetime import datetime
+    try:
+        ret = int(string)
+    except ValueError:
+        try:
+            ret = float(string)
+        except ValueError:
+            try:
+                ret = cis_standard_time_unit.date2num(datetime(*_parse_datetime(string)))
+            except ValueError:
+                raise argparse.ArgumentTypeError("'{}' is not a valid value.".format(string))
+    return ret
+
+
+def parse_as_number_or_partial_datetime(string):
+    """Parse a string as a number from the command line, or if that fails, as a datetime, reporting parse errors.
+
     The string should be in an ISO 8601 format except that the date and time
     parts may be separated by a space or colon instead of T.
     :param in_string: String to parse
-    :return: int, or float value (possibly converted to the standard time from a time string)
+    :return: int, float value, datetime component list or datetimedelta
     """
     try:
         ret = int(string)

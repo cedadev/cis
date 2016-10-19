@@ -51,7 +51,7 @@ def initialise_top_parser():
 
 def add_plot_parser_arguments(parser):
     from cis.data_io.products.AProduct import AProduct
-    from cis.parse_datetime import parse_as_number_or_datetime
+    from cis.parse_datetime import parse_as_number_or_partial_datetime, parse_as_number_or_datetime
     import cis.plugin as plugin
     from matplotlib.colors import cnames
 
@@ -86,21 +86,21 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--xmax", metavar="Maximum x", nargs="?", help="The maximum x value to plot",
                         type=parse_as_number_or_datetime)
     parser.add_argument("--xstep", metavar="X step", nargs="?", help="The step of the x axis",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_partial_datetime)
 
     parser.add_argument("--ymin", metavar="Minimum y", nargs="?", help="The minimum y value to plot",
                         type=parse_as_number_or_datetime)
     parser.add_argument("--ymax", metavar="Maximum y", nargs="?", help="The maximum y value to plot",
                         type=parse_as_number_or_datetime)
     parser.add_argument("--ystep", metavar="Y step", nargs="?", help="The step of the y axis",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_partial_datetime)
 
     parser.add_argument("--vmin", metavar="Minimum value", nargs="?", help="The minimum value to plot",
                         type=parse_as_number_or_datetime)
     parser.add_argument("--vmax", metavar="Maximum value", nargs="?", help="The maximum value to plot",
                         type=parse_as_number_or_datetime)
     parser.add_argument("--vstep", metavar="X value", nargs="?", help="The step of the colour bar",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_partial_datetime)
 
     parser.add_argument("--xbinwidth", metavar="Histogram x axis bin width", nargs="?",
                         help="The width of the bins on the x axis of a histogram", type=float)
@@ -326,7 +326,7 @@ def get_plot_datagroups(datagroups, parser):
                                                        "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "contfontsize"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
-                                         check_nothing,
+                                         check_float,
                                          check_nothing, check_product, check_plot_type, check_float, check_nothing,
                                          check_float, check_float, check_int, convert_to_list_of_floats, check_boolean,
                                          check_float, check_float)
@@ -383,7 +383,7 @@ def get_aggregate_grid(aggregategrid, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_as_number_or_datetime
+    from cis.parse_datetime import parse_as_number_or_partial_datetime
     from cis.aggregation.aggregation_grid import AggregationGrid
     from datetime import datetime
 
@@ -412,9 +412,9 @@ def get_aggregate_grid(aggregategrid, parser):
         else:
             dim_name = match.group('dim')
 
-            start_parsed = parse_as_number_or_datetime(match.group('start'))
-            end_parsed = parse_as_number_or_datetime(match.group('end'))
-            delta_parsed = parse_as_number_or_datetime(match.group('delta'))
+            start_parsed = parse_as_number_or_partial_datetime(match.group('start'))
+            end_parsed = parse_as_number_or_partial_datetime(match.group('end'))
+            delta_parsed = parse_as_number_or_partial_datetime(match.group('delta'))
             is_time = hasattr(delta_parsed, 'year')
 
             if dim_name.lower() == 'x':
@@ -451,7 +451,7 @@ def get_subset_limits(subsetlimits, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_as_number_or_datetime
+    from cis.parse_datetime import parse_as_number_or_partial_datetime
     from cis.subsetting.subset_limits import SubsetLimits
 
     # Split into the limits for each dimension.
@@ -477,8 +477,8 @@ def get_subset_limits(subsetlimits, parser):
             else:
                 limit2 = match.group('end')
 
-            limit1_parsed = parse_as_number_or_datetime(limit1)
-            limit2_parsed = parse_as_number_or_datetime(limit2)
+            limit1_parsed = parse_as_number_or_partial_datetime(limit1)
+            limit2_parsed = parse_as_number_or_partial_datetime(limit2)
 
             if dim_name.lower() == 'x':
                 if not limit1_parsed <= limit2_parsed:

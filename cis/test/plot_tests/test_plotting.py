@@ -228,7 +228,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_iris_scatter2d(self):
+    def test_iris_scatter(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --title overiddentitle --fontsize 10 --width 7 --ymin=-0.0005" \
                " --ymax 0.0005".split()
@@ -239,9 +239,9 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_iris_scatter3d(self):
+    def test_iris_scatter2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --fontsize 7 --cbarorient vertical --grid --ymin 0 --ymax 90 --vmin 0" \
+        opts = "--type scatter2d --fontsize 7 --cbarorient vertical --grid --ymin 0 --ymax 90 --vmin 0" \
                " --cbarorient vertical".split()
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=RdBu",
                      "snow:" + escape_colons(valid_2d_filename) + ":label=snowlabel,cmap=RdBu"]
@@ -379,7 +379,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_scatter2d(self):
+    def test_other_scatter(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --xlabel overiddenx --ylabel overiddeny --title overiddentitle" \
                " --fontsize 15 --height 5 --width 6 --logy --grid".split()
@@ -390,9 +390,9 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_other_scatter3d(self):
+    def test_other_scatter2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --title overiddentitle --vmax 175 --logy --xaxis Latitude" \
+        opts = "--type scatter2d --title overiddentitle --vmax 175 --logy --xaxis Latitude" \
                " --yaxis Height".split()
         arguments = ["plot", "RVOD_liq_water_content:" + escape_colons(valid_cloudsat_RVOD_file) + ":cmap=RdBu,itemwidth=20"]
 
@@ -571,12 +571,12 @@ class TestPlotVisual(VisualTest):
         self.check_graphic()
 
     @skip_osx
-    def test_filled_contour_over_scatter(self):
+    def test_filled_contour_over_scatter2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
                " --ymin 0 --ymax 90".split()
 
-        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter,itemwidth=20",
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
                                               "contlabel=true,contfontsize=18"]
 
@@ -586,12 +586,12 @@ class TestPlotVisual(VisualTest):
         self.check_graphic()
 
     @skip_osx
-    def test_filled_contour_over_scatter_with_cmin(self):
+    def test_filled_contour_over_scatter2d_with_cmin(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180" \
                " --xmax -90 --ymin 0 --ymax 90 --nasabluemarble".split()
 
-        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter,itemwidth=20",
+        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
                                               "contfontsize=18,cmap=Reds"]
 
@@ -600,26 +600,26 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_scatter_over_contour(self):
+    def test_scatter2d_over_contour(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
                " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split() + \
                ["--title=Overlay test"]
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=contour" ,
-                     "snow:" + escape_colons(valid_2d_filename) + ":type=scatter,itemstyle=^,label=snowlabel,itemwidth=3"]
+                     "snow:" + escape_colons(valid_2d_filename) + ":type=scatter2d,itemstyle=^,label=snowlabel,itemwidth=3"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
 
         self.check_graphic()
 
-    def test_iris_scatter_overlay(self):
+    def test_iris_scatter2d_overlay(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
                " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split() + \
                ["--title=Overlay test"]
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap" ,
-                     "snow:" + escape_colons(valid_2d_filename) + ":type=scatter,itemstyle=^,label=snowlabel,itemwidth=3"]
+                     "snow:" + escape_colons(valid_2d_filename) + ":type=scatter2d,itemstyle=^,label=snowlabel,itemwidth=3"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -628,7 +628,7 @@ class TestPlotVisual(VisualTest):
 
     def test_medium_plot_region(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+        opts = "--type scatter2d --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
                " --ymin 50 --ymax 70".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -640,7 +640,7 @@ class TestPlotVisual(VisualTest):
 
     def test_small_plot_region(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+        opts = "--type scatter2d --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
                " --ymin 59 --ymax 61".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -652,7 +652,7 @@ class TestPlotVisual(VisualTest):
 
     def test_very_small_plot_region(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -151.5 --xmax -151.2" \
+        opts = "--type scatter2d --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -151.5 --xmax -151.2" \
                " --ymin 60.4 --ymax 60.8".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -664,7 +664,7 @@ class TestPlotVisual(VisualTest):
 
     def test_medium_plot_region_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
+        opts = "--type scatter2d --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -170 --xmax -150" \
                " --ymin 50 --ymax 70 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename)]
@@ -676,7 +676,7 @@ class TestPlotVisual(VisualTest):
 
     def test_small_plot_region_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type scatter --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
+        opts = "--type scatter2d --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -152 --xmax -150" \
                " --ymin 59 --ymax 61 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":itemwidth=10"]
@@ -815,7 +815,7 @@ class TestPlotAPIVisual(VisualTest):
         _ = d[0].data
         _ = d[1].data
         d[0].metadata._name = 'snow'
-        d[1].plot(x=d[0])
+        d[1].plot(xaxis=d[0])
 
         self.check_graphic()
 
@@ -906,7 +906,7 @@ class TestPlotAPIVisual(VisualTest):
         d = make_regular_2d_ungridded_data()
         d.lat.axis = ''
         d.lon.axis=''
-        d.plot(how='scatter2d', x='longitude', y='latitude', nasabluemarble=True)
+        d.plot(how='scatter2d', xaxis='longitude', yaxis='latitude', nasabluemarble=True)
 
         self.check_graphic()
 
@@ -916,7 +916,7 @@ class TestPlotAPIVisual(VisualTest):
         d = make_regular_2d_ungridded_data()
         d.lat.axis = ''
         d.lon.axis=''
-        d.plot(how='scatter2d', x=d.lon, y=d.lat, nasabluemarble=True)
+        d.plot(how='scatter2d', xaxis=d.lon, yaxis=d.lat, nasabluemarble=True)
 
         self.check_graphic()
 

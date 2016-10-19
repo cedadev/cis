@@ -294,7 +294,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     import numpy as np
     from cis.data_io.common_data import CommonData
     from cis.data_io.gridded_data import GriddedData
-    from iris.util import squeeze
+    from cis.utils import squeeze
 
     # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
 
@@ -316,13 +316,13 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     #  (even though they have standard names)
     yaxis = get_axis(data, 'Y', yaxis)
 
-    how = data._get_default_plot_type(xaxis.standard_name == 'longitude'
-                                      and yaxis.standard_name == 'latitude') if how is None else how
+    how = how or data._get_default_plot_type(xaxis.standard_name == 'longitude'
+                                             and yaxis.standard_name == 'latitude')
 
     # TODO: Check that projection=None is a valid default.
 
     try:
-        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=kwargs.get('label', None) or data.var_name,
+        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=kwargs.pop('label', None) or data.var_name,
                                *args, **kwargs)
     except KeyError:
         raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))

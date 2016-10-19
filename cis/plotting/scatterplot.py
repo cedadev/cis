@@ -15,7 +15,7 @@ class ScatterPlot(GenericPlot):
         """
         # TODO: This is better now but I'm still not convinced about having mplkwargs being changed globably like this
         if self.itemwidth is not None:
-            self.mplkwargs["s"] = self.itemwidth
+            self.mplkwargs["markersize"] = self.itemwidth
 
         if self.itemstyle is not None:
             self.mplkwargs["marker"] = self.itemstyle
@@ -28,7 +28,7 @@ class ScatterPlot(GenericPlot):
 
         # By plotting the data as flat arrays with a line style of 'o' we get a scatter plot - with the added
         #  benefit of not having to keep track of the layers ourselves.
-        ax.plot(self.x.flat, self.data.flat, 'o', *self.mplargs, **self.mplkwargs)
+        ax.plot(self.x.flatten(), self.data.flatten(), 'o', *self.mplargs, **self.mplkwargs)
 
         super(ScatterPlot, self).__call__(ax)
 

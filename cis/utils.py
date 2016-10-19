@@ -706,3 +706,13 @@ def single_warnings_only():
     with warnings.catch_warnings():
         warnings.simplefilter("once")
         yield
+
+
+def squeeze(data):
+    from iris.cube import Cube
+    from iris.util import squeeze
+    from cis.data_io.gridded_data import make_from_cube
+    if isinstance(data, Cube):
+        return make_from_cube(squeeze(data))
+    else:
+        return data
