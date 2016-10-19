@@ -821,6 +821,6 @@ def demote_warnings(level=logging.INFO):
 @contextlib.contextmanager
 def single_warnings_only():
     import warnings
-    with warnings.catch_warnings(record=True) as ws:
+    with warnings.catch_warnings():
         warnings.simplefilter("once")
         yield

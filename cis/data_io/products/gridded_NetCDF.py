@@ -81,8 +81,13 @@ class NetCDF_Gridded(AProduct):
         :return: iris.cube.Cube
         """
         from cis.time_util import convert_cube_time_coord_to_standard_time
+        from utils import single_warnings_only
 
-        cube = self._create_cube(filenames, variable)
+        # Filter the warnings so that they only appear once - otherwise you get lots of repeated warnings
+        #  - partly because we open the files multiple times (to look for aux coords) and partly because iris
+        #  will throw a warning every time it meets a variable with a non-CF dimension
+        with single_warnings_only():
+            cube = self._create_cube(filenames, variable)
 
         try:
             cube = convert_cube_time_coord_to_standard_time(cube)
