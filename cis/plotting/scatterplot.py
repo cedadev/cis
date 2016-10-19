@@ -56,6 +56,3 @@ class ScatterPlot2D(Generic2DPlot):
         self.mappable = ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
 
         super(ScatterPlot2D, self).__call__(ax)
-
-    def unpack_data_items(self, packed_data_items):
-        return packed_data_items.data, self.xaxis.points, self.yaxis.points

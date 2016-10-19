@@ -349,21 +349,22 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     return ax
 
 
-def multilayer_plot(data_list, how=None, ax=None, y=None, layer_opts=None, *args, **kwargs):
+def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *args, **kwargs):
     if how in ['comparativescatter', 'histogram2d']:
-        if y is not None:
+        if yaxis is not None:
             raise ValueError("...")
             # TODO
         ax = data_list[1].plot(how, ax, xaxis=data_list[0], *args, **kwargs)
     else:
         layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
 
-        if not isinstance(y, list):
-            y = [y for i in data_list]
+        if not isinstance(yaxis, list):
+            yaxis = [yaxis for i in data_list]
 
-        for d, yaxis, opts in zip(data_list, y, layer_opts):
+        for d, y, opts in zip(data_list, yaxis, layer_opts):
             layer_kwargs = dict(list(kwargs.items()) + list(opts.items()))
-            ax = d.plot(how, ax, yaxis=yaxis, *args, **layer_kwargs)
+            how = layer_kwargs.pop('type', how)
+            ax = d.plot(how, ax, yaxis=y, *args, **layer_kwargs)
 
         legend = ax.legend(loc="best")
         if legend is not None:

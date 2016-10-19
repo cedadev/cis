@@ -312,7 +312,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type histogram2d --xlabel overridenx --ylabel overiddeny --cbarlabel overiddencbarlabel " \
                "--title overiddentitle --fontsize 7 --width 10 --xmin 0 --xmax 2 --xbinwidth 0.1 --ymin 0 --ymax 1.5" \
-               " --ybinwidth 0.1 --vmin 60 --vmax 480 --vstep 30 --cbarorient Vertical --grid".split()
+               " --ybinwidth 0.1 --vmin 60 --vmax 480 --vstep 30 --cbarorient vertical --grid".split()
         arguments = ["plot", 
                      "AOT_440:" + escape_colons(valid_aeronet_filename), 
                      "AOT_870:" + escape_colons(valid_aeronet_filename)]
@@ -534,7 +534,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_iris_contour_over_heatmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --width 20 --height 15 --cbarscale 0.5".split()
+        opts = "--width 20 --height 15 --cbarscale 0.5".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
@@ -547,7 +547,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_iris_contour_over_heatmap_binary_cmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5".split()
+        opts = "--xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cmap=binary",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
@@ -560,7 +560,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_transparent_contour_over_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5" \
+        opts = "--xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5" \
                " --nasabluemarble".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.000075"]
@@ -573,7 +573,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_filled_contour_over_scatter2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
+        opts = "--width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
                " --ymin 0 --ymax 90".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
@@ -588,7 +588,7 @@ class TestPlotVisual(VisualTest):
     @skip_osx
     def test_filled_contour_over_scatter2d_with_cmin(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180" \
+        opts = "--width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180" \
                " --xmax -90 --ymin 0 --ymax 90 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
@@ -602,7 +602,7 @@ class TestPlotVisual(VisualTest):
 
     def test_scatter2d_over_contour(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
+        opts = "--xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
                " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split() + \
                ["--title=Overlay test"]
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=contour" ,
@@ -615,7 +615,7 @@ class TestPlotVisual(VisualTest):
 
     def test_iris_scatter2d_overlay(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--type overlay --xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
+        opts = "--xlabel overiddenxlabel --height 10 --width 12 --xmin 0 --xmax 200 --xstep 10" \
                " --cbarorient horizontal --ymin 0 --ymax 90 --vmin 0 --cbarorient horizontal".split() + \
                ["--title=Overlay test"]
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap" ,
