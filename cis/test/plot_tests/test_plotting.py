@@ -178,7 +178,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_iris_histogram2d(self):
+    def test_iris_histogram(self):
         opts = "--xmin=-50 --xmax 50 --xbinwidth 10 --ymin 1 --logy --output".split() + [self.id() + ".png"]
         arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":color=red,itemstyle=step,label=overridenlabel",
                     "snow:" + escape_colons(valid_1d_filename) + ":color=green,itemstyle=step", "--type", "histogram"] + opts
@@ -188,7 +188,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    def test_iris_histogram3d(self):
+    def test_iris_histogram2d(self):
         opts = "--cmap RdBu --ylabel overiddeny --title overiddentitle --xmin 0.000002 --xmax 0.000006 " \
                "--ybinwidth 0.000001 --output ".split() + [self.id() + ".png"]
         arguments = ["plot", "rain:" + escape_colons(valid_1d_filename), 
