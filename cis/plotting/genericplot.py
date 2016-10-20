@@ -96,7 +96,10 @@ class Generic2DPlot(APlot):
         self.logv = logv
         self.vstep = vstep
         self.cbarscale = cbarscale
-        self.cbarorient = cbarorient
+        if cbarorient is None:
+            self.cbarorient = 'horizontal' if self.is_map() else 'vertical'
+        else:
+            self.cbarorient = cbarorient
         self.colourbar = colourbar
         self.cbarlabel = cbarlabel or format_units(packed_data_items.units)
 

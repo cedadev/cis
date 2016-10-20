@@ -65,10 +65,6 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None):
 
     transform = ccrs.PlateCarree()
 
-    # First make sure all of the data fits
-    ax.relim()
-    ax.autoscale()
-
     global_tolerance = 0.8
 
     # Then apply user limits (using different interfaces for different axes types...)
@@ -199,50 +195,32 @@ def drawbluemarble(ax):
     ax.imshow(img, origin='upper', transform=source_proj, extent=[-180, 180, -90, 90])
 
 
-def auto_set_map_ticks(ax, transform=None):
+def auto_set_map_ticks(ax, gridlines=True):
     """
     Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
     Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
     vs longitude plots the ticks can come out overlapped, so an exception is included to deal with this.
     """
-    from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-    from matplotlib.ticker import MaxNLocator
-    import cartopy.crs as ccrs
+    from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-    transform = transform or ccrs.PlateCarree()
+    try:
+        gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5)
+        # Turn off the top and right-hand labels
+        gl.xlabels_top = False
+        gl.ylabels_right = False
 
-    max_x_bins = 9
-    max_y_bins = 7  # as plots are wider rather than taller
+        # Format the lat/lon labels nicely
+        gl.xformatter = LONGITUDE_FORMATTER
+        gl.yformatter = LATITUDE_FORMATTER
+    except TypeError:
+        # Labels not supported for this projection, try without...
+        gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5)
 
-    lon_steps = [1, 3, 6, 9, 10]
-    lat_steps = [1, 3, 6, 9, 10]
-    variable_step = [1, 2, 4, 5, 10]
-
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
-
-    if (xmax - xmin) < 5:
-        lon_steps = variable_step
-    if (ymax - ymin) < 5:
-        lat_steps = variable_step
-
-    # We need to make a special exception for particularly narrow and wide plots, which will be lat vs lon
-    # preserving the aspect ratio. This gives more options for the spacing to try and find something that can use
-    # the maximum number of bins.
-    if (ymax - ymin) > 2.2 * (xmax - xmin):
-        max_x_bins = 4
-        max_y_bins = 11
-    elif (xmax - xmin) > 2.2 * (ymax - ymin):
-        max_x_bins = 14
-        max_y_bins = 4
-
-    lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
-    ax.set_xticks(lon_locator.tick_values(xmin, xmax), crs=transform)
-    ax.xaxis.set_major_formatter(LongitudeFormatter())
-
-    lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
-    ax.set_yticks(lat_locator.tick_values(ymin, ymax), crs=transform)
-    ax.yaxis.set_major_formatter(LatitudeFormatter())
+    if not gridlines:
+        gl.xlines = False
+        gl.ylines = False
+    # TODO It would be nice to have ticks if we don't have lines...
+    # ax.tick_params(direction='out')
 
 
 def auto_set_ticks(ax, axis, lat_lon=False):
@@ -250,8 +228,7 @@ def auto_set_ticks(ax, axis, lat_lon=False):
     Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
     Log axes generally come out nicely spaced without needing manual intervention.
     """
-    # TODO: The decision whether to do the actual setting should be done outside this function
-    # TODO: Split into one function which just works on a single axis, with lat or lon as a bool
+    # TODO: Not currently used...
     from matplotlib.ticker import MaxNLocator, AutoMinorLocator
     import numpy as np
     max_bins = 9
@@ -345,8 +322,8 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     if ax is None:
         if plot.is_map():
             if projection is None:
-                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, np.min(xaxis.points) + 180.0)))
-
+                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data) + 180.0))
+            plot.mplkwargs['transform'] = ccrs.PlateCarree()
             _, ax = plt.subplots(subplot_kw={'projection': projection})
             # Monkey-patch the nasabluemarble method onto the axis
             GeoAxes.bluemarble = drawbluemarble
@@ -425,7 +402,7 @@ class Plotter(object):
 
         self.set_width_and_height(width, height)
 
-        apply_axis_limits(self.ax, xmin, xmax, ymin, ymax, )
+        apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
 
         # This has to come after applying the axis limits because otherwise the image can get cropped
         if plot.is_map() and nasabluemarble:
