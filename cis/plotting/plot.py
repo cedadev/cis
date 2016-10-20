@@ -72,16 +72,16 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None):
         # We can't optionally pass in certain bounds to set_extent so we need to pull out the existing ones and only
         #  change the ones we've been given.
         x1, x2, y1, y2 = ax.get_extent()
-        xmin = xmin or x1
-        xmax = xmax or x2
-        ymin = ymin or y1
-        ymax = ymax or y2
         # If the user hasn't specified any limits and the data spans most of the globe, just make it a global plot
         if all(lim is None for lim in (xmin, xmax, ymin, ymax)) and \
-                ((ymax-ymin > ax.projection.y_limits * global_tolerance) or
-                 (xmax - xmin > ax.projection.x_limits * global_tolerance)):
+                ((y2-y1 > ax.projection.y_limits * global_tolerance) or
+                 (x2 - x1 > ax.projection.x_limits * global_tolerance)):
             ax.set_global()
         else:
+            xmin = xmin if xmin is not None else x1
+            xmax = xmax if xmax is not None else x2
+            ymin = ymin if ymin is not None else y1
+            ymax = ymax if ymax is not None else y2
             ax.set_extent([xmin, xmax, ymin, ymax], crs=transform)
     else:
         ax.set_xlim(xmin=xmin, xmax=xmax)
@@ -314,7 +314,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     # TODO: Check that projection=None is a valid default.
 
     try:
-        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=kwargs.pop('label', None) or data.var_name,
+        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=kwargs.pop('label', None) or data.name(),
                                *args, **kwargs)
     except KeyError:
         raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))

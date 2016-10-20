@@ -47,9 +47,6 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, ti
     if title is not None:
         ax.set_title(title)
 
-    ax.relim()
-    ax.autoscale()
-
 
 class GenericPlot(APlot):
 
@@ -93,6 +90,13 @@ class Generic2DPlot(APlot):
         from .APlot import format_units
         super(Generic2DPlot, self).__init__(packed_data_items, *args, **kwargs)
 
+        logging.debug("Unpacking the data items")
+        # TODO I shouldn't need to do this
+        self.data, self.x, self.y = self.unpack_data_items(packed_data_items)
+
+        self.xlabel = self.guess_axis_label(packed_data_items, self.xaxis)
+        self.ylabel = self.guess_axis_label(packed_data_items, self.yaxis)
+
         self.logv = logv
         self.vstep = vstep
         self.cbarscale = cbarscale
@@ -101,7 +105,7 @@ class Generic2DPlot(APlot):
         else:
             self.cbarorient = cbarorient
         self.colourbar = colourbar
-        self.cbarlabel = cbarlabel or format_units(packed_data_items.units)
+        self.cbarlabel = cbarlabel or self.label
 
         self.coastlines = coastlines
         self.coastlinescolour = coastlinescolour
@@ -112,22 +116,17 @@ class Generic2DPlot(APlot):
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
 
-        logging.debug("Unpacking the data items")
-        # TODO I shouldn't need to do this
-        self.data, self.x, self.y = self.unpack_data_items(packed_data_items)
-
-        self.xlabel = self.guess_axis_label(packed_data_items, self.xaxis)
-        self.ylabel = self.guess_axis_label(packed_data_items, self.yaxis)
-        self.label = packed_data_items.name()
 
     def __call__(self, ax):
         from .plot import add_color_bar
         from .plot import drawcoastlines, auto_set_map_ticks
         ax.set_xlabel(self.xlabel)
         ax.set_ylabel(self.ylabel)
-        ax.set_title(self.label)
+
         if self.colourbar:
             add_color_bar(self.mappable, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
+        else:
+            ax.set_title(self.label)
 
         if self.is_map():
             if self.coastlines:
