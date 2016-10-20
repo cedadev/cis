@@ -30,6 +30,10 @@ class VisualTest(BaseIntegrationTest):
 
     _DEFAULT_IMAGE_TOLERANCE = 0.2
 
+    def id(self):
+        # Just use the module, class and method name - the root can change depending on where it is run from
+        return ".".join(super(VisualTest, self).id().split('.')[-3:])
+
     def setUp(self):
         # Set force overwrite in case working files are still present
         os.environ['CIS_FORCE_OVERWRITE'] = "True"
@@ -49,8 +53,7 @@ class VisualTest(BaseIntegrationTest):
     def check_graphic(self, tol=_DEFAULT_IMAGE_TOLERANCE):
         """Checks the CRC matches for the current matplotlib.pyplot figure, and closes the figure."""
 
-        # Just use the module, class and method name - the root can change depending on where it is run from
-        test_id = ".".join(self.id().split('.')[-3:])
+        test_id = self.id()
 
         figure = plt.gcf()
 
