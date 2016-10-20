@@ -23,8 +23,6 @@ _DISPLAY_FIGURES = False
 
 # plt.switch_backend('agg')
 
-skip_osx = skipIf(platform == 'darwin', 'Binary install of shapely is creating a number of failing tests on OS X.')
-
 
 class VisualTest(BaseIntegrationTest):
 
@@ -133,7 +131,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    @skip_osx
     def test_iris_contour(self):
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=RdBu", "--type", "contour",
                      "--xlabel", "Overidden X Label", "--title", "Overidded Title",
@@ -145,7 +142,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    @skip_osx
     def test_iris_contourf(self):
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename), "--type", "contourf",
                      "--ylabel", "Overidden Y Label", "--height", "5", "--width", "10", "--ymin", "15", "--ymax", "45",
@@ -413,10 +409,8 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        # Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
-        #         layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90)
-
-        data.plot(xaxis='longitude', yaxis='latitude', itemwidth=50, coastlines=True)
+        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
+                layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90)
 
         self.check_graphic()
 
@@ -536,7 +530,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    @skip_osx
     def test_iris_contour_over_heatmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--width 20 --height 15 --cbarscale 0.5".split()
@@ -549,7 +542,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    @skip_osx
     def test_iris_contour_over_heatmap_binary_cmap(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5".split()
@@ -562,7 +554,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    @skip_osx
     def test_transparent_contour_over_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5" \
@@ -575,7 +566,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    @skip_osx
     def test_filled_contour_over_scatter2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
@@ -590,7 +580,6 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
-    @skip_osx
     def test_filled_contour_over_scatter2d_with_cmin(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180" \
