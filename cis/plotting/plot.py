@@ -56,15 +56,20 @@ def get_axis(d, axis, name=None):
     return coord
 
 
-def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=None, projection=None):
+def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None):
     """
     Applies the specified limits to the given axis
     """
     from cartopy.mpl.geoaxes import GeoAxes
+    import cartopy.crs as ccrs
+
+    transform = ccrs.PlateCarree()
 
     # First make sure all of the data fits
     ax.relim()
     ax.autoscale()
+
+    global_tolerance = 0.8
 
     # Then apply user limits (using different interfaces for different axes types...)
     if isinstance(ax, GeoAxes):
@@ -75,11 +80,13 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None, transform=
         xmax = xmax or x2
         ymin = ymin or y1
         ymax = ymax or y2
-        try:
-            #TODO: Not sure if we still need this logic...
+        # If the user hasn't specified any limits and the data spans most of the globe, just make it a global plot
+        if all(lim is None for lim in (xmin, xmax, ymin, ymax)) and \
+                ((ymax-ymin > ax.projection.y_limits * global_tolerance) or
+                 (xmax - xmin > ax.projection.x_limits * global_tolerance)):
+            ax.set_global()
+        else:
             ax.set_extent([xmin, xmax, ymin, ymax], crs=transform)
-        except ValueError:
-            ax.set_extent([xmin, xmax, ymin, ymax], crs=projection)
     else:
         ax.set_xlim(xmin=xmin, xmax=xmax)
         ax.set_ylim(ymin=ymin, ymax=ymax)
@@ -164,14 +171,18 @@ def drawcoastlines(ax, coastlinescolour):
                         'Check internet connectivity and try again')
 
 
-def drawbluemarble(ax, transform):
+def drawbluemarble(ax):
     """
     Adds nasa blue marble back ground to a plot
     There are three levels of resolution used based on the spatial scale of the plot. These are determined using
     values determined by eye for bluemarble and the coastlines independently.
     """
     from matplotlib.image import imread
+    import cartopy.crs as ccrs
     import os.path as path
+
+    source_proj = ccrs.PlateCarree()
+
     bluemarble_scales = [(0, 'raster/world.topo.bathy.200407.3x1350x675.png'),
                          (5000, 'raster/world.topo.bathy.200407.3x2700x1350.png'),
                          (2500, 'raster/world.topo.bathy.200407.3x5400x2700.png')]
@@ -185,10 +196,10 @@ def drawbluemarble(ax, transform):
             bluemarble_res = res
 
     img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
-    ax.imshow(img, origin='upper', transform=transform, extent=[-180, 180, -90, 90])
+    ax.imshow(img, origin='upper', transform=source_proj, extent=[-180, 180, -90, 90])
 
 
-def auto_set_map_ticks(ax, transform):
+def auto_set_map_ticks(ax, transform=None):
     """
     Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
     Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
@@ -196,6 +207,9 @@ def auto_set_map_ticks(ax, transform):
     """
     from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
     from matplotlib.ticker import MaxNLocator
+    import cartopy.crs as ccrs
+
+    transform = transform or ccrs.PlateCarree()
 
     max_x_bins = 9
     max_y_bins = 7  # as plots are wider rather than taller
@@ -290,6 +304,7 @@ def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
 
 def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None, *args, **kwargs):
     import cartopy.crs as ccrs
+    from cartopy.mpl.geoaxes import GeoAxes
     import matplotlib.pyplot as plt
     import numpy as np
     from cis.data_io.common_data import CommonData
@@ -327,15 +342,16 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     except KeyError:
         raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
 
-    transform = None
-    if plot.is_map():
-        if projection is None:
-            projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, np.min(xaxis.points) + 180.0)))
-            transform = ccrs.PlateCarree()
-            plot.mplkwargs['transform'] = transform
-
     if ax is None:
-        _, ax = plt.subplots(subplot_kw={'projection': projection})
+        if plot.is_map():
+            if projection is None:
+                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data, np.min(xaxis.points) + 180.0)))
+
+            _, ax = plt.subplots(subplot_kw={'projection': projection})
+            # Monkey-patch the nasabluemarble method onto the axis
+            GeoAxes.bluemarble = drawbluemarble
+        else:
+            _, ax = plt.subplots()
 
     # Make the plot
     plot(ax)
@@ -346,7 +362,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     if yaxis.standard_name == 'air_pressure':
         ax.invert_yaxis()
 
-    return ax
+    return plot, ax
 
 
 def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *args, **kwargs):
@@ -354,7 +370,7 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         if yaxis is not None:
             raise ValueError("...")
             # TODO
-        ax = data_list[1].plot(how, ax, xaxis=data_list[0], *args, **kwargs)
+        plot, ax = basic_plot(data_list[1], how, ax, xaxis=data_list[0], *args, **kwargs)
     else:
         layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
 
@@ -364,20 +380,20 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         for d, y, opts in zip(data_list, yaxis, layer_opts):
             layer_kwargs = dict(list(kwargs.items()) + list(opts.items()))
             how = layer_kwargs.pop('type', how)
-            ax = d.plot(how, ax, yaxis=y, *args, **layer_kwargs)
+            plot, ax = basic_plot(d, how, ax, yaxis=y, *args, **layer_kwargs)
 
         legend = ax.legend(loc="best")
         if legend is not None:
             legend.draggable(state=True)
 
-    return ax
+    return plot, ax
 
 
 class Plotter(object):
 
     def __init__(self, data, type=None, output=None, height=None,
                  width=None, logx=False, logy=False, xmin=None,
-                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None,
+                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, nasabluemarble=False,
                  grid=False, xlabel=None, ylabel=None, title=None, fontsize=None, *args, **kwargs):
         """
         Constructor for the plotter. Note that this method also does the actual plotting.
@@ -397,11 +413,11 @@ class Plotter(object):
         # If it's still a list... We don't use the object methods because in the case of the command line API
         #  we allow mixed Gridded and Ungridded data sets - which we don't allow for CommonDataLists
         if isinstance(data, list):
-            self.ax = multilayer_plot(data, how=type, *args, **kwargs)
+            plot, self.ax = multilayer_plot(data, how=type, *args, **kwargs)
         else:
             if 'layer_opts' in kwargs:
                 kwargs.update(kwargs.pop('layer_opts')[0])
-            self.ax = basic_plot(data, how=type, *args, **kwargs)
+            plot, self.ax = basic_plot(data, how=type, *args, **kwargs)
 
         self.fig = self.ax.get_figure()
         # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
@@ -409,7 +425,11 @@ class Plotter(object):
 
         self.set_width_and_height(width, height)
 
-        apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
+        apply_axis_limits(self.ax, xmin, xmax, ymin, ymax, )
+
+        # This has to come after applying the axis limits because otherwise the image can get cropped
+        if plot.is_map() and nasabluemarble:
+            drawbluemarble(self.ax)
 
         format_plot(self.ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title)
 

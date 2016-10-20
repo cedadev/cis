@@ -413,8 +413,10 @@ class TestPlotVisual(VisualTest):
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
-        Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
-                layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90)
+        # Plotter([data], xaxis='longitude', yaxis='latitude', width=8, height=6, cbarscale=None,
+        #         layer_opts=[{'itemwidth': 50}], ymin=-90, ymax=90)
+
+        data.plot(xaxis='longitude', yaxis='latitude', itemwidth=50, coastlines=True)
 
         self.check_graphic()
 
@@ -876,7 +878,8 @@ class TestPlotAPIVisual(VisualTest):
         from cis.data_io.gridded_data import GriddedData
 
         d = GriddedData.make_from_cube(make_mock_cube())
-        d.plot(how='contour')
+        ax = d.plot(how='contour')
+        ax.bluemarble()
 
         self.check_graphic()
 
@@ -899,7 +902,9 @@ class TestPlotAPIVisual(VisualTest):
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         d = make_regular_2d_ungridded_data()
-        d.plot(how='scatter2d', nasabluemarble=True)
+        ax = d.plot(how='scatter2d')
+
+        ax.bluemarble()
 
         self.check_graphic()
 
@@ -909,7 +914,9 @@ class TestPlotAPIVisual(VisualTest):
         d = make_regular_2d_ungridded_data()
         d.lat.axis = ''
         d.lon.axis=''
-        d.plot(how='scatter2d', xaxis='longitude', yaxis='latitude', nasabluemarble=True)
+        ax = d.plot(how='scatter2d', xaxis='longitude', yaxis='latitude')
+
+        ax.bluemarble()
 
         self.check_graphic()
 
@@ -919,7 +926,9 @@ class TestPlotAPIVisual(VisualTest):
         d = make_regular_2d_ungridded_data()
         d.lat.axis = ''
         d.lon.axis=''
-        d.plot(how='scatter2d', xaxis=d.lon, yaxis=d.lat, nasabluemarble=True)
+        ax = d.plot(how='scatter2d', xaxis=d.lon, yaxis=d.lat)
+
+        ax.bluemarble()
 
         self.check_graphic()
 
@@ -975,12 +984,13 @@ class TestPlotAPIVisual(VisualTest):
         from nose.tools import assert_raises
 
         d = make_regular_2d_ungridded_data()
-        # with assert_raises(ValueError):
-        d.plot(how='histogram', nasabluemarble=True)
+
+        with assert_raises(AttributeError):
+            d.plot(how='histogram', contnlevels=5)
 
         self.check_graphic()
 
-        # with assert_raises(ValueError):
-        d.plot(how='histogram', x=d.lat)
+        with assert_raises(AttributeError):
+            d.plot(how='histogram', xaxis=d.lat)
 
         #TODO: There must be more of these

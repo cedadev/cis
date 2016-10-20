@@ -50,7 +50,9 @@ class ScatterPlot2D(Generic2DPlot):
 
         if self.edgecolor is not None:
             self.mplkwargs["edgecolors"] = self.edgecolor
-
+        else:
+            self.mplkwargs["edgecolors"] = ''
+            
         self.mplkwargs["c"] = self.data
 
         self.mappable = ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)

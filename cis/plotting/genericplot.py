@@ -77,7 +77,7 @@ class Generic2DPlot(APlot):
     # @initializer
     def __init__(self, packed_data_items, transparency=None, logv=None, vstep=None,
                  cbarscale=None, cbarorient=None, colourbar=True, cbarlabel=None,
-                 nasabluemarble=None, coastlines=None, coastlinescolour='k', *args, **kwargs):
+                 coastlines=True, coastlinescolour='k', *args, **kwargs):
         """
         Constructor for Generic_Plot.
         Note: This also calls the plot method
@@ -100,7 +100,6 @@ class Generic2DPlot(APlot):
         self.colourbar = colourbar
         self.cbarlabel = cbarlabel or format_units(packed_data_items.units)
 
-        self.nasabluemarble = True if nasabluemarble is None else nasabluemarble
         self.coastlines = coastlines
         self.coastlinescolour = coastlinescolour
 
@@ -120,7 +119,7 @@ class Generic2DPlot(APlot):
 
     def __call__(self, ax):
         from .plot import add_color_bar
-        from .plot import drawbluemarble, drawcoastlines, auto_set_map_ticks
+        from .plot import drawcoastlines, auto_set_map_ticks
         ax.set_xlabel(self.xlabel)
         ax.set_ylabel(self.ylabel)
         ax.set_title(self.label)
@@ -128,11 +127,9 @@ class Generic2DPlot(APlot):
             add_color_bar(self.mappable, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
 
         if self.is_map():
-            if self.nasabluemarble:
-                drawbluemarble(ax, self.mplkwargs['transform'])
-            if self.coastlines or (self.coastlines is None and not self.nasabluemarble):
+            if self.coastlines:
                 drawcoastlines(ax, self.coastlinescolour)
-            auto_set_map_ticks(ax, self.mplkwargs['transform'])
+            auto_set_map_ticks(ax, self.mplkwargs.get('transform', None))
 
     def is_map(self):
         if self.xaxis.name().lower().startswith("lon") and self.yaxis.name().lower().startswith("lat"):

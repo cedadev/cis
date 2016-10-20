@@ -111,7 +111,8 @@ class CommonData(object):
 
     def plot(self, *args, **kwargs):
         from cis.plotting.plot import basic_plot
-        return basic_plot(self, *args, **kwargs)
+        _, ax = basic_plot(self, *args, **kwargs)
+        return ax
 
     @abstractmethod
     def _get_default_plot_type(self, lat_lon=False):
@@ -233,4 +234,5 @@ class CommonDataList(list):
 
     def plot(self, *args, **kwargs):
         from cis.plotting.plot import multilayer_plot
-        multilayer_plot(self, *args, **kwargs)
+        _, ax = multilayer_plot(self, *args, **kwargs)
+        return ax
