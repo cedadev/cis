@@ -3,25 +3,51 @@ Class for plotting graphs.
 Also contains a dictionary for the valid plot types.
 All plot types need to be imported and added to the plot_types dictionary in order to be used.
 """
+import logging
+
+from cis.plotting.comparativescatter import ComparativeScatter
 from cis.plotting.contourplot import ContourPlot, ContourfPlot
 from cis.plotting.heatmap import Heatmap
-from cis.plotting.lineplot import LinePlot
-from cis.plotting.scatterplot import ScatterPlot, ScatterPlot2D
-from cis.plotting.comparativescatter import ComparativeScatter
 from cis.plotting.histogram import Histogram
 from cis.plotting.histogram2d import Histogram2D
-import logging
-from .APlot import format_units
-from .genericplot import format_plot
+from cis.plotting.lineplot import LinePlot
+from cis.plotting.scatterplot import ScatterPlot, ScatterPlot2D
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 
-def name_preferring_standard(coord_item):
-    for name in [coord_item.standard_name, coord_item.var_name, coord_item.long_name]:
+plot_types = {"contour": ContourPlot,
+              "contourf": ContourfPlot,
+              "heatmap": Heatmap,
+              "line": LinePlot,
+              "scatter": ScatterPlot,
+              "scatter2d": ScatterPlot2D,
+              "comparativescatter": ComparativeScatter,
+              "histogram": Histogram,
+              "histogram2d": Histogram2D}
+
+
+def format_units(units):
+    """
+    :param units: The units of a variable, as a string
+    :return: The units surrounding brackets, or the empty string if no units given
+    """
+    if "since" in str(units):
+        # Assume we are on a time if the units contain since.
+        return ""
+    elif units:
+        return "(" + str(units) + ")"
+    else:
+        return ""
+
+
+def get_label(common_data, units=True):
+    name = common_data.name() or ""
+    if units:
         if name:
-            return name
-    return ''
+            name += " "
+        name += format_units(common_data.units)
+    return name
 
 
 def _try_coord(data, coord_dict):
@@ -54,38 +80,6 @@ def get_axis(d, axis, name=None):
     logging.info("Plotting " + coord.name() + " on the {} axis".format(axis))
 
     return coord
-
-
-def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None):
-    """
-    Applies the specified limits to the given axis
-    """
-    from cartopy.mpl.geoaxes import GeoAxes
-    import cartopy.crs as ccrs
-
-    transform = ccrs.PlateCarree()
-
-    global_tolerance = 0.8
-
-    # Then apply user limits (using different interfaces for different axes types...)
-    if isinstance(ax, GeoAxes):
-        # We can't optionally pass in certain bounds to set_extent so we need to pull out the existing ones and only
-        #  change the ones we've been given.
-        x1, x2, y1, y2 = ax.get_extent()
-        # If the user hasn't specified any limits and the data spans most of the globe, just make it a global plot
-        if all(lim is None for lim in (xmin, xmax, ymin, ymax)) and \
-                ((y2 - y1 > (ax.projection.y_limits[1] - ax.projection.y_limits[0]) * global_tolerance) or
-                 (x2 - x1 > (ax.projection.x_limits[1] - ax.projection.x_limits[0]) * global_tolerance)):
-            ax.set_global()
-        else:
-            xmin = xmin if xmin is not None else x1
-            xmax = xmax if xmax is not None else x2
-            ymin = ymin if ymin is not None else y1
-            ymax = ymax if ymax is not None else y2
-            ax.set_extent([xmin, xmax, ymin, ymax], crs=transform)
-    else:
-        ax.set_xlim(xmin=xmin, xmax=xmax)
-        ax.set_ylim(ymin=ymin, ymax=ymax)
 
 
 def set_x_axis_as_time(ax):
@@ -226,29 +220,6 @@ def auto_set_map_ticks(ax, gridlines=True):
     # ax.tick_params(direction='out')
 
 
-def auto_set_ticks(ax, axis, lat_lon=False):
-    """
-    Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
-    Log axes generally come out nicely spaced without needing manual intervention.
-    """
-    # TODO: Not currently used...
-    from matplotlib.ticker import MaxNLocator, AutoMinorLocator
-    import numpy as np
-    max_bins = 9
-
-    lat_lon_steps = [1, 3, 6, 9, 10]
-    variable_step = [1, 2, 4, 5, 10]
-
-    mpl_axis = getattr(ax, "{}axis".format(axis))
-
-    # Use lat/lon steps if we're a lat/lon axis with a large enough range
-    steps = lat_lon_steps if lat_lon and np.diff(mpl_axis.get_data_interval()) > 5 else variable_step
-
-    mpl_axis.set_major_locator(MaxNLocator(nbins=max_bins, steps=steps))
-    mpl_axis.set_minor_locator(AutoMinorLocator())
-    mpl_axis.grid(False, which='minor')
-
-
 def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
     """
     Adds a colour bar to a plot
@@ -287,7 +258,6 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     import cartopy.crs as ccrs
     from cartopy.mpl.geoaxes import GeoAxes
     import matplotlib.pyplot as plt
-    import numpy as np
     from cis.data_io.common_data import CommonData
     from cis.data_io.gridded_data import GriddedData
     from cis.utils import squeeze
@@ -316,9 +286,6 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
                                              and yaxis.standard_name == 'latitude')
 
     # TODO: Check that projection=None is a valid default.
-    def get_label(d):
-        l = data.name()
-        return l + " " + format_units(data.units) if l is not None else format_units(data.units)
     label = get_label(data) if label is None else label
 
     try:
@@ -365,124 +332,11 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         for d, y, opts in zip(data_list, yaxis, layer_opts):
             layer_kwargs = dict(list(kwargs.items()) + list(opts.items()))
             how = layer_kwargs.pop('type', how)
-            plot, ax = basic_plot(d, how, ax, yaxis=y, *args, **layer_kwargs)
+            label = layer_kwargs.pop('label', get_label(d, units=False))
+            plot, ax = basic_plot(d, how, ax, yaxis=y, label=label, *args, **layer_kwargs)
 
         legend = ax.legend(loc="best")
         if legend is not None:
             legend.draggable(state=True)
 
     return plot, ax
-
-
-class Plotter(object):
-
-    def __init__(self, data, type=None, output=None, height=None,
-                 width=None, logx=False, logy=False, xmin=None,
-                 xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, nasabluemarble=False,
-                 grid=False, xlabel=None, ylabel=None, title=None, fontsize=None, *args, **kwargs):
-        """
-        Constructor for the plotter. Note that this method also does the actual plotting.
-
-        :param data: A list of packed (i.e. GriddedData or UngriddedData objects) data items to be plotted
-        :param type: The plot type to be used, as a string
-        :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be
-         used, with png being the default
-        :param args: Any other arguments received from the parser
-        :param kwargs: Any other keyword arguments received from the plotter
-        """
-
-        # Turn data into a single object if it is one - otherwise we end up with an overlay plot
-        if isinstance(data, list) and len(data) == 1:
-            data = data[0]
-
-        x_start = get_x_wrap_start(data, xmin)
-        if x_start is not None:
-            kwargs['central_longitude'] = x_start - 180.0
-
-        # If it's still a list... We don't use the object methods because in the case of the command line API
-        #  we allow mixed Gridded and Ungridded data sets - which we don't allow for CommonDataLists
-        if isinstance(data, list):
-            plot, self.ax = multilayer_plot(data, how=type, *args, **kwargs)
-        else:
-            if 'layer_opts' in kwargs:
-                kwargs.update(kwargs.pop('layer_opts')[0])
-            plot, self.ax = basic_plot(data, how=type, *args, **kwargs)
-
-        self.fig = self.ax.get_figure()
-        # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
-        # instance
-
-        self.set_width_and_height(width, height)
-
-        apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
-
-        # This has to come after applying the axis limits because otherwise the image can get cropped
-        if plot.is_map() and nasabluemarble:
-            drawbluemarble(self.ax)
-
-        format_plot(self.ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title)
-
-        self.output_to_file_or_screen(output)
-
-    def output_to_file_or_screen(self, out_filename=None):
-        """
-        Outputs to screen unless a filename is given
-
-        :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with
-         png being the default
-        """
-        import logging
-        import matplotlib.pyplot as plt
-
-        if out_filename is None:
-            plt.show()
-        else:
-            logging.info("saving plot to file: " + out_filename)
-            width = self.fig.get_figwidth()
-            self.fig.savefig(out_filename, bbox_inches='tight',
-                             pad_inches=0.05 * width)  # Will overwrite if file already exists
-
-    def set_width_and_height(self, width, height):
-        """
-        Sets the width and height of the plot
-        Uses an aspect ratio of 4:3 if only one of width and height are specified
-        If neither width or height are specified it defaults to 8 by 6 inches.
-        """
-
-        if height is not None:
-            if width is None:
-                width = height * (4.0 / 3.0)
-        elif width is not None:
-            height = width * (3.0 / 4.0)
-        else:
-            height = 6
-            width = 8
-
-        self.fig.set_figheight(height)
-        self.fig.set_figwidth(width)
-
-
-plot_types = {"contour": ContourPlot,
-              "contourf": ContourfPlot,
-              "heatmap": Heatmap,
-              "line": LinePlot,
-              "scatter": ScatterPlot,
-              "scatter2d": ScatterPlot2D,
-              "comparativescatter": ComparativeScatter,
-              "histogram": Histogram,
-              "histogram2d": Histogram2D}
-
-
-def get_x_wrap_start(data, user_xmin=None):
-    from cis.utils import find_longitude_wrap_start
-
-    # FIND THE WRAP START OF THE DATA
-    data_wrap_start = find_longitude_wrap_start(data)
-
-    # NOW find the wrap start of the user specified range
-    if user_xmin is not None:
-        x_wrap_start = -180 if user_xmin < 0 else 0
-    else:
-        x_wrap_start = data_wrap_start
-
-    return x_wrap_start

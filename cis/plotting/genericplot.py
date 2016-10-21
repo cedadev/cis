@@ -1,57 +1,63 @@
 import logging
-
-import numpy as np
-from .APlot import APlot
-from cis.exceptions import CISError
+from abc import ABCMeta, abstractmethod
+import six
 
 
-# TODO: Carry on splitting out the 2d and 3d plot methods. Make the relavant plots subclass the right one. Pull out any
-# obviously static methods. and split files. This should make the classes more manageable and easier to test.
+@six.add_metaclass(ABCMeta)
+class APlot(object):
 
+    # TODO: Reorder these into roughly the order they are most commonly used
+    # @initializer
+    def __init__(self, packed_data_items, xaxis, yaxis, color=None,
+                 edgecolor=None, itemstyle=None, itemwidth=None, label=None, *mplargs, **mplkwargs):
+        """
+        Constructor for Generic_Plot.
+        Note: This also calls the plot method
 
-def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title):
-    """
-    Used by 2d subclasses to format the plot
-    """
-    import matplotlib
+        :param ax: The matplotlib axis on which to plot
+        :param datagroup: The data group number in an overlay plot, 0 is the 'base' plot
+        :param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
+        :param plot_args: A dictionary of plot args that was created by plot.py
+        :param mplargs: Any arguments to be passed directly into matplotlib
+        :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
+        """
+        # Raw data attributes (for unpacking the packed data into)
+        self.data = None
+        self.x = None
+        self.y = None
 
-    if logx:
-        ax.set_xscale("log")
-    if logy:
-        ax.set_yscale("log")
+        self.xaxis = xaxis
+        self.yaxis = yaxis
+        self.color = color
+        self.label = label
+        self.edgecolor = edgecolor
+        self.itemstyle = itemstyle
+        self.itemwidth = itemwidth
 
-    if grid:
-        ax.grid(True, which="both")
+        self.mplargs = mplargs
+        self.mplkwargs = mplkwargs
 
-    if xstep is not None:
-        min_val, max_val = ax.get_xlim()
-        ticks = np.arange(min_val, max_val + xstep, xstep)
+        self.color_axis = []
 
-        ax.set_xticks(ticks)
+    @abstractmethod
+    def __call__(self, ax):
+        """
+        The method that will do the plotting. To be implemented by each subclass of Generic_Plot.
+        """
+        pass
 
-    if ystep is not None:
-        min_val, max_val = ax.get_ylim()
-        ticks = np.arange(min_val, max_val + ystep, ystep)
-
-        ax.set_yticks(ticks)
-
-    if fontsize is not None:
-        matplotlib.rcParams.update({'font.size': fontsize})
-
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-
-    if title is not None:
-        ax.set_title(title)
+    @abstractmethod
+    def is_map(self):
+        """
+        :return: A boolean saying if this plot should be represented as a map
+        """
+        pass
 
 
 class GenericPlot(APlot):
 
     def __init__(self, packed_data_items, *args, **kwargs):
-        from cis.plotting.APlot import get_label
+        from cis.plotting.plot import get_label
         super(GenericPlot, self).__init__(packed_data_items, *args, **kwargs)
 
         logging.debug("Unpacking the data items")
@@ -87,15 +93,15 @@ class Generic2DPlot(APlot):
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
-        from .APlot import format_units
+        from .plot import get_label
         super(Generic2DPlot, self).__init__(packed_data_items, *args, **kwargs)
 
         logging.debug("Unpacking the data items")
         # TODO I shouldn't need to do this
         self.data, self.x, self.y = self.unpack_data_items(packed_data_items)
 
-        self.xlabel = self.guess_axis_label(packed_data_items, self.xaxis)
-        self.ylabel = self.guess_axis_label(packed_data_items, self.yaxis)
+        self.xlabel = get_label(self.xaxis)
+        self.ylabel = get_label(self.yaxis)
 
         self.logv = logv
         self.vstep = vstep

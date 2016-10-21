@@ -8,13 +8,10 @@ from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.data_io.products.AProduct import ProductPluginException
 from cis.exceptions import InvalidDimensionError
 from nose.tools import raises
-from unittest import skipIf
-from sys import platform
 
 import shutil
 import logging
 
-import matplotlib
 import matplotlib.testing.compare as mcompare
 import matplotlib.pyplot as plt
 
@@ -405,7 +402,7 @@ class TestPlotVisual(VisualTest):
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
         from cis.test.util.mock import make_regular_2d_ungridded_data
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
@@ -419,7 +416,7 @@ class TestPlotVisual(VisualTest):
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
         from cis.test.util.mock import make_regular_2d_ungridded_data
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
@@ -432,7 +429,7 @@ class TestPlotVisual(VisualTest):
         """
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
@@ -446,7 +443,7 @@ class TestPlotVisual(VisualTest):
         """
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
@@ -460,7 +457,7 @@ class TestPlotVisual(VisualTest):
         """
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
@@ -475,7 +472,7 @@ class TestPlotVisual(VisualTest):
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
         from cis.test.util.mock import make_regular_2d_ungridded_data
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
@@ -489,7 +486,7 @@ class TestPlotVisual(VisualTest):
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
         from cis.test.util.mock import make_regular_2d_ungridded_data
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
 
         data = make_regular_2d_ungridded_data(lon_dim_length=90, lon_min=5., lon_max=325., lat_min=-30, lat_max=30)
 
@@ -502,7 +499,7 @@ class TestPlotVisual(VisualTest):
         """
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
@@ -518,7 +515,7 @@ class TestPlotVisual(VisualTest):
         """
         Test that ungridded data which crosses the dateline gets plotted correctly
         """
-        from cis.plotting import Plotter
+        from cis.plotting.formatted_plot import Plotter
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         datas = [make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.),
@@ -976,10 +973,5 @@ class TestPlotAPIVisual(VisualTest):
 
         with assert_raises(AttributeError):
             d.plot(how='histogram', contnlevels=5)
-
-        self.check_graphic()
-
-        with assert_raises(AttributeError):
-            d.plot(how='histogram', xaxis=d.lat)
 
         #TODO: There must be more of these

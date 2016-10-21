@@ -59,7 +59,7 @@ def plot_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments
     """
-    from cis.plotting.plot import Plotter
+    from cis.plotting.formatted_plot import Plotter
     from cis.data_io.data_reader import DataReader
 
     data = DataReader().read_datagroups(main_arguments.datagroups)

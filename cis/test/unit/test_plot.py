@@ -8,10 +8,9 @@ import iris
 from iris.coords import DimCoord
 from iris.cube import Cube
 import numpy as np
-from nose.tools import eq_
 
 from cis.data_io.gridded_data import make_from_cube
-from cis.plotting.plot import Plotter
+from cis.plotting.formatted_plot import Plotter
 from cis.plotting.genericplot import GenericPlot
 from cis.test.utils_for_testing import assert_arrays_equal
 from cis.plotting.heatmap import make_color_mesh_cells, Heatmap
