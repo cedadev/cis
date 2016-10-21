@@ -192,32 +192,52 @@ def drawbluemarble(ax):
         ax.imshow(img, origin='upper', transform=source_proj, extent=[-180, 180, -90, 90])
 
 
-def auto_set_map_ticks(ax, gridlines=True):
+def get_best_map_ticks(ax, transform=None):
     """
     Use the matplotlib.ticker class to automatically set nice values for the major and minor ticks.
     Log axes generally come out nicely spaced without needing manual intervention. For particularly narrow latitude
     vs longitude plots the ticks can come out overlapped, so an exception is included to deal with this.
     """
-    from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+    from matplotlib.ticker import MaxNLocator
 
-    try:
-        gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5)
-        # Turn off the top and right-hand labels
-        gl.xlabels_top = False
-        gl.ylabels_right = False
+    max_x_bins = 9
+    max_y_bins = 7  # as plots are wider rather than taller
 
-        # Format the lat/lon labels nicely
-        gl.xformatter = LONGITUDE_FORMATTER
-        gl.yformatter = LATITUDE_FORMATTER
-    except TypeError:
-        # Labels not supported for this projection, try without...
-        gl = ax.gridlines(draw_labels=True, linewidth=1, color='gray', alpha=0.5)
+    lon_steps = [1, 3, 6, 9, 10]
+    lat_steps = [1, 3, 6, 9, 10]
+    variable_step = [1, 2, 4, 5, 10]
 
-    if not gridlines:
-        gl.xlines = False
-        gl.ylines = False
-    # TODO It would be nice to have ticks if we don't have lines...
-    # ax.tick_params(direction='out')
+    xmin, xmax, ymin, ymax = ax.get_extent(crs=transform)
+    # ymin, ymax = ax.get_ylim()
+
+    if (xmax - xmin) < 5:
+        lon_steps = variable_step
+    if (ymax - ymin) < 5:
+        lat_steps = variable_step
+
+    # We need to make a special exception for particularly narrow and wide plots, which will be lat vs lon
+    # preserving the aspect ratio. This gives more options for the spacing to try and find something that can use
+    # the maximum number of bins.
+    if (ymax - ymin) > 2.2 * (xmax - xmin):
+        max_x_bins = 4
+        max_y_bins = 11
+    elif (xmax - xmin) > 2.2 * (ymax - ymin):
+        max_x_bins = 14
+        max_y_bins = 4
+
+    lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
+    lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
+    return lon_locator.tick_values(xmin, xmax), lat_locator.tick_values(ymin, ymax)
+
+
+def set_map_ticks(ax, xticks, yticks, transform=None):
+    from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+
+    ax.set_xticks(xticks, crs=transform)
+    ax.xaxis.set_major_formatter(LongitudeFormatter())
+
+    ax.set_yticks(yticks, crs=transform)
+    ax.yaxis.set_major_formatter(LatitudeFormatter())
 
 
 def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):

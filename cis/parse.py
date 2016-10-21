@@ -324,12 +324,14 @@ def get_plot_datagroups(datagroups, parser):
                                                        "itemwidth",
                                                        "label", "product", "type", "transparency", "cmap", "cmin",
                                                        "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
+                                                       "cbarscale", "cbarorient", "colourbar", "cbarlabel",
                                                        "contfontsize"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
                                          check_float,
-                                         check_nothing, check_product, check_plot_type, check_float, check_nothing,
-                                         check_float, check_float, check_int, convert_to_list_of_floats, check_boolean,
-                                         check_float, check_float)
+                                         check_nothing, check_product, check_plot_type, check_float, check_nothing, check_float,
+                                         check_float, check_int, convert_to_list_of_floats, check_nothing, check_int,
+                                         check_float, check_nothing, check_boolean, check_nothing,
+                                         check_float)
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsory_args=2)
 
 

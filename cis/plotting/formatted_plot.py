@@ -1,7 +1,7 @@
-from plotting.plot import multilayer_plot, basic_plot, drawbluemarble
+from cis.plotting.plot import multilayer_plot, basic_plot, drawbluemarble
 
 
-def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title):
+def format_plot(ax, logx, logy, grid, fontsize, xlabel, ylabel, title):
     """
     Used by 2d subclasses to format the plot
     """
@@ -16,18 +16,6 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, ti
     if grid:
         ax.grid(True, which="both")
 
-    if xstep is not None:
-        min_val, max_val = ax.get_xlim()
-        ticks = np.arange(min_val, max_val + xstep, xstep)
-
-        ax.set_xticks(ticks)
-
-    if ystep is not None:
-        min_val, max_val = ax.get_ylim()
-        ticks = np.arange(min_val, max_val + ystep, ystep)
-
-        ax.set_yticks(ticks)
-
     if fontsize is not None:
         matplotlib.rcParams.update({'font.size': fontsize})
 
@@ -41,43 +29,77 @@ def format_plot(ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, ti
         ax.set_title(title)
 
 
-def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None):
+def apply_map_axis_limits(ax, xmin=None, xmax=None, xstep=None, ymin=None, ymax=None, ystep=None):
     """
     Applies the specified limits to the given axis
     """
-    from cartopy.mpl.geoaxes import GeoAxes
     import cartopy.crs as ccrs
+    from cis.plotting.plot import get_best_map_ticks
+    import numpy as np
 
     transform = ccrs.PlateCarree()
 
     global_tolerance = 0.8
 
-    # Then apply user limits (using different interfaces for different axes types...)
-    if isinstance(ax, GeoAxes):
-        # We can't optionally pass in certain bounds to set_extent so we need to pull out the existing ones and only
-        #  change the ones we've been given.
-        x1, x2, y1, y2 = ax.get_extent()
-        # If the user hasn't specified any limits and the data spans most of the globe, just make it a global plot
-        if all(lim is None for lim in (xmin, xmax, ymin, ymax)) and \
-                ((y2 - y1 > (ax.projection.y_limits[1] - ax.projection.y_limits[0]) * global_tolerance) or
+    # We can't optionally pass in certain bounds to set_extent so we need to pull out the existing ones and only
+    #  change the ones we've been given.
+    x1, x2, y1, y2 = ax.get_extent()
+    # If the user hasn't specified any limits and the data spans most of the globe, just make it a global plot
+    if all(lim is None for lim in (xmin, xmax, ymin, ymax)) and \
+            ((y2 - y1 > (ax.projection.y_limits[1] - ax.projection.y_limits[0]) * global_tolerance) or
                  (x2 - x1 > (ax.projection.x_limits[1] - ax.projection.x_limits[0]) * global_tolerance)):
-            ax.set_global()
-        else:
-            xmin = xmin if xmin is not None else x1
-            xmax = xmax if xmax is not None else x2
-            ymin = ymin if ymin is not None else y1
-            ymax = ymax if ymax is not None else y2
-            ax.set_extent([xmin, xmax, ymin, ymax], crs=transform)
+        ax.set_global()
     else:
-        ax.set_xlim(xmin=xmin, xmax=xmax)
-        ax.set_ylim(ymin=ymin, ymax=ymax)
+        xmin = xmin if xmin is not None else x1
+        xmax = xmax if xmax is not None else x2
+        ymin = ymin if ymin is not None else y1
+        ymax = ymax if ymax is not None else y2
+        ax.set_extent([xmin, xmax, ymin, ymax], crs=transform)
+
+    # Get the updated extent
+    x1, x2, y1, y2 = ax.get_extent()
+
+    # Get default ticks
+    xticks, yticks = get_best_map_ticks(ax)
+
+    # If we're given user steps then calculate our own ticks
+    if xstep is not None:
+        xticks = np.arange(x1, x2 + xstep, xstep)
+
+    if ystep is not None:
+        yticks = np.arange(y1, y2 + ystep, ystep)
+
+    ax.set_xticks(xticks)
+    ax.set_yticks(yticks)
 
 
-def get_x_wrap_start(data, user_xmin=None):
+def apply_axis_limits(ax, xmin=None, xmax=None, xstep=None, ymin=None, ymax=None, ystep=None):
+    """
+    Applies the specified limits to the given axis
+    """
+    import numpy as np
+
+    ax.set_xlim(xmin=xmin, xmax=xmax)
+    ax.set_ylim(ymin=ymin, ymax=ymax)
+
+    if xstep is not None:
+        min_val, max_val = ax.get_xlim()
+        ticks = np.arange(min_val, max_val + xstep, xstep)
+
+        ax.set_xticks(ticks)
+
+    if ystep is not None:
+        min_val, max_val = ax.get_ylim()
+        ticks = np.arange(min_val, max_val + ystep, ystep)
+
+        ax.set_yticks(ticks)
+
+
+def get_x_wrap_start(data_list, user_xmin=None):
     from cis.utils import find_longitude_wrap_start
 
     # FIND THE WRAP START OF THE DATA
-    data_wrap_start = find_longitude_wrap_start(data)
+    data_wrap_start = min(find_longitude_wrap_start(data) for data in data_list)
 
     # NOW find the wrap start of the user specified range
     if user_xmin is not None:
@@ -105,13 +127,13 @@ class Plotter(object):
         :param kwargs: Any other keyword arguments received from the plotter
         """
 
-        # Turn data into a single object if it is one - otherwise we end up with an overlay plot
-        if isinstance(data, list) and len(data) == 1:
-            data = data[0]
-
         x_start = get_x_wrap_start(data, xmin)
         if x_start is not None:
             kwargs['central_longitude'] = x_start - 180.0
+
+        # Turn data into a single object if it is one - otherwise we end up with an overlay plot
+        if isinstance(data, list) and len(data) == 1:
+            data = data[0]
 
         # If it's still a list... We don't use the object methods because in the case of the command line API
         #  we allow mixed Gridded and Ungridded data sets - which we don't allow for CommonDataLists
@@ -128,13 +150,15 @@ class Plotter(object):
 
         self.set_width_and_height(width, height)
 
-        apply_axis_limits(self.ax, xmin, xmax, ymin, ymax)
+        if plot.is_map():
+            apply_map_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
+            # This has to come after applying the axis limits because otherwise the image can get cropped
+            if nasabluemarble:
+                drawbluemarble(self.ax)
+        else:
+            apply_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
 
-        # This has to come after applying the axis limits because otherwise the image can get cropped
-        if plot.is_map() and nasabluemarble:
-            drawbluemarble(self.ax)
-
-        format_plot(self.ax, logx, logy, grid, xstep, ystep, fontsize, xlabel, ylabel, title)
+        format_plot(self.ax, logx, logy, grid, fontsize, xlabel, ylabel, title)
 
         self.output_to_file_or_screen(output)
 

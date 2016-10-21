@@ -531,7 +531,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--width 20 --height 15 --cbarscale 0.5".split()
 
-        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap",
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cbarorient=vertical",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -543,7 +543,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5".split()
 
-        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cmap=binary",
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cmap=binary,cbarorient=vertical",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)

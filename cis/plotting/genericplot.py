@@ -128,7 +128,7 @@ class Generic2DPlot(APlot):
 
     def __call__(self, ax):
         from .plot import add_color_bar
-        from .plot import drawcoastlines, auto_set_map_ticks
+        from .plot import drawcoastlines, get_best_map_ticks, set_map_ticks
         ax.set_xlabel(self.xlabel)
         ax.set_ylabel(self.ylabel)
 
@@ -140,7 +140,7 @@ class Generic2DPlot(APlot):
         if self.is_map():
             if self.coastlines:
                 drawcoastlines(ax, self.coastlinescolour)
-            auto_set_map_ticks(ax, self.mplkwargs.get('transform', None))
+            set_map_ticks(ax, *get_best_map_ticks(ax))
 
     def is_map(self):
         if self.xaxis.name().lower().startswith("lon") and self.yaxis.name().lower().startswith("lat"):

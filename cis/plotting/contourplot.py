@@ -6,7 +6,7 @@ DEFAULT_NUMBER_OF_CONTOUR_LEVELS = 7
 class ContourPlot(Generic2DPlot):
 
     def __init__(self, packed_data_items, contnlevels=None,
-                 contlevels=None, contlabel=None, contwidth=None, cont_label_kwargs=None, vstep=None, *args, **kwargs):
+                 contlevels=None, contlabel=True, contwidth=None, cont_label_kwargs=None, vstep=None, *args, **kwargs):
         super(ContourPlot, self).__init__(packed_data_items, *args, **kwargs)
         self.vstep = vstep
         self.filled = False
