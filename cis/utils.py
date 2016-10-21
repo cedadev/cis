@@ -716,3 +716,12 @@ def squeeze(data):
         return make_from_cube(squeeze(data))
     else:
         return data
+
+
+@contextlib.contextmanager
+def no_autoscale(ax):
+    # Turn the scaling off so that we don't change the limits by doing whatever we do next
+    ax.set_autoscale_on(False)
+    yield
+    # Turn scaling back on
+    ax.set_autoscale_on(True)

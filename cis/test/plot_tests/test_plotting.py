@@ -777,7 +777,7 @@ class TestPlotVisual(VisualTest):
         # opts = ['--xmin=-0.5', '--xmax=360']
         opts = []
 
-        arguments = ["plot", 'AOD550:' + make_pathname('aggregated_aerosol_cci.nc')]
+        arguments = ["plot", 'AOD550:' + escape_colons(make_pathname('aggregated_aerosol_cci.nc'))]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)

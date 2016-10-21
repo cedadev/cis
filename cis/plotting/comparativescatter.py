@@ -40,17 +40,15 @@ class ComparativeScatter(APlot):
 
     def _plot_xy_line(self, ax):
         import numpy as np
+        from cis.utils import no_autoscale
+
         # Turn the scaling off so that we don't change the limits by plotting the line
-        ax.set_autoscale_on(False)
+        with no_autoscale(ax):
+            lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+                    np.max([ax.get_xlim(), ax.get_ylim()])]  # max of both axes
 
-        lims = [np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
-                np.max([ax.get_xlim(), ax.get_ylim()])]  # max of both axes
-
-        # now plot both limits against each other for the x=y line
-        ax.plot(lims, lims, color="black", linestyle="dashed")
-
-        # Turn scaling back on
-        ax.set_autoscale_on(True)
+            # now plot both limits against each other for the x=y line
+            ax.plot(lims, lims, color="black", linestyle="dashed")
 
     def is_map(self):
         return False

@@ -74,8 +74,8 @@ def apply_axis_limits(ax, xmin=None, xmax=None, ymin=None, ymax=None):
         x1, x2, y1, y2 = ax.get_extent()
         # If the user hasn't specified any limits and the data spans most of the globe, just make it a global plot
         if all(lim is None for lim in (xmin, xmax, ymin, ymax)) and \
-                ((y2-y1 > ax.projection.y_limits * global_tolerance) or
-                 (x2 - x1 > ax.projection.x_limits * global_tolerance)):
+                ((y2 - y1 > (ax.projection.y_limits[1] - ax.projection.y_limits[0]) * global_tolerance) or
+                 (x2 - x1 > (ax.projection.x_limits[1] - ax.projection.x_limits[0]) * global_tolerance)):
             ax.set_global()
         else:
             xmin = xmin if xmin is not None else x1
@@ -176,6 +176,7 @@ def drawbluemarble(ax):
     from matplotlib.image import imread
     import cartopy.crs as ccrs
     import os.path as path
+    from cis.utils import no_autoscale
 
     source_proj = ccrs.PlateCarree()
 
@@ -192,7 +193,9 @@ def drawbluemarble(ax):
             bluemarble_res = res
 
     img = imread(path.join(path.dirname(path.realpath(__file__)), bluemarble_res))
-    ax.imshow(img, origin='upper', transform=source_proj, extent=[-180, 180, -90, 90])
+    # Don't change the scale of the plot
+    with no_autoscale(ax):
+        ax.imshow(img, origin='upper', transform=source_proj, extent=[-180, 180, -90, 90])
 
 
 def auto_set_map_ticks(ax, gridlines=True):
@@ -279,7 +282,8 @@ def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
     cbar.set_label(cbarlabel)
 
 
-def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None, *args, **kwargs):
+def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None, central_longitude=0.0,
+               label=None, *args, **kwargs):
     import cartopy.crs as ccrs
     from cartopy.mpl.geoaxes import GeoAxes
     import matplotlib.pyplot as plt
@@ -312,9 +316,13 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
                                              and yaxis.standard_name == 'latitude')
 
     # TODO: Check that projection=None is a valid default.
+    def get_label(d):
+        l = data.name()
+        return l + " " + format_units(data.units) if l is not None else format_units(data.units)
+    label = get_label(data) if label is None else label
 
     try:
-        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=kwargs.pop('label', None) or data.name(),
+        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=label,
                                *args, **kwargs)
     except KeyError:
         raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
@@ -322,7 +330,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     if ax is None:
         if plot.is_map():
             if projection is None:
-                projection = ccrs.PlateCarree(central_longitude=(get_x_wrap_start(data) + 180.0))
+                projection = ccrs.PlateCarree(central_longitude=central_longitude)
             plot.mplkwargs['transform'] = ccrs.PlateCarree()
             _, ax = plt.subplots(subplot_kw={'projection': projection})
             # Monkey-patch the nasabluemarble method onto the axis
@@ -386,6 +394,10 @@ class Plotter(object):
         # Turn data into a single object if it is one - otherwise we end up with an overlay plot
         if isinstance(data, list) and len(data) == 1:
             data = data[0]
+
+        x_start = get_x_wrap_start(data, xmin)
+        if x_start is not None:
+            kwargs['central_longitude'] = x_start - 180.0
 
         # If it's still a list... We don't use the object methods because in the case of the command line API
         #  we allow mixed Gridded and Ungridded data sets - which we don't allow for CommonDataLists
