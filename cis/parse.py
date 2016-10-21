@@ -102,10 +102,10 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--vstep", metavar="X value", nargs="?", help="The step of the colour bar",
                         type=parse_as_number_or_partial_datetime)
 
-    parser.add_argument("--xbinwidth", metavar="Histogram x axis bin width", nargs="?",
-                        help="The width of the bins on the x axis of a histogram", type=float)
-    parser.add_argument("--ybinwidth", metavar="Histogram y axis bin width", nargs="?",
-                        help="The width of the bins on the y axis of a histogram", type=float)
+    parser.add_argument("--xbins", metavar="Number of histogram x axis bins", nargs="?",
+                        help="The number of bins on the x axis of a histogram", type=int)
+    parser.add_argument("--ybins", metavar="Number of histogram x axis bins", nargs="?",
+                        help="The number of bins on the y axis of a histogram", type=int)
 
     parser.add_argument("--cbarorient", metavar="Colour bar orientation", nargs="?",
                         help="The orientation of the colour bar, either horizontal or vertical",

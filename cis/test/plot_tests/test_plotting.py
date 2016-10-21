@@ -173,7 +173,7 @@ class TestPlotVisual(VisualTest):
         self.check_graphic()
 
     def test_iris_histogram(self):
-        opts = "--xmin=-50 --xmax 50 --xbinwidth 10 --ymin 1 --logy --output".split() + [self.id() + ".png"]
+        opts = "--xmin=-50 --xmax 50 --xbins 5 --ymin 1 --logy --output".split() + [self.id() + ".png"]
         arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":color=red,itemstyle=step,label=overridenlabel",
                     "snow:" + escape_colons(valid_1d_filename) + ":color=green,itemstyle=step", "--type", "histogram"] + opts
 
@@ -184,7 +184,7 @@ class TestPlotVisual(VisualTest):
 
     def test_iris_histogram2d(self):
         opts = "--cmap RdBu --ylabel overiddeny --title overiddentitle --xmin 0.000002 --xmax 0.000006 " \
-               "--ybinwidth 0.000001 --output ".split() + [self.id() + ".png"]
+               "--ybins 20 --output ".split() + [self.id() + ".png"]
         arguments = ["plot", "rain:" + escape_colons(valid_1d_filename), 
                      "snow:" + escape_colons(valid_1d_filename), "--type", "histogram2d"] + opts
 
@@ -229,7 +229,7 @@ class TestPlotVisual(VisualTest):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type scatter --title overiddentitle --fontsize 10 --width 7 --ymin=-0.0005" \
                " --ymax 0.0005".split()
-        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":itemstyle=^,itemwidth=300"]
+        arguments = ["plot", "rain:" + escape_colons(valid_1d_filename) + ":itemstyle=^,itemwidth=30"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -285,7 +285,7 @@ class TestPlotVisual(VisualTest):
     def test_other_histogram(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type histogram --xlabel overiddenx --fontsize 10 --height 10 --width 10 --xmin 0 --xmax 1.5" \
-               " --xbinwidth 0.1 --grid".split()
+               " --xbins 20 --grid".split()
         arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename) + ":itemstyle=step"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
@@ -295,7 +295,7 @@ class TestPlotVisual(VisualTest):
 
     def test_other_histogram_bin_width(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = " --type histogram --xbinwidth 0.5".split()
+        opts = " --type histogram --xbins 20".split()
         arguments = ["plot", 
                      "AOT_440:" + escape_colons(valid_aeronet_filename) + ":itemstyle=step",
                      "AOT_870:" + escape_colons(valid_aeronet_filename) + ":itemstyle=step"]
@@ -308,8 +308,8 @@ class TestPlotVisual(VisualTest):
     def test_other_histogram2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type histogram2d --xlabel overridenx --ylabel overiddeny --cbarlabel overiddencbarlabel " \
-               "--title overiddentitle --fontsize 7 --width 10 --xmin 0 --xmax 2 --xbinwidth 0.1 --ymin 0 --ymax 1.5" \
-               " --ybinwidth 0.1 --vmin 60 --vmax 480 --vstep 30 --cbarorient vertical --grid".split()
+               "--title overiddentitle --fontsize 7 --width 10 --xmin 0 --xmax 2 --xbins 20 --ymin 0 --ymax 1.5" \
+               " --ybins 20 --vmin 60 --vmax 480 --vstep 30 --cbarorient vertical --grid".split()
         arguments = ["plot", 
                      "AOT_440:" + escape_colons(valid_aeronet_filename), 
                      "AOT_870:" + escape_colons(valid_aeronet_filename)]

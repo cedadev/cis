@@ -96,10 +96,12 @@ def apply_axis_limits(ax, xmin=None, xmax=None, xstep=None, ymin=None, ymax=None
 
 
 def get_x_wrap_start(data_list, user_xmin=None):
-    from cis.utils import find_longitude_wrap_start
+    from cis.utils import find_longitude_wrap_start as find_start
 
     # FIND THE WRAP START OF THE DATA
-    data_wrap_start = min(find_longitude_wrap_start(data) for data in data_list)
+    all_starts = [find_start(data) for data in data_list if find_start(data) is not None]
+    if all_starts:
+        data_wrap_start = min(all_starts)
 
     # NOW find the wrap start of the user specified range
     if user_xmin is not None:

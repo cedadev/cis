@@ -4,11 +4,13 @@ import numpy
 
 class Histogram2D(ComparativeScatter):
 
-    def __init__(self, packed_data_items, logv=None, vstep=None,
+    def __init__(self, packed_data_items, logv=None, vstep=None, xbins=None, ybins=None,
                  cbarscale=None, cbarorient=None, colourbar=True, cbarlabel=None, *args, **kwargs):
         super(Histogram2D, self).__init__(packed_data_items, *args, **kwargs)
 
         self.logv = logv
+        self.xbins = xbins
+        self.ybins = ybins
         self.vstep = vstep
         self.cbarscale = cbarscale
         self.cbarorient = cbarorient
@@ -28,7 +30,7 @@ class Histogram2D(ComparativeScatter):
         second_data_item = second_data_item.compressed()
 
         # Use Numpy histogram generator instead of hist2d to allow log scales to be properly plotted
-        histogram2ddata, x, y = numpy.histogram2d(first_data_item, second_data_item)
+        histogram2ddata, x, y = numpy.histogram2d(first_data_item, second_data_item, bins=[self.xbins, self.ybins])
         histogram2ddata = numpy.ma.masked_equal(histogram2ddata, 0)
         self.map = ax.pcolor(x, y, histogram2ddata.T, *self.mplargs, **self.mplkwargs)
 
@@ -39,5 +41,3 @@ class Histogram2D(ComparativeScatter):
 
         if self.colourbar:
             add_color_bar(self.map, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
-        # TODO: Decide whether to draw this or not...
-        # self.ax.get_figure().colorbar(result)
