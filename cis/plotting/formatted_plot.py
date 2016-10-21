@@ -37,7 +37,7 @@ def apply_map_axis_limits(ax, xmin=None, xmax=None, xstep=None, ymin=None, ymax=
     from cis.plotting.plot import get_best_map_ticks
     import numpy as np
 
-    transform = ccrs.PlateCarree()
+    transform = ccrs.PlateCarree(360)
 
     global_tolerance = 0.8
 
@@ -128,7 +128,7 @@ class Plotter(object):
         """
 
         x_start = get_x_wrap_start(data, xmin)
-        if x_start is not None:
+        if x_start is not None and 'central_longitude' not in kwargs:
             kwargs['central_longitude'] = x_start - 180.0
 
         # Turn data into a single object if it is one - otherwise we end up with an overlay plot

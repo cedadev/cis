@@ -314,16 +314,17 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     except KeyError:
         raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
 
+    subplot_kwargs = {}
+    if plot.is_map():
+        if projection is None:
+            projection = ccrs.PlateCarree(central_longitude=central_longitude)
+        plot.mplkwargs['transform'] = ccrs.PlateCarree()
+        subplot_kwargs['projection'] = projection
+        # Monkey-patch the nasabluemarble method onto the axis
+        GeoAxes.bluemarble = drawbluemarble
+
     if ax is None:
-        if plot.is_map():
-            if projection is None:
-                projection = ccrs.PlateCarree(central_longitude=central_longitude)
-            plot.mplkwargs['transform'] = ccrs.PlateCarree()
-            _, ax = plt.subplots(subplot_kw={'projection': projection})
-            # Monkey-patch the nasabluemarble method onto the axis
-            GeoAxes.bluemarble = drawbluemarble
-        else:
-            _, ax = plt.subplots()
+        _, ax = plt.subplots(subplot_kw=subplot_kwargs)
 
     # Make the plot
     plot(ax)
@@ -342,7 +343,8 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         if yaxis is not None:
             raise ValueError("...")
             # TODO
-        plot, ax = basic_plot(data_list[1], how, ax, xaxis=data_list[0], *args, **kwargs)
+        layer_kwargs = dict(list(kwargs.items()) + list(layer_opts[0].items()))
+        plot, ax = basic_plot(data_list[1], how, ax, xaxis=data_list[0], *args, **layer_kwargs)
     else:
         layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
 

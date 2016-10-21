@@ -322,7 +322,7 @@ def get_plot_datagroups(datagroups, parser):
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "color", "edgecolor", "itemstyle",
                                                        "itemwidth",
-                                                       "label", "product", "type", "transparency", "cmap", "cmin",
+                                                       "label", "product", "type", "alpha", "cmap", "cmin",
                                                        "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
                                                        "cbarscale", "cbarorient", "colourbar", "cbarlabel",
                                                        "contfontsize"])

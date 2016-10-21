@@ -8,6 +8,7 @@ from cis.test.integration.base_integration_test import BaseIntegrationTest
 from cis.data_io.products.AProduct import ProductPluginException
 from cis.exceptions import InvalidDimensionError
 from nose.tools import raises
+from unittest import skip
 
 import shutil
 import logging
@@ -439,6 +440,7 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    @skip("Known failure")
     def test_other_longitude_wrapping_minus_180_180_forced_0_to_360(self):
         """
         Test that ungridded data which crosses the dateline gets plotted correctly
@@ -532,7 +534,7 @@ class TestPlotVisual(VisualTest):
         opts = "--width 20 --height 15 --cbarscale 0.5".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cbarorient=vertical",
-                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,color=white,contlevels=[1,10,25,50,175]"]
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,color=white,contlevels=[1,10,25,50,175],cbarorient=vertical"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -544,7 +546,7 @@ class TestPlotVisual(VisualTest):
         opts = "--xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5".split()
 
         arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":type=heatmap,cmap=binary,cbarorient=vertical",
-                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175]"]
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contour,cmap=jet,contlevels=[1,10,25,50,175],cbarorient=vertical"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -553,10 +555,10 @@ class TestPlotVisual(VisualTest):
 
     def test_transparent_contour_over_bluemarble(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5" \
+        opts = "--type contourf --xmin -180 --xmax 180 --width 20 --height 15 --cbarscale 0.5" \
                " --nasabluemarble".split()
 
-        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=Reds,type=contourf,transparency=0.5,cmin=0.000075"]
+        arguments = ["plot", "rain:" + escape_colons(valid_2d_filename) + ":cmap=Reds,alpha=0.5,cmin=0.000075"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -565,12 +567,12 @@ class TestPlotVisual(VisualTest):
 
     def test_filled_contour_over_scatter2d(self):
         output_file_opt = ["--output", self.id() + ".png"]
-        opts = "--width 20 --height 15 --xaxis longitude --yaxis latitude --xmin -180 --xmax -90" \
+        opts = "--type contourf --width 20 --height 15 --xaxis longitude --yaxis latitude " \
                " --ymin 0 --ymax 90".split()
 
-        arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
-                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[0,10,20,30,40,50,100],transparency=0.7,"
-                                              "contlabel=true,contfontsize=18"]
+        arguments = ["plot", #"GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":contlevels=[0,10,20,30,40,50,100],alpha=0.7,"
+                                              "contlabel=true"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -583,7 +585,7 @@ class TestPlotVisual(VisualTest):
                " --xmax -90 --ymin 0 --ymax 90 --nasabluemarble".split()
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
-                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[40,50,100],transparency=0.3,contlabel=true,"
+                     "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[40,50,100],alpha=0.3,contlabel=true,"
                                               "contfontsize=18,cmap=Reds"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)

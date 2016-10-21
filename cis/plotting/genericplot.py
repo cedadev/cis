@@ -78,7 +78,7 @@ class Generic2DPlot(APlot):
 
     # TODO: Reorder these into roughly the order they are most commonly used
     # @initializer
-    def __init__(self, packed_data_items, transparency=None, logv=None, vstep=None,
+    def __init__(self, packed_data_items, logv=None, vstep=None,
                  cbarscale=None, cbarorient=None, colourbar=True, cbarlabel=None,
                  coastlines=True, coastlinescolour='k', *args, **kwargs):
         """
@@ -119,8 +119,6 @@ class Generic2DPlot(APlot):
 
         self.coastlines = coastlines
         self.coastlinescolour = coastlinescolour
-
-        self.transparency = transparency
 
         if self.logv:
             from matplotlib.colors import LogNorm
