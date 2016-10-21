@@ -101,9 +101,13 @@ class Generic2DPlot(APlot):
         self.vstep = vstep
         self.cbarscale = cbarscale
         if cbarorient is None:
-            self.cbarorient = 'horizontal' if self.is_map() else 'vertical'
+            # Set the color bar to be horizontal if we're plotting a wide map, otherwise vertical
+            self.cbarorient = 'horizontal' if self.is_map() and \
+                                              (self.x.max() - self.x.min()) > \
+                                              (self.y.max() - self.y.min()) else 'vertical'
         else:
             self.cbarorient = cbarorient
+
         self.colourbar = colourbar
         self.cbarlabel = cbarlabel or self.label
 
@@ -115,7 +119,6 @@ class Generic2DPlot(APlot):
         if self.logv:
             from matplotlib.colors import LogNorm
             self.mplkwargs["norm"] = LogNorm()
-
 
     def __call__(self, ax):
         from .plot import add_color_bar
