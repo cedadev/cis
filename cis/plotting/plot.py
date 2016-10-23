@@ -343,7 +343,10 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         if yaxis is not None:
             raise ValueError("...")
             # TODO
-        layer_kwargs = dict(list(kwargs.items()) + list(layer_opts[0].items()))
+        if layer_opts is not None:
+            layer_kwargs = dict(list(kwargs.items()) + list(layer_opts[0].items()))
+        else:
+            layer_kwargs = kwargs
         plot, ax = basic_plot(data_list[1], how, ax, xaxis=data_list[0], *args, **layer_kwargs)
     else:
         layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts

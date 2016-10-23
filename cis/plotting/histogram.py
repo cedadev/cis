@@ -4,7 +4,7 @@ from cis.plotting.genericplot import GenericPlot
 class Histogram(GenericPlot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
 
-    def __init__(self, packed_data_items, xbins=None, *args, **kwargs):
+    def __init__(self, packed_data_items, xbins=10, *args, **kwargs):
         super(Histogram, self).__init__(packed_data_items, *args, **kwargs)
         self.xbins = xbins
         #
