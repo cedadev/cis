@@ -100,8 +100,7 @@ def get_x_wrap_start(data_list, user_xmin=None):
 
     # FIND THE WRAP START OF THE DATA
     all_starts = [find_start(data) for data in data_list if find_start(data) is not None]
-    if all_starts:
-        data_wrap_start = min(all_starts)
+    data_wrap_start = min(all_starts) if all_starts else None
 
     # NOW find the wrap start of the user specified range
     if user_xmin is not None:

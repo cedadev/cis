@@ -111,7 +111,7 @@ def add_plot_parser_arguments(parser):
                         help="The orientation of the colour bar, either horizontal or vertical",
                         choices=['vertical', 'horizontal'])
     parser.add_argument("--nocolourbar", dest='colourbar',
-                        help="Does not show the colour bar", action='store_true')
+                        help="Does not show the colour bar", action='store_false')
 
     parser.add_argument("--logx",
                         help="Uses a log scale (base 10) on the x axis", action='store_true')
