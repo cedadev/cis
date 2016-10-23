@@ -151,6 +151,8 @@ class Plotter(object):
 
         self.set_width_and_height(width, height)
 
+        format_plot(self.ax, logx, logy, grid, fontsize, xlabel, ylabel, title)
+
         if plot.is_map():
             apply_map_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
             # This has to come after applying the axis limits because otherwise the image can get cropped
@@ -159,7 +161,9 @@ class Plotter(object):
         else:
             apply_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
 
-        format_plot(self.ax, logx, logy, grid, fontsize, xlabel, ylabel, title)
+            # Rescale the data after changing the limits and possibly making log scale
+            self.ax.relim()
+            self.ax.autoscale()
 
         self.output_to_file_or_screen(output)
 

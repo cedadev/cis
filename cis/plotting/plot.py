@@ -329,7 +329,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     # Make the plot
     plot(ax)
 
-    if xaxis.standard_name == 'time':
+    if xaxis.standard_name == 'time' and how not in ['comparativescatter', 'histogram2d', 'histogram']:
         set_x_axis_as_time(ax)
 
     if yaxis.standard_name == 'air_pressure':
