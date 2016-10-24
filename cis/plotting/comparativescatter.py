@@ -17,7 +17,7 @@ class ComparativeScatter(APlot):
 
     def __call__(self, ax):
         if self.itemwidth is not None:
-            self.mplkwargs["s"] = self.itemwidth
+            self.mplkwargs["markersize"] = self.itemwidth
 
         if self.itemstyle is not None:
             self.mplkwargs["marker"] = self.itemstyle
@@ -31,7 +31,7 @@ class ComparativeScatter(APlot):
         if self.label is not None:
             self.mplkwargs['label'] = self.label
 
-        ax.scatter(self.x, self.y, *self.mplargs, **self.mplkwargs)
+        ax.plot(self.x.flatten(), self.y.flatten(), 'o', *self.mplargs, **self.mplkwargs)
 
         self._plot_xy_line(ax)
 

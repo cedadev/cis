@@ -1,17 +1,24 @@
-from cis.plotting.plot import multilayer_plot, basic_plot, drawbluemarble
 
-
-def format_plot(ax, logx, logy, grid, fontsize, xlabel, ylabel, title):
+def set_log_scales(ax, logx, logy, rescale=True):
     """
-    Used by 2d subclasses to format the plot
+    Optionally log-scale one or both of the axis
     """
-    import matplotlib
-    import numpy as np
-
     if logx:
         ax.set_xscale("log")
     if logy:
         ax.set_yscale("log")
+
+    if (logx or logy) and rescale:
+        # Optionally rescale the data as it doesn't appear to be done automatically.
+        ax.relim()
+        ax.autoscale()
+
+
+def format_plot(ax, grid, fontsize, xlabel, ylabel, title):
+    """
+    General high-level level formatting
+    """
+    import matplotlib
 
     if grid:
         ax.grid(True, which="both")
@@ -127,6 +134,7 @@ class Plotter(object):
         :param args: Any other arguments received from the parser
         :param kwargs: Any other keyword arguments received from the plotter
         """
+        from cis.plotting.plot import multilayer_plot, basic_plot, drawbluemarble
 
         x_start = get_x_wrap_start(data, xmin)
         if x_start is not None and 'central_longitude' not in kwargs:
@@ -146,12 +154,12 @@ class Plotter(object):
             plot, self.ax = basic_plot(data, how=type, *args, **kwargs)
 
         self.fig = self.ax.get_figure()
-        # TODO: All of the below functions should be static, take their own arguments and apply only to the plot.ax
-        # instance
 
         self.set_width_and_height(width, height)
 
-        format_plot(self.ax, logx, logy, grid, fontsize, xlabel, ylabel, title)
+        plot.set_log_scales(self.ax, logx, logy)
+
+        format_plot(self.ax, grid, fontsize, xlabel, ylabel, title)
 
         if plot.is_map():
             apply_map_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
@@ -160,10 +168,6 @@ class Plotter(object):
                 drawbluemarble(self.ax)
         else:
             apply_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
-
-            # Rescale the data after changing the limits and possibly making log scale
-            self.ax.relim()
-            self.ax.autoscale()
 
         self.output_to_file_or_screen(output)
 

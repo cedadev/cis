@@ -57,6 +57,10 @@ def _try_coord(data, coord_dict):
         coord = data.coord(**coord_dict)
     except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
         coord = None
+    else:
+        if not len(coord.points) > 1:
+            # Don't guess a scalar coord
+            coord = None
     return coord
 
 
