@@ -903,3 +903,15 @@ class TestPlotAPIVisual(VisualTest):
             d.plot(how='histogram', contnlevels=5)
 
         #TODO: There must be more of these
+
+    def test_taylor_diagram_gridded(self):
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.gridded_data import GriddedDataList
+
+        d = GriddedDataList([make_mock_cube(), make_mock_cube(data_offset=2)])
+        d[0].var_name = 'snow'
+        d[1].var_name = 'rain'
+
+        d.plot(how='taylor')
+
+        self.check_graphic()

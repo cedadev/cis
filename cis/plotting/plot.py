@@ -12,6 +12,7 @@ from cis.plotting.histogram import Histogram
 from cis.plotting.histogram2d import Histogram2D
 from cis.plotting.lineplot import LinePlot
 from cis.plotting.scatterplot import ScatterPlot, ScatterPlot2D
+from cis.plotting.taylor import Taylor
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
@@ -24,7 +25,8 @@ plot_types = {"contour": ContourPlot,
               "scatter2d": ScatterPlot2D,
               "comparativescatter": ComparativeScatter,
               "histogram": Histogram,
-              "histogram2d": Histogram2D}
+              "histogram2d": Histogram2D,
+              "taylor": Taylor}
 
 
 def format_units(units):
@@ -343,18 +345,19 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
 
 
 def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *args, **kwargs):
+    layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
+    if len(layer_opts) != len(data_list):
+        raise ValueError("One layer-options keyword dictionary must be supplied for each data item, or none at all.")
+
     if how in ['comparativescatter', 'histogram2d']:
         if yaxis is not None:
             raise ValueError("...")
             # TODO
-        if layer_opts is not None:
-            layer_kwargs = dict(list(kwargs.items()) + list(layer_opts[0].items()))
-        else:
-            layer_kwargs = kwargs
+        layer_kwargs = dict(list(kwargs.items()) + list(layer_opts[0].items()))
         plot, ax = basic_plot(data_list[1], how, ax, xaxis=data_list[0], *args, **layer_kwargs)
+    elif how == 'taylor':
+        plot, ax = _taylor_plot(data_list, ax, layer_opts, *args, **kwargs)
     else:
-        layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
-
         if not isinstance(yaxis, list):
             yaxis = [yaxis for i in data_list]
 
@@ -367,5 +370,65 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         legend = ax.legend(loc="best")
         if legend is not None:
             legend.draggable(state=True)
+
+    return plot, ax
+
+
+def _taylor_plot(data_list, ax=None, layer_opts=None, *args, **kwargs):
+    """
+    Construct a Taylor diagram from the data list provided. Layer_opts are parsed for itemstyle and color which
+     are then combined to be passed to the plotting routines. This allows reuse of familiar command line kwargs while
+     maintaining a simple API.
+
+    :param list data_list: List of CommonData objexts
+    :param ax: Optional axis - although we don't use a standard axis for this plot so using the default is strongly
+    recommended
+    :param list layer_opts: A list of dictionaries optionally containing labels, itemstyles and colors for each data object
+    :param list args: Optional extra arguments
+    :param dict kwargs: Optional extra keyword arguments
+    :return: Taylor plot and axes instances
+    """
+    import matplotlib.pyplot as plt
+    from cis.plotting.taylor import ArcCosTransform
+    from matplotlib.projections import PolarAxes
+    from matplotlib.transforms import IdentityTransform, blended_transform_factory
+    import mpl_toolkits.axisartist.floating_axes as floating_axes
+
+    labels = [layer_opt.pop('label', None) for layer_opt in layer_opts]
+
+    # Pull together markers from the layer_opts
+    markers = [layer_opt.pop('itemstyle', None) for layer_opt in layer_opts]
+    if all(m is None for m in markers):
+        # If all markers are None then just set the list to None
+        markers = None
+    elif any(m is None for m in markers):
+        # If not all are None, but some are then we have a problem
+        raise ValueError("If any markers are set then a marker must be set for every dataset")
+
+    # Pull together colors from the layer_opts
+    colors = [layer_opt.pop('color', None) for layer_opt in layer_opts]
+    if all(c is None for c in colors):
+        # If all markers are None then just set the list to None
+        colors = None
+    elif any(c is None for c in colors):
+        # If not all are None, but some are then we have a problem
+        raise ValueError("If any markers are set then a marker must be set for every dataset")
+    kwargs['itemwidth'] = layer_opts[0].pop('itemwidth', None)
+    plot = Taylor(data_list, labels, colors, markers, *args, **kwargs)
+
+    if ax is None:
+        fig = plt.figure()
+
+        tr = blended_transform_factory(ArcCosTransform(), IdentityTransform()) + PolarAxes.PolarTransform()
+
+        gh = floating_axes.GridHelperCurveLinear(tr, extremes=(plot.extend, 1., 0., plot.maxgamma),
+                                                 grid_locator1=None,
+                                                 grid_locator2=None,
+                                                 tick_formatter1=None,
+                                                 tick_formatter2=None)
+        ax = floating_axes.FloatingSubplot(fig, 1, 1, 1, grid_helper=gh)
+        fig.add_subplot(ax)
+
+    ax = plot(ax)
 
     return plot, ax
