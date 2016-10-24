@@ -11,9 +11,8 @@ import numpy as np
 
 from cis.data_io.gridded_data import make_from_cube
 from cis.plotting.formatted_plot import Plotter
-from cis.plotting.genericplot import GenericPlot
+from cis.plotting.genericplot import Generic2DPlot
 from cis.test.utils_for_testing import assert_arrays_equal
-from cis.plotting.heatmap import make_color_mesh_cells
 
 
 class TestPlotting(unittest.TestCase):
@@ -34,13 +33,10 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_values, out_x, out_y= make_color_mesh_cells(data, longitude, latitude)
-        expected_x = np.array([[-1, 0, 1],
-                               [-1, 0, 1],
-                               [-1, 0, 1]])
-        expected_y = np.array([[50, 50, 50],
-                               [51, 51, 51],
-                               [52, 52, 52]])
+        out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
+                                                                   latitude.contiguous_bounds())
+        expected_x = np.array([-1, 0, 1])
+        expected_y = np.array([50, 51, 52])
         expected_v = np.array([[1, 2],
                                [3, 4]])
         assert_arrays_equal(out_x, expected_x)
@@ -57,13 +53,10 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_values, out_x, out_y= make_color_mesh_cells(data, longitude, latitude)
-        expected_x = np.array([[0, 1, 2],
-                               [0, 1, 2],
-                               [0, 1, 2]])
-        expected_y = np.array([[50, 50, 50],
-                               [51, 51, 51],
-                               [52, 52, 52]])
+        out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
+                                                                   latitude.contiguous_bounds())
+        expected_x = np.array([0, 1, 2])
+        expected_y = np.array([50, 51, 52])
         expected_v = np.array([[1, 2],
                                [3, 4]])
         assert_arrays_equal(out_x, expected_x)
@@ -80,13 +73,10 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_values, out_x, out_y= make_color_mesh_cells(data, longitude, latitude)
-        expected_x = np.array([[1, 0, -1],
-                               [1, 0, -1],
-                               [1, 0, -1]])
-        expected_y = np.array([[52, 52, 52],
-                               [51, 51, 51],
-                               [50, 50, 50]])
+        out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
+                                                                   latitude.contiguous_bounds())
+        expected_x = np.array([1, 0, -1])
+        expected_y = np.array([52, 51, 50])
         expected_v = np.array([[1, 2],
                                [3, 4]])
         assert_arrays_equal(out_x, expected_x)
@@ -103,12 +93,12 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_values, out_x, out_y= make_color_mesh_cells(data, longitude, latitude)
+        out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
+                                                                   latitude.contiguous_bounds())
         x_bounds = np.arange(-179, 190, 10)
         y_bounds = np.array([50, 51, 52])
-        expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
-        assert_arrays_equal(out_x, expected_x)
-        assert_arrays_equal(out_y, expected_y)
+        assert_arrays_equal(out_x, x_bounds)
+        assert_arrays_equal(out_y, y_bounds)
 
         # Test that a plot doesn't fail.
         data.plot('heatmap')
@@ -120,12 +110,12 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_values, out_x, out_y= make_color_mesh_cells(data, longitude, latitude)
+        out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
+                                                                   latitude.contiguous_bounds())
         x_bounds = np.arange(0, 380, 20)
         y_bounds = np.array([50, 51, 52])
-        expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
-        assert_arrays_equal(out_x, expected_x)
-        assert_arrays_equal(out_y, expected_y)
+        assert_arrays_equal(out_x, x_bounds)
+        assert_arrays_equal(out_y, y_bounds)
 
         # Test that a plot doesn't fail.
         data.plot('heatmap')
@@ -137,12 +127,12 @@ class TestHeatMap(unittest.TestCase):
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
         data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
-        out_values, out_x, out_y= make_color_mesh_cells(data, longitude, latitude)
+        out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
+                                                                   latitude.contiguous_bounds())
         x_bounds = np.arange(0, 361, 1)
         y_bounds = np.array([50, 51, 52])
-        expected_x, expected_y = np.meshgrid(x_bounds, y_bounds)
-        assert_arrays_equal(out_x, expected_x)
-        assert_arrays_equal(out_y, expected_y)
+        assert_arrays_equal(out_x, x_bounds)
+        assert_arrays_equal(out_y, y_bounds)
 
         # Test that a plot doesn't fail.
         data.plot('heatmap')
