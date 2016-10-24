@@ -55,6 +55,10 @@ class APlot(object):
         """
         pass
 
+    def is_rectangular_projection(self, ax):
+        from cartopy.crs import _RectangularProjection
+        return self.is_map() and isinstance(ax.projection, _RectangularProjection)
+
     def set_log_scales(self, ax, logx, logy):
         """
         Optionally log-scale one or both of the axis. Default for Aplot is to rescale after logging.

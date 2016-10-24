@@ -162,7 +162,8 @@ class Plotter(object):
         format_plot(self.ax, grid, fontsize, xlabel, ylabel, title)
 
         if plot.is_map():
-            apply_map_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
+            if plot.is_rectangular_projection(self.ax):
+                apply_map_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
             # This has to come after applying the axis limits because otherwise the image can get cropped
             if nasabluemarble:
                 drawbluemarble(self.ax)

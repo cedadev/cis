@@ -13,6 +13,8 @@ from cis.plotting.histogram2d import Histogram2D
 from cis.plotting.lineplot import LinePlot
 from cis.plotting.scatterplot import ScatterPlot, ScatterPlot2D
 from cis.plotting.taylor import Taylor
+from cis.plugin import get_all_subclasses
+import cartopy.crs
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
@@ -27,6 +29,9 @@ plot_types = {"contour": ContourPlot,
               "histogram": Histogram,
               "histogram2d": Histogram2D,
               "taylor": Taylor}
+
+
+projections = {cls.__name__: cls for cls in get_all_subclasses(cartopy.crs.Projection, "cartopy.crs")}
 
 
 def format_units(units):
@@ -238,12 +243,17 @@ def get_best_map_ticks(ax, transform=None):
 
 def set_map_ticks(ax, xticks, yticks, transform=None):
     from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+    import cartopy.crs as ccrs
 
-    ax.set_xticks(xticks, crs=transform)
-    ax.xaxis.set_major_formatter(LongitudeFormatter())
+    if isinstance(ax.projection, ccrs._RectangularProjection):
+        ax.set_xticks(xticks, crs=transform)
+        ax.xaxis.set_major_formatter(LongitudeFormatter())
 
-    ax.set_yticks(yticks, crs=transform)
-    ax.yaxis.set_major_formatter(LatitudeFormatter())
+        ax.set_yticks(yticks, crs=transform)
+        ax.yaxis.set_major_formatter(LatitudeFormatter())
+    else:
+        logging.debug("Not setting map ticks for non-rectangular projection. Setting gridlines instead.")
+        ax.gridlines()
 
 
 def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
@@ -324,6 +334,8 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     if plot.is_map():
         if projection is None:
             projection = ccrs.PlateCarree(central_longitude=central_longitude)
+        elif isinstance(projection, str):
+            projection = projections[projection]()
         plot.mplkwargs['transform'] = ccrs.PlateCarree()
         subplot_kwargs['projection'] = projection
         # Monkey-patch the nasabluemarble method onto the axis

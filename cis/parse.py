@@ -8,7 +8,7 @@ import os.path
 import logging
 
 from cis.exceptions import InvalidCommandLineOptionError
-from cis.plotting.plot import plot_types
+from cis.plotting.plot import plot_types, projections
 
 
 def initialise_top_parser():
@@ -142,9 +142,11 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--cbarscale", metavar="A scaling for the color bar", nargs="?",
                         help="Scale the color bar, use when color bar does not match plot size", type=float)
 
+    parser.add_argument("--projection", choices=projections.keys())
+
     # Taylor diagram specific options
     parser.add_argument('--solid', action='store_true', help='Use solid markers')
-    parser.add_argument('--extend', type=float, default=0.0, help='Extend plot for negative correlation')
+    parser.add_argument('--extend', type=float, help='Extend plot for negative correlation')
     parser.add_argument('--fold', action='store_true', help='Fold plot for negative correlation or large variance')
     parser.add_argument('--gammamax', type=float, help='Fix maximum extent of radial axis')
     parser.add_argument('--stdbiasmax', type=float, help='Fix maximum standardised bias')

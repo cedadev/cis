@@ -646,6 +646,30 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_polar_projection(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        opts = ["--projection=NorthPolarStereo"]
+
+        arguments = ["plot", valid_aerosol_cci_variable + ":" + escape_colons(valid_aerosol_cci_filename)]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+    def test_mercator_projection(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        # These limits are ignored
+        opts = ["--projection=Mercator", "--xmin=-90", "--xmax=90"]
+
+        arguments = ["plot", valid_aerosol_cci_variable + ":" + escape_colons(valid_aerosol_cci_filename)]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
+
     def test_setting_xrange_using_datetimes(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = ["--xmin=2003-08-01",  "--xmax=2003-12-01T12:30:12"]
@@ -926,5 +950,41 @@ class TestPlotAPIVisual(VisualTest):
         d[1].var_name = 'rain'
 
         d.plot(how='taylor')
+
+        self.check_graphic()
+
+    def test_orographic_projection(self):
+        from cis import read_data
+        import cartopy.crs as ccrs
+
+        d = read_data(valid_aerosol_cci_filename, valid_aerosol_cci_variable)
+
+        ax = plt.subplot(1, 1, 1, projection=ccrs.Orthographic(0, 90))
+
+        ax = d.plot(ax=ax)
+
+        ax.set_global()
+
+        self.check_graphic()
+
+    def test_polar_projection(self):
+        from cis import read_data
+        import cartopy.crs as ccrs
+
+        d = read_data(valid_aerosol_cci_filename, valid_aerosol_cci_variable)
+
+        ax = d.plot(projection=ccrs.NorthPolarStereo())
+
+        self.check_graphic()
+
+    def test_mercator_projection(self):
+        from cis import read_data
+        import cartopy.crs as ccrs
+
+        d = read_data(valid_aerosol_cci_filename, valid_aerosol_cci_variable)
+
+        ax = d.plot(projection=ccrs.Mercator())
+
+        ax.bluemarble()
 
         self.check_graphic()
