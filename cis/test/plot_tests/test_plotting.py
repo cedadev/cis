@@ -259,6 +259,19 @@ class TestPlotVisual(VisualTest):
 
         self.check_graphic()
 
+    def test_other_taylor_diagram(self):
+        output_file_opt = ["--output", self.id() + ".png"]
+        # You can change the fontsize, height, width and title, but the labels and limits are ignored
+        opts = " --type taylor --bias color --xlabel overiddenx --title overiddentitle --fontsize 17" \
+               " --height 15 --width 15 --xmin 0 --xmax 1 --ymin 0 --ymax 0.5 --grid".split()
+        arguments = ["plot", "AOT_440:" + escape_colons(valid_aeronet_filename),
+                     "AOT_870:" + escape_colons(valid_aeronet_filename)]
+
+        main_arguments = parse_args(arguments + opts + output_file_opt)
+        plot_cmd(main_arguments)
+
+        self.check_graphic()
+
     def test_other_contour(self):
         output_file_opt = ["--output", self.id() + ".png"]
         opts = "--type contour --ylabel overiddenylabel --title overiddentitle --vmin 0 --cbarorient vertical --grid" \

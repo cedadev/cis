@@ -394,6 +394,8 @@ def _taylor_plot(data_list, ax=None, layer_opts=None, *args, **kwargs):
     from matplotlib.transforms import IdentityTransform, blended_transform_factory
     import mpl_toolkits.axisartist.floating_axes as floating_axes
 
+    _ = kwargs.pop('central_longitude', None)  # In case the Plotter has added it...
+
     labels = [layer_opt.pop('label', None) for layer_opt in layer_opts]
 
     # Pull together markers from the layer_opts

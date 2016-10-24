@@ -141,6 +141,16 @@ def add_plot_parser_arguments(parser):
                         help="Set the height of the plot when outputting to file", type=float)
     parser.add_argument("--cbarscale", metavar="A scaling for the color bar", nargs="?",
                         help="Scale the color bar, use when color bar does not match plot size", type=float)
+
+    # Taylor diagram specific options
+    parser.add_argument('--solid', action='store_true', help='Use solid markers')
+    parser.add_argument('--extend', type=float, default=0.0, help='Extend plot for negative correlation')
+    parser.add_argument('--fold', action='store_true', help='Fold plot for negative correlation or large variance')
+    parser.add_argument('--maxgamma', type=float, help='Fix maximum extent of radial axis')
+    parser.add_argument('--maxstdbias', type=float, help='Fix maximum standardised bias')
+    parser.add_argument('--bias', metavar='METHOD', choices=['color', 'colour', 'size', 'flag'],
+                        help='Indicate bias using the specified method (colo[u]r, size, flag)')
+
     return parser
 
 

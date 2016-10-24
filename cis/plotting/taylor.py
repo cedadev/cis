@@ -54,7 +54,7 @@ class Bunch(object):
 class Taylor(APlot):
 
     def __init__(self, packed_data_items, labels=None, colors=None, markers=None, extend=0.0, fold=False, logv=False,
-                 maxgamma=None, solid=False, usrmaxstdbias=None, bias=None,
+                 maxgamma=None, solid=False, maxstdbias=None, bias=None,
                  cbarscale=None, cbarorient=None, cbarlabel=None, *args, **kwargs):
         """
         A routine for producing taylor diagrams using matplotlib
@@ -68,8 +68,8 @@ class Taylor(APlot):
         :param bool logv: Work on logarithms of data sets
         :param float maxgamma: Fix maximum extent of radial axis
         :param bool solid: Use solid markers, default False
-        :param float usrmaxstdbias: Fix maximum standardised bias
-        :param string bias: Indicate bias using the specified method (colo[u]r, size or flag). Default is 'flag'
+        :param float maxstdbias: Fix maximum standardised bias
+        :param string bias: Indicate bias using the specified method (colo[u]r, size or flag). Default is None
         :param float cbarscale: A scale factor for the colorbar
         :param string cbarorient: The colorbar orientation ('vertical' or 'horizontal')
         :param string cbarlabel: A label for the colorbar
@@ -84,7 +84,7 @@ class Taylor(APlot):
         self.fold = fold
         self.maxgamma = maxgamma
         self.solid = solid
-        self.usrmaxstdbias = usrmaxstdbias
+        self.usrmaxstdbias = maxstdbias
         self.bias = bias
         self.cbarscale = cbarscale
         self.cbarorient = cbarorient or 'horizontal'
@@ -137,12 +137,12 @@ class Taylor(APlot):
             mask = np.logical_or(mask, self.gammas > maxgamma)
         if self.bias:
             mask = np.logical_or(mask, np.ma.getmaskarray(self.stdbiases))
-            if usrmaxstdbias:
-                mask = np.ma.logical_or(mask, np.ma.abs(self.stdbiases) > usrmaxstdbias)
+            if self.usrmaxstdbias:
+                mask = np.ma.logical_or(mask, np.ma.abs(self.stdbiases) > self.usrmaxstdbias)
 
         self.maxgamma = maxgamma or np.ma.amax(np.ma.masked_where(mask, self.gammas))
         if self.bias:
-            self.maxstdbias = usrmaxstdbias or np.ma.amax(np.ma.abs(np.ma.masked_where(mask, self.stdbiases)))
+            self.maxstdbias = self.usrmaxstdbias or np.ma.amax(np.ma.abs(np.ma.masked_where(mask, self.stdbiases)))
             self.minstdbias = min(np.ma.amin(np.ma.abs(np.ma.masked_where(mask[1:], self.stdbiases[1:]))), self.maxstdbias / 8)
             self.stdbiasrange = self.maxstdbias - self.minstdbias
 
@@ -161,12 +161,12 @@ class Taylor(APlot):
             if fold:
                 self.gammas = np.ma.minimum(self.gammas, self.maxgamma)
         if self.bias and self.usrmaxstdbias:
-            self.any_overbias = np.ma.any(self.stdbiases > usrmaxstdbias)
-            self.any_underbias = np.ma.any(self.stdbiases < -usrmaxstdbias)
-            self.labels = [l + ' B-' if b < -usrmaxstdbias else l for l, b in zip(self.labels, self.stdbiases)]
-            self.labels = [l + ' B+' if b > usrmaxstdbias else l for l, b in zip(self.labels, self.stdbiases)]
+            self.any_overbias = np.ma.any(self.stdbiases > self.usrmaxstdbias)
+            self.any_underbias = np.ma.any(self.stdbiases < -self.usrmaxstdbias)
+            self.labels = [l + ' B-' if b < -self.usrmaxstdbias else l for l, b in zip(self.labels, self.stdbiases)]
+            self.labels = [l + ' B+' if b > self.usrmaxstdbias else l for l, b in zip(self.labels, self.stdbiases)]
             if fold:
-                self.stdbiases = np.ma.maximum(np.ma.minimum(self.stdbiases, usrmaxstdbias), -usrmaxstdbias)
+                self.stdbiases = np.ma.maximum(np.ma.minimum(self.stdbiases, self.usrmaxstdbias), -self.usrmaxstdbias)
 
         if self.bias in ('color', 'colour'):
             self.mplkwargs['cmap'] = matplotlib.cm.get_cmap('RdBu_r')
@@ -294,3 +294,6 @@ class Taylor(APlot):
 
     def is_map(self):
         return False
+
+    def set_log_scales(self, ax, logx, logy):
+        pass  # Don't!

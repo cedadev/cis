@@ -166,7 +166,7 @@ class Plotter(object):
             # This has to come after applying the axis limits because otherwise the image can get cropped
             if nasabluemarble:
                 drawbluemarble(self.ax)
-        else:
+        elif type != 'taylor':
             apply_axis_limits(self.ax, xmin, xmax, xstep, ymin, ymax, ystep)
 
         self.output_to_file_or_screen(output)
