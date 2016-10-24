@@ -54,7 +54,7 @@ class Bunch(object):
 class Taylor(APlot):
 
     def __init__(self, packed_data_items, labels=None, colors=None, markers=None, extend=0.0, fold=False, logv=False,
-                 maxgamma=None, solid=False, maxstdbias=None, bias=None,
+                 gammamax=None, solid=False, stdbiasmax=None, bias=None,
                  cbarscale=None, cbarorient=None, cbarlabel=None, *args, **kwargs):
         """
         A routine for producing taylor diagrams using matplotlib
@@ -66,9 +66,9 @@ class Taylor(APlot):
         :param float extend: Extend plot for negative correlation, default 0.0
         :param bool fold: Fold plot for negative correlation or large variance, default False
         :param bool logv: Work on logarithms of data sets
-        :param float maxgamma: Fix maximum extent of radial axis
+        :param float gammamax: Fix maximum extent of radial axis
         :param bool solid: Use solid markers, default False
-        :param float maxstdbias: Fix maximum standardised bias
+        :param float stdbiasmax: Fix maximum standardised bias
         :param string bias: Indicate bias using the specified method (colo[u]r, size or flag). Default is None
         :param float cbarscale: A scale factor for the colorbar
         :param string cbarorient: The colorbar orientation ('vertical' or 'horizontal')
@@ -82,9 +82,9 @@ class Taylor(APlot):
         self.colors = colors
         self.extend = extend
         self.fold = fold
-        self.maxgamma = maxgamma
+        self.gammamax = gammamax
         self.solid = solid
-        self.usrmaxstdbias = maxstdbias
+        self.usrstdbiasmax = stdbiasmax
         self.bias = bias
         self.cbarscale = cbarscale
         self.cbarorient = cbarorient or 'horizontal'
@@ -133,16 +133,16 @@ class Taylor(APlot):
             self.markers = markers
 
         mask = np.ma.getmaskarray(self.gammas)
-        if maxgamma and not fold:
-            mask = np.logical_or(mask, self.gammas > maxgamma)
+        if self.gammamax and not fold:
+            mask = np.logical_or(mask, self.gammas > self.gammamax)
         if self.bias:
             mask = np.logical_or(mask, np.ma.getmaskarray(self.stdbiases))
-            if self.usrmaxstdbias:
-                mask = np.ma.logical_or(mask, np.ma.abs(self.stdbiases) > self.usrmaxstdbias)
+            if self.usrstdbiasmax:
+                mask = np.ma.logical_or(mask, np.ma.abs(self.stdbiases) > self.usrstdbiasmax)
 
-        self.maxgamma = maxgamma or np.ma.amax(np.ma.masked_where(mask, self.gammas))
+        self.gammamax = self.gammamax or np.ma.amax(np.ma.masked_where(mask, self.gammas))
         if self.bias:
-            self.maxstdbias = self.usrmaxstdbias or np.ma.amax(np.ma.abs(np.ma.masked_where(mask, self.stdbiases)))
+            self.maxstdbias = self.usrstdbiasmax or np.ma.amax(np.ma.abs(np.ma.masked_where(mask, self.stdbiases)))
             self.minstdbias = min(np.ma.amin(np.ma.abs(np.ma.masked_where(mask[1:], self.stdbiases[1:]))), self.maxstdbias / 8)
             self.stdbiasrange = self.maxstdbias - self.minstdbias
 
@@ -156,17 +156,17 @@ class Taylor(APlot):
                     self.corrs = np.ma.abs(self.corrs)
                 else:
                     self.corrs = np.ma.maximum(self.corrs, extend)
-        if self.maxgamma:
-            self.labels = [l + ' $>$' if g > self.maxgamma else l for l, g in zip(self.labels, self.gammas)]
+        if self.gammamax:
+            self.labels = [l + ' $>$' if g > self.gammamax else l for l, g in zip(self.labels, self.gammas)]
             if fold:
-                self.gammas = np.ma.minimum(self.gammas, self.maxgamma)
-        if self.bias and self.usrmaxstdbias:
-            self.any_overbias = np.ma.any(self.stdbiases > self.usrmaxstdbias)
-            self.any_underbias = np.ma.any(self.stdbiases < -self.usrmaxstdbias)
-            self.labels = [l + ' B-' if b < -self.usrmaxstdbias else l for l, b in zip(self.labels, self.stdbiases)]
-            self.labels = [l + ' B+' if b > self.usrmaxstdbias else l for l, b in zip(self.labels, self.stdbiases)]
+                self.gammas = np.ma.minimum(self.gammas, self.gammamax)
+        if self.bias and self.usrstdbiasmax:
+            self.any_overbias = np.ma.any(self.stdbiases > self.usrstdbiasmax)
+            self.any_underbias = np.ma.any(self.stdbiases < -self.usrstdbiasmax)
+            self.labels = [l + ' B-' if b < -self.usrstdbiasmax else l for l, b in zip(self.labels, self.stdbiases)]
+            self.labels = [l + ' B+' if b > self.usrstdbiasmax else l for l, b in zip(self.labels, self.stdbiases)]
             if fold:
-                self.stdbiases = np.ma.maximum(np.ma.minimum(self.stdbiases, self.usrmaxstdbias), -self.usrmaxstdbias)
+                self.stdbiases = np.ma.maximum(np.ma.minimum(self.stdbiases, self.usrstdbiasmax), -self.usrstdbiasmax)
 
         if self.bias in ('color', 'colour'):
             self.mplkwargs['cmap'] = matplotlib.cm.get_cmap('RdBu_r')
@@ -262,7 +262,7 @@ class Taylor(APlot):
                                     marker=' ', color=maincolor)
 
         arc = np.linspace(0., np.pi, 50)
-        for radius in np.arange(0., 2 * self.maxgamma, .2):
+        for radius in np.arange(0., 2 * self.gammamax, .2):
             ax.plot(1.0 + np.cos(arc) * radius, np.sin(arc) * radius, linestyle='dotted', color='green')
 
         ax2.plot(np.linspace(1.0, self.extend, 50),
@@ -276,7 +276,7 @@ class Taylor(APlot):
 
         if self.bias in ('color', 'colour'):
             extend = 'neither'
-            if self.fold and self.usrmaxstdbias:
+            if self.fold and self.usrstdbiasmax:
                 if self.any_overbias and self.any_underbias:
                     extend = 'both'
                 elif self.any_overbias:

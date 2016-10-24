@@ -423,7 +423,7 @@ def _taylor_plot(data_list, ax=None, layer_opts=None, *args, **kwargs):
 
         tr = blended_transform_factory(ArcCosTransform(), IdentityTransform()) + PolarAxes.PolarTransform()
 
-        gh = floating_axes.GridHelperCurveLinear(tr, extremes=(plot.extend, 1., 0., plot.maxgamma),
+        gh = floating_axes.GridHelperCurveLinear(tr, extremes=(plot.extend, 1., 0., plot.gammamax),
                                                  grid_locator1=None,
                                                  grid_locator2=None,
                                                  tick_formatter1=None,

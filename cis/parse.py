@@ -146,8 +146,8 @@ def add_plot_parser_arguments(parser):
     parser.add_argument('--solid', action='store_true', help='Use solid markers')
     parser.add_argument('--extend', type=float, default=0.0, help='Extend plot for negative correlation')
     parser.add_argument('--fold', action='store_true', help='Fold plot for negative correlation or large variance')
-    parser.add_argument('--maxgamma', type=float, help='Fix maximum extent of radial axis')
-    parser.add_argument('--maxstdbias', type=float, help='Fix maximum standardised bias')
+    parser.add_argument('--gammamax', type=float, help='Fix maximum extent of radial axis')
+    parser.add_argument('--stdbiasmax', type=float, help='Fix maximum standardised bias')
     parser.add_argument('--bias', metavar='METHOD', choices=['color', 'colour', 'size', 'flag'],
                         help='Indicate bias using the specified method (colo[u]r, size, flag)')
 
