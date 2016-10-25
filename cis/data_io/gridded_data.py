@@ -21,6 +21,7 @@ def load_cube(*args, **kwargs):
     iris.FUTURE.netcdf_promote = True
 
     cubes = iris.load(*args, **kwargs)
+
     try:
         iris_cube = cubes.merge_cube()
     except MergeError as e:

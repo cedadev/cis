@@ -816,3 +816,11 @@ def demote_warnings(level=logging.INFO):
         yield
         for w in ws:
             logging.log(level, w.message)
+
+
+@contextlib.contextmanager
+def single_warnings_only():
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("once")
+        yield
