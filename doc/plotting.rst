@@ -12,7 +12,10 @@ This will attempt to locate the variable ``variable`` in all of the specified ``
   a simple line plot, for three dimensional data the third variable is represented by the line colour
 
 ``scatter``
-  a scatter plot, for three dimensional data the third variable is represented by the maker
+  a scatter plot
+
+``scatter2d``
+  a scatter plot with two coordinate axis and the data represented by the colour of the marker
 
 ``heatmap``
   a heatmap especially suitable for gridded data
@@ -23,15 +26,15 @@ This will attempt to locate the variable ``variable`` in all of the specified ``
 ``contourf``
   a filled contour plot, see :ref:`contour options <contour-options>`
 
-``histogram3d``
-
 ``histogram2d``
+
+``histogram``
 
 ``comparativescatter``
   allows two variables to be plotted against each other, specified as ``cis plot variable1:filename1 variable2:filename2 --type comparativescatter``
 
-``overlay``
-  a collection of plots overlaid on one another, see :ref:`overlay plots <overlay-plots>`
+``taylor``
+  a Taylor diagram for comparing collocated datasets
 
 
 Note that ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
@@ -57,10 +60,10 @@ There are a number of optional arguments, which should be entered as a comma sep
 ``cmap``
   colour map to use, e.g. for contour lines or heatmap, see :ref:`colours-and-markers`
 
-``cmin``
+``vmin``
   the minimum value for the colourmap
 
-``cmax``
+``vmax``
   the maximum value for the colourmap
 
 ``edgecolor``
@@ -78,6 +81,25 @@ There are a number of optional arguments, which should be entered as a comma sep
 ``product``
   the data product to use for the plot
 
+``type``
+  the type of plot for that layer. This can't be set if the global type has been set.
+
+``alpha``
+  the transparancy of that layer
+
+``cbarlabel``
+  The label for the colorbar
+
+``cbarorient``
+  The orientation of the colour bar, either horizontal or vertical
+
+``nocolourbar``
+ Hides the colour bar on a 3D plot
+
+``cbarscale``
+  this can be used to change the size of the colourbar when plotting and defaults to 0.55 for vertical colorbars, 1.0
+  for horizontal.
+
 .. _contour-options:
 
 Additional datagroup options for contour plots only:
@@ -93,9 +115,6 @@ Additional datagroup options for contour plots only:
 
 ``contwidth``
   width of the contour lines
-
-``contfontsize``
-  size for labels on contour plot
 
 Note that ``label`` refers to the label the plot will have on the legend, for example if a multi-series line graph or scatter plot is plotted. To set the labels of the axes, use ``--xlabel`` and ``--ylabel``. ``--cbarlabel`` can be used to set the label on the colour bar.
 
@@ -128,9 +147,6 @@ There are a number of plot formatting options available:
 ``--ylabel``
   The label for the y axis
 
-``--cbarlabel``
-  The label for the colorbar
-
 ``--title``
   The title of the plot
 
@@ -146,36 +162,40 @@ There are a number of plot formatting options available:
 ``--width``
   The width of the plot, in inches
 
-``--xbinwidth``
-  The width of the histogram bins on the x axis
+``--xbins``
+  The number of bins on the x axis of a histogram
 
-``--ybinwidth``
-  The width of the histogram bins on the y axis
-
-``--cbarorient``
-  The orientation of the colour bar, either horizontal or vertical
-
-``--nocolourbar``
-  Hides the colour bar on a 3D plot 
+``--ybins``
+  The number of bins on the y axis of a histogram
 
 ``--grid``
   Shows grid lines
-
-``--plotwidth``
-  width of the plot in inches
-
-``--plotheight``
-  height of the plot in inches
-
-``--cbarscale``
-  this can be used to change the size of the colourbar when plotting and defaults to 0.55 for vertical colorbars, 1.0
-  for horizontal.
 
 ``--coastlinescolour``
   The colour of the coastlines on a map, see :ref:`colours-and-markers`
 
 ``--nasabluemarble``
   Use the NASA Blue Marble for the background, instead of coastlines, when doing lat-lon plots
+
+.. _taylor-options:
+
+``--bias``
+  Plot the bias between the data sets using specified mechanism. Can be either 'color', 'colour', 'size' or 'flag'
+
+``--solid``
+  Use solid markers
+
+``--extend``
+  Extend plot for negative correlation
+
+``--fold``
+  Fold plot for negative correlation or large variance
+
+``--gammamax``
+  Fix maximum extent of radial axis
+
+``--stdbiasmax``
+  Fix maximum standardised bias
 
 
 Setting Plot Ranges
@@ -212,17 +232,15 @@ To plot using a log scale:
 Overlaying Multiple Plots
 =========================
 
-Overlaying multiple line graphs or scatter plots is straightforward, simply use the plot command as before but specify multiple files and variables, e.g.::
+Overlaying multiple plots is straightforward, simply use the plot command as before but specify multiple files and variables, e.g.::
 
   $ cis plot $var1:$filename1:edgecolor=black $var2:$filename2:edgecolor=red
 
 To plot two variables from the same file, simply use the above command with `$filename1` in place of `$filename2`.
 
-However, using ``--type overlay`` allows multiple files to be specified on the command line to be plotted each with its own type, which is specified as e.g. ``type=heatmap``, along with the other datagroup options. Currently supported plot types are ``heatmap``, ``contour``, ``contourf`` and ``scatter``. An additional datagroup option available is ``transparency``, which allows the transparency for a layer to be set. ``transparency`` take a value between 0 and 1, where 0 is completely opaque and 1 fully transparent.
+The ``type`` paramter can be used to specify different types for each layer. For example, to plot a heatmap and a contour plot the following options can be used::
 
-For example, to plot a heatmap and a contour plot the following options can be used::
-
-  cis plot var1:file1:type=heatmap var2:file2:type=contour,color=white --type overlay --plotwidth 20 --plotheight 15 --cbarscale 0.5 -o overlay.png
+  cis plot var1:file1:type=heatmap var2:file2:type=contour,color=white --width 20 --height 15 --cbarscale 0.5 -o overlay.png
 
 Note that the default plot dimensions are deduced from the first datagroup specified.
 

@@ -1,5 +1,5 @@
 """
-Class for plotting graphs.
+High-level plotting routines
 Also contains a dictionary for the valid plot types.
 All plot types need to be imported and added to the plot_types dictionary in order to be used.
 """
@@ -31,11 +31,13 @@ plot_types = {"contour": ContourPlot,
               "taylor": Taylor}
 
 
+# Available projections from Cartopy
 projections = {cls.__name__: cls for cls in get_all_subclasses(cartopy.crs.Projection, "cartopy.crs")}
 
 
 def format_units(units):
     """
+    Optionally put brackets around a units string
     :param units: The units of a variable, as a string
     :return: The units surrounding brackets, or the empty string if no units given
     """
@@ -49,6 +51,12 @@ def format_units(units):
 
 
 def get_label(common_data, units=True):
+    """
+    Get a nicely formatted label from a CommonData object
+    :param CommonData common_data:
+    :param bool units: Include units in label? Default True
+    :return string: A label
+    """
     name = common_data.name() or ""
     if units:
         if name:
@@ -58,6 +66,12 @@ def get_label(common_data, units=True):
 
 
 def _try_coord(data, coord_dict):
+    """
+    Try and find a single (extended) coord in a CommonData object using the dictionary provided
+    :param CommonData data:
+    :param dict coord_dict: Kwargs to look for coord
+    :return: A single Coord or None if none can be found
+    """
     import cis.exceptions as cis_ex
     import iris.exceptions as iris_ex
     try:
@@ -72,7 +86,13 @@ def _try_coord(data, coord_dict):
 
 
 def get_axis(d, axis, name=None):
-
+    """
+    Guess the best Coord to use for the axis
+    :param CommonData d:
+    :param string axis:
+    :param string name:
+    :return Coord: A single Coord
+    """
     coord = _try_coord(d, dict(name_or_coord=name)) or _try_coord(d, dict(standard_name=name)) \
             or _try_coord(d, dict(axis=axis))
 
@@ -94,11 +114,11 @@ def get_axis(d, axis, name=None):
 
 
 def set_x_axis_as_time(ax):
+    """
+    Nicely format a time axis
+    """
     from matplotlib import ticker
     from cis.time_util import convert_std_time_to_datetime
-
-    def format_date(x, pos=None):
-        return convert_std_time_to_datetime(x).strftime('%Y-%m-%d')
 
     def format_datetime(x, pos=None):
         # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
@@ -114,16 +134,10 @@ def set_x_axis_as_time(ax):
         else:
             return date_time.isoformat(' ')
 
-    def format_time(x, pos=None):
-        return convert_std_time_to_datetime(x).strftime('%H:%M:%S')
-
+    # Setup conversion of our standard time
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_datetime))
-    # ax.set_xticks(rotation=45, ha="right")
-    # Give extra spacing at bottom of plot due to rotated labels
-    # ax.get_figure().subplots_adjust(bottom=0.3)
-    # Just let matplotlib do it...
+    # Then just let matplotlib format it nicely...
     ax.get_figure().autofmt_xdate()
-    # ax.xaxis.set_minor_formatter(ticker.FuncFormatter(format_time))
 
 
 def _get_extent(ax):
@@ -291,14 +305,28 @@ def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
 
 def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None, central_longitude=0.0,
                label=None, *args, **kwargs):
+    """
+    Plot a single data object using the method specified
+
+    :param CommonData data: The data to plot
+    :param string how: The method to use, one of:  "contour", "contourf", "heatmap", "line", "scatter", "scatter2d",
+    "comparativescatter", "histogram", "histogram2d" or "taylor"
+    :param Axes ax: A matplotlib axes on which to draw the plot
+    :param Coord or CommonData xaxis: The data to plot on the x axis
+    :param Coord or CommonData yaxis: The data to plot on the y axis
+    :param string or cartopy.crs.Projection projection: The projection to use for map plots (default is PlateCaree)
+    :param float central_longitude: The central longitude to use for PlateCaree (if no other projection specified)
+    :param string label: A label for the data. This is used for the title, colorbar or legend depending on plot type
+    :param args: Other plot-specific args
+    :param kwargs: Other plot-specific kwargs
+    :return APlot and Axes: The APlot instance and the matplotlib Axes on which the plot was drwan
+    """
     import cartopy.crs as ccrs
     from cartopy.mpl.geoaxes import GeoAxes
     import matplotlib.pyplot as plt
     from cis.data_io.common_data import CommonData
     from cis.data_io.gridded_data import GriddedData
     from cis.utils import squeeze
-
-    # TODO x and y should be Coord or CommonData objects only by the time they reach the plots
 
     # Remove any extra gridded data dimensions
     if isinstance(data, GriddedData):
@@ -307,21 +335,19 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     if isinstance(xaxis, CommonData):
         if how is not None:
             if how not in ['comparativescatter', 'histogram2d']:
-                raise ValueError("....")
+                raise ValueError("Invalid plot type with xaxis as a CommonData object. Either use comparativescatter, "
+                                 "histogram2d or use a Coord (or None) for the xaxis argument.")
         else:
             how = 'comparativescatter'
     else:
         xaxis = get_axis(data, 'X', xaxis)
-    # TODO: The y axis should probably be worked out by the plotter - it is different for 2D (data) and 3D (coord)
-    # TODO: In fact, I might be better off combining the get axis calls into one method, since they are interdependant
-    # for example it doesn't give sensible axis for make_regular_2d_ungridded_data with no coord axis metadata
-    #  (even though they have standard names)
+
     yaxis = get_axis(data, 'Y', yaxis)
 
     how = how or data._get_default_plot_type(xaxis.standard_name == 'longitude'
                                              and yaxis.standard_name == 'latitude')
 
-    # TODO: Check that projection=None is a valid default.
+    # Set a nice default label
     label = get_label(data) if label is None else label
 
     try:
@@ -347,6 +373,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     # Make the plot
     plot(ax)
 
+    # Any post-processing
     if xaxis.standard_name == 'time' and how not in ['comparativescatter', 'histogram2d', 'histogram']:
         set_x_axis_as_time(ax)
 
@@ -357,6 +384,20 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
 
 
 def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *args, **kwargs):
+    """
+    Plot multiple data objects using the method specified
+
+    :param list data_list: A list of CommonData objects to plot
+    :param string how: The method to use, one of:  "contour", "contourf", "heatmap", "line", "scatter", "scatter2d",
+    "comparativescatter", "histogram", "histogram2d" or "taylor"
+    :param Axes ax: A matplotlib axes on which to draw the plot
+    :param Coord or CommonData xaxis: The data to plot on the x axis
+    :param Coord or CommonData yaxis: The data to plot on the y axis
+    :param list layer_opts: A list of keyword dictionaries to pass to each layer of the plot.
+    :param args: Other plot-specific args to pass to all plots
+    :param kwargs: Other plot-specific kwargs to pass to all plots
+    :return APlot and Axes: The APlot instance and the matplotlib Axes on which the plot was drwan
+    """
     layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
     if len(layer_opts) != len(data_list):
         raise ValueError("One layer-options keyword dictionary must be supplied for each data item, or none at all.")

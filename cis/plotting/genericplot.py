@@ -1,3 +1,7 @@
+"""
+Abstract classes defining the plotting interface for all CIS plot types. Each Plot deals with one 'layer' or set of
+data.
+"""
 import logging
 from abc import ABCMeta, abstractmethod
 import six
@@ -8,18 +12,19 @@ from iris.coords import POINT_MODE
 @six.add_metaclass(ABCMeta)
 class APlot(object):
 
-    # TODO: Reorder these into roughly the order they are most commonly used
-    # @initializer
-    def __init__(self, packed_data_items, xaxis, yaxis, color=None,
+    def __init__(self, packed_data, xaxis, yaxis, color=None,
                  edgecolor=None, itemstyle=None, itemwidth=None, label=None, *mplargs, **mplkwargs):
         """
-        Constructor for Generic_Plot.
-        Note: This also calls the plot method
+        Abstract base class for all CIS plot types. Includes some common kwargs.
 
-        :param ax: The matplotlib axis on which to plot
-        :param datagroup: The data group number in an overlay plot, 0 is the 'base' plot
-        :param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
-        :param plot_args: A dictionary of plot args that was created by plot.py
+        :param CommonData packed_data: A packed data item (as opposed to a Numpy array)
+        :param Coord or CommonData xaxis: A data item for the xaxis (optional depending on plot type)
+        :param Coord or CommonData yaxis: A data item for the yaxis (optional depending on plot type)
+        :param string color: A color for the plot (line or scatter color for example)
+        :param string edgecolor: The edgecolor to use for scatter and comparative plots
+        :param string itemstyle: The itemstyle to use for scatter and comparative plots
+        :param int itemwidth: The width for the plot items (lines or points)
+        :param string label: A label for the plot layer - this is used either as a title or legend label
         :param mplargs: Any arguments to be passed directly into matplotlib
         :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
         """
@@ -44,7 +49,7 @@ class APlot(object):
     @abstractmethod
     def __call__(self, ax):
         """
-        The method that will do the plotting. To be implemented by each subclass of Generic_Plot.
+        The method that will do the plotting. To be implemented by each subclass of APlot.
         """
         pass
 
@@ -56,27 +61,33 @@ class APlot(object):
         pass
 
     def is_rectangular_projection(self, ax):
+        """
+        :return: A boolean saying if this (map) plot is on a rectangular projection
+        """
         from cartopy.crs import _RectangularProjection
         return self.is_map() and isinstance(ax.projection, _RectangularProjection)
 
     def set_log_scales(self, ax, logx, logy):
         """
-        Optionally log-scale one or both of the axis. Default for Aplot is to rescale after logging.
+        Optionally log-scale one or both of the axis. Default is to rescale after logging.
         """
         set_log_scales(ax, logx, logy, True)
 
 
 class GenericPlot(APlot):
 
-    def __init__(self, packed_data_items, *args, **kwargs):
+    def __init__(self, packed_data, *args, **kwargs):
+        """
+        A generic (abstract) class for plotting data against a single coordinate, as e.g. a line or scatter.
+        """
         from cis.plotting.plot import get_label
-        super(GenericPlot, self).__init__(packed_data_items, *args, **kwargs)
+        super(GenericPlot, self).__init__(packed_data, *args, **kwargs)
 
         logging.debug("Unpacking the data items")
-        self.x, self.data = self.xaxis.points, packed_data_items.data
+        self.x, self.data = self.xaxis.points, packed_data.data
 
-        self.mplkwargs['label'] = self.label or packed_data_items.name()
-        self.xlabel, self.ylabel = get_label(self.xaxis), get_label(packed_data_items)
+        self.mplkwargs['label'] = self.label or packed_data.name()
+        self.xlabel, self.ylabel = get_label(self.xaxis), get_label(packed_data)
 
     def __call__(self, ax):
         ax.set_xlabel(self.xlabel)
@@ -88,31 +99,31 @@ class GenericPlot(APlot):
 
 class Generic2DPlot(APlot):
 
+    # The mode is used for unpacking gridded data objects to define how to unpack the coordinates
     MODE = POINT_MODE
 
-    # TODO: Reorder these into roughly the order they are most commonly used
-    # @initializer
-    def __init__(self, packed_data_items, logv=None, vstep=None,
-                 cbarscale=None, cbarorient=None, colourbar=True, cbarlabel=None,
+    def __init__(self, packed_data, logv=None, vstep=None,
+                 colourbar=True, cbarscale=None, cbarorient=None, cbarlabel=None,
                  coastlines=True, coastlinescolour='k', *args, **kwargs):
         """
-        Constructor for Generic_Plot.
-        Note: This also calls the plot method
+        A generic (abstract) class for plotting data against two coordinates, as e.g. a heatmap or contour. This
+        includes a number of kwargs common to this type of plot.
 
-        :param ax: The matplotlib axis on which to plot
-        :param calculate_min_and_max_values: If true calculates min and max for the data values
-        :param datagroup: The data group number in an overlay plot, 0 is the 'base' plot
-        :param packed_data_items: A list of packed (i.e. Iris cubes or Ungridded data objects) data items
-        :param plot_args: A dictionary of plot args that was created by plot.py
-        :param mplargs: Any arguments to be passed directly into matplotlib
-        :param mplkwargs: Any keyword arguments to be passed directly into matplotlib
+        :param CommonData packed_data: The data to plot on the v (colour) axis
+        :param bool logv: Log the v (colour bar) axis?
+        :param float vstep: The step to use for the v axis (colour bar)
+        :param bool colourbar: Include colour bar? Default True
+        :param float cbarscale: A scale factor for the colorbar
+        :param string cbarorient: The colour bar orientation ('vertical' or 'horizontal')
+        :param string cbarlabel: A label for the colour bar
+        :param bool coastlines: Plot coastlines on map plots? Default True
+        :param string coastlinescolour: The colour to use for coastlines (default black)
         """
         from .plot import get_label
-        super(Generic2DPlot, self).__init__(packed_data_items, *args, **kwargs)
+        super(Generic2DPlot, self).__init__(packed_data, *args, **kwargs)
 
         logging.debug("Unpacking the data items")
-        # TODO I shouldn't need to do this
-        self.data, self.x, self.y = self.unpack_data_items(packed_data_items)
+        self.data, self.x, self.y = self.unpack_data_items(packed_data)
 
         self.xlabel = get_label(self.xaxis)
         self.ylabel = get_label(self.yaxis)
@@ -144,6 +155,7 @@ class Generic2DPlot(APlot):
         ax.set_xlabel(self.xlabel)
         ax.set_ylabel(self.ylabel)
 
+        # Either setup the colour bar - or if we're not doing one then we need to set the title
         if self.colourbar:
             add_color_bar(self.mappable, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
         else:
@@ -167,10 +179,8 @@ class Generic2DPlot(APlot):
 
     def unpack_data_items(self, data_object):
         """
-        :param data_object: A cube or an UngriddedData object
-        :param x: a numpy array of x points
-        :param y: a numpy array of y points
-        :return: A dictionary containing x, y and data as numpy arrays
+        :param CommonData data_object: A cube or an UngriddedData object
+        :return: data, x, and y and as numpy arrays
         """
         from iris.cube import Cube
         import logging
@@ -179,6 +189,7 @@ class Generic2DPlot(APlot):
         y = self.yaxis.points if self.MODE == POINT_MODE else self.yaxis.contiguous_bounds()
 
         if isinstance(data_object, Cube):
+            # We need to do some more unpacking, and possibly meshgridding for gridded data
             data, x, y = self._cube_manipulation(data_object, x, y)
         else:
             data = data_object.data
@@ -192,6 +203,15 @@ class Generic2DPlot(APlot):
 
     @staticmethod
     def _cube_manipulation(cube, x, y):
+        """
+        Optionally transpose the data and make a mesh-grid, taking into account auxilliary coordinates
+        A lot of this logic closely follows that used in iris.qplt.
+
+        :param Cube cube: An iris Cube
+        :param NDarray x: a numpy array of x points
+        :param NDarray y: a numpy array of y points
+        :return: data, x, and y and as numpy arrays
+        """
         import iris.plot as iplt
         import iris
         from cartopy.util import add_cyclic_point

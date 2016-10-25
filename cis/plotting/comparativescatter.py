@@ -1,19 +1,25 @@
+"""
+A scatter plot with one dataset plotted against another (as opposed to plotting data against a coordinate)
+"""
 import logging
 from cis.plotting.genericplot import APlot
 
 
 class ComparativeScatter(APlot):
 
-    def __init__(self, packed_data_items, *mplargs, **mplkwargs):
-        super(ComparativeScatter, self).__init__(packed_data_items, *mplargs, **mplkwargs)
+    def __init__(self, packed_data, *mplargs, **mplkwargs):
+        """
+        Note that the packed_data argument is ignored for this plot type - only xaxis and yaxis are plotted.
+        """
+        super(ComparativeScatter, self).__init__(packed_data, *mplargs, **mplkwargs)
 
         logging.debug("Unpacking the data items")
-        self.x, self.y = getattr(self.xaxis, 'points', None) or self.xaxis.data, packed_data_items.data
+        self.x, self.y = getattr(self.xaxis, 'points', None) or self.xaxis.data, packed_data.data
 
-        self.label = packed_data_items.long_name if self.label is None else self.label
+        self.label = packed_data.long_name if self.label is None else self.label
 
         self.xlabel = self.xaxis.name()
-        self.ylabel = packed_data_items.name()
+        self.ylabel = packed_data.name()
 
     def __call__(self, ax):
         if self.itemwidth is not None:
@@ -39,6 +45,9 @@ class ComparativeScatter(APlot):
         ax.set_ylabel(self.ylabel)
 
     def _plot_xy_line(self, ax):
+        """
+        Plot an x-y dashed line as a guide for the eye
+        """
         import numpy as np
         from cis.utils import no_autoscale
 

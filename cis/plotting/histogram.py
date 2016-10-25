@@ -1,20 +1,23 @@
+"""
+A basic histogram plot
+"""
 from cis.plotting.genericplot import GenericPlot
 
 
 class Histogram(GenericPlot):
     valid_histogram_styles = ["bar", "step", "stepfilled"]
 
-    def __init__(self, packed_data_items, xbins=10, *args, **kwargs):
-        super(Histogram, self).__init__(packed_data_items, *args, **kwargs)
+    def __init__(self, packed_data, xbins=10, *args, **kwargs):
+        """
+        :param xbins: The number of bins to use on the xaxis
+        """
+        super(Histogram, self).__init__(packed_data, *args, **kwargs)
         self.xbins = xbins
         #
-        self.xlabel = packed_data_items.name()
+        self.xlabel = packed_data.name()
         self.ylabel = "Frequency"
 
     def __call__(self, ax):
-        """
-        Plots a 2D histogram
-        """
         from numpy.ma import MaskedArray
 
         self.mplkwargs["bins"] = self.xbins

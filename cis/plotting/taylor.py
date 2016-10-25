@@ -1,5 +1,6 @@
-#!/usr/bin/env python2.7
-"""Plot a Taylor diagram comparing datasets
+"""
+Plot a Taylor diagram comparing datasets. This is quite different to the other plot types and so does more formatting
+itself than we normally would.
 
 From Zak Kipling's implemention in https://scm.physics.ox.ac.uk/svn/climproc_python/trunk/scripts/taylor.py
 """
@@ -53,14 +54,14 @@ class Bunch(object):
 
 class Taylor(APlot):
 
-    def __init__(self, packed_data_items, labels=None, colors=None, markers=None, extend=0.0, fold=False, logv=False,
+    def __init__(self, packed_data, labels=None, colors=None, markers=None, extend=0.0, fold=False, logv=False,
                  gammamax=None, solid=False, stdbiasmax=None, bias=None,
                  cbarscale=None, cbarorient=None, cbarlabel=None, *args, **kwargs):
         """
         A routine for producing taylor diagrams using matplotlib
 
-        :param list packed_data_items: A list of numpy arrays containing data to compare, the first array is taken as the reference
-        :param list labels: List of labels for each of the indata datasets
+        :param list packed_data: A list of CommonData objects to compare, the first item is taken as the reference
+        :param list labels: List of labels for each of the datasets
         :param list colors: Specify colour(s) to use
         :param list markers: Specify marker(s) to use
         :param float extend: Extend plot for negative correlation, default 0.0
@@ -76,9 +77,9 @@ class Taylor(APlot):
         :param kwargs: Any other arguments for plot, such as alpha
         """
         # xaxis and yaxis are None in this special case
-        super(Taylor, self).__init__(packed_data_items, None, None, *args, **kwargs)
+        super(Taylor, self).__init__(packed_data, None, None, *args, **kwargs)
 
-        self.labels = [l or d.name() for l, d in zip(labels, packed_data_items)]
+        self.labels = [l or d.name() for l, d in zip(labels, packed_data)]
         self.colors = colors
         self.extend = extend
         self.fold = fold
@@ -103,10 +104,10 @@ class Taylor(APlot):
             raise ValueError('Invalid bias argument specified, should be either colo[u]r, size or flag')
 
         if logv:
-            packed_data_items = [np.ma.log(d.data) for d in packed_data_items]
+            packed_data = [np.ma.log(d.data) for d in packed_data]
 
-        means = np.ma.array([np.ma.mean(d.data) for d in packed_data_items])
-        sigmas = np.ma.array([np.ma.std(d.data, ddof=1) for d in packed_data_items])
+        means = np.ma.array([np.ma.mean(d.data) for d in packed_data])
+        sigmas = np.ma.array([np.ma.std(d.data, ddof=1) for d in packed_data])
 
         logging.info("Means: {}".format(means))
         # Treat the first array as the reference
@@ -117,7 +118,7 @@ class Taylor(APlot):
         self.gammas = sigmas / ref_sigma
 
         # Calculate the correlations against the first array
-        self.corrs = np.ma.array([np.ma.corrcoef(d.data, packed_data_items[0].data)[0, 1] for d in packed_data_items])
+        self.corrs = np.ma.array([np.ma.corrcoef(d.data, packed_data[0].data)[0, 1] for d in packed_data])
         self.corrs = np.ma.minimum(np.ma.maximum(self.corrs, -1.), 1.)
 
         if markers is None:
@@ -207,7 +208,7 @@ class Taylor(APlot):
                 size = min(max((abs(stdbias) - self.minstdbias) / self.stdbiasrange, 0.), 1.)
                 size = self.itemwidth * (0.25 + 1.75 * size)
 
-            logging.info(label, corr, gamma, stdbias, marker, size)
+            logging.info("        ".join([str(s) for s in (label, corr, gamma, stdbias, marker, size)]))
 
             if self.bias in ('color', 'colour'):
                 if size is not None:

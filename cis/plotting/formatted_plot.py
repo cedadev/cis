@@ -1,3 +1,8 @@
+"""
+Routines for creating a plot and then formatting it, using command line options. It is not intended for plotting
+directly from Python, although it could be used for that.
+"""
+
 
 def set_log_scales(ax, logx, logy, rescale=True):
     """
@@ -38,7 +43,7 @@ def format_plot(ax, grid, fontsize, xlabel, ylabel, title):
 
 def apply_map_axis_limits(ax, xmin=None, xmax=None, xstep=None, ymin=None, ymax=None, ystep=None):
     """
-    Applies the specified limits to the given axis
+    Applies the specified limits to the given GeoAxis.
     """
     import cartopy.crs as ccrs
     from cis.plotting.plot import get_best_map_ticks
@@ -103,6 +108,15 @@ def apply_axis_limits(ax, xmin=None, xmax=None, xstep=None, ymin=None, ymax=None
 
 
 def get_x_wrap_start(data_list, user_xmin=None):
+    """
+    Find the left-hand most data point out of a list of CommonData objects. This is needed to work out the best
+     central longitude.
+
+    If the user has specified an xmin then if it is -ve take our wrap start as -180, else it should be 0.
+    :param list data_list: CommonData objects
+    :param float user_xmin: An optional user supplied x_min.
+    :return: The left-hand most longitude of the plot.
+    """
     from cis.utils import find_longitude_wrap_start as find_start
 
     # FIND THE WRAP START OF THE DATA
@@ -125,17 +139,34 @@ class Plotter(object):
                  xmax=None, xstep=None, ymin=None, ymax=None, ystep=None, nasabluemarble=False,
                  grid=False, xlabel=None, ylabel=None, title=None, fontsize=None, *args, **kwargs):
         """
-        Constructor for the plotter. Note that this method also does the actual plotting.
+        Constructor for the formatted plotter. Note that this method also does the actual plotting.
 
-        :param data: A list of packed (i.e. GriddedData or UngriddedData objects) data items to be plotted
-        :param type: The plot type to be used, as a string
-        :param out_filename: The filename of the file to save the plot to. Optional. Various file extensions can be
-         used, with png being the default
+        :param list data: A list of packed (i.e. GriddedData or UngriddedData objects) data items to be plotted
+        :param string type: The plot type to be used
+        :param string output: The filename of the file to save the plot to (Optional). Various file extensions can be
+         used, with png being the default.
+        :param float height: The height of the plot
+        :param float width: The width of the plot
+        :param bool logx: Set the x-axis to log scale
+        :param bool logy: Set the y-axis to log scale
+        :param float xmin: The minimium value of the x axis
+        :param float xmax: The maximium value of the x axis
+        :param float xstep: The step value of the x ticks
+        :param float ymin: The minimium value of the y axis
+        :param float ymax: The maximium value of the y axis
+        :param float ystep: The step value of the y ticks
+        :param bool nasabluemarble: Plot a NASA bluemarble background? Default False
+        :param bool grid: Plot gridlines? Default False
+        :param string xlabel: A label for the x axis
+        :param string ylabel: A label for the y axis
+        :param string title: A title for the plot
+        :param int fontsize: The fontsize to use for the ticks and labels
         :param args: Any other arguments received from the parser
-        :param kwargs: Any other keyword arguments received from the plotter
+        :param kwargs: Any other keyword arguments received from the parser
         """
         from cis.plotting.plot import multilayer_plot, basic_plot, drawbluemarble
 
+        # Figure out teh best coneral longitude for the projection (it doesn't matter if it's a map yet)
         x_start = get_x_wrap_start(data, xmin)
         if x_start is not None and 'central_longitude' not in kwargs:
             kwargs['central_longitude'] = x_start - 180.0
@@ -175,9 +206,6 @@ class Plotter(object):
     def output_to_file_or_screen(self, out_filename=None):
         """
         Outputs to screen unless a filename is given
-
-        :param out_filename: The filename of the file to save the plot to. Various file extensions can be used, with
-         png being the default
         """
         import logging
         import matplotlib.pyplot as plt

@@ -135,10 +135,6 @@ def add_plot_parser_arguments(parser):
                         help="Add the NASA 'Blue Marble' image as the background to a map, instead of coastlines",
                         action='store_true')
 
-    parser.add_argument("--plotwidth", metavar="Width of the plot in inches", nargs="?",
-                        help="Set the width of the plot when outputting to file", type=float)
-    parser.add_argument("--plotheight", metavar="Height of the plot in inches", nargs="?",
-                        help="Set the height of the plot when outputting to file", type=float)
     parser.add_argument("--cbarscale", metavar="A scaling for the color bar", nargs="?",
                         help="Scale the color bar, use when color bar does not match plot size", type=float)
 
@@ -334,16 +330,14 @@ def get_plot_datagroups(datagroups, parser):
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "color", "edgecolor", "itemstyle",
                                                        "itemwidth",
-                                                       "label", "product", "type", "alpha", "cmap", "cmin",
-                                                       "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
-                                                       "cbarscale", "cbarorient", "colourbar", "cbarlabel",
-                                                       "contfontsize"])
+                                                       "label", "product", "type", "alpha", "cmap", "vmin",
+                                                       "vmax", "vstep", "contnlevels", "contlevels", "contlabel", "contwidth",
+                                                       "cbarscale", "cbarorient", "colourbar", "cbarlabel"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
                                          check_float,
                                          check_nothing, check_product, check_plot_type, check_float, check_nothing, check_float,
-                                         check_float, check_int, convert_to_list_of_floats, check_nothing, check_int,
-                                         check_float, check_nothing, check_boolean, check_nothing,
-                                         check_float)
+                                         check_float, check_float, check_int, convert_to_list_of_floats, check_boolean, check_int,
+                                         check_float, check_nothing, check_boolean, check_nothing)
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsory_args=2)
 
 

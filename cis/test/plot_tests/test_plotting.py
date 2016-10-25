@@ -602,7 +602,7 @@ class TestPlotVisual(VisualTest):
 
         arguments = ["plot", "GGALT:" + escape_colons(valid_NCAR_NetCDF_RAF_filename) + ":type=scatter2d,itemwidth=20",
                      "solarupclear:" + escape_colons(valid_2d_filename) + ":type=contourf,contlevels=[40,50,100],alpha=0.3,contlabel=true,"
-                                              "contfontsize=18,cmap=Reds"]
+                                              "cmap=Reds"]
 
         main_arguments = parse_args(arguments + opts + output_file_opt)
         plot_cmd(main_arguments)
@@ -660,7 +660,7 @@ class TestPlotVisual(VisualTest):
     def test_mercator_projection(self):
         output_file_opt = ["--output", self.id() + ".png"]
         # These limits are ignored
-        opts = ["--projection=Mercator", "--xmin=-90", "--xmax=90"]
+        opts = ["--projection=Mercator", "--xmin=-90", "--xmax=90", "--nasabluemarble"]
 
         arguments = ["plot", valid_aerosol_cci_variable + ":" + escape_colons(valid_aerosol_cci_filename)]
 
@@ -668,7 +668,6 @@ class TestPlotVisual(VisualTest):
         plot_cmd(main_arguments)
 
         self.check_graphic()
-
 
     def test_setting_xrange_using_datetimes(self):
         output_file_opt = ["--output", self.id() + ".png"]

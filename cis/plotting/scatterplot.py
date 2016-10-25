@@ -1,19 +1,16 @@
+"""
+Basic scatter plots, against either one or two coordinates.
+"""
 from cis.plotting.genericplot import GenericPlot, Generic2DPlot
 
 
 class ScatterPlot(GenericPlot):
 
-    # def __init__(self, packed_data, *args, **kwargs):
-    #     super(ScatterPlot, self).__init__(packed_data, *args, **kwargs)
-    #     self.xlabel = self.x.name()
-    #     self.ylabel = self.data.name()
-
     def __call__(self, ax):
         """
-        Plots one or many scatter plots
-        Stores the plot in a list to be used for when adding the legend
+        Plots one set of scatter points
         """
-        # TODO: This is better now but I'm still not convinced about having mplkwargs being changed globably like this
+        # Translate our argument names to mpl line kwargs
         if self.itemwidth is not None:
             self.mplkwargs["markersize"] = self.itemwidth
 
@@ -37,11 +34,8 @@ class ScatterPlot2D(Generic2DPlot):
 
     def __call__(self, ax):
         """
-        Plots one or many scatter plots
-        Stores the plot in a list to be used for when adding the legend
+        Plots one set of scatter points with the colour determined by the data
         """
-        # TODO: Refactor these checks, maybe create a dict of mplkwargs and local attributes to loop over, and probably
-        #  combine with the normal scatter plot above
         if self.itemwidth is not None:
             self.mplkwargs["s"] = self.itemwidth
 
@@ -51,6 +45,7 @@ class ScatterPlot2D(Generic2DPlot):
         if self.edgecolor is not None:
             self.mplkwargs["edgecolors"] = self.edgecolor
         else:
+            # For 2D scatter plots set the edgecolors off by default
             self.mplkwargs["edgecolors"] = ''
             
         self.mplkwargs["c"] = self.data
