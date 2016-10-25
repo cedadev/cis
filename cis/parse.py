@@ -462,8 +462,7 @@ def get_subset_limits(subsetlimits, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_as_number_or_partial_datetime
-    from cis.subsetting.subset_limits import SubsetLimits
+    from cis.parse_datetime import parse_datetime, parse_as_number_or_partial_datetime, parse_partial_datetime
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(subsetlimits)

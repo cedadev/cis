@@ -59,7 +59,7 @@ class TestRegularGridInterpolator(TestCase):
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                                           [0.5, 0.5, .5, .5]])
 
-        for method in ['linear', 'nearest']:
+        for method in ['lin', 'nn']:
             interp = _RegularGridInterpolator(points,
                                              sample.T.tolist(), method=method)
             v1 = interp(values.tolist())
@@ -73,7 +73,7 @@ class TestRegularGridInterpolator(TestCase):
         values = values - 2j*values
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8], [0.5, 0.5, .5, .5]])
 
-        for method in ['linear', 'nearest']:
+        for method in ['lin', 'nn']:
             interp = _RegularGridInterpolator(points, sample.T, method=method)
             rinterp = _RegularGridInterpolator(points, sample.real.T, method=method)
             iinterp = _RegularGridInterpolator(points, sample.imag.T, method=method)
@@ -101,23 +101,23 @@ class TestRegularGridInterpolator(TestCase):
         points, values = self._get_sample_4d()
         sample = np.asarray([0.1, 0.1, .9, .9])
         wanted = 1100.
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([0.1, 0.1, 0.1, 0.1])
         wanted = 0.
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([0., 0., 0., 0.])
         wanted = 0.
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([1., 1., 1., 1.])
         wanted = 1111.
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         assert_array_almost_equal(interp(values), wanted)
         sample = np.asarray([0.1, 0.4, 0.6, 0.9])
         wanted = 1055.
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         assert_array_almost_equal(interp(values), wanted)
 
     def test_linear_edges(self):
@@ -153,10 +153,10 @@ class TestRegularGridInterpolator(TestCase):
         points, values = self._get_sample_4d()
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [21, 2.1, -1.1, -11], [2.1, 2.1, -1.1, -1.1]])
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         wanted = np.asarray([0., 1111., 11., 11.])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
-        interp = _RegularGridInterpolator(points, sample.T, method="linear")
+        interp = _RegularGridInterpolator(points, sample.T, method="lin")
         wanted = np.asarray([-111.1, 1222.1, -11068., -1186.9])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
 
@@ -165,10 +165,10 @@ class TestRegularGridInterpolator(TestCase):
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [21, 2.1, -1.1, -11], [2.1, 2.1, -1.1, -1.1]])
 
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         wanted = np.asarray([0., 11., 11., 11.])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
-        interp = _RegularGridInterpolator(points, sample.T, method="linear")
+        interp = _RegularGridInterpolator(points, sample.T, method="lin")
         wanted = np.asarray([-12.1, 133.1, -1069., -97.9])
         assert_array_almost_equal(interp(values, fill_value=None), wanted)
 
@@ -177,10 +177,10 @@ class TestRegularGridInterpolator(TestCase):
 
         sample = np.asarray([[-.1, -.1, -.1, -.1], [1.1, 1.1, 1.1, 1.1],
                              [2.1, 2.1, -1.1, -1.1]])
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         # Assert that all of the elements are masked
         assert all(interp(values, fill_value=np.nan).mask)
-        interp = _RegularGridInterpolator(points, sample.T, method="linear")
+        interp = _RegularGridInterpolator(points, sample.T, method="lin")
         assert all(interp(values, fill_value=np.nan).mask)
 
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
@@ -193,7 +193,7 @@ class TestRegularGridInterpolator(TestCase):
         points, values = self._get_sample_4d()
         sample = np.asarray([[0.1, 0.1, 1., .9], [0.2, 0.1, .45, .8],
                              [0.5, 0.5, .5, .5]])
-        interp = _RegularGridInterpolator(points, sample.T, method="nearest")
+        interp = _RegularGridInterpolator(points, sample.T, method="nn")
         points_qhull = itertools.product(*points)
         points_qhull = [p for p in points_qhull]
         points_qhull = np.asarray(points_qhull)
@@ -222,7 +222,7 @@ class TestRegularGridInterpolator(TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
         wanted = np.asarray([8.8, 11.2, 4.8])
         assert_array_almost_equal(values, wanted)
@@ -240,7 +240,7 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nn')
         values = interpolator(cube)
         wanted = np.asarray([221.0, 223.0, 318.0, np.nan])
         assert_array_almost_equal(values, wanted)
@@ -258,7 +258,7 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 8, 27))])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
         wanted = np.asarray([23.0, 23.5, 33.5, 12.4])
         assert_array_almost_equal(values, wanted)
@@ -276,7 +276,7 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
         wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
         assert_array_almost_equal(values, wanted)
@@ -296,7 +296,7 @@ class TestRegularGridInterpolator(TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
         wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
         assert_array_almost_equal(values, wanted)
@@ -318,7 +318,7 @@ class TestRegularGridInterpolator(TestCase):
              # This point lies outside the upper bounds for altitude at this point
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nn')
         values = interpolator(cube, fill_value=None)
         wanted = np.asarray([221.0, 345.0, 100.0])
         assert_array_almost_equal(values, wanted)
@@ -359,10 +359,10 @@ class TestRegularGridInterpolator(TestCase):
 
         wanted = np.ma.array([8.0, np.nan, np.nan], mask=[False, True, True])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nn')
         assert_array_almost_equal(interpolator(cube), wanted)
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         assert_array_almost_equal(interpolator(cube), wanted)
 
     def test_missing_values_with_extrapolation(self):
@@ -380,11 +380,11 @@ class TestRegularGridInterpolator(TestCase):
 
         wanted = np.ma.array([6.0, np.nan, np.nan], mask=[False, True, True])
 
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nearest')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nn')
         assert_array_almost_equal(interpolator(cube, extrapolate=True), wanted)
 
         wanted = np.ma.array([7.0, np.nan, np.nan], mask=[False, True, True])
-        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'linear')
+        interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         assert_array_almost_equal(interpolator(cube, extrapolate=True), wanted)
 
 

@@ -27,7 +27,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         constraint = None
 
         col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, data, constraint, 'nearest')
+        output = col.collocate(sample, data, constraint, 'nn')
 
         expected_result = np.array([8, 12, 8])
         assert len(output) == 1
@@ -46,7 +46,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         constraint = None
 
         col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, data, constraint, 'linear')
+        output = col.collocate(sample, data, constraint, 'lin')
 
         expected_result = np.array([8.8, 10.4, 7.2])
         assert len(output) == 1
@@ -68,7 +68,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
         col = GriddedUngriddedCollocator(missing_data_for_missing_sample=True)
-        output = col.collocate(sample, data, constraint, 'nearest')
+        output = col.collocate(sample, data, constraint, 'nn')
 
         assert len(output) == 1
         assert isinstance(output, UngriddedDataList)
@@ -89,7 +89,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
         col = GriddedUngriddedCollocator(missing_data_for_missing_sample=False)
-        output = col.collocate(sample, data, constraint, 'nearest')
+        output = col.collocate(sample, data, constraint, 'nn')
 
         assert len(output) == 1
         assert isinstance(output, UngriddedDataList)
@@ -107,7 +107,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample_points.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN, missing_data_for_missing_sample=True)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         # This point should be masked because of the sampling
         assert np.ma.is_masked(new_data.data[1])
@@ -123,7 +123,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
 
         # Since there is no corresponding pressure field in the source data a ValueError should be raised
-        assert_raises(ValueError, col.collocate, sample_points, cube, None, 'linear')
+        assert_raises(ValueError, col.collocate, sample_points, cube, None, 'lin')
 
     def test_order_of_coords_doesnt_matter(self):
         from iris.cube import Cube
@@ -156,15 +156,15 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
              Coord(sample_times, Metadata('time', units='days since 1970-01-01 00:00:00'))])
 
         col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, source, None, 'nearest')[0]
+        output = col.collocate(sample, source, None, 'nn')[0]
 
         source.transpose()
         col = GriddedUngriddedCollocator()
-        assert_equal(col.collocate(sample, source, None, 'nearest')[0].data, output.data)
+        assert_equal(col.collocate(sample, source, None, 'nn')[0].data, output.data)
 
         source.transpose((2, 1, 0, 3))
         col = GriddedUngriddedCollocator()
-        assert_equal(col.collocate(sample, source, None, 'nearest')[0].data, output.data)
+        assert_equal(col.collocate(sample, source, None, 'nn')[0].data, output.data)
 
 
 class TestNN(unittest.TestCase):
@@ -177,7 +177,7 @@ class TestNN(unittest.TestCase):
              HyperPoint(lat=4.0, lon=4.0),
              HyperPoint(lat=-4.0, lon=-4.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 8.0)  # float(cube[2,1].data))
         eq_(new_data.data[1], 12.0)  # float(cube[3,2].data))
         eq_(new_data.data[2], 4.0)  # float(cube[1,0].data))
@@ -190,7 +190,7 @@ class TestNN(unittest.TestCase):
              HyperPoint(80.0, 0.0), HyperPoint(85.0, 355.0), HyperPoint(90.0, 360.0),
              HyperPoint(-80.0, 0.0), HyperPoint(-85.0, 355.0), HyperPoint(-90.0, 360.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         wanted = np.asarray([325.0, 360.0, 325.0,
                              613.0, 648.0, 649.0,
                              37.0, 36.0, 1.0])
@@ -206,7 +206,7 @@ class TestNN(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-14.0),
              HyperPoint(lat=-4.0, lon=-44.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 325.0)  # float(cube[9,0].data)
         eq_(new_data.data[1], 365.0)  # float(cube[10,4].data))
         eq_(new_data.data[2], 324.0)  # float(cube[8,35].data))
@@ -225,7 +225,7 @@ class TestNN(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-14.0),
              HyperPoint(lat=-4.0, lon=-44.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 325.0)  # float(cube[9,0].data)
         eq_(new_data.data[1], 365.0)  # float(cube[10,4].data))
         eq_(new_data.data[2], 324.0)  # float(cube[8,35].data))
@@ -241,7 +241,7 @@ class TestNN(unittest.TestCase):
              HyperPoint(lat=1.0, lon=361.0),
              HyperPoint(lat=1.0, lon=381.0)])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 325.0)  # float(cube[9,0].data))
         eq_(new_data.data[1], 327.0)  # float(cube[9,0].data))
         eq_(new_data.data[2], 325.0)  # float(cube[9,0].data))
@@ -252,7 +252,7 @@ class TestNN(unittest.TestCase):
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = UngriddedData.from_points_array([HyperPoint(0.0, 0.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 8.0)
 
     def test_collocation_of_alt_points_on_hybrid_altitude_coordinates(self):
@@ -267,7 +267,7 @@ class TestNN(unittest.TestCase):
              # This point lies outside the upper bounds for altitude at this point
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 221.0)  # float(cube[2,1,1,0].data))
         eq_(new_data.data[1], 345.0)  # float(cube[3,2,1,4].data))
         eq_(new_data.data[2], 100.0)  # float(cube[1,0,0,9].data))
@@ -282,7 +282,7 @@ class TestNN(unittest.TestCase):
              # This point lies in the middle of the altitude bounds at this point
              HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28, 8, 34))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 221.0)  # float(cube[2,1,1,0].data))
         eq_(new_data.data[1], 345.0)  # float(cube[3,2,1,4].data))
 
@@ -294,7 +294,7 @@ class TestNN(unittest.TestCase):
             [HyperPoint(lat=1.0, lon=111.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
              HyperPoint(lat=4.0, lon=141.0, alt=12000.0, t=dt.datetime(1984, 8, 28, 8, 34))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 2501.0)  # float(cube[2,11,1,0].data))
         eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
 
@@ -307,7 +307,7 @@ class TestNN(unittest.TestCase):
              HyperPoint(lat=4.0, lon=141.0, alt=12000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
              HyperPoint(lat=-4.0, lon=-14.0, alt=10000.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 2501.0)  # float(cube[2,11,1,0].data))
         eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
         eq_(new_data.data[2], 2139.0)  # float(cube[1,35,0,8].data))
@@ -326,7 +326,7 @@ class TestNN(unittest.TestCase):
              # This point lies outside the upper bounds for altitude at this point
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, pres=10000.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -345,7 +345,7 @@ class TestNN(unittest.TestCase):
              # This point lies outside the upper bounds for altitude at this point
              HyperPoint(lat=-4.0, lon=-4.0, pres=63100049.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -366,7 +366,7 @@ class TestNN(unittest.TestCase):
              # This point lies outside the upper bounds for altitude at this point
              HyperPoint(lat=-4.0, lon=-4.0, alt=1000, pres=63100049.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -386,7 +386,7 @@ class TestNN(unittest.TestCase):
              # This point lies outside the upper bounds for altitude at this point
              HyperPoint(lat=-4.0, lon=-4.0, alt=1000, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -402,7 +402,7 @@ class TestNN(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 8.0)
         eq_(new_data.data[1], 5.0)
         eq_(new_data.data[2], 7.0)
@@ -413,7 +413,7 @@ class TestNN(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 12.0)
         eq_(new_data.data[1], 6.0)
         eq_(new_data.data[2], 10.0)
@@ -427,7 +427,7 @@ class TestNN(unittest.TestCase):
                          HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 9, 2, 15, 54))]
         sample_points = UngriddedData.from_points_array(sample_points)
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nearest')[0]
+        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 51.0)
         eq_(new_data.data[1], 82.0)
         eq_(new_data.data[2], 28.0)
@@ -439,7 +439,7 @@ class TestLinear(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)
         assert_almost_equal(new_data.data[2], 4.8)
@@ -452,7 +452,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(80.0, 0.0), HyperPoint(85.0, 355.0), HyperPoint(90.0, 360.0),
              HyperPoint(-80.0, 0.0), HyperPoint(-85.0, 355.0), HyperPoint(-90.0, 360.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         wanted = np.asarray([325.0, 342.5, 325.0,
                              613.0, (630.5 + 666.5) / 2, 649.0,
                              37.0, (54.5 + 18.5) / 2, 1.0])
@@ -467,7 +467,7 @@ class TestLinear(unittest.TestCase):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0)])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)
 
@@ -480,7 +480,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27))])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
@@ -498,7 +498,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=0.0, lon=0.0, alt=5550.0, t=dt.datetime(1984, 8, 28))])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 321.0467626, decimal=7)
         assert_almost_equal(new_data.data[1], 222.4814815, decimal=7)
 
@@ -516,7 +516,7 @@ class TestLinear(unittest.TestCase):
             [HyperPoint(lat=4.0, lon=355.0, alt=11438.0, t=dt.datetime(1984, 8, 28)),
              HyperPoint(lat=0.0, lon=2.0, alt=10082.0, t=dt.datetime(1984, 8, 28))])
         col = GriddedUngriddedCollocator(extrapolate=False)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         eq_(new_data.data[0], 3563.0)
         eq_(new_data.data[1], 2185.0)
 
@@ -529,7 +529,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, pres=100.0, t=dt.datetime(1984, 8, 27))])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
@@ -542,7 +542,7 @@ class TestLinear(unittest.TestCase):
             [HyperPoint(lat=-4.0, lon=-4.0, alt=6382.8, t=dt.datetime(1984, 8, 27))])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN, extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 126.0, decimal=7)
 
     def test_collocation_of_pres_points_on_hybrid_pressure_coordinates(self):
@@ -554,7 +554,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, t=dt.datetime(1984, 8, 27))])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 221.5, decimal=5)
         # Exactly on the lat, lon, points, interpolated over time and pressure
@@ -573,7 +573,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 221.5, decimal=5)
         # Exactly on the lat, lon, points, interpolated over time and pressure
@@ -592,7 +592,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=5.0, lon=2.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 8, 27))])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 23.0, decimal=5)
         # Exactly on the lat, lon, points, interpolated over time and pressure
@@ -614,7 +614,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
         col = GriddedUngriddedCollocator()
-        outlist = col.collocate(sample_points, cube_list, None, 'linear')
+        outlist = col.collocate(sample_points, cube_list, None, 'lin')
         # First data set:
         new_data = outlist[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
@@ -644,7 +644,7 @@ class TestLinear(unittest.TestCase):
             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 221.5, decimal=5)
         # Exactly on the lat, time points, interpolated over latitude and pressure
@@ -661,7 +661,7 @@ class TestLinear(unittest.TestCase):
             [HyperPoint(lat=0.0, lon=355.0, pres=1482280045.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
              HyperPoint(lat=5.0, lon=2.5, pres=1879350048.0, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
         col = GriddedUngriddedCollocator(extrapolate=False)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         eq_(new_data.data[0], 2701.0011131725005)
         eq_(new_data.data[1], 3266.1930161260775)
 
@@ -672,7 +672,7 @@ class TestLinear(unittest.TestCase):
             # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
             [HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates_multi_var(self):
@@ -686,7 +686,7 @@ class TestLinear(unittest.TestCase):
             [HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
 
         col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube_list, None, 'linear')
+        new_data = col.collocate(sample_points, cube_list, None, 'lin')
         assert_almost_equal(new_data[0].data[0], 125.0, decimal=7)
         assert_almost_equal(new_data[1].data[0], 225.0, decimal=7)
 
@@ -701,7 +701,7 @@ class TestLinear(unittest.TestCase):
              HyperPoint(lat=5.0, lon=5.0, alt=355.5, t=dt.datetime(1984, 8, 28, 0, 0))])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
         assert_almost_equal(new_data.data[1], 346.5, decimal=7)
 
@@ -715,7 +715,7 @@ class TestLinear(unittest.TestCase):
             [HyperPoint(lat=0.0, lon=0.0, alt=234.5, pres=1000, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
 
     def test_collocation_over_scalar_coord(self):
@@ -729,7 +729,7 @@ class TestLinear(unittest.TestCase):
              # TODO: Is this correct behaviour?
              HyperPoint(-4.0, -4.0, t=dt.datetime(1984, 10, 1, 0, 0, 0))])
         col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'linear')[0]
+        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
 
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)

@@ -197,7 +197,7 @@ def parse_as_number_or_datetime(string):
     :return: int, or float value (possibly converted to the standard time from a time string)
     """
     from datetime import datetime
-    if in_string == 'None' or in_string is None:
+    if string == 'None' or string is None:
         return None
     try:
         ret = int(string)
@@ -227,12 +227,9 @@ def parse_as_number_or_partial_datetime(string):
             ret = float(string)
         except ValueError:
             try:
-                ret = _parse_datetime(string)
+                ret = _parse_partial_datetime(string)
             except ValueError:
-                try:
-                    ret = _parse_datetime_delta(string)
-                except ValueError:
-                    raise argparse.ArgumentTypeError("'{}' is not a valid value.".format(string))
+                raise argparse.ArgumentTypeError("'{}' is not a valid value.".format(string))
     return ret
 
 

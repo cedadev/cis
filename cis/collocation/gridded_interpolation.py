@@ -205,7 +205,7 @@ class _RegularGridInterpolator(object):
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
-    def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, method="linear"):
+    def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, method="lin"):
         """
         Initialise the itnerpolator - this will calculate and cache the indices of the interpolation. It will
         also interpolate the hybrid coordinate if needed to determine a unique vertical index.
