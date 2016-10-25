@@ -6,14 +6,15 @@ from cis.data_io.aeronet import get_aeronet_file_variables
 from cis.data_io.hdf import get_hdf4_file_variables
 from cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 from cis import __version__
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class AProduct(object):
     """
     Abstract class for the various possible data products. This just defines the interface which
     the subclasses must implement.
     """
-    __metaclass__ = ABCMeta
 
     # If a filename matches two data products' file signatures, the data product with the higher priority will be used
     priority = 10

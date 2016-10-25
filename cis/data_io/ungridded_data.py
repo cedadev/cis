@@ -395,6 +395,8 @@ class UngriddedData(LazyData, CommonData):
                 combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
                 if coord.data.dtype != 'object':
                     combined_mask |= numpy.isnan(coord.data).flatten()
+                coord.update_shape()
+                coord.update_range()
             if combined_mask.any():
                 n_points = numpy.count_nonzero(combined_mask)
                 logging.warning(
@@ -680,6 +682,13 @@ class UngriddedData(LazyData, CommonData):
                                        fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
                                        var_units=var_units, **kwargs)
 
+    def _get_default_plot_type(self, lat_lon=False):
+        if lat_lon:
+            return 'scatter2d'
+        else:
+            return 'line'
+
+
 class UngriddedCoordinates(CommonData):
     """
     Wrapper (adaptor) class for the different types of possible ungridded data.
@@ -869,6 +878,11 @@ class UngriddedCoordinates(CommonData):
                                 fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
                                 var_units=var_units, **kwargs)
 
+    def _get_default_plot_type(self, lat_lon=False):
+        raise NotImplementedError("UngriddedCoordinates have no default plot type")
+
+    def var_name(self):
+        raise NotImplementedError("UngriddedCoordinates have no var name")
 
 class UngriddedDataList(CommonDataList):
     """

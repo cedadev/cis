@@ -387,6 +387,15 @@ class GriddedData(iris.cube.Cube, CommonData):
         return collocate(data, self, col, con, kernel)
 
 
+    def _get_default_plot_type(self, lat_lon=False):
+        if self.ndim == 1:
+            return 'line'
+        elif self.ndim ==2:
+            return 'heatmap'
+        else:
+            raise ValueError("Unable to determine plot type for data with {} dimensions".format(self.ndim))
+
+
 class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
     This class extends iris.cube.CubeList to add functionality needed for CIS to process multiple gridded data.

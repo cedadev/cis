@@ -148,11 +148,11 @@ class DataReader(object):
 
         :return: A list of CommonData objects (either GriddedData or UngriddedData, *or a combination*)
         """
-        data_list = []
+        data_list = list()
         for datagroup in datagroups:
             aliases = datagroup.get('aliases', None)
             data = self.read_data_list(datagroup['filenames'], datagroup['variables'],
-                                       datagroup['product'], aliases)
+                                       datagroup.get('product', None), aliases)
             data_list.extend(data)
         return data_list
 

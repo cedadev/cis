@@ -59,35 +59,22 @@ def plot_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments
     """
-    from cis.plotting.plot import Plotter
+    from cis.plotting.formatted_plot import Plotter
     from cis.data_io.data_reader import DataReader
 
-    try:
-        data = DataReader().read_datagroups(main_arguments.datagroups)
-    except MemoryError:
-        __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
-                         "of data to be plotted, increase the swap space available on your machine or use a machine "
-                         "with more memory (for example the JASMIN facility).")
+    data = DataReader().read_datagroups(main_arguments.datagroups)
 
     # We have to pop off the arguments which plot isn't expecting so that it treats everything else as an mpl kwarg
     main_arguments = vars(main_arguments)
-    main_arguments.pop('command')  # Remove the command argument now it is not needed
-    plot_type = main_arguments.pop("type")
-    output = main_arguments.pop("output")
-    # Also pop off the verbosity kwargs
+    _ = main_arguments.pop('command')
     _ = main_arguments.pop("quiet")
     _ = main_arguments.pop("verbose")
     _ = main_arguments.pop("force_overwrite")
+    _ = main_arguments.pop("output_var", None)
 
-    main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
-    main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")
-
-    try:
-        Plotter(data, plot_type, output, **main_arguments)
-    except MemoryError:
-        __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
-                         "of data to be plotted, increase the swap space available on your machine or use a machine "
-                         "with more memory (for example the JASMIN facility).")
+    layer_opts = [{k: v for k, v in d.items() if k not in ['variables', 'filenames', 'product']}
+                  for d in main_arguments.pop('datagroups')]
+    Plotter(data, layer_opts=layer_opts, **main_arguments)
 
 
 def info_cmd(main_arguments):
@@ -322,6 +309,10 @@ def main():
 
     try:
         parse_and_run_arguments()
+    except MemoryError:
+        __error_occurred("Not enough memory. Please either reduce the amount "
+                         "of data, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
     except Exception as e:
         __error_occurred(e)
 

@@ -140,11 +140,11 @@ class TestPlotIntegration(BaseIntegrationTest):
 
         os.remove(out_name)
 
-    def test_plot_ungridded_histogram2d(self):
+    def test_plot_ungridded_histogram(self):
         filename = valid_GASSP_station_filename
         variable = valid_GASSP_station_vars[0]
-        out_name = 'histogram2d.png'
-        args = ['plot', variable + ':' + escape_colons(filename), '--type', 'histogram2d', '-o', out_name]
+        out_name = 'histogram.png'
+        args = ['plot', variable + ':' + escape_colons(filename), '--type', 'histogram', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
 

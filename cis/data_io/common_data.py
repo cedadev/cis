@@ -1,12 +1,12 @@
 from abc import ABCMeta, abstractmethod
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class CommonData(object):
     """
     Interface of common methods implemented for gridded and ungridded data.
     """
-    __metaclass__ = ABCMeta
-
     filenames = []
 
     _alias = None
@@ -52,7 +52,7 @@ class CommonData(object):
         """
         Return the variable name associated with this data object
 
-        :return: The ariable name
+        :return: The variable name
         """
         return None
 
@@ -168,14 +168,23 @@ class CommonData(object):
                                    fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
                                    var_units=var_units, **kwargs)
 
+    def plot(self, *args, **kwargs):
+        from cis.plotting.plot import basic_plot
+        _, ax = basic_plot(self, *args, **kwargs)
+        return ax
+
+    @abstractmethod
+    def _get_default_plot_type(self, lat_lon=False):
+        pass
+
+
+@six.add_metaclass(ABCMeta)
 class CommonDataList(list):
     """
     Interface for common list methods implemented for both gridded and ungridded data.
 
     Note that all objects in a CommonDataList must have the same coordinates and coordinate values.
     """
-    __metaclass__ = ABCMeta
-
     filenames = []
 
     def __init__(self, iterable=()):
@@ -310,3 +319,8 @@ class CommonDataList(list):
     @abstractmethod
     def aggregate(self, kernel=None, **kwargs):
         pass
+
+    def plot(self, *args, **kwargs):
+        from cis.plotting.plot import multilayer_plot
+        _, ax = multilayer_plot(self, *args, **kwargs)
+        return ax

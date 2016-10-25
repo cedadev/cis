@@ -7,9 +7,7 @@ numpy>=1.10
 iris
 scipy
 pandas
-
-# This is a fix for a cartopy incompatibility
-# shapely=1.5.12
+six
 
 # IO Dependencies
 hdf4
