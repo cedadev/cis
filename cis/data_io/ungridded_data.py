@@ -1048,11 +1048,11 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
     from cis.data_io.gridded_data import GriddedData, GriddedDataList
     from cis.collocation.col import collocate, get_kernel
 
-    col = ci.GeneralUngriddedCollocator(fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
-                                        var_units=var_units,
-                                        missing_data_for_missing_sample=missing_data_for_missing_sample)
-
     if isinstance(data, UngriddedData) or isinstance(data, UngriddedDataList):
+        col = ci.GeneralUngriddedCollocator(fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                            var_units=var_units,
+                                            missing_data_for_missing_sample=missing_data_for_missing_sample)
+
         # Box is the default, and only option for ungridded -> ungridded collocation
         if how != '' or how != 'box':
             raise ValueError("Invalid method specified for ungridded -> ungridded collocation: " + how)
@@ -1060,19 +1060,11 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
         # We can have any kernel, default to moments
         kernel = get_kernel(kernel)
     elif isinstance(data, GriddedData) or isinstance(data, GriddedDataList):
-        # nn is the default for gridded -> ungridded collocation
-        if how == '' or how == 'nn':
-            con = None
-            kernel = ci.nn_gridded()
-        elif how == 'lin':
-            con = None
-            kernel = ci.li()
-        elif how == 'box':
-            con = ci.SepConstraintKdtree(**kwargs)
-            # We can have any kernel, default to moments
-            kernel = get_kernel(kernel)
-        else:
-            raise ValueError("Invalid method specified for gridded -> ungridded collocation: " + how)
+        col = ci.GriddedUngriddedCollocator(fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                            var_units=var_units,
+                                            missing_data_for_missing_sample=missing_data_for_missing_sample)
+        con = None
+        kernel = how
     else:
         raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
 

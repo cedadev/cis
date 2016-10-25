@@ -24,7 +24,7 @@ import numpy as np
 
 class GriddedUngriddedInterpolator(object):
 
-    def __init__(self, _data, sample, method='linear', missing_data_for_missing_sample=False):
+    def __init__(self, _data, sample, method='lin', missing_data_for_missing_sample=False):
         """
         Prepare an interpolation over the grid defined by a GriddedData source onto an UngriddedData sample.
 
@@ -217,9 +217,9 @@ class _RegularGridInterpolator(object):
         :param str method: The method of interpolation to perform. Supported are "linear" and "nearest". Default is
         "linear".
         """
-        if method == "linear":
+        if method == "lin":
             self._interp = self._evaluate_linear
-        elif method == "nearest":
+        elif method == "nn":
             self._interp = self._evaluate_nearest
         else:
             raise ValueError("Method '%s' is not defined" % method)

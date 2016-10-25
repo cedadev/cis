@@ -170,10 +170,8 @@ class GriddedUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        if not isinstance(data, iris.cube.Cube):
-            raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
         if constraint is not None and not isinstance(constraint, DummyConstraint):
-            raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
+            raise ValueError("A constraint cannot be specified for the GriddedUngriddedCollocator")
         data_points = data
 
         # First fix the sample points so that they all fall within the same 360 degree longitude range
