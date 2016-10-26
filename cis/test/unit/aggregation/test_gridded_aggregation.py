@@ -9,32 +9,17 @@ from cis.aggregation.gridded_collapsor import GriddedCollapsor
 from cis.test.utils_for_testing import *
 from cis.aggregation.collapse_kernels import aggregation_kernels
 from cis.test.util.mock import *
+from cis.data_io.gridded_data import make_from_cube
 
 
-class TestGriddedAggregation(TestCase):
+class TestGriddedCollapse(TestCase):
     def setUp(self):
-        self.cube = make_mock_cube()
+        self.cube = make_from_cube(make_mock_cube())
         self.kernel = iris.analysis.MEAN
 
     @istest
-    @raises(NotImplementedError)
-    def test_aggregating_to_same_grid_raises_NotImplementedError(self):
-        # Partial collapse of gridded data not supported (see JASCIS-148).
-        grid = {'y': AggregationGrid(-12.5, 12.5, 5, False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
-
-        assert numpy.array_equal(self.cube.data, cube_out.data)
-        assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
-        assert numpy.array_equal(self.cube.coords('longitude')[0].points, cube_out.coords('longitude')[0].points)
-
-    @istest
     def test_collapsing_coordinate_collapses_coordinate(self):
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed('x', how=self.kernel)
 
         result = numpy.array([2, 5, 8, 11, 14])
 
@@ -44,10 +29,7 @@ class TestGriddedAggregation(TestCase):
 
     @istest
     def test_collapsing_coordinate_takes_start_end_but_ignores_them(self):
-        grid = {'x': AggregationGrid(0, 5, float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed('x', how=self.kernel)
 
         result = numpy.array([2, 5, 8, 11, 14])
 
@@ -57,11 +39,7 @@ class TestGriddedAggregation(TestCase):
 
     @istest
     def test_can_name_variables_by_standard_name(self):
-        grid = {'longitude': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'latitude': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['longitude', 'latitude'], how=self.kernel)
 
         result = numpy.array(8.0)
 
@@ -69,11 +47,7 @@ class TestGriddedAggregation(TestCase):
 
     @istest
     def test_can_name_variables_by_variable_name(self):
-        grid = {'lon': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'lat': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['lon', 'lat'], how=self.kernel)
 
         result = numpy.array(8.0)
 
@@ -81,11 +55,7 @@ class TestGriddedAggregation(TestCase):
 
     @istest
     def test_collapsing_everything_returns_a_single_value(self):
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['x', 'y'], how=self.kernel)
 
         result = numpy.array(8.0)
 
@@ -93,13 +63,9 @@ class TestGriddedAggregation(TestCase):
 
     @istest
     def test_collapsing_everything_returns_a_single_value_with_missing_values(self):
-        self.cube = make_5x3_lon_lat_2d_cube_with_missing_data()
+        self.cube = make_from_cube(make_5x3_lon_lat_2d_cube_with_missing_data())
 
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['x', 'y'], how=self.kernel)
 
         # result = numpy.array(8.1538461538461533)
         result = numpy.array(numpy.mean(self.cube.data))
@@ -109,11 +75,7 @@ class TestGriddedAggregation(TestCase):
     @istest
     def test_aggregating_using_max_kernel_returns_maximums(self):
         self.kernel = iris.analysis.MAX
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False),
-                'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['x', 'y'], how=self.kernel)
 
         result = numpy.array(15)
 
@@ -122,11 +84,7 @@ class TestGriddedAggregation(TestCase):
     @istest
     def test_aggregating_using_min_kernel_returns_minimums(self):
         self.kernel = iris.analysis.MIN
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['x', 'y'], how=self.kernel)
 
         result = numpy.array(1)
 
@@ -135,10 +93,7 @@ class TestGriddedAggregation(TestCase):
     @istest
     def test_aggregating_using_std_dev_kernel_returns_sample_standard_deviation(self):
         self.kernel = iris.analysis.STD_DEV
-        grid = {'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['y'], how=self.kernel)
 
         result = numpy.array([numpy.sqrt(22.5), numpy.sqrt(22.5), numpy.sqrt(22.5)])
 
@@ -147,38 +102,24 @@ class TestGriddedAggregation(TestCase):
 
     @istest
     def test_aggregation_on_three_dimensional_grid_with_time(self):
-        self.cube = make_mock_cube(time_dim_length=7)
-        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
-                'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
+        self.cube = make_from_cube(make_mock_cube(time_dim_length=7))
 
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        cube_out = self.cube.collapsed(['t', 'x', 'y'], how=self.kernel)
 
         result_data = numpy.array(53)
         assert_arrays_almost_equal(result_data, cube_out[0].data)
 
     def test_aggregation_over_multidimensional_coord(self):
-        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
-        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
-                'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'y': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False),
-                'air_pressure': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(self.cube, grid)
-        cube_out = agg(self.kernel)
+        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        cube_out = self.cube.collapsed(['t', 'x', 'y', 'air_pressure'], how=self.kernel)
 
         result_data = numpy.array(263)
         assert_arrays_almost_equal(cube_out[0].data, result_data)
 
     def test_partial_aggregation_over_multidimensional_coord(self):
-        from cis.data_io.gridded_data import GriddedData
         # JASCIS-126
-        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
-        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
-
-        agg = GriddedCollapsor(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg(self.kernel)
+        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        cube_out = self.cube.collapsed(['t'], how=self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
                                     [51.0, 52.0, 53.0, 54.0, 55.0],
@@ -210,15 +151,11 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
     def test_partial_aggregation_over_multidimensional_coord_with_multi_kernel(self):
-        from cis.data_io.gridded_data import GriddedData
         # JASCIS-126
         from cis.aggregation.collapse_kernels import MultiKernel, StddevKernel, CountKernel
         self.kernel = MultiKernel('moments', [iris.analysis.MEAN, StddevKernel(), CountKernel()])
-        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
-        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True)}
-
-        agg = GriddedCollapsor(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg(self.kernel)
+        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        cube_out = self.cube.collapsed(['t'], how=self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
                                     [51.0, 52.0, 53.0, 54.0, 55.0],
@@ -252,13 +189,8 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
     def test_partial_aggregation_over_more_than_one_dim_on_multidimensional_coord(self):
-        from cis.data_io.gridded_data import GriddedData
-        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
-        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
-                'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
-
-        agg = GriddedCollapsor(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg(self.kernel)
+        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        cube_out = self.cube.collapsed(['t', 'x'], how=self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
@@ -272,13 +204,8 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
     def test_partial_aggregation_over_more_than_one_multidimensional_coord(self):
-        from cis.data_io.gridded_data import GriddedData
-        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5, geopotential_height=True)
-        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
-                'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
-
-        agg = GriddedCollapsor(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg(self.kernel)
+        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5, geopotential_height=True))
+        cube_out = self.cube.collapsed(['t', 'x'], how=self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
@@ -295,13 +222,9 @@ class TestGriddedAggregation(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('altitude').points, altitude_points)
 
     def test_partial_aggregation_over_multidimensional_coord_along_middle_of_cube(self):
-        from cis.data_io.gridded_data import GriddedData
         # JASCIS-126
-        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
-
-        agg = GriddedCollapsor(GriddedData.make_from_cube(self.cube), grid)
-        cube_out = agg(self.kernel)
+        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        cube_out = self.cube.collapsed(['x'], how=self.kernel)
 
         result_data = numpy.array([[[36.0, 37.0, 38.0, 39.0, 40.0],
                                     [41.0, 42.0, 43.0, 44.0, 45.0],
@@ -389,7 +312,6 @@ class TestGriddedAggregation(TestCase):
         eq_(GriddedCollapsor._calc_new_dims([0, 1, 2], {2, 3}), [0, 1])
 
 
-
 class TestGriddedListAggregation(TestCase):
     def setUp(self):
         self.kernel = iris.analysis.MEAN
@@ -400,10 +322,7 @@ class TestGriddedListAggregation(TestCase):
         data1 = make_from_cube(make_mock_cube())
         data2 = make_from_cube(make_mock_cube(data_offset=1))
         datalist = GriddedDataList([data1, data2])
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('NaN'), False)}
-
-        agg = GriddedCollapsor(datalist, grid)
-        cube_out = agg(self.kernel)
+        cube_out = datalist.collapsed(['x'], how=self.kernel)
 
         result1 = numpy.array([2, 5, 8, 11, 14])
         result2 = result1 + 1
@@ -421,10 +340,7 @@ class TestGriddedListAggregation(TestCase):
         data1 = make_from_cube(make_mock_cube())
         data2 = make_from_cube(make_mock_cube(data_offset=1))
         datalist = GriddedDataList([data1, data2])
-        grid = {'y': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
-
-        agg = GriddedCollapsor(datalist, grid)
-        cube_out = agg(self.kernel)
+        cube_out = datalist.collapsed(['y'], how=self.kernel)
 
         result1 = numpy.array([7, 8, 9])
         result2 = result1 + 1
@@ -444,10 +360,7 @@ class TestGriddedListAggregation(TestCase):
         data2.data += 10
         data = GriddedDataList([data1, data2])
 
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
-
-        agg = GriddedCollapsor(data, grid)
-        output = agg(self.kernel)
+        output = data.collapsed(['x'], how=self.kernel)
 
         expect_mean = numpy.array([[5.5, 8.75, 9]])
         expect_stddev = numpy.array([numpy.sqrt(15), numpy.sqrt(26.25), numpy.sqrt(30)])
@@ -455,7 +368,7 @@ class TestGriddedListAggregation(TestCase):
 
         assert isinstance(output, GriddedDataList)
         assert len(output) == 6
-        mean_1, mean_2, stddev_1, stddev_2, count_1, count_2 = output
+        mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
         assert mean_1.var_name == 'var1'
         assert stddev_1.var_name == 'var1_std_dev'
         assert count_1.var_name == 'var1_num_points'
@@ -477,11 +390,7 @@ class TestGriddedListAggregation(TestCase):
         data2.var_name = 'var2'
         data2.data += 10
         data = GriddedDataList([data1, data2])
-        grid = {'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False),
-                'y': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
-
-        agg = GriddedCollapsor(data, grid)
-        output = agg(self.kernel)
+        output = data.collapsed(['x', 'y'], how=self.kernel)
 
         expect_mean = numpy.array(7.75)
         expect_stddev = numpy.array(numpy.sqrt(244.25 / 11))
@@ -489,7 +398,7 @@ class TestGriddedListAggregation(TestCase):
 
         assert isinstance(output, GriddedDataList)
         assert len(output) == 6
-        mean_1, mean_2, stddev_1, stddev_2, count_1, count_2 = output
+        mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
         assert mean_1.var_name == 'var1'
         assert stddev_1.var_name == 'var1_std_dev'
         assert count_1.var_name == 'var1_num_points'
@@ -511,11 +420,7 @@ class TestGriddedListAggregation(TestCase):
         data2 = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5, data_offset=1))
         datalist = GriddedDataList([data1, data2])
 
-        grid = {'t': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), True),
-                'x': AggregationGrid(float('Nan'), float('Nan'), float('Nan'), False)}
-
-        agg = GriddedCollapsor(datalist, grid)
-        cube_out = agg(self.kernel)
+        cube_out = datalist.collapsed(['t', 'x'], how=self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
                                    [156.0, 157.0, 158.0, 159.0, 160.0],

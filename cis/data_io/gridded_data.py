@@ -305,16 +305,16 @@ class GriddedData(iris.cube.Cube, CommonData):
         from iris.pandas import as_data_frame
         return as_data_frame(self, copy=copy)
 
-    def collapsed(self, coords, kernel=None, **kwargs):
+    def collapsed(self, coords, how=None, **kwargs):
         """
         Collapse the dataset over one or more coordinates using CIS aggregation (NOT Iris). This allows multidimensional
          coordinates to be aggregated over as well.
         :param list of iris.coords.Coord or str coords: The coords to collapse
-        :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
+        :param str or iris.analysis.Aggregator how: The kernel to use in the aggregation
         :param kwargs: NOT USED - this is only to match the iris interface.
         :return:
         """
-        return _collapse_gridded(self, coords, kernel)
+        return _collapse_gridded(self, coords, how)
 
     def subset(self, **kwargs):
         """
@@ -497,16 +497,19 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
             data_list.append(data.aggregated_by(*args, **kwargs))
         return data_list
 
-    def collapsed(self, coords, kernel=None, **kwargs):
+    def collapsed(self, *args, **kwargs):
         """
         Collapse the dataset over one or more coordinates using CIS aggregation (NOT Iris). This allows multidimensional
          coordinates to be aggregated over as well.
         :param list of iris.coords.Coord or str coords: The coords to collapse
-        :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
+        :param str or iris.analysis.Aggregator how: The kernel to use in the aggregation
         :param kwargs: NOT USED - this is only to match the iris interface.
         :return:
         """
-        return _collapse_gridded(self, coords, kernel)
+        output = GriddedDataList()
+        for data in self:
+            output.extend(data.collapsed(*args, **kwargs))
+        return output
 
     def interpolate(self, *args, **kwargs):
         """
@@ -614,40 +617,39 @@ def _collapse_gridded(data, coords, kernel):
     Collapse a GriddedData or GriddedDataList based on the specified grids (currently only collapsing is available)
     :param GriddedData or GriddedDataList data: The data object to aggregate
     :param list of iris.coords.Coord or str coords: The coords to collapse
-    :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
+    :param str or iris.analysis.Aggregator kernel: The kernel to use in the aggregation
     :return:
     """
-    from cis.aggregation.collapse_kernels import aggregation_kernels
+    from cis.aggregation.collapse_kernels import aggregation_kernels, MultiKernel
     from iris.analysis import Aggregator as IrisAggregator, MEAN
     from cis.aggregation.gridded_collapsor import GriddedCollapsor
     from cis import __version__
     from cis.utils import listify
 
-    # Make sure coords are a list
-    # TODO: Turn these into actual coords
-    coords = [listify(coords)]
+    # Ensure the coords are all Coord instances
+    coords = [data._get_coord(c) for c in listify(coords)]
 
     # TODO: Figure out what these kernels should be.
     # TODO: CHange kernel to 'how'
     # Choose the right kernel - or fall back to default (MEAN)
     if isinstance(kernel, str):
         kernel_inst = aggregation_kernels[kernel]
-    elif isinstance(kernel, IrisAggregator):
+    elif isinstance(kernel, (IrisAggregator, MultiKernel)):
         kernel_inst = kernel
     elif kernel is None:
-        kernel_inst = MEAN()
+        kernel_inst = MEAN
     else:
-        raise ValueError("Invalid kernel specified: " + kernel)
+        raise ValueError("Invalid kernel specified: " + str(kernel))
 
     aggregator = GriddedCollapsor(data, coords)
-    data = aggregator(kernel)
+    data = aggregator(kernel_inst)
 
     # TODO Tidy up output of grid in the history
     history = "Collapsed using CIS version " + __version__ + \
               "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
               "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
               "\n over coordinates: " + ", ".join(c.name() for c in coords) + \
-              "\n with kernel: " + kernel + "."
+              "\n with kernel: " + str(kernel_inst) + "."
     data.add_history(history)
 
     return data

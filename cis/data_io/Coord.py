@@ -132,7 +132,8 @@ class CoordList(list):
             raise DuplicateCoordinateError()
         super(CoordList, self).append(other)
 
-    def get_coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def get_coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None,
+                   var_name=None):
         """
         Return a list of coordinates in this :class:`CoordList` fitting the given criteria. This is deliberately very
         similar to :func:`Cube.coords()` to maintain a similar interface and because the functionality is similar. There
@@ -151,6 +152,8 @@ class CoordList(list):
         :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for
          axis. Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
         :type axis: string or None
+        :param var_name: The name of the variable which the coordinate was read from. If None, does not check for long_name.
+        :type var_name: string or None
 
         :return: A :class:`CoordList` of coordinates fitting the given criteria
         """
@@ -178,6 +181,9 @@ class CoordList(list):
             axis = axis.upper()
             coords = [coord_ for coord_ in coords if coord_.axis == axis]
 
+        if var_name is not None:
+            coords = [coord_ for coord_ in coords if coord_.var_name == var_name]
+
         if attributes is not None:
             if not isinstance(attributes, Mapping):
                 raise ValueError(
@@ -190,7 +196,8 @@ class CoordList(list):
 
         return coords
 
-    def get_coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def get_coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None,
+                  var_name=None):
         """
         Return a single coord fitting the given criteria. This is deliberately very
         similar to :func:`Cube.coord()` method to maintain a similar interface and because the functionality is similar.
@@ -209,6 +216,8 @@ class CoordList(list):
         :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for
          axis. Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
         :type axis: string or None
+        :param var_name: The name of the variable which the coordinate was read from. If None, does not check for long_name.
+        :type var_name: string or None
 
         :raises CoordinateNotFoundError: If the arguments given do not result in precisely
          1 coordinate being matched.
@@ -217,7 +226,7 @@ class CoordList(list):
         """
         from cis.exceptions import CoordinateNotFoundError
         coords = self.get_coords(name_or_coord=name_or_coord, standard_name=standard_name, long_name=long_name,
-                                 attributes=attributes, axis=axis)
+                                 attributes=attributes, axis=axis, var_name=var_name)
         if len(coords) == 0:  # If we found none by name, try with standard name only
             coords = self.get_coords(standard_name=name_or_coord)
 

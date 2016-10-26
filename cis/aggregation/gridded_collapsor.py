@@ -101,8 +101,8 @@ class GriddedCollapsor(object):
         for coord, _ in coords_for_partial_collapse:
             data_for_collapse.remove_coord(coord)
 
-        # TODO: This is going to just recursively call this method
-        new_data = data_for_collapse.collapsed(self.coords, kernel, **ag_args)
+        # Having set-up the collapse we can now just defer to the Cube.collapse method for much of the leg-work
+        new_data = iris.cube.Cube.collapsed(data_for_collapse, self.coords, kernel, **ag_args)
 
         for coord, old_dims in coords_for_partial_collapse:
             collapsed_coord = GriddedCollapsor._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
