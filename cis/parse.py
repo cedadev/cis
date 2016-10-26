@@ -45,6 +45,9 @@ def initialise_top_parser():
     stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets",
                                          parents=[global_options])
     add_stats_parser_arguments(stats_parser)
+    collapse_parser = subparsers.add_parser("collapse", help="Collapse a gridded dataset over specified dimensions",
+                                            parents=[global_options])
+    add_collapse_parser_arguments(collapse_parser)
     subparsers.add_parser("version", help="Display the CIS version number")
     return parser
 
@@ -185,6 +188,18 @@ def add_aggregate_parser_arguments(parser):
                         help="Grid for new aggregation, e.g. t,x=[-180,90,5] would collapse time completely and "
                              "aggregate longitude onto a new grid, which would start at -180 and then proceed in 5 "
                              "degree increments up to 90")
+    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
+                        help="The filename of the output file")
+    return parser
+
+
+def add_collapse_parser_arguments(parser):
+    parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
+                        help="Variables to aggregate with filenames, and optional arguments seperated by colon(s). "
+                             "Optional arguments are product and kernel, which are entered as keyword=value in a "
+                             "comma separated list. Example: var:filename:product=MODIS_L3,kernel=mean")
+    parser.add_argument('dimensions', metavar='dim', type=str, nargs='+',
+                        help='Dimensions to collapse')
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file")
     return parser
@@ -388,7 +403,6 @@ def get_eval_datagroups(datagroups, parser):
 
 
 def get_aggregate_grid(aggregategrid, parser):
-    # TODO: This should just return a dict of lists
     """
     :param aggregategrid: List of aggregate grid specifications
     :param parser:        The parser used to report errors
@@ -517,7 +531,6 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
     :param compulsory_args:   The exact number of compulsory arguments (colon separated)
     :return: A list of dictionaries containing the parsed arguments
     """
-
     # TODO I'm pretty sure this could be done by argparse more cleanly and efficiently, just pass it the split args...
 
     input_dicts = []
@@ -867,6 +880,12 @@ def validate_aggregate_args(arguments, parser):
     return arguments
 
 
+def validate_collapse_args(arguments, parser):
+    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
+    _validate_output_file(arguments, parser)
+    return arguments
+
+
 def validate_subset_args(arguments, parser):
     arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     arguments.limits = get_subset_limits(arguments.subsetranges, parser)
@@ -902,6 +921,7 @@ validators = {'plot': validate_plot_args,
               'info': validate_info_args,
               'col': validate_col_args,
               'aggregate': validate_aggregate_args,
+              'collapse': validate_collapse_args,
               'subset': validate_subset_args,
               'eval': validate_eval_args,
               'stats': validate_stats_args,

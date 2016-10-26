@@ -179,6 +179,7 @@ def aggregate_cmd(main_arguments):
     from cis import read_data_list
     from iris.exceptions import IrisError
     import cis.exceptions as ex
+    from cis.data_io.gridded_data import GriddedDataList
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Aggregation can only be performed on one data group")
@@ -198,9 +199,21 @@ def aggregate_cmd(main_arguments):
     except IOError as e:
         raise ex.CISError("There was an error reading one of the files: \n" + str(e))
 
-    output = data.aggregate(kernel=input_group["kernel"], **main_arguments.grid)
+    if isinstance(data, GriddedDataList):
+        logging.warning("The aggregate command will not be supported in future versions of CIS. "
+                        "Please use 'collapse' instead.")
+        if any(v is not None for v in main_arguments.grid.values()):
+            raise ex.InvalidCommandLineOptionError("Grid specifications are not supported for Gridded aggregation.")
+        output = data.collapsed(main_arguments.grid.keys(), kernel=input_group["kernel"])
+    else:
+        output = data.aggregate(kernel=input_group["kernel"], **main_arguments.grid)
 
     output.save_data(main_arguments.output)
+
+
+def collapse_cmd(main_arguments):
+    # TODO: finish me!
+    pass
 
 
 def evaluate_cmd(main_arguments):
