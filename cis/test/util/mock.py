@@ -732,6 +732,7 @@ def make_dummy_ungridded_data_time_series(len=10):
     :return:
     """
     from datetime import datetime, timedelta
+    from cis.time_util import cis_standard_time_unit
     from cis.data_io.Coord import Coord, CoordList
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
@@ -740,7 +741,8 @@ def make_dummy_ungridded_data_time_series(len=10):
 
     x = Coord(np.zeros(len) + 65.2, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(np.zeros(len) - 12.1, Metadata(standard_name='longitude', units='degrees'))
-    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'), axis='x')
+    t = Coord(cis_standard_time_unit.date2num(times),
+              Metadata(standard_name='time', units=cis_standard_time_unit), axis='x')
     data = np.arange(len) + 1.0
 
     return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",

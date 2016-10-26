@@ -1,10 +1,33 @@
 import logging
-from cis.aggregation.aggregate import Aggregator
 import numpy as np
 from datetime import datetime
 
 
-class UngriddedAggregator(Aggregator):
+class UngriddedAggregator(object):
+
+    def __init__(self, data, grid):
+        self.data = data
+        self._grid = grid
+
+    def get_grid(self, coord):
+        from cis.utils import guess_coord_axis
+        grid = None
+        guessed_axis = guess_coord_axis(coord)
+        if coord.name() in self._grid:
+            grid = self._grid.pop(coord.name())
+        elif hasattr(coord, 'var_name') and coord.var_name in self._grid:
+            grid = self._grid.pop(coord.var_name)
+        elif coord.standard_name in self._grid:
+            grid = self._grid.pop(coord.standard_name)
+        elif coord.long_name in self._grid:
+            grid = self._grid.pop(coord.long_name)
+        elif guessed_axis is not None:
+            if guessed_axis in self._grid:
+                grid = self._grid.pop(guessed_axis)
+            elif guessed_axis.lower() in self._grid:
+                grid = self._grid.pop(guessed_axis.lower())
+
+        return grid, guessed_axis
 
     def aggregate(self, kernel):
         """

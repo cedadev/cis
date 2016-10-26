@@ -112,16 +112,28 @@ class CommonData(object):
     @abstractmethod
     def subset(self, **kwargs):
         """
-        Subset the CommonData object based on the specified constraints
-        :param kwargs:
-        :return:
+        Subset the CommonData object based on the specified constraints. Constraints on arbitrary coordinates are
+        specified using keyword arguments. Each constraint must have two entries (a maximum and a minimum) although
+        one of these can be None. Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range.
+
+        subset = data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
+                             altitude=[45.0, 75.0])
+
+        subset = data.subset(time=[PartialDateTime(1984, 9)])
+
+        :param kwargs: The constraint arguments
+        :return CommonData: The subset of the data
         """
         pass
 
     @abstractmethod
     def aggregate(self, kernel=None, **kwargs):
         """
-        Aggregate the CommonData object based on the specified grids
+        Aggregate the CommonData object based on the specified grids. The grid is defined by passing keyword arguments
+        for each dimension, each argument must have three entries (a maximum, a minimum and a gridstep)
+
+
         :param kernel: The kernel to use in the aggregation
         :param kwargs: The grid specifications for each coordinate dimension
         :return:

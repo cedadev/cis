@@ -182,11 +182,18 @@ class TestUngriddedSubsetConstraint(TestCase):
         subset = data.subset(longitude=[1.0, 3.0])
         assert (subset is None)
 
-    # TODO: Add a PartialDateTime test
     def test_can_subset_ungridded_data_by_time(self):
         data = cis.test.util.mock.make_regular_4d_ungridded_data()
         subset = data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)])
         assert (subset.data.tolist() == [2, 3, 7, 8, 12, 13, 17, 18, 22, 23, 27, 28, 32, 33, 37, 38, 42, 43, 47, 48])
+
+    def test_can_subset_ungridded_data_by_partial_date_time(self):
+        from cis.time_util import PartialDateTime
+        data = cis.test.util.mock.make_dummy_ungridded_data_time_series(100)
+        subset = data.subset(time=[PartialDateTime(1984, 9)])
+        assert (subset.data.tolist() == [6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0,
+                                         20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0,
+                                         33.0, 34.0, 35.0])
 
     def test_can_subset_ungridded_data_by_time_altitude(self):
         data = cis.test.util.mock.make_regular_4d_ungridded_data()

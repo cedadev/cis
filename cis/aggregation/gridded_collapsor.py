@@ -1,9 +1,17 @@
 import logging
 import iris
-from cis.aggregation.aggregate import Aggregator
 
 
-class GriddedAggregator(Aggregator):
+class GriddedCollapsor(object):
+
+    def __init__(self, data, coords):
+        """
+        Set up the collapse of a GriddedData set over the given Coords
+        :param GriddedData data:
+        :param list coords: of Coord instances
+        """
+        self.data = data
+        self.coords = coords
 
     @staticmethod
     def _partially_collapse_multidimensional_coord(coord, dims_to_collapse, kernel=iris.analysis.MEAN):
@@ -57,7 +65,7 @@ class GriddedAggregator(Aggregator):
             for factory in d.aux_factories:
                 factory.update(*args, **kwargs)
 
-    def _gridded_full_collapse(self, coords, kernel):
+    def _gridded_full_collapse(self, kernel):
         from copy import deepcopy
         from cis.exceptions import ClassNotFoundError
         ag_args = {}
@@ -71,7 +79,7 @@ class GriddedAggregator(Aggregator):
             raise ClassNotFoundError('Error - unexpected aggregator type.')
 
         dims_to_collapse = set()
-        for coord in coords:
+        for coord in self.coords:
             dims_to_collapse.update(self.data.coord_dims(coord))
 
         coords_for_partial_collapse = []
@@ -93,11 +101,11 @@ class GriddedAggregator(Aggregator):
         for coord, _ in coords_for_partial_collapse:
             data_for_collapse.remove_coord(coord)
 
-        new_data = data_for_collapse.collapsed(coords, kernel, **ag_args)
+        new_data = data_for_collapse.collapsed(self.coords, kernel, **ag_args)
 
         for coord, old_dims in coords_for_partial_collapse:
-            collapsed_coord = GriddedAggregator._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
-            new_dims = GriddedAggregator._calc_new_dims(old_dims, dims_to_collapse)
+            collapsed_coord = GriddedCollapsor._partially_collapse_multidimensional_coord(coord, dims_to_collapse)
+            new_dims = GriddedCollapsor._calc_new_dims(old_dims, dims_to_collapse)
 
             new_data.add_aux_coord(collapsed_coord, new_dims)
             # If the coordinate we had to collapse manually was a dependency in an aux factory (which is quite likely)
@@ -106,10 +114,10 @@ class GriddedAggregator(Aggregator):
 
         return new_data
 
-    def aggregate(self, kernel):
-        from cis.utils import isnan
+    def __call__(self, kernel):
         from cis.data_io.gridded_data import GriddedDataList
-        from cis.aggregation.aggregation_kernels import MultiKernel
+        from cis.aggregation.collapse_kernels import MultiKernel
+
         # Make sure all coordinate have bounds - important for weighting and aggregating
         # Only try and guess bounds on Dim Coords
         for coord in self.data.coords(dim_coords=True):
@@ -119,26 +127,13 @@ class GriddedAggregator(Aggregator):
                 new_coord_number = self.data.coord_dims(coord)
                 self.data.remove_coord(coord.name())
                 self.data.add_dim_coord(coord, new_coord_number)
-        coords = []
-        for coord in self.data.coords():
-            grid, guessed_axis = self.get_grid(coord)
-
-            if grid is not None:
-                # TODO: Remove this nan - it's daft
-                if isnan(grid.delta):
-                    logging.info('Aggregating on ' + coord.name() + ', collapsing completely and using ' +
-                                 kernel.cell_method + ' kernel.')
-                    coords.append(coord)
-                else:
-                    raise NotImplementedError("Aggregation using partial collapse of "
-                                              "coordinates is not supported for GriddedData")
 
         output = GriddedDataList([])
         if isinstance(kernel, MultiKernel):
             for sub_kernel in kernel.sub_kernels:
-                sub_kernel_out = self._gridded_full_collapse(coords, sub_kernel)
+                sub_kernel_out = self._gridded_full_collapse(sub_kernel)
                 output.append_or_extend(sub_kernel_out)
         else:
-            output.append_or_extend(self._gridded_full_collapse(coords, kernel))
+            output.append_or_extend(self._gridded_full_collapse(kernel))
         return output
 

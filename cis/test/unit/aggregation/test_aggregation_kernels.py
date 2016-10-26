@@ -2,10 +2,10 @@ import unittest
 
 from cis.collocation.col_framework import get_kernel
 from cis.aggregation.aggregation_grid import AggregationGrid
-from cis.aggregation.gridded_aggregator import GriddedAggregator
+from cis.aggregation.gridded_collapsor import GriddedCollapsor
 from cis.aggregation.ungridded_aggregator import UngriddedAggregator
 from cis.test.util import mock
-from cis.aggregation.aggregation_kernels import aggregation_kernels, CountKernel
+from cis.aggregation.collapse_kernels import aggregation_kernels, CountKernel
 from cis.test.utils_for_testing import *
 
 
@@ -15,8 +15,8 @@ class TestMomentsKernel(unittest.TestCase):
         grid = {'y': AggregationGrid(-10, 10, float('Nan'), False)}
         cube = mock.make_mock_cube()
         kernel = aggregation_kernels['moments']
-        agg = GriddedAggregator(cube, grid)
-        result = agg.aggregate(kernel)
+        agg = GriddedCollapsor(cube, grid)
+        result = agg(kernel)
 
         expected_means = numpy.array([7, 8, 9])
         expected_std_dev = numpy.array(3 * [numpy.sqrt(22.5)])
@@ -34,8 +34,8 @@ class TestMomentsKernel(unittest.TestCase):
         cube.var_name = 'age_ice'
         cube.units = 'years'
         kernel = aggregation_kernels['moments']
-        agg = GriddedAggregator(cube, grid)
-        result = agg.aggregate(kernel)
+        agg = GriddedCollapsor(cube, grid)
+        result = agg(kernel)
 
         mean, stddev, num = result
         assert_that(mean.standard_name, is_('age_of_sea_ice'))
@@ -56,8 +56,8 @@ class TestMomentsKernel(unittest.TestCase):
         cube = mock.make_mock_cube(2, 2)
         cube.data = numpy.ma.masked_invalid([[float('Nan'), 1], [float('Nan'), float('Nan')]])
         kernel = aggregation_kernels['moments']
-        agg = GriddedAggregator(cube, grid)
-        result = agg.aggregate(kernel)
+        agg = GriddedCollapsor(cube, grid)
+        result = agg(kernel)
 
         assert_that(result[1].data.mask.all())
 

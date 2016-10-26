@@ -386,7 +386,6 @@ class GriddedData(iris.cube.Cube, CommonData):
 
         return collocate(data, self, col, con, kernel)
 
-
     def _get_default_plot_type(self, lat_lon=False):
         if self.ndim == 1:
             return 'line'
@@ -618,25 +617,14 @@ def _collapse_gridded(data, coords, kernel):
     :param iris.analysis.Aggregator kernel: The kernel to use in the aggregation
     :return:
     """
-    from cis.aggregation.aggregation_kernels import aggregation_kernels
+    from cis.aggregation.collapse_kernels import aggregation_kernels
     from iris.analysis import Aggregator as IrisAggregator, MEAN
-    from cis.aggregation.gridded_aggregator import GriddedAggregator
-    from cis.aggregation.aggregate import aggregate
+    from cis.aggregation.gridded_collapsor import GriddedCollapsor
+    from cis import __version__
     from cis.utils import listify
-    from iris.coords import Coord
 
     # Make sure coords are a list
     coords = listify(coords)
-
-    # This is a horrible hack to make the collapsed interface match the aggregation interface...
-    kwargs = {}
-    for c in coords:
-        if isinstance(c, Coord):
-            kwargs[c.name()] = []
-        elif isinstance(c, str):
-            kwargs[c] = []
-        else:
-            raise ValueError("Invalid coord specified: " + c)
 
     # Choose the right kernel - or fall back to default (MEAN)
     if isinstance(kernel, str):
@@ -648,4 +636,15 @@ def _collapse_gridded(data, coords, kernel):
     else:
         raise ValueError("Invalid kernel specified: " + kernel)
 
-    return aggregate(GriddedAggregator, data, kernel_inst, **kwargs)
+    aggregator = GriddedCollapsor(data, coords)
+    data = aggregator(kernel)
+
+    # TODO Tidy up output of grid in the history
+    history = "Collapsed using CIS version " + __version__ + \
+              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
+              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
+              "\n over coordinates: " + ", ".join(c.name() for c in coords) + \
+              "\n with kernel: " + kernel + "."
+    data.add_history(history)
+
+    return data

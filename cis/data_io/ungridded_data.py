@@ -661,7 +661,6 @@ class UngriddedData(LazyData, CommonData):
         """
         _aggregate_ungridded(self, kernel, **kwargs)
 
-
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
         """
@@ -1094,6 +1093,18 @@ def _aggregate_ungridded(data, kernel, **kwargs):
     :return:
     """
     from cis.aggregation.ungridded_aggregator import UngriddedAggregator
-    from cis.aggregation.aggregate import aggregate
     from cis.collocation.col import get_kernel
-    return aggregate(UngriddedAggregator, data, get_kernel(kernel), **kwargs)
+    from cis import __version__
+
+    aggregator = UngriddedAggregator(data, kwargs)
+    data = aggregator.aggregate(get_kernel(kernel))
+
+    # TODO Tidy up output of grid in the history
+    history = "Aggregated using CIS version " + __version__ + \
+              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
+              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
+              "\n using new grid: " + str(kwargs) + \
+              "\n with kernel: " + kernel + "."
+    data.add_history(history)
+
+    return data

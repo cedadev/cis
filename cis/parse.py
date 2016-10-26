@@ -51,7 +51,7 @@ def initialise_top_parser():
 
 def add_plot_parser_arguments(parser):
     from cis.data_io.products.AProduct import AProduct
-    from cis.parse_datetime import parse_as_number_or_partial_datetime, parse_as_number_or_datetime
+    from cis.parse_datetime import parse_as_number_or_datetime_delta, parse_as_number_or_standard_time
     import cis.plugin as plugin
     from matplotlib.colors import cnames
 
@@ -82,25 +82,25 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--width", metavar="Plot width", nargs="?", help="The width of the plot in inches", type=float)
 
     parser.add_argument("--xmin", metavar="Minimum x", nargs="?", help="The minimum x value to plot",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_standard_time)
     parser.add_argument("--xmax", metavar="Maximum x", nargs="?", help="The maximum x value to plot",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_standard_time)
     parser.add_argument("--xstep", metavar="X step", nargs="?", help="The step of the x axis",
-                        type=parse_as_number_or_partial_datetime)
+                        type=parse_as_number_or_datetime_delta)
 
     parser.add_argument("--ymin", metavar="Minimum y", nargs="?", help="The minimum y value to plot",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_standard_time)
     parser.add_argument("--ymax", metavar="Maximum y", nargs="?", help="The maximum y value to plot",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_standard_time)
     parser.add_argument("--ystep", metavar="Y step", nargs="?", help="The step of the y axis",
-                        type=parse_as_number_or_partial_datetime)
+                        type=parse_as_number_or_datetime_delta)
 
     parser.add_argument("--vmin", metavar="Minimum value", nargs="?", help="The minimum value to plot",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_standard_time)
     parser.add_argument("--vmax", metavar="Maximum value", nargs="?", help="The maximum value to plot",
-                        type=parse_as_number_or_datetime)
+                        type=parse_as_number_or_standard_time)
     parser.add_argument("--vstep", metavar="X value", nargs="?", help="The step of the colour bar",
-                        type=parse_as_number_or_partial_datetime)
+                        type=parse_as_number_or_datetime_delta)
 
     parser.add_argument("--xbins", metavar="Number of histogram x axis bins", nargs="?",
                         help="The number of bins on the x axis of a histogram", type=int)
@@ -312,7 +312,7 @@ def check_product(product, parser):
 def check_aggregate_kernel(arg, parser):
     import cis.plugin as plugin
     from cis.collocation.col_framework import Kernel
-    from cis.aggregation.aggregation_kernels import aggregation_kernels
+    from cis.aggregation.collapse_kernels import aggregation_kernels
 
     aggregation_classes = plugin.find_plugin_classes(Kernel, 'cis.collocation.col_implementations')
     aggregation_names = [cls().__class__.__name__ for cls in aggregation_classes]
@@ -394,9 +394,8 @@ def get_aggregate_grid(aggregategrid, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_as_number_or_partial_datetime
+    from cis.parse_datetime import parse_as_number_or_datetime, parse_as_number_or_datetime_delta
     from cis.aggregation.aggregation_grid import AggregationGrid
-    from datetime import datetime
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(aggregategrid)
@@ -412,8 +411,8 @@ def get_aggregate_grid(aggregategrid, parser):
         if match is None or match.group('dim') is None:
             parser.error("A dimension for aggregation does not have a valid dimension name")
         elif match.group('start') is None and match.group('delta') is None:
-            dim_name = match.group('dim')
-            grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), float('NaN'), None)
+            # This is for gridded aggregation where we just have a list of dims with no grid
+            grid_dict[match.group('dim')] = None
         elif match.group('end') is None:
             parser.error("A dimension for aggregation has a start point but no end or delta value, an end and a delta "
                          "value must be supplied, for example x=[0,360,30].")
@@ -423,9 +422,9 @@ def get_aggregate_grid(aggregategrid, parser):
         else:
             dim_name = match.group('dim')
 
-            start_parsed = parse_as_number_or_partial_datetime(match.group('start'))
-            end_parsed = parse_as_number_or_partial_datetime(match.group('end'))
-            delta_parsed = parse_as_number_or_partial_datetime(match.group('delta'))
+            start_parsed = parse_as_number_or_datetime(match.group('start'))
+            end_parsed = parse_as_number_or_datetime(match.group('end'))
+            delta_parsed = parse_as_number_or_datetime_delta(match.group('delta'))
             is_time = hasattr(delta_parsed, 'year')
 
             if dim_name.lower() == 'x':
@@ -462,7 +461,7 @@ def get_subset_limits(subsetlimits, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_datetime, parse_as_number_or_partial_datetime, parse_partial_datetime
+    from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime, parse_partial_datetime
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(subsetlimits)
@@ -505,8 +504,7 @@ def get_subset_limits(subsetlimits, parser):
                         parser.error("Longitude limits should not be more than 360 degrees apart "
                                      "(i.e. for x[A,B] B-A <= 360)")
             else:
-                limits = [parse_as_number_or_partial_datetime(limit1, 'subset range start coordinate', parser),
-                          parse_as_number_or_partial_datetime(limit2, 'subset range start coordinate', parser)]
+                limits = [parse_as_number_or_datetime(limit1), parse_as_number_or_datetime(limit2)]
             limit_dict[dim_name] = limits
     return limit_dict
 

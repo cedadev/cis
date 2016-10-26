@@ -1,7 +1,7 @@
 """Tests for parse_datetime module
 """
 from nose.tools import istest, raises, assert_almost_equal, eq_
-from cis.parse_datetime import _parse_partial_datetime, parse_as_number_or_partial_datetime, \
+from cis.parse_datetime import _parse_partial_datetime, parse_as_number_or_datetime, \
                                parse_datetimestr_delta_to_float_days, parse_datetimestr_to_std_time
 from cis.time_util import PartialDateTime
 
@@ -104,19 +104,19 @@ def parse_datetime_raises_error_if_invalid_day():
 @istest
 def parse_as_number_or_datetime_can_parse_date_as_datetime():
     from datetime import datetime
-    dt = parse_as_number_or_partial_datetime('2010-07-01')
-    assert (dt == PartialDateTime(2010, 7, 1))
+    dt = parse_as_number_or_datetime('2010-07-01')
+    assert (dt == datetime(2010, 7, 1))
 
 
 @istest
 def parse_as_number_or_datetime_can_parse_integer():
-    dt = parse_as_number_or_partial_datetime('2010')
+    dt = parse_as_number_or_datetime('2010')
     assert (dt == 2010)
 
 
 @istest
 def parse_as_number_or_datetime_can_parse_float():
-    dt = parse_as_number_or_partial_datetime('12.345')
+    dt = parse_as_number_or_datetime('12.345')
     assert (dt == 12.345)
 
 
