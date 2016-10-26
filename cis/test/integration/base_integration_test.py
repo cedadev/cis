@@ -10,9 +10,13 @@ class BaseIntegrationTest(unittest.TestCase):
     OUTPUT_FILENAME = "test_integration_out.nc"
 
     def setUp(self):
+        # Set force overwrite in case working files are still present
+        os.environ['CIS_FORCE_OVERWRITE'] = "True"
         self.clean_output()
 
     def tearDown(self):
+        # Pop off the environemnt variable
+        os.environ.pop('CIS_FORCE_OVERWRITE')
         self.clean_output()
 
     def clean_output(self):

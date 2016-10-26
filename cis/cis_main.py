@@ -99,6 +99,7 @@ def col_cmd(main_arguments):
     """
     from cis.collocation.col_framework import get_kernel
 
+    # TODO: Try and factor this out somehow
     output_file = main_arguments.output
     data_reader = DataReader()
     missing_data_for_missing_samples = False
@@ -109,17 +110,18 @@ def col_cmd(main_arguments):
     else:
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
 
+    # TODO: Tidy these up if I can
     col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup[
                                                                   'collocator'] is not None else ''
     col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup[
                                                                      'collocator'] is not None else {}
-    kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
-    kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else {}
+    kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup.get('kernel', None) is not None else None
+    kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup.get('kernel', None) is not None else {}
 
     for input_group in main_arguments.datagroups:
         variables = input_group['variables']
         filenames = input_group['filenames']
-        product = input_group["product"]
+        product = input_group.get("product", None)
 
         data = data_reader.read_data_list(filenames, variables, product)
         data_writer = DataWriter()
