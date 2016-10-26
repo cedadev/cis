@@ -624,8 +624,11 @@ def _collapse_gridded(data, coords, kernel):
     from cis.utils import listify
 
     # Make sure coords are a list
-    coords = listify(coords)
+    # TODO: Turn these into actual coords
+    coords = [listify(coords)]
 
+    # TODO: Figure out what these kernels should be.
+    # TODO: CHange kernel to 'how'
     # Choose the right kernel - or fall back to default (MEAN)
     if isinstance(kernel, str):
         kernel_inst = aggregation_kernels[kernel]

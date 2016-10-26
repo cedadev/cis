@@ -425,7 +425,6 @@ def get_aggregate_grid(aggregategrid, parser):
             start_parsed = parse_as_number_or_datetime(match.group('start'))
             end_parsed = parse_as_number_or_datetime(match.group('end'))
             delta_parsed = parse_as_number_or_datetime_delta(match.group('delta'))
-            is_time = hasattr(delta_parsed, 'year')
 
             if dim_name.lower() == 'x':
                 if not start_parsed <= end_parsed:
@@ -435,7 +434,7 @@ def get_aggregate_grid(aggregategrid, parser):
                     parser.error("Longitude grid should not be wider than 360 degrees "
                                  "(i.e. for x[A,B,C] B-A <= 360)")
 
-            grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed, is_time)
+            grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed)
 
     return grid_dict
 

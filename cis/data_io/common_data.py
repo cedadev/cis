@@ -189,6 +189,21 @@ class CommonData(object):
     def _get_default_plot_type(self, lat_lon=False):
         pass
 
+    def _get_coord(self, name):
+        from cis.utils import standard_axes
+        def _try_coord(data, coord_dict):
+            import cis.exceptions as cis_ex
+            import iris.exceptions as iris_ex
+            try:
+                coord = data.coord(**coord_dict)
+            except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
+                coord = None
+            return coord
+
+        coord = _try_coord(self, dict(name_or_coord=name)) or _try_coord(self, dict(standard_name=name)) \
+            or _try_coord(self, dict(axis=name)) or _try_coord(self, dict(standard_name=standard_axes[name.upper()]))
+        return coord
+
 
 @six.add_metaclass(ABCMeta)
 class CommonDataList(list):
@@ -336,3 +351,6 @@ class CommonDataList(list):
         from cis.plotting.plot import multilayer_plot
         _, ax = multilayer_plot(self, *args, **kwargs)
         return ax
+
+    def _get_coord(self, *args):
+        return self[0]._get_coord(*args)

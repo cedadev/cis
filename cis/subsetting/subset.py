@@ -226,6 +226,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data
         """
         import numpy as np
+        from cis.utils import listify
 
         data = self._create_data_for_subset(data)
 
@@ -246,14 +247,11 @@ class UngriddedSubsetConstraint(SubsetConstraint):
             coord.metadata.shape = coord.data.shape
             coord._data_flattened = None  # Otherwise Coord won't recalculate this.
 
-        if isinstance(data, list):
-            for variable in data:
-                self._constrain_data(combined_mask, variable, new_coords)
-                if len(variable.data) < 1:
-                    return None
-        else:
-            self._constrain_data(combined_mask, data, new_coords)
-            if len(data.data) < 1:
+        for variable in listify(data):
+            # Constrain each copy of the data object in-place
+            self._constrain_data(combined_mask, variable, new_coords)
+            # If any of the data objects are None then they all must be - so return None
+            if len(variable.data) < 1:
                 return None
         return data
 
@@ -286,13 +284,8 @@ class UngriddedSubsetConstraint(SubsetConstraint):
                 guessed_axis = guess_coord_axis(coord)
                 if guessed_axis == 'X':
                     lon_limits = self._limits[coord.name()]
-                    lon_coord = coord
-                    if isinstance(lon_coord, iris.coords.Coord):
-                        coord_min = lon_coord.points.min()
-                        coord_max = lon_coord.points.max()
-                    else:
-                        coord_min = lon_coord.data.min()
-                        coord_max = lon_coord.data.max()
+                    coord_min = coord.points.min()
+                    coord_max = coord.points.max()
                     data_below_zero = coord_min < 0
                     data_above_180 = coord_max > 180
                     limits_below_zero = lon_limits.start < 0 or lon_limits.end < 0

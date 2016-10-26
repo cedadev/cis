@@ -101,6 +101,7 @@ class GriddedCollapsor(object):
         for coord, _ in coords_for_partial_collapse:
             data_for_collapse.remove_coord(coord)
 
+        # TODO: This is going to just recursively call this method
         new_data = data_for_collapse.collapsed(self.coords, kernel, **ag_args)
 
         for coord, old_dims in coords_for_partial_collapse:

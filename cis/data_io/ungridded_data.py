@@ -652,14 +652,14 @@ class UngriddedData(LazyData, CommonData):
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
-    def aggregate(self, kernel=None, **kwargs):
+    def aggregate(self, how=None, **kwargs):
         """
         Aggregate the CommonData object based on the specified grids
-        :param cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
+        :param str or cis.collocation.col_framework.Kernel how: The kernel to use in the aggregation
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
         """
-        _aggregate_ungridded(self, kernel, **kwargs)
+        return _aggregate_ungridded(self, how, **kwargs)
 
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
@@ -977,14 +977,14 @@ class UngriddedDataList(CommonDataList):
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
-    def aggregate(self, kernel=None, **kwargs):
+    def aggregate(self, how=None, **kwargs):
         """
         Aggregate based on the specified grids
-        :param cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
+        :param str or cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
         """
-        return _aggregate_ungridded(self, kernel, **kwargs)
+        return _aggregate_ungridded(self, how, **kwargs)
 
 
 def _coords_as_data_frame(coord_list, copy=True):
@@ -1084,7 +1084,7 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
     return collocate(data, sample, col, con, kernel)
 
 
-def _aggregate_ungridded(data, kernel, **kwargs):
+def _aggregate_ungridded(data, how, **kwargs):
     """
     Aggregate an UngriddedData or UngriddedDataList based on the specified grids
     :param UngriddedData or UngriddedDataList data: The data object to aggregate
@@ -1093,18 +1093,33 @@ def _aggregate_ungridded(data, kernel, **kwargs):
     :return:
     """
     from cis.aggregation.ungridded_aggregator import UngriddedAggregator
+    from cis.aggregation.aggregation_grid import AggregationGrid
     from cis.collocation.col import get_kernel
+    from cis.time_util import PartialDateTime
     from cis import __version__
 
-    aggregator = UngriddedAggregator(data, kwargs)
-    data = aggregator.aggregate(get_kernel(kernel))
+    kernel = get_kernel(how)
+    grid_spec = {}
+    for dim_name, grid in kwargs.items():
+        if all(hasattr(grid, att) for att in ('start', 'stop', 'step')):
+            g = grid
+        elif len(grid) == 2 and isinstance(grid[0], PartialDateTime):
+            g = AggregationGrid(grid[0].min(), grid[0].max(), grid[1])
+        elif len(grid) == 3:
+            g = AggregationGrid(grid[0], grid[1], grid[2])
+        else:
+            raise ValueError("Invalid subset arguments: {}".format(grid))
+        grid_spec[data._get_coord(dim_name).name()] = g
+
+    aggregator = UngriddedAggregator(grid_spec)
+    data = aggregator.aggregate(data, kernel)
 
     # TODO Tidy up output of grid in the history
     history = "Aggregated using CIS version " + __version__ + \
               "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
               "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
               "\n using new grid: " + str(kwargs) + \
-              "\n with kernel: " + kernel + "."
+              "\n with kernel: " + str(kernel) + "."
     data.add_history(history)
 
     return data
