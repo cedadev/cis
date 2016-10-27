@@ -203,7 +203,7 @@ def aggregate_cmd(main_arguments):
                         "Please use 'collapse' instead.")
         if any(v is not None for v in main_arguments.grid.values()):
             raise ex.InvalidCommandLineOptionError("Grid specifications are not supported for Gridded aggregation.")
-        output = data.collapsed(main_arguments.grid.keys(), how=input_group.get("kernel", ''))
+        output = data.collapsed(list(main_arguments.grid.keys()), how=input_group.get("kernel", ''))
     else:
         output = data.aggregate(how=input_group.get("kernel", ''), **main_arguments.grid)
 
