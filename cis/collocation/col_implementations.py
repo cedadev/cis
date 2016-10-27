@@ -137,7 +137,7 @@ class GriddedUngriddedCollocator(Collocator):
     Collocator for locating GriddedData onto ungridded sample points
     """
 
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False, extrapolate=False):
         super(GriddedUngriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
                                                          missing_data_for_missing_sample)
@@ -570,7 +570,7 @@ class nn_t(nn_time):
 
 class GriddedCollocator(Collocator):
 
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False, extrapolate=False):
         super(GriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
                                                          missing_data_for_missing_sample)

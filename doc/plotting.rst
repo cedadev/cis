@@ -207,7 +207,7 @@ When the arguments refer to dates or times, they should be in the format ``YYYY-
 
 The ``step`` arguments are used to specify the tick spacing on the axes and ``vstep`` is used to specify the tick spacing on the colorbar.
 
-When the ``step`` arguments refer to an amount of time, they should be in the ISO 8061 format ``PnYnMnDTnHnMnS``, where any particular time group is optional, case does not matter, and ``T`` can be substituted for either a colon or a space (if using a space quotes are necessary). 
+When the ``step`` arguments refer to an amount of time, they should be in the ISO 8601 format ``PnYnMnDTnHnMnS``, where any particular time group is optional, case does not matter, and ``T`` can be substituted for either a colon or a space (if using a space quotes are necessary).
 
 For example, to specify a tick spacing of one month and six seconds on the x axis, the following argument should be given:
 ``--xstep 1m6S`` 

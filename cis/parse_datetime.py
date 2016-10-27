@@ -1,5 +1,3 @@
-from collections import namedtuple
-import datetime
 import re
 from cis.time_util import cis_standard_time_unit
 import argparse
@@ -92,25 +90,20 @@ def parse_datetime(dt_string, name, parser):
     return dt
 
 
-def date_delta_creator(year, month=0, day=0, hour=0, minute=0, second=0):
-    date_delta_tuple = namedtuple('date_delta', ['year', 'month', 'day', 'hour', 'minute', 'second'])
-    return date_delta_tuple(int(year), int(month), int(day), int(hour), int(minute), int(second))
-
-
 def _parse_datetime_delta(dt_string):
     """Parse a date/time delta string into years, months, days, hours, minutes and seconds.
 
-    :param dt_string: String to parse, for example 'PY2M3DT4H5M6S' (ISO 8061)
+    :param dt_string: String to parse, for example 'PY2M3DT4H5M6S' (ISO 8601)
     :return: Named tuple 'date_delta' containing, 'year', 'month', 'day', 'hour', 'minute', 'second'
     :raise ValueError: if the string cannot be parsed as a date/time delta
     """
-
+    from datetime import timedelta
     dt_string = dt_string.upper()
 
     match = re.match(r'(?:[P])(?P<date>[^T :]+)?(?:[T :])?(?P<time>.+)?$', dt_string)
 
     if match is None:
-        raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
+        raise ValueError('Date/Time step must be in ISO 8601 format, for example PY2M3DT4H5M6S.')
 
     if match.group('date') is not None:
         date_string = match.group('date')
@@ -141,7 +134,7 @@ def _parse_datetime_delta(dt_string):
         elif token[-1:] == "D":
             days = val
         else:
-            raise ValueError("Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
+            raise ValueError("Date/Time step must be in ISO 8601 format, for example PY2M3DT4H5M6S")
 
     for token in time_tokens:
         val = int(token[:-1])
@@ -152,33 +145,26 @@ def _parse_datetime_delta(dt_string):
         elif token[-1:] == "S":
             seconds = val
         else:
-            raise ValueError("Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
+            raise ValueError("Date/Time step must be in ISO 8601 format, for example PY2M3DT4H5M6S")
 
-    times = [years, months, days, hours, minutes, seconds]
+    # Note that there is a loss of precision here because we have to convert months and years to integer days
+    dt = timedelta(seconds=seconds, minutes=minutes, hours=hours, days=(days + months*30 + years*365))
+    return dt
 
-    return date_delta_creator(*times)
 
-
-def _datetime_delta_to_float_days(delta):
+def _datetime_delta_to_float_days(td):
     """
-    Converts a datetime delta into a fractional day
-    :param delta: the datetime delta to be converted
+    Converts a timedelta into a fractional day
+    :param td: the timedelta to be converted
     :return: a float representation of a day
     """
-    from datetime import timedelta
-
     sec = 1.0/(24.0*60.0*60.0)  # Conversion from sec to day
-
-    days = delta.day + delta.month*365.2425/12.0 + delta.year*365.2425
-
-    td = timedelta(days=days, hours=delta.hour, minutes=delta.minute, seconds=delta.second)
-
     return td.total_seconds()*sec
 
 
 def parse_datetimestr_delta_to_float_days(string):
     """
-    Parses "PY2M3DT4H5M6S" (ISO 8061) into a fractional day
+    Parses "PY2M3DT4H5M6S" (ISO 8601) into a fractional day
     :param string: string to be parsed
     :return: a float representation of a day
     """

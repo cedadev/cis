@@ -110,11 +110,8 @@ def col_cmd(main_arguments):
     else:
         sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
 
-    # TODO: Tidy these up if I can
-    col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup[
-                                                                  'collocator'] is not None else ''
-    col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup[
-                                                                     'collocator'] is not None else {}
+    col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup.get('collocator', None) is not None else ''
+    col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup.get('collocator', None) is not None else {}
     kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup.get('kernel', None) is not None else None
     kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup.get('kernel', None) is not None else {}
 
@@ -150,7 +147,7 @@ def subset_cmd(main_arguments):
 
     variables = input_group['variables']
     filenames = input_group['filenames']
-    product = input_group["product"] if input_group["product"] is not None else None
+    product = input_group.get("product", None)
 
     # Read the input data - the parser limits the number of data groups to one for this command.
     try:
@@ -195,7 +192,7 @@ def aggregate_cmd(main_arguments):
         # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
         # the specified files.
         logging.info("Reading data for variables: %s", variables)
-        data = read_data_list(filenames, variables, input_group["product"])
+        data = read_data_list(filenames, variables, input_group.get("product", None))
     except (IrisError, ex.InvalidVariableError) as e:
         raise ex.CISError("There was an error reading in data: \n" + str(e))
     except IOError as e:
@@ -206,9 +203,9 @@ def aggregate_cmd(main_arguments):
                         "Please use 'collapse' instead.")
         if any(v is not None for v in main_arguments.grid.values()):
             raise ex.InvalidCommandLineOptionError("Grid specifications are not supported for Gridded aggregation.")
-        output = data.collapsed(main_arguments.grid.keys(), kernel=input_group["kernel"])
+        output = data.collapsed(main_arguments.grid.keys(), how=input_group.get("kernel", ''))
     else:
-        output = data.aggregate(kernel=input_group["kernel"], **main_arguments.grid)
+        output = data.aggregate(how=input_group.get("kernel", ''), **main_arguments.grid)
 
     output.save_data(main_arguments.output)
 

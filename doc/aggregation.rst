@@ -95,7 +95,7 @@ where:
   and when used as a range end, the latest compatible date/time is used. Including optional and alternative components,
   the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``.
 
-  Date/time steps are specified in the ISO 8061 format ``PnYnMnDTnHnMnS``, where any particular time period is optional,
+  Date/time steps are specified in the ISO 8601 format ``PnYnMnDTnHnMnS``, where any particular time period is optional,
   for example ``P1MT30M`` would specify a time interval of 1 month and 30 minutes. Years and months are treated as
   calendar years and months, meaning they are not necessarily fixed in length. For example a date interval of 1 year and
   1 month would mean going from 12:00 15th April 2013 to 12:00 15th May 2013. The are two exceptions to this, in rare

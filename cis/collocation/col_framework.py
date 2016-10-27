@@ -10,7 +10,7 @@ class Collocator(object):
     Class which provides a method for performing collocation. This just defines the interface which
     the subclasses must implement.
     """
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
         """
         Initialise the fill_value, missing data flag and variable attributes.
@@ -23,7 +23,7 @@ class Collocator(object):
          data points with a missing value - regardless of the collocation result. The default is False.
         :return:
         """
-        self.fill_value = float(fill_value)
+        self.fill_value = float(fill_value) if fill_value is not None else np.nan
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units

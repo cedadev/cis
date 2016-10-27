@@ -979,7 +979,7 @@ class UngriddedDataList(CommonDataList):
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
 
-    def aggregate(self, how=None, **kwargs):
+    def aggregate(self, how='', **kwargs):
         """
         Aggregate based on the specified grids
         :param str or cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
