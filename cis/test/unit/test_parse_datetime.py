@@ -123,7 +123,7 @@ def parse_as_number_or_datetime_can_parse_float():
 @istest
 def test_that_can_parse_time_deltas():
     delta = parse_datetimestr_delta_to_float_days("P2y15m3dT5M10H3S")
-    assert_almost_equal(1190.45829861, delta)
+    assert_almost_equal(1183.420173611111, delta)
 
 
 @istest
