@@ -406,7 +406,7 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         layer_kwargs = dict(list(kwargs.items()) + list(layer_opts[0].items()))
         plot, ax = basic_plot(data_list[1], how, ax, xaxis=data_list[0], *args, **layer_kwargs)
     elif how == 'taylor':
-        plot, ax = _taylor_plot(data_list, ax, layer_opts, *args, **kwargs)
+        plot, ax = taylor_plot(data_list, ax, layer_opts, *args, **kwargs)
     else:
         if not isinstance(yaxis, list):
             yaxis = [yaxis for i in data_list]
@@ -424,11 +424,11 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
     return plot, ax
 
 
-def _taylor_plot(data_list, ax=None, layer_opts=None, *args, **kwargs):
+def taylor_plot(data_list, ax=None, layer_opts=None, *args, **kwargs):
     """
-    Construct a Taylor diagram from the data list provided. Layer_opts are parsed for itemstyle and color which
-     are then combined to be passed to the plotting routines. This allows reuse of familiar command line kwargs while
-     maintaining a simple API.
+    Construct a Taylor diagram from the data list provided. Taylor plots are a bit special!
+     Layer_opts are parsed for itemstyle and color which are then combined to be passed to the plotting routines. This
+     allows reuse of familiar command line kwargs while maintaining a simple API.
 
     :param list data_list: List of CommonData objexts
     :param ax: Optional axis - although we don't use a standard axis for this plot so using the default is strongly
