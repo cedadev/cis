@@ -146,15 +146,38 @@ class DataReader(object):
                    'variables': ['variable1', 'variable2'],
                    'product' : 'Aerosol_CCI'}
 
-        :return: A list of CommonData objects (either GriddedData or UngriddedData, *or a combination*)
+        :return list: A list of CommonData objects (either GriddedData or UngriddedData, *or a combination*)
         """
         data_list = list()
         for datagroup in datagroups:
-            aliases = datagroup.get('aliases', None)
-            data = self.read_data_list(datagroup['filenames'], datagroup['variables'],
-                                       datagroup.get('product', None), aliases)
-            data_list.extend(data)
+            data_list.extend(self.read_single_datagroup(datagroup))
         return data_list
+
+    def read_single_datagroup(self, datagroup):
+        """
+        Read data from a set of datagroups
+
+        :param datagroup: A datagroup: a grouping of files and variables, where the
+         set of files may be logically considered to represent the same data (an example would be 2D model data split
+         into monthly output files where the grid is the same).
+         The following should be true of a datagroup:
+
+         1. All variables in a datagroup are present in all the files in that datagroup
+         2. The shape of the data returned from each variable must be the same in each file, so that they may be
+            concatenated
+         3. They should all be openable by the same CIS data product
+         4. They should be dictionaries of the following format::
+
+                 {'filenames': ['filename1.nc', 'filename2.nc'],
+                   'variables': ['variable1', 'variable2'],
+                   'product' : 'Aerosol_CCI'}
+
+        :return CommonDataList: Either a GriddedDataLise or an UngriddedDataList
+        """
+        aliases = datagroup.get('aliases', None)
+        data = self.read_data_list(datagroup['filenames'], datagroup['variables'],
+                                   datagroup.get('product', None), aliases)
+        return data
 
     def read_coordinates(self, filenames, product=None):
         """

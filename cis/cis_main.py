@@ -1,4 +1,4 @@
-#!/bin/env python2.7
+#!/bin/env python
 """
 Command line interface for the Climate Intercomparison Suite (CIS)
 """
@@ -7,7 +7,6 @@ import traceback
 import logging
 
 from cis.data_io.data_reader import DataReader
-from cis.data_io.data_writer import DataWriter
 from cis import __version__, __status__
 
 logger = logging.getLogger(__name__)
@@ -24,32 +23,6 @@ def __error_occurred(e):
     logging.debug(traceback.format_exc())
     logging.error(str(e) + " - check cis.log for details\n")
     exit(1)
-
-
-def __check_variable_is_valid(main_arguments, data, axis):
-    """
-    Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to
-    assign the variable to the specified axis
-
-    :param main_arguments: The arguments received from the parser
-    :param data: A list of packed data objects
-    :param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it
-     will be plotted on.
-    :param axis: The axis on which to plot the variable on
-    """
-    from cis.exceptions import InvalidVariableError
-
-    user_specified_variable = main_arguments.pop(axis + "axis")
-
-    for data_item in data:
-        if len(data_item.coords(user_specified_variable)) == 0 \
-                and len(data_item.coords(standard_name=user_specified_variable)) == 0 \
-                and data_item.name() != user_specified_variable \
-                and data_item.standard_name != user_specified_variable \
-                and data_item.long_name != user_specified_variable:
-            raise InvalidVariableError("{} is not a valid variable".format(user_specified_variable))
-
-    return user_specified_variable
 
 
 def plot_cmd(main_arguments):
@@ -99,36 +72,27 @@ def col_cmd(main_arguments):
     """
     from cis.collocation.col_framework import get_kernel
 
-    # TODO: Try and factor this out somehow
-    output_file = main_arguments.output
-    data_reader = DataReader()
+    # Read the sample data
     missing_data_for_missing_samples = False
     if main_arguments.samplevariable is not None:
-        sample_data = data_reader.read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
-                                                 main_arguments.sampleproduct)[0]
+        sample_data = DataReader().read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
+                                                  main_arguments.sampleproduct)[0]
         missing_data_for_missing_samples = True
     else:
-        sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
+        sample_data = DataReader().read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
 
-    col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup.get('collocator', None) is not None else ''
-    col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup.get('collocator', None) is not None else {}
-    kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup.get('kernel', None) is not None else None
-    kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup.get('kernel', None) is not None else {}
+    # Unpack the sample options
+    col_name, col_options = main_arguments.samplegroup['collocator']
+    kern_name, kern_options = main_arguments.samplegroup['kernel']
+
+    kernel = get_kernel(kern_name)(**kern_options) if kern_name is not None else None
 
     for input_group in main_arguments.datagroups:
-        variables = input_group['variables']
-        filenames = input_group['filenames']
-        product = input_group.get("product", None)
-
-        data = data_reader.read_data_list(filenames, variables, product)
-        data_writer = DataWriter()
-
-        kernel = get_kernel(kern_name)(**kern_options) if kern_name is not None else None
-
+        # Then collocate each datagroup
+        data = DataReader().read_single_datagroup(input_group)
         output = data.collocated_onto(sample_data, how=col_name, kernel=kernel,
                                       missing_data_for_missing_samples=missing_data_for_missing_samples, **col_options)
-
-        data_writer.write_data(output, output_file)
+        output.save_data(main_arguments.output)
 
 
 def subset_cmd(main_arguments):
@@ -137,28 +101,12 @@ def subset_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments (minus the subset command)
     """
-    from cis import read_data_list
-    from iris.exceptions import IrisError
     import cis.exceptions as ex
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Subsetting can only be performed on one data group")
-    input_group = main_arguments.datagroups[0]
 
-    variables = input_group['variables']
-    filenames = input_group['filenames']
-    product = input_group.get("product", None)
-
-    # Read the input data - the parser limits the number of data groups to one for this command.
-    try:
-        # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
-        # the specified files.
-        logging.info("Reading data for variables: %s", variables)
-        data = read_data_list(filenames, variables, product)
-    except (IrisError, ex.InvalidVariableError) as e:
-        raise ex.CISError("There was an error reading in data: \n" + str(e))
-    except IOError as e:
-        raise ex.CISError("There was an error reading one of the files: \n" + str(e))
+    data = DataReader().read_single_datagroup(main_arguments.datagroups[0])
 
     subset = data.subset(**main_arguments.limits)
 
@@ -175,8 +123,6 @@ def aggregate_cmd(main_arguments):
 
     :param main_arguments: The command line arguments (minus the aggregate command)
     """
-    from cis import read_data_list
-    from iris.exceptions import IrisError
     import cis.exceptions as ex
     from cis.data_io.gridded_data import GriddedDataList
 
@@ -184,19 +130,7 @@ def aggregate_cmd(main_arguments):
         __error_occurred("Aggregation can only be performed on one data group")
     input_group = main_arguments.datagroups[0]
 
-    variables = input_group['variables']
-    filenames = input_group['filenames']
-
-    # Read the input data - the parser limits the number of data groups to one for this command.
-    try:
-        # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
-        # the specified files.
-        logging.info("Reading data for variables: %s", variables)
-        data = read_data_list(filenames, variables, input_group.get("product", None))
-    except (IrisError, ex.InvalidVariableError) as e:
-        raise ex.CISError("There was an error reading in data: \n" + str(e))
-    except IOError as e:
-        raise ex.CISError("There was an error reading one of the files: \n" + str(e))
+    data = DataReader().read_single_datagroup(input_group)
 
     if isinstance(data, GriddedDataList):
         logging.warning("The aggregate command will not be supported in future versions of CIS. "
@@ -211,8 +145,26 @@ def aggregate_cmd(main_arguments):
 
 
 def collapse_cmd(main_arguments):
-    # TODO: finish me!
-    pass
+    """
+    Main routine for handling calls to the collapse command.
+
+    :param main_arguments: The command line arguments (minus the collapse command)
+    """
+    from cis.data_io.ungridded_data import UngriddedDataList
+
+    if len(main_arguments.datagroups) > 1:
+        __error_occurred("Collapse can only be performed on one data group")
+    input_group = main_arguments.datagroups[0]
+
+    data = DataReader().read_single_datagroup(input_group)
+
+    if isinstance(data, UngriddedDataList):
+        logging.error("The collapse command can only be performed on gridded data. "
+                      "Please use 'aggregate' instead.")
+
+    output = data.collapsed(main_arguments.dimensions, how=input_group.get("kernel", ''))
+
+    output.save_data(main_arguments.output)
 
 
 def evaluate_cmd(main_arguments):
@@ -272,9 +224,10 @@ def version_cmd(_main_arguments):
 
 commands = {'plot': plot_cmd,
             'info': info_cmd,
-            'col': col_cmd,
+            'collocate': col_cmd,
             'aggregate': aggregate_cmd,
             'subset': subset_cmd,
+            'collapse': collapse_cmd,
             'eval': evaluate_cmd,
             'stats': stats_cmd,
             'version': version_cmd}

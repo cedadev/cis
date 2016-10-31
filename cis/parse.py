@@ -631,13 +631,10 @@ def split_outside_brackets(input, seps=[','], brackets={'[': ']'}):
 def extract_method_and_args(arguments, parser):
     from cis.utils import parse_key_val_list
 
-    if not arguments:
-        method_and_args = None
-    else:
-        elements = multi_split(arguments, ['[', ',', ']'])
-        method_name = elements[0]
-        args = elements[1:] if len(elements) > 1 else []
-        method_and_args = (method_name, parse_key_val_list(args))
+    elements = multi_split(arguments, ['[', ',', ']'])
+    method_name = elements[0] if len(elements) > 0 else ''
+    args = elements[1:] if len(elements) > 1 else []
+    method_and_args = (method_name, parse_key_val_list(args))
     return method_and_args
 
 
