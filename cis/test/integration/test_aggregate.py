@@ -44,8 +44,7 @@ class BaseAggregationTest(BaseIntegrationTest):
         time_end = convert_to_days_since_cis_epoch(time_end)
         time_delta = time_delta.total_seconds() / dt.timedelta(days=1).total_seconds()
 
-        expected_time_bnds = np.array([[t, t + time_delta] for t in np.arange(time_start, time_end, time_delta)
-                                       if t + time_delta <= time_end * (1 + 1e-13)])
+        expected_time_bnds = np.array([[t, t + time_delta] for t in np.arange(time_start, time_end, time_delta)])
         time_bnds = self.ds.variables[time_name + '_bnds']
         assert_that(time_bnds.shape == expected_time_bnds.shape)
         assert_that(np.allclose(time_bnds[:], expected_time_bnds))
