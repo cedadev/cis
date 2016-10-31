@@ -33,6 +33,9 @@ def subset(data, constraint, **kwargs):
 
         if all(hasattr(limit, att) for att in ('start', 'stop')):
             l = limit
+        elif isinstance(limit, PartialDateTime):
+            l = slice(_convert_datetime_to_coord_unit(c, limit.min()),
+                      _convert_datetime_to_coord_unit(c, limit.max()))
         elif len(limit) == 1 and isinstance(limit[0], PartialDateTime):
             l = slice(_convert_datetime_to_coord_unit(c, limit[0].min()),
                       _convert_datetime_to_coord_unit(c, limit[0].max()))
