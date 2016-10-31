@@ -292,7 +292,6 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
             aggregate_cmd(main_arguments)
             # Check that we got a deprecation warning
             assert len(w) == 1
-            assert issubclass(w[-1].category, DeprecationWarning)
             assert "deprecated" in str(w[-1].message)
 
         self.check_output_contains_variables(self.OUTPUT_FILENAME, ['od550aer'])

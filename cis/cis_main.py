@@ -82,8 +82,8 @@ def col_cmd(main_arguments):
         sample_data = DataReader().read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
 
     # Unpack the sample options
-    col_name, col_options = main_arguments.samplegroup['collocator']
-    kern_name, kern_options = main_arguments.samplegroup['kernel']
+    col_name, col_options = main_arguments.samplegroup.get('collocator', ('', {}))
+    kern_name, kern_options = main_arguments.samplegroup.get('kernel', ('', {}))
 
     kernel = get_kernel(kern_name)(**kern_options) if kern_name is not None else None
 
@@ -134,7 +134,7 @@ def aggregate_cmd(main_arguments):
 
     if isinstance(data, GriddedDataList):
         logging.warning("The aggregate command is deprecated for GriddedData and will not be supported in future "
-                        "versions of CIS. Please use 'collapse' instead.", category=DeprecationWarning)
+                        "versions of CIS. Please use 'collapse' instead.")
         if any(v is not None for v in main_arguments.grid.values()):
             raise ex.InvalidCommandLineOptionError("Grid specifications are not supported for Gridded aggregation.")
         output = data.collapsed(list(main_arguments.grid.keys()), how=input_group.get("kernel", ''))
