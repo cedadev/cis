@@ -22,6 +22,43 @@ class TestPlotting(unittest.TestCase):
             cube = iris.load_cube("/")
             Plotter([cube], "line", "/")
 
+    def test_units_formatting(self):
+        from cis.plotting.plot import format_units
+        from cf_units import Unit
+        assert format_units("kg s-1") == "(kg s-1)"
+        assert format_units("seconds since 1600") == ""  # We don't want any units as they will be converted to DateTime
+        assert format_units(Unit("kg s-1")) == "(kg s-1)"
+
+    def test_get_label(self):
+        from cis.plotting.plot import get_label
+        from cis.test.util.mock import make_dummy_1d_ungridded_data
+        d = make_dummy_1d_ungridded_data()
+        assert get_label(d) == "rain (kg m-2 s-1)"
+        assert get_label(d, False) == "rain"
+        d.metadata._name = ""
+        d.metadata.long_name = ""
+        assert get_label(d) == "(kg m-2 s-1)"
+        assert get_label(d, False) == ""
+
+    def test_get_axis_ungridded(self):
+        from plotting.plot import get_axis
+        from cis.test.util.mock import make_dummy_2d_ungridded_data
+        d = make_dummy_2d_ungridded_data()
+        assert get_axis(d, "x").name() == 'latitude'
+        assert get_axis(d, "x", 'latitude').name() == 'latitude'
+        assert get_axis(d, "x", 'bad_name').name() == 'latitude'  # Falls back on axis name
+        assert get_axis(d, "y").name() == 'longitude'
+        assert get_axis(d, "y", 'longitude').name() == 'longitude'
+        assert get_axis(d, "y", 'bad_name').name() == 'longitude'  # Falls back on axis name
+
+    def test_get_axis_gridded(self):
+        from plotting.plot import get_axis
+        from cis.test.util.mock import make_mock_cube
+        from cis.data_io.gridded_data import make_from_cube
+        d = make_from_cube(make_mock_cube())
+        assert get_axis(d, "x").name() == 'longitude'
+        assert get_axis(d, "y").name() == 'latitude'
+
 
 class TestHeatMap(unittest.TestCase):
     kwargs = {}
