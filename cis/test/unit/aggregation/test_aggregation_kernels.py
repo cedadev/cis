@@ -1,9 +1,6 @@
 import unittest
 
 from cis.collocation.col_framework import get_kernel
-from cis.aggregation.aggregation_grid import AggregationGrid
-from cis.aggregation.gridded_collapsor import GriddedCollapsor
-from cis.aggregation.ungridded_aggregator import UngriddedAggregator
 from cis.test.util import mock
 from cis.aggregation.collapse_kernels import aggregation_kernels, CountKernel
 from cis.test.utils_for_testing import *
@@ -57,7 +54,7 @@ class TestMomentsKernel(unittest.TestCase):
         assert_that(result[1].data.mask.all())
 
     def test_GIVEN_ungridded_data_WHEN_collapse_THEN_calculations_correct(self):
-        grid = {'y': AggregationGrid(-12.5, 12.5, 12.5)}
+        grid = {'y': slice(-12.5, 12.5, 12.5)}
         data = mock.make_regular_2d_ungridded_data()
         kernel_class = get_kernel('moments')
         kernel = kernel_class()
@@ -72,7 +69,7 @@ class TestMomentsKernel(unittest.TestCase):
         assert_that(numpy.array_equal(result[2].data.flatten(), expected_no))
 
     def test_GIVEN_ungridded_data_WHEN_collapse_THEN_metadata_correct(self):
-        grid = {'y': AggregationGrid(-10, 10, 10)}
+        grid = {'y': slice(-10, 10, 10)}
         data = mock.make_regular_2d_ungridded_data()
         kernel_class = get_kernel('moments')
         kernel = kernel_class()

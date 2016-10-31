@@ -409,7 +409,6 @@ def get_aggregate_grid(aggregategrid, parser):
     :return: The parsed datagroups as a list of dictionaries
     """
     from cis.parse_datetime import parse_as_number_or_datetime, parse_as_number_or_datetime_delta
-    from cis.aggregation.aggregation_grid import AggregationGrid
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(aggregategrid)
@@ -448,7 +447,7 @@ def get_aggregate_grid(aggregategrid, parser):
                     parser.error("Longitude grid should not be wider than 360 degrees "
                                  "(i.e. for x[A,B,C] B-A <= 360)")
 
-            grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed)
+            grid_dict[dim_name] = slice(start_parsed, end_parsed, delta_parsed)
 
     return grid_dict
 

@@ -1,13 +1,10 @@
 from unittest import TestCase
 
-from nose.tools import istest, eq_
-import iris.analysis
+from nose.tools import istest
 
-from cis.data_io.gridded_data import make_from_cube, GriddedDataList
+from cis.data_io.gridded_data import GriddedDataList
 from cis.data_io.ungridded_data import UngriddedDataList
 from cis.collocation.col_implementations import mean, max, min, stddev, moments
-from cis.aggregation.aggregation_grid import AggregationGrid
-from cis.aggregation.ungridded_aggregator import UngriddedAggregator
 from cis.test.utils_for_testing import *
 
 from cis.test.util.mock import *
@@ -20,7 +17,7 @@ class TestUngriddedAggregation(TestCase):
 
     @istest
     def test_aggregating_single_point_in_one_dimension(self):
-        grid = {'y': AggregationGrid(-12.5, 12.5, 5)}
+        grid = {'y': slice(-12.5, 12.5, 5)}
 
         data = make_dummy_ungridded_data_single_point()
 
@@ -35,7 +32,7 @@ class TestUngriddedAggregation(TestCase):
         """
         Note that this is also the variable name for many ungridded cases
         """
-        grid = {'latitude': AggregationGrid(-12.5, 12.5, 5)}
+        grid = {'latitude': slice(-12.5, 12.5, 5)}
 
         data = make_dummy_ungridded_data_single_point()
 
@@ -51,7 +48,7 @@ class TestUngriddedAggregation(TestCase):
         Test to document the behaviour of aggregation when a point on a cell's lower bound is taken to be in that cell
           or out of it. If the point is on the lower bound it is taken to be part of that cell.
         """
-        grid = {'y': AggregationGrid(-12.5, 12.5, 5)}
+        grid = {'y': slice(-12.5, 12.5, 5)}
 
         data = make_dummy_ungridded_data_single_point(lat=-2.50000)
 
@@ -67,7 +64,7 @@ class TestUngriddedAggregation(TestCase):
         Test to document the behaviour of aggregation when a point on a cell's upper bound is taken to be in that cell
           or out of it. If the point is on the upper bound it is taken to be part of that cell.
         """
-        grid = {'y': AggregationGrid(-12.5, 12.5, 5)}
+        grid = {'y': slice(-12.5, 12.5, 5)}
 
         data = make_dummy_ungridded_data_single_point(lat=2.50000)
 
@@ -84,7 +81,7 @@ class TestUngriddedAggregation(TestCase):
         ungridded data points array are removed from the aggregate because they fall on the respective cells' upper
         bounds.
         """
-        grid = {'x': AggregationGrid(-5, 5, 5), 'y': AggregationGrid(-10, 10, 5)}
+        grid = {'x': slice(-5, 5, 5), 'y': slice(-10, 10, 5)}
 
         data = make_regular_2d_ungridded_data()
 
@@ -100,7 +97,7 @@ class TestUngriddedAggregation(TestCase):
 
     @istest
     def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5), 'y': AggregationGrid(-12.5, 12.5, 5)}
+        grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 5)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -121,7 +118,7 @@ class TestUngriddedAggregation(TestCase):
 
     @istest
     def test_mean_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5), 'y': AggregationGrid(-12.5, 12.5, 12.5)}
+        grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 12.5)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -138,7 +135,7 @@ class TestUngriddedAggregation(TestCase):
     def test_max_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
         self.kernel = max()
 
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5), 'y': AggregationGrid(-12.5, 12.5, 12.5)}
+        grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 12.5)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -155,7 +152,7 @@ class TestUngriddedAggregation(TestCase):
     def test_min_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
         self.kernel = min()
 
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5), 'y': AggregationGrid(-12.5, 12.5, 12.5)}
+        grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 12.5)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -172,7 +169,7 @@ class TestUngriddedAggregation(TestCase):
     def test_stddev_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
         self.kernel = stddev()
 
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5), 'y': AggregationGrid(-12.5, 12.5, 12.5)}
+        grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 12.5)}
 
         data = make_regular_2d_ungridded_data_with_missing_values()
 
@@ -187,7 +184,7 @@ class TestUngriddedAggregation(TestCase):
 
     def test_aggregation_one_dim_using_moments_kernel(self):
         data = make_regular_2d_ungridded_data_with_missing_values()
-        grid = {'y': AggregationGrid(-12.5, 12.5, 12.5)}
+        grid = {'y': slice(-12.5, 12.5, 12.5)}
 
         output = data.aggregate(how='moments', **grid)
 
@@ -207,7 +204,7 @@ class TestUngriddedAggregation(TestCase):
 
     def test_aggregation_two_dims_using_moments_kernel(self):
         data = make_regular_2d_ungridded_data_with_missing_values()
-        grid = {'y': AggregationGrid(-12.5, 12.5, 15), 'x': AggregationGrid(-7.5, 7.5, 10)}
+        grid = {'y': slice(-12.5, 12.5, 15), 'x': slice(-7.5, 7.5, 10)}
 
         output = data.aggregate(how='moments', **grid)
 
@@ -228,40 +225,40 @@ class TestUngriddedAggregation(TestCase):
 
     def test_aggregating_on_grid_0_to_360_when_data_is_minus_180_to_180(self):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=-175., lon_max=145.)
-        grid = {'x': AggregationGrid(125, 270, 40)}
+        grid = {'x': slice(125, 270, 40)}
         output = data.aggregate(how=self.kernel, **grid)
         assert_arrays_equal(output[0].data, [[13.5, 5.5, 6.5, 7.5]])
 
     def test_aggregating_on_grid_minus_180_to_180_when_data_is_0_to_360(self):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=5., lon_max=325.)
-        grid = {'x': AggregationGrid(-75, 125, 40)}
+        grid = {'x': slice(-75, 125, 40)}
         output = data.aggregate(how=self.kernel, **grid)
         assert_arrays_equal(output[0].data, [[12.5, 13.5, 5.5, 6.5, 7.5]])
 
     def test_collapsed_coords_get_output_as_length_1(self):
         data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(0, 360, 10)}
+        grid = {'x': slice(0, 360, 10)}
         output = data.aggregate(how=self.kernel, **grid)
         lat = output.coord('latitude')
         assert_that(lat.points, is_([0]))
 
     def test_collapsed_coords_get_max_min_bounds(self):
         data = make_regular_2d_ungridded_data()
-        grid = {'y': AggregationGrid(-90, 90, 10)}
+        grid = {'y': slice(-90, 90, 10)}
         output = data.aggregate(how=self.kernel, **grid)
         lon = output.coord('longitude')
         assert_arrays_equal(lon.bounds, [[-5, 5]])
 
     def test_aggregating_coord_to_length_one_with_explicit_bounds_gets_output_as_length_one(self):
         data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(-180, 180, 360), 'y': AggregationGrid(-90, 90, 10),}
+        grid = {'x': slice(-180, 180, 360), 'y': slice(-90, 90, 10),}
         output = data.aggregate(how=self.kernel, **grid)
         lon = output.coord('longitude')
         assert_that(lon.points, is_([0]))
 
     def test_aggregating_to_length_one_with_explicit_bounds_get_correct_bounds(self):
         data = make_regular_2d_ungridded_data()
-        grid = {'x': AggregationGrid(-180, 180, 360), 'y': AggregationGrid(-90, 90, 10),}
+        grid = {'x': slice(-180, 180, 360), 'y': slice(-90, 90, 10),}
         output = data.aggregate(how=self.kernel, **grid)
         lon = output.coord('longitude')
         assert_arrays_equal(lon.bounds, [[-180, 180]])
@@ -273,7 +270,7 @@ class TestUngriddedListAggregation(TestCase):
 
     @istest
     def test_aggregating_list_of_datasets_over_two_dims(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5), 'y': AggregationGrid(-12.5, 12.5, 5)}
+        grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 5)}
 
         datalist = UngriddedDataList([make_regular_2d_ungridded_data_with_missing_values(),
                                       make_regular_2d_ungridded_data_with_missing_values()])
@@ -302,7 +299,7 @@ class TestUngriddedListAggregation(TestCase):
         data2.metadata._name = 'snow'
         data2._data += 10
         data = UngriddedDataList([data1, data2])
-        grid = {'y': AggregationGrid(-12.5, 12.5, 12.5)}
+        grid = {'y': slice(-12.5, 12.5, 12.5)}
 
         output = data.aggregate(how=self.kernel, **grid)
 
@@ -333,7 +330,7 @@ class TestUngriddedListAggregation(TestCase):
         data2.metadata._name = 'snow'
         data2._data += 10
         data = UngriddedDataList([data1, data2])
-        grid = {'y': AggregationGrid(-12.5, 12.5, 15), 'x': AggregationGrid(-7.5, 7.5, 10)}
+        grid = {'y': slice(-12.5, 12.5, 15), 'x': slice(-7.5, 7.5, 10)}
 
         output = data.aggregate(how=self.kernel, **grid)
 
@@ -360,7 +357,7 @@ class TestUngriddedListAggregation(TestCase):
 
     @istest
     def test_aggregating_list_of_datasets_over_two_dims_with_diff_masks(self):
-        grid = {'x': AggregationGrid(-7.5, 7.5, 5), 'y': AggregationGrid(-12.5, 12.5, 5)}
+        grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 5)}
 
         var_0 = make_regular_2d_ungridded_data_with_missing_values()
         var_1 = make_regular_2d_ungridded_data_with_missing_values()

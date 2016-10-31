@@ -1095,7 +1095,6 @@ def _aggregate_ungridded(data, how, **kwargs):
     :return:
     """
     from cis.aggregation.ungridded_aggregator import UngriddedAggregator
-    from cis.aggregation.aggregation_grid import AggregationGrid
     from cis.collocation.col import get_kernel
     from cis.time_util import PartialDateTime
     from cis import __version__
@@ -1106,9 +1105,9 @@ def _aggregate_ungridded(data, how, **kwargs):
         if all(hasattr(grid, att) for att in ('start', 'stop', 'step')):
             g = grid
         elif len(grid) == 2 and isinstance(grid[0], PartialDateTime):
-            g = AggregationGrid(grid[0].min(), grid[0].max(), grid[1])
+            g = slice(grid[0].min(), grid[0].max(), grid[1])
         elif len(grid) == 3:
-            g = AggregationGrid(grid[0], grid[1], grid[2])
+            g = slice(grid[0], grid[1], grid[2])
         else:
             raise ValueError("Invalid subset arguments: {}".format(grid))
         grid_spec[data._get_coord(dim_name).name()] = g

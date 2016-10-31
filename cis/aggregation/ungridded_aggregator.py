@@ -100,16 +100,16 @@ class UngriddedAggregator(object):
         This dimcoord will have a grid
         :type coord: data_io.Coord.Coord
         :param coord: Coordinate to partially collapse
-        :type grid: aggregation.aggregation_grid.AggregationGrid
+        :type grid: slice
         :param grid: grid on which this coordinate will aggregate
         :return: DimCoord
         """
         from iris.coords import DimCoord
-        new_coordinate_grid = aggregation_grid_array(grid.start, grid.end, grid.step)
+        new_coordinate_grid = aggregation_grid_array(grid.start, grid.stop, grid.step)
         new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
                              units=self._get_CF_coordinate_units(coord))
         if len(new_coord.points) == 1:
-            new_coord.bounds = [[grid.start, grid.end]]
+            new_coord.bounds = [[grid.start, grid.stop]]
         else:
             new_coord.guess_bounds()
         return new_coord

@@ -1,6 +1,5 @@
 from abc import ABCMeta
 import logging
-from collections import namedtuple
 
 import numpy as np
 import iris
@@ -8,7 +7,6 @@ import iris.coords
 
 from cis.subsetting.subset_framework import SubsetConstraintInterface
 import cis.data_io.gridded_data as gridded_data
-from cis.utils import guess_coord_axis
 
 
 def subset(data, constraint, **kwargs):
@@ -21,13 +19,35 @@ def subset(data, constraint, **kwargs):
     :param kwargs:
     :return:
     """
+    from datetime import datetime
+    from cis.time_util import PartialDateTime
     from cis.exceptions import CoordinateNotFoundError
 
-    constraints = create_constraint_limits(data, kwargs)
+    constraints = {}
 
-    if len(constraints) == 0:
-        raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
-                                      "coordinate name.".format("' or '".join(list(kwargs.keys()))))
+    for dim_name, limit in kwargs.items():
+        c = data._get_coord(dim_name)
+        if c is None:
+            raise CoordinateNotFoundError("No coordinate found that matches '{}'. Please check the "
+                                          "coordinate name.".format(dim_name))
+
+        if all(hasattr(limit, att) for att in ('start', 'stop')):
+            l = limit
+        elif len(limit) == 1 and isinstance(limit[0], PartialDateTime):
+            l = slice(_convert_datetime_to_coord_unit(c, limit[0].min()),
+                      _convert_datetime_to_coord_unit(c, limit[0].max()))
+        elif len(limit) == 2:
+            if isinstance(limit[0], datetime) and isinstance(limit[1], datetime):
+                # Ensure that the limits are date/times.
+                limit_start = _convert_datetime_to_coord_unit(c, limit[0])
+                limit_end = _convert_datetime_to_coord_unit(c, limit[1])
+            else:
+                # Assume to be a non-time axis.
+                limit_start, limit_end = _fix_non_circular_limits(limit[0], limit[1])
+            l = slice(limit_start, limit_end)
+        else:
+            raise ValueError("Invalid subset arguments: {}".format(limit))
+        constraints[data._get_coord(dim_name).name()] = l
 
     subset_constraint = constraint(constraints)
 
@@ -37,49 +57,6 @@ def subset(data, constraint, **kwargs):
         subset.add_history("Subsetted using limits: " + str(subset_constraint))
 
     return subset
-
-
-class CoordLimits(namedtuple('CoordLimits', ['start', 'end'])):
-    """Holds the start and end values for subsetting limits.
-    :ivar start: subsetting limit start
-    :ivar end: subsetting limit end
-    """
-    pass
-
-
-def create_constraint_limits(data, limits):
-    """
-    Create a set of CoordLimits based on the given data and limits
-
-    :param data: The data object containing the coordinates to subset
-    :param limits: A dictionary containing coordinate names and limits as tuples or lists of either floats of datetime objects
-    """
-    from datetime import datetime
-    from cis.time_util import PartialDateTime
-
-    coord_limits = {}
-
-    for dim_name, limit in limits.items():
-        c = data._get_coord(dim_name)
-        if all(hasattr(limit, att) for att in ('start', 'stop')):
-            l = limit
-        elif len(limit) == 1 and isinstance(limit[0], PartialDateTime):
-            l = CoordLimits(_convert_datetime_to_coord_unit(c, limit[0].min()),
-                            _convert_datetime_to_coord_unit(c, limit[0].max()))
-        elif len(limit) == 2:
-            if isinstance(limit[0], datetime) and isinstance(limit[1], datetime):
-                # Ensure that the limits are date/times.
-                limit_start = _convert_datetime_to_coord_unit(c, limit[0])
-                limit_end = _convert_datetime_to_coord_unit(c, limit[1])
-            else:
-                # Assume to be a non-time axis.
-                limit_start, limit_end = _fix_non_circular_limits(limit[0], limit[1])
-            l = CoordLimits(limit_start, limit_end)
-        else:
-            raise ValueError("Invalid subset arguments: {}".format(limit))
-        coord_limits[data._get_coord(dim_name).name()] = l
-
-    return coord_limits
 
 
 def _convert_datetime_to_coord_unit(coord, dt):
@@ -121,7 +98,7 @@ class SubsetConstraint(SubsetConstraintInterface):
     def __str__(self):
         limit_strs = []
         for name, limit in self._limits.items():
-            limit_strs.append("{}: [{}, {}]".format(name, str(limit.start), str(limit.end)))
+            limit_strs.append("{}: [{}, {}]".format(name, str(limit.start), str(limit.stop)))
         return ', '.join(limit_strs)
 
 
@@ -162,10 +139,10 @@ class GriddedSubsetConstraint(SubsetConstraint):
         for coord, limits in self._limits.items():
             if data.coord(coord).units.modulus is not None:
                 # These coordinates can be safely used with iris.cube.Cube.intersection()
-                intersection_constraint[coord] = (limits.start, limits.end)
+                intersection_constraint[coord] = (limits.start, limits.stop)
             else:
                 # These coordinates cannot be used with iris.cube.Cube.intersection(), will use iris.cube.Cube.extract()
-                constraint_function = lambda x: limits.start <= x.point <= limits.end
+                constraint_function = lambda x: limits.start <= x.point <= limits.stop
                 if extract_constraint is None:
                     extract_constraint = iris.Constraint(**{coord: constraint_function})
                 else:
@@ -197,7 +174,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         combined_mask = np.zeros(shape, dtype=bool)
         for coord, limit in self._limits.items():
             # Mask out any points which are NOT (<= to the end limit AND >= to the start limit)
-            mask = ~ (np.less_equal(data.coord(coord).data_flattened, limit.end) &
+            mask = ~ (np.less_equal(data.coord(coord).data_flattened, limit.stop) &
                       np.greater_equal(data.coord(coord).data_flattened, limit.start))
             combined_mask = combined_mask | mask
 
@@ -248,8 +225,8 @@ class UngriddedSubsetConstraint(SubsetConstraint):
                 coord_max = coord.points.max()
                 data_below_zero = coord_min < 0
                 data_above_180 = coord_max > 180
-                limits_below_zero = limit.start < 0 or limit.end < 0
-                limits_above_180 = limit.start > 180 or limit.end > 180
+                limits_below_zero = limit.start < 0 or limit.stop < 0
+                limits_above_180 = limit.start > 180 or limit.stop > 180
 
                 if data_below_zero and not data_above_180:
                     # i.e. data is in the range -180 -> 180
