@@ -1,22 +1,22 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
+import six
 import logging
 
 import numpy as np
 import iris
 import iris.coords
 
-from cis.subsetting.subset_framework import SubsetConstraintInterface
 import cis.data_io.gridded_data as gridded_data
 
 
 def subset(data, constraint, **kwargs):
     """
-    Helper function for constraining a CommonData or CommonDataList object (data) given a SubsetConstraintInterface
-    object, the constraints should be specified using the kwargs of the form coord: [min, max]
+    Helper function for constraining a CommonData or CommonDataList object (data) given a SubsetConstraint
+    class, the constraints should be specified using the kwargs of the form coord: [min, max]
 
-    :param CommonData or CommonDataList data:
-    :param SubsetConstraintInterface constraint:
-    :param kwargs:
+    :param CommonData or CommonDataList data: The data to subset
+    :param class SubsetConstraint constraint: A SubsetConstraint class to do the constraining
+    :param kwargs: The limits as slices or length 2 tuples of max and min.
     :return:
     """
     from datetime import datetime
@@ -82,16 +82,17 @@ def _fix_non_circular_limits(limit_start, limit_end):
     return new_limits
 
 
-class SubsetConstraint(SubsetConstraintInterface):
+@six.add_metaclass(ABCMeta)
+class SubsetConstraint(object):
     """Abstract Constraint for subsetting.
 
     Holds the limits for subsetting in each dimension.
-
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, limits):
-        # TODO: Document what these limits should be...
+        """
+        :param dict limits: A dictionary mapping coordinate name to slice objects
+        """
         self._limits = limits
         logging.debug("Created SubsetConstraint of type %s", self.__class__.__name__)
 
@@ -100,6 +101,14 @@ class SubsetConstraint(SubsetConstraintInterface):
         for name, limit in self._limits.items():
             limit_strs.append("{}: [{}, {}]".format(name, str(limit.start), str(limit.stop)))
         return ', '.join(limit_strs)
+
+    @abstractmethod
+    def constrain(self, data):
+        """Subsets the supplied data.
+
+        :param data: data to be subsetted
+        :return: subsetted data
+        """
 
 
 class GriddedSubsetConstraint(SubsetConstraint):
@@ -151,11 +160,8 @@ class GriddedSubsetConstraint(SubsetConstraint):
 
 
 class UngriddedSubsetConstraint(SubsetConstraint):
-    """Implementation of SubsetConstraint for subsetting ungridded data.
-
-    .. Note:
-        The constrain method is not used for ungridded subsetting which uses fixed numpy comparisons for speed.
-
+    """
+    Implementation of SubsetConstraint for subsetting ungridded data.
     """
 
     def constrain(self, data):
