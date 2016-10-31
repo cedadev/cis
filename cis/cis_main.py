@@ -85,7 +85,7 @@ def col_cmd(main_arguments):
     col_name, col_options = main_arguments.samplegroup.get('collocator', ('', {}))
     kern_name, kern_options = main_arguments.samplegroup.get('kernel', ('', {}))
 
-    kernel = get_kernel(kern_name)(**kern_options) if kern_name is not None else None
+    kernel = get_kernel(kern_name)(**kern_options) if kern_name else None
 
     for input_group in main_arguments.datagroups:
         # Then collocate each datagroup
