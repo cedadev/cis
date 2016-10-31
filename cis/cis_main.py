@@ -73,11 +73,11 @@ def col_cmd(main_arguments):
     from cis.collocation.col_framework import get_kernel
 
     # Read the sample data
-    missing_data_for_missing_samples = False
+    missing_data_for_missing_sample = False
     if main_arguments.samplevariable is not None:
         sample_data = DataReader().read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
                                                   main_arguments.sampleproduct)[0]
-        missing_data_for_missing_samples = True
+        missing_data_for_missing_sample = True
     else:
         sample_data = DataReader().read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
 
@@ -85,13 +85,15 @@ def col_cmd(main_arguments):
     col_name, col_options = main_arguments.samplegroup.get('collocator', ('', {}))
     kern_name, kern_options = main_arguments.samplegroup.get('kernel', ('', {}))
 
+    missing_data_for_missing_sample = col_options.pop('missing_data_for_missing_sample', missing_data_for_missing_sample)
+
     kernel = get_kernel(kern_name)(**kern_options) if kern_name else None
 
     for input_group in main_arguments.datagroups:
         # Then collocate each datagroup
         data = DataReader().read_single_datagroup(input_group)
         output = data.collocated_onto(sample_data, how=col_name, kernel=kernel,
-                                      missing_data_for_missing_samples=missing_data_for_missing_samples, **col_options)
+                                      missing_data_for_missing_sample=missing_data_for_missing_sample, **col_options)
         output.save_data(main_arguments.output)
 
 
