@@ -185,13 +185,14 @@ class Generic2DPlot(APlot):
         from iris.cube import Cube
         import logging
 
-        x = self.xaxis.points if self.MODE == POINT_MODE else self.xaxis.contiguous_bounds()
-        y = self.yaxis.points if self.MODE == POINT_MODE else self.yaxis.contiguous_bounds()
-
         if isinstance(data_object, Cube):
+            x = self.xaxis.points if self.MODE == POINT_MODE else self.xaxis.contiguous_bounds()
+            y = self.yaxis.points if self.MODE == POINT_MODE else self.yaxis.contiguous_bounds()
             # We need to do some more unpacking, and possibly meshgridding for gridded data
             data, x, y = self._cube_manipulation(data_object, x, y)
         else:
+            x = self.xaxis.points
+            y = self.yaxis.points
             data = data_object.data
 
         logging.debug("Shape of x: " + str(x.shape))
