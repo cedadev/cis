@@ -216,8 +216,9 @@ class CommonData(object):
             return coord
 
         coord = _try_coord(self, dict(name_or_coord=name)) or _try_coord(self, dict(standard_name=name)) \
-            or _try_coord(self, dict(axis=name)) or _try_coord(self, dict(var_name=name)) or \
-                _try_coord(self, dict(standard_name=standard_axes.get(name.upper(), None)))
+            or _try_coord(self, dict(standard_name=standard_axes.get(name.upper(), None))) or \
+                _try_coord(self, dict(var_name=name)) or _try_coord(self, dict(axis=name))
+
         return coord
 
 
