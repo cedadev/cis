@@ -345,7 +345,7 @@ class GriddedData(iris.cube.Cube, CommonData):
         from cis.collocation.col import collocate, get_kernel
 
         if isinstance(data, UngriddedData) or isinstance(data, UngriddedDataList):
-            col_cls = ci.GeneralGriddedCollocator()
+            col_cls = ci.GeneralGriddedCollocator
             # Bin is the default for ungridded -> gridded collocation
             if how == '' or how == 'bin':
                 con = ci.BinnedCubeCellOnlyConstraint()
