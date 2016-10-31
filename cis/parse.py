@@ -11,11 +11,47 @@ from cis.exceptions import InvalidCommandLineOptionError
 from cis.plotting.plot import plot_types, projections
 
 
+class AliasedSubParsersAction(argparse._SubParsersAction):
+    """
+    Manually add aliases (which aren't supported in Python 2...
+    From https://gist.github.com/sampsyo/471779
+    """
+
+    class _AliasedPseudoAction(argparse.Action):
+        def __init__(self, name, aliases, help):
+            dest = name
+            if aliases:
+                dest += ' (%s)' % ','.join(aliases)
+            super(AliasedSubParsersAction._AliasedPseudoAction, self).__init__(option_strings=[], dest=dest, help=help)
+
+    def add_parser(self, name, **kwargs):
+        if 'aliases' in kwargs:
+            aliases = kwargs['aliases']
+            del kwargs['aliases']
+        else:
+            aliases = []
+
+        parser = super(AliasedSubParsersAction, self).add_parser(name, **kwargs)
+
+        # Make the aliases work.
+        for alias in aliases:
+            self._name_parser_map[alias] = parser
+        # Make the help text reflect them, first removing old help entry.
+        if 'help' in kwargs:
+            help = kwargs.pop('help')
+            self._choices_actions.pop()
+            pseudo_action = self._AliasedPseudoAction(name, aliases, help)
+            self._choices_actions.append(pseudo_action)
+
+        return parser
+
+
 def initialise_top_parser():
     """
     The parser to which all arguments are initially passed
     """
     global_options = argparse.ArgumentParser(add_help=False)
+    global_options.register('action', 'parsers', AliasedSubParsersAction)
     verbosity_group = global_options.add_mutually_exclusive_group()
     verbosity_group.add_argument("-v", "--verbose", action='count',
                                  help="Increase the level of logging information output to screen to include "
