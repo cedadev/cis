@@ -16,6 +16,11 @@ class TestGriddedSubsetConstraint(TestCase):
     Tests for subsetting gridded data
     """
 
+    def test_null_subset_2d_gridded_data(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset()
+        np.testing.assert_array_equal(subset.data, data.data)
+
     def test_can_subset_2d_gridded_data_by_longitude(self):
         data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
         subset = data.subset(longitude=[0.0, 5.0])
@@ -156,6 +161,12 @@ class TestGriddedSubsetConstraint(TestCase):
 
 class TestUngriddedSubsetConstraint(TestCase):
     # Tests for subsetting ungridded data
+
+    def test_null_subset_of_2d_ungridded_data(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset()
+        # The data gets flattened, but is otherwise equal
+        np.testing.assert_array_equal(subset.data.flatten(), data.data.flatten())
 
     def test_can_subset_2d_ungridded_data_by_longitude(self):
         data = cis.test.util.mock.make_regular_2d_ungridded_data()
