@@ -772,24 +772,6 @@ class TestGriddedUngriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
-    def test_NetCDF_Gridded_onto_GASSP_using_moments_kernel(self):
-        # Takes 850s
-        vars = valid_echamham_variable_1, valid_echamham_variable_2
-        filename = valid_echamham_filename
-        sample_file = valid_GASSP_aeroplane_filename
-        sample_var = valid_GASSP_aeroplane_variable
-        collocator_and_opts = 'box[h_sep=100km],kernel=moments,variable=%s' % sample_var
-        arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
-                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
-                     '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        col_cmd(main_arguments)
-        out_vars = []
-        for var in vars:
-            out_vars.extend([var, var + '_std_dev', var + '_num_points'])
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, out_vars)
-        self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, out_vars)
-
     @skip_pyhdf
     def test_NetCDF_Gridded_onto_MODIS_L2(self):
         # Takes 16s
