@@ -43,6 +43,27 @@ class TestUngriddedAggregation(TestCase):
         compare_masked_arrays(cube_out[0].data, result)
 
     @istest
+    def test_aggregating_defaults(self):
+        """
+        Testing default aggregation edges. Note that the upper edges of the
+        ungridded data points array are removed from the aggregate because they fall on the respective cells' upper
+        bounds.
+        """
+        grid = {'x': slice(None, 5, 5), 'y': slice(-10, None, 5)}
+
+        data = make_regular_2d_ungridded_data()
+
+        cube_out = data.aggregate(how=self.kernel, **grid)
+
+        result = numpy.array([[1.0, 2.0],  # 3.0],
+                              [4.0, 5.0],  # 6.0],
+                              [7.0, 8.0],  # 9.0],
+                              [10.0, 11.0]])  # 12.0],
+        # [13.0, 14.0, 15.0]],
+
+        assert_arrays_almost_equal(cube_out[0].data, result)
+
+    @istest
     def test_aggregating_single_point_in_one_dimension_lower_bound_edge_case(self):
         """
         Test to document the behaviour of aggregation when a point on a cell's lower bound is taken to be in that cell

@@ -1102,6 +1102,7 @@ def _aggregate_ungridded(data, how, **kwargs):
     kernel = get_kernel(how)
     grid_spec = {}
     for dim_name, grid in kwargs.items():
+        c = data._get_coord(dim_name)
         if all(hasattr(grid, att) for att in ('start', 'stop', 'step')):
             g = grid
         elif len(grid) == 2 and isinstance(grid[0], PartialDateTime):
@@ -1110,7 +1111,12 @@ def _aggregate_ungridded(data, how, **kwargs):
             g = slice(grid[0], grid[1], grid[2])
         else:
             raise ValueError("Invalid subset arguments: {}".format(grid))
-        grid_spec[data._get_coord(dim_name).name()] = g
+
+        # Fill in defaults
+        grid_start = g.start if g.start is not None else c.points.min()
+        grid_end = g.stop if g.stop is not None else c.points.max()
+
+        grid_spec[c.name()] = slice(grid_start, grid_end, g.step)
 
     aggregator = UngriddedAggregator(grid_spec)
     data = aggregator.aggregate(data, kernel)

@@ -37,17 +37,19 @@ def subset(data, constraint, **kwargs):
             l = slice(_convert_datetime_to_coord_unit(c, limit[0].min()),
                       _convert_datetime_to_coord_unit(c, limit[0].max()))
         elif len(limit) == 2:
-            limit_start = limit[0] if limit[0] is not None else c.points.min()
-            if isinstance(limit_start, datetime):
-                limit_start = _convert_datetime_to_coord_unit(c, limit_start)
-
-            limit_end = limit[1] if limit[1] is not None else c.points.max()
-            if isinstance(limit_end, datetime):
-                limit_end = _convert_datetime_to_coord_unit(c, limit_end)
-            l = slice(limit_start, limit_end)
+            l = slice(limit[0], limit[1])
         else:
             raise ValueError("Invalid subset arguments: {}".format(limit))
-        constraints[data._get_coord(dim_name).name()] = l
+
+        # Fill in defaults and convert datetimes
+        limit_start = l.start if l.start is not None else c.points.min()
+        if isinstance(limit_start, datetime):
+            limit_start = _convert_datetime_to_coord_unit(c, limit_start)
+
+        limit_end = l.stop if l.stop is not None else c.points.max()
+        if isinstance(limit_end, datetime):
+            limit_end = _convert_datetime_to_coord_unit(c, limit_end)
+        constraints[data._get_coord(dim_name).name()] = slice(limit_start, limit_end)
 
     subset_constraint = constraint(constraints)
 
