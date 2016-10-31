@@ -41,7 +41,7 @@ class TestPlotting(unittest.TestCase):
         assert get_label(d, False) == ""
 
     def test_get_axis_ungridded(self):
-        from plotting.plot import get_axis
+        from cis.plotting.plot import get_axis
         from cis.test.util.mock import make_dummy_2d_ungridded_data
         d = make_dummy_2d_ungridded_data()
         assert get_axis(d, "x").name() == 'latitude'
@@ -52,7 +52,7 @@ class TestPlotting(unittest.TestCase):
         assert get_axis(d, "y", 'bad_name').name() == 'longitude'  # Falls back on axis name
 
     def test_get_axis_gridded(self):
-        from plotting.plot import get_axis
+        from cis.plotting.plot import get_axis
         from cis.test.util.mock import make_mock_cube
         from cis.data_io.gridded_data import make_from_cube
         d = make_from_cube(make_mock_cube())
