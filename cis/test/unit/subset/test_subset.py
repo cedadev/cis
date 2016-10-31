@@ -26,6 +26,16 @@ class TestGriddedSubsetConstraint(TestCase):
         subset = data.subset(latitude=[0.0, 10.0])
         assert (subset.data.tolist() == [[7, 8, 9], [10, 11, 12], [13, 14, 15]])
 
+    def test_can_subset_2d_gridded_data_by_latitude_with_None_min(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(latitude=[0.0, None])
+        assert (subset.data.tolist() == [[7, 8, 9], [10, 11, 12], [13, 14, 15]])
+
+    def test_can_subset_2d_gridded_data_by_latitude_with_None_max(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(latitude=[None, 0.0])
+        assert (subset.data.tolist() == [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
     def test_can_subset_3d_gridded_data_by_altitude(self):
         data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_altitude())
         subset = data.subset(altitude=[2, 5])
@@ -149,8 +159,13 @@ class TestUngriddedSubsetConstraint(TestCase):
 
     def test_can_subset_2d_ungridded_data_by_longitude(self):
         data = cis.test.util.mock.make_regular_2d_ungridded_data()
-        subset = data.subset(longitude=[0.0, 5.0])
+        subset = data.subset(longitude=[0.0, None])
         assert (subset.data.tolist() == [2, 3, 5, 6, 8, 9, 11, 12, 14, 15])
+
+    def test_can_subset_2d_ungridded_data_by_longitude_with_None_min(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset(longitude=[None, 0.0])
+        assert (subset.data.tolist() == [1, 2, 4, 5, 7, 8, 10, 11, 13, 14])
 
     def test_can_subset_2d_ungridded_data_by_longitude_with_wrapping_at_180(self):
         data = cis.test.util.mock.make_regular_2d_ungridded_data(

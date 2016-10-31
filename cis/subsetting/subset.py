@@ -37,13 +37,13 @@ def subset(data, constraint, **kwargs):
             l = slice(_convert_datetime_to_coord_unit(c, limit[0].min()),
                       _convert_datetime_to_coord_unit(c, limit[0].max()))
         elif len(limit) == 2:
-            if isinstance(limit[0], datetime) and isinstance(limit[1], datetime):
-                # Ensure that the limits are date/times.
-                limit_start = _convert_datetime_to_coord_unit(c, limit[0])
-                limit_end = _convert_datetime_to_coord_unit(c, limit[1])
-            else:
-                # Assume to be a non-time axis.
-                limit_start, limit_end = _fix_non_circular_limits(limit[0], limit[1])
+            limit_start = limit[0] if limit[0] is not None else c.points.min()
+            if isinstance(limit_start, datetime):
+                limit_start = _convert_datetime_to_coord_unit(c, limit_start)
+
+            limit_end = limit[1] if limit[1] is not None else c.points.max()
+            if isinstance(limit_end, datetime):
+                limit_end = _convert_datetime_to_coord_unit(c, limit_end)
             l = slice(limit_start, limit_end)
         else:
             raise ValueError("Invalid subset arguments: {}".format(limit))
@@ -70,16 +70,6 @@ def _convert_datetime_to_coord_unit(coord, dt):
     else:
         iris_unit = Unit(coord.units)
     return iris_unit.date2num(dt)
-
-
-def _fix_non_circular_limits(limit_start, limit_end):
-    if limit_start <= limit_end:
-        new_limits = (limit_start, limit_end)
-    else:
-        new_limits = (limit_end, limit_start)
-        logging.info("Real limits: original: %s  after fix: %s", (limit_start, limit_end), new_limits)
-
-    return new_limits
 
 
 @six.add_metaclass(ABCMeta)
