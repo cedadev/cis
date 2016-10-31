@@ -655,10 +655,27 @@ class UngriddedData(LazyData, CommonData):
 
     def aggregate(self, how=None, **kwargs):
         """
-        Aggregate the CommonData object based on the specified grids
-        :param str or cis.collocation.col_framework.Kernel how: The kernel to use in the aggregation
+        Aggregate the UngriddedData object based on the specified grids. The grid is defined by passing keyword
+        arguments for each dimension, each argument must be a slice, or have three entries (a maximum, a minimum and a
+        gridstep). The default aggregation method ('moments') returns the mean, standard deviation and number of points
+         as separate GriddedData objects.
+
+        Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range. The gridstep can be specified as a
+        DateTimeDelta object.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.aggregate(x=[-180, 180, 360], y=slice(-90, 90, 10))
+
+        or:
+            data.aggregate(how='mean', t=[PartialDateTime(2008,9), timedelta(days=1))
+
+        :param str how: The kernel to use in the aggregation (moments, mean, min, etc...). Default is moments
         :param kwargs: The grid specifications for each coordinate dimension
-        :return:
+        :return GriddedData:
         """
         agg = _aggregate_ungridded(self, how, **kwargs)
         # Return the single item if there's only one (this depends on the kernel used)
@@ -854,9 +871,6 @@ class UngriddedCoordinates(CommonData):
     def subset(self, **kwargs):
         raise NotImplementedError("Subset is not available for UngriddedCoordinates objects")
 
-    def aggregate(self, **kwargs):
-        raise NotImplementedError("Aggregation is not available for UngriddedCoordinates objects")
-
     def collocated_onto(self, sample, how='', kernel=None, **kwargs):
         raise NotImplementedError("UngriddedCoordinates objects cannot be used as sources of data for collocation.")
 
@@ -986,10 +1000,27 @@ class UngriddedDataList(CommonDataList):
 
     def aggregate(self, how='', **kwargs):
         """
-        Aggregate based on the specified grids
-        :param str or cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
+        Aggregate the UngriddedDataList object based on the specified grids. The grid is defined by passing keyword
+        arguments for each dimension, each argument must be a slice, or have three entries (a maximum, a minimum and a
+        gridstep). The default aggregation method ('moments') returns the mean, standard deviation and number of points
+         as separate GriddedData objects (for each UngriddedData object in the list).
+
+        Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range. The gridstep can be specified as a
+        DateTimeDelta object.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.aggregate(x=[-180, 180, 360], y=slice(-90, 90, 10))
+
+        or:
+            data.aggregate(how='mean', t=[PartialDateTime(2008,9), timedelta(days=1))
+
+        :param str how: The kernel to use in the aggregation (moments, mean, min, etc...)
         :param kwargs: The grid specifications for each coordinate dimension
-        :return:
+        :return GriddedDataList:
         """
         return _aggregate_ungridded(self, how, **kwargs)
 

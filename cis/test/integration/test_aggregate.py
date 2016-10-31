@@ -277,12 +277,24 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
                                     lat_name='Latitude', lon_name='Longitude')
 
     def test_aggregate_netCDF_gridded_HadGem(self):
+        # Test aggregating a gridded file, it should work but throw a deprecation
+        import warnings
         # Takes 1s
         variable = '*'
         filename = valid_hadgem_filename
         arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 'x,y', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Run the aggregation
+            aggregate_cmd(main_arguments)
+            # Check that we got a deprecation warning
+            assert len(w) == 1
+            assert issubclass(w[-1].category, DeprecationWarning)
+            assert "deprecated" in str(w[-1].message)
+
         self.check_output_contains_variables(self.OUTPUT_FILENAME, ['od550aer'])
 
     def test_aggregate_cis_ungridded(self):
@@ -305,19 +317,6 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='Latitude', lon_name='Longitude')
-
-    @skip_pyhdf
-    def test_aggregate_MODIS_L3(self):
-        # Takes 15s
-        variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
-                   'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
-                   'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
-        filename = valid_modis_l3_filename
-        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 'x,y',
-                     '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
     def test_aggregate_CloudSatPRECIP(self):
@@ -374,16 +373,6 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='latitude', lon_name='longitude')
-
-    def test_aggregate_cis_gridded(self):
-        # Takes 1s
-        variable = '*'
-        filename = valid_cis_gridded_output_filename
-        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean,product=NetCDF_Gridded', 'x,y',
-                     '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, ['TAU_2D_550nm'])
 
 
 class TestTemporalAggregationByDataProduct(BaseAggregationTest):
@@ -496,43 +485,6 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
         self.check_output_vars_are_different(self.OUTPUT_FILENAME, variable.split(',')[:5])
 
-    def test_aggregate_netCDF_gridded_HadGem(self):
-        # Takes 1s
-        variable = 'od550aer'
-        filename = valid_hadgem_filename
-        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 't', '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
-
-    def test_netCDF_gridded_hybrid_height(self):
-        # Takes 2s
-        variable = valid_hybrid_height_variable
-        filename = valid_hybrid_height_filename
-        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 't,x,y', '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
-
-    def test_netCDF_gridded_hybrid_height_partial(self):
-        # JASCIS-126
-        # Takes 2s
-        variable = valid_hybrid_height_variable
-        filename = valid_hybrid_height_filename
-        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 't', '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
-
-    def test_netCDF_gridded_hybrid_height_partial_with_multi_kernel(self):
-        # Takes 2s
-        variable = valid_hybrid_height_variable
-        filename = valid_hybrid_height_filename
-        arguments = ['aggregate', variable + ':' + escape_colons(filename), 't', '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
-
     def test_aggregate_cis_ungridded(self):
         # Takes 2s
         variable = 'AOD550,AOD870,latitude,time'
@@ -554,18 +506,6 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         str_delta = 'PT1M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
         self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Scan_Start_Time')
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
-
-    @skip_pyhdf
-    def test_aggregate_MODIS_L3(self):
-        # Takes 30s
-        variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
-                   'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
-                   'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
-        filename = valid_modis_l3_filename + ',' + valid_modis_l3_filename2
-        arguments = ['aggregate', variable + ':' + escape_colons(filename), 't', '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
@@ -656,17 +596,6 @@ class TestMomentsKernel(BaseAggregationTest):
         self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
                                     lat_name='latitude', lon_name='longitude')
         expected_vars = ['AOD550', 'AOD550_std_dev', 'AOD550_num_points']
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, expected_vars)
-
-    def test_aggregate_netCDF_gridded_HadGem(self):
-        # Takes 1s
-        variable = 'od550aer'
-        filename = valid_hadgem_filename
-        grid = 'x,y'
-        arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=moments', grid, '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        aggregate_cmd(main_arguments)
-        expected_vars = ['od550aer', 'od550aer_std_dev', 'od550aer_num_points']
         self.check_output_contains_variables(self.OUTPUT_FILENAME, expected_vars)
 
     def test_moments_kernel_aggregate_cis_ungridded(self):

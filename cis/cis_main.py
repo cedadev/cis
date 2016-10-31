@@ -133,8 +133,8 @@ def aggregate_cmd(main_arguments):
     data = DataReader().read_single_datagroup(input_group)
 
     if isinstance(data, GriddedDataList):
-        logging.warning("The aggregate command will not be supported in future versions of CIS. "
-                        "Please use 'collapse' instead.")
+        logging.warning("The aggregate command is deprecated for GriddedData and will not be supported in future "
+                        "versions of CIS. Please use 'collapse' instead.", category=DeprecationWarning)
         if any(v is not None for v in main_arguments.grid.values()):
             raise ex.InvalidCommandLineOptionError("Grid specifications are not supported for Gridded aggregation.")
         output = data.collapsed(list(main_arguments.grid.keys()), how=input_group.get("kernel", ''))

@@ -325,15 +325,6 @@ class GriddedData(iris.cube.Cube, CommonData):
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
 
-    def aggregate(self, kernel=None, **kwargs):
-        """
-        Aggregate based on the specified grids
-        :param kernel: The kernel to use in the aggregation
-        :param kwargs: The grid specifications for each coordinate dimension
-        :return:
-        """
-        raise NotImplementedError("Aggregating gridded data to a different grid is currently unsupported")
-
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
         """
@@ -602,15 +593,6 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)
 
-    def aggregate(self, kernel=None, **kwargs):
-        """
-        Aggregate based on the specified grids
-        :param kernel: The kernel to use in the aggregation
-        :param kwargs: The grid specifications for each coordinate dimension
-        :return:
-        """
-        raise NotImplementedError("Aggregating gridded data to a different grid is currently unsupported")
-
 
 def _collapse_gridded(data, coords, kernel):
     """
@@ -621,7 +603,7 @@ def _collapse_gridded(data, coords, kernel):
     :return:
     """
     from cis.aggregation.collapse_kernels import aggregation_kernels, MultiKernel
-    from iris.analysis import Aggregator as IrisAggregator, MEAN
+    from iris.analysis import Aggregator as IrisAggregator
     from cis.aggregation.gridded_collapsor import GriddedCollapsor
     from cis import __version__
     from cis.utils import listify
@@ -629,22 +611,20 @@ def _collapse_gridded(data, coords, kernel):
     # Ensure the coords are all Coord instances
     coords = [data._get_coord(c) for c in listify(coords)]
 
-    # TODO: Figure out what these kernels should be.
-    # TODO: CHange kernel to 'how'
-    # Choose the right kernel - or fall back to default (MEAN)
+    # The kernel can be a string or object, so catch both defaults
+    if kernel is None or kernel == '':
+        kernel = 'moments'
+
     if isinstance(kernel, str):
         kernel_inst = aggregation_kernels[kernel]
     elif isinstance(kernel, (IrisAggregator, MultiKernel)):
         kernel_inst = kernel
-    elif kernel is None:
-        kernel_inst = MEAN
     else:
         raise ValueError("Invalid kernel specified: " + str(kernel))
 
     aggregator = GriddedCollapsor(data, coords)
     data = aggregator(kernel_inst)
 
-    # TODO Tidy up output of grid in the history
     history = "Collapsed using CIS version " + __version__ + \
               "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
               "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \

@@ -877,7 +877,10 @@ def validate_aggregate_args(arguments, parser):
 
 
 def validate_collapse_args(arguments, parser):
-    arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
+    arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
+    # If we only have one dimension just check if the user has comma separated the dims (as in aggregation)
+    if len(arguments.dimensions) == 1:
+        arguments.dimensions = arguments.dimensions[0].split(',')
     _validate_output_file(arguments, parser)
     return arguments
 
