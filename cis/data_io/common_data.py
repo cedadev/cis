@@ -178,6 +178,24 @@ class CommonData(object):
                                    var_units=var_units, **kwargs)
 
     def plot(self, *args, **kwargs):
+        """
+        Plot the data. A matplotlib Axes is created if none is provided.
+
+        The default method for series data is 'line', otherwise (for e.g. a map plot) is 'scatter2d' for UngriddedData
+        and 'heatmap' for GriddedData.
+
+        :param string how: The method to use, one of:  "contour", "contourf", "heatmap", "line", "scatter", "scatter2d",
+        "comparativescatter", "histogram", "histogram2d" or "taylor"
+        :param Axes ax: A matplotlib axes on which to draw the plot
+        :param Coord or CommonData xaxis: The data to plot on the x axis
+        :param Coord or CommonData yaxis: The data to plot on the y axis
+        :param string or cartopy.crs.Projection projection: The projection to use for map plots (default is PlateCaree)
+        :param float central_longitude: The central longitude to use for PlateCaree (if no other projection specified)
+        :param string label: A label for the data. This is used for the title, colorbar or legend depending on plot type
+        :param args: Other plot-specific args
+        :param kwargs: Other plot-specific kwargs
+        :return Axes: The matplotlib Axes on which the plot was drawn
+        """
         from cis.plotting.plot import basic_plot
         _, ax = basic_plot(self, *args, **kwargs)
         return ax
@@ -318,6 +336,30 @@ class CommonDataList(list):
 
     @abstractmethod
     def subset(self, **kwargs):
+        """
+        Subset the CommonDataList object based on the specified constraints. Constraints on arbitrary coordinates are
+        specified using keyword arguments. Each constraint must have two entries (a maximum and a minimum) although
+        one of these can be None. Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
+                             altitude=[45.0, 75.0])
+
+        Will subset the data from the start of the 28th of August 1984, to the end of the 29th, and between altitudes of
+        45 and 75 (in whatever units ares used for that Coordinate).
+
+        And:
+            data.subset(time=[PartialDateTime(1984, 9)])
+
+        Will subset the data to all of September 1984.
+
+        :param kwargs: The constraint arguments
+        :return CommonDataList: The subset of each of the data
+        """
         pass
 
     def collocated_onto(self, sample, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
@@ -342,6 +384,22 @@ class CommonDataList(list):
                                    var_units=var_units, **kwargs)
 
     def plot(self, *args, **kwargs):
+        """
+        Plot the data. A matplotlib Axes is created if none is provided.
+
+        The default method for series data is 'line', otherwise (for e.g. a map plot) is 'scatter2d' for UngriddedData
+        and 'heatmap' for GriddedData.
+
+        :param string how: The method to use, one of:  "contour", "contourf", "heatmap", "line", "scatter", "scatter2d",
+        "comparativescatter", "histogram", "histogram2d" or "taylor"
+        :param Axes ax: A matplotlib axes on which to draw the plot
+        :param Coord or CommonData xaxis: The data to plot on the x axis
+        :param Coord or CommonData yaxis: The data to plot on the y axis
+        :param list layer_opts: A list of keyword dictionaries to pass to each layer of the plot.
+        :param args: Other plot-specific args to pass to all plots
+        :param kwargs: Other plot-specific kwargs to pass to all plots
+        :return Axes: The matplotlib Axes on which the plot was drawn
+        """
         from cis.plotting.plot import multilayer_plot
         _, ax = multilayer_plot(self, *args, **kwargs)
         return ax

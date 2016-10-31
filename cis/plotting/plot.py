@@ -319,7 +319,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     :param string label: A label for the data. This is used for the title, colorbar or legend depending on plot type
     :param args: Other plot-specific args
     :param kwargs: Other plot-specific kwargs
-    :return APlot and Axes: The APlot instance and the matplotlib Axes on which the plot was drwan
+    :return APlot and Axes: The APlot instance and the matplotlib Axes on which the plot was drawn
     """
     import cartopy.crs as ccrs
     from cartopy.mpl.geoaxes import GeoAxes
@@ -396,7 +396,7 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
     :param list layer_opts: A list of keyword dictionaries to pass to each layer of the plot.
     :param args: Other plot-specific args to pass to all plots
     :param kwargs: Other plot-specific kwargs to pass to all plots
-    :return APlot and Axes: The APlot instance and the matplotlib Axes on which the plot was drwan
+    :return APlot and Axes: The APlot instance and the matplotlib Axes on which the plot was drawn
     """
     layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
     if len(layer_opts) != len(data_list):
