@@ -39,12 +39,10 @@ def subset(data, constraint, **kwargs):
     return subset
 
 
-class CoordLimits(namedtuple('CoordLimits', ['coord', 'start', 'end', 'constraint_function'])):
+class CoordLimits(namedtuple('CoordLimits', ['start', 'end'])):
     """Holds the start and end values for subsetting limits.
-    :ivar coord: the coordinate the limit applies to
     :ivar start: subsetting limit start
     :ivar end: subsetting limit end
-    :ivar constraint_function: function determining whether the constraint is satisfied
     """
     pass
 
@@ -61,48 +59,25 @@ def create_constraint_limits(data, limits):
 
     coord_limits = {}
 
-    for coord in data.coords(dim_coords=True):
-        # Match user-specified limits with dimensions found in data.
-        guessed_axis = guess_coord_axis(coord)
-        limit = None
-        if coord.name() in limits:
-            limit = limits.pop(coord.name())
-        elif hasattr(coord, 'var_name') and coord.var_name in limits:
-            limit = limits.pop(coord.var_name)
-        elif coord.standard_name in limits:
-            limit = limits.pop(coord.standard_name)
-        elif coord.long_name in limits:
-            limit = limits.pop(coord.long_name)
-        elif guessed_axis is not None:
-            if guessed_axis in limits:
-                limit = limits.pop(guessed_axis)
-            elif guessed_axis.lower() in limits:
-                limit = limits.pop(guessed_axis.lower())
-
-        if limit is not None:
-            if len(limit) == 1:
-                if isinstance(limit[0], PartialDateTime):
-                    dt_start, dt_end = limit[0].range()
-                    limit_start = _convert_datetime_to_coord_unit(coord, dt_start)
-                    limit_end = _convert_datetime_to_coord_unit(coord, dt_end)
-                else:
-                    raise ValueError("Error processing limit for {}. "
-                                     "When providing a single limit that limit must be a PartialDateTime".format(coord))
-            elif len(limit) == 2:
-                if isinstance(limit[0], datetime) and isinstance(limit[1], datetime):
-                    # Ensure that the limits are date/times.
-                    limit_start = _convert_datetime_to_coord_unit(coord, limit[0])
-                    limit_end = _convert_datetime_to_coord_unit(coord, limit[1])
-                else:
-                    # Assume to be a non-time axis.
-                    (limit_start, limit_end) = _fix_non_circular_limits(float(limit[0]), float(limit[1]))
+    for dim_name, limit in limits.items():
+        c = data._get_coord(dim_name)
+        if all(hasattr(limit, att) for att in ('start', 'stop')):
+            l = limit
+        elif len(limit) == 1 and isinstance(limit[0], PartialDateTime):
+            l = CoordLimits(_convert_datetime_to_coord_unit(c, limit[0].min()),
+                            _convert_datetime_to_coord_unit(c, limit[0].max()))
+        elif len(limit) == 2:
+            if isinstance(limit[0], datetime) and isinstance(limit[1], datetime):
+                # Ensure that the limits are date/times.
+                limit_start = _convert_datetime_to_coord_unit(c, limit[0])
+                limit_end = _convert_datetime_to_coord_unit(c, limit[1])
             else:
-                raise ValueError("Error processing limit for {}. "
-                                 "Limits must be a list or tuple of length 2".format(coord))
-
-            # Apply the limit to the constraint object
-            coord_limits[coord.name()] = CoordLimits(coord, limit_start, limit_end,
-                                                     lambda x: limit_start <= x.point <= limit_end)
+                # Assume to be a non-time axis.
+                limit_start, limit_end = _fix_non_circular_limits(limit[0], limit[1])
+            l = CoordLimits(limit_start, limit_end)
+        else:
+            raise ValueError("Invalid subset arguments: {}".format(limit))
+        coord_limits[data._get_coord(dim_name).name()] = l
 
     return coord_limits
 
@@ -118,19 +93,6 @@ def _convert_datetime_to_coord_unit(coord, dt):
     else:
         iris_unit = Unit(coord.units)
     return iris_unit.date2num(dt)
-
-
-def _convert_coord_unit_to_datetime(coord, dt):
-    """Converts a datetime to be in the unit of a specified Coord.
-    """
-    from cf_units import Unit
-
-    if isinstance(coord, iris.coords.Coord):
-        # The unit class is then cf_units.Unit.
-        iris_unit = coord.units
-    else:
-        iris_unit = Unit(coord.units)
-    return iris_unit.num2date(dt)
 
 
 def _fix_non_circular_limits(limit_start, limit_end):
@@ -203,7 +165,7 @@ class GriddedSubsetConstraint(SubsetConstraint):
                 intersection_constraint[coord] = (limits.start, limits.end)
             else:
                 # These coordinates cannot be used with iris.cube.Cube.intersection(), will use iris.cube.Cube.extract()
-                constraint_function = limits.constraint_function
+                constraint_function = lambda x: limits.start <= x.point <= limits.end
                 if extract_constraint is None:
                     extract_constraint = iris.Constraint(**{coord: constraint_function})
                 else:
@@ -233,10 +195,10 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         # Create the combined mask across all limits
         shape = data.coords()[0].data_flattened.shape  # This assumes they are all the same shape
         combined_mask = np.zeros(shape, dtype=bool)
-        for limit in self._limits.values():
+        for coord, limit in self._limits.items():
             # Mask out any points which are NOT (<= to the end limit AND >= to the start limit)
-            mask = ~ (np.less_equal(limit.coord.data_flattened, limit.end) &
-                      np.greater_equal(limit.coord.data_flattened, limit.start))
+            mask = ~ (np.less_equal(data.coord(coord).data_flattened, limit.end) &
+                      np.greater_equal(data.coord(coord).data_flattened, limit.start))
             combined_mask = combined_mask | mask
 
         # Generate the new coordinates here (before we loop)
@@ -278,32 +240,28 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         """
         # We need a copy with new data and coordinates
         data = data.copy()
-        for coord in data.coords():
-            # Match user-specified limits with dimensions found in data.
-            if coord.name() in self._limits:
-                guessed_axis = guess_coord_axis(coord)
-                if guessed_axis == 'X':
-                    lon_limits = self._limits[coord.name()]
-                    coord_min = coord.points.min()
-                    coord_max = coord.points.max()
-                    data_below_zero = coord_min < 0
-                    data_above_180 = coord_max > 180
-                    limits_below_zero = lon_limits.start < 0 or lon_limits.end < 0
-                    limits_above_180 = lon_limits.start > 180 or lon_limits.end > 180
+        # Check for longitude coordinate in the limits
+        for dim_name, limit in self._limits.items():
+            coord = data.coord(dim_name)
+            if coord.standard_name == 'longitude':
+                coord_min = coord.points.min()
+                coord_max = coord.points.max()
+                data_below_zero = coord_min < 0
+                data_above_180 = coord_max > 180
+                limits_below_zero = limit.start < 0 or limit.end < 0
+                limits_above_180 = limit.start > 180 or limit.end > 180
 
-                    if data_below_zero and not data_above_180:
-                        # i.e. data is in the range -180 -> 180
-                        # Only convert the data if the limits are above 180:
-                        if limits_above_180 and not limits_below_zero:
-                            # Convert data from -180 -> 180 to 0 -> 360
-                            range_start = 0
-                            coord.set_longitude_range(range_start)
-                    elif data_above_180 and not data_below_zero:
-                        # i.e. data is in the range 0 -> 360
-                        if limits_below_zero and not limits_above_180:
-                            # Convert data from 0 -> 360 to -180 -> 180
-                            range_start = -180
-                            coord.set_longitude_range(range_start)
-                # Ensure the limits also have the new longitude coordinate
-                self._limits[coord.name()].coord.data = coord.data
+                if data_below_zero and not data_above_180:
+                    # i.e. data is in the range -180 -> 180
+                    # Only convert the data if the limits are above 180:
+                    if limits_above_180 and not limits_below_zero:
+                        # Convert data from -180 -> 180 to 0 -> 360
+                        range_start = 0
+                        coord.set_longitude_range(range_start)
+                elif data_above_180 and not data_below_zero:
+                    # i.e. data is in the range 0 -> 360
+                    if limits_below_zero and not limits_above_180:
+                        # Convert data from 0 -> 360 to -180 -> 180
+                        range_start = -180
+                        coord.set_longitude_range(range_start)
         return data

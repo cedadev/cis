@@ -117,10 +117,20 @@ class CommonData(object):
         one of these can be None. Datetime objects can be used to specify upper and lower datetime limits, or a
         single PartialDateTime object can be used to specify a datetime range.
 
-        subset = data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
                              altitude=[45.0, 75.0])
 
-        subset = data.subset(time=[PartialDateTime(1984, 9)])
+        Will subset the data from the start of the 28th of August 1984, to the end of the 29th, and between altitudes of
+        45 and 75 (in whatever units ares used for that Coordinate).
+
+        And:
+            data.subset(time=[PartialDateTime(1984, 9)])
+
+        Will subset the data to all of September 1984.
 
         :param kwargs: The constraint arguments
         :return CommonData: The subset of the data
