@@ -278,21 +278,12 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
 
     def test_aggregate_netCDF_gridded_HadGem(self):
         # Test aggregating a gridded file, it should work but throw a deprecation
-        import warnings
         # Takes 1s
         variable = '*'
         filename = valid_hadgem_filename
         arguments = ['aggregate', variable + ':' + escape_colons(filename) + ':kernel=mean', 'x,y', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
-
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            # Run the aggregation
-            aggregate_cmd(main_arguments)
-            # Check that we got a deprecation warning
-            assert len(w) == 1
-            assert "deprecated" in str(w[-1].message)
+        aggregate_cmd(main_arguments)
 
         self.check_output_contains_variables(self.OUTPUT_FILENAME, ['od550aer'])
 
