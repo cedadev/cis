@@ -18,8 +18,31 @@
 
 # There is no algorithmic change, just a restructuring to allow caching of the weights for calculating many
 #  interpolations of different datasets using the same points, and support for hybrid coordinates.
-
+# The two helper functions extend_circular_coord and _data are also taken from SciPy as the interpolate module is
+#  deprecated since Iris 1.10.
 import numpy as np
+
+
+def extend_circular_coord(coord, points):
+    """
+    Return coordinates points with a shape extended by one
+    This is common when dealing with circular coordinates.
+
+    """
+    modulus = np.array(coord.units.modulus or 0,
+                       dtype=coord.dtype)
+    points = np.append(points, points[0] + modulus)
+    return points
+
+
+def extend_circular_data(cube, coord_dim):
+    coord_slice_in_cube = [slice(None)] * cube.ndim
+    coord_slice_in_cube[coord_dim] = slice(0, 1)
+
+    data = np.append(cube.data,
+                     cube.data[tuple(coord_slice_in_cube)],
+                     axis=coord_dim)
+    return data
 
 
 class GriddedUngriddedInterpolator(object):
@@ -35,7 +58,6 @@ class GriddedUngriddedInterpolator(object):
         :param UngriddedData sample: The points to sample the source data at.
         :param str method: The interpolation method to use (either 'linear' or 'nearest'). Default is 'linear'.
         """
-        from iris.analysis._interpolation import extend_circular_coord, extend_circular_data
         from cis.utils import move_item_to_end
         coords = []
         grid_points = []
@@ -139,7 +161,6 @@ class GriddedUngriddedInterpolator(object):
         :param bool extrapolate: Extrapolate points outside the bounds of the data? Default False.
         :return ndarray: Interpolated values.
         """
-        from iris.analysis._interpolation import extend_circular_data
         if extrapolate:
             fill_value = None
 
