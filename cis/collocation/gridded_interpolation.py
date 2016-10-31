@@ -35,12 +35,12 @@ def extend_circular_coord(coord, points):
     return points
 
 
-def extend_circular_data(cube, coord_dim):
-    coord_slice_in_cube = [slice(None)] * cube.ndim
+def extend_circular_data(data, coord_dim):
+    coord_slice_in_cube = [slice(None)] * data.ndim
     coord_slice_in_cube[coord_dim] = slice(0, 1)
 
-    data = np.append(cube.data,
-                     cube.data[tuple(coord_slice_in_cube)],
+    data = np.append(data,
+                     data[tuple(coord_slice_in_cube)],
                      axis=coord_dim)
     return data
 
