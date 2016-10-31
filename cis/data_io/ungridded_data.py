@@ -660,7 +660,11 @@ class UngriddedData(LazyData, CommonData):
         :param kwargs: The grid specifications for each coordinate dimension
         :return:
         """
-        return _aggregate_ungridded(self, how, **kwargs)
+        agg = _aggregate_ungridded(self, how, **kwargs)
+        # Return the single item if there's only one (this depends on the kernel used)
+        if len(agg) == 1:
+            agg = agg[0]
+        return agg
 
     def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
                      var_name='', var_long_name='', var_units='', **kwargs):
@@ -884,6 +888,7 @@ class UngriddedCoordinates(CommonData):
 
     def var_name(self):
         raise NotImplementedError("UngriddedCoordinates have no var name")
+
 
 class UngriddedDataList(CommonDataList):
     """
@@ -1118,15 +1123,16 @@ def _aggregate_ungridded(data, how, **kwargs):
 
         grid_spec[c.name()] = slice(grid_start, grid_end, g.step)
 
-    aggregator = UngriddedAggregator(grid_spec)
-    data = aggregator.aggregate(data, kernel)
-
-    # TODO Tidy up output of grid in the history
+    # We have to make the history before doing the aggregation as the grid dims get popped-off during the operation
     history = "Aggregated using CIS version " + __version__ + \
               "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
               "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
-              "\n using new grid: " + str(kwargs) + \
+              "\n using new grid: " + str(grid_spec) + \
               "\n with kernel: " + str(kernel) + "."
+
+    aggregator = UngriddedAggregator(grid_spec)
+    data = aggregator.aggregate(data, kernel)
+
     data.add_history(history)
 
     return data

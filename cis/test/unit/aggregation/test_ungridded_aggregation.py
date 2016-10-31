@@ -25,7 +25,7 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result.T)
+        compare_masked_arrays(cube_out.data, result.T)
 
     @istest
     def test_can_name_variables_by_standard_name(self):
@@ -40,7 +40,7 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_aggregating_defaults(self):
@@ -61,7 +61,7 @@ class TestUngriddedAggregation(TestCase):
                               [10.0, 11.0]])  # 12.0],
         # [13.0, 14.0, 15.0]],
 
-        assert_arrays_almost_equal(cube_out[0].data, result)
+        assert_arrays_almost_equal(cube_out.data, result)
 
     @istest
     def test_aggregating_single_point_in_one_dimension_lower_bound_edge_case(self):
@@ -77,7 +77,7 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result.T)
+        compare_masked_arrays(cube_out.data, result.T)
 
     @istest
     def test_aggregating_single_point_in_one_dimension_upper_bound_edge_case(self):
@@ -93,7 +93,7 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[0], [0], [1.0], [0.0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
 
-        compare_masked_arrays(cube_out[0].data, result.T)
+        compare_masked_arrays(cube_out.data, result.T)
 
     @istest
     def test_aggregating_edge_cases(self):
@@ -114,7 +114,7 @@ class TestUngriddedAggregation(TestCase):
                               [10.0, 11.0]])  # 12.0],
         # [13.0, 14.0, 15.0]],
 
-        assert_arrays_almost_equal(cube_out[0].data, result)
+        assert_arrays_almost_equal(cube_out.data, result)
 
     @istest
     def test_aggregating_simple_dataset_in_two_dimensions_with_missing_values(self):
@@ -135,7 +135,7 @@ class TestUngriddedAggregation(TestCase):
                                       [0, 0, 0],
                                       [1, 0, 0]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_mean_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -150,7 +150,7 @@ class TestUngriddedAggregation(TestCase):
                                 mask=[[0, 0, 0],
                                       [0, 0, 0]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_max_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -167,7 +167,7 @@ class TestUngriddedAggregation(TestCase):
                                 mask=[[0, 0, 0],
                                       [0, 0, 0]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_min_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -184,7 +184,7 @@ class TestUngriddedAggregation(TestCase):
                                 mask=[[0, 0, 0],
                                       [0, 0, 0]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_stddev_kernel_with_dataset_in_two_dimensions_with_missing_values(self):
@@ -201,7 +201,7 @@ class TestUngriddedAggregation(TestCase):
                                 mask=[[0, 1, 0],
                                       [0, 0, 0]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out[0].data, result)
+        compare_masked_arrays(cube_out.data, result)
 
     def test_aggregation_one_dim_using_moments_kernel(self):
         data = make_regular_2d_ungridded_data_with_missing_values()
@@ -248,13 +248,13 @@ class TestUngriddedAggregation(TestCase):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=-175., lon_max=145.)
         grid = {'x': slice(125, 270, 40)}
         output = data.aggregate(how=self.kernel, **grid)
-        assert_arrays_equal(output[0].data, [[13.5, 5.5, 6.5, 7.5]])
+        assert_arrays_equal(output.data, [[13.5, 5.5, 6.5, 7.5]])
 
     def test_aggregating_on_grid_minus_180_to_180_when_data_is_0_to_360(self):
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=9, lon_min=5., lon_max=325.)
         grid = {'x': slice(-75, 125, 40)}
         output = data.aggregate(how=self.kernel, **grid)
-        assert_arrays_equal(output[0].data, [[12.5, 13.5, 5.5, 6.5, 7.5]])
+        assert_arrays_equal(output.data, [[12.5, 13.5, 5.5, 6.5, 7.5]])
 
     def test_collapsed_coords_get_output_as_length_1(self):
         data = make_regular_2d_ungridded_data()
