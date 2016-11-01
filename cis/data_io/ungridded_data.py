@@ -13,9 +13,11 @@ from cis.data_io.common_data import CommonData, CommonDataList
 from cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from cis.utils import listify
+import cis.maths
 
 
 class Metadata(object):
+
     @classmethod
     def from_CubeMetadata(cls, cube_meta):
         return cls(name=cube_meta.var_name, standard_name=cube_meta.standard_name, long_name=cube_meta.long_name,
@@ -33,6 +35,7 @@ class Metadata(object):
 
         self.long_name = long_name
         self.shape = shape
+        # TODO: Attempt to make these cfunits... create a setter and getter
         self.units = units
         self.range = range
         self.factor = factor
@@ -44,6 +47,28 @@ class Metadata(object):
             self.misc = {}
         else:
             self.misc = misc
+
+    def __eq__(self, other):
+        result = NotImplemented
+
+        if isinstance(other, Metadata):
+            result = self._name == other._name and \
+                     self._standard_name == other._standard_name and \
+                     self.long_name == other.long_name and \
+                     self.units == other.units and \
+                     self.calendar == other.calendar
+        return result
+
+    # Must supply __ne__, Python does not defer to __eq__ for negative equality
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        if result is not NotImplemented:
+            result = not result
+        return result
+
+    # Must supply __hash__, Python 3 does not enable it if __eq__ is defined
+    def __hash__(self):
+        return hash(id(self))
 
     def summary(self, offset=5):
         """
@@ -250,6 +275,56 @@ class LazyData(object):
         """
         pass
 
+    def __getitem__(self, keys):
+        """
+        Return a COPY of the data with the given slice. We copy to emulate the Iris Cube behaviour
+        """
+        import copy
+        # Copy the metadata - but blank the range and shape as these will have changed
+        metadata = copy.deepcopy(self.metadata)
+        metadata.shape = None
+        metadata.range = None
+        # The data is just a new LazyData objects with the sliced data. Note this is a slice of the whole (concatenated)
+        #  data, and will lead to post-processing before slicing.
+        # TODO: We could be cleverer and figure out the right slice across the various data managers to only read the
+        #  right data from disk.
+        return LazyData(self.data.__getitem__(keys).copy(), metadata)
+
+    def __eq__(self, other):
+        import numpy as np
+        result = NotImplemented
+
+        if isinstance(other, LazyData):
+            # Check the metadata
+            result = self.metadata == other.metadata
+
+            # Then, if that is OK, check the data
+            if result:
+                result = np.allclose(self.data, other.data)
+
+        return result
+
+    # Must supply __ne__, Python does not defer to __eq__ for negative equality
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        if result is not NotImplemented:
+            result = not result
+        return result
+
+    # Must supply __hash__, Python 3 does not enable it if __eq__ is defined
+    def __hash__(self):
+        return hash(id(self))
+
+    # Maths operator overloads
+    __add__ = cis.maths.add
+    __radd__ = __add__
+    __sub__= cis.maths.subtract
+    __mul__ = cis.maths.multiply
+    __rmul__ = cis.maths.multiply
+    __div__ = cis.maths.divide
+    __truediv__ = cis.maths.divide
+    __pow__ = cis.maths.exponentiate
+
     @data.setter
     def data(self, value):
         self._data = value
@@ -263,17 +338,6 @@ class LazyData(object):
             data = self.data
             self._data_flattened = data.ravel()
         return self._data_flattened
-
-    def copy_metadata_from(self, other_data):
-        """
-        Method to copy the metadata from one UngriddedData/Cube object to another
-        """
-        self._coords = other_data.coords()
-        self.metadata = other_data._metadata
-
-        # def __getitem__(self, item): pass
-        # This method could be overridden to provide the ability to ask for slices of data
-        #  e.g. UngridedDataObject[012:32.4:5]
 
     def add_history(self, new_history):
         """Appends to, or creates, the metadata history attribute using the supplied history string.
@@ -447,15 +511,17 @@ class UngriddedData(LazyData, CommonData):
             ug_data.add_history(history)
         return ug_data
 
-    def copy(self):
+    def copy(self, data=None):
         """
         Create a copy of this UngriddedData object with new data and coordinates
         so that that they can be modified without held references being affected.
         Will call any lazy loading methods in the data and coordinates
 
+        :param ndarray data: Replace the data of the ungridded data copy with provided data
+
         :return: Copied UngriddedData object
         """
-        data = numpy.ma.copy(self.data)  # This will load the data if lazy load
+        data = data or numpy.ma.copy(self.data)  # This will load the data if lazy load
         coords = self.coords().copy()
         return UngriddedData(data=data, metadata=self.metadata, coords=coords)
 
