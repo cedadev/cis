@@ -118,11 +118,11 @@ def set_x_axis_as_time(ax):
     Nicely format a time axis
     """
     from matplotlib import ticker
-    from cis.time_util import convert_std_time_to_datetime
+    from matplotlib.dates import num2date
 
     def format_datetime(x, pos=None):
         # use iosformat rather than strftime as strftime can't handle dates before 1900 - the output is the same
-        date_time = convert_std_time_to_datetime(x)
+        date_time = num2date(x)
         day_min, day_max = ax.get_xlim()
         day_range = day_max - day_min
         if day_range < 1 and date_time.second == 0:
@@ -341,6 +341,9 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
             how = 'comparativescatter'
     else:
         xaxis = get_axis(data, 'X', xaxis)
+
+    if xaxis.standard_name == 'time':
+        xaxis.convert_standard_time_to_datetime()
 
     yaxis = get_axis(data, 'Y', yaxis)
 

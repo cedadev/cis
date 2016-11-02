@@ -106,8 +106,7 @@ class CloudSat(AProduct):
         if height_data is not None:
             time_data = utils.expand_1d_to_2d_array(time_data, len(height_data[0]), axis=1)
         time_coord = Coord(time_data, Metadata(name='Profile_time', standard_name='time', shape=time_data.shape,
-                                               units=str(cis_standard_time_unit),
-                                               calendar=cis_standard_time_unit.calendar), "X")
+                                               units=cis_standard_time_unit), "X")
 
         # create object containing list of coordinates
         coords = CoordList()

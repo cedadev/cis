@@ -89,7 +89,7 @@ def initialise_top_parser():
 
 def add_plot_parser_arguments(parser):
     from cis.data_io.products.AProduct import AProduct
-    from cis.parse_datetime import parse_as_number_or_datetime_delta, parse_as_number_or_standard_time
+    from cis.parse_datetime import parse_as_number_or_datetime_delta, parse_as_number_or_datetime
     import cis.plugin as plugin
     from matplotlib.colors import cnames
 
@@ -120,23 +120,23 @@ def add_plot_parser_arguments(parser):
     parser.add_argument("--width", metavar="Plot width", nargs="?", help="The width of the plot in inches", type=float)
 
     parser.add_argument("--xmin", metavar="Minimum x", nargs="?", help="The minimum x value to plot",
-                        type=parse_as_number_or_standard_time)
+                        type=parse_as_number_or_datetime)
     parser.add_argument("--xmax", metavar="Maximum x", nargs="?", help="The maximum x value to plot",
-                        type=parse_as_number_or_standard_time)
+                        type=parse_as_number_or_datetime)
     parser.add_argument("--xstep", metavar="X step", nargs="?", help="The step of the x axis",
                         type=parse_as_number_or_datetime_delta)
 
     parser.add_argument("--ymin", metavar="Minimum y", nargs="?", help="The minimum y value to plot",
-                        type=parse_as_number_or_standard_time)
+                        type=parse_as_number_or_datetime)
     parser.add_argument("--ymax", metavar="Maximum y", nargs="?", help="The maximum y value to plot",
-                        type=parse_as_number_or_standard_time)
+                        type=parse_as_number_or_datetime)
     parser.add_argument("--ystep", metavar="Y step", nargs="?", help="The step of the y axis",
                         type=parse_as_number_or_datetime_delta)
 
     parser.add_argument("--vmin", metavar="Minimum value", nargs="?", help="The minimum value to plot",
-                        type=parse_as_number_or_standard_time)
+                        type=parse_as_number_or_datetime)
     parser.add_argument("--vmax", metavar="Maximum value", nargs="?", help="The maximum value to plot",
-                        type=parse_as_number_or_standard_time)
+                        type=parse_as_number_or_datetime)
     parser.add_argument("--vstep", metavar="X value", nargs="?", help="The step of the colour bar",
                         type=parse_as_number_or_datetime_delta)
 

@@ -118,13 +118,14 @@ def get_x_wrap_start(data_list, user_xmin=None):
     :return: The left-hand most longitude of the plot.
     """
     from cis.utils import find_longitude_wrap_start as find_start
+    from datetime import datetime
 
     # FIND THE WRAP START OF THE DATA
     all_starts = [find_start(data) for data in data_list if find_start(data) is not None]
     data_wrap_start = min(all_starts) if all_starts else None
 
     # NOW find the wrap start of the user specified range
-    if user_xmin is not None:
+    if user_xmin is not None and not isinstance(user_xmin, datetime):
         x_wrap_start = -180 if user_xmin < 0 else 0
     else:
         x_wrap_start = data_wrap_start

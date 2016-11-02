@@ -24,7 +24,7 @@ class Metadata(object):
                    units=str(cube_meta.units), misc=cube_meta.attributes)
 
     def __init__(self, name='', standard_name='', long_name='', shape=None, units='', range=None, factor=None,
-                 offset=None, missing_value=None, calendar='', history='', misc=None):
+                 offset=None, missing_value=None, history='', misc=None):
         self._name = name
 
         self._standard_name = ''
@@ -35,13 +35,12 @@ class Metadata(object):
 
         self.long_name = long_name
         self.shape = shape
-        # TODO: Attempt to make these cfunits... create a setter and getter
+
         self.units = units
         self.range = range
         self.factor = factor
         self.offset = offset
         self.missing_value = missing_value
-        self.calendar = calendar
         self.history = history
         if misc is None:
             self.misc = {}
@@ -55,8 +54,7 @@ class Metadata(object):
             result = self._name == other._name and \
                      self._standard_name == other._standard_name and \
                      self.long_name == other.long_name and \
-                     self.units == other.units and \
-                     self.calendar == other.calendar
+                     self.units == other.units
         return result
 
     # Must supply __ne__, Python does not defer to __eq__ for negative equality
@@ -82,8 +80,6 @@ class Metadata(object):
         string += '{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
         string += '{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
         string += '{pad:{width}}Units = {units}\n'.format(pad=' ', width=offset, units=self.units)
-        if self.calendar:
-            string += '{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
         string += '{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
         # str(tuple) returns repr(obj) on each item in the tuple, if we have a datetime tuple then we want str(obj)
         #  instead. Just make that ourselves here instead (as a str to avoid the extra quotes if we make a 'real' tuple)
@@ -126,6 +122,23 @@ class Metadata(object):
             self._standard_name = standard_name
         else:
             raise ValueError('%r is not a valid standard_name' % standard_name)
+
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, units):
+        from cf_units import Unit
+        if not isinstance(units, Unit):
+            try:
+                # Try some basic tidying up of unit
+                if isinstance(units, str):
+                    units = units.replace("since:", "since").replace(",", "")
+                units = Unit(units)
+            except ValueError:
+                logging.info("Unable to parse cf-units: {}. Some operations may not be available.".format(units))
+        self._units = units
 
     @staticmethod
     def guess_standard_name(name):
@@ -1100,6 +1113,7 @@ def _coords_as_data_frame(coord_list, copy=True):
     """
     import pandas as pd
     from cis.time_util import cis_standard_time_unit
+    from cf_units import Unit
 
     columns = {}
     time = None
@@ -1112,8 +1126,10 @@ def _coords_as_data_frame(coord_list, copy=True):
             data = _to_flat_ndarray(coord.data, True)
 
         if coord.standard_name == 'time':
-            if coord.units.lower() == 'datetime object':
+            if str(coord.units).lower() == 'datetime object':
                 time = data
+            elif isinstance(coord.units, Unit):
+                time = coord.units.num2date(data)
             else:
                 time = cis_standard_time_unit.num2date(data)
         else:

@@ -1106,7 +1106,7 @@ def make_regular_4d_ungridded_data():
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
     p = Coord(p, Metadata(standard_name='air_pressure', units='Pa'))
-    t = Coord(t, Metadata(standard_name='time', units=str(cis_standard_time_unit)))
+    t = Coord(t, Metadata(standard_name='time', units=cis_standard_time_unit))
 
     coords = CoordList([x, y, a, p, t])
     return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",

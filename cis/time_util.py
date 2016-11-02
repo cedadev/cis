@@ -137,9 +137,14 @@ def calculate_mid_time(t1, t2):
 
 
 def convert_time_since_to_std_time(time_array, units):
+    """
+
+    :param ndaray time_array:
+    :param cf_units.Unit units:
+    :return:
+    """
     # Strip out any extra colons and commas
-    old_time = Unit(units.replace("since:", "since").replace(",", ""))
-    dt = old_time.num2date(time_array)
+    dt = units.num2date(time_array)
     return cis_standard_time_unit.date2num(dt)
 
 
@@ -147,15 +152,16 @@ def convert_time_using_time_stamp_info_to_std_time(time_array, units, time_stamp
     """
     Convert the time using time stamp info and the first word of the units
     :param time_array: the time array to convert
-    :param units: the units of the array (e.g. day or Days from the file time reference 2012-12-12)
-    :param time_stamp_info: the time stamp to use for the convertion
+    :param str units: the units of the array (e.g. day or Days from the file time reference 2012-12-12)
+    :param str time_stamp_info: the time stamp to use for the convertion
     :return: converted data
     """
-    units = units.split()
+    from cf_units import Unit
+    units = str(units).split()
     if len(units) is 0:
         raise ValueError("Units is empty when converting time")
 
-    units_in_since_form = units[0] + " since " + time_stamp_info
+    units_in_since_form = Unit(units[0] + " since " + time_stamp_info)
 
     return convert_time_since_to_std_time(time_array, units_in_since_form)
 

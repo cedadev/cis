@@ -838,8 +838,6 @@ class TestPlotAPIVisual(VisualTest):
         from cis.data_io.ungridded_data import UngriddedDataList
 
         d = UngriddedDataList([make_dummy_ungridded_data_time_series(), make_dummy_ungridded_data_time_series()])
-        d[0].time.convert_datetime_to_standard_time()
-        d[1].time.convert_datetime_to_standard_time()
         _ = d[0].data
         d[1].data += 2.0
         d[1].metadata._name = 'snow'
@@ -886,7 +884,6 @@ class TestPlotAPIVisual(VisualTest):
         from cis.test.util.mock import make_dummy_ungridded_data_time_series
 
         d = make_dummy_ungridded_data_time_series()
-        d.time.convert_datetime_to_standard_time()
 
         d.plot(how='line', c='purple', itemstyle='dashed')
 
@@ -898,8 +895,6 @@ class TestPlotAPIVisual(VisualTest):
 
         d = UngriddedDataList([make_dummy_ungridded_data_time_series(),
                                make_dummy_ungridded_data_time_series()])
-        d[0].time.convert_datetime_to_standard_time()
-        d[1].time.convert_datetime_to_standard_time()
         _ = d[0].data
         d[1].data += 2.0
         d[1].metadata._name = 'snow'

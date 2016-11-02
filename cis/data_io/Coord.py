@@ -51,14 +51,12 @@ class Coord(LazyData):
         # if not self.units.startswith("Julian Date"):
         #     raise ValueError("Time units must be Julian Date for conversion to an Object")
         self._data = convert_julian_date_to_std_time(self.data)
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
 
     def convert_TAI_time_to_std_time(self, ref):
         from cis.time_util import convert_sec_since_to_std_time, cis_standard_time_unit
         self._data = convert_sec_since_to_std_time(self.data, ref)
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
 
     def convert_to_std_time(self, time_stamp_info=None):
         """
@@ -69,23 +67,29 @@ class Coord(LazyData):
         :param time_stamp_info: the time stamp info from the file, None if it does not exist
         """
         from cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit, \
-            convert_time_using_time_stamp_info_to_std_time
+            convert_time_using_time_stamp_info_to_std_time, convert_datetime_to_std_time
 
-        if "since" in self.units:
+        if "since" in str(self.units):
             self._data = convert_time_since_to_std_time(self.data, self.units)
+        elif str(self.units).lower().startswith('datetime'):
+            self._data = convert_datetime_to_std_time(self.data)
         else:
             if time_stamp_info is None:
                 raise ValueError("File must have time stamp info if converting without 'since' in units definition")
             self._data = convert_time_using_time_stamp_info_to_std_time(self.data, self.units, time_stamp_info)
 
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
 
     def convert_datetime_to_standard_time(self):
         from cis.time_util import convert_datetime_to_std_time, cis_standard_time_unit
         self._data = convert_datetime_to_std_time(self.data)
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
+
+    def convert_standard_time_to_datetime(self):
+        from cis.time_util import convert_std_time_to_datetime, cis_standard_time_unit
+        if self.units == cis_standard_time_unit:
+            self._data = convert_std_time_to_datetime(self.data)
+            self.units = "DateTime Object"
 
     def set_longitude_range(self, range_start):
         """
@@ -96,14 +100,14 @@ class Coord(LazyData):
         self._data = fix_longitude_range(self._data, range_start)
         self._data_flattened = None
 
-    def copy(self):
+    def copy(self, data=None):
         """
         Create a copy of this Coord object with new data so that that they can be modified without held references
         being affected. This will call any lazy loading methods in the coordinate data
 
         :return: Copied :class:`Coord`
         """
-        data = numpy.ma.copy(self.data)  # Will call lazy load method
+        data = data or numpy.ma.copy(self.data)  # Will call lazy load method
         return Coord(data, self.metadata)
 
 

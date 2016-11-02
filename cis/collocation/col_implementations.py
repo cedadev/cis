@@ -441,7 +441,7 @@ class moments(AbstractDataOnlyKernel):
         stddev_units = var_units
         self.nopoints_name = var_name + '_num_points'
         npoints_long_name = 'Number of points used to calculate the mean of %s' % var_long_name
-        npoints_units = None
+        npoints_units = ''
         return ((self.mean_name, var_long_name, var_standard_name, var_units),
                 (self.stddev_name, stdev_long_name, None, stddev_units),
                 (self.nopoints_name, npoints_long_name, None, npoints_units))
