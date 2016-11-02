@@ -80,9 +80,6 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
         assert_arrays_equal(out_values, expected_v)
 
-        # Test that a plot doesn't fail.
-        data.plot('heatmap')
-
     def test_lat_lon_increasing_no_bounds(self):
         x = np.array([0.5, 1.5])
         y = np.array([50.5, 51.5])
@@ -99,9 +96,6 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_x, expected_x)
         assert_arrays_equal(out_y, expected_y)
         assert_arrays_equal(out_values, expected_v)
-
-        # Test that a plot doesn't fail.
-        data.plot('heatmap')
 
     def test_lat_lon_decreasing_no_bounds(self):
         x = np.array([0.5, -0.5])
@@ -120,9 +114,6 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_y, expected_y)
         assert_arrays_equal(out_values, expected_v)
 
-        # Test that a plot doesn't fail.
-        data.plot('heatmap')
-
     def test_wide_longitude(self):
         x = np.arange(-174, 186, 10)
         y = np.array([50.5, 51.5])
@@ -136,9 +127,6 @@ class TestHeatMap(unittest.TestCase):
         y_bounds = np.array([50, 51, 52])
         assert_arrays_equal(out_x, x_bounds)
         assert_arrays_equal(out_y, y_bounds)
-
-        # Test that a plot doesn't fail.
-        data.plot('heatmap')
 
     def test_longitude_0_360(self):
         x = np.arange(10, 370, 20)
@@ -154,9 +142,6 @@ class TestHeatMap(unittest.TestCase):
         assert_arrays_equal(out_x, x_bounds)
         assert_arrays_equal(out_y, y_bounds)
 
-        # Test that a plot doesn't fail.
-        data.plot('heatmap')
-
     def test_longitude_0_360_one_degree(self):
         x = np.arange(0.5, 360.5, 1)
         y = np.array([50.5, 51.5])
@@ -170,6 +155,3 @@ class TestHeatMap(unittest.TestCase):
         y_bounds = np.array([50, 51, 52])
         assert_arrays_equal(out_x, x_bounds)
         assert_arrays_equal(out_y, y_bounds)
-
-        # Test that a plot doesn't fail.
-        data.plot('heatmap')
