@@ -84,7 +84,14 @@ class GenericPlot(APlot):
         super(GenericPlot, self).__init__(packed_data, *args, **kwargs)
 
         logging.debug("Unpacking the data items")
-        self.x, self.data = self.xaxis.points, packed_data.data
+
+        if self.xaxis.standard_name == 'time':
+            # Convert to matplotlib datetime
+            self.x = self.xaxis.units.convert(self.xaxis.points, 'days since 001-01-01 00:00:00')
+        else:
+            self.x = self.xaxis.points
+
+        self.data = packed_data.data
 
         self.mplkwargs['label'] = self.label or packed_data.name()
         self.xlabel, self.ylabel = get_label(self.xaxis), get_label(packed_data)

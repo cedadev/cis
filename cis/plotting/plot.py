@@ -342,9 +342,6 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     else:
         xaxis = get_axis(data, 'X', xaxis)
 
-    if xaxis.standard_name == 'time':
-        xaxis.convert_standard_time_to_datetime()
-
     yaxis = get_axis(data, 'Y', yaxis)
 
     how = how or data._get_default_plot_type(xaxis.standard_name == 'longitude'
