@@ -288,21 +288,6 @@ class LazyData(object):
         """
         pass
 
-    def __getitem__(self, keys):
-        """
-        Return a COPY of the data with the given slice. We copy to emulate the Iris Cube behaviour
-        """
-        import copy
-        # Copy the metadata - but blank the range and shape as these will have changed
-        metadata = copy.deepcopy(self.metadata)
-        metadata.shape = None
-        metadata.range = None
-        # The data is just a new LazyData objects with the sliced data. Note this is a slice of the whole (concatenated)
-        #  data, and will lead to post-processing before slicing.
-        # TODO: We could be cleverer and figure out the right slice across the various data managers to only read the
-        #  right data from disk.
-        return LazyData(self.data.__getitem__(keys).copy(), metadata)
-
     def __eq__(self, other):
         import numpy as np
         result = NotImplemented
@@ -524,6 +509,21 @@ class UngriddedData(LazyData, CommonData):
             ug_data.add_history(history)
         return ug_data
 
+    def __getitem__(self, keys):
+        """
+        Return a COPY of the data with the given slice. We copy to emulate the Iris Cube behaviour
+        """
+        from copy import deepcopy
+        # Create a copy of the slice of each of the coords
+        new_coords = []
+        for c in self.coords():
+            new_coords.append(c[keys])
+        # The data is just a new LazyData objects with the sliced data. Note this is a slice of the whole (concatenated)
+        #  data, and will lead to post-processing before slicing.
+        # TODO: We could be cleverer and figure out the right slice across the various data managers to only read the
+        #  right data from disk.
+        return UngriddedData(data=self.data[keys].copy(), metadata=deepcopy(self.metadata), coords=new_coords)
+
     def copy(self, data=None):
         """
         Create a copy of this UngriddedData object with new data and coordinates
@@ -534,7 +534,7 @@ class UngriddedData(LazyData, CommonData):
 
         :return: Copied UngriddedData object
         """
-        data = data or numpy.ma.copy(self.data)  # This will load the data if lazy load
+        data = data if data is not None else numpy.ma.copy(self.data)  # This will load the data if lazy load
         coords = self.coords().copy()
         return UngriddedData(data=data, metadata=self.metadata, coords=coords)
 
@@ -1197,7 +1197,7 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
                                             var_units=var_units,
                                             missing_data_for_missing_sample=missing_data_for_missing_sample)
         con = None
-        kernel = how
+        kernel = 'lin'
     else:
         raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
 

@@ -308,6 +308,35 @@ def log10(ungridded_data, in_place=False):
     return _math_op_common(ungridded_data, np.log10, ungridded_data.units.log(10), in_place=in_place)
 
 
+def _assert_compatible(ungridded_data, other):
+    """
+    Checks to see if ungridded_data.data and another array can be broadcast to
+    the same shape using ``numpy.broadcast_arrays``.
+
+    """
+    # This code previously returned broadcasted versions of the cube
+    # data and the other array. As numpy.broadcast_arrays does not work
+    # with masked arrays (it returns them as ndarrays) operations
+    # involving masked arrays would be broken.
+
+    try:
+        data_view, other_view = np.broadcast_arrays(ungridded_data.data,
+                                                    np.asarray(other))
+    except ValueError as err:
+        # re-raise
+        raise ValueError("The array was not broadcastable to the cube's data "
+                         "shape. The error message from numpy when "
+                         "broadcasting:\n{}\nThe cube's shape was {} and the "
+                         "array's shape was {}".format(err, ungridded_data.shape,
+                                                       other.shape))
+
+    if ungridded_data.shape != data_view.shape:
+        raise ValueError("The array operation would increase the "
+                         "dimensionality of the cube. The new cube's data "
+                         "would have had to become: {}".format(
+                             data_view.shape))
+
+
 def _binary_op_common(operation_function, ungridded_data, other, new_unit, in_place=False):
     """
     Function which shares common code between binary operations.
@@ -323,10 +352,16 @@ def _binary_op_common(operation_function, ungridded_data, other, new_unit, in_pl
                            `ungridded_data` and `ungridded_data.data`
     """
     from cis.data_io.ungridded_data import LazyData
+    from iris.cube import Cube
     _assert_is_ungridded_data(ungridded_data)
 
-    if isinstance(other, LazyData):
+    if isinstance(other, (LazyData, Cube)):
         other = other.data
+
+    # don't worry about checking for other data types (such as scalars or
+    # np.ndarrays) because _assert_compatible validates that they are broadcast
+    # compatible with cube.data
+    _assert_compatible(ungridded_data, other)
 
     def unary_func(x):
         ret = operation_function(x, other)
@@ -346,12 +381,12 @@ def _math_op_common(ungridded_data, operation_function, new_unit, in_place=False
     if in_place:
         new_ungridded_data = ungridded_data
         try:
-            operation_function(new_ungridded_data._my_data, out=new_ungridded_data._my_data)
+            operation_function(new_ungridded_data.data, out=new_ungridded_data.data)
         except TypeError:
             # Non ufunc function
             operation_function(new_ungridded_data.data)
     else:
-        new_ungridded_data = ungridded_data.copy(data=operation_function(ungridded_data._my_data))
+        new_ungridded_data = ungridded_data.copy(data=operation_function(ungridded_data.data))
     new_ungridded_data.units = new_unit
     new_ungridded_data.add_history('Performed {op} operation'.format(op=operation_function.__name__))
     return new_ungridded_data

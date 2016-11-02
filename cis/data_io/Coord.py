@@ -35,6 +35,17 @@ class Coord(LazyData):
         if isinstance(self.units, str) and self.units == 'deg':
             self.units = 'degrees'
 
+    def __getitem__(self, keys):
+        """
+        Return a COPY of the Coord with the given slice. We copy to emulate the Iris Cube behaviour
+        """
+        from copy import deepcopy
+        # The data is just a new LazyData objects with the sliced data. Note this is a slice of the whole (concatenated)
+        #  data, and will lead to post-processing before slicing.
+        # TODO: We could be cleverer and figure out the right slice across the various data managers to only read the
+        #  right data from disk.
+        return Coord(self.data[keys].copy(), metadata=deepcopy(self.metadata))
+
     @property
     def points(self):
         """Alias for :func:`self.data`, to match :func:`iris.coords.Coord.points` interface
@@ -107,7 +118,7 @@ class Coord(LazyData):
 
         :return: Copied :class:`Coord`
         """
-        data = data or numpy.ma.copy(self.data)  # Will call lazy load method
+        data = data if data is not None else numpy.ma.copy(self.data)  # Will call lazy load method
         return Coord(data, self.metadata)
 
 
