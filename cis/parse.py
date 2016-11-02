@@ -51,7 +51,6 @@ def initialise_top_parser():
     The parser to which all arguments are initially passed
     """
     global_options = argparse.ArgumentParser(add_help=False)
-    global_options.register('action', 'parsers', AliasedSubParsersAction)
     verbosity_group = global_options.add_mutually_exclusive_group()
     verbosity_group.add_argument("-v", "--verbose", action='count',
                                  help="Increase the level of logging information output to screen to include "
@@ -64,7 +63,7 @@ def initialise_top_parser():
                                      "also be set by setting the 'CIS_FORCE_OVERWRITE' environment variable to 'TRUE'")
 
     parser = argparse.ArgumentParser("cis", parents=[global_options])
-
+    parser.register('action', 'parsers', AliasedSubParsersAction)
     subparsers = parser.add_subparsers(dest='command')
     plot_parser = subparsers.add_parser("plot", help="Create plots", argument_default=argparse.SUPPRESS, parents=[global_options])
     add_plot_parser_arguments(plot_parser)
