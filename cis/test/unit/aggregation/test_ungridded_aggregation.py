@@ -25,7 +25,7 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out.data, result.T)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_can_name_variables_by_standard_name(self):
@@ -77,7 +77,7 @@ class TestUngriddedAggregation(TestCase):
 
         result = numpy.ma.array([[0], [0], [1.0], [0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('nan'))
 
-        compare_masked_arrays(cube_out.data, result.T)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_aggregating_single_point_in_one_dimension_upper_bound_edge_case(self):
@@ -91,9 +91,9 @@ class TestUngriddedAggregation(TestCase):
 
         cube_out = data.aggregate(how=self.kernel, **grid)
 
-        result = numpy.ma.array([[0], [0], [1.0], [0.0], [0]], mask=[[1], [1], [0], [1], [1]], fill_value=float('inf'))
+        result = numpy.ma.array([[0], [0], [0.0], [1.0], [0]], mask=[[1], [1], [1], [0], [1]], fill_value=float('inf'))
 
-        compare_masked_arrays(cube_out.data, result.T)
+        compare_masked_arrays(cube_out.data, result)
 
     @istest
     def test_aggregating_edge_cases(self):

@@ -10,8 +10,6 @@ import operator
 import cf_units
 import numpy as np
 
-from cis.data_io.ungridded_data import LazyData
-
 
 def abs(ungridded_data, in_place=False):
     """
@@ -35,6 +33,7 @@ def abs(ungridded_data, in_place=False):
 
 
 def _assert_is_ungridded_data(ungridded_data):
+    from cis.data_io.ungridded_data import LazyData
     if not isinstance(ungridded_data, LazyData):
         raise TypeError('The "ungridded_data" argument must be an instance of '
                         'cis.data_io.ungridded_data.LazyData.')
@@ -67,7 +66,7 @@ def add(ungridded_data, other, in_place=False):
     * ungridded_data:
         An instance of :class:`cis.data_io.ungridded_data.LazyData`.
     * other:
-        An instance of :class:`cis.data_io.ungridded_data.LazyData` or :class:`iris.coords.Coord`,
+        An instance of :class:`cis.data_io.ungridded_data.LazyData` 
         or a number or :class:`numpy.ndarray`.
 
     Kwargs:
@@ -99,7 +98,7 @@ def subtract(ungridded_data, other, in_place=False):
     * ungridded_data:
         An instance of :class:`cis.data_io.ungridded_data.LazyData`.
     * other:
-        An instance of :class:`cis.data_io.ungridded_data.LazyData` or :class:`iris.coords.Coord`,
+        An instance of :class:`cis.data_io.ungridded_data.LazyData` 
         or a number or :class:`numpy.ndarray`.
 
     Kwargs:
@@ -147,7 +146,7 @@ def multiply(ungridded_data, other, in_place=False):
     * ungridded_data:
         An instance of :class:`cis.data_io.ungridded_data.LazyData`.
     * other:
-        An instance of :class:`cis.data_io.ungridded_data.LazyData` or :class:`iris.coords.Coord`,
+        An instance of :class:`cis.data_io.ungridded_data.LazyData` 
         or a number or :class:`numpy.ndarray`.
 
     Returns:
@@ -170,7 +169,7 @@ def divide(ungridded_data, other, in_place=False):
     * ungridded_data:
         An instance of :class:`cis.data_io.ungridded_data.LazyData`.
     * other:
-        An instance of :class:`cis.data_io.ungridded_data.LazyData` or :class:`iris.coords.Coord`,
+        An instance of :class:`cis.data_io.ungridded_data.LazyData`
         or a number or :class:`numpy.ndarray`.
 
     Returns:
@@ -323,6 +322,7 @@ def _binary_op_common(operation_function, ungridded_data, other, new_unit, in_pl
     in_place             - whether or not to apply the operation in place to
                            `ungridded_data` and `ungridded_data.data`
     """
+    from cis.data_io.ungridded_data import LazyData
     _assert_is_ungridded_data(ungridded_data)
 
     if isinstance(other, LazyData):
