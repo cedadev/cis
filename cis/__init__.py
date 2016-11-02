@@ -71,7 +71,7 @@ def read_data_list(filenames, variables, product=None, aliases=None):
         raise IOError(e)
     if len(file_set) == 0:
         raise IOError("No files found which match: {}".format(filenames))
-    return DataReader().read_data_list(expand_filelist(filenames), variables, product, aliases)
+    return DataReader().read_data_list(file_set, variables, product, aliases)
 
 
 def get_variables(filenames, product=None, type=None):
@@ -95,4 +95,4 @@ def get_variables(filenames, product=None, type=None):
         raise IOError(e)
     if len(file_set) == 0:
         raise IOError("No files found which match: {}".format(filenames))
-    return get_variables(filenames, product=product, data_type=type)
+    return get_variables(file_set, product=product, data_type=type)
