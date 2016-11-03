@@ -1,6 +1,5 @@
 """
-Test the CommonData API: slicing, maths operations, equality, all main API functions, for basic operation and no
-side effects...
+Test the CommonData API: slicing, maths operations, equality, all main API functions, and no side effects...
 """
 from unittest import TestCase
 from nose.tools import assert_raises
@@ -18,22 +17,28 @@ class TestAPI(TestCase):
         self.ug = make_regular_2d_ungridded_data()
         self.ug_1 = make_regular_2d_ungridded_data()
         self.gd = make_from_cube(make_mock_cube())
-        self.gd_large = make_from_cube(make_mock_cube(50,30))
+        self.gd_large = make_from_cube(make_mock_cube(50, 30))
 
     def test_can_slice_ungridded_data(self):
         res = self.ug[2:5]
         assert_array_almost_equal(res.data, self.ug.data[2:5])
         assert_array_almost_equal(res.lat.data, self.ug.lat.data[2:5])
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1
 
     def test_can_slice_single_row_of_ungridded_data(self):
         scalar = self.ug[2]
         assert_array_almost_equal(scalar.data, self.ug.data[2])
         assert_array_almost_equal(scalar.lat.data, self.ug.lat.data[2])
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1
 
     def test_can_slice_multidim_ungridded_data(self):
         res = self.ug[2:5, 2]
         assert_array_almost_equal(res.data, self.ug.data[2:5, 2])
         assert_array_almost_equal(res.lat.data, self.ug.lat.data[2:5, 2])
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1
 
     # Basic maths operations
 
@@ -83,4 +88,54 @@ class TestAPI(TestCase):
 
     def test_basic_gridded_to_ungridded_collocation(self):
         res = self.gd.collocated_onto(self.ug)
-        # TODO Check the rough numbers
+        res_1 = self.ug.sampled_from(self.gd)
+        # The two results should be identical
+        assert res == res_1
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1
+
+    def test_basic_ungridded_to_ungridded_collocation(self):
+        res = self.ug.collocated_onto(self.ug_1)
+        res_1 = self.ug_1.sampled_from(self.ug)
+        # The two results should be identical
+        assert res == res_1
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1
+
+    def test_basic_gridded_to_gridded_collocation(self):
+        gd_copy = self.gd.copy()
+        res = self.gd.collocated_onto(self.gd)
+        assert self.gd == gd_copy
+        res_1 = self.gd.sampled_from(self.gd)
+        # The two data results should be identical, although the metadata is slightly different for some reason
+        assert_array_almost_equal(res[0].data, res_1[0].data)
+
+    def test_basic_ungridded_to_gridded_collocation(self):
+        gd_copy = self.gd.copy()
+        res = self.ug.collocated_onto(self.gd)
+        assert self.gd == gd_copy
+        res_1 = self.gd.sampled_from(self.ug)
+        # The two data results should be identical, although the metadata is slightly different for some reason
+        assert_array_almost_equal(res[0].data, res_1[0].data)
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1
+
+    def test_basic_gridded_subsetting(self):
+        gd_copy = self.gd.copy()
+        res = self.gd.subset(x=[-5, 0])
+        assert self.gd == gd_copy
+
+    def test_basic_ungridded_subsetting(self):
+        res = self.ug.subset(x=[-5, 0])
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1
+
+    def test_basic_gridded_collapse(self):
+        gd_copy = self.gd.copy()
+        res = self.gd.collapsed('x')
+        assert self.gd == gd_copy
+
+    def test_basic_ungridded_aggregation(self):
+        res = self.ug.aggregate(x=[-5, 0, 1])
+        # This dataset should still be the same as the alternative one (this checks data and metadata)
+        assert self.ug == self.ug_1

@@ -294,6 +294,8 @@ class SepConstraintKdtree(PointConstraint):
         if h_sep is not None:
             self.h_sep = cis.utils.parse_distance_with_units_to_float_km(h_sep)
             self.haversine_distance_kd_tree_index = None
+        else:
+            self.h_sep = None
 
         if a_sep is not None:
             self.a_sep = cis.utils.parse_distance_with_units_to_float_m(a_sep)
@@ -326,7 +328,7 @@ class SepConstraintKdtree(PointConstraint):
 
     def constrain_points(self, ref_point, data):
         con_points = HyperPointList()
-        if self.haversine_distance_kd_tree_index:
+        if self.haversine_distance_kd_tree_index and self.h_sep:
             point_indices = self._get_cached_indices(ref_point)
             if point_indices is None:
                 point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
