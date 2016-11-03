@@ -252,7 +252,13 @@ def get_best_map_ticks(ax, transform=None):
 
     lon_locator = MaxNLocator(nbins=max_x_bins, steps=lon_steps)
     lat_locator = MaxNLocator(nbins=max_y_bins, steps=lat_steps)
-    return lon_locator.tick_values(xmin, xmax), lat_locator.tick_values(ymin, ymax)
+    lon_ticks = lon_locator.tick_values(xmin, xmax)
+    # Prune any large longitude ticks
+    lon_ticks = [t for t in lon_ticks if abs(t) <= 360.0]
+    lat_ticks = lat_locator.tick_values(ymin, ymax)
+    # Prune any large latitude ticks
+    lat_ticks = [t for t in lat_ticks if abs(t) <= 90.0]
+    return lon_ticks, lat_ticks
 
 
 def set_map_ticks(ax, xticks, yticks, transform=None):
