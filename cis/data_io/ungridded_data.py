@@ -1246,7 +1246,8 @@ def _aggregate_ungridded(data, how, **kwargs):
             grid_step = g.step
 
         if isinstance(grid_step, timedelta):
-            grid_step = grid_step.days
+            # Standard time is days since, so turn this into a fractional number of days
+            grid_step = grid_step.total_seconds()*24*60*60
 
         grid_spec[c.name()] = slice(grid_start, grid_end, grid_step)
 
