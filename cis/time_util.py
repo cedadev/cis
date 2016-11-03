@@ -238,3 +238,43 @@ def convert_cube_time_coord_to_standard_time(cube):
         cube.add_dim_coord(new_time_coord, data_dim)
 
     return cube
+
+
+def set_year(datetime, new_year):
+    """
+    Change the year of a datetime to some new year. If datetime is a leapday then return None
+    :param datetime.datetime datetime: Datetime object to change
+    :param int new_year: The new year
+    :return: A datetime with the same date as the original except the changed year
+    """
+    # Once we have the data as datetimes we can just use replace to change the year...
+    try:
+        new_dt = datetime.replace(year=new_year)
+    except ValueError:
+        # ...Unless the date is 29th of Feb!
+        new_dt = None
+    return new_dt
+
+
+def change_year_of_ungridded_data(data, new_year):
+    """
+     This slightly roundabout method works fine, but isn't particularly quick.
+      I could just add the number of years times 365, but that does't take leap years into account. If I want to take
+      leap years into account I can't use fractional days which would break the time. In principle I could take calculate
+      the exact difference in integer days between the first date and the first date in the new year then apply that
+      scaling - but THAT won't work if the data set spans a leap day...
+    :param data: An ungridded data object to update in-place
+    :param int new_year: The year to change the data to
+    """
+    import numpy as np
+
+    dates = data.coord('time').data
+
+    dt = convert_std_time_to_datetime(dates)
+
+    np_set_year = np.vectorize(set_year)
+
+    updated_dt = np_set_year(dt, new_year)
+    new_dates = convert_datetime_to_std_time(updated_dt)
+
+    data.coord('time').data = new_dates

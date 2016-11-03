@@ -6,7 +6,7 @@ import datetime as dt
 from unittest import TestCase
 
 from cis.time_util import convert_sec_since_to_std_time, convert_datetime_to_std_time, \
-    convert_julian_date_to_std_time, PartialDateTime, find_last_day_of_month
+    convert_julian_date_to_std_time, PartialDateTime, find_last_day_of_month, set_year, change_year_of_ungridded_data
 
 
 class TestTimeUtils(TestCase):
@@ -137,3 +137,25 @@ class TestTimeUtils(TestCase):
     def test_convert_datetime_components_to_datetime_raises_error_if_invalid_time(self):
         start, end = PartialDateTime(2000, 6, 30, 12, 30, 60).range()
 
+    def test_set_year(self):
+        from datetime import datetime
+
+        # Test changing a leapday to a year without a leapday returns None
+        eq_(set_year(datetime(1984, 2, 28), 2007), datetime(2007, 2, 28))
+        eq_(set_year(datetime(1984, 2, 29), 2007), None)
+
+        # Test changing a leapday to a year with a leapday works fine
+        eq_(set_year(datetime(1984, 2, 28), 2000), datetime(2000, 2, 28))
+        eq_(set_year(datetime(1984, 2, 29), 2000), datetime(2000, 2, 29))
+
+    def test_change_ug_data_year(self):
+        from cis.test.util.mock import make_regular_2d_with_time_ungridded_data
+        from cis.time_util import convert_datetime_to_std_time
+        from datetime import datetime
+
+        ug = make_regular_2d_with_time_ungridded_data()
+        ug.coord('time').convert_datetime_to_standard_time()
+
+        change_year_of_ungridded_data(ug, 2007)
+
+        eq_(ug.coord('time').points[0, 0], convert_datetime_to_std_time(datetime(2007, 8, 27)))
