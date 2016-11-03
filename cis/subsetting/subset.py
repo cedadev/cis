@@ -171,43 +171,33 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         data = self._create_data_for_subset(data)
 
         # Create the combined mask across all limits
-        shape = data.coords()[0].data_flattened.shape  # This assumes they are all the same shape
-        combined_mask = np.zeros(shape, dtype=bool)
+        shape = data.coords()[0].data.shape  # This assumes they are all the same shape
+        combined_mask = np.ones(shape, dtype=bool)
         for coord, limit in self._limits.items():
-            # Mask out any points which are NOT (<= to the end limit AND >= to the start limit)
-            mask = ~ (np.less_equal(data.coord(coord).data_flattened, limit.stop) &
-                      np.greater_equal(data.coord(coord).data_flattened, limit.start))
-            combined_mask = combined_mask | mask
+            # Select any points which are <= to the stop limit AND >= to the start limit
+            mask = (np.less_equal(data.coord(coord).data, limit.stop) &
+                    np.greater_equal(data.coord(coord).data, limit.start))
+            combined_mask = combined_mask & mask
 
         # Generate the new coordinates here (before we loop)
         new_coords = data.coords()
         for coord in new_coords:
-            coord.data = np.ma.masked_array(coord.data, mask=combined_mask)
-            coord.data = coord.data.compressed()
+            coord.data = coord.data[combined_mask]
             coord.metadata.shape = coord.data.shape
             coord._data_flattened = None  # Otherwise Coord won't recalculate this.
 
+        # If the whole selection mask is False then the data will be empty - return None
+        if np.all(~combined_mask):
+            return None
+
         for variable in listify(data):
             # Constrain each copy of the data object in-place
-            self._constrain_data(combined_mask, variable, new_coords)
-            # If any of the data objects are None then they all must be - so return None
-            if len(variable.data) < 1:
-                return None
+            variable.data = variable.data[combined_mask]
+
+            # Add the new compressed coordinates
+            variable._coords = new_coords
+
         return data
-
-    def _constrain_data(self, combined_mask, data, new_coords):
-        # Convert masked values to missing values
-        is_masked = isinstance(data.data, np.ma.masked_array)
-        if is_masked:
-            missing_value = data.metadata.missing_value
-            data.data = data.data.filled(fill_value=missing_value)
-
-        # Apply the combined mask and force out the masked data
-        data.data = np.ma.masked_array(data.data, mask=combined_mask)
-        data.data = data.data.compressed()
-
-        # Add the new compressed coordinates
-        data._coords = new_coords
 
     def _create_data_for_subset(self, data):
         """

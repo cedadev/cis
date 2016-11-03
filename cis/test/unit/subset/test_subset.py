@@ -230,7 +230,7 @@ class TestUngriddedSubsetConstraint(TestCase):
     def test_can_subset_2d_ungridded_data_with_missing_values(self):
         data = cis.test.util.mock.make_regular_2d_ungridded_data_with_missing_values()
         subset = data.subset(longitude=[0.0, 5.0])
-        assert (subset.data.tolist() == [2, 3, -999, 6, 8, -999, 11, 12, 14, 15])
+        assert (subset.data.tolist() == [2, 3, None, 6, 8, None, 11, 12, 14, 15])
 
     def test_GIVEN_UngriddedDataList_WHEN_constrain_THEN_correctly_subsetted_UngriddedDataList_returned(self):
         ug_data = cis.test.util.mock.make_regular_2d_ungridded_data()
