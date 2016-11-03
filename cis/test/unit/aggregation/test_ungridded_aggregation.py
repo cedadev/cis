@@ -9,7 +9,6 @@ from cis.test.utils_for_testing import *
 
 from cis.test.util.mock import *
 
-#TODO I need some datetime and PartialDateTime tests in here
 
 class TestUngriddedAggregation(TestCase):
     def setUp(self):
@@ -283,6 +282,50 @@ class TestUngriddedAggregation(TestCase):
         output = data.aggregate(how=self.kernel, **grid)
         lon = output.coord('longitude')
         assert_arrays_equal(lon.bounds, [[-180, 180]])
+
+    def test_aggregating_over_time(self):
+        from datetime import datetime, timedelta
+        from cis.time_util import cis_standard_time_unit as tunit
+        data = make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
+        output = data.aggregate(t=slice(datetime(1984, 8, 1), datetime(1984, 9, 30), timedelta(days=30)))
+        expected_t_bounds = [[tunit.date2num(datetime(1984, 8, 1)), tunit.date2num(datetime(1984, 8, 31))],
+                             [tunit.date2num(datetime(1984, 8, 31)), tunit.date2num(datetime(1984, 9, 30))]]
+        assert_arrays_equal(output[0].coord('time').bounds, expected_t_bounds)
+        assert_arrays_equal(output[0].data, [[[2.5, 10]]])
+
+    def test_aggregating_over_time_with_default_times(self):
+        from datetime import datetime, timedelta
+        from cis.time_util import cis_standard_time_unit as tunit
+        data = make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
+        output = data.aggregate(t=slice(None, None, timedelta(days=30)))
+        expected_t_bounds = [[tunit.date2num(datetime(1984, 8, 27)), tunit.date2num(datetime(1984, 9, 10))]]
+        assert_arrays_equal(output[0].coord('time').bounds, expected_t_bounds)
+        assert_arrays_equal(output[0].data, [[[7.5]]])
+
+    def test_aggregating_over_time_with_partial_datetime(self):
+        from cis.time_util import PartialDateTime, cis_standard_time_unit as tunit
+        from datetime import datetime, timedelta
+        data = make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
+        output = data.aggregate(t=[PartialDateTime(1984,9), timedelta(days=30)])
+        expected_t_bounds = [[tunit.date2num(datetime(1984, 9, 1)), tunit.date2num(datetime(1984, 10, 1))]]
+        assert_arrays_almost_equal(output[0].coord('time').bounds, expected_t_bounds)
+        assert_arrays_almost_equal(output[0].data, [[[10.5]]])
+
+    @raises(ValueError)
+    def test_empty_step_raises_error_with_partial_datetime(self):
+        from cis.time_util import PartialDateTime
+        data = make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
+        output = data.aggregate(t=[PartialDateTime(1984, 9), None])
+
+    @raises(ValueError)
+    def test_empty_step_raises_error(self):
+        data = make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
+        output = data.aggregate(x=slice(1, 2, None))
 
 
 class TestUngriddedListAggregation(TestCase):

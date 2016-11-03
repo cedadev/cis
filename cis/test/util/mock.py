@@ -976,7 +976,7 @@ def make_regular_2d_with_time_ungridded_data():
     data = np.reshape(np.arange(15) + 1.0, (5, 3))
 
     coords = CoordList([x, y, t])
-    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 

@@ -34,11 +34,11 @@ def subset(data, constraint, **kwargs):
         if all(hasattr(limit, att) for att in ('start', 'stop')):
             l = limit
         elif isinstance(limit, PartialDateTime):
-            l = slice(_convert_datetime_to_coord_unit(c, limit.min()),
-                      _convert_datetime_to_coord_unit(c, limit.max()))
+            l = slice(c.units.date2num(limit.min()),
+                      c.units.date2num(limit.max()))
         elif len(limit) == 1 and isinstance(limit[0], PartialDateTime):
-            l = slice(_convert_datetime_to_coord_unit(c, limit[0].min()),
-                      _convert_datetime_to_coord_unit(c, limit[0].max()))
+            l = slice(c.units.date2num(limit[0].min()),
+                      c.units.date2num(limit[0].max()))
         elif len(limit) == 2:
             l = slice(limit[0], limit[1])
         else:
@@ -47,11 +47,11 @@ def subset(data, constraint, **kwargs):
         # Fill in defaults and convert datetimes
         limit_start = l.start if l.start is not None else c.points.min()
         if isinstance(limit_start, datetime):
-            limit_start = _convert_datetime_to_coord_unit(c, limit_start)
+            limit_start = c.units.date2num(limit_start)
 
         limit_end = l.stop if l.stop is not None else c.points.max()
         if isinstance(limit_end, datetime):
-            limit_end = _convert_datetime_to_coord_unit(c, limit_end)
+            limit_end = c.units.date2num(limit_end)
         constraints[data._get_coord(dim_name).name()] = slice(limit_start, limit_end)
 
     subset_constraint = constraint(constraints)
@@ -62,19 +62,6 @@ def subset(data, constraint, **kwargs):
         subset.add_history("Subsetted using limits: " + str(subset_constraint))
 
     return subset
-
-
-def _convert_datetime_to_coord_unit(coord, dt):
-    """Converts a datetime to be in the unit of a specified Coord.
-    """
-    from cf_units import Unit
-
-    if isinstance(coord, iris.coords.Coord):
-        # The unit class is then cf_units.Unit.
-        iris_unit = coord.units
-    else:
-        iris_unit = Unit(coord.units)
-    return iris_unit.date2num(dt)
 
 
 @six.add_metaclass(ABCMeta)

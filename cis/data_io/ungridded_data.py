@@ -1215,6 +1215,7 @@ def _aggregate_ungridded(data, how, **kwargs):
     from cis.aggregation.ungridded_aggregator import UngriddedAggregator
     from cis.collocation.col import get_kernel
     from cis.time_util import PartialDateTime
+    from datetime import datetime, timedelta
     from cis import __version__
 
     kernel = get_kernel(how)
@@ -1232,9 +1233,22 @@ def _aggregate_ungridded(data, how, **kwargs):
 
         # Fill in defaults
         grid_start = g.start if g.start is not None else c.points.min()
-        grid_end = g.stop if g.stop is not None else c.points.max()
+        if isinstance(grid_start, datetime):
+            grid_start = c.units.date2num(grid_start)
 
-        grid_spec[c.name()] = slice(grid_start, grid_end, g.step)
+        grid_end = g.stop if g.stop is not None else c.points.max()
+        if isinstance(grid_end, datetime):
+            grid_end = c.units.date2num(grid_end)
+
+        if g.step is None:
+            raise ValueError("Grid step must not be None")
+        else:
+            grid_step = g.step
+
+        if isinstance(grid_step, timedelta):
+            grid_step = grid_step.days
+
+        grid_spec[c.name()] = slice(grid_start, grid_end, grid_step)
 
     # We have to make the history before doing the aggregation as the grid dims get popped-off during the operation
     history = "Aggregated using CIS version " + __version__ + \
