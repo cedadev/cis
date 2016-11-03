@@ -139,3 +139,30 @@ class TestAPI(TestCase):
         res = self.ug.aggregate(x=[-5, 0, 1])
         # This dataset should still be the same as the alternative one (this checks data and metadata)
         assert self.ug == self.ug_1
+
+    def test_change_units(self):
+        from numpy.testing import assert_almost_equal
+        assert self.ug.data[0, 0] == 1
+
+        self.ug.units = 'cm-3'
+
+        self.ug.convert_units('m-3')
+
+        assert str(self.ug.units) == 'm-3'
+        assert_almost_equal(self.ug.data[0, 0], [1e6])
+
+    def test_change_units_throws_ValueError_for_invalid_units_or_conversion(self):
+        # Invalid units on the ungridded data
+        with assert_raises(ValueError):
+            self.ug.units = 'cm-3 stp'
+            self.ug.convert_units('m-3')
+
+        # Invalid units to convert to
+        with assert_raises(ValueError):
+            self.ug.units = 'cm-3'
+            self.ug.convert_units('foo')
+
+        # Invalid conversion
+        with assert_raises(ValueError):
+            self.ug.units = 'cm-3'
+            self.ug.convert_units('kg')

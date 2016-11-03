@@ -403,6 +403,23 @@ class LazyData(object):
 
         self.metadata.range = range
 
+    def convert_units(self, new_units):
+        """
+        Convert units of LazyData object to new_units in place
+
+        :param LazyData ug_data:
+        :param cf_units.Unit or str new_units:
+        :raises ValueError if new_units can't be converted to standard units, or units are incompatible
+        """
+        from cf_units import Unit
+        if not isinstance(new_units, Unit):
+            new_units = Unit(new_units)
+        if not isinstance(self.units, Unit):
+            # If our units aren't cf_units then they can't be...
+            raise ValueError("Unable to convert non-standard LazyData units: {}".format(self.units))
+        self.units.convert(self.data, new_units, inplace=True)
+        self.units = new_units
+
 
 class UngriddedData(LazyData, CommonData):
     """
@@ -1247,7 +1264,7 @@ def _aggregate_ungridded(data, how, **kwargs):
 
         if isinstance(grid_step, timedelta):
             # Standard time is days since, so turn this into a fractional number of days
-            grid_step = grid_step.total_seconds()*24*60*60
+            grid_step = grid_step.total_seconds() / (24*60*60)
 
         grid_spec[c.name()] = slice(grid_start, grid_end, grid_step)
 
