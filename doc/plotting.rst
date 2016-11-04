@@ -34,7 +34,7 @@ This will attempt to locate the variable ``variable`` in all of the specified ``
   allows two variables to be plotted against each other, specified as ``cis plot variable1:filename1 variable2:filename2 --type comparativescatter``
 
 ``taylor``
-  a Taylor diagram for comparing collocated datasets
+  a Taylor diagram for comparing collocated datasets. See Taylor, K. E. (2001), 'Summarizing multiple aspects of model performance in a single diagram', J. Geophys. Res., 106(D7), 7183–7192, doi:10.1029/2000JD900719 for a detailed description.
 
 
 Note that ``filenames`` is a non-optional argument used to specify the files to read the variable from. These can be specified as a comma separated list of the following possibilities:
@@ -155,6 +155,9 @@ There are a number of plot formatting options available:
 
 ``--cmap``
   The colour map to be used when plotting a 3D plot, see :ref:`colours-and-markers`
+
+``--projection``
+  The projection to use for the map-plot. All Cartopy projections are supported, see http://scitools.org.uk/cartopy/docs/latest/crs/projections.html for a full list.
 
 ``--height``
   The height of the plot, in inches
