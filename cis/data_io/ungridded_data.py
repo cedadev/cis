@@ -701,11 +701,14 @@ class UngriddedData(LazyData, CommonData):
 
         return cls(values, Metadata(), coords)
 
-    def summary(self):
+    def summary(self, shorten=False):
         """
         Unicode summary of the UngriddedData with metadata of itself and its coordinates
         """
         summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
+        if shorten:
+            return summary
+
         summary += '     Shape = {}\n'.format(self.data.shape) + '\n'
         summary += '     Total number of points = {}\n'.format(self.size)
         summary += '     Number of non-masked points = {}\n'.format(self.count())
@@ -719,6 +722,9 @@ class UngriddedData(LazyData, CommonData):
             summary += c.metadata.summary(offset=10)
 
         return summary
+
+    def __repr__(self):
+        return "<cis 'UngriddedData' of %s>" % self.summary(shorten=True)
 
     def __str__(self):
         # six has a decorator for this bit, but it doesn't do errors='replace'.
@@ -1006,7 +1012,7 @@ class UngriddedDataList(CommonDataList):
     """
 
     def __str__(self):
-        "<UngriddedDataList: %s>" % super(UngriddedDataList, self).__str__()
+        return "UngriddedDataList: \n%s" % super(UngriddedDataList, self).__str__()
 
     @property
     def is_gridded(self):

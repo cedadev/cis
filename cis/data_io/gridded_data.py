@@ -103,6 +103,10 @@ class GriddedData(iris.cube.Cube, CommonData):
         data.add_history(history)
         return data
 
+    def __repr__(self):
+        # Override the Cube representation
+        return "<cis 'GriddedData' of %s>" % self.summary(shorten=True)
+
     @staticmethod
     def _wrap_cube_iterator(itr):
         """Makes a generator that returns a GriddedData object from each Cube returned by an iterator.
@@ -396,7 +400,7 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
 
     def __str__(self):
-        "<GriddedDataList: %s>" % super(GriddedDataList, self).__str__()
+        return "GriddedDataList: \n%s" % super(GriddedDataList, self).__str__()
 
     @property
     def is_gridded(self):

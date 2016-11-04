@@ -231,9 +231,45 @@ class CommonDataList(list):
     """
     filenames = []
 
+    def __new__(cls, iterable=()):
+        cube_list = list.__new__(cls, iterable)
+        # Use extend to check all the types are the same - this gets overridden by each list sub-type
+        cube_list.extend(iterable)
+        return cube_list
+
     def __init__(self, iterable=()):
         super(CommonDataList, self).__init__()
         self.extend(iterable)
+
+    def __add__(self, rhs):
+        return self.__class__(list.__add__(self, rhs))
+
+    def __getitem__(self, item):
+        result = list.__getitem__(self, item)
+        if isinstance(result, list):
+            result = self.__class__(result)
+        return result
+
+    def __getslice__(self, start, stop):
+        result = super(CommonDataList, self).__getslice__(start, stop)
+        result = self.__class__(result)
+        return result
+
+    def __str__(self):
+        """Runs short :meth:`CommonData.summary` on every item and the coords"""
+        result = ['%s: %s' % (i, item.summary(shorten=True)) for i, item in enumerate(self)]
+        if result:
+            result = ''.join(result)
+            result += 'Coordinates: \n'
+            for c in self.coords():
+                result += '{pad:{width}}{name}\n'.format(pad=' ', width=2, name=c.name())
+        else:
+            result = '< Empty list >'
+        return result
+
+    def __repr__(self):
+        """Runs repr on every cube."""
+        return '[%s]' % ',\n'.join([repr(item) for item in self])
 
     @property
     @abstractmethod
