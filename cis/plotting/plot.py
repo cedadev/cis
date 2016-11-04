@@ -452,6 +452,7 @@ def taylor_plot(data_list, ax=None, layer_opts=None, *args, **kwargs):
 
     _ = kwargs.pop('central_longitude', None)  # In case the Plotter has added it...
 
+    layer_opts = [{} for i in data_list] if layer_opts is None else layer_opts
     labels = [layer_opt.pop('label', None) for layer_opt in layer_opts]
 
     # Pull together markers from the layer_opts
