@@ -409,6 +409,8 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
         raise ValueError("One layer-options keyword dictionary must be supplied for each data item, or none at all.")
 
     if how in ['comparativescatter', 'histogram2d']:
+        if len(data_list) != 2:
+            raise ValueError("Exactly two data objects must be provided for comparative plots")
         layer_kwargs = dict(list(kwargs.items()) + list(layer_opts[0].items()))
         plot, ax = basic_plot(data_list[1], how, ax, xaxis=data_list[0], *args, **layer_kwargs)
     elif how == 'taylor':
