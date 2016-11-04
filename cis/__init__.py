@@ -1,5 +1,5 @@
 """
-CIS is an open source command-line tool for easy collocation, visualization, analysis, and
+CIS is an open source command-line tool and Python library for easy collocation, visualization, analysis, and
 comparison of diverse gridded and ungridded datasets used in the atmospheric sciences.
 
 .. note ::
@@ -7,12 +7,8 @@ comparison of diverse gridded and ungridded datasets used in the atmospheric sci
     The CIS documentation has detailed usage information, including a :doc:`user guide <../index>`
     for new users.
 
-As a commmand line tool, CIS has not been designed with a python API in mind. There are however some utility functions
-that may provide a useful start for those who wish to use CIS as a python library. The functions in this module provide
-the main way to load your data. They can be easily import using, for example: `from cis import read_data`.
-
 The :func:`read_data` function is a simple way to read a single gridded or ungridded data object (e.g. a NetCDF
-variable) from one or more files. CIS will determine the best way to interperet the datafile by comparing the file
+variable) from one or more files. CIS will determine the best way to interpret the datafile by comparing the file
 signature with the built-in data reading plugins and any user defined plugins. Specifying a particular ``product``
 allows the user to override this automatic detection.
 
@@ -22,7 +18,7 @@ ungridded, but not a mix. For ungridded data lists it is assumed that all object
 """
 __author__ = "David Michel, Daniel Wallis, Duncan Watson-Parris, Richard Wilkinson, Ian Bush, Matt Kendall, John Holt"
 __version__ = "1.5.0"
-__status__ = "Dev"
+__status__ = "Stable"
 __website__ = "http://www.cistools.net/"
 
 __all__ = ['read_data', 'read_data_list', 'get_variables']
