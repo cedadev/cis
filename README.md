@@ -5,7 +5,7 @@ CIS
 
 [![Build Status](https://travis-ci.org/cedadev/cis.svg?branch=master)](https://travis-ci.org/cedadev/cis)
 [![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
-[![Downloads](https://anaconda.org/cistools/cis/badges/downloads.svg)](https://anaconda.org/CISTools/cis/files)
+[![Downloads](https://anaconda.org/conda-forge/cis/badges/downloads.svg)](https://anaconda.org/conda-forge/cis/files)
 
 v1.4.0 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.59939.svg)](http://dx.doi.org/10.5281/zenodo.59939)
 
