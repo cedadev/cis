@@ -71,16 +71,17 @@ class Coord(LazyData):
 
     def convert_to_std_time(self, time_stamp_info=None):
         """
-        Convert this coordinate to standard time. It will use either: the units of the coordinate if it is in the
-        standard 'x since y' format; or
-        the first word of the units, combined with the time stamp (if the timestamp is not given an error is thrown).
+        Convert this coordinate to standard time. It will use either: the units of the coordinate if it is a cf_units
+        Unit, or the first word of the units, combined with the time stamp (if the timestamp is not given an error is
+        thrown).
 
         :param time_stamp_info: the time stamp info from the file, None if it does not exist
         """
         from cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit, \
             convert_time_using_time_stamp_info_to_std_time, convert_datetime_to_std_time
+        from cf_units import Unit
 
-        if "since" in str(self.units):
+        if isinstance(self.units, Unit):
             self._data = convert_time_since_to_std_time(self.data, self.units)
         elif str(self.units).lower().startswith('datetime'):
             self._data = convert_datetime_to_std_time(self.data)

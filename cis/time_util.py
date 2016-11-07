@@ -138,12 +138,11 @@ def calculate_mid_time(t1, t2):
 
 def convert_time_since_to_std_time(time_array, units):
     """
-
+    Go via datetimes to be on the safe side.
     :param ndaray time_array:
     :param cf_units.Unit units:
     :return:
     """
-    # Strip out any extra colons and commas
     dt = units.num2date(time_array)
     return cis_standard_time_unit.date2num(dt)
 
