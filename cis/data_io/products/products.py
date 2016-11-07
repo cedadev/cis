@@ -101,7 +101,8 @@ class Aeronet(AProduct):
         # The name is text before any brackets, the units is what's after it (minus the closing bracket)
         name_units = variable.split('(')
         name = name_units[0]
-        units = name_units[1][:-1] if len(name_units) > 1 else ''
+        # For Aeronet we can assume that if there are no units then it is unitless (AOT, Angstrom exponent, etc)
+        units = name_units[1][:-1] if len(name_units) > 1 else '1'
 
         return UngriddedData(data_obj[variable],
                              Metadata(name=name, long_name=variable, shape=(len(data_obj),), units=units,
