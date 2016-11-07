@@ -318,7 +318,8 @@ class TestUngriddedDataList(TestCase):
 
     def test_can_get_string_of_list(self):
         s = str(self.ungridded_data_list)
-        assert_that(s == "0: Ungridded data: rainfall_flux / (kg m-2 s-1) \n1: Ungridded data: snowfall_flux / (kg m-2 s-1) \nCoordinates: \n  lat\n  lon\n")
+        assert_that(s == "UngriddedDataList: \n0: Ungridded data: rainfall_flux / (kg m-2 s-1) \n"
+                         "1: Ungridded data: snowfall_flux / (kg m-2 s-1) \nCoordinates: \n  lat\n  lon\n")
 
     def test_GIVEN_data_containing_multiple_matching_coordinates_WHEN_coords_THEN_only_unique_coords_returned(self):
         unique_coords = self.ungridded_data_list.coords()
