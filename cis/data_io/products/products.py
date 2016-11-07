@@ -99,8 +99,8 @@ class Aeronet(AProduct):
 
         coords = self._create_coord_list(filenames, data_obj)
         # The name is text before any brackets, the units is what's after it (minus the closing bracket)
-        name_units = variable.split('(')[0]
-        name = name_units[0] if len(name_units) > 1 else name_units
+        name_units = variable.split('(')
+        name = name_units[0]
         units = name_units[1][:-1] if len(name_units) > 1 else ''
 
         return UngriddedData(data_obj[variable],
