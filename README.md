@@ -8,7 +8,7 @@ CIS
 
 v1.4.0 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.59939.svg)](http://dx.doi.org/10.5281/zenodo.59939)
 
-CIS is an open source command-line tool for the easy collocation, visualization, analysis, and comparison of a
+CIS is an open source Python library and command-line tool for the easy collocation, visualization, analysis, and comparison of a
 diverse set of gridded and ungridded datasets used across earth sciences. Visit our homepage at www.cistools.net.
 
 For issue tracking and improvement suggestions please see our JIRA project at: https://jira.ceh.ac.uk/projects/JASCIS/issues.
@@ -55,5 +55,5 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with CIS.  If not, see <http://www.gnu.org/licenses/>.
 
-A gratefully use a number of NASA Visible Earth 'Blue Marble' raster 
+We gratefully use a number of NASA Visible Earth 'Blue Marble' raster 
 images in this repository.
