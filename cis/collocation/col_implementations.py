@@ -1,8 +1,6 @@
 import logging
 
 import iris
-import iris.analysis
-import iris.analysis.interpolate
 import iris.coords
 from iris.exceptions import CoordinateMultiDimError
 import numpy as np
@@ -739,8 +737,9 @@ class GriddedCollocator(Collocator):
 
 class gridded_gridded_nn(Kernel):
     def __init__(self):
+        from iris.analysis import Nearest
         self.name = 'nearest'
-        self.interpolater = iris.analysis.Nearest
+        self.interpolater = Nearest
 
     def get_value(self, point, data):
         """Not needed for gridded/gridded collocation.
@@ -750,8 +749,9 @@ class gridded_gridded_nn(Kernel):
 
 class gridded_gridded_li(Kernel):
     def __init__(self):
+        from iris.analysis import Linear
         self.name = 'bilinear'
-        self.interpolater = iris.analysis.Linear
+        self.interpolater = Linear
 
     def get_value(self, point, data):
         """Not needed for gridded/gridded collocation.
