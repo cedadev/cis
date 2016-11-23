@@ -61,7 +61,7 @@ def info_cmd(main_arguments):
     """
     from cis.info import info
     dg = main_arguments.datagroups[0]
-    info(dg['filenames'], dg['variables'], dg['product'], main_arguments.type)
+    info(dg['filenames'], dg['variables'], dg.get('product', None), main_arguments.type)
 
 
 def col_cmd(main_arguments):
