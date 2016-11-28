@@ -34,3 +34,4 @@ Bugs fixed
 CIS 1.5.1 fixes
 ===============
  * Minor fix in interpreting units when reading some NetCDF data in Python 2
+ * Fixed an issue where line and scatter plots weren't respecting the yaxis keyword

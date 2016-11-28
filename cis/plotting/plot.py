@@ -334,6 +334,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     from cis.data_io.common_data import CommonData
     from cis.data_io.gridded_data import GriddedData
     from cis.utils import squeeze
+    from cis.plotting.genericplot import GenericPlot
 
     # Remove any extra gridded data dimensions
     if isinstance(data, GriddedData):
@@ -346,22 +347,31 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
                                  "histogram2d or use a Coord (or None) for the xaxis argument.")
         else:
             how = 'comparativescatter'
+        xaxis_coord = xaxis
     else:
-        xaxis = get_axis(data, 'X', xaxis)
+        xaxis_coord = get_axis(data, 'X', xaxis)
 
-    yaxis = get_axis(data, 'Y', yaxis)
+    yaxis_coord = get_axis(data, 'Y', yaxis)
 
-    how = how or data._get_default_plot_type(xaxis.standard_name == 'longitude'
-                                             and yaxis.standard_name == 'latitude')
+    how = how or data._get_default_plot_type(xaxis_coord.standard_name == 'longitude'
+                                             and yaxis_coord.standard_name == 'latitude')
+
+    try:
+        plt_type = plot_types[how]
+    except KeyError:
+        raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
+
+    if issubclass(plt_type, GenericPlot) and yaxis is not None:
+        # If we have a line or scatter plot and the user has specified a y-axis, then this should be the data
+        data = yaxis_coord
+    else:
+        # Otherwise, it's just another kwarg
+        kwargs['yaxis'] = yaxis_coord
 
     # Set a nice default label
     label = get_label(data) if label is None else label
 
-    try:
-        plot = plot_types[how](data, xaxis=xaxis, yaxis=yaxis, label=label,
-                               *args, **kwargs)
-    except KeyError:
-        raise ValueError("Invalid plot type, must be one of: {}".format(plot_types.keys()))
+    plot = plot_types[how](data, xaxis=xaxis_coord, label=label, *args, **kwargs)
 
     subplot_kwargs = {}
     if plot.is_map():
@@ -381,10 +391,10 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     plot(ax)
 
     # Any post-processing
-    if xaxis.standard_name == 'time' and how not in ['comparativescatter', 'histogram2d', 'histogram']:
+    if xaxis_coord.standard_name == 'time' and how not in ['comparativescatter', 'histogram2d', 'histogram']:
         set_x_axis_as_time(ax)
 
-    if yaxis.standard_name == 'air_pressure':
+    if yaxis_coord.standard_name == 'air_pressure':
         ax.invert_yaxis()
 
     return plot, ax

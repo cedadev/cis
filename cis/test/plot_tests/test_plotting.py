@@ -982,3 +982,10 @@ class TestPlotAPIVisual(VisualTest):
         ax.bluemarble()
 
         self.check_graphic()
+
+    def test_can_specify_yaxis_altitude(self):
+        from cis import read_data
+        d = read_data(valid_GASSP_aeroplane_filename, valid_GASSP_aeroplane_variable)
+        d.plot(yaxis='altitude')
+
+        self.check_graphic()

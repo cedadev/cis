@@ -12,7 +12,7 @@ from iris.coords import POINT_MODE
 @six.add_metaclass(ABCMeta)
 class APlot(object):
 
-    def __init__(self, packed_data, xaxis, yaxis, color=None,
+    def __init__(self, packed_data, xaxis, yaxis=None, color=None,
                  edgecolor=None, itemstyle=None, itemwidth=None, label=None, *mplargs, **mplkwargs):
         """
         Abstract base class for all CIS plot types. Includes some common kwargs.
