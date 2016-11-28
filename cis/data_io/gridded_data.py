@@ -7,6 +7,7 @@ import numpy as np
 from cis.data_io.common_data import CommonData, CommonDataList
 from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.hyperpoint_view import GriddedHyperPointView
+import six
 
 
 def load_cube(*args, **kwargs):
@@ -619,7 +620,7 @@ def _collapse_gridded(data, coords, kernel):
     if kernel is None or kernel == '':
         kernel = 'moments'
 
-    if isinstance(kernel, str):
+    if isinstance(kernel, six.string_types):
         kernel_inst = aggregation_kernels[kernel]
     elif isinstance(kernel, (IrisAggregator, MultiKernel)):
         kernel_inst = kernel

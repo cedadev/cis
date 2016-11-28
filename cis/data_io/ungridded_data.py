@@ -133,8 +133,8 @@ class Metadata(object):
         if not isinstance(units, Unit):
             try:
                 # Try some basic tidying up of unit
-                if isinstance(units, str):
-                    units = units.replace("since:", "since").replace(",", "")
+                if isinstance(units, six.string_types):
+                    units = units.replace("since:", "since").replace(",", "").lower()
                 units = Unit(units)
             except ValueError:
                 logging.info("Unable to parse cf-units: {}. Some operations may not be available.".format(units))

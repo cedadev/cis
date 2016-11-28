@@ -30,3 +30,7 @@ Bugs fixed
  * [JASCIS-357] Added deprecation for the aggregation of gridded datasets
  * [JASCIS-329] Metadata objects now attempt to use cf_units for all units, but will fall back to strings if needed. In
    future releases we may insist on plugins providing standard units.
+
+CIS 1.5.1 fixes
+===============
+ * Minor fix in interpreting units when reading some NetCDF data in Python 2

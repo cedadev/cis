@@ -3,6 +3,7 @@
 """
 import logging
 from cis.collocation.col_implementations import moments
+import six
 
 
 def collocate(data, sample, collocator, constraint, kernel):
@@ -56,7 +57,7 @@ def get_kernel(kernel, default=moments):
     from cis.collocation.col_framework import get_kernel, Kernel
     if not kernel:
         kernel = default()
-    elif isinstance(kernel, str):
+    elif isinstance(kernel, six.string_types):
         kernel = get_kernel(kernel)()
     elif not isinstance(kernel, Kernel):
         raise ValueError("Invalid kernel argument, it must be either a string or a Kernel instance")

@@ -15,6 +15,7 @@ from cis.plotting.scatterplot import ScatterPlot, ScatterPlot2D
 from cis.plotting.taylor import Taylor
 from cis.plugin import get_all_subclasses
 import cartopy.crs
+import six
 
 colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
@@ -366,7 +367,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     if plot.is_map():
         if projection is None:
             projection = ccrs.PlateCarree(central_longitude=central_longitude)
-        elif isinstance(projection, str):
+        elif isinstance(projection, six.string_types):
             projection = projections[projection]()
         plot.mplkwargs['transform'] = ccrs.PlateCarree()
         subplot_kwargs['projection'] = projection
