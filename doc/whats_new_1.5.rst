@@ -35,3 +35,7 @@ CIS 1.5.1 fixes
 ===============
  * Minor fix in interpreting units when reading some NetCDF data in Python 2
  * Fixed an issue where line and scatter plots weren't respecting the yaxis keyword
+
+CIS 1.5.2 fixes
+===============
+ * Slicing and copying Coords now preserves the axis

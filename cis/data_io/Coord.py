@@ -44,7 +44,7 @@ class Coord(LazyData):
         #  data, and will lead to post-processing before slicing.
         # TODO: We could be cleverer and figure out the right slice across the various data managers to only read the
         #  right data from disk.
-        return Coord(self.data[keys].copy(), metadata=deepcopy(self.metadata))
+        return Coord(self.data[keys].copy(), metadata=deepcopy(self.metadata), axis=self.axis)
 
     @property
     def points(self):
@@ -120,7 +120,7 @@ class Coord(LazyData):
         :return: Copied :class:`Coord`
         """
         data = data if data is not None else numpy.ma.copy(self.data)  # Will call lazy load method
-        return Coord(data, self.metadata)
+        return Coord(data, self.metadata, axis=self.axis)
 
 
 class CoordList(list):
