@@ -989,3 +989,11 @@ class TestPlotAPIVisual(VisualTest):
         d.plot(yaxis='altitude')
 
         self.check_graphic()
+
+    def test_log_colorbar_scale(self):
+        from cis import read_data
+        d = read_data(valid_aerosol_cci_filename, valid_aerosol_cci_variable)
+        d.plot(logv=True)
+
+        self.check_graphic()
+

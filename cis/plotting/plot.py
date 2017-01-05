@@ -292,7 +292,7 @@ def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
         cbar_kwargs['ticks'] = MultipleLocator(vstep)
 
     if logv:
-        cbar_kwargs['formatter'] = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
+        cbar_kwargs['format'] = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
     #
     if cbarscale is not None:
         cbar_kwargs['shrink'] = cbarscale
