@@ -1,4 +1,4 @@
-#!/bin/env python2.7
+#!/bin/env python
 """
 Command line interface for the Climate Intercomparison Suite (CIS)
 """
@@ -7,7 +7,6 @@ import traceback
 import logging
 
 from cis.data_io.data_reader import DataReader
-from cis.data_io.data_writer import DataWriter
 from cis import __version__, __status__
 
 logger = logging.getLogger(__name__)
@@ -26,32 +25,6 @@ def __error_occurred(e):
     exit(1)
 
 
-def __check_variable_is_valid(main_arguments, data, axis):
-    """
-    Used for creating or appending to a dictionary of the format { variable_name : axis } which will later be used to
-    assign the variable to the specified axis
-
-    :param main_arguments: The arguments received from the parser
-    :param data: A list of packed data objects
-    :param var_axis_dict: A dictionary where the key will be the name of a variable and the value will be the axis it
-     will be plotted on.
-    :param axis: The axis on which to plot the variable on
-    """
-    from cis.exceptions import InvalidVariableError
-
-    user_specified_variable = main_arguments.pop(axis + "axis")
-
-    for data_item in data:
-        if len(data_item.coords(user_specified_variable)) == 0 \
-                and len(data_item.coords(standard_name=user_specified_variable)) == 0 \
-                and data_item.name() != user_specified_variable \
-                and data_item.standard_name != user_specified_variable \
-                and data_item.long_name != user_specified_variable:
-            raise InvalidVariableError("{} is not a valid variable".format(user_specified_variable))
-
-    return user_specified_variable
-
-
 def plot_cmd(main_arguments):
     """
     Main routine for handling calls to the 'plot' command.
@@ -59,35 +32,22 @@ def plot_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments
     """
-    from cis.plotting.plot import Plotter
+    from cis.plotting.formatted_plot import Plotter
     from cis.data_io.data_reader import DataReader
 
-    try:
-        data = DataReader().read_datagroups(main_arguments.datagroups)
-    except MemoryError:
-        __error_occurred("Not enough memory to read the data for the requested plot. Please either reduce the amount "
-                         "of data to be plotted, increase the swap space available on your machine or use a machine "
-                         "with more memory (for example the JASMIN facility).")
+    data = DataReader().read_datagroups(main_arguments.datagroups)
 
     # We have to pop off the arguments which plot isn't expecting so that it treats everything else as an mpl kwarg
     main_arguments = vars(main_arguments)
-    main_arguments.pop('command')  # Remove the command argument now it is not needed
-    plot_type = main_arguments.pop("type")
-    output = main_arguments.pop("output")
-    # Also pop off the verbosity kwargs
+    _ = main_arguments.pop('command')
     _ = main_arguments.pop("quiet")
     _ = main_arguments.pop("verbose")
     _ = main_arguments.pop("force_overwrite")
+    _ = main_arguments.pop("output_var", None)
 
-    main_arguments["x_variable"] = __check_variable_is_valid(main_arguments, data, "x")
-    main_arguments["y_variable"] = __check_variable_is_valid(main_arguments, data, "y")
-
-    try:
-        Plotter(data, plot_type, output, **main_arguments)
-    except MemoryError:
-        __error_occurred("Not enough memory to plot the data after reading it in. Please either reduce the amount "
-                         "of data to be plotted, increase the swap space available on your machine or use a machine "
-                         "with more memory (for example the JASMIN facility).")
+    layer_opts = [{k: v for k, v in d.items() if k not in ['variables', 'filenames', 'product']}
+                  for d in main_arguments.pop('datagroups')]
+    Plotter(data, layer_opts=layer_opts, **main_arguments)
 
 
 def info_cmd(main_arguments):
@@ -101,7 +61,7 @@ def info_cmd(main_arguments):
     """
     from cis.info import info
     dg = main_arguments.datagroups[0]
-    info(dg['filenames'], dg['variables'], dg['product'], main_arguments.type)
+    info(dg['filenames'], dg['variables'], dg.get('product', None), main_arguments.type)
 
 
 def col_cmd(main_arguments):
@@ -110,43 +70,31 @@ def col_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments (minus the col command)
     """
-    from cis.exceptions import ClassNotFoundError, CISError
-    from cis.collocation.col import Collocate
+    from cis.collocation.col_framework import get_kernel
 
-    output_file = main_arguments.output
-    data_reader = DataReader()
-    missing_data_for_missing_samples = False
+    # Read the sample data
+    missing_data_for_missing_sample = False
     if main_arguments.samplevariable is not None:
-        sample_data = data_reader.read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
-                                                 main_arguments.sampleproduct)[0]
-        missing_data_for_missing_samples = True
+        sample_data = DataReader().read_data_list(main_arguments.samplefiles, main_arguments.samplevariable,
+                                                  main_arguments.sampleproduct)[0]
+        missing_data_for_missing_sample = True
     else:
-        sample_data = data_reader.read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
+        sample_data = DataReader().read_coordinates(main_arguments.samplefiles, main_arguments.sampleproduct)
 
-    try:
-        col = Collocate(sample_data, missing_data_for_missing_samples)
-    except IOError as e:
-        __error_occurred("There was an error reading one of the files: \n" + str(e))
+    # Unpack the sample options
+    col_name, col_options = main_arguments.samplegroup.get('collocator', ('', {}))
+    kern_name, kern_options = main_arguments.samplegroup.get('kernel', ('', {}))
 
-    col_name = main_arguments.samplegroup['collocator'][0] if main_arguments.samplegroup[
-                                                                  'collocator'] is not None else None
-    col_options = main_arguments.samplegroup['collocator'][1] if main_arguments.samplegroup[
-                                                                     'collocator'] is not None else {}
-    kern_name = main_arguments.samplegroup['kernel'][0] if main_arguments.samplegroup['kernel'] is not None else None
-    kern_options = main_arguments.samplegroup['kernel'][1] if main_arguments.samplegroup['kernel'] is not None else None
+    missing_data_for_missing_sample = col_options.pop('missing_data_for_missing_sample', missing_data_for_missing_sample)
+
+    kernel = get_kernel(kern_name)(**kern_options) if kern_name else None
 
     for input_group in main_arguments.datagroups:
-        variables = input_group['variables']
-        filenames = input_group['filenames']
-        product = input_group["product"] if input_group["product"] is not None else None
-
-        data = data_reader.read_data_list(filenames, variables, product)
-        data_writer = DataWriter()
-        try:
-            output = col.collocate(data, col_name, col_options, kern_name, kern_options)
-            data_writer.write_data(output, output_file)
-        except ClassNotFoundError as e:
-            __error_occurred(str(e) + "\nInvalid collocation option.")
+        # Then collocate each datagroup
+        data = DataReader().read_single_datagroup(input_group)
+        output = data.collocated_onto(sample_data, how=col_name, kernel=kernel,
+                                      missing_data_for_missing_sample=missing_data_for_missing_sample, **col_options)
+        output.save_data(main_arguments.output)
 
 
 def subset_cmd(main_arguments):
@@ -155,18 +103,20 @@ def subset_cmd(main_arguments):
 
     :param main_arguments:    The command line arguments (minus the subset command)
     """
-    from cis.subsetting.subset import Subset
+    import cis.exceptions as ex
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Subsetting can only be performed on one data group")
-    input_group = main_arguments.datagroups[0]
 
-    variables = input_group['variables']
-    filenames = input_group['filenames']
-    product = input_group["product"] if input_group["product"] is not None else None
+    data = DataReader().read_single_datagroup(main_arguments.datagroups[0])
 
-    subset = Subset(main_arguments.limits, main_arguments.output)
-    subset.subset(variables, filenames, product)
+    subset = data.subset(**main_arguments.limits)
+
+    if subset is None:
+        # Constraints exclude all data.
+        raise ex.NoDataInSubsetError("No output created - constraints exclude all data")
+
+    subset.save_data(main_arguments.output)
 
 
 def aggregate_cmd(main_arguments):
@@ -175,17 +125,48 @@ def aggregate_cmd(main_arguments):
 
     :param main_arguments: The command line arguments (minus the aggregate command)
     """
-    from cis.aggregation.aggregate import Aggregate
+    import cis.exceptions as ex
+    from cis.data_io.gridded_data import GriddedDataList
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Aggregation can only be performed on one data group")
     input_group = main_arguments.datagroups[0]
 
-    variables = input_group['variables']
-    filenames = input_group['filenames']
+    data = DataReader().read_single_datagroup(input_group)
 
-    aggregate = Aggregate(main_arguments.grid, main_arguments.output)
-    aggregate.aggregate(variables, filenames, input_group["product"], input_group["kernel"])
+    if isinstance(data, GriddedDataList):
+        logging.warning("The aggregate command is deprecated for GriddedData and will not be supported in future "
+                        "versions of CIS. Please use 'collapse' instead.")
+        if any(v is not None for v in main_arguments.grid.values()):
+            raise ex.InvalidCommandLineOptionError("Grid specifications are not supported for Gridded aggregation.")
+        output = data.collapsed(list(main_arguments.grid.keys()), how=input_group.get("kernel", ''))
+    else:
+        output = data.aggregate(how=input_group.get("kernel", ''), **main_arguments.grid)
+
+    output.save_data(main_arguments.output)
+
+
+def collapse_cmd(main_arguments):
+    """
+    Main routine for handling calls to the collapse command.
+
+    :param main_arguments: The command line arguments (minus the collapse command)
+    """
+    from cis.data_io.ungridded_data import UngriddedDataList
+
+    if len(main_arguments.datagroups) > 1:
+        __error_occurred("Collapse can only be performed on one data group")
+    input_group = main_arguments.datagroups[0]
+
+    data = DataReader().read_single_datagroup(input_group)
+
+    if isinstance(data, UngriddedDataList):
+        logging.error("The collapse command can only be performed on gridded data. "
+                      "Please use 'aggregate' instead.")
+
+    output = data.collapsed(main_arguments.dimensions, how=input_group.get("kernel", ''))
+
+    output.save_data(main_arguments.output)
 
 
 def evaluate_cmd(main_arguments):
@@ -245,9 +226,10 @@ def version_cmd(_main_arguments):
 
 commands = {'plot': plot_cmd,
             'info': info_cmd,
-            'col': col_cmd,
+            'collocate': col_cmd,
             'aggregate': aggregate_cmd,
             'subset': subset_cmd,
+            'collapse': collapse_cmd,
             'eval': evaluate_cmd,
             'stats': stats_cmd,
             'version': version_cmd}
@@ -294,6 +276,10 @@ def main():
 
     try:
         parse_and_run_arguments()
+    except MemoryError:
+        __error_occurred("Not enough memory. Please either reduce the amount "
+                         "of data, increase the swap space available on your machine or use a machine "
+                         "with more memory (for example the JASMIN facility).")
     except Exception as e:
         __error_occurred(e)
 

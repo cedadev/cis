@@ -1,353 +1,245 @@
 """
 Unit tests for the top-level subsetting routines.
-Note that the set_limit mocks are setup for each test using the start/stop methods in setup
- and teardown respectively, but that the constrain methods are patched out on a per-test basis, this is just
- because some tests rely on the constrain call having different side effects.
 """
+import datetime
 from unittest import TestCase
-from hamcrest import assert_that, is_
-from mock import MagicMock, Mock, patch
+import numpy as np
+from cis.data_io.gridded_data import GriddedDataList
 
-from cis.data_io.data_reader import DataReader
-from cis.data_io.data_writer import DataWriter
-from cis.data_io.ungridded_data import UngriddedDataList
-from cis.data_io.gridded_data import GriddedDataList, make_from_cube
-from cis.subsetting.subset import Subset
-from cis.subsetting.subset_limits import SubsetLimits
-from cis.test.util.mock import make_regular_2d_ungridded_data, make_square_5x3_2d_cube
+from cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedDataList
+from cis.data_io.gridded_data import make_from_cube
+import cis.test.util.mock
 
 
-class TestSubsetOnUngriddedData(TestCase):
+class TestGriddedSubsetConstraint(TestCase):
+    """
+    Tests for subsetting gridded data
+    """
 
-    def setUp(self):
+    def test_null_subset_2d_gridded_data(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset()
+        np.testing.assert_array_equal(subset.data, data.data)
+
+    def test_can_subset_2d_gridded_data_by_longitude(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(longitude=[0.0, 5.0])
+        assert (subset.data.tolist() == [[2, 3], [5, 6], [8, 9], [11, 12], [14, 15]])
+
+    def test_can_subset_2d_gridded_data_by_latitude(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(latitude=[0.0, 10.0])
+        assert (subset.data.tolist() == [[7, 8, 9], [10, 11, 12], [13, 14, 15]])
+
+    def test_can_subset_2d_gridded_data_by_latitude_with_None_min(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(latitude=[0.0, None])
+        assert (subset.data.tolist() == [[7, 8, 9], [10, 11, 12], [13, 14, 15]])
+
+    def test_can_subset_2d_gridded_data_by_latitude_with_None_max(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(latitude=[None, 0.0])
+        assert (subset.data.tolist() == [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+    def test_can_subset_3d_gridded_data_by_altitude(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_altitude())
+        subset = data.subset(altitude=[2, 5])
+        assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
+                                         [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
+                                         [[45, 46, 47, 48], [52, 53, 54, 55], [59, 60, 61, 62]],
+                                         [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
+                                         [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
+
+    def test_can_subset_3d_gridded_data_by_pressure(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_pressure())
+        subset = data.subset(air_pressure=[2, 5])
+        assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
+                                         [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
+                                         [[45, 46, 47, 48], [52, 53, 54, 55], [59, 60, 61, 62]],
+                                         [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
+                                         [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
+
+    def test_can_subset_2d_gridded_data_by_time(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_time())
+        subset = data.subset(time=[140494, 140497])
+        assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
+                                         [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
+                                         [[45, 46, 47, 48], [52, 53, 54, 55], [59, 60, 61, 62]],
+                                         [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
+                                         [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
+
+    def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
+        data = make_from_cube(cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
+        long_coord = data.coord('longitude')
+        long_coord.points = np.arange(-175, 185, 40)
+        long_coord.bounds = None
+        long_coord.guess_bounds()
+        subset = data.subset(longitude=[135.0, 270])
+        assert (subset.data.tolist() == [[9, 1, 2, 3],
+                                         [18, 10, 11, 12],
+                                         [27, 19, 20, 21],
+                                         [36, 28, 29, 30],
+                                         [45, 37, 38, 39]])
+
+    def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_360(self):
+        data = make_from_cube(cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
+        long_coord = data.coord('longitude')
+        long_coord.points = np.arange(5, 365, 40)
+        long_coord.bounds = None
+        long_coord.guess_bounds()
+        subset = data.subset(longitude=[-45.0, 90])
+        assert (subset.data.tolist() == [[9, 1, 2, 3],
+                                         [18, 10, 11, 12],
+                                         [27, 19, 20, 21],
+                                         [36, 28, 29, 30],
+                                         [45, 37, 38, 39]])
+
+    def test_can_subset_2d_gridded_data_with_missing_data(self):
+        """This test just shows that missing values do not interfere with subsetting -
+        nothing special happens to the missing values.
         """
-        Setup the test harnesses, the various mocks and variables are set here, but some may be overriden by the
-        individual tests.
-        :return:
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_missing_data())
+        subset = data.subset(longitude=[0.0, 5.0])
+        assert (subset.data.tolist(fill_value=-999) == [[2, 3], [-999, 6], [8, -999], [11, 12], [14, 15]])
+
+    def test_can_subset_2d_gridded_data_by_longitude_latitude(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(longitude=[0.0, 5.0], latitude=[-5.0, 5.0])
+        assert (subset.data.tolist() == [[5, 6], [8, 9], [11, 12]])
+
+    def test_edge_cases_with_no_bounds_for_2d_gridded_data_subset_by_longitude_latitude(self):
         """
-        self.variable = 'var_name'
-        self.filename = 'filename'
-        self.output_file = 'output.hdf'
-        self.xmin, self.xmax = -10, 10
-        self.ymin, self.ymax = 40, 60
-        self.limits = {'x': SubsetLimits(self.xmin, self.xmax, False),
-                       'y': SubsetLimits(self.ymin, self.ymax, False)}
+        This test defines the behaviour for constraints set just away from cell centers when no bounds have been
+        assigned to the coordinates: Namely the cell centers are treated as points with no bounds.
 
-        self.mock_data_reader = DataReader()
-        self.mock_data_reader.read_data_list = MagicMock(return_value=make_regular_2d_ungridded_data())
-        self.mock_data_writer = DataWriter()
-        self.mock_data_writer.write_data = Mock()
-
-        # Patch out the set_limit methods so that we can check they've been called correctly
-        self.limit_patch = patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.set_limit')
-        self.set_limit = self.limit_patch.start()
-
-    def tearDown(self):
+        This test constrains the subsetting algorithm as defined in the CIS paper so be very careful about changing it!
         """
-        Make sure we clean-up the patch
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(longitude=[0.0, 4.5], latitude=[-5.5, 5.5])
+        assert (subset.data.tolist() == [[5,], [8,], [11,]])
+
+    def test_edge_cases_with_bounds_for_2d_gridded_data_subset_by_longitude_latitude(self):
         """
-        self.limit_patch.stop()
-
-    def test_GIVEN_single_variable_WHEN_subset_THEN_DataReader_called_correctly(self):
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-        subset.subset(self.variable, self.filename, product=None)
-        assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filename)
-        assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variable)
-
-    def test_GIVEN_single_variable_WHEN_subset_THEN_Subsetter_called_correctly(self):
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        # Patch out the constrain method, in this case it just sends all the data back
-        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
-                             side_effect=lambda *args: args[0]) as constrain:
-            subset.subset(self.variable, self.filename, product=None)
-
-            assert_that(constrain.call_count, is_(1))
-            called_data = constrain.call_args[0][0]
-            called_limits = self.set_limit.call_args_list
-            assert_that(called_data.data_flattened.tolist(),
-                        is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
-            assert_that(called_limits[0][0][0].name(), is_('lat'))
-            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
-            assert_that(called_limits[1][0][0].name(), is_('lon'))
-            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
-
-    def test_GIVEN_single_variable_WHEN_subset_THEN_DataWriter_called_correctly(self):
-
-        def _mock_subset(data):
-            data.data += 1  # Modify the data slightly so we can be sure it's passed in correctly
-            return data
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        # Patch out the constrain method, in this case it modifies the data slightly so we can test the writing
-        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
-                             side_effect=_mock_subset) as constrain:
-            subset.subset(self.variable, self.filename, product=None)
-
-            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
-            written_data = self.mock_data_writer.write_data.call_args[0][0]
-            written_filename = self.mock_data_writer.write_data.call_args[0][1]
-            assert_that(written_data.data_flattened.tolist(), is_([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]))
-            assert_that(written_filename, is_(self.output_file))
-
-    def test_GIVEN_multiple_variables_and_filenames_WHEN_subset_THEN_DataReader_called_correctly(self):
-        self.variables = ['var_name1', 'var_name2']
-        self.filenames = ['filename1', 'filename2']
-
-        self.mock_data_reader.read_data_list = MagicMock(
-            return_value=UngriddedDataList(2 * [make_regular_2d_ungridded_data()]))
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
-                             side_effect=lambda *args: args[0]) as constrain:
-
-            subset.subset(self.variables, self.filenames, product=None)
-
-            assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
-            assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filenames)
-            assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variables)
-
-    def test_GIVEN_multiple_variables_WHEN_subset_THEN_Subsetter_called_correctly(self):
-        self.variables = ['var_name1', 'var_name2']
-
-        self.mock_data_reader.read_data_list = MagicMock(
-            return_value=UngriddedDataList(2 * [make_regular_2d_ungridded_data()]))
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
-                             side_effect=lambda *args: args[0]) as constrain:
-            subset.subset(self.variables, self.filename, product=None)
-
-            assert_that(constrain.call_count, is_(1))
-            called_data = constrain.call_args[0][0]
-            called_limits = self.set_limit.call_args_list
-
-            assert_that(called_data[0].data_flattened.tolist(), is_([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
-            assert_that(called_data[1].data_flattened.tolist(), is_(called_data[0].data_flattened.tolist()))
-            assert_that(called_limits[0][0][0].name(), is_('lat'))
-            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
-            assert_that(called_limits[1][0][0].name(), is_('lon'))
-            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
-
-    def test_GIVEN_multiple_variables_WHEN_subset_THEN_DataWriter_called_correctly(self):
-        self.variables = ['var_name1', 'var_name2']
-
-        def _mock_subset(data):
-            # Modify the data slightly so we can be sure it's passed in correctly
-            for var in data:
-                var.data += 1
-            return data
-
-        self.mock_data_reader.read_data_list = MagicMock(return_value=UngriddedDataList([make_regular_2d_ungridded_data(),
-                                                                                    make_regular_2d_ungridded_data()]))
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
-                                side_effect=_mock_subset) as constrain:
-            subset.subset(self.variables, self.filename, product=None)
-
-            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
-            written_data = self.mock_data_writer.write_data.call_args[0][0]
-            written_filename = self.mock_data_writer.write_data.call_args[0][1]
-            assert_that(written_data[0].data_flattened.tolist(), is_([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]))
-            assert_that(written_data[0].data_flattened.tolist(), written_data[1].data_flattened.tolist())
-            assert_that(written_filename, is_(self.output_file))
-
-    def test_GIVEN_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
-        self.limits = {'lon': SubsetLimits(self.xmin, self.xmax, False),
-                       'lat': SubsetLimits(self.ymin, self.ymax, False)}
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        with patch('cis.subsetting.subset_constraint.UngriddedSubsetConstraint.constrain',
-                             side_effect=lambda *args: args[0]) as constrain:
-            subset.subset(self.variable, self.filename, product=None)
-            called_limits = self.set_limit.call_args_list
-            assert_that(called_limits[0][0][0].name(), is_('lat'))
-            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
-            assert_that(called_limits[1][0][0].name(), is_('lon'))
-            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
-
-
-class TestSubsetOnGriddedData(TestCase):
-
-    def _mock_data(self, data):
-        return data
-
-    def setUp(self):
-        self.variable = 'var_name'
-        self.filename = 'filename'
-        self.output_file = 'output.hdf'
-        self.xmin, self.xmax = 0, 5
-        self.ymin, self.ymax = -5, 5
-        self.limits = {'x': SubsetLimits(self.xmin, self.xmax, False),
-                       'y': SubsetLimits(self.ymin, self.ymax, False)}
-
-        self.mock_data_reader = DataReader()
-        self.mock_data_reader.read_data_list = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
-        self.mock_data_writer = DataWriter()
-        self.mock_data_writer.write_data = Mock()
-
-        self.limit_patch = patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.set_limit')
-        self.set_limit = self.limit_patch.start()
-
-    def tearDown(self):
-        self.limit_patch.stop()
-
-    def test_GIVEN_single_variable_WHEN_subset_THEN_DataReader_called_correctly(self):
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-        subset.subset(self.variable, self.filename, product=None)
-        assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filename)
-        assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variable)
-
-    def test_GIVEN_single_variable_WHEN_subset_THEN_Subsetter_called_correctly(self):
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
-                                     side_effect=lambda *args: args[0]) as constrain:
-            subset.subset(self.variable, self.filename, product=None)
-
-            assert_that(constrain.call_count, is_(1))
-            called_data = constrain.call_args[0][0]
-            called_limits = self.set_limit.call_args_list
-            assert_that(called_data.data.tolist(),
-                        is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
-            assert_that(called_limits[0][0][0].name(), is_('latitude'))
-            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
-            assert_that(called_limits[1][0][0].name(), is_('longitude'))
-            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
-
-    def test_GIVEN_single_variable_WHEN_subset_THEN_DataWriter_called_correctly(self):
-
-        def _mock_subset(data):
-            data.data += 1  # Modify the data slightly so we can be sure it's passed in correctly
-            return data
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
-                                     side_effect=_mock_subset) as constrain:
-            subset.subset(self.variable, self.filename, product=None)
-
-            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
-            written_data = self.mock_data_writer.write_data.call_args[0][0]
-            written_filename = self.mock_data_writer.write_data.call_args[0][1]
-            assert_that(written_data.data.tolist(), is_([[2, 3, 4], [5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16]]))
-            assert_that(written_filename, is_(self.output_file))
-
-    def test_GIVEN_multiple_variables_and_filenames_WHEN_subset_THEN_DataReader_called_correctly(self):
-        self.variables = ['var_name1', 'var_name2']
-        self.filenames = ['filename1', 'filename2']
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-        subset.subset(self.variables, self.filenames, product=None)
-        assert_that(self.mock_data_reader.read_data_list.call_count, is_(1))
-        assert_that(self.mock_data_reader.read_data_list.call_args[0][0], self.filenames)
-        assert_that(self.mock_data_reader.read_data_list.call_args[0][1], self.variables)
-
-    def test_GIVEN_multiple_variables_WHEN_subset_THEN_Subsetter_called_correctly(self):
-        self.variables = ['var_name1', 'var_name2']
-
-        self.mock_data_reader.read_data_list = MagicMock(return_value=GriddedDataList([make_square_5x3_2d_cube(),
-                                                                                  make_square_5x3_2d_cube()]))
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
-                             side_effect=lambda *args: args[0]) as constrain:
-            subset.subset(self.variables, self.filename, product=None)
-
-            assert_that(constrain.call_count, is_(1))
-            called_data = constrain.call_args[0][0]
-            called_limits = self.set_limit.call_args_list
-            assert_that(called_data[0].data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
-            assert_that(called_data[1].data.tolist(), is_(called_data[0].data.tolist()))
-            assert_that(called_limits[0][0][0].name(), is_('latitude'))
-            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
-            assert_that(called_limits[1][0][0].name(), is_('longitude'))
-            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
-
-    def test_GIVEN_multiple_variables_WHEN_subset_THEN_DataWriter_called_correctly(self):
-        self.variables = ['var_name1', 'var_name2']
-
-        def _mock_subset(data):
-            # Modify the data slightly so we can be sure it's passed in correctly
-            for var in data:
-                var.data += 1
-            return data
-
-        self.mock_data_reader.read_data_list = MagicMock(return_value=GriddedDataList([make_square_5x3_2d_cube(),
-                                                                                  make_square_5x3_2d_cube()]))
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
-                                     side_effect=_mock_subset) as constrain:
-            subset.subset(self.variables, self.filename, product=None)
-
-            assert_that(self.mock_data_writer.write_data.call_count, is_(1))
-            written_data = self.mock_data_writer.write_data.call_args[0][0]
-            written_filename = self.mock_data_writer.write_data.call_args[0][1]
-            assert_that(written_data[0].data.tolist(), is_([[2, 3, 4], [5, 6, 7], [8, 9, 10], [11, 12, 13], [14, 15, 16]]))
-            assert_that(written_data[0].data.tolist(), written_data[1].data.tolist())
-            assert_that(written_filename, is_(self.output_file))
-
-    def test_GIVEN_standard_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
-        self.limits = {'longitude': SubsetLimits(self.xmin, self.xmax, False),
-                       'latitude': SubsetLimits(self.ymin, self.ymax, False)}
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
-                                     side_effect=lambda *args: args[0]) as constrain:
-            subset.subset(self.variable, self.filename, product=None)
-
-            assert_that(constrain.call_count, is_(1))
-            called_data = constrain.call_args[0][0]
-            called_limits = self.set_limit.call_args_list
-            assert_that(called_data.data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
-            assert_that(called_limits[0][0][0].name(), is_('latitude'))
-            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
-            assert_that(called_limits[1][0][0].name(), is_('longitude'))
-            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
-
-    def test_GIVEN_var_named_variables_WHEN_subset_THEN_coordinates_found_correctly(self):
-        self.limits = {'lon': SubsetLimits(self.xmin, self.xmax, False),
-                       'lat': SubsetLimits(self.ymin, self.ymax, False)}
-
-        subset = Subset(self.limits, self.output_file,
-                        data_reader=self.mock_data_reader, data_writer=self.mock_data_writer)
-
-        with patch('cis.subsetting.subset_constraint.GriddedSubsetConstraint.constrain',
-                                     side_effect=lambda *args: args[0]) as constrain:
-            subset.subset(self.variable, self.filename, product=None)
-
-            assert_that(constrain.call_count, is_(1))
-            called_data = constrain.call_args[0][0]
-            called_limits = self.set_limit.call_args_list
-            assert_that(called_data.data.tolist(), is_([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]))
-            assert_that(called_limits[0][0][0].name(), is_('latitude'))
-            assert_that(called_limits[0][0][1:], is_((self.ymin, self.ymax)))
-            assert_that(called_limits[1][0][0].name(), is_('longitude'))
-            assert_that(called_limits[1][0][1:], is_((self.xmin, self.xmax)))
+        Complementary to the test above, if bounds are assigned to the coordinates then the cells can match the
+        constraint if the matching points are within - or equal to the bounds.
+
+        This test constrains the subsetting algorithm as defined in the CIS paper so be very careful about changing it!
+        """
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        for c in data.coords():
+            c.guess_bounds()
+        subset = data.subset(longitude=[0.0, 4.5], latitude=[-2.50, 2.50])
+        assert (subset.data.tolist() == [[5, 6], [8, 9], [11, 12]])
+
+    def test_empty_longitude_subset_of_gridded_data_list_returns_no_data(self):
+        """
+        Checks that the convention of returning None if subsetting results in an empty subset.
+        Longitude has a modulus and so uses the IRIS intersection method
+        """
+        data = GriddedDataList([cis.test.util.mock.make_square_5x3_2d_cube()])
+        subset = data.subset(longitude=[1.0, 3.0])
+        assert (subset is None)
+
+    def test_empty_time_subset_of_gridded_data_list_returns_no_data(self):
+        """
+        Checks that the convention of returning None if subsetting results in an empty subset.
+        Longitude has no modulus and so uses the IRIS extract method
+        """
+        data = GriddedDataList([cis.test.util.mock.make_square_5x3_2d_cube_with_time()])
+        subset = data.subset(time=[140500, 140550])
+        assert (subset is None)
+
+    def test_GIVEN_GriddedDataList_WHEN_constrain_THEN_correctly_subsetted_GriddedDataList_returned(self):
+        gridded1 = cis.test.util.mock.make_square_5x3_2d_cube()
+        gridded2 = cis.test.util.mock.make_square_5x3_2d_cube()
+        datalist = GriddedDataList([gridded1, gridded2])
+        subset = datalist.subset(longitude=[0.0, 5.0], latitude=[-5.0, 5.0])
+        assert isinstance(subset, GriddedDataList)
+        assert (subset[0].data.tolist() == [[5, 6], [8, 9], [11, 12]])
+        assert (subset[1].data.tolist() == [[5, 6], [8, 9], [11, 12]])
+
+
+class TestUngriddedSubsetConstraint(TestCase):
+    # Tests for subsetting ungridded data
+
+    def test_null_subset_of_2d_ungridded_data(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset()
+        # The data gets flattened, but is otherwise equal
+        np.testing.assert_array_equal(subset.data.flatten(), data.data.flatten())
+
+    def test_can_subset_2d_ungridded_data_by_longitude(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset(longitude=[0.0, None])
+        assert (subset.data.tolist() == [2, 3, 5, 6, 8, 9, 11, 12, 14, 15])
+
+    def test_can_subset_2d_ungridded_data_by_longitude_with_None_min(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset(longitude=[None, 0.0])
+        assert (subset.data.tolist() == [1, 2, 4, 5, 7, 8, 10, 11, 13, 14])
+
+    def test_can_subset_2d_ungridded_data_by_longitude_with_wrapping_at_180(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data(
+            lat_dim_length=5, lon_dim_length=9, lon_min=-175., lon_max=145.)
+        subset = data.subset(longitude=[135.0, 270.0])
+        assert (subset.data.tolist() == [1, 2, 3, 9, 10, 11, 12, 18, 19, 20, 21, 27, 28, 29, 30, 36, 37, 38, 39, 45])
+
+    def test_can_subset_2d_ungridded_data_by_longitude_with_wrapping_at_360(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data(
+            lat_dim_length=5, lon_dim_length=9, lon_min=5., lon_max=325.)
+        subset = data.subset(longitude=[-45.0, 90.0])
+        assert (subset.data.tolist() == [1, 2, 3, 9, 10, 11, 12, 18, 19, 20, 21, 27, 28, 29, 30, 36, 37, 38, 39, 45])
+
+    def test_original_data_not_altered_when_subsetting(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset(longitude=[0.0, 5.0], latitude=[-5.0, 5.0])
+        assert len(data.data_flattened) == 15
+        assert len(data.coord('longitude').data_flattened) == 15
+
+    def test_can_subset_2d_ungridded_data_by_longitude_latitude(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset(longitude=[0.0, 5.0], latitude=[-5.0, 5.0])
+        assert (subset.data.tolist() == [5, 6, 8, 9, 11, 12])
+
+    def test_empty_subset_of_ungridded_data_returns_no_data(self):
+        """Checks that the convention of returning None if subsetting results in an empty subset.
+        """
+        data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        subset = data.subset(longitude=[1.0, 3.0])
+        assert (subset is None)
+
+    def test_can_subset_ungridded_data_by_time(self):
+        data = cis.test.util.mock.make_regular_4d_ungridded_data()
+        subset = data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)])
+        assert (subset.data.tolist() == [2, 3, 7, 8, 12, 13, 17, 18, 22, 23, 27, 28, 32, 33, 37, 38, 42, 43, 47, 48])
+
+    def test_can_subset_ungridded_data_by_partial_date_time(self):
+        from cis.time_util import PartialDateTime
+        data = cis.test.util.mock.make_dummy_ungridded_data_time_series(100)
+        subset = data.subset(time=[PartialDateTime(1984, 9)])
+        assert (subset.data.tolist() == [6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0,
+                                         20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0,
+                                         33.0, 34.0, 35.0])
+
+    def test_can_subset_ungridded_data_by_time_altitude(self):
+        data = cis.test.util.mock.make_regular_4d_ungridded_data()
+        subset = data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
+                             altitude=[45.0, 75.0])
+        assert (subset.data.tolist() == [27, 28, 32, 33, 37, 38])
+
+    def test_can_subset_2d_ungridded_data_with_missing_values(self):
+        data = cis.test.util.mock.make_regular_2d_ungridded_data_with_missing_values()
+        subset = data.subset(longitude=[0.0, 5.0])
+        assert (subset.data.tolist() == [2, 3, None, 6, 8, None, 11, 12, 14, 15])
+
+    def test_GIVEN_UngriddedDataList_WHEN_constrain_THEN_correctly_subsetted_UngriddedDataList_returned(self):
+        ug_data = cis.test.util.mock.make_regular_2d_ungridded_data()
+        ug_data2 = UngriddedData(ug_data.data + 1, Metadata(name='snow', standard_name='snowfall_flux',
+                                                            long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
+                                                            units="kg m-2 s-1", missing_value=-999), ug_data.coords())
+        datalist = UngriddedDataList([ug_data, ug_data2])
+        subset = datalist.subset(longitude=[0.0, 5.0], latitude=[-5.0, 10.0])
+
+        assert isinstance(subset, UngriddedDataList)
+        assert subset[0].data.tolist() == [5, 6, 8, 9, 11, 12, 14, 15]
+        assert subset[1].data.tolist() == [6, 7, 9, 10, 12, 13, 15, 16]

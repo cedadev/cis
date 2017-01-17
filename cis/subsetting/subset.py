@@ -1,157 +1,259 @@
+from abc import ABCMeta, abstractmethod
+import six
 import logging
 
-from iris.exceptions import IrisError
-from cf_units import Unit
-import iris.util
+import numpy as np
+import iris
+import iris.coords
 
-from cis.data_io.data_reader import DataReader
-from cis.data_io.data_writer import DataWriter
-import cis.exceptions as ex
-import cis.parse_datetime as parse_datetime
-from cis.subsetting.subset_constraint import GriddedSubsetConstraint, UngriddedSubsetConstraint
-from cis import __version__
-from cis.utils import guess_coord_axis
+import cis.data_io.gridded_data as gridded_data
 
 
-class Subset(object):
+def subset(data, constraint, **kwargs):
     """
-    Class for subsetting Ungridded or Gridded data either temporally, or spatially or both.
+    Helper function for constraining a CommonData or CommonDataList object (data) given a SubsetConstraint
+    class, the constraints should be specified using the kwargs of the form coord: [min, max]
+
+    :param CommonData or CommonDataList data: The data to subset
+    :param class SubsetConstraint constraint: A SubsetConstraint class to do the constraining
+    :param kwargs: The limits as slices or length 2 tuples of max and min.
+    :return:
+    """
+    from datetime import datetime
+    from cis.time_util import PartialDateTime
+    from cis.exceptions import CoordinateNotFoundError
+    from shapely.wkt import loads
+    from shapely.geos import ReadingError
+
+    constraints = {}
+
+    for dim_name, limit in kwargs.items():
+        # Deal with shape argument
+        if dim_name == 'shape':
+            if isinstance(limit, six.string_types):
+                try:
+                    shape = loads(limit)
+                except ReadingError:
+                    raise ValueError("Invalid shape string: " + limit)
+            else:
+                shape = limit
+            constraints['shape'] = shape
+            bounding_box = shape.bounds
+            # Create the lat/lon box - this will be used to speed up the shape subset
+            constraints[data.coord(standard_name='longitude').name()] = slice(bounding_box[0], bounding_box[2])
+            constraints[data.coord(standard_name='latitude').name()] = slice(bounding_box[1], bounding_box[3])
+            break
+
+        c = data._get_coord(dim_name)
+        if c is None:
+            raise CoordinateNotFoundError("No coordinate found that matches '{}'. Please check the "
+                                          "coordinate name.".format(dim_name))
+
+        if all(hasattr(limit, att) for att in ('start', 'stop')):
+            l = limit
+        elif isinstance(limit, PartialDateTime):
+            l = slice(c.units.date2num(limit.min()),
+                      c.units.date2num(limit.max()))
+        elif len(limit) == 1 and isinstance(limit[0], PartialDateTime):
+            l = slice(c.units.date2num(limit[0].min()),
+                      c.units.date2num(limit[0].max()))
+        elif len(limit) == 2:
+            l = slice(limit[0], limit[1])
+        else:
+            raise ValueError("Invalid subset arguments: {}".format(limit))
+
+        # Fill in defaults and convert datetimes
+        limit_start = l.start if l.start is not None else c.points.min()
+        if isinstance(limit_start, datetime):
+            limit_start = c.units.date2num(limit_start)
+
+        limit_end = l.stop if l.stop is not None else c.points.max()
+        if isinstance(limit_end, datetime):
+            limit_end = c.units.date2num(limit_end)
+        constraints[data._get_coord(dim_name).name()] = slice(limit_start, limit_end)
+
+    subset_constraint = constraint(constraints)
+
+    subset = subset_constraint.constrain(data)
+
+    if subset is not None:
+        subset.add_history("Subsetted using limits: " + str(subset_constraint))
+
+    return subset
+
+
+@six.add_metaclass(ABCMeta)
+class SubsetConstraint(object):
+    """Abstract Constraint for subsetting.
+
+    Holds the limits for subsetting in each dimension.
     """
 
-    def __init__(self, limits, output_file, data_reader=DataReader(), data_writer=DataWriter()):
+    def __init__(self, limits, shape=None):
         """
-        Constructor
-
-        :param dict limits: A dictionary of dimension_name:SubsetLimits key value pairs.
-        :param output_file: The filename to output the result to
-        :param data_reader: Optional :class:`DataReader` configuration object
-        :param data_writer: Optional :class:`DataWriter` configuration object
+        :param dict limits: A dictionary mapping coordinate name to slice objects
         """
         self._limits = limits
-        self._output_file = output_file
-        self._data_reader = data_reader
-        self._data_writer = data_writer
+        self._shape = shape
+        logging.debug("Created SubsetConstraint of type %s", self.__class__.__name__)
 
-    def subset(self, variables, filenames, product=None):
-        """
-        Subset the given variables based on the initialised limits
+    def __str__(self):
+        limit_strs = []
+        for name, limit in self._limits.items():
+            limit_strs.append("{}: [{}, {}]".format(name, str(limit.start), str(limit.stop)))
+        return ', '.join(limit_strs)
 
-        :param variables: One or more variables to read from the files
-        :type variables: string or list
-        :param filenames: One or more filenames of the files to read
-        :type filenames: string or list
-        :param str product: Name of data product to use (optional)
-        """
-        from cis.exceptions import CoordinateNotFoundError
+    @abstractmethod
+    def constrain(self, data):
+        """Subsets the supplied data.
 
-        # Read the input data - the parser limits the number of data groups to one for this command.
-        data = None
-        try:
-            # Read the data into a data object (either UngriddedData or Iris Cube), concatenating data from
-            # the specified files.
-            logging.info("Reading data for variables: %s", variables)
-            data = self._data_reader.read_data_list(filenames, variables, product)
-        except (IrisError, ex.InvalidVariableError) as e:
-            raise ex.CISError("There was an error reading in data: \n" + str(e))
-        except IOError as e:
-            raise ex.CISError("There was an error reading one of the files: \n" + str(e))
-
-        # Set subset constraint type according to the type of the data object.
-        if data.is_gridded:
-            # Gridded data on Cube
-            subset_constraint = GriddedSubsetConstraint()
-        else:
-            # Generic ungridded data
-            subset_constraint = UngriddedSubsetConstraint()
-
-        self._set_constraint_limits(data, subset_constraint)
-
-        if len(self._limits) != 0:
-            raise CoordinateNotFoundError("No (dimension) coordinate found that matches '{}'. Please check the "
-                                          "coordinate name.".format("' or '".join(list(self._limits.keys()))))
-
-        subset = subset_constraint.constrain(data)
-
-        if subset is None:
-            # Constraints exclude all data.
-            raise ex.NoDataInSubsetError("No output created - constraints exclude all data")
-        else:
-            history = "Subsetted using CIS version " + __version__ + \
-                      "\nvariables: " + str(variables) + \
-                      "\nfrom files: " + str(filenames) + \
-                      "\nusing limits: " + str(subset_constraint)
-            subset.add_history(history)
-            self._data_writer.write_data(subset, self._output_file)
-
-    def _set_constraint_limits(self, data, subset_constraint):
-        """
-        Identify and set the constraint limits on the subset_constraint object using the coordinates from the data
-        object
-
-        :param data: The data object containing the coordinates to subset
-        :param subset_constraint: The constraint object on to which to apply the limits
+        :param data: data to be subsetted
+        :return: subsetted data
         """
 
-        for coord in data.coords(dim_coords=True):
-            # Match user-specified limits with dimensions found in data.
-            guessed_axis = guess_coord_axis(coord)
-            limit = None
-            if coord.name() in self._limits:
-                limit = self._limits.pop(coord.name())
-            elif hasattr(coord, 'var_name') and coord.var_name in self._limits:
-                limit = self._limits.pop(coord.var_name)
-            elif coord.standard_name in self._limits:
-                limit = self._limits.pop(coord.standard_name)
-            elif coord.long_name in self._limits:
-                limit = self._limits.pop(coord.long_name)
-            elif guessed_axis is not None:
-                if guessed_axis in self._limits:
-                    limit = self._limits.pop(guessed_axis)
-                elif guessed_axis.lower() in self._limits:
-                    limit = self._limits.pop(guessed_axis.lower())
 
-            if limit is not None:
-                wrapped = False
-                if limit.is_time or guessed_axis == 'T':
-                    # Ensure that the limits are date/times.
-                    dt = parse_datetime.convert_datetime_components_to_datetime(limit.start, True)
-                    limit_start = self._convert_datetime_to_coord_unit(coord, dt)
-                    dt = parse_datetime.convert_datetime_components_to_datetime(limit.end, False)
-                    limit_end = self._convert_datetime_to_coord_unit(coord, dt)
+class GriddedSubsetConstraint(SubsetConstraint):
+    """
+    Implementation of SubsetConstraint for subsetting gridded data.
+    """
+
+    def constrain(self, data):
+        """
+        Subsets the supplied data using a combination of iris.cube.Cube.extract and iris.cube.Cube.intersection,
+        depending on whether intersection is supported (whether the coordinate has a defined modulus).
+        :param data: data to be subsetted
+        :return: subsetted data or None if all data excluded.
+        @rtype: cis.data_io.gridded_data.GriddedData
+        """
+        extract_constraint, intersection_constraint = self._make_extract_and_intersection_constraints(data)
+        if extract_constraint is not None:
+            data = data.extract(extract_constraint)
+        if intersection_constraint:
+            try:
+                data = data.intersection(**intersection_constraint)
+            except IndexError:
+                return None
+        return gridded_data.make_from_cube(data)
+
+    def _make_extract_and_intersection_constraints(self, data):
+        """
+        Make the appropriate constraints:
+        - dictionary of coord_name -> (min, max) for coordinates with defined modulus (to be used on the IRIS
+          intersection method).
+        - iris.Constraint if no defined modulus
+        :param data:
+        :return:
+        """
+        extract_constraint = None
+        intersection_constraint = {}
+        for coord, limits in self._limits.items():
+            if data.coord(coord).units.modulus is not None:
+                # These coordinates can be safely used with iris.cube.Cube.intersection()
+                intersection_constraint[coord] = (limits.start, limits.stop)
+            else:
+                # These coordinates cannot be used with iris.cube.Cube.intersection(), will use iris.cube.Cube.extract()
+                constraint_function = lambda x: limits.start <= x.point <= limits.stop
+                if extract_constraint is None:
+                    extract_constraint = iris.Constraint(**{coord: constraint_function})
                 else:
-                    # Assume to be a non-time axis.
-                    (limit_start, limit_end) = self._fix_non_circular_limits(float(limit.start), float(limit.end))
-                # Apply the limit to the constraint object
-                subset_constraint.set_limit(coord, limit_start, limit_end)
+                    extract_constraint = extract_constraint & iris.Constraint(**{coord: constraint_function})
+        return extract_constraint, intersection_constraint
 
-    @staticmethod
-    def _convert_datetime_to_coord_unit(coord, dt):
-        """Converts a datetime to be in the unit of a specified Coord.
+
+class UngriddedSubsetConstraint(SubsetConstraint):
+    """
+    Implementation of SubsetConstraint for subsetting ungridded data.
+    """
+
+    def constrain(self, data):
+        """Subsets the supplied data.
+
+        :param data: data to be subsetted
+        :return: subsetted data
         """
-        if isinstance(coord, iris.coords.Coord):
-            # The unit class is then cf_units.Unit.
-            iris_unit = coord.units
-        else:
-            iris_unit = Unit(coord.units)
-        return iris_unit.date2num(dt)
+        import numpy as np
+        from cis.utils import listify
 
-    @staticmethod
-    def _convert_coord_unit_to_datetime(coord, dt):
-        """Converts a datetime to be in the unit of a specified Coord.
+        data = self._create_data_for_subset(data)
+
+        # Create the combined mask across all limits
+        shape = data.coords()[0].data.shape  # This assumes they are all the same shape
+        combined_mask = np.ones(shape, dtype=bool)
+        for coord, limit in self._limits.items():
+            # Select any points which are <= to the stop limit AND >= to the start limit
+            mask = (np.less_equal(data.coord(coord).data, limit.stop) &
+                    np.greater_equal(data.coord(coord).data, limit.start))
+            combined_mask = combined_mask & mask
+
+        # Generate the new coordinates here (before we loop)
+        new_coords = data.coords()
+        for coord in new_coords:
+            coord.data = coord.data[combined_mask]
+            coord.metadata.shape = coord.data.shape
+            coord._data_flattened = None  # Otherwise Coord won't recalculate this.
+
+        # If the whole selection mask is False then the data will be empty - return None
+        if np.all(~combined_mask):
+            return None
+
+        for variable in listify(data):
+            # Constrain each copy of the data object in-place
+            variable.data = variable.data[combined_mask]
+
+            # Add the new compressed coordinates
+            variable._coords = new_coords
+
+        return data
+
+    def _create_data_for_subset(self, data):
         """
-        if isinstance(coord, iris.coords.Coord):
-            # The unit class is then cf_units.Unit.
-            iris_unit = coord.units
-        else:
-            iris_unit = Unit(coord.units)
-        return iris_unit.num2date(dt)
+        Produce a copy of the data so that the original is not altered,
+        with longitudes mapped onto the right domain for the requested limits
+        :param data: Data being subsetted
+        :return:
+        """
+        # We need a copy with new data and coordinates
+        data = data.copy()
+        # Check for longitude coordinate in the limits
+        for dim_name, limit in self._limits.items():
+            coord = data.coord(dim_name)
+            if coord.standard_name == 'longitude':
+                coord_min = coord.points.min()
+                coord_max = coord.points.max()
+                data_below_zero = coord_min < 0
+                data_above_180 = coord_max > 180
+                limits_below_zero = limit.start < 0 or limit.stop < 0
+                limits_above_180 = limit.start > 180 or limit.stop > 180
 
-    @staticmethod
-    def _fix_non_circular_limits(limit_start, limit_end):
-        if limit_start <= limit_end:
-            new_limits = (limit_start, limit_end)
-        else:
-            new_limits = (limit_end, limit_start)
-            logging.info("Real limits: original: %s  after fix: %s", (limit_start, limit_end), new_limits)
+                if data_below_zero and not data_above_180:
+                    # i.e. data is in the range -180 -> 180
+                    # Only convert the data if the limits are above 180:
+                    if limits_above_180 and not limits_below_zero:
+                        # Convert data from -180 -> 180 to 0 -> 360
+                        range_start = 0
+                        coord.set_longitude_range(range_start)
+                elif data_above_180 and not data_below_zero:
+                    # i.e. data is in the range 0 -> 360
+                    if limits_below_zero and not limits_above_180:
+                        # Convert data from 0 -> 360 to -180 -> 180
+                        range_start = -180
+                        coord.set_longitude_range(range_start)
+        return data
 
-        return new_limits
+
+def subset_region(ungridded_data, region):
+    from shapely.geometry import MultiPoint
+
+    cis_data = np.vstack([ungridded_data.lon.data, ungridded_data.lat.data, np.arange(len(ungridded_data.lat.data))])
+    points = MultiPoint(cis_data.T)
+
+    # Perform the actual calculation
+    selection = region.intersection(points)
+
+    # Pull out the indices
+    if selection.is_empty:
+        indices = []
+    else:
+        indices = np.asarray(selection).T[2].astype(np.int)
+
+    return ungridded_data[indices]

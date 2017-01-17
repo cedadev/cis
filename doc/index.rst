@@ -16,6 +16,7 @@ Contents:
    whats_new
    data_products
    command_line
+   cis_api
    file_information
    subsetting
    aggregation
@@ -29,7 +30,6 @@ Contents:
    plugin_development
    analysis_plugin_development
    maintenance_and_development
-   CIS as a Python library (API) <api/cis>
 
 Indices and tables
 ==================

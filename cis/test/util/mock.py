@@ -732,6 +732,7 @@ def make_dummy_ungridded_data_time_series(len=10):
     :return:
     """
     from datetime import datetime, timedelta
+    from cis.time_util import cis_standard_time_unit
     from cis.data_io.Coord import Coord, CoordList
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
@@ -740,7 +741,8 @@ def make_dummy_ungridded_data_time_series(len=10):
 
     x = Coord(np.zeros(len) + 65.2, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(np.zeros(len) - 12.1, Metadata(standard_name='longitude', units='degrees'))
-    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'), axis='x')
+    t = Coord(cis_standard_time_unit.date2num(times),
+              Metadata(standard_name='time', units=cis_standard_time_unit), axis='x')
     data = np.arange(len) + 1.0
 
     return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
@@ -869,8 +871,8 @@ def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lo
     y_points = np.linspace(lon_min, lon_max, lon_dim_length)
     y, x = np.meshgrid(y_points, x_points)
 
-    x = Coord(x, Metadata(name='lat', standard_name='latitude', units='degrees'))
-    y = Coord(y, Metadata(name='lon', standard_name='longitude', units='degrees'))
+    x = Coord(x, Metadata(name='lat', standard_name='latitude', units='degrees'), axis='Y')
+    y = Coord(y, Metadata(name='lon', standard_name='longitude', units='degrees'), axis= 'X')
     data = np.reshape(np.arange(lat_dim_length * lon_dim_length) + data_offset + 1.0, (lat_dim_length, lon_dim_length))
     if mask:
         data = np.ma.asarray(data)
@@ -974,7 +976,7 @@ def make_regular_2d_with_time_ungridded_data():
     data = np.reshape(np.arange(15) + 1.0, (5, 3))
 
     coords = CoordList([x, y, t])
-    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+    return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
 
@@ -1104,7 +1106,7 @@ def make_regular_4d_ungridded_data():
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
     p = Coord(p, Metadata(standard_name='air_pressure', units='Pa'))
-    t = Coord(t, Metadata(standard_name='time', units=str(cis_standard_time_unit)))
+    t = Coord(t, Metadata(standard_name='time', units=cis_standard_time_unit))
 
     coords = CoordList([x, y, a, p, t])
     return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",

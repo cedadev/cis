@@ -1,12 +1,12 @@
 from abc import ABCMeta, abstractmethod
+import six
 
 
+@six.add_metaclass(ABCMeta)
 class CommonData(object):
     """
     Interface of common methods implemented for gridded and ungridded data.
     """
-    __metaclass__ = ABCMeta
-
     filenames = []
 
     _alias = None
@@ -52,7 +52,7 @@ class CommonData(object):
         """
         Return the variable name associated with this data object
 
-        :return: The ariable name
+        :return: The variable name
         """
         return None
 
@@ -109,20 +109,167 @@ class CommonData(object):
         """
         pass
 
+    @abstractmethod
+    def subset(self, **kwargs):
+        """
+        Subset the CommonData object based on the specified constraints. Constraints on arbitrary coordinates are
+        specified using keyword arguments. Each constraint must have two entries (a maximum and a minimum) although
+        one of these can be None. Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range.
 
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
+                             altitude=[45.0, 75.0])
+
+        Will subset the data from the start of the 28th of August 1984, to the end of the 29th, and between altitudes of
+        45 and 75 (in whatever units ares used for that Coordinate).
+
+        And:
+            data.subset(time=[PartialDateTime(1984, 9)])
+
+        Will subset the data to all of September 1984.
+
+        :param kwargs: The constraint arguments
+        :return CommonData: The subset of the data
+        """
+        pass
+
+    @abstractmethod
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+
+        :param CommonData or CommonDataList data: The data to resample
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
+        :return CommonData: The collocated dataset
+        """
+        pass
+
+    def collocated_onto(self, sample, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                        var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel.
+
+        :param CommonData sample: The sample data to collocate onto
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
+        :return CommonData: The collocated dataset
+        """
+        return sample.sampled_from(self, how=how, kernel=kernel,
+                                   missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                   fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                   var_units=var_units, **kwargs)
+
+    def plot(self, *args, **kwargs):
+        """
+        Plot the data. A matplotlib Axes is created if none is provided.
+
+        The default method for series data is 'line', otherwise (for e.g. a map plot) is 'scatter2d' for UngriddedData
+        and 'heatmap' for GriddedData.
+
+        :param string how: The method to use, one of:  "contour", "contourf", "heatmap", "line", "scatter", "scatter2d",
+        "comparativescatter", "histogram", "histogram2d" or "taylor"
+        :param Axes ax: A matplotlib axes on which to draw the plot
+        :param Coord or CommonData xaxis: The data to plot on the x axis
+        :param Coord or CommonData yaxis: The data to plot on the y axis
+        :param string or cartopy.crs.Projection projection: The projection to use for map plots (default is PlateCaree)
+        :param float central_longitude: The central longitude to use for PlateCaree (if no other projection specified)
+        :param string label: A label for the data. This is used for the title, colorbar or legend depending on plot type
+        :param args: Other plot-specific args
+        :param kwargs: Other plot-specific kwargs
+        :return Axes: The matplotlib Axes on which the plot was drawn
+        """
+        from cis.plotting.plot import basic_plot
+        _, ax = basic_plot(self, *args, **kwargs)
+        return ax
+
+    @abstractmethod
+    def _get_default_plot_type(self, lat_lon=False):
+        pass
+
+    def _get_coord(self, name):
+        from cis.utils import standard_axes
+        def _try_coord(data, coord_dict):
+            import cis.exceptions as cis_ex
+            import iris.exceptions as iris_ex
+            try:
+                coord = data.coord(**coord_dict)
+            except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
+                coord = None
+            return coord
+
+        coord = _try_coord(self, dict(name_or_coord=name)) or _try_coord(self, dict(standard_name=name)) \
+            or _try_coord(self, dict(standard_name=standard_axes.get(name.upper(), None))) or \
+                _try_coord(self, dict(var_name=name)) or _try_coord(self, dict(axis=name))
+
+        return coord
+
+
+@six.add_metaclass(ABCMeta)
 class CommonDataList(list):
     """
     Interface for common list methods implemented for both gridded and ungridded data.
 
     Note that all objects in a CommonDataList must have the same coordinates and coordinate values.
     """
-    __metaclass__ = ABCMeta
-
     filenames = []
+
+    def __new__(cls, iterable=()):
+        cube_list = list.__new__(cls, iterable)
+        # Use extend to check all the types are the same - this gets overridden by each list sub-type
+        cube_list.extend(iterable)
+        return cube_list
 
     def __init__(self, iterable=()):
         super(CommonDataList, self).__init__()
         self.extend(iterable)
+
+    def __add__(self, rhs):
+        return self.__class__(list.__add__(self, rhs))
+
+    def __getitem__(self, item):
+        result = list.__getitem__(self, item)
+        if isinstance(result, list):
+            result = self.__class__(result)
+        return result
+
+    def __getslice__(self, start, stop):
+        result = super(CommonDataList, self).__getslice__(start, stop)
+        result = self.__class__(result)
+        return result
+
+    def __str__(self):
+        """Runs short :meth:`CommonData.summary` on every item and the coords"""
+        result = ['%s: %s' % (i, item.summary(shorten=True)) for i, item in enumerate(self)]
+        if result:
+            result = ''.join(result)
+            result += 'Coordinates: \n'
+            for c in self.coords():
+                result += '{pad:{width}}{name}\n'.format(pad=' ', width=2, name=c.name())
+        else:
+            result = '< Empty list >'
+        return result
+
+    def __repr__(self):
+        """Runs repr on every cube."""
+        return '[%s]' % ',\n'.join([repr(item) for item in self])
 
     @property
     @abstractmethod
@@ -223,3 +370,76 @@ class CommonDataList(list):
         """
         for data in self:
             data.set_longitude_range(range_start)
+
+    @abstractmethod
+    def subset(self, **kwargs):
+        """
+        Subset the CommonDataList object based on the specified constraints. Constraints on arbitrary coordinates are
+        specified using keyword arguments. Each constraint must have two entries (a maximum and a minimum) although
+        one of these can be None. Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
+                             altitude=[45.0, 75.0])
+
+        Will subset the data from the start of the 28th of August 1984, to the end of the 29th, and between altitudes of
+        45 and 75 (in whatever units ares used for that Coordinate).
+
+        And:
+            data.subset(time=[PartialDateTime(1984, 9)])
+
+        Will subset the data to all of September 1984.
+
+        :param kwargs: The constraint arguments
+        :return CommonDataList: The subset of each of the data
+        """
+        pass
+
+    def collocated_onto(self, sample, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                        var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel.
+
+        :param CommonData sample: The sample data to collocate onto
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :param kwargs: Constraint arguments such as h_sep, a_sep, etc.
+        :return CommonData: The collocated dataset
+        """
+        return sample.sampled_from(self, how=how, kernel=kernel,
+                                   missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                   fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                   var_units=var_units, **kwargs)
+
+    def plot(self, *args, **kwargs):
+        """
+        Plot the data. A matplotlib Axes is created if none is provided.
+
+        The default method for series data is 'line', otherwise (for e.g. a map plot) is 'scatter2d' for UngriddedData
+        and 'heatmap' for GriddedData.
+
+        :param string how: The method to use, one of:  "contour", "contourf", "heatmap", "line", "scatter", "scatter2d",
+        "comparativescatter", "histogram", "histogram2d" or "taylor"
+        :param Axes ax: A matplotlib axes on which to draw the plot
+        :param Coord or CommonData xaxis: The data to plot on the x axis
+        :param Coord or CommonData yaxis: The data to plot on the y axis
+        :param list layer_opts: A list of keyword dictionaries to pass to each layer of the plot.
+        :param args: Other plot-specific args to pass to all plots
+        :param kwargs: Other plot-specific kwargs to pass to all plots
+        :return Axes: The matplotlib Axes on which the plot was drawn
+        """
+        from cis.plotting.plot import multilayer_plot
+        _, ax = multilayer_plot(self, *args, **kwargs)
+        return ax
+
+    def _get_coord(self, *args):
+        return self[0]._get_coord(*args)

@@ -2,7 +2,7 @@
 Module to do integration tests of plots to files. Does not check the graph created is correct, only that a graph is
 created without errors.
 """
-from cis.exceptions import CISError, UserPrintableException
+from cis.exceptions import UserPrintableException
 from cis.cis_main import plot_cmd, subset_cmd, aggregate_cmd
 from cis.parse import parse_args
 from cis.test.integration_test_data import *
@@ -100,8 +100,8 @@ class TestPlotIntegration(BaseIntegrationTest):
 
         os.remove(out_name)
 
-    @raises(CISError)
-    def test_plot_gridded_3d_exits_with_CISError(self):
+    @raises(ValueError)
+    def test_plot_gridded_3d_exits_with_ValueError(self):
         variable = valid_cis_gridded_output_variable
         filename = valid_cis_gridded_output_filename
         out_name = '3d_out.png'
@@ -140,11 +140,11 @@ class TestPlotIntegration(BaseIntegrationTest):
 
         os.remove(out_name)
 
-    def test_plot_ungridded_histogram2d(self):
+    def test_plot_ungridded_histogram(self):
         filename = valid_GASSP_station_filename
         variable = valid_GASSP_station_vars[0]
-        out_name = 'histogram2d.png'
-        args = ['plot', variable + ':' + escape_colons(filename), '--type', 'histogram2d', '-o', out_name]
+        out_name = 'histogram.png'
+        args = ['plot', variable + ':' + escape_colons(filename), '--type', 'histogram', '-o', out_name]
         args = parse_args(args)
         plot_cmd(args)
 

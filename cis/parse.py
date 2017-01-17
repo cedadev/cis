@@ -8,7 +8,42 @@ import os.path
 import logging
 
 from cis.exceptions import InvalidCommandLineOptionError
-from cis.plotting.plot import Plotter
+from cis.plotting.plot import plot_types, projections
+
+
+class AliasedSubParsersAction(argparse._SubParsersAction):
+    """
+    Manually add aliases (which aren't supported in Python 2...
+    From https://gist.github.com/sampsyo/471779
+    """
+
+    class _AliasedPseudoAction(argparse.Action):
+        def __init__(self, name, aliases, help):
+            dest = name
+            if aliases:
+                dest += ' (%s)' % ','.join(aliases)
+            super(AliasedSubParsersAction._AliasedPseudoAction, self).__init__(option_strings=[], dest=dest, help=help)
+
+    def add_parser(self, name, **kwargs):
+        if 'aliases' in kwargs:
+            aliases = kwargs['aliases']
+            del kwargs['aliases']
+        else:
+            aliases = []
+
+        parser = super(AliasedSubParsersAction, self).add_parser(name, **kwargs)
+
+        # Make the aliases work.
+        for alias in aliases:
+            self._name_parser_map[alias] = parser
+        # Make the help text reflect them, first removing old help entry.
+        if 'help' in kwargs:
+            help = kwargs.pop('help')
+            self._choices_actions.pop()
+            pseudo_action = self._AliasedPseudoAction(name, aliases, help)
+            self._choices_actions.append(pseudo_action)
+
+        return parser
 
 
 def initialise_top_parser():
@@ -28,30 +63,35 @@ def initialise_top_parser():
                                      "also be set by setting the 'CIS_FORCE_OVERWRITE' environment variable to 'TRUE'")
 
     parser = argparse.ArgumentParser("cis", parents=[global_options])
-
+    parser.register('action', 'parsers', AliasedSubParsersAction)
     subparsers = parser.add_subparsers(dest='command')
-    plot_parser = subparsers.add_parser("plot", help="Create plots", parents=[global_options])
+    plot_parser = subparsers.add_parser("plot", help="Create plots", argument_default=argparse.SUPPRESS, parents=[global_options])
     add_plot_parser_arguments(plot_parser)
     info_parser = subparsers.add_parser("info", help="Get information about a file", parents=[global_options])
     add_info_parser_arguments(info_parser)
-    col_parser = subparsers.add_parser("col", help="Perform collocation", parents=[global_options])
+    col_parser = subparsers.add_parser("collocate", aliases=['col'], help="Perform collocation", parents=[global_options])
     add_col_parser_arguments(col_parser)
-    aggregate_parser = subparsers.add_parser("aggregate", help="Perform aggregation", parents=[global_options])
+    aggregate_parser = subparsers.add_parser("aggregate", aliases=['agg'], help="Perform aggregation", parents=[global_options])
     add_aggregate_parser_arguments(aggregate_parser)
-    subset_parser = subparsers.add_parser("subset", help="Perform subsetting", parents=[global_options])
+    subset_parser = subparsers.add_parser("subset", aliases=['sub'], help="Perform subsetting", parents=[global_options])
     add_subset_parser_arguments(subset_parser)
     eval_parser = subparsers.add_parser("eval", help="Evaluate a numeric expression", parents=[global_options])
     add_eval_parser_arguments(eval_parser)
     stats_parser = subparsers.add_parser("stats", help="Perform statistical comparison of two datasets",
                                          parents=[global_options])
     add_stats_parser_arguments(stats_parser)
+    collapse_parser = subparsers.add_parser("collapse", help="Collapse a gridded dataset over specified dimensions",
+                                            parents=[global_options])
+    add_collapse_parser_arguments(collapse_parser)
     subparsers.add_parser("version", help="Display the CIS version number")
     return parser
 
 
 def add_plot_parser_arguments(parser):
     from cis.data_io.products.AProduct import AProduct
+    from cis.parse_datetime import parse_as_number_or_datetime_delta, parse_as_number_or_datetime
     import cis.plugin as plugin
+    from matplotlib.colors import cnames
 
     product_classes = plugin.find_plugin_classes(AProduct, 'cis.data_io.products', verbose=False)
 
@@ -62,75 +102,91 @@ def add_plot_parser_arguments(parser):
                              "colour and product is one of the options listed below. For example 'cis plot "
                              "var1:file:product=NetCDF_CF_Gridded,colour=red'. Products: " +
                              str([cls().__class__.__name__ for cls in product_classes]))
-    parser.add_argument("-o", "--output", metavar="Output filename", nargs="?",
+    parser.add_argument("-o", "--output", metavar="Output filename", nargs="?", default=None,
                         help="The filename of the output file for the plot image")
     parser.add_argument("--type", metavar="Chart type", nargs="?",
-                        help="The chart type, one of: " + str(list(Plotter.plot_types.keys())))
+                        help="The chart type, one of: " + str(plot_types.keys()),
+                        choices=plot_types.keys())
 
     parser.add_argument("--xlabel", metavar="X axis label", nargs="?", help="The label for the x axis")
     parser.add_argument("--ylabel", metavar="Y axis label", nargs="?", help="The label for the y axis")
     parser.add_argument("--cbarlabel", metavar="Colour bar label", nargs="?", help="The label for the colour bar")
 
-    parser.add_argument("--xtickangle", metavar="X tick angle", nargs="?",
-                        help="The angle (in degrees) of the ticks on the x axis")
-    parser.add_argument("--ytickangle", metavar="Y tick angle", nargs="?",
-                        help="The angle (in degrees) of the ticks on the y axis")
-
     parser.add_argument("--title", metavar="Chart title", nargs="?", help="The title for the chart")
-    parser.add_argument("--itemwidth", metavar="Item width", nargs="?",
-                        help="The width of an item. Unit are points in the case of a line, and point^2 in the case of a"
-                             " scatter point.")
-    parser.add_argument("--fontsize", metavar="Font size", nargs="?", help="The size of the font in points")
+    parser.add_argument("--fontsize", metavar="Font size", nargs="?", help="The size of the font in points", type=float)
     parser.add_argument("--cmap", metavar="Colour map", nargs="?", help="The colour map used, e.g. RdBu")
-    parser.add_argument("--height", metavar="Plot height", nargs="?", help="The height of the plot in inches")
-    parser.add_argument("--width", metavar="Plot width", nargs="?", help="The width of the plot in inches")
+    parser.add_argument("--height", metavar="Plot height", nargs="?", help="The height of the plot in inches",
+                        type=float)
+    parser.add_argument("--width", metavar="Plot width", nargs="?", help="The width of the plot in inches", type=float)
 
-    parser.add_argument("--xmin", metavar="Minimum x", nargs="?", help="The minimum x value to plot")
-    parser.add_argument("--xmax", metavar="Maximum x", nargs="?", help="The maximum x value to plot")
-    parser.add_argument("--xstep", metavar="X step", nargs="?", help="The step of the x axis")
+    parser.add_argument("--xmin", metavar="Minimum x", nargs="?", help="The minimum x value to plot",
+                        type=parse_as_number_or_datetime)
+    parser.add_argument("--xmax", metavar="Maximum x", nargs="?", help="The maximum x value to plot",
+                        type=parse_as_number_or_datetime)
+    parser.add_argument("--xstep", metavar="X step", nargs="?", help="The step of the x axis",
+                        type=parse_as_number_or_datetime_delta)
 
-    parser.add_argument("--ymin", metavar="Minimum y", nargs="?", help="The minimum y value to plot")
-    parser.add_argument("--ymax", metavar="Maximum y", nargs="?", help="The maximum y value to plot")
-    parser.add_argument("--ystep", metavar="Y step", nargs="?", help="The step of the y axis")
+    parser.add_argument("--ymin", metavar="Minimum y", nargs="?", help="The minimum y value to plot",
+                        type=parse_as_number_or_datetime)
+    parser.add_argument("--ymax", metavar="Maximum y", nargs="?", help="The maximum y value to plot",
+                        type=parse_as_number_or_datetime)
+    parser.add_argument("--ystep", metavar="Y step", nargs="?", help="The step of the y axis",
+                        type=parse_as_number_or_datetime_delta)
 
-    parser.add_argument("--vmin", metavar="Minimum value", nargs="?", help="The minimum value to plot")
-    parser.add_argument("--vmax", metavar="Maximum value", nargs="?", help="The maximum value to plot")
-    parser.add_argument("--vstep", metavar="X value", nargs="?", help="The step of the colour bar")
+    parser.add_argument("--vmin", metavar="Minimum value", nargs="?", help="The minimum value to plot",
+                        type=parse_as_number_or_datetime)
+    parser.add_argument("--vmax", metavar="Maximum value", nargs="?", help="The maximum value to plot",
+                        type=parse_as_number_or_datetime)
+    parser.add_argument("--vstep", metavar="X value", nargs="?", help="The step of the colour bar",
+                        type=parse_as_number_or_datetime_delta)
 
-    parser.add_argument("--xbinwidth", metavar="Histogram x axis bin width", nargs="?",
-                        help="The width of the bins on the x axis of a histogram")
-    parser.add_argument("--ybinwidth", metavar="Histogram y axis bin width", nargs="?",
-                        help="The width of the bins on the y axis of a histogram")
+    parser.add_argument("--xbins", metavar="Number of histogram x axis bins", nargs="?",
+                        help="The number of bins on the x axis of a histogram", type=int)
+    parser.add_argument("--ybins", metavar="Number of histogram x axis bins", nargs="?",
+                        help="The number of bins on the y axis of a histogram", type=int)
 
-    parser.add_argument("--cbarorient", metavar="Colour bar orientation", default="vertical", nargs="?",
-                        help="The orientation of the colour bar, either horizontal or vertical")
-    parser.add_argument("--nocolourbar", metavar="Hides the colour bar", default="False", nargs="?",
-                        help="Does not show the colour bar")
+    parser.add_argument("--cbarorient", metavar="Colour bar orientation", nargs="?",
+                        help="The orientation of the colour bar, either horizontal or vertical",
+                        choices=['vertical', 'horizontal'])
+    parser.add_argument("--nocolourbar", dest='colourbar',
+                        help="Does not show the colour bar", action='store_false')
 
-    parser.add_argument("--logx", metavar="Log (base 10) scale on X axis", default="False", nargs="?",
-                        help="Uses a log scale (base 10) on the x axis")
-    parser.add_argument("--logy", metavar="Log (base 10) scale on Y axis", default="False", nargs="?",
-                        help="Uses a log scale (base 10) on the y axis")
-    parser.add_argument("--logv", metavar="Log (base 10) scale for values", default="False", nargs="?",
-                        help="Uses a log scale (base 10) on the colour bar")
+    parser.add_argument("--logx",
+                        help="Uses a log scale (base 10) on the x axis", action='store_true')
+    parser.add_argument("--logy",
+                        help="Uses a log scale (base 10) on the y axis", action='store_true')
+    parser.add_argument("--logv",
+                        help="Uses a log scale (base 10) on the colour bar", action='store_true')
 
-    parser.add_argument("--grid", metavar="Show grid", default="False", nargs="?", help="Shows grid lines on the plot")
+    parser.add_argument("--grid", help="Shows grid lines on the plot",
+                        action='store_true')
+
     parser.add_argument("--xaxis", metavar="Variable on x axis", nargs="?",
                         help="Name of variable to use on the x axis")
     parser.add_argument("--yaxis", metavar="Variable on y axis", nargs="?",
                         help="Name of variable to use on the y axis")
 
     parser.add_argument("--coastlinescolour", metavar="Coastlines Colour", nargs="?",
-                        help="The colour of the coastlines on a map. Any valid html colour (e.g. red)")
-    parser.add_argument("--nasabluemarble", metavar="NASA Blue Marble background", default=False, nargs="?",
-                        help="Add the NASA 'Blue Marble' image as the background to a map, instead of coastlines")
+                        help="The colour of the coastlines on a map. Any valid html colour (e.g. red)",
+                        choices=(list(cnames.keys()) + ['grey']))
+    parser.add_argument("--nasabluemarble",
+                        help="Add the NASA 'Blue Marble' image as the background to a map, instead of coastlines",
+                        action='store_true')
 
-    parser.add_argument("--plotwidth", metavar="Width of the plot in inches", default=8, nargs="?",
-                        help="Set the width of the plot when outputting to file")
-    parser.add_argument("--plotheight", metavar="Height of the plot in inches", default=6, nargs="?",
-                        help="Set the height of the plot when outputting to file")
-    parser.add_argument("--cbarscale", metavar="A scaling for the color bar", default=None, nargs="?",
-                        help="Scale the color bar, use when color bar does not match plot size")
+    parser.add_argument("--cbarscale", metavar="A scaling for the color bar", nargs="?",
+                        help="Scale the color bar, use when color bar does not match plot size", type=float)
+
+    parser.add_argument("--projection", choices=projections.keys())
+
+    # Taylor diagram specific options
+    parser.add_argument('--solid', action='store_true', help='Use solid markers')
+    parser.add_argument('--extend', type=float, help='Extend plot for negative correlation')
+    parser.add_argument('--fold', action='store_true', help='Fold plot for negative correlation or large variance')
+    parser.add_argument('--gammamax', type=float, help='Fix maximum extent of radial axis')
+    parser.add_argument('--stdbiasmax', type=float, help='Fix maximum standardised bias')
+    parser.add_argument('--bias', metavar='METHOD', choices=['color', 'colour', 'size', 'flag'],
+                        help='Indicate bias using the specified method (colo[u]r, size, flag)')
+
     return parser
 
 
@@ -153,7 +209,8 @@ def add_col_parser_arguments(parser):
                              "specified. For example filename:variable=var1,collocator=box[h_sep=10km].")
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file containing the collocated data. The name specified will"
-                             " be suffixed with \".nc\".")
+                             " be suffixed with \".nc\". For ungridded output, it will be prefixed with \"cis-\" and "
+                             "so that cis can recognise it when using the file for further operations.")
     return parser
 
 
@@ -166,6 +223,18 @@ def add_aggregate_parser_arguments(parser):
                         help="Grid for new aggregation, e.g. t,x=[-180,90,5] would collapse time completely and "
                              "aggregate longitude onto a new grid, which would start at -180 and then proceed in 5 "
                              "degree increments up to 90")
+    parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
+                        help="The filename of the output file")
+    return parser
+
+
+def add_collapse_parser_arguments(parser):
+    parser.add_argument("datagroups", metavar="DataGroup", nargs=1,
+                        help="Variables to aggregate with filenames, and optional arguments seperated by colon(s). "
+                             "Optional arguments are product and kernel, which are entered as keyword=value in a "
+                             "comma separated list. Example: var:filename:product=MODIS_L3,kernel=mean")
+    parser.add_argument('dimensions', metavar='dim', type=str, nargs='+',
+                        help='Dimensions to collapse')
     parser.add_argument("-o", "--output", metavar="Output filename", default="out", nargs="?",
                         help="The filename of the output file")
     return parser
@@ -239,7 +308,9 @@ def parse_float(arg, name, parser):
     :param parser: The parser used to report an error message
     :return: The parsed float if succeeds or the original argument if fails
     """
-    if arg:
+    if arg == 'None' or arg is None:
+        return None
+    else:
         try:
             arg = float(arg)
             return arg
@@ -291,7 +362,7 @@ def check_product(product, parser):
 def check_aggregate_kernel(arg, parser):
     import cis.plugin as plugin
     from cis.collocation.col_framework import Kernel
-    from cis.aggregation.aggregation_kernels import aggregation_kernels
+    from cis.aggregation.collapse_kernels import aggregation_kernels
 
     aggregation_classes = plugin.find_plugin_classes(Kernel, 'cis.collocation.col_implementations')
     aggregation_names = [cls().__class__.__name__ for cls in aggregation_classes]
@@ -310,13 +381,15 @@ def get_plot_datagroups(datagroups, parser):
     from collections import namedtuple
 
     DatagroupOptions = namedtuple('DatagroupOptions', ["variables", "filenames", "color", "edgecolor", "itemstyle",
-                                                       "label", "product", "type", "transparency", "cmap", "cmin",
-                                                       "cmax", "contnlevels", "contlevels", "contlabel", "contwidth",
-                                                       "contfontsize"])
+                                                       "itemwidth",
+                                                       "label", "product", "type", "alpha", "cmap", "vmin",
+                                                       "vmax", "vstep", "contnlevels", "contlevels", "contlabel", "contwidth",
+                                                       "cbarscale", "cbarorient", "colourbar", "cbarlabel"])
     datagroup_options = DatagroupOptions(check_is_not_empty, expand_file_list, check_color, check_color, check_nothing,
-                                         check_nothing, check_product, check_plot_type, check_float, check_nothing,
-                                         check_float, check_float, check_int, convert_to_list_of_floats, check_boolean,
-                                         check_float, check_float)
+                                         check_float,
+                                         check_nothing, check_product, check_plot_type, check_float, check_nothing, check_float,
+                                         check_float, check_float, check_int, convert_to_list_of_floats, check_boolean, check_int,
+                                         check_float, check_nothing, check_boolean, check_nothing)
     return parse_colon_and_comma_separated_arguments(datagroups, parser, datagroup_options, compulsory_args=2)
 
 
@@ -370,9 +443,7 @@ def get_aggregate_grid(aggregategrid, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_datetime, parse_datetime_delta, parse_as_number_or_datetime
-    from cis.aggregation.aggregation_grid import AggregationGrid
-    from datetime import datetime
+    from cis.parse_datetime import parse_as_number_or_datetime, parse_as_number_or_datetime_delta
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(aggregategrid)
@@ -388,8 +459,8 @@ def get_aggregate_grid(aggregategrid, parser):
         if match is None or match.group('dim') is None:
             parser.error("A dimension for aggregation does not have a valid dimension name")
         elif match.group('start') is None and match.group('delta') is None:
-            dim_name = match.group('dim')
-            grid_dict[dim_name] = AggregationGrid(float('NaN'), float('NaN'), float('NaN'), None)
+            # This is for gridded aggregation where we just have a list of dims with no grid
+            grid_dict[match.group('dim')] = None
         elif match.group('end') is None:
             parser.error("A dimension for aggregation has a start point but no end or delta value, an end and a delta "
                          "value must be supplied, for example x=[0,360,30].")
@@ -398,36 +469,20 @@ def get_aggregate_grid(aggregategrid, parser):
                          "supplied, for example x=[0,360,30].")
         else:
             dim_name = match.group('dim')
-            start = match.group('start')
-            end = match.group('end')
-            delta = match.group('delta')
 
-            # If the dimension is specified as x, y, z, p or t, assume that the dimension is spatial or temporal in the
-            # obvious way. Otherwise, parse what is found as a date/time or number.
-            is_time = None
-            if dim_name.lower() == 't':
-                start_parsed = parse_datetime(start, 'aggregation grid start date/time', parser)
-                end_parsed = parse_datetime(end, 'aggregation grid end date/time', parser)
-                delta_parsed = parse_datetime_delta(delta, 'aggregation grid delta date/time', parser)
-                is_time = True
-            elif dim_name.lower() in ['x', 'y', 'z', 'p']:
-                start_parsed = parse_float(start, 'aggregation grid start coordinate', parser)
-                end_parsed = parse_float(end, 'aggregation grid end coordinate', parser)
-                delta_parsed = parse_float(delta, 'aggregation grid delta coordinate', parser)
-                is_time = False
-                if dim_name.lower() == 'x':
-                    if not start_parsed <= end_parsed:
-                        parser.error("Longitude grid must be monotonically increasing (i.e. for x[A,B,C] A <= B). For "
-                                     "example, x=[90,-90,10] is invalid but x=[90,270,10] is valid")
-                    if not end_parsed - start_parsed <= 360:
-                        parser.error("Longitude grid should not be wider than 360 degrees "
-                                     "(i.e. for x[A,B,C] B-A <= 360)")
-            else:
-                start_parsed = parse_as_number_or_datetime(start, 'aggregation grid start coordinate', parser)
-                end_parsed = parse_as_number_or_datetime(end, 'aggregation grid end coordinate', parser)
-                delta_parsed = parse_as_number_or_datetime(delta, 'aggregation grid delta coordinate', parser)
-                is_time = hasattr(delta_parsed, 'year')
-            grid_dict[dim_name] = AggregationGrid(start_parsed, end_parsed, delta_parsed, is_time)
+            start_parsed = parse_as_number_or_datetime(match.group('start'))
+            end_parsed = parse_as_number_or_datetime(match.group('end'))
+            delta_parsed = parse_as_number_or_datetime_delta(match.group('delta'))
+
+            if dim_name.lower() == 'x':
+                if not start_parsed <= end_parsed:
+                    parser.error("Longitude grid must be monotonically increasing (i.e. for x[A,B,C] A <= B). For "
+                                 "example, x=[90,-90,10] is invalid but x=[90,270,10] is valid")
+                if not end_parsed - start_parsed <= 360:
+                    parser.error("Longitude grid should not be wider than 360 degrees "
+                                 "(i.e. for x[A,B,C] B-A <= 360)")
+
+            grid_dict[dim_name] = slice(start_parsed, end_parsed, delta_parsed)
 
     return grid_dict
 
@@ -453,8 +508,7 @@ def get_subset_limits(subsetlimits, parser):
     :param parser:        The parser used to report errors
     :return: The parsed datagroups as a list of dictionaries
     """
-    from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime
-    from cis.subsetting.subset_limits import SubsetLimits
+    from cis.parse_datetime import parse_datetime, parse_as_number_or_datetime, parse_partial_datetime
 
     # Split into the limits for each dimension.
     split_input = split_outside_brackets(subsetlimits)
@@ -473,34 +527,32 @@ def get_subset_limits(subsetlimits, parser):
                 "A dimension for subsetting does not have dimension name, start value and/or end value specified")
         else:
             dim_name = match.group('dim')
+            limit_dict[dim_name] = []
+
             limit1 = match.group('start')
-            if match.group('end') is None:
-                limit2 = limit1
-            else:
-                limit2 = match.group('end')
+            limit2 = match.group('end')
 
             # If the dimension is specified as x, y, z, or t, assume that the dimension is spatial or temporal in the
             # obvious way. Otherwise, parse what is found as a date/time or number.
-            is_time = None
-            if dim_name.lower() == 't':
-                limit1_parsed = parse_datetime(limit1, 'subset range start date/time', parser)
-                limit2_parsed = parse_datetime(limit2, 'subset range end date/time', parser)
-                is_time = True
+            if dim_name.lower() == 't' or dim_name.lower() == 'time':
+                if limit2 is None:
+                    limits = parse_partial_datetime(limit1, 'subset range date/time', parser)
+                else:
+                    limits = [parse_datetime(limit1, 'subset range start date/time', parser),
+                              parse_datetime(limit2, 'subset range end date/time', parser)]
             elif dim_name.lower() in ['x', 'y', 'z']:
-                limit1_parsed = parse_float(limit1, 'subset range start coordinate', parser)
-                limit2_parsed = parse_float(limit2, 'subset range start coordinate', parser)
-                is_time = False
+                limits = [parse_float(limit1, 'subset range start coordinate', parser),
+                          parse_float(limit2, 'subset range start coordinate', parser)]
                 if dim_name.lower() == 'x':
-                    if not limit1_parsed <= limit2_parsed:
+                    if not limits[0] <= limits[1]:
                         parser.error("Longitude limits must be monotonically increasing (i.e. for x[A,B] A <= B). For "
                                      "example, x=[90,-90] is invalid but x=[90,270] is valid")
-                    if not limit2_parsed - limit1_parsed <= 360:
+                    if not limits[1] - limits[0] <= 360:
                         parser.error("Longitude limits should not be more than 360 degrees apart "
                                      "(i.e. for x[A,B] B-A <= 360)")
             else:
-                limit1_parsed = parse_as_number_or_datetime(limit1, 'subset range start coordinate', parser)
-                limit2_parsed = parse_as_number_or_datetime(limit2, 'subset range start coordinate', parser)
-            limit_dict[dim_name] = SubsetLimits(limit1_parsed, limit2_parsed, is_time)
+                limits = [parse_as_number_or_datetime(limit1), parse_as_number_or_datetime(limit2)]
+            limit_dict[dim_name] = limits
     return limit_dict
 
 
@@ -513,8 +565,9 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
     :param compulsory_args:   The exact number of compulsory arguments (colon separated)
     :return: A list of dictionaries containing the parsed arguments
     """
-    input_dicts = []
+    # TODO I'm pretty sure this could be done by argparse more cleanly and efficiently, just pass it the split args...
 
+    input_dicts = []
     for input_string in inputs:
         split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', input_string)]
         if len(split_input) < compulsory_args:
@@ -561,8 +614,6 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
                 raise InvalidCommandLineOptionError('Something is wrong with this argument: ', split_input_comma)
 
         for i, option in enumerate(option):
-            # Make sure an entry for each option is created, even if it is None
-            input_dict[option] = None
             for j in split_input_comma:
                 # Split the input, [0] will be the key and [1] the value in the list
                 split_input_variable = split_outside_brackets(j, '=')
@@ -615,13 +666,10 @@ def split_outside_brackets(input, seps=[','], brackets={'[': ']'}):
 def extract_method_and_args(arguments, parser):
     from cis.utils import parse_key_val_list
 
-    if not arguments:
-        method_and_args = None
-    else:
-        elements = multi_split(arguments, ['[', ',', ']'])
-        method_name = elements[0]
-        args = elements[1:] if len(elements) > 1 else []
-        method_and_args = (method_name, parse_key_val_list(args))
+    elements = multi_split(arguments, ['[', ',', ']'])
+    method_name = elements[0] if len(elements) > 0 else ''
+    args = elements[1:] if len(elements) > 1 else []
+    method_and_args = (method_name, parse_key_val_list(args))
     return method_and_args
 
 
@@ -709,9 +757,9 @@ def check_plot_type(plot_type, parser):
     """
 
     if plot_type is not None:
-        if plot_type not in list(Plotter.plot_types.keys()):
+        if plot_type not in plot_types.keys():
             parser.error(
-                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(list(Plotter.plot_types.keys())))
+                "'" + plot_type + "' is not a valid plot type, please use one of: " + str(plot_types.keys()))
 
     return plot_type
 
@@ -728,50 +776,6 @@ def check_color(color, parser):
     return color
 
 
-def check_colour_bar_orientation(orientation, parser):
-    orientation = orientation.lower()
-    if orientation != "horizontal" and orientation != "vertical":
-        parser.error("The colour bar orientation must either be horizontal or vertical")
-    return orientation
-
-
-def check_valid_min_max_args(min_val, max_val, step, parser, range_axis):
-    """
-    If a val range was specified, checks that they are valid numbers and the min is less than the max
-    """
-    from cis.parse_datetime import parse_as_number_or_datetime, parse_as_float_or_time_delta, \
-        parse_datetimestr_to_std_time
-    from cis.time_util import convert_datetime_to_std_time
-    import datetime
-
-    ax_range = {}
-
-    if min_val is not None:
-        dt = parse_as_number_or_datetime(min_val, range_axis + "min", parser)
-        if isinstance(dt, list):
-            ax_range[range_axis + "min"] = convert_datetime_to_std_time(datetime.datetime(*dt))
-        else:
-            ax_range[range_axis + "min"] = dt
-
-    if max_val is not None:
-        dt = parse_as_number_or_datetime(max_val, range_axis + "max", parser)
-        if isinstance(dt, list):
-            ax_range[range_axis + "max"] = convert_datetime_to_std_time(datetime.datetime(*dt))
-        else:
-            ax_range[range_axis + "max"] = dt
-    if step is not None:
-        ax_range[range_axis + "step"] = parse_as_float_or_time_delta(step, range_axis + "step", parser)
-
-    return ax_range
-
-
-def check_boolean_argument(argument):
-    if argument is None or argument != "False":
-        return True
-    else:
-        return False
-
-
 def check_boolean(arg, parser):
     if arg is None or arg.lower() == "true":
         return True
@@ -779,29 +783,6 @@ def check_boolean(arg, parser):
         return False
     else:
         parser.error("'" + arg + "' is not either True or False")
-
-
-def assign_logs(arguments):
-    arguments.logx = check_boolean_argument(arguments.logx)
-    arguments.logy = check_boolean_argument(arguments.logy)
-    arguments.logv = check_boolean_argument(arguments.logv)
-
-    if arguments.logx:
-        arguments.logx = 10
-    else:
-        arguments.logx = None
-
-    if arguments.logy:
-        arguments.logy = 10
-    else:
-        arguments.logy = None
-
-    if arguments.logv:
-        arguments.logv = 10
-    else:
-        arguments.logv = None
-
-    return arguments
 
 
 def _split_output_if_includes_variable_name(arguments, parser):
@@ -883,28 +864,6 @@ def _create_attributes_dictionary(arguments, parser):
 
 def validate_plot_args(arguments, parser):
     arguments.datagroups = get_plot_datagroups(arguments.datagroups, parser)
-    check_plot_type(arguments.type, parser)
-
-    arguments.valrange = check_valid_min_max_args(arguments.vmin, arguments.vmax, arguments.vstep, parser, "v")
-    arguments.xrange = check_valid_min_max_args(arguments.xmin, arguments.xmax, arguments.xstep, parser, "x")
-    arguments.yrange = check_valid_min_max_args(arguments.ymin, arguments.ymax, arguments.ystep, parser, "y")
-
-    arguments.cbarorient = check_colour_bar_orientation(arguments.cbarorient, parser)
-    arguments.nocolourbar = check_boolean_argument(arguments.nocolourbar)
-    arguments.grid = check_boolean_argument(arguments.grid)
-
-    arguments.coastlinescolour = check_color(arguments.coastlinescolour, parser)
-
-    arguments = assign_logs(arguments)
-    # Try and parse numbers
-    arguments.itemwidth = parse_float(arguments.itemwidth, "item width", parser)
-    arguments.fontsize = parse_float(arguments.fontsize, "font size", parser)
-    arguments.height = parse_float(arguments.height, "height", parser)
-    arguments.width = parse_float(arguments.width, "width", parser)
-    arguments.xtickangle = parse_float(arguments.xtickangle, "x tick angle", parser)
-    arguments.ytickangle = parse_float(arguments.ytickangle, "y tick angle", parser)
-    arguments.xbinwidth = parse_float(arguments.xbinwidth, "x bin width", parser)
-    arguments.ybinwidth = parse_float(arguments.ybinwidth, "y bin width", parser)
 
     if arguments.output is not None:
         _validate_output_file(arguments, parser, '.png')
@@ -937,9 +896,8 @@ def validate_col_args(arguments, parser):
     # Take the three parts out of the 0th samplegroup.
     # Note: Due to the reason stated above, there will only ever be one samplegroup
     arguments.samplefiles = arguments.samplegroup["filenames"]
-    arguments.samplevariable = arguments.samplegroup["variable"] if arguments.samplegroup[
-                                                                        "variable"] is not "" else None
-    arguments.sampleproduct = arguments.samplegroup["product"]
+    arguments.samplevariable = arguments.samplegroup.get("variable", None)
+    arguments.sampleproduct = arguments.samplegroup.get("product", None)
     arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     _validate_output_file(arguments, parser)
 
@@ -949,6 +907,15 @@ def validate_col_args(arguments, parser):
 def validate_aggregate_args(arguments, parser):
     arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
     arguments.grid = get_aggregate_grid(arguments.aggregategrid, parser)
+    _validate_output_file(arguments, parser)
+    return arguments
+
+
+def validate_collapse_args(arguments, parser):
+    arguments.datagroups = get_aggregate_datagroups(arguments.datagroups, parser)
+    # If we only have one dimension just check if the user has comma separated the dims (as in aggregation)
+    if len(arguments.dimensions) == 1:
+        arguments.dimensions = arguments.dimensions[0].split(',')
     _validate_output_file(arguments, parser)
     return arguments
 
@@ -988,6 +955,7 @@ validators = {'plot': validate_plot_args,
               'info': validate_info_args,
               'col': validate_col_args,
               'aggregate': validate_aggregate_args,
+              'collapse': validate_collapse_args,
               'subset': validate_subset_args,
               'eval': validate_eval_args,
               'stats': validate_stats_args,

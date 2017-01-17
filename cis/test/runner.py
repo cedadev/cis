@@ -12,7 +12,7 @@ def run(test_set='cis/test/unit', n_processors=1, stop=False, debug=False):
                             format="%(asctime)s - %(levelname)s - %(module)s : %(lineno)d - %(message)s",
                             stream=sys.stdout)
 
-    args = ['', test_set, '--processes=%s' % n_processors, '--verbosity=2']
+    args = ['', test_set, '--processes=%s' % n_processors, '--verbosity=2', '--process-timeout=60']
 
     if stop:
         args.append('--stop')

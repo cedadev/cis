@@ -1,12 +1,12 @@
 """
 module to test the time conversion utilities
 """
-from nose.tools import eq_, assert_almost_equal
+from nose.tools import eq_, assert_almost_equal, istest, raises
 import datetime as dt
 from unittest import TestCase
 
 from cis.time_util import convert_sec_since_to_std_time, convert_datetime_to_std_time, \
-    convert_julian_date_to_std_time
+    convert_julian_date_to_std_time, PartialDateTime, find_last_day_of_month, set_year, change_year_of_ungridded_data
 
 
 class TestTimeUtils(TestCase):
@@ -89,3 +89,73 @@ class TestTimeUtils(TestCase):
         eq_(julian_days.shape, std_days.shape)
         assert np.allclose(std_days, ref)
 
+    # Tests for find_last_day_of_month
+    def test_find_last_day_of_month_finds_day_for_dec_2010(self):
+        day = find_last_day_of_month(2010, 12)
+        assert (day == 31)
+
+    def test_find_last_day_of_month_finds_day_for_feb_2000(self):
+        day = find_last_day_of_month(2000, 2)
+        assert (day == 29)
+
+    # Tests for convert_datetime_components_to_datetime
+    def test_convert_datetime_components_to_datetime_can_convert_year_as_lower_limit(self):
+        start, end = PartialDateTime(2000).range()
+        assert (start == dt.datetime(2000, 1, 1, 0, 0, 0))
+        assert (end == dt.datetime(2000, 12, 31, 23, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_year_month_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6).range()
+        assert (start == dt.datetime(1990, 6, 1, 0, 0, 0))
+        assert (end == dt.datetime(1990, 6, 30, 23, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_year_month_day_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7).range()
+        assert (start == dt.datetime(1990, 6, 7, 0, 0, 0))
+        assert (end == dt.datetime(1990, 6, 7, 23, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_date_hour_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7, 18).range()
+        assert (start == dt.datetime(1990, 6, 7, 18, 0, 0))
+        assert (end == dt.datetime(1990, 6, 7, 18, 59, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_date_hour_min_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7, 6, 30).range()
+        assert (start == dt.datetime(1990, 6, 7, 6, 30, 0))
+        assert (end == dt.datetime(1990, 6, 7, 6, 30, 59))
+
+    def test_convert_datetime_components_to_datetime_can_convert_date_hour_min_sec_as_lower_limit(self):
+        start, end = PartialDateTime(1990, 6, 7, 12, 15, 45).range()
+        assert (start == dt.datetime(1990, 6, 7, 12, 15, 45))
+        assert (end == dt.datetime(1990, 6, 7, 12, 15, 45))
+
+    @raises(ValueError)
+    def test_convert_datetime_components_to_datetime_raises_error_if_invalid_date(self):
+        start, end = PartialDateTime(2000, 6, 31).range()
+
+    @raises(ValueError)
+    def test_convert_datetime_components_to_datetime_raises_error_if_invalid_time(self):
+        start, end = PartialDateTime(2000, 6, 30, 12, 30, 60).range()
+
+    def test_set_year(self):
+        from datetime import datetime
+
+        # Test changing a leapday to a year without a leapday returns None
+        eq_(set_year(datetime(1984, 2, 28), 2007), datetime(2007, 2, 28))
+        eq_(set_year(datetime(1984, 2, 29), 2007), None)
+
+        # Test changing a leapday to a year with a leapday works fine
+        eq_(set_year(datetime(1984, 2, 28), 2000), datetime(2000, 2, 28))
+        eq_(set_year(datetime(1984, 2, 29), 2000), datetime(2000, 2, 29))
+
+    def test_change_ug_data_year(self):
+        from cis.test.util.mock import make_regular_2d_with_time_ungridded_data
+        from cis.time_util import convert_datetime_to_std_time
+        from datetime import datetime
+
+        ug = make_regular_2d_with_time_ungridded_data()
+        ug.coord('time').convert_datetime_to_standard_time()
+
+        change_year_of_ungridded_data(ug, 2007)
+
+        eq_(ug.coord('time').points[0, 0], convert_datetime_to_std_time(datetime(2007, 8, 27)))

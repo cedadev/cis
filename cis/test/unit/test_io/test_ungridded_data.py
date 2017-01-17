@@ -2,7 +2,7 @@
 """
 from unittest import TestCase, skipIf
 from hamcrest import assert_that, is_, contains_inanyorder
-from nose.tools import raises, assert_almost_equal
+from nose.tools import raises, assert_almost_equal, assert_raises
 from cis.test.util.mock import make_regular_2d_ungridded_data, make_regular_2d_ungridded_data_with_missing_values, \
     make_regular_2d_with_time_ungridded_data
 
@@ -295,9 +295,33 @@ class TestUngriddedDataList(TestCase):
                                                  units="kg m-2 s-1", missing_value=-999), self.coords)
         self.ungridded_data_list = UngriddedDataList([ug1, ug2])
 
+    def test_slicing(self):
+        single_item = self.ungridded_data_list[1]
+        assert_that(isinstance(single_item, UngriddedData))
+        many_items = self.ungridded_data_list[0:1]
+        assert_that(isinstance(many_items, UngriddedDataList))
+        many_items = self.ungridded_data_list[0:]
+        assert_that(isinstance(many_items, UngriddedDataList))
+
+    def test_combining(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        another_list = UngriddedDataList([make_regular_2d_ungridded_data(), make_regular_2d_ungridded_data()])
+        # Test adding
+        assert_that(isinstance(self.ungridded_data_list + another_list, UngriddedDataList))
+        # Test extending
+        another_list.extend(self.ungridded_data_list)
+        assert_that(isinstance(another_list, UngriddedDataList))
+        assert_that(len(another_list) == 4)
+        # Test can't add single items
+        with assert_raises(TypeError):
+            self.ungridded_data_list + another_list[0]
+
+    def test_can_get_string_of_list(self):
+        s = str(self.ungridded_data_list)
+        assert_that(s == "UngriddedDataList: \n0: Ungridded data: rainfall_flux / (kg m-2 s-1) \n"
+                         "1: Ungridded data: snowfall_flux / (kg m-2 s-1) \nCoordinates: \n  lat\n  lon\n")
 
     def test_GIVEN_data_containing_multiple_matching_coordinates_WHEN_coords_THEN_only_unique_coords_returned(self):
-
         unique_coords = self.ungridded_data_list.coords()
         assert_that(len(unique_coords), is_(2))
         assert_that(isinstance(unique_coords, CoordList))

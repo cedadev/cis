@@ -199,22 +199,6 @@ class TestDataReader(TestCase):
         assert_that(data[1], is_(var2))
         assert_that(data[2], is_(var3))
 
-    def test_GIVEN_gridded_and_ungridded_datagroups_WHEN_read_datagroups_THEN_NO_TypeError(self):
-        datagroup_1 = {'variables': ['var1'],
-                       'filenames': ['filename1.nc'],
-                       'product': None}
-        datagroup_2 = {'variables': ['var3'],
-                       'filenames': ['filename2.nc'],
-                       'product': 'cis'}
-        var1 = make_from_cube(make_square_5x3_2d_cube())
-        var2 = make_regular_2d_ungridded_data()
-        get_data_func = MagicMock(side_effect=[var1, var2])
-        get_var_func = MagicMock(side_effect=lambda f: {'filename1.nc': ['var1'],
-                                                        'filename2.nc': ['var3']}[f])
-        reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
-        data = reader.read_datagroups([datagroup_1, datagroup_2])
-        assert_that(data, is_(list))
-
     def test_GIVEN_aliases_None_WHEN_read_datagroups_THEN_read_OK_aliases_default_to_var_names(self):
         datagroup = {'variables': ['var1'],
                      'filenames': ['filename1.nc'],

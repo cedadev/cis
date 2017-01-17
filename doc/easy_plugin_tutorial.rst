@@ -45,7 +45,7 @@ we’ve read, and :class:`.UngriddedCoordinates` - which is what we return to CI
     In python it’s very easy to import classes and methods from other
     modules within your package, and across packages using the from and
     import commands. The file-reading routines used here are used by many of
-    the other data products. See the :doc:`API <api/cis>` section for further
+    the other data products. See the :doc:`API <cis_api>` section for further
     details about using CIS as a python library.
 
 Don’t worry too much about what these methods do at this stage, just use

@@ -7,6 +7,7 @@ import numpy as np
 from cis.data_io.common_data import CommonData, CommonDataList
 from cis.data_io.hyperpoint import HyperPoint
 from cis.data_io.hyperpoint_view import GriddedHyperPointView
+import six
 
 
 def load_cube(*args, **kwargs):
@@ -21,6 +22,7 @@ def load_cube(*args, **kwargs):
     iris.FUTURE.netcdf_promote = True
 
     cubes = iris.load(*args, **kwargs)
+
     try:
         iris_cube = cubes.merge_cube()
     except MergeError as e:
@@ -101,6 +103,10 @@ class GriddedData(iris.cube.Cube, CommonData):
         # Add history separately as it is not a constructor argument
         data.add_history(history)
         return data
+
+    def __repr__(self):
+        # Override the Cube representation
+        return "<cis 'GriddedData' of %s>" % self.summary(shorten=True)
 
     @staticmethod
     def _wrap_cube_iterator(itr):
@@ -304,8 +310,86 @@ class GriddedData(iris.cube.Cube, CommonData):
         from iris.pandas import as_data_frame
         return as_data_frame(self, copy=copy)
 
-    def collapsed(self, *args, **kwargs):
-        return make_from_cube(super(GriddedData, self).collapsed(*args, **kwargs))
+    def collapsed(self, coords, how=None, **kwargs):
+        """
+        Collapse the dataset over one or more coordinates using CIS aggregation (NOT Iris). This allows multidimensional
+         coordinates to be aggregated over as well.
+        :param list of iris.coords.Coord or str coords: The coords to collapse
+        :param str or iris.analysis.Aggregator how: The kernel to use in the aggregation
+        :param kwargs: NOT USED - this is only to match the iris interface.
+        :return:
+        """
+        return _collapse_gridded(self, coords, how)
+
+    def subset(self, **kwargs):
+        """
+        Subset the CommonData object based on the specified constraints
+        :param kwargs:
+        :return:
+        """
+        from cis.subsetting.subset import subset, GriddedSubsetConstraint
+        return subset(self, GriddedSubsetConstraint, **kwargs)
+
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+
+        :param CommonData or CommonDataList data: The data to resample
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :return CommonData: The collocated dataset
+        """
+        from cis.collocation import col_implementations as ci
+        from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
+        from cis.collocation.col import collocate, get_kernel
+
+        if isinstance(data, UngriddedData) or isinstance(data, UngriddedDataList):
+            col_cls = ci.GeneralGriddedCollocator
+            # Bin is the default for ungridded -> gridded collocation
+            if how == '' or how == 'bin':
+                con = ci.BinnedCubeCellOnlyConstraint()
+            elif how == 'box':
+                con = ci.SepConstraintKdtree(**kwargs)
+            else:
+                raise ValueError("Invalid method specified for ungridded -> gridded collocation: " + how)
+
+            # We can have any kernel, default to moments
+            kernel = get_kernel(kernel)
+        elif isinstance(data, GriddedData) or isinstance(data, GriddedDataList):
+            col_cls = ci.GriddedCollocator
+            con = None
+            if kernel is not None:
+                raise ValueError("Cannot specify kernel when method is 'lin' or 'nn'")
+
+            # Lin is the default for gridded -> gridded
+            if how == '' or how == 'lin':
+                kernel = ci.gridded_gridded_li()
+            elif how == 'nn':
+                kernel = ci.gridded_gridded_nn()
+            else:
+                raise ValueError("Invalid method specified for gridded -> gridded collocation: " + how)
+        else:
+            raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
+
+        col = col_cls(missing_data_for_missing_sample=missing_data_for_missing_sample, fill_value=fill_value,
+                      var_name=var_name, var_long_name=var_long_name, var_units=var_units)
+
+        return collocate(data, self, col, con, kernel)
+
+    def _get_default_plot_type(self, lat_lon=False):
+        if self.ndim == 1:
+            return 'line'
+        elif self.ndim ==2:
+            return 'heatmap'
+        else:
+            raise ValueError("Unable to determine plot type for data with {} dimensions".format(self.ndim))
+
 
 class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
@@ -317,7 +401,7 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
     """
 
     def __str__(self):
-        "<GriddedDataList: %s>" % super(GriddedDataList, self).__str__()
+        return "GriddedDataList: \n%s" % super(GriddedDataList, self).__str__()
 
     @property
     def is_gridded(self):
@@ -411,17 +495,17 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
 
     def collapsed(self, *args, **kwargs):
         """
-        Build a collapsed GriddedDataList by calling iris.cube.Cube.collapsed(*args, **kwargs)
-        for the all items in the data list
-        :param args:
-        :param kwargs:
-        :return: GriddedDataList
+        Collapse the dataset over one or more coordinates using CIS aggregation (NOT Iris). This allows multidimensional
+         coordinates to be aggregated over as well.
+        :param list of iris.coords.Coord or str coords: The coords to collapse
+        :param str or iris.analysis.Aggregator how: The kernel to use in the aggregation
+        :param kwargs: NOT USED - this is only to match the iris interface.
+        :return:
         """
-        data_list = GriddedDataList()
+        output = GriddedDataList()
         for data in self:
-            collapsed_data = make_from_cube(data.collapsed(*args, **kwargs))
-            data_list.append(collapsed_data)
-        return data_list
+            output.extend(data.collapsed(*args, **kwargs))
+        return output
 
     def interpolate(self, *args, **kwargs):
         """
@@ -509,3 +593,48 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         """
         # Use the dimensions of the first item since all items should be the same shape
         return self[0].ndim
+
+    def subset(self, **kwargs):
+        from cis.subsetting.subset import subset, GriddedSubsetConstraint
+        return subset(self, GriddedSubsetConstraint, **kwargs)
+
+
+def _collapse_gridded(data, coords, kernel):
+    """
+    Collapse a GriddedData or GriddedDataList based on the specified grids (currently only collapsing is available)
+    :param GriddedData or GriddedDataList data: The data object to aggregate
+    :param list of iris.coords.Coord or str coords: The coords to collapse
+    :param str or iris.analysis.Aggregator kernel: The kernel to use in the aggregation
+    :return:
+    """
+    from cis.aggregation.collapse_kernels import aggregation_kernels, MultiKernel
+    from iris.analysis import Aggregator as IrisAggregator
+    from cis.aggregation.gridded_collapsor import GriddedCollapsor
+    from cis import __version__
+    from cis.utils import listify
+
+    # Ensure the coords are all Coord instances
+    coords = [data._get_coord(c) for c in listify(coords)]
+
+    # The kernel can be a string or object, so catch both defaults
+    if kernel is None or kernel == '':
+        kernel = 'moments'
+
+    if isinstance(kernel, six.string_types):
+        kernel_inst = aggregation_kernels[kernel]
+    elif isinstance(kernel, (IrisAggregator, MultiKernel)):
+        kernel_inst = kernel
+    else:
+        raise ValueError("Invalid kernel specified: " + str(kernel))
+
+    aggregator = GriddedCollapsor(data, coords)
+    data = aggregator(kernel_inst)
+
+    history = "Collapsed using CIS version " + __version__ + \
+              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
+              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
+              "\n over coordinates: " + ", ".join(c.name() for c in coords) + \
+              "\n with kernel: " + str(kernel_inst) + "."
+    data.add_history(history)
+
+    return data

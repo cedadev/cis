@@ -1,16 +1,16 @@
 from abc import ABCMeta, abstractmethod
+import six
 from cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
 import numpy as np
 
 
+@six.add_metaclass(ABCMeta)
 class Collocator(object):
     """
     Class which provides a method for performing collocation. This just defines the interface which
     the subclasses must implement.
     """
-    __metaclass__ = ABCMeta
-
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False):
         """
         Initialise the fill_value, missing data flag and variable attributes.
@@ -23,7 +23,7 @@ class Collocator(object):
          data points with a missing value - regardless of the collocation result. The default is False.
         :return:
         """
-        self.fill_value = float(fill_value)
+        self.fill_value = float(fill_value) if fill_value is not None else np.nan
         self.var_name = var_name
         self.var_long_name = var_long_name
         self.var_units = var_units
@@ -270,35 +270,16 @@ def __get_class(parent_class, name=None):
     raise ClassNotFoundError("Specified "+parent_class.__name__+" subclass cannot be found")
 
 
-def get_constraint(method=None):
-    """
-    Top level routine for finding the correct Constraint object. This doesn't instantiate the constraint class as it
-    may need variables passed to the constructor
-    :param method: The constraint method to find - this should be a string which matches the name of one
-    of the subclasses of Constraint
-    :return: One of Constraint's subclasses
-    """
-    constraint_cls = __get_class(Constraint, method)
-    return constraint_cls
-
-
 def get_kernel(method=None):
     """
     Top level routine for finding the correct Kernel object.
-    :param method: The kernel method to find - this should be a string which matches the name of one
+    :param str method: The kernel method to find - this should be a string which matches the name of one
     of the subclasses of Kernel
     :return: One of Kernel's subclasses
     """
-    kernel_cls = __get_class(Kernel, method)
+    from cis.exceptions import ClassNotFoundError
+    try:
+        kernel_cls = __get_class(Kernel, method)
+    except ClassNotFoundError:
+        raise ValueError("No kernel found matching name: " + str(method))
     return kernel_cls
-
-
-def get_collocator(method=None):
-    """
-    Top level routine for finding the correct Collocator object.
-    :param method: The collocate method to find - this should be a string which matches the name of one
-    of the subclasses of Collocator
-    :return: One of Collocator's subclasses
-    """
-    collocate_cls = __get_class(Collocator, method)
-    return collocate_cls

@@ -8,6 +8,9 @@ This page documents the new features added, and bugs fixed in CIS since version 
 
 CIS 1.4 features
 ================
+ * An all new Python interface for subsetting any data read by CIS. Just call the :meth:`subset` method on any CIS GriddedData
+   or UngriddedData object to access the same functionality as through the command line - without reading or writing to
+   disk. See :doc:`CIS API<cis_api>` for more details.
 
  * CIS now includes full support for Python => 3.4, as well as Python 2.7
  * New verbose and quiet flags allow for control over how much CIS commands output to the screen. The default verbosity

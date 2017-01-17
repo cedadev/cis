@@ -18,13 +18,36 @@
 
 # There is no algorithmic change, just a restructuring to allow caching of the weights for calculating many
 #  interpolations of different datasets using the same points, and support for hybrid coordinates.
-
+# The two helper functions extend_circular_coord and _data are also taken from SciPy as the interpolate module is
+#  deprecated since Iris 1.10.
 import numpy as np
+
+
+def extend_circular_coord(coord, points):
+    """
+    Return coordinates points with a shape extended by one
+    This is common when dealing with circular coordinates.
+
+    """
+    modulus = np.array(coord.units.modulus or 0,
+                       dtype=coord.dtype)
+    points = np.append(points, points[0] + modulus)
+    return points
+
+
+def extend_circular_data(data, coord_dim):
+    coord_slice_in_cube = [slice(None)] * data.ndim
+    coord_slice_in_cube[coord_dim] = slice(0, 1)
+
+    data = np.append(data,
+                     data[tuple(coord_slice_in_cube)],
+                     axis=coord_dim)
+    return data
 
 
 class GriddedUngriddedInterpolator(object):
 
-    def __init__(self, _data, sample, method='linear', missing_data_for_missing_sample=False):
+    def __init__(self, _data, sample, method='lin', missing_data_for_missing_sample=False):
         """
         Prepare an interpolation over the grid defined by a GriddedData source onto an UngriddedData sample.
 
@@ -35,7 +58,6 @@ class GriddedUngriddedInterpolator(object):
         :param UngriddedData sample: The points to sample the source data at.
         :param str method: The interpolation method to use (either 'linear' or 'nearest'). Default is 'linear'.
         """
-        from iris.analysis._interpolation import extend_circular_coord, extend_circular_data
         from cis.utils import move_item_to_end
         coords = []
         grid_points = []
@@ -139,7 +161,6 @@ class GriddedUngriddedInterpolator(object):
         :param bool extrapolate: Extrapolate points outside the bounds of the data? Default False.
         :return ndarray: Interpolated values.
         """
-        from iris.analysis._interpolation import extend_circular_data
         if extrapolate:
             fill_value = None
 
@@ -205,7 +226,7 @@ class _RegularGridInterpolator(object):
     # this class is based on code originally programmed by Johannes Buchner,
     # see https://github.com/JohannesBuchner/regulargrid
 
-    def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, method="linear"):
+    def __init__(self, coords, points, hybrid_coord=None, hybrid_dims=None, method="lin"):
         """
         Initialise the itnerpolator - this will calculate and cache the indices of the interpolation. It will
         also interpolate the hybrid coordinate if needed to determine a unique vertical index.
@@ -217,9 +238,9 @@ class _RegularGridInterpolator(object):
         :param str method: The method of interpolation to perform. Supported are "linear" and "nearest". Default is
         "linear".
         """
-        if method == "linear":
+        if method == "lin":
             self._interp = self._evaluate_linear
-        elif method == "nearest":
+        elif method == "nn":
             self._interp = self._evaluate_nearest
         else:
             raise ValueError("Method '%s' is not defined" % method)

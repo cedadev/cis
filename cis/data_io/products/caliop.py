@@ -88,7 +88,7 @@ class abstract_Caliop(AProduct):
         pres_data = hdf.read_data(sdata['Pressure'], self._get_calipso_data)
         pres_metadata = hdf.read_metadata(sdata['Pressure'], "SD")
         # Fix badly formatted units which aren't CF compliant and will break if they are aggregated
-        if pres_metadata.units == "hPA":
+        if str(pres_metadata.units) == "hPA":
             pres_metadata.units = "hPa"
         pres_metadata.shape = new_shape
         pres_coord = Coord(pres_data, pres_metadata, 'P')
@@ -113,8 +113,7 @@ class abstract_Caliop(AProduct):
         time_data = convert_sec_since_to_std_time(time_data, dt.datetime(1993, 1, 1, 0, 0, 0))
         time_data = utils.expand_1d_to_2d_array(time_data[:, index_offset], len_x, axis=1)
         time_coord = Coord(time_data, Metadata(name='Profile_Time', standard_name='time', shape=time_data.shape,
-                                               units=str(cis_standard_time_unit),
-                                               calendar=cis_standard_time_unit.calendar), "T")
+                                               units=cis_standard_time_unit), "T")
 
         # create the object containing all coordinates
         coords = CoordList()

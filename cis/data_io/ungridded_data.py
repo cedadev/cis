@@ -13,16 +13,18 @@ from cis.data_io.common_data import CommonData, CommonDataList
 from cis.data_io.hyperpoint_view import UngriddedHyperPointView
 from cis.data_io.write_netcdf import add_data_to_file, write_coordinates
 from cis.utils import listify
+import cis.maths
 
 
 class Metadata(object):
+
     @classmethod
     def from_CubeMetadata(cls, cube_meta):
         return cls(name=cube_meta.var_name, standard_name=cube_meta.standard_name, long_name=cube_meta.long_name,
                    units=str(cube_meta.units), misc=cube_meta.attributes)
 
     def __init__(self, name='', standard_name='', long_name='', shape=None, units='', range=None, factor=None,
-                 offset=None, missing_value=None, calendar='', history='', misc=None):
+                 offset=None, missing_value=None, history='', misc=None):
         self._name = name
 
         self._standard_name = ''
@@ -33,17 +35,38 @@ class Metadata(object):
 
         self.long_name = long_name
         self.shape = shape
+
         self.units = units
         self.range = range
         self.factor = factor
         self.offset = offset
         self.missing_value = missing_value
-        self.calendar = calendar
         self.history = history
         if misc is None:
             self.misc = {}
         else:
             self.misc = misc
+
+    def __eq__(self, other):
+        result = NotImplemented
+
+        if isinstance(other, Metadata):
+            result = self._name == other._name and \
+                     self._standard_name == other._standard_name and \
+                     self.long_name == other.long_name and \
+                     self.units == other.units
+        return result
+
+    # Must supply __ne__, Python does not defer to __eq__ for negative equality
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        if result is not NotImplemented:
+            result = not result
+        return result
+
+    # Must supply __hash__, Python 3 does not enable it if __eq__ is defined
+    def __hash__(self):
+        return hash(id(self))
 
     def summary(self, offset=5):
         """
@@ -57,8 +80,6 @@ class Metadata(object):
         string += '{pad:{width}}Long name = {lname}\n'.format(pad=' ', width=offset, lname=self.long_name)
         string += '{pad:{width}}Standard name = {sname}\n'.format(pad=' ', width=offset, sname=self.standard_name)
         string += '{pad:{width}}Units = {units}\n'.format(pad=' ', width=offset, units=self.units)
-        if self.calendar:
-            string += '{pad:{width}}Calendar = {cal}\n'.format(pad=' ', width=offset, cal=self.calendar)
         string += '{pad:{width}}Missing value = {mval}\n'.format(pad=' ', width=offset, mval=self.missing_value)
         # str(tuple) returns repr(obj) on each item in the tuple, if we have a datetime tuple then we want str(obj)
         #  instead. Just make that ourselves here instead (as a str to avoid the extra quotes if we make a 'real' tuple)
@@ -101,6 +122,23 @@ class Metadata(object):
             self._standard_name = standard_name
         else:
             raise ValueError('%r is not a valid standard_name' % standard_name)
+
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, units):
+        from cf_units import Unit
+        if not isinstance(units, Unit):
+            try:
+                # Try some basic tidying up of unit
+                if isinstance(units, six.string_types):
+                    units = units.replace("since:", "since").replace(",", "").lower()
+                units = Unit(units)
+            except ValueError:
+                logging.info("Unable to parse cf-units: {}. Some operations may not be available.".format(units))
+        self._units = units
 
     @staticmethod
     def guess_standard_name(name):
@@ -250,6 +288,41 @@ class LazyData(object):
         """
         pass
 
+    def __eq__(self, other):
+        import numpy as np
+        result = NotImplemented
+
+        if isinstance(other, LazyData):
+            # Check the metadata
+            result = self.metadata == other.metadata
+
+            # Then, if that is OK, check the data
+            if result:
+                result = np.allclose(self.data, other.data)
+
+        return result
+
+    # Must supply __ne__, Python does not defer to __eq__ for negative equality
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        if result is not NotImplemented:
+            result = not result
+        return result
+
+    # Must supply __hash__, Python 3 does not enable it if __eq__ is defined
+    def __hash__(self):
+        return hash(id(self))
+
+    # Maths operator overloads
+    __add__ = cis.maths.add
+    __radd__ = __add__
+    __sub__= cis.maths.subtract
+    __mul__ = cis.maths.multiply
+    __rmul__ = cis.maths.multiply
+    __div__ = cis.maths.divide
+    __truediv__ = cis.maths.divide
+    __pow__ = cis.maths.exponentiate
+
     @data.setter
     def data(self, value):
         self._data = value
@@ -263,17 +336,6 @@ class LazyData(object):
             data = self.data
             self._data_flattened = data.ravel()
         return self._data_flattened
-
-    def copy_metadata_from(self, other_data):
-        """
-        Method to copy the metadata from one UngriddedData/Cube object to another
-        """
-        self._coords = other_data.coords()
-        self.metadata = other_data._metadata
-
-        # def __getitem__(self, item): pass
-        # This method could be overridden to provide the ability to ask for slices of data
-        #  e.g. UngridedDataObject[012:32.4:5]
 
     def add_history(self, new_history):
         """Appends to, or creates, the metadata history attribute using the supplied history string.
@@ -341,6 +403,23 @@ class LazyData(object):
 
         self.metadata.range = range
 
+    def convert_units(self, new_units):
+        """
+        Convert units of LazyData object to new_units in place
+
+        :param LazyData ug_data:
+        :param cf_units.Unit or str new_units:
+        :raises ValueError if new_units can't be converted to standard units, or units are incompatible
+        """
+        from cf_units import Unit
+        if not isinstance(new_units, Unit):
+            new_units = Unit(new_units)
+        if not isinstance(self.units, Unit):
+            # If our units aren't cf_units then they can't be...
+            raise ValueError("Unable to convert non-standard LazyData units: {}".format(self.units))
+        self.units.convert(self.data, new_units, inplace=True)
+        self.units = new_units
+
 
 class UngriddedData(LazyData, CommonData):
     """
@@ -390,27 +469,28 @@ class UngriddedData(LazyData, CommonData):
     #         data = self.data
     #     else:
     #         # Remove any points with missing coordinate values:
-    #         combined_mask = numpy.zeros(self._data.shape, dtype=bool)
+    #         combined_mask = numpy.zeros(self._data.shape, dtype=bool).flatten()
     #         for coord in self._coords:
-    #             combined_mask |= numpy.ma.getmaskarray(coord.data)
+    #             combined_mask |= numpy.ma.getmaskarray(coord.data).flatten()
     #             if coord.data.dtype != 'object':
-    #                 combined_mask |= numpy.isnan(coord.data)
+    #                 combined_mask |= numpy.isnan(coord.data).flatten()
+    #             coord.update_shape()
+    #             coord.update_range()
     #         if combined_mask.any():
     #             n_points = numpy.count_nonzero(combined_mask)
     #             logging.warning(
     #                 "Identified {n_points} point(s) which were missing values for some or all coordinates - "
     #                 "these points have been removed from the data.".format(n_points=n_points))
     #             for coord in self._coords:
-    #                 if coord._data.ndim > 1:
-    #                     coord._data = coord._data[~combined_mask.any(axis=1)]
-    #                 else:
-    #                     coord._data = coord._data[~combined_mask]
+    #                 coord.data = numpy.ma.masked_array(coord.data.flatten(), mask=combined_mask).compressed()
     #                 coord.update_shape()
     #                 coord.update_range()
-    #             if self._data.ndim > 1:
-    #                 self._data = self._data[~combined_mask.any(axis=1)]
+    #             if numpy.ma.is_masked(self._data):
+    #                 new_data_mask = numpy.ma.masked_array(self._data.mask.flatten(), mask=combined_mask).compressed()
+    #                 new_data = numpy.ma.masked_array(self._data.data.flatten(), mask=combined_mask).compressed()
+    #                 self._data = numpy.ma.masked_array(new_data, mask=new_data_mask)
     #             else:
-    #                 self._data = self._data[~combined_mask]
+    #                 self._data = numpy.ma.masked_array(self._data.flatten(), mask=combined_mask).compressed()
     #         self.update_shape()
     #         self.update_range()
 
@@ -446,15 +526,32 @@ class UngriddedData(LazyData, CommonData):
             ug_data.add_history(history)
         return ug_data
 
-    def copy(self):
+    def __getitem__(self, keys):
+        """
+        Return a COPY of the data with the given slice. We copy to emulate the Iris Cube behaviour
+        """
+        from copy import deepcopy
+        # Create a copy of the slice of each of the coords
+        new_coords = []
+        for c in self.coords():
+            new_coords.append(c[keys])
+        # The data is just a new LazyData objects with the sliced data. Note this is a slice of the whole (concatenated)
+        #  data, and will lead to post-processing before slicing.
+        # TODO: We could be cleverer and figure out the right slice across the various data managers to only read the
+        #  right data from disk.
+        return UngriddedData(data=self.data[keys].copy(), metadata=deepcopy(self.metadata), coords=new_coords)
+
+    def copy(self, data=None):
         """
         Create a copy of this UngriddedData object with new data and coordinates
         so that that they can be modified without held references being affected.
         Will call any lazy loading methods in the data and coordinates
 
+        :param ndarray data: Replace the data of the ungridded data copy with provided data
+
         :return: Copied UngriddedData object
         """
-        data = numpy.ma.copy(self.data)  # This will load the data if lazy load
+        data = data if data is not None else numpy.ma.copy(self.data)  # This will load the data if lazy load
         coords = self.coords().copy()
         return UngriddedData(data=data, metadata=self.metadata, coords=coords)
 
@@ -518,19 +615,20 @@ class UngriddedData(LazyData, CommonData):
 
         return df
 
-    def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+    def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, var_name=None,
+               dim_coords=True):
         """
         :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
         self._post_process()
-        return self._coords.get_coords(name_or_coord, standard_name, long_name, attributes, axis)
+        return self._coords.get_coords(name_or_coord, standard_name, long_name, attributes, axis, var_name)
 
-    def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, var_name=None):
         """
         :raise: CoordinateNotFoundError
         :return: A single coord given the same arguments as :meth:`coords`.
         """
-        return self.coords().get_coord(name_or_coord, standard_name, long_name, attributes, axis)
+        return self.coords().get_coord(name_or_coord, standard_name, long_name, attributes, axis, var_name)
 
     def get_coordinates_points(self):
         """Returns a HyperPointView of the coordinates of points.
@@ -603,11 +701,14 @@ class UngriddedData(LazyData, CommonData):
 
         return cls(values, Metadata(), coords)
 
-    def summary(self):
+    def summary(self, shorten=False):
         """
         Unicode summary of the UngriddedData with metadata of itself and its coordinates
         """
         summary = 'Ungridded data: {name} / ({units}) \n'.format(name=self.name(), units=self.units)
+        if shorten:
+            return summary
+
         summary += '     Shape = {}\n'.format(self.data.shape) + '\n'
         summary += '     Total number of points = {}\n'.format(self.size)
         summary += '     Number of non-masked points = {}\n'.format(self.count())
@@ -621,6 +722,9 @@ class UngriddedData(LazyData, CommonData):
             summary += c.metadata.summary(offset=10)
 
         return summary
+
+    def __repr__(self):
+        return "<cis 'UngriddedData' of %s>" % self.summary(shorten=True)
 
     def __str__(self):
         # six has a decorator for this bit, but it doesn't do errors='replace'.
@@ -641,6 +745,71 @@ class UngriddedData(LazyData, CommonData):
         """
         from cis.utils import fix_longitude_range
         self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
+
+    def subset(self, **kwargs):
+        """
+        Subset the CommonData object based on the specified constraints
+        :param kwargs:
+        :return:
+        """
+        from cis.subsetting.subset import subset, UngriddedSubsetConstraint
+        return subset(self, UngriddedSubsetConstraint, **kwargs)
+
+    def aggregate(self, how=None, **kwargs):
+        """
+        Aggregate the UngriddedData object based on the specified grids. The grid is defined by passing keyword
+        arguments for each dimension, each argument must be a slice, or have three entries (a maximum, a minimum and a
+        gridstep). The default aggregation method ('moments') returns the mean, standard deviation and number of points
+         as separate GriddedData objects.
+
+        Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range. The gridstep can be specified as a
+        DateTimeDelta object.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.aggregate(x=[-180, 180, 360], y=slice(-90, 90, 10))
+
+        or:
+            data.aggregate(how='mean', t=[PartialDateTime(2008,9), timedelta(days=1))
+
+        :param str how: The kernel to use in the aggregation (moments, mean, min, etc...). Default is moments
+        :param kwargs: The grid specifications for each coordinate dimension
+        :return GriddedData:
+        """
+        agg = _aggregate_ungridded(self, how, **kwargs)
+        # Return the single item if there's only one (this depends on the kernel used)
+        if len(agg) == 1:
+            agg = agg[0]
+        return agg
+
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+
+        :param CommonData or CommonDataList data: The data to resample
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :return CommonData: The collocated dataset
+        """
+        return _ungridded_sampled_from(self, data, how=how, kernel=kernel,
+                                       missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                       fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                       var_units=var_units, **kwargs)
+
+    def _get_default_plot_type(self, lat_lon=False):
+        if lat_lon:
+            return 'scatter2d'
+        else:
+            return 'line'
 
 
 class UngriddedCoordinates(CommonData):
@@ -731,6 +900,10 @@ class UngriddedCoordinates(CommonData):
     def time(self):
         return self.coord(standard_name='time')
 
+    @property
+    def var_name(self):
+        return ''
+
     def hyper_point(self, index):
         """
         :param index: The index in the array to find the point for
@@ -753,19 +926,20 @@ class UngriddedCoordinates(CommonData):
         """
         return _coords_as_data_frame(self._coords)
 
-    def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, dim_coords=True):
+    def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, var_name=None,
+               dim_coords=True):
         """
         :return: A list of coordinates in this UngriddedData object fitting the given criteria
         """
-        return self._coords.get_coords(name_or_coord, standard_name, long_name, attributes, axis)
+        return self._coords.get_coords(name_or_coord, standard_name, long_name, attributes, axis, var_name)
 
-    def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, var_name=None):
         """
         :raise: CoordinateNotFoundError
         :return: A single coord given the same arguments as :meth:`coords`.
 
         """
-        return self._coords.get_coord(name_or_coord, standard_name, long_name, attributes, axis)
+        return self._coords.get_coord(name_or_coord, standard_name, long_name, attributes, axis, var_name)
 
     def get_coordinates_points(self):
         return UngriddedHyperPointView(self.coords_flattened, None)
@@ -800,6 +974,41 @@ class UngriddedCoordinates(CommonData):
         from cis.utils import fix_longitude_range
         self.coord(standard_name='longitude').data = fix_longitude_range(self.lon.points, range_start)
 
+    def subset(self, **kwargs):
+        raise NotImplementedError("Subset is not available for UngriddedCoordinates objects")
+
+    def collocated_onto(self, sample, how='', kernel=None, **kwargs):
+        raise NotImplementedError("UngriddedCoordinates objects cannot be used as sources of data for collocation.")
+
+    def sampled_from(self, data, how='', kernel=None, missing_data_for_missing_sample=False, fill_value=None,
+                     var_name='', var_long_name='', var_units='', **kwargs):
+        """
+        Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+
+        Note - that the default value for missing_data_for_missing_sample is different in this implementation as
+        compared to the UngriddedData implementation.
+
+        :param CommonData or CommonDataList data: The data to resample
+        :param str how: Collocation method (e.g. lin, nn, bin or box)
+        :param str or cis.collocation.col_framework.Kernel kernel:
+        :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+        :param float fill_value: Value to use for missing data
+        :param str var_name: The output variable name
+        :param str var_long_name: The output variable's long name
+        :param str var_units: The output variable's units
+        :return CommonData: The collocated dataset
+        """
+        return _ungridded_sampled_from(self, data, how=how, kernel=kernel,
+                                       missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                       fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                       var_units=var_units, **kwargs)
+
+    def _get_default_plot_type(self, lat_lon=False):
+        raise NotImplementedError("UngriddedCoordinates have no default plot type")
+
+    def var_name(self):
+        raise NotImplementedError("UngriddedCoordinates have no var name")
+
 
 class UngriddedDataList(CommonDataList):
     """
@@ -807,7 +1016,7 @@ class UngriddedDataList(CommonDataList):
     """
 
     def __str__(self):
-        "<UngriddedDataList: %s>" % super(UngriddedDataList, self).__str__()
+        return "UngriddedDataList: \n%s" % super(UngriddedDataList, self).__str__()
 
     @property
     def is_gridded(self):
@@ -891,6 +1100,36 @@ class UngriddedDataList(CommonDataList):
 
         return df
 
+    def subset(self, **kwargs):
+        from cis.subsetting.subset import subset, UngriddedSubsetConstraint
+        return subset(self, UngriddedSubsetConstraint, **kwargs)
+
+    def aggregate(self, how='', **kwargs):
+        """
+        Aggregate the UngriddedDataList object based on the specified grids. The grid is defined by passing keyword
+        arguments for each dimension, each argument must be a slice, or have three entries (a maximum, a minimum and a
+        gridstep). The default aggregation method ('moments') returns the mean, standard deviation and number of points
+         as separate GriddedData objects (for each UngriddedData object in the list).
+
+        Datetime objects can be used to specify upper and lower datetime limits, or a
+        single PartialDateTime object can be used to specify a datetime range. The gridstep can be specified as a
+        DateTimeDelta object.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.aggregate(x=[-180, 180, 360], y=slice(-90, 90, 10))
+
+        or:
+            data.aggregate(how='mean', t=[PartialDateTime(2008,9), timedelta(days=1))
+
+        :param str how: The kernel to use in the aggregation (moments, mean, min, etc...)
+        :param kwargs: The grid specifications for each coordinate dimension
+        :return GriddedDataList:
+        """
+        return _aggregate_ungridded(self, how, **kwargs)
+
 
 def _coords_as_data_frame(coord_list, copy=True):
     """
@@ -901,6 +1140,7 @@ def _coords_as_data_frame(coord_list, copy=True):
     """
     import pandas as pd
     from cis.time_util import cis_standard_time_unit
+    from cf_units import Unit
 
     columns = {}
     time = None
@@ -913,8 +1153,10 @@ def _coords_as_data_frame(coord_list, copy=True):
             data = _to_flat_ndarray(coord.data, True)
 
         if coord.standard_name == 'time':
-            if coord.units.lower() == 'datetime object':
+            if str(coord.units).lower() == 'datetime object':
                 time = data
+            elif isinstance(coord.units, Unit):
+                time = coord.units.num2date(data)
             else:
                 time = cis_standard_time_unit.num2date(data)
         else:
@@ -945,3 +1187,107 @@ def _to_flat_ndarray(data, copy=True):
         ndarr = data.ravel()
 
     return ndarr
+
+
+def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_missing_sample=True, fill_value=None,
+                            var_name='', var_long_name='', var_units='', **kwargs):
+    """
+    Collocate the CommonData object with another CommonData object using the specified collocator and kernel
+
+    :param CommonData or CommonDataList data: The data to resample
+    :param str how: Collocation method (e.g. lin, nn, bin or box)
+    :param str or cis.collocation.col_framework.Kernel kernel:
+    :param bool missing_data_for_missing_sample: Should missing values in sample data be ignored for collocation?
+    :param float fill_value: Value to use for missing data
+    :param str var_name: The output variable name
+    :param str var_long_name: The output variable's long name
+    :param str var_units: The output variable's units
+    :return CommonData: The collocated dataset
+    """
+    from cis.collocation import col_implementations as ci
+    from cis.data_io.gridded_data import GriddedData, GriddedDataList
+    from cis.collocation.col import collocate, get_kernel
+
+    if isinstance(data, UngriddedData) or isinstance(data, UngriddedDataList):
+        col = ci.GeneralUngriddedCollocator(fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                            var_units=var_units,
+                                            missing_data_for_missing_sample=missing_data_for_missing_sample)
+
+        # Box is the default, and only option for ungridded -> ungridded collocation
+        if how not in ['', 'box']:
+            raise ValueError("Invalid method specified for ungridded -> ungridded collocation: " + how)
+        con = ci.SepConstraintKdtree(**kwargs)
+        # We can have any kernel, default to moments
+        kernel = get_kernel(kernel)
+    elif isinstance(data, GriddedData) or isinstance(data, GriddedDataList):
+        col = ci.GriddedUngriddedCollocator(fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
+                                            var_units=var_units,
+                                            missing_data_for_missing_sample=missing_data_for_missing_sample)
+        con = None
+        kernel = 'lin'
+    else:
+        raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
+
+    return collocate(data, sample, col, con, kernel)
+
+
+def _aggregate_ungridded(data, how, **kwargs):
+    """
+    Aggregate an UngriddedData or UngriddedDataList based on the specified grids
+    :param UngriddedData or UngriddedDataList data: The data object to aggregate
+    :param cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
+    :param kwargs: The grid specifications for each coordinate dimension
+    :return:
+    """
+    from cis.aggregation.ungridded_aggregator import UngriddedAggregator
+    from cis.collocation.col import get_kernel
+    from cis.time_util import PartialDateTime
+    from datetime import datetime, timedelta
+    from cis import __version__
+
+    kernel = get_kernel(how)
+    grid_spec = {}
+    for dim_name, grid in kwargs.items():
+        c = data._get_coord(dim_name)
+        if all(hasattr(grid, att) for att in ('start', 'stop', 'step')):
+            g = grid
+        elif len(grid) == 2 and isinstance(grid[0], PartialDateTime):
+            g = slice(grid[0].min(), grid[0].max(), grid[1])
+        elif len(grid) == 3:
+            g = slice(grid[0], grid[1], grid[2])
+        else:
+            raise ValueError("Invalid subset arguments: {}".format(grid))
+
+        # Fill in defaults
+        grid_start = g.start if g.start is not None else c.points.min()
+        if isinstance(grid_start, datetime):
+            grid_start = c.units.date2num(grid_start)
+
+        grid_end = g.stop if g.stop is not None else c.points.max()
+        if isinstance(grid_end, datetime):
+            grid_end = c.units.date2num(grid_end)
+
+        if g.step is None:
+            raise ValueError("Grid step must not be None")
+        else:
+            grid_step = g.step
+
+        if isinstance(grid_step, timedelta):
+            # Standard time is days since, so turn this into a fractional number of days
+            grid_step = grid_step.total_seconds() / (24*60*60)
+
+        grid_spec[c.name()] = slice(grid_start, grid_end, grid_step)
+
+    # We have to make the history before doing the aggregation as the grid dims get popped-off during the operation
+    history = "Aggregated using CIS version " + __version__ + \
+              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
+              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
+              "\n using new grid: " + str(grid_spec) + \
+              "\n with kernel: " + str(kernel) + "."
+
+    aggregator = UngriddedAggregator(grid_spec)
+    data = aggregator.aggregate(data, kernel)
+
+    data.add_history(history)
+
+    return data

@@ -74,7 +74,7 @@ def can_convert_time_without_since_in_units():
 @istest
 def can_convert_time_with_since_in_units():
     times = numpy.array([0, 1])
-    units = "Days since 1601-01-01"
+    units = "days since 1601-01-01"
     coord = Coord(times, Metadata(units=units))
 
     coord.convert_to_std_time()

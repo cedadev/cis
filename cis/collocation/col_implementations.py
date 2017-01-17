@@ -1,8 +1,6 @@
 import logging
 
 import iris
-import iris.analysis
-import iris.analysis.interpolate
 import iris.coords
 from iris.exceptions import CoordinateMultiDimError
 import numpy as np
@@ -137,7 +135,7 @@ class GriddedUngriddedCollocator(Collocator):
     Collocator for locating GriddedData onto ungridded sample points
     """
 
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False, extrapolate=False):
         super(GriddedUngriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
                                                          missing_data_for_missing_sample)
@@ -170,10 +168,8 @@ class GriddedUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        if not isinstance(data, iris.cube.Cube):
-            raise ValueError("Ungridded data cannot be used with kernel nn_gridded or li")
         if constraint is not None and not isinstance(constraint, DummyConstraint):
-            raise ValueError("A constraint cannot be specified with kernel nn_gridded or li")
+            raise ValueError("A constraint cannot be specified for the GriddedUngriddedCollocator")
         data_points = data
 
         # First fix the sample points so that they all fall within the same 360 degree longitude range
@@ -296,6 +292,8 @@ class SepConstraintKdtree(PointConstraint):
         if h_sep is not None:
             self.h_sep = cis.utils.parse_distance_with_units_to_float_km(h_sep)
             self.haversine_distance_kd_tree_index = None
+        else:
+            self.h_sep = None
 
         if a_sep is not None:
             self.a_sep = cis.utils.parse_distance_with_units_to_float_m(a_sep)
@@ -328,7 +326,7 @@ class SepConstraintKdtree(PointConstraint):
 
     def constrain_points(self, ref_point, data):
         con_points = HyperPointList()
-        if self.haversine_distance_kd_tree_index:
+        if self.haversine_distance_kd_tree_index and self.h_sep:
             point_indices = self._get_cached_indices(ref_point)
             if point_indices is None:
                 point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
@@ -443,7 +441,7 @@ class moments(AbstractDataOnlyKernel):
         stddev_units = var_units
         self.nopoints_name = var_name + '_num_points'
         npoints_long_name = 'Number of points used to calculate the mean of %s' % var_long_name
-        npoints_units = None
+        npoints_units = ''
         return ((self.mean_name, var_long_name, var_standard_name, var_units),
                 (self.stddev_name, stdev_long_name, None, stddev_units),
                 (self.nopoints_name, npoints_long_name, None, npoints_units))
@@ -572,7 +570,7 @@ class nn_t(nn_time):
 
 class GriddedCollocator(Collocator):
 
-    def __init__(self, fill_value=np.nan, var_name='', var_long_name='', var_units='',
+    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
                  missing_data_for_missing_sample=False, extrapolate=False):
         super(GriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
                                                          missing_data_for_missing_sample)
@@ -739,8 +737,9 @@ class GriddedCollocator(Collocator):
 
 class gridded_gridded_nn(Kernel):
     def __init__(self):
+        from iris.analysis import Nearest
         self.name = 'nearest'
-        self.interpolater = iris.analysis.Nearest
+        self.interpolater = Nearest
 
     def get_value(self, point, data):
         """Not needed for gridded/gridded collocation.
@@ -750,8 +749,9 @@ class gridded_gridded_nn(Kernel):
 
 class gridded_gridded_li(Kernel):
     def __init__(self):
+        from iris.analysis import Linear
         self.name = 'bilinear'
-        self.interpolater = iris.analysis.Linear
+        self.interpolater = Linear
 
     def get_value(self, point, data):
         """Not needed for gridded/gridded collocation.
@@ -854,7 +854,10 @@ class GeneralGriddedCollocator(Collocator):
                     pass
 
         # Construct an output cube containing the collocated data.
-        kernel_var_details = kernel.get_variable_details(data.var_name, data.long_name, data.standard_name, data.units)
+        kernel_var_details = kernel.get_variable_details(self.var_name or data.var_name,
+                                                         self.var_long_name or data.long_name,
+                                                         data.standard_name,
+                                                         self.var_units or data.units)
         output = GriddedDataList([])
         for idx, val in enumerate(values):
             cube = self._create_collocated_cube(data, val, output_coords)

@@ -27,8 +27,8 @@ def __add_metadata(var, data):
         var.long_name = data.long_name
     if data.metadata.missing_value:
         var.missing_value = data.metadata.missing_value
-    if data.metadata.calendar:
-        var.calendar = data.metadata.calendar
+    if hasattr(data.units, 'calendar') and data.units.calendar:
+        var.calendar = data.units.calendar
     if data.metadata.history:
         var.history = data.metadata.history
     for name, value in data.attributes.items():

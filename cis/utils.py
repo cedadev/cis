@@ -43,7 +43,7 @@ def concatenate(arrays, axis=0):
     return res
 
 
-def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale=False):
+def calculate_histogram_bin_edges(data, axis, user_min, user_max, step, log_scale=False):
     """
     :param data: A numpy array
     :param axis: The axis on which the data will be plotted. Set to "x" for histogram2d
@@ -57,8 +57,8 @@ def calculate_histogram_bin_edges(data, axis, user_range, step, log_scale=False)
     import logging
     import sys
 
-    min_val = user_range.get(axis + "min", data.min())
-    max_val = user_range.get(axis + "max", data.max())
+    min_val = user_min or data.min()
+    max_val = user_max or data.max()
 
     val_range = float(max_val - min_val)
 
@@ -214,98 +214,6 @@ def get_coord(data_object, variable, data):
         return coord
 
 
-def unpack_data_object(data_object, x_variable, y_variable, x_wrap_start):
-    """
-    :param data_object    A cube or an UngriddedData object
-    :return: A dictionary containing x, y and data as numpy arrays
-    """
-    from iris.cube import Cube
-    import iris.plot as iplt
-    from iris.exceptions import CoordinateNotFoundError
-    import iris
-    import logging
-    from cartopy.util import add_cyclic_point
-
-    no_of_dims = len(data_object.shape)
-
-    data = data_object.data  # ndarray
-
-    x = get_coord(data_object, x_variable, data)
-    if hasattr(x, 'points'):
-        x = x.points
-    try:
-        coord = data_object.coord(x_variable)
-        x_axis_name = guess_coord_axis(coord)
-    except CoordinateNotFoundError:
-        x_axis_name = None
-
-    y = get_coord(data_object, y_variable, data)
-    if hasattr(y, 'points'):
-        y = y.points
-    # Must use special function to check equality of array here, so NaNs are returned as equal and False is returned if
-    # arrays have a different shape
-    if array_equal_including_nan(y, data) or array_equal_including_nan(y, x):
-        y = None
-
-    if array_equal_including_nan(x, data):
-        data = y
-        y = None
-
-    if isinstance(data_object, Cube):
-        plot_defn = iplt._get_plot_defn(data_object, iris.coords.POINT_MODE, ndims=no_of_dims)
-        if plot_defn.transpose:
-            data = data.T
-            x = x.T
-            y = y.T
-
-        # Check for auxiliary coordinates.
-        aux_coords = False
-        for coord in data_object[0].coords(dim_coords=False):
-            aux_coords = True
-
-        if no_of_dims == 2:
-            # If we have found some auxiliary coordinates in the data and the shape of x data or y data is the same as
-            # data assume we have a hybrid coordinate (which is two dimensional b nature. Perhaps need a more robust
-            # method for detecting this.
-            if aux_coords and (data.shape == x.shape or data.shape == y.shape):
-                # Work out which set of data needs expanding to match the coordinates of the others. Note there can only
-                # ever be one hybrid coordinate axis.
-                if y.shape == data.shape:
-                    if y[:, 0].shape == x.shape:
-                        x, _y = np.meshgrid(x, y[0, :])
-                    elif y[0, :].shape == x.shape:
-                        x, _y = np.meshgrid(x, y[:, 0])
-                elif x.shape == data.shape:
-                    if x[:, 0].shape == y.shape:
-                        y, _x = np.meshgrid(y, x[0, :])
-                    elif x[0, :].shape == y.shape:
-                        y, _x = np.meshgrid(y, x[:, 0])
-            else:
-                if len(x) == data.shape[-1]:
-                    try:
-                        data, x = add_cyclic_point(data, x)
-                    except ValueError as e:
-                        logging.warn('Unable to add cyclic data point for {}. Error was: '.format(x_variable)
-                                     + e.args[0])
-                    x, y = np.meshgrid(x, y)
-                elif len(y) == data.shape[-1]:
-                    try:
-                        data, y = add_cyclic_point(data, y)
-                    except ValueError as e:
-                        logging.warn('Unable to add cyclic data point for {}. Error was: '.format(y_variable)
-                                     + e.args[0])
-                    y, x = np.meshgrid(y, x)
-    elif x_axis_name == 'X' and x_wrap_start is not None:
-        x = fix_longitude_range(x, x_wrap_start)
-
-    logging.debug("Shape of x: " + str(x.shape))
-    if y is not None:
-        logging.debug("Shape of y: " + str(y.shape))
-    logging.debug("Shape of data: " + str(data.shape))
-
-    return {"data": data, "x": x, "y": y}
-
-
 def fix_longitude_range(lons, range_start):
     """Shifts longitude values by +/- 360 to fit within a 360 degree range starting at a specified value.
     It is assumed that a no shifts larger than 360 are needed.
@@ -318,32 +226,18 @@ def fix_longitude_range(lons, range_start):
     return wrap_lons(lons, range_start, 360)
 
 
-def find_longitude_wrap_start(x_variable, packed_data_items):
+def find_longitude_wrap_start(packed_data_item):
     """
     ONLY WORK OUT THE WRAP START OF THE DATA
-    :param x_variable:
-    :param x_range:
-    :param packed_data_items:
+    :param packed_data_item:
     :return:
     """
     from iris.exceptions import CoordinateNotFoundError
-    x_wrap_start = None
-    x_points_mins = []
-    x_points_maxs = []
-    for data_object in packed_data_items:
-        try:
-            coord = data_object.coord(x_variable)
-            x_axis_name = guess_coord_axis(coord)
-        except CoordinateNotFoundError:
-            x_axis_name = None
-        if x_axis_name == 'X':
-            x_points_mins.append(np.min(coord.points))
-            x_points_maxs.append(np.max(coord.points))
-
-    if len(x_points_mins) > 0:
-        x_points_min = min(x_points_mins)
-        x_points_max = max(x_points_maxs)
-
+    try:
+        x_points_min = packed_data_item.coord(standard_name='longitude').points.min()
+    except CoordinateNotFoundError:
+        x_wrap_start = None
+    else:
         x_wrap_start = -180 if x_points_min < 0 else 0
 
     return x_wrap_start
@@ -493,23 +387,11 @@ def apply_intersection_mask_to_two_arrays(array1, array2):
     :param array2: Another (optionally masked) array
     :return: Two masked arrays with a common mask
     """
-
     import numpy.ma as ma
-    if isinstance(array1, ma.MaskedArray):
-        if isinstance(array2, ma.MaskedArray):
-            intersection_mask = ma.mask_or(array1.mask, array2.mask)
-        else:
-            intersection_mask = array1.mask
-    else:
-        if isinstance(array2, ma.MaskedArray):
-            intersection_mask = array2.mask
-        else:
-            intersection_mask = False
-
-    array1 = ma.array(array1, mask=intersection_mask)
-    array2 = ma.array(array2, mask=intersection_mask)
-
-    return array1, array2
+    mask1 = ma.getmaskarray(array1)
+    mask2 = ma.getmaskarray(array2)
+    # a new masked array combines the masks and preserves the originals
+    return ma.masked_array(array1, mask2), ma.masked_array(array2, mask1)
 
 
 def index_iterator_nditer(shape, points):
@@ -816,3 +698,30 @@ def demote_warnings(level=logging.INFO):
         yield
         for w in ws:
             logging.log(level, w.message)
+
+
+@contextlib.contextmanager
+def single_warnings_only():
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("once")
+        yield
+
+
+def squeeze(data):
+    from iris.cube import Cube
+    from iris.util import squeeze
+    from cis.data_io.gridded_data import make_from_cube
+    if isinstance(data, Cube):
+        return make_from_cube(squeeze(data))
+    else:
+        return data
+
+
+@contextlib.contextmanager
+def no_autoscale(ax):
+    # Turn the scaling off so that we don't change the limits by doing whatever we do next
+    ax.set_autoscale_on(False)
+    yield
+    # Turn scaling back on
+    ax.set_autoscale_on(True)

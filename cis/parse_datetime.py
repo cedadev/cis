@@ -1,7 +1,6 @@
-from collections import namedtuple
-import datetime
 import re
 from cis.time_util import cis_standard_time_unit
+import argparse
 
 
 def parse_datetimestr_to_std_time(s):
@@ -9,8 +8,18 @@ def parse_datetimestr_to_std_time(s):
     return cis_standard_time_unit.date2num(du.parse(s))
 
 
-def _parse_datetime(dt_string):
+def _parse_datetime(s):
     """Parse a date/time string.
+
+    The string should be in an ISO 8601 format except that the date and time
+    parts may be separated by a space or colon instead of T.
+    """
+    import dateutil.parser as du
+    return du.parse(s)
+
+
+def _parse_partial_datetime(dt_string):
+    """Parse a partial date/time string.
 
     The string should be in an ISO 8601 format except that the date and time
     parts may be separated by a space or colon instead of T.
@@ -18,6 +27,8 @@ def _parse_datetime(dt_string):
     :return: list of datetime components
     :raise ValueError: if the string cannot be parsed as a date/time
     """
+    from cis.time_util import PartialDateTime
+
     # Separate date and time at first character that is one of 'T', ' ' or ':'.
     match = re.match(r'(?P<date>[^T :]+)(?:[T :])(?P<time>.+)$', dt_string)
     if match is not None:
@@ -36,13 +47,27 @@ def _parse_datetime(dt_string):
     else:
         dt_components.extend(time_components)
 
-    # Check that the components are valid (assuming month and/or date is 1 if missing).
-    tmp_components = list(dt_components)
-    if len(tmp_components) < 3:
-        tmp_components.extend([1] * (3 - len(tmp_components)))
-    datetime.datetime(*tmp_components)
+    return PartialDateTime(*dt_components)
 
-    return dt_components
+
+def parse_partial_datetime(dt_string, name, parser):
+    """Parse a partial date/time string from the command line, reporting parse errors.
+
+    The string should be in an ISO 8601 format except that the date and time
+    parts may be separated by a space or colon instead of T.
+    :param dt_string: String to parse
+    :param name:      A description of the argument used for error messages
+    :param parser:    The parser used to report errors
+    :return: datetime value
+    """
+    if dt_string == 'None' or dt_string is None:
+        return None
+    try:
+        dt = _parse_partial_datetime(dt_string)
+    except ValueError:
+        parser.error("'" + dt_string + "' is not a valid " + name)
+        dt = None
+    return dt
 
 
 def parse_datetime(dt_string, name, parser):
@@ -55,6 +80,8 @@ def parse_datetime(dt_string, name, parser):
     :param parser:    The parser used to report errors
     :return: datetime value
     """
+    if dt_string == 'None' or dt_string is None:
+        return None
     try:
         dt = _parse_datetime(dt_string)
     except ValueError:
@@ -63,25 +90,20 @@ def parse_datetime(dt_string, name, parser):
     return dt
 
 
-def date_delta_creator(year, month=0, day=0, hour=0, minute=0, second=0):
-    date_delta_tuple = namedtuple('date_delta', ['year', 'month', 'day', 'hour', 'minute', 'second'])
-    return date_delta_tuple(int(year), int(month), int(day), int(hour), int(minute), int(second))
-
-
 def _parse_datetime_delta(dt_string):
     """Parse a date/time delta string into years, months, days, hours, minutes and seconds.
 
-    :param dt_string: String to parse, for example 'PY2M3DT4H5M6S' (ISO 8061)
+    :param dt_string: String to parse, for example 'PY2M3DT4H5M6S' (ISO 8601)
     :return: Named tuple 'date_delta' containing, 'year', 'month', 'day', 'hour', 'minute', 'second'
     :raise ValueError: if the string cannot be parsed as a date/time delta
     """
-
+    from datetime import timedelta
     dt_string = dt_string.upper()
 
     match = re.match(r'(?:[P])(?P<date>[^T :]+)?(?:[T :])?(?P<time>.+)?$', dt_string)
 
     if match is None:
-        raise ValueError('Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S.')
+        raise ValueError('Date/Time step must be in ISO 8601 format, for example PY2M3DT4H5M6S.')
 
     if match.group('date') is not None:
         date_string = match.group('date')
@@ -112,7 +134,7 @@ def _parse_datetime_delta(dt_string):
         elif token[-1:] == "D":
             days = val
         else:
-            raise ValueError("Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
+            raise ValueError("Date/Time step must be in ISO 8601 format, for example PY2M3DT4H5M6S")
 
     for token in time_tokens:
         val = int(token[:-1])
@@ -123,138 +145,87 @@ def _parse_datetime_delta(dt_string):
         elif token[-1:] == "S":
             seconds = val
         else:
-            raise ValueError("Date/Time step must be in ISO 8061 format, for example PY2M3DT4H5M6S")
+            raise ValueError("Date/Time step must be in ISO 8601 format, for example PY2M3DT4H5M6S")
 
-    times = [years, months, days, hours, minutes, seconds]
-
-    return date_delta_creator(*times)
-
-
-def parse_datetime_delta(dt_string, name, parser):
-    """Parse a date/time delta string from the command line, reporting parse errors.
-
-    :param dt_string: String to parse
-    :param name:      A description of the argument used for error messages
-    :param parser:    The parser used to report errors
-    :return: timedelta value
-    """
-    try:
-        dt = _parse_datetime_delta(dt_string)
-    except ValueError:
-        parser.error("'" + dt_string + "' is not a valid " + name)
-        dt = None
+    # Note that there is a loss of precision here because we have to convert months and years to integer days
+    dt = timedelta(seconds=seconds, minutes=minutes, hours=hours, days=(days + months*30 + years*365))
     return dt
+
+
+def _datetime_delta_to_float_days(td):
+    """
+    Converts a timedelta into a fractional day
+    :param td: the timedelta to be converted
+    :return: a float representation of a day
+    """
+    sec = 1.0/(24.0*60.0*60.0)  # Conversion from sec to day
+    return td.total_seconds()*sec
 
 
 def parse_datetimestr_delta_to_float_days(string):
     """
-    Parses "PY2M3DT4H5M6S" (ISO 8061) into a fractional day
+    Parses "PY2M3DT4H5M6S" (ISO 8601) into a fractional day
     :param string: string to be parsed
     :return: a float representation of a day
     """
-    from datetime import timedelta
 
     date_delta = _parse_datetime_delta(string)
-
-    sec = 1.0/(24.0*60.0*60.0)  # Conversion from sec to day
-
-    days = date_delta.day + date_delta.month*365.2425/12.0 + date_delta.year*365.2425
-
-    td = timedelta(days=days, hours=date_delta.hour, minutes=date_delta.minute, seconds=date_delta.second)
-
-    return td.total_seconds()*sec
+    return _datetime_delta_to_float_days(date_delta)
 
 
-def parse_as_number_or_datetime(in_string, name, parser):
-    """Parse a string as a number from the command line, or if that fails, as a datetime, reporting parse errors.
-
-    The string should be in an ISO 8601 format except that the date and time
-    parts may be separated by a space or colon instead of T.
-    :param in_string: String to parse
-    :param name:      A description of the argument used for error messages
-    :param parser:    The parser used to report errors
-    :return: int, or float value (possibly converted to the standard time from a time string)
+def parse_as_number_or_datetime(string):
     """
-    import dateutil.parser as du
+    Parse a string as a number from the command line, or if that fails, as a datetime
+
+    :param in_string: String to parse
+    :return: int, float or DateTime
+    """
+    if string == 'None' or string is None:
+        return None
     try:
-        ret = int(in_string)
+        ret = int(string)
     except ValueError:
         try:
-            ret = float(in_string)
+            ret = float(string)
         except ValueError:
             try:
-                ret = _parse_datetime(in_string)
+                ret = _parse_datetime(string)
             except ValueError:
-                try:
-                    ret = _parse_datetime_delta(in_string)
-                except ValueError:
-                    parser.error("'" + in_string + "' is not a valid " + name)
-                    ret = None
+                raise argparse.ArgumentTypeError("'{}' is not a valid value.".format(string))
     return ret
 
 
-def parse_as_float_or_time_delta(arg, name, parser):
-    if arg:
+def parse_as_number_or_standard_time(string):
+    """
+    Parse a string as a number from the command line, or if that fails, as a datetime in standard cis units
+
+    :param in_string: String to parse
+    :return: int, float (possibly representing a time in CIS standard time units)
+    """
+    from datetime import datetime
+    res = parse_as_number_or_datetime(string)
+    if isinstance(res, datetime):
+        res = cis_standard_time_unit.date2num(res)
+    return res
+
+
+def parse_as_number_or_datetime_delta(string):
+    """
+    Parse a string as a number from the command line, or if that fails, as a datetime delta
+
+    :param in_string: String to parse
+    :return: int, float value or datetimedelta
+    """
+    try:
+        ret = int(string)
+    except ValueError:
         try:
-            # First try and parse as a float
-            arg = float(arg)
+            ret = float(string)
         except ValueError:
-            # Then try and parse as a timedelta
             try:
-                arg = parse_datetimestr_delta_to_float_days(arg)
+                ret = _parse_datetime_delta(string)
             except ValueError:
-                # Otherwise throw an error
-                parser.error("'" + arg + "' is not a valid " + name)
-        return arg
-    else:
-        return None
+                raise argparse.ArgumentTypeError("'{}' is not a valid value.".format(string))
+    return ret
 
 
-def convert_datetime_components_to_datetime(dt_components, is_lower_limit):
-    """
-    Converts date and time components: year, month, day, hours, minutes, seconds to a datetime object for use
-    as a limit.
-
-    Components beyond the year are defaulted if absent, taking minimum or maximum values if the value of
-    is_lower_limit is True or False respectively.
-
-    :param dt_components: list of date/time components as integers in the order:year, month, day, hours, minutes,
-        seconds. At least the year must be specified. If only the year is specified it may be passed as an integer.
-    :param is_lower_limit: If True, use minimum value for missing date/time components, otherwise use maximum.
-    """
-    YEAR_INDEX = 0
-    DAY_INDEX = 2
-
-    if isinstance(dt_components, list):
-        all_components = list(dt_components)
-    else:
-        all_components = [dt_components]
-
-    if is_lower_limit:
-        default_limits = [None, 1, 1, 0, 0, 0]
-    else:
-        default_limits = [None, 12, None, 23, 59, 59]
-
-    # Fill in the trailing fields with default values.
-    for idx in range(len(all_components), len(default_limits)):
-        if idx == YEAR_INDEX:
-            # Don't default the year - this is the minimum that must be specified.
-            pass
-        elif idx == DAY_INDEX and not is_lower_limit:
-            # Set day to last day of month.
-            all_components.append(find_last_day_of_month(*all_components))
-        else:
-            all_components.append(default_limits[idx])
-    return datetime.datetime(*all_components)
-
-
-def find_last_day_of_month(year, month):
-    """Finds the last day of a month.
-
-    :param year: year as integer
-    :param month: month as integer
-    :return: last day of month as integer
-    """
-    next_month = datetime.datetime(year, month, 28) + datetime.timedelta(days=4)
-    last_date = next_month - datetime.timedelta(days=next_month.day)
-    return last_date.day

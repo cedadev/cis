@@ -31,9 +31,20 @@ class Coord(LazyData):
         """
         super(Coord, self).__init__(data, metadata, data_retrieval_callback)
         self.axis = axis.upper()
-        # Fix an issue where IRIS cannot parse units 'deg' (should be degrees).
-        if self.units == 'deg':
+        # Fix an issue where cf_units cannot parse units 'deg' (should be degrees).
+        if isinstance(self.units, str) and self.units == 'deg':
             self.units = 'degrees'
+
+    def __getitem__(self, keys):
+        """
+        Return a COPY of the Coord with the given slice. We copy to emulate the Iris Cube behaviour
+        """
+        from copy import deepcopy
+        # The data is just a new LazyData objects with the sliced data. Note this is a slice of the whole (concatenated)
+        #  data, and will lead to post-processing before slicing.
+        # TODO: We could be cleverer and figure out the right slice across the various data managers to only read the
+        #  right data from disk.
+        return Coord(self.data[keys].copy(), metadata=deepcopy(self.metadata), axis=self.axis)
 
     @property
     def points(self):
@@ -51,41 +62,46 @@ class Coord(LazyData):
         # if not self.units.startswith("Julian Date"):
         #     raise ValueError("Time units must be Julian Date for conversion to an Object")
         self._data = convert_julian_date_to_std_time(self.data)
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
 
     def convert_TAI_time_to_std_time(self, ref):
         from cis.time_util import convert_sec_since_to_std_time, cis_standard_time_unit
         self._data = convert_sec_since_to_std_time(self.data, ref)
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
 
     def convert_to_std_time(self, time_stamp_info=None):
         """
-        Convert this coordinate to standard time. It will use either: the units of the coordinate if it is in the
-        standard 'x since y' format; or
-        the first word of the units, combined with the time stamp (if the timestamp is not given an error is thrown).
+        Convert this coordinate to standard time. It will use either: the units of the coordinate if it is a cf_units
+        Unit, or the first word of the units, combined with the time stamp (if the timestamp is not given an error is
+        thrown).
 
         :param time_stamp_info: the time stamp info from the file, None if it does not exist
         """
         from cis.time_util import convert_time_since_to_std_time, cis_standard_time_unit, \
-            convert_time_using_time_stamp_info_to_std_time
+            convert_time_using_time_stamp_info_to_std_time, convert_datetime_to_std_time
+        from cf_units import Unit
 
-        if "since" in self.units:
+        if isinstance(self.units, Unit):
             self._data = convert_time_since_to_std_time(self.data, self.units)
+        elif str(self.units).lower().startswith('datetime'):
+            self._data = convert_datetime_to_std_time(self.data)
         else:
             if time_stamp_info is None:
                 raise ValueError("File must have time stamp info if converting without 'since' in units definition")
             self._data = convert_time_using_time_stamp_info_to_std_time(self.data, self.units, time_stamp_info)
 
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
 
     def convert_datetime_to_standard_time(self):
         from cis.time_util import convert_datetime_to_std_time, cis_standard_time_unit
         self._data = convert_datetime_to_std_time(self.data)
-        self.units = str(cis_standard_time_unit)
-        self.metadata.calendar = cis_standard_time_unit.calendar
+        self.units = cis_standard_time_unit
+
+    def convert_standard_time_to_datetime(self):
+        from cis.time_util import convert_std_time_to_datetime, cis_standard_time_unit
+        if self.units == cis_standard_time_unit:
+            self._data = convert_std_time_to_datetime(self.data)
+            self.units = "DateTime Object"
 
     def set_longitude_range(self, range_start):
         """
@@ -96,15 +112,15 @@ class Coord(LazyData):
         self._data = fix_longitude_range(self._data, range_start)
         self._data_flattened = None
 
-    def copy(self):
+    def copy(self, data=None):
         """
         Create a copy of this Coord object with new data so that that they can be modified without held references
         being affected. This will call any lazy loading methods in the coordinate data
 
         :return: Copied :class:`Coord`
         """
-        data = numpy.ma.copy(self.data)  # Will call lazy load method
-        return Coord(data, self.metadata)
+        data = data if data is not None else numpy.ma.copy(self.data)  # Will call lazy load method
+        return Coord(data, self.metadata, axis=self.axis)
 
 
 class CoordList(list):
@@ -132,7 +148,8 @@ class CoordList(list):
             raise DuplicateCoordinateError()
         super(CoordList, self).append(other)
 
-    def get_coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def get_coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None,
+                   var_name=None):
         """
         Return a list of coordinates in this :class:`CoordList` fitting the given criteria. This is deliberately very
         similar to :func:`Cube.coords()` to maintain a similar interface and because the functionality is similar. There
@@ -151,6 +168,8 @@ class CoordList(list):
         :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for
          axis. Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
         :type axis: string or None
+        :param var_name: The name of the variable which the coordinate was read from. If None, does not check for long_name.
+        :type var_name: string or None
 
         :return: A :class:`CoordList` of coordinates fitting the given criteria
         """
@@ -178,6 +197,9 @@ class CoordList(list):
             axis = axis.upper()
             coords = [coord_ for coord_ in coords if coord_.axis == axis]
 
+        if var_name is not None:
+            coords = [coord_ for coord_ in coords if coord_.var_name == var_name]
+
         if attributes is not None:
             if not isinstance(attributes, Mapping):
                 raise ValueError(
@@ -190,7 +212,8 @@ class CoordList(list):
 
         return coords
 
-    def get_coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None):
+    def get_coord(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None,
+                  var_name=None):
         """
         Return a single coord fitting the given criteria. This is deliberately very
         similar to :func:`Cube.coord()` method to maintain a similar interface and because the functionality is similar.
@@ -209,6 +232,8 @@ class CoordList(list):
         :param axis: The desired coordinate axis, see :func:`iris.util.guess_coord_axis`. If None, does not check for
          axis. Accepts the values 'X', 'Y', 'Z' and 'T' (case-insensitive).
         :type axis: string or None
+        :param var_name: The name of the variable which the coordinate was read from. If None, does not check for long_name.
+        :type var_name: string or None
 
         :raises CoordinateNotFoundError: If the arguments given do not result in precisely
          1 coordinate being matched.
@@ -217,7 +242,7 @@ class CoordList(list):
         """
         from cis.exceptions import CoordinateNotFoundError
         coords = self.get_coords(name_or_coord=name_or_coord, standard_name=standard_name, long_name=long_name,
-                                 attributes=attributes, axis=axis)
+                                 attributes=attributes, axis=axis, var_name=var_name)
         if len(coords) == 0:  # If we found none by name, try with standard name only
             coords = self.get_coords(standard_name=name_or_coord)
 

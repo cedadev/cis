@@ -2,14 +2,13 @@ CIS
 ===
 
 [![Join the chat at https://gitter.im/cedadev/cis](https://badges.gitter.im/cedadev/cis.svg)](https://gitter.im/cedadev/cis?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [![Build Status](https://travis-ci.org/cedadev/cis.svg?branch=master)](https://travis-ci.org/cedadev/cis)
 [![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
-[![Downloads](https://anaconda.org/cistools/cis/badges/downloads.svg)](https://anaconda.org/CISTools/cis/files)
+[![Downloads](https://anaconda.org/conda-forge/cis/badges/downloads.svg)](https://anaconda.org/conda-forge/cis/files)
 
 v1.4.0 DOI: [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.59939.svg)](http://dx.doi.org/10.5281/zenodo.59939)
 
-CIS is an open source command-line tool for the easy collocation, visualization, analysis, and comparison of a
+CIS is an open source Python library and command-line tool for the easy collocation, visualization, analysis, and comparison of a
 diverse set of gridded and ungridded datasets used across earth sciences. Visit our homepage at www.cistools.net.
 
 For issue tracking and improvement suggestions please see our JIRA project at: https://jira.ceh.ac.uk/projects/JASCIS/issues.
@@ -56,5 +55,5 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with CIS.  If not, see <http://www.gnu.org/licenses/>.
 
-A gratefully use a number of NASA Visible Earth 'Blue Marble' raster 
+We gratefully use a number of NASA Visible Earth 'Blue Marble' raster 
 images in this repository.

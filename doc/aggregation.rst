@@ -9,14 +9,14 @@ The Community Intercomparison Suite (CIS) has the ability to aggregate both grid
 more coordinates. For example, you might aggregate a dataset over the longitude coordinate to produce an averaged
 measurement of variation over latitude.
 
-CIS supports 'complete collapse' of a coordinate - where all values in that dimension are aggregated so that the
-coordinate no longer exists - and 'partial collapse' - where a coordinate is aggregated into bins of fixed size,
-so that the coordinate still exists but is on a coarser grid. Partial collapse is currently only supported for ungridded
-data. The output of an aggregation is always a CF compliant gridded NetCDF file.
+CIS supports 'collapse' of a coordinate - where all values in that dimension are aggregated so that the
+coordinate no longer exists - and 'aggregation' - where a coordinate is aggregated into bins of fixed size,
+so that the coordinate still exists but is on a coarser grid. Aggregation is currently only supported for ungridded
+data. The output of either type of aggregation is always a CF compliant gridded NetCDF file.
 
 The aggregation command has the following syntax::
 
-  $ cis aggregate <datagroup>[:options] <grid> [-o <outputfile>]
+  $ cis <collapse|aggregate> <datagroup>[:options] <grid> [-o <outputfile>]
 
 where:
 
@@ -95,7 +95,7 @@ where:
   and when used as a range end, the latest compatible date/time is used. Including optional and alternative components,
   the syntax is ``YYYY[-MM[-DD[{T|:| }hh[:mm[:ss]]]]]``.
 
-  Date/time steps are specified in the ISO 8061 format ``PnYnMnDTnHnMnS``, where any particular time period is optional,
+  Date/time steps are specified in the ISO 8601 format ``PnYnMnDTnHnMnS``, where any particular time period is optional,
   for example ``P1MT30M`` would specify a time interval of 1 month and 30 minutes. Years and months are treated as
   calendar years and months, meaning they are not necessarily fixed in length. For example a date interval of 1 year and
   1 month would mean going from 12:00 15th April 2013 to 12:00 15th May 2013. The are two exceptions to this, in rare
@@ -229,12 +229,12 @@ Aggregating with the minimum kernel::
    :align: center
 
 
-Gridded aggregation
--------------------
+Gridded collapse
+----------------
 
-Aggregating 3D model data over time and longitude to produce an averaged measure of variation with latitude::
+Collapsing 3D model data over time and longitude to produce an averaged measure of variation with latitude::
 
-  $ cis aggregate rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,x -o agg-out.nc
+  $ cis collapse rsutcs:rsutcs_Amon_HadGEM2-A_sstClim_r1i1p1_185912-188911.nc:kernel=mean t,x -o agg-out.nc
   $ cis plot rsutcs:agg-out.nc --xaxis latitude --yaxis rsutcs -o gridded_collapse.png
 
 .. figure:: img/aggregation/gridded_collapse.png

@@ -98,10 +98,15 @@ class Aeronet(AProduct):
         data_obj = load_multiple_aeronet(filenames, [variable])
 
         coords = self._create_coord_list(filenames, data_obj)
+        # The name is text before any brackets, the units is what's after it (minus the closing bracket)
+        name_units = variable.split('(')
+        name = name_units[0]
+        # For Aeronet we can assume that if there are no units then it is unitless (AOT, Angstrom exponent, etc)
+        units = name_units[1][:-1] if len(name_units) > 1 else '1'
 
         return UngriddedData(data_obj[variable],
-                             Metadata(name=variable, long_name=variable, shape=(len(data_obj),), missing_value=-999.0),
-                             coords)
+                             Metadata(name=name, long_name=variable, shape=(len(data_obj),), units=units,
+                                      missing_value=-999.0), coords)
 
 
 class ASCII_Hyperpoints(AProduct):

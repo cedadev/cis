@@ -1,16 +1,16 @@
 from abc import ABCMeta, abstractmethod
-
+import six
 import numpy as np
 
 from cis.data_io.hyperpoint import HyperPoint
 import cis.utils
 
 
+@six.add_metaclass(ABCMeta)
 class HyperPointView(object):
     """
     View of coordinates and data as HyperPoints.
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def __getitem__(self, item):

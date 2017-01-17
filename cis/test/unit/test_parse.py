@@ -8,10 +8,10 @@ from unittest import TestCase
 import os
 from mock import patch
 from hamcrest import is_, assert_that, contains_inanyorder
-from nose.tools import eq_
+from nose.tools import eq_, raises
 
 from cis.parse import parse_args, expand_file_list
-from cis.plotting.plot import Plotter
+from cis.plotting.plot import plot_types
 
 
 def escape_colons(string):
@@ -270,7 +270,7 @@ class TestParsePlot(ParseTestFiles):
 
     def test_can_specify_valid_chart_type(self):
         args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                list(Plotter.plot_types.keys())[0]]
+                list(plot_types.keys())[0]]
         parse_args(args)
 
     def test_should_raise_error_with_an_invalid_chart_type(self):
@@ -285,7 +285,7 @@ class TestParsePlot(ParseTestFiles):
     def test_should_raise_error_with_more_than_one_chart_type(self):
         try:
             args = ["plot", "var:" + self.escaped_test_directory_files[0], "--type",
-                    list(Plotter.plot_types.keys())[0], list(Plotter.plot_types.keys())[1]]
+                    list(plot_types.keys())[0], list(plot_types.keys())[1]]
             parse_args(args)
             assert False
         except SystemExit as e:
@@ -650,7 +650,7 @@ class TestParseCollocate(ParseTestFiles):
         args = ["col", var + ':' + self.escaped_test_directory_files[0], samplegroup]
         main_args = parse_args(args)
         sg = main_args.samplegroup
-        assert_that(sg['collocator'], is_(None))
+        assert_that(not sg.get('collocator', False))
         assert_that(sg['variable'], is_('rain'))
 
     def test_can_specify_one_valid_samplefile_and_one_complete_datagroup(self):
@@ -661,8 +661,7 @@ class TestParseCollocate(ParseTestFiles):
         eq_(('col', {}), args.samplegroup['collocator'])
         eq_(('con', {}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
-        eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}],
-            args.datagroups)
+        eq_([{'variables': ['variable'], 'filenames': [self.test_directory_files[0]]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_one_datafile_without_other_options(self):
         args = ["col", "variable:" + self.escaped_test_directory_files[0], self.escaped_test_directory_files[0] +
@@ -670,10 +669,7 @@ class TestParseCollocate(ParseTestFiles):
         args = parse_args(args)
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_(('bin', {}), args.samplegroup['collocator'])
-        eq_(None, args.samplegroup['constraint'])
-        eq_(None, args.samplegroup['kernel'])
-        eq_([{'variables': ['variable'], 'product': None, 'filenames': [self.test_directory_files[0]]}],
-            args.datagroups)
+        eq_([{'variables': ['variable'], 'filenames': [self.test_directory_files[0]]}], args.datagroups)
 
     def test_can_specify_one_valid_samplefile_and_many_datagroups(self):
         args = ["col", "variable1:" + self.escaped_test_directory_files[0],
@@ -684,7 +680,7 @@ class TestParseCollocate(ParseTestFiles):
         eq_([self.test_directory_files[0]], args.samplegroup['filenames'])
         eq_("variable4", args.samplegroup['variable'])
         eq_(('col', {}), args.samplegroup['collocator'])
-        eq_(None, args.samplegroup['constraint'])
+        eq_(False, args.samplegroup.get('constraint', False))
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_([self.test_directory_files[0]], args.datagroups[0]['filenames'])
         eq_(["variable1"], args.datagroups[0]['variables'])
@@ -704,4 +700,3 @@ class TestParseCollocate(ParseTestFiles):
         eq_(('SepConstraint', {'h_sep': '1500', 'v_sep': '22000', 't_sep': '5000'}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_(('bin', {}), args.samplegroup['collocator'])
-        eq_(None, args.samplegroup['product'])
