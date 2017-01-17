@@ -35,7 +35,10 @@ def __add_metadata(var, data):
         setattr(var, name, value)
     for name, value in data.metadata.misc.items():
         if name not in var.ncattrs():
-            setattr(var, name, value)
+            try:
+                setattr(var, name, value)
+            except ValueError:
+                logging.warning("Invalid value ({}) for {} attribute. Attribute not saved to {}.".format(value, name, var))
     return var
 
 
