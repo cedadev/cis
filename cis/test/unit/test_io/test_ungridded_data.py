@@ -328,6 +328,16 @@ class TestUngriddedDataList(TestCase):
         coord_names = [coord.standard_name for coord in unique_coords]
         assert_that(coord_names, contains_inanyorder('latitude', 'longitude'))
 
+    def test_can_create_list_from_generators_and_other_iterators(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data
+        import itertools
+        another_list = UngriddedDataList((make_regular_2d_ungridded_data(), make_regular_2d_ungridded_data()))
+        assert_that(len(another_list) == 2)
+
+        dict = {1: [make_regular_2d_ungridded_data()], 2: [make_regular_2d_ungridded_data()]}
+        another_list = UngriddedDataList(itertools.chain.from_iterable(d for d in dict.values()))
+        assert_that(len(another_list) == 2)
+
     @skip_pandas
     def test_GIVEN_multiple_ungridded_data_WHEN_call_as_data_frame_THEN_returns_valid_data_frame(self):
 
