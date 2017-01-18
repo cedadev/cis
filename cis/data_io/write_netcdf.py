@@ -38,7 +38,8 @@ def __add_metadata(var, data):
             try:
                 setattr(var, name, value)
             except ValueError:
-                logging.warning("Invalid value ({}) for {} attribute. Attribute not saved to {}.".format(value, name, var))
+                logging.warning("Invalid value ({}) for {} attribute. "
+                                "Attribute not saved to {}.".format(value, name, var.name))
     return var
 
 
