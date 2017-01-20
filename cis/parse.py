@@ -953,7 +953,7 @@ def validate_version_args(arguments, parser):
 
 validators = {'plot': validate_plot_args,
               'info': validate_info_args,
-              'col': validate_col_args,
+              'collocate': validate_col_args,
               'aggregate': validate_aggregate_args,
               'collapse': validate_collapse_args,
               'subset': validate_subset_args,
