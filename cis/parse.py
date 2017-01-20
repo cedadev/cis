@@ -961,6 +961,10 @@ validators = {'plot': validate_plot_args,
               'stats': validate_stats_args,
               'version': validate_version_args}
 
+aliases = {'col': 'collocate',
+           'sub': 'subset',
+           'agg': 'aggregate'}
+
 
 def parse_args(arguments=None):
     """
@@ -972,6 +976,10 @@ def parse_args(arguments=None):
         # sys.argv[0] is the name of the script itself
         arguments = sys.argv[1:]
     main_args = parser.parse_args(arguments)
+    # TODO I don't really like this as I have to specify the aliases twice...
+    if main_args.command in aliases.keys():
+        main_args.command = aliases[main_args.command]
+
     # Firstly deal with logging verbosity - in case we log anything in the validation
     # The 'screen' handler is the first in the list
     if main_args.quiet:
