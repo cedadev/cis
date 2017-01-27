@@ -92,6 +92,8 @@ class GeneralUngriddedCollocator(Collocator):
         else:
             sample_enumerator = sample_points.enumerate_all_points
 
+        all_con_points_indices = constraint.haversine_distance_kd_tree_index.find_points_within_distance_sample(sample_points, constraint.h_sep)
+
         for i, point in sample_enumerator():
             # Log progress periodically.
             cell_count += 1
@@ -100,10 +102,8 @@ class GeneralUngriddedCollocator(Collocator):
                 cell_count = 0
                 logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
 
-            if constraint is None:
-                con_points = data_points
-            else:
-                con_points = constraint.constrain_points(point, data_points)
+            # FIXME this doesn't work for HyperPointListViews, perhaps Dataframes would be easier?
+            con_points = data_points[all_con_points_indices[i]]
             try:
                 value_obj = kernel.get_value(point, con_points)
                 # Kernel returns either a single value or a tuple of values to insert into each output variable.
