@@ -12,6 +12,8 @@ from cis.data_io.common_data import CommonData
 from cis.data_io.hyperpoint import HyperPointList
 from cis.time_util import convert_datetime_to_std_time
 
+WKT_DIAMOND = "POLYGON ((-5 0, 0 5, 5 5, 0 -5, -5 0))"
+
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
                    time_dim_length=0,

@@ -125,6 +125,7 @@ class GriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data or None if all data excluded.
         @rtype: cis.data_io.gridded_data.GriddedData
         """
+        _shape = self._limits.pop('shape', None)
         extract_constraint, intersection_constraint = self._make_extract_and_intersection_constraints(data)
         if extract_constraint is not None:
             data = data.extract(extract_constraint)
@@ -171,6 +172,10 @@ class UngriddedSubsetConstraint(SubsetConstraint):
     """
     Implementation of SubsetConstraint for subsetting ungridded data.
     """
+    def __init__(self, limits):
+        super(UngriddedSubsetConstraint, self).__init__(limits)
+        self._shape_indices = None
+        self._combined_mask = None
 
     def constrain(self, data):
         """Subsets the supplied data.
@@ -179,38 +184,42 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data
         """
         import numpy as np
-        from cis.utils import listify
+        from cis.data_io.ungridded_data import UngriddedDataList
 
-        data = self._create_data_for_subset(data)
+        if isinstance(data, list):
+            # Calculating masks and indices will only take place on the first iteration,
+            # so we can just call this method recursively if we've got a list of data.
+            output = UngriddedDataList()
+            for var in data:
+                output.append(self.constrain(var))
+            return output
 
-        # Create the combined mask across all limits
-        shape = data.coords()[0].data.shape  # This assumes they are all the same shape
-        combined_mask = np.ones(shape, dtype=bool)
-        for coord, limit in self._limits.items():
-            # Select any points which are <= to the stop limit AND >= to the start limit
-            mask = (np.less_equal(data.coord(coord).data, limit.stop) &
-                    np.greater_equal(data.coord(coord).data, limit.start))
-            combined_mask = combined_mask & mask
+        _data = self._create_data_for_subset(data)
 
-        # Generate the new coordinates here (before we loop)
-        new_coords = data.coords()
-        for coord in new_coords:
-            coord.data = coord.data[combined_mask]
-            coord.metadata.shape = coord.data.shape
-            coord._data_flattened = None  # Otherwise Coord won't recalculate this.
+        _shape = self._limits.pop('shape', None)
 
-        # If the whole selection mask is False then the data will be empty - return None
-        if np.all(~combined_mask):
-            return None
+        if self._combined_mask is None:
+            # Create the combined mask across all limits
+            shape = _data.coords()[0].data.shape  # This assumes they are all the same shape
+            combined_mask = np.ones(shape, dtype=bool)
+            for coord, limit in self._limits.items():
+                # Select any points which are <= to the stop limit AND >= to the start limit
+                mask = (np.less_equal(_data.coord(coord).data, limit.stop) &
+                        np.greater_equal(_data.coord(coord).data, limit.start))
+                combined_mask &= mask
+            self._combined_mask = combined_mask
 
-        for variable in listify(data):
-            # Constrain each copy of the data object in-place
-            variable.data = variable.data[combined_mask]
+        _data = _data[self._combined_mask]
 
-            # Add the new compressed coordinates
-            variable._coords = new_coords
+        if _shape is not None:
+            if self._shape_indices is None:
+                self._shape_indices = _get_subset_region_indices(_data, _shape)
+            _data = _data[np.unravel_index(self._shape_indices, _data.shape)]
 
-        return data
+        if len(_data.shape) == 0:
+            _data = None
+
+        return _data
 
     def _create_data_for_subset(self, data):
         """
@@ -219,11 +228,16 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :param data: Data being subsetted
         :return:
         """
+        from cis.exceptions import CoordinateNotFoundError
         # We need a copy with new data and coordinates
         data = data.copy()
         # Check for longitude coordinate in the limits
         for dim_name, limit in self._limits.items():
-            coord = data.coord(dim_name)
+            try:
+                coord = data.coord(dim_name)
+            except CoordinateNotFoundError:
+                # E.g. shape...
+                continue
             if coord.standard_name == 'longitude':
                 coord_min = coord.points.min()
                 coord_max = coord.points.max()
@@ -248,19 +262,30 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         return data
 
 
-def subset_region(ungridded_data, region):
+def _get_subset_region_indices(ungridded_data, region):
     from shapely.geometry import MultiPoint
 
-    cis_data = np.vstack([ungridded_data.lon.data, ungridded_data.lat.data, np.arange(len(ungridded_data.lat.data))])
+    cis_data = np.vstack([ungridded_data.lat.data.flat, ungridded_data.lat.data.flat, np.arange(len(ungridded_data.lat.data.flat))])
     points = MultiPoint(cis_data.T)
+    if not points.has_z:
+        # There is a bug in Shapely < 1.6 where the Z doesn't get created properly so we need to code around it by going
+        #  via a list (https://github.com/Toblerity/Shapely/issues/437)
+        logging.warning("Subsetting by region can be very slow when using Shapely < 1.6. Please consider updating it.")
+        points = MultiPoint(cis_data.T.tolist())
 
     # Perform the actual calculation
     selection = region.intersection(points)
 
-    # Pull out the indices
-    if selection.is_empty:
-        indices = []
-    else:
-        indices = np.asarray(selection).T[2].astype(np.int)
+    indices = [] if selection.is_empty else np.asarray(selection).T[2].astype(np.int)
 
-    return ungridded_data[indices]
+    return indices
+
+
+def subset_region(ungridded_data, region):
+    """
+    TODO!
+    :param ungridded_data:
+    :param region:
+    :return:
+    """
+    return ungridded_data[_get_subset_region_indices(ungridded_data, region)]
