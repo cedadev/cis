@@ -144,19 +144,26 @@ class GriddedSubsetConstraint(SubsetConstraint):
         :param data:
         :return:
         """
-        extract_constraint = None
+        class Contains(object):
+            """
+            Callable object for checking if a value is within a preset range
+            """
+            def __init__(self, lower, upper):
+                self.lower = lower
+                self.upper = upper
+
+            def __call__(self, x):
+                return self.lower <= x.point <= self.upper
+
         intersection_constraint = {}
+        extract_constraint = iris.Constraint()
         for coord, limits in self._limits.items():
             if data.coord(coord).units.modulus is not None:
                 # These coordinates can be safely used with iris.cube.Cube.intersection()
                 intersection_constraint[coord] = (limits.start, limits.stop)
             else:
                 # These coordinates cannot be used with iris.cube.Cube.intersection(), will use iris.cube.Cube.extract()
-                constraint_function = lambda x: limits.start <= x.point <= limits.stop
-                if extract_constraint is None:
-                    extract_constraint = iris.Constraint(**{coord: constraint_function})
-                else:
-                    extract_constraint = extract_constraint & iris.Constraint(**{coord: constraint_function})
+                extract_constraint = extract_constraint & iris.Constraint(**{coord: Contains(limits.start, limits.stop)})
         return extract_constraint, intersection_constraint
 
 

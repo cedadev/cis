@@ -68,6 +68,11 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
                                          [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
 
+    def test_can_subset_gridded_data_using_multiple_extract_constraints(self):
+        data = make_from_cube(cis.test.util.mock.make_mock_cube(time_dim_length=3, alt_dim_length=6))
+        subset = data.subset(time=[140492, 140493], altitude=[0, 3])
+        assert subset.data.shape == (5, 3, 3, 2)
+
     def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
         data = make_from_cube(cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
         long_coord = data.coord('longitude')
