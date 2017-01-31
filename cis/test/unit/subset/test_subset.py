@@ -240,16 +240,17 @@ class TestUngriddedSubsetConstraint(TestCase):
         assert (subset.data.tolist() == [27, 28, 32, 33, 37, 38])
 
     def test_can_subset_ungridded_data_by_shape(self):
-        data = cis.test.util.mock.make_regular_4d_ungridded_data()
+        data = cis.test.util.mock.make_regular_2d_with_time_ungridded_data()
         subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND)
-        # The corner should be masked, but the center not
-        assert (subset.data.tolist() == [27, 28, 32, 33, 37, 38])
+        # The corners should be masked, but the center not
+        assert (subset.data.tolist() == [5, 7, 8, 9, 11])
 
     def test_can_subset_ungridded_data_by_shape_and_time(self):
-        data = cis.test.util.mock.make_regular_4d_ungridded_data()
+        data = cis.test.util.mock.make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
         subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND, time=[datetime.datetime(1984, 8, 28),
-                                                                         datetime.datetime(1984, 8, 29)])
-        assert (subset.data.tolist() == [27, 28, 32, 33, 37, 38])
+                                                                         datetime.datetime(1984, 9, 3)])
+        assert (subset.data.tolist() == [5, 7, 8])
 
     def test_can_subset_2d_ungridded_data_with_missing_values(self):
         data = cis.test.util.mock.make_regular_2d_ungridded_data_with_missing_values()
