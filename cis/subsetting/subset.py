@@ -129,6 +129,8 @@ class GriddedSubsetConstraint(SubsetConstraint):
         extract_constraint, intersection_constraint = self._make_extract_and_intersection_constraints(data)
         if extract_constraint is not None:
             data = data.extract(extract_constraint)
+            if data is None:
+                return None  # Don't do the intersection
         if intersection_constraint:
             try:
                 data = data.intersection(**intersection_constraint)
