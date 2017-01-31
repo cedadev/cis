@@ -213,7 +213,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
 
         if _shape is not None:
             if self._shape_indices is None:
-                self._shape_indices = _get_subset_region_indices(_data, _shape)
+                self._shape_indices = _get_ungridded_subset_region_indices(_data, _shape)
             _data = _data[np.unravel_index(self._shape_indices, _data.shape)]
 
         if _data.size == 0:
@@ -262,22 +262,21 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         return data
 
 
-def _get_subset_region_indices(ungridded_data, region):
+def _get_indices_for_lat_lon_points(lats, lons, region):
     from shapely.geometry import MultiPoint
 
-    cis_data = np.vstack([ungridded_data.lon.data.flat, ungridded_data.lat.data.flat])
-    points = MultiPoint(cis_data.T)
+    lat_lon_points = np.vstack([lats, lons])
+    points = MultiPoint(lat_lon_points.T)
 
     # Performance in this loop might be an issue, but I think it's essentially how GeoPandas does it. If I want to
     #  improve it I might need to look at using something like rtree.
     return [i for i, p in enumerate(points) if region.contains(p)]
 
 
-def subset_region(ungridded_data, region):
-    """
-    TODO!
-    :param ungridded_data:
-    :param region:
-    :return:
-    """
-    return ungridded_data[_get_subset_region_indices(ungridded_data, region)]
+def _get_ungridded_subset_region_indices(ungridded_data, region):
+    return _get_indices_for_lat_lon_points(ungridded_data.lon.data.flat, ungridded_data.lat.data.flat, region)
+
+
+def _get_gridded_subset_region_indices(gridded_data, region):
+    x, y = np.meshgrid(gridded_data.coord(axis='X').points, gridded_data.coord(axis='Y').points)
+    return _get_indices_for_lat_lon_points(x.flat, y.flat, region)
