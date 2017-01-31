@@ -265,20 +265,12 @@ class UngriddedSubsetConstraint(SubsetConstraint):
 def _get_subset_region_indices(ungridded_data, region):
     from shapely.geometry import MultiPoint
 
-    cis_data = np.vstack([ungridded_data.lat.data.flat, ungridded_data.lat.data.flat, np.arange(len(ungridded_data.lat.data.flat))])
+    cis_data = np.vstack([ungridded_data.lon.data.flat, ungridded_data.lat.data.flat])
     points = MultiPoint(cis_data.T)
-    if not points.has_z:
-        # There is a bug in Shapely < 1.6 where the Z doesn't get created properly so we need to code around it by going
-        #  via a list (https://github.com/Toblerity/Shapely/issues/437)
-        logging.warning("Subsetting by region can be very slow when using Shapely < 1.6. Please consider updating it.")
-        points = MultiPoint(cis_data.T.tolist())
 
-    # Perform the actual calculation
-    selection = region.intersection(points)
-
-    indices = [] if selection.is_empty else np.asarray(selection).T[2].astype(np.int)
-
-    return indices
+    # Performance in this loop might be an issue, but I think it's essentially how GeoPandas does it. If I want to
+    #  improve it I might need to look at using something like rtree.
+    return [i for i, p in enumerate(points) if region.contains(p)]
 
 
 def subset_region(ungridded_data, region):
