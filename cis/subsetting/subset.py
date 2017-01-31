@@ -136,6 +136,16 @@ class GriddedSubsetConstraint(SubsetConstraint):
                 data = data.intersection(**intersection_constraint)
             except IndexError:
                 return None
+
+        if _shape is not None:
+            if data.ndim > 2:
+                raise NotImplementedError("Unable to perform shape subset for multidimensional gridded datasets")
+            mask = np.ma.masked_all_like(data.data)
+            mask[np.unravel_index(_get_gridded_subset_region_indices(data, _shape), data.shape)] = False
+            if isinstance(data.data, np.ma.MaskedArray):
+                data.data.mask &= mask
+            else:
+                data.data = np.ma.masked_array(data.data, mask)
         return gridded_data.make_from_cube(data)
 
     def _make_extract_and_intersection_constraints(self, data):

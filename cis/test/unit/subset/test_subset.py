@@ -74,11 +74,11 @@ class TestGriddedSubsetConstraint(TestCase):
         assert subset.data.shape == (5, 3, 3, 2)
 
     def test_can_subset_gridded_data_by_shape(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_time())
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
         subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND)
         # The corner should be masked, but the center not
-        assert subset.data[0, 0, 0].mask
-        assert ~subset.data[2, 1, 0].mask
+        assert subset.data[0, 0].mask
+        assert ~subset.data[2, 1].mask
 
     def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
         data = make_from_cube(cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
