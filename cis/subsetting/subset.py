@@ -42,7 +42,7 @@ def subset(data, constraint, **kwargs):
             # Create the lat/lon box - this will be used to speed up the shape subset
             constraints[data.coord(standard_name='longitude').name()] = slice(bounding_box[0], bounding_box[2])
             constraints[data.coord(standard_name='latitude').name()] = slice(bounding_box[1], bounding_box[3])
-            break
+            continue
 
         c = data._get_coord(dim_name)
         if c is None:
