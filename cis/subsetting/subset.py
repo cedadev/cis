@@ -216,7 +216,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
                 self._shape_indices = _get_subset_region_indices(_data, _shape)
             _data = _data[np.unravel_index(self._shape_indices, _data.shape)]
 
-        if len(_data.shape) == 0:
+        if _data.size == 0:
             _data = None
 
         return _data
