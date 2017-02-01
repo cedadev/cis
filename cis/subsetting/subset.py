@@ -288,7 +288,8 @@ def _get_indices_for_lat_lon_points(lats, lons, region):
 
 
 def _get_ungridded_subset_region_indices(ungridded_data, region):
-    return _get_indices_for_lat_lon_points(ungridded_data.lon.data.flat, ungridded_data.lat.data.flat, region)
+    # We have to use flatten rather than flat, GEOS creates a copy of the data if it's a view anyway.
+    return _get_indices_for_lat_lon_points(ungridded_data.lon.data.flatten(), ungridded_data.lat.data.flatten(), region)
 
 
 def _get_gridded_subset_region_indices(gridded_data, region):

@@ -522,7 +522,10 @@ def get_subset_limits(subsetlimits, parser):
         # or
         # <dim_name>=[<start_value>]
         match = re.match(r'(?P<dim>[^=]+)=\[(?P<start>[^],]+)(?:,(?P<end>[^],]+))?\]$', seg)
-        if match is None or match.group('dim') is None or match.group('start') is None:
+        if seg.startswith('shape'):
+            # Don't use the regexp for this as it gets confused with the commas
+            limit_dict['shape'] = seg.split('=')[1]
+        elif match is None or match.group('dim') is None or match.group('start') is None:
             parser.error(
                 "A dimension for subsetting does not have dimension name, start value and/or end value specified")
         else:
@@ -629,7 +632,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
     return input_dicts
 
 
-def split_outside_brackets(input, seps=[','], brackets={'[': ']'}):
+def split_outside_brackets(input, seps=[','], brackets={'[': ']', '(': ')'}):
     """Splits an input string at separators that are not within brackets.
     :param input: input string to parse
     :param seps: list of separator characters - default: comma
