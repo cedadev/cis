@@ -748,9 +748,27 @@ class UngriddedData(LazyData, CommonData):
 
     def subset(self, **kwargs):
         """
-        Subset the CommonData object based on the specified constraints
-        :param kwargs:
-        :return:
+        Subset the data based on the specified constraints. Note that the limits are inclusive.
+
+        The subset region is defined by passing keyword arguments for each dimension to be subset over, each argument
+        must be a slice, or have two entries (a maximum and a minimum). Datetime objects can be used to specify upper
+        and lower datetime limits, or a single PartialDateTime object can be used to specify a datetime range.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(x=[0, 80], y=slice(10, 50))
+
+        or:
+            data.aggregate(t=PartialDateTime(2008,9))
+
+
+        A shape keyword can also be supplied as a WKT string or shapely object to subset in lat/lon by an arbitrary
+        shape. In this case the lat/lon bounds are taken as the bounding box of the shape.
+
+        :param kwargs: The constraints for each coordinate dimension
+        :return CommonData:
         """
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)

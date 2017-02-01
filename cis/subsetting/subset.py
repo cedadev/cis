@@ -14,6 +14,8 @@ def subset(data, constraint, **kwargs):
     Helper function for constraining a CommonData or CommonDataList object (data) given a SubsetConstraint
     class, the constraints should be specified using the kwargs of the form coord: [min, max]
 
+    A shape keyword can also be supplied as a WKT string or shapely object to subset in lat/lon by an arbitrary shape.
+
     :param CommonData or CommonDataList data: The data to subset
     :param class SubsetConstraint constraint: A SubsetConstraint class to do the constraining
     :param kwargs: The limits as slices or length 2 tuples of max and min.
@@ -290,5 +292,6 @@ def _get_ungridded_subset_region_indices(ungridded_data, region):
 
 
 def _get_gridded_subset_region_indices(gridded_data, region):
+    # Using X and Y is a bit more general than lat and lon - the shapefiles needn't actually represent lat/lon
     x, y = np.meshgrid(gridded_data.coord(axis='X').points, gridded_data.coord(axis='Y').points)
     return _get_indices_for_lat_lon_points(x.flat, y.flat, region)

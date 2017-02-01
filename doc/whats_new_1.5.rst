@@ -38,4 +38,6 @@ CIS 1.5.1 fixes
 
 CIS 1.5.2 fixes
 ===============
+ * Gridded and ungridded datasets can now be subset to an arbitrary lat/lon (shapely) shape.
  * Slicing and copying Coords now preserves the axis
+ * Fixed an issue where subsetting gridded data over multiple coordinates sometimes resulted in an error
