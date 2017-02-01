@@ -140,7 +140,7 @@ class GriddedSubsetConstraint(SubsetConstraint):
         if _shape is not None:
             if data.ndim > 2:
                 raise NotImplementedError("Unable to perform shape subset for multidimensional gridded datasets")
-            mask = np.ma.masked_all_like(data.data)
+            mask = np.ones(data.shape, dtype=bool)
             mask[np.unravel_index(_get_gridded_subset_region_indices(data, _shape), data.shape)] = False
             if isinstance(data.data, np.ma.MaskedArray):
                 data.data.mask &= mask
