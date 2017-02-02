@@ -41,3 +41,8 @@ CIS 1.5.2 fixes
  * Gridded and ungridded datasets can now be subset to an arbitrary lat/lon (shapely) shape.
  * Slicing and copying Coords now preserves the axis
  * Fixed an issue where subsetting gridded data over multiple coordinates sometimes resulted in an error
+ * CIS will now catch errors when writing out metadata values which might have special types and can't be safely
+   cast (e.g. VALID_RANGE).
+ * Minor fix for log scale color bars
+ * Minor fix for parsing the command aliases
+ * Minor fix for creating data lists from iterators
