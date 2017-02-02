@@ -18,7 +18,7 @@ ungridded, but not a mix. For ungridded data lists it is assumed that all object
 """
 __author__ = "David Michel, Daniel Wallis, Duncan Watson-Parris, Richard Wilkinson, Ian Bush, Matt Kendall, John Holt"
 __version__ = "1.5.2"
-__status__ = "Dev"
+__status__ = "Stable"
 __website__ = "http://www.cistools.net/"
 
 __all__ = ['read_data', 'read_data_list', 'get_variables']
