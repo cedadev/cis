@@ -46,3 +46,7 @@ CIS 1.5.2 fixes
  * Minor fix for log scale color bars
  * Minor fix for parsing the command aliases
  * Minor fix for creating data lists from iterators
+
+CIS 1.5.3 fixes
+===============
+ * Minor fix when reading variables from PP files with spaces in the name
