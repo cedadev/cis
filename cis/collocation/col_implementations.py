@@ -100,35 +100,55 @@ class GeneralUngriddedCollocator(Collocator):
         else:
             sample_enumerator = sample_points.enumerate_all_points
 
+        # TODO: A ball-tree (such as in sklearn) might be more efficient here.
         all_con_points_indices = constraint.haversine_distance_kd_tree_index.find_points_within_distance_sample(sample_points, constraint.h_sep)
 
-        values_only_df = data_points_df[data_points_df.columns[-1]].values
+        # values_only_df = data_points_df[data_points_df.columns[-1]].values
+        from builtins import max as builtin_max
+        max_entries = builtin_max([len(x) for x in all_con_points_indices])
+        # import pandas as pd
+        # matrix = np.ma.masked_all((len(sample_points), max_entries))
 
-        for i, point in sample_enumerator():
-            # Log progress periodically.
-            cell_count += 1
-            if cell_count == 1000:
-                total_count += cell_count
-                cell_count = 0
-                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
+        matrix = np.full((len(sample_points), max_entries), np.nan)
 
-            # FIXME this doesn't work for HyperPointListViews, perhaps Dataframes would be easier?
-            # DataFrames work but are very slow... If we only need numbers then numpy arrays are fast.
+        values_only = data_points.data
 
-            con_points = values_only_df[all_con_points_indices[i]]
-            try:
-                value_obj = kernel.get_value(point, con_points)
-                # Kernel returns either a single value or a tuple of values to insert into each output variable.
-                if isinstance(value_obj, tuple):
-                    for idx, val in enumerate(value_obj):
-                        if not np.isnan(val):
-                            values[idx, i] = val
-                else:
-                    values[0, i] = value_obj
-            except CoordinateMultiDimError as e:
-                raise NotImplementedError(e)
-            except ValueError as e:
-                pass
+        for i, indices in enumerate(all_con_points_indices):
+            values = values_only[indices]
+            matrix[i, :len(values)] = values
+
+        # matrix = np.lib.pad(a, (2,3), 'constant', constant_values=(4, 6))
+        # dfs = [pd.Series(values_only_df[indices]) for indices in all_con_points_indices]
+        # df = pd.concat(dfs)
+        # max_entries = max([len(x) for x in con_points])
+        # np.concatenate([np.zeros(max_entries, dtype=bool), np.ones(max_entries), dtype=bool)])
+        values = np.mean(matrix,axis=1), np.mean(matrix,axis=1), np.std(matrix,axis=1)
+
+        # for i, point in sample_enumerator():
+        #     # Log progress periodically.
+        #     cell_count += 1
+        #     if cell_count == 1000:
+        #         total_count += cell_count
+        #         cell_count = 0
+        #         logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
+        #
+        #     # FIXME this doesn't work for HyperPointListViews, perhaps Dataframes would be easier?
+        #     # DataFrames work but are very slow... If we only need numbers then numpy arrays are fast.
+        #
+        #     con_points = values_only_df[all_con_points_indices[i]]
+        #     try:
+        #         value_obj = kernel.get_value(point, con_points)
+        #         # Kernel returns either a single value or a tuple of values to insert into each output variable.
+        #         if isinstance(value_obj, tuple):
+        #             for idx, val in enumerate(value_obj):
+        #                 if not np.isnan(val):
+        #                     values[idx, i] = val
+        #         else:
+        #             values[0, i] = value_obj
+        #     except CoordinateMultiDimError as e:
+        #         raise NotImplementedError(e)
+        #     except ValueError as e:
+        #         pass
         log_memory_profile("GeneralUngriddedCollocator after running kernel on sample points")
 
         return_data = UngriddedDataList()
@@ -136,7 +156,7 @@ class GeneralUngriddedCollocator(Collocator):
             var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
                                     missing_value=self.fill_value, units=var_details[3])
             set_standard_name_if_valid(var_metadata, var_details[2])
-            return_data.append(UngriddedData(values[idx, :], var_metadata, points.coords()))
+            return_data.append(UngriddedData(values[idx], var_metadata, points.coords()))
         log_memory_profile("GeneralUngriddedCollocator final")
 
         return return_data
