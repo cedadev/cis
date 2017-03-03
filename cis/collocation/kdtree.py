@@ -1345,6 +1345,56 @@ class HaversineDistanceKDTree(KDTree):
 
         return traverse_checking(self.tree, R)
 
+    def sparse_distance_matrix(self, other, max_distance):
+        """
+        Compute a sparse distance matrix
+
+        Computes a distance matrix between two KDTrees, leaving as zero
+        any distance greater than max_distance.
+
+        :param other:  KDTree
+
+        :param max_distance: positive float
+
+        :param p: float, optional
+
+        :returns: dok_matrix
+            Sparse matrix representing the results in "dictionary of keys" format.
+
+        """
+        result = scipy.sparse.dok_matrix((self.n, other.n))
+
+        def traverse(node1, rect1, node2, rect2):
+            if rect1.min_distance_rectangle(rect2) > max_distance:
+                return
+            elif isinstance(node1, KDTree.leafnode):
+                if isinstance(node2, KDTree.leafnode):
+                    for i in node1.idx:
+                        for j in node2.idx:
+                            d = haversine_distance(self.data[i], other.data[j])
+                            if d <= max_distance:
+                                result[i, j] = d
+                else:
+                    less, greater = rect2.split(node2.split_dim, node2.split)
+                    traverse(node1, rect1, node2.less, less)
+                    traverse(node1, rect1, node2.greater, greater)
+            elif isinstance(node2, KDTree.leafnode):
+                less, greater = rect1.split(node1.split_dim, node1.split)
+                traverse(node1.less, less, node2, rect2)
+                traverse(node1.greater, greater, node2, rect2)
+            else:
+                less1, greater1 = rect1.split(node1.split_dim, node1.split)
+                less2, greater2 = rect2.split(node2.split_dim, node2.split)
+                traverse(node1.less, less1, node2.less, less2)
+                traverse(node1.less, less1, node2.greater, greater2)
+                traverse(node1.greater, greater1, node2.less, less2)
+                traverse(node1.greater, greater1, node2.greater, greater2)
+
+        traverse(self.tree, RectangleHaversine(self.maxes, self.mins),
+                 other.tree, RectangleHaversine(other.maxes, other.mins))
+
+        return result
+
 
 def distance_matrix(x, y, p=2, threshold=1000000):
     """

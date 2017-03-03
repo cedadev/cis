@@ -85,8 +85,8 @@ class GeneralUngriddedCollocator(Collocator):
 
         sample_points_count = len(sample_points)
         # Create an empty masked array to store the collocated values. The elements will be unmasked by assignment.
-        values = np.ma.masked_all((len(var_set_details), sample_points_count))
-        values.fill_value = self.fill_value
+        # values = np.ma.masked_all((len(var_set_details), sample_points_count))
+        # values.fill_value = self.fill_value
         log_memory_profile("GeneralUngriddedCollocator after output array creation")
 
         logging.info("    {} sample points".format(sample_points_count))
@@ -101,21 +101,25 @@ class GeneralUngriddedCollocator(Collocator):
             sample_enumerator = sample_points.enumerate_all_points
 
         # TODO: A ball-tree (such as in sklearn) might be more efficient here.
-        all_con_points_indices = constraint.haversine_distance_kd_tree_index.find_points_within_distance_sample(sample_points, constraint.h_sep)
+        distance_matrix = constraint.haversine_distance_kd_tree_index.get_distance_matrix(sample_points, constraint.h_sep)
 
         # values_only_df = data_points_df[data_points_df.columns[-1]].values
-        from builtins import max as builtin_max
-        max_entries = builtin_max([len(x) for x in all_con_points_indices])
+        # from builtins import max as builtin_max
+        # max_entries = builtin_max([len(x) for x in all_con_points_indices])
         # import pandas as pd
         # matrix = np.ma.masked_all((len(sample_points), max_entries))
 
-        matrix = np.full((len(sample_points), max_entries), np.nan)
+        # matrix = np.full((len(sample_points), max_entries), np.nan)
 
         values_only = data_points.data
 
-        for i, indices in enumerate(all_con_points_indices):
-            values = values_only[indices]
-            matrix[i, :len(values)] = values
+        values_matrix = np.broadcast_to(values_only, distance_matrix.shape)
+
+        matrix = np.ma.array(values_matrix, mask=distance_matrix.toarray() == 0)
+
+        # for i, indices in enumerate(all_con_points_indices):
+        #     values = values_only[indices]
+        #     matrix[i, :len(values)] = values
 
         # matrix = np.lib.pad(a, (2,3), 'constant', constant_values=(4, 6))
         # dfs = [pd.Series(values_only_df[indices]) for indices in all_con_points_indices]
