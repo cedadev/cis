@@ -395,6 +395,30 @@ class RectangleHaversine(RectangleBase):
         furthest_point = np.where(self.maxes - x > x - self.mins, self.maxes, self.mins)
         return haversine_distance(x, furthest_point)
 
+    def min_distance_rectangle(self, other):
+        """
+        Compute the minimum distance between points in the two hyperrectangles.
+
+        :param other: hyperrectangle
+            Input.
+        :param p: float
+            Input.
+
+        """
+        return haversine_distance([0.0, 0.0], np.maximum(0, np.maximum(self.mins - other.maxes, other.mins - self.maxes)))
+
+    def max_distance_rectangle(self, other):
+        """
+        Compute the maximum distance between points in the two hyperrectangles.
+
+        :param other: hyperrectangle
+            Input.
+        :param p: float, optional
+            Input.
+
+        """
+        return haversine_distance([0.0, 0.0], np.maximum(self.maxes - other.mins, other.maxes - self.mins))
+
 
 class KDTree(object):
     """
@@ -1293,8 +1317,8 @@ class HaversineDistanceKDTree(KDTree):
                 traverse_no_checking(node1.less, node2)
                 traverse_no_checking(node1.greater, node2)
 
-        traverse_checking(self.tree, Rectangle(self.maxes, self.mins),
-                          other.tree, Rectangle(other.maxes, other.mins))
+        traverse_checking(self.tree, RectangleHaversine(self.maxes, self.mins),
+                          other.tree, RectangleHaversine(other.maxes, other.mins))
         return results
 
     def _query_ball_point(self, x, r, p=2., eps=0):

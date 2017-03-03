@@ -88,10 +88,16 @@ class Test_nn_horizontal_kdtree(object):
 class TestSepConstraint(object):
     @istest
     def test_horizontal_constraint_in_2d(self):
+        from cis.data_io.Coord import Coord, CoordList
+        from cis.data_io.ungridded_data import Metadata
         ug_data = mock.make_regular_2d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=7.5, lon=-2.5)
-        sample_points = HyperPointList([sample_point])
+        sample_points = UngriddedData(np.array([0.0]), Metadata(),
+                                      CoordList([Coord(np.array([7.5]), Metadata(standard_name='latitude')),
+                                                 Coord(np.array([-2.5]), Metadata(standard_name='longitude'))]))
+        sample_points_view = sample_points.get_all_points()
+        # sample_point = HyperPoint(lat=7.5, lon=-2.5)
+        # sample_points = HyperPointList([sample_point])
         coord_map = None
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
@@ -105,10 +111,11 @@ class TestSepConstraint(object):
         # This should leave us with 4 points
         ref_vals = np.array([10, 11, 13, 14])
 
-        new_points = constraint.constrain_points(sample_point, ug_data_points)
-        new_vals = new_points.vals
+        indices = constraint.haversine_distance_kd_tree_index.find_points_within_distance_sample(sample_points_view, 400)
 
-        eq_(ref_vals.size, new_vals.size)
+        new_vals = ug_data.data.flat[indices]
+
+        eq_(ref_vals.size, len(new_vals[0]))
         assert (np.equal(ref_vals, new_vals).all())
 
     @istest

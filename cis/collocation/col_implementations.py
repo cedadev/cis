@@ -52,10 +52,18 @@ class GeneralUngriddedCollocator(Collocator):
 
         data_points = data.get_non_masked_points()
 
+        # TODO This really duplicates the above...
+        data_points_df = data.as_data_frame()
+        data_points_df.dropna(axis=1, inplace=True)
+
+        print(len(data_points_df))
+        print(len(data_points))
+
         # First fix the sample points so that they all fall within the same 360 degree longitude range
         _fix_longitude_range(points.coords(), sample_points)
         # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
-        _fix_longitude_range(points.coords(), data_points)
+        # TODO This doesn't work for dataframes
+        # _fix_longitude_range(points.coords(), data_points)
 
         log_memory_profile("GeneralUngriddedCollocator after data retrieval")
 
@@ -94,6 +102,8 @@ class GeneralUngriddedCollocator(Collocator):
 
         all_con_points_indices = constraint.haversine_distance_kd_tree_index.find_points_within_distance_sample(sample_points, constraint.h_sep)
 
+        values_only_df = data_points_df[data_points_df.columns[-1]].values
+
         for i, point in sample_enumerator():
             # Log progress periodically.
             cell_count += 1
@@ -103,7 +113,9 @@ class GeneralUngriddedCollocator(Collocator):
                 logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
 
             # FIXME this doesn't work for HyperPointListViews, perhaps Dataframes would be easier?
-            con_points = data_points[all_con_points_indices[i]]
+            # DataFrames work but are very slow... If we only need numbers then numpy arrays are fast.
+
+            con_points = values_only_df[all_con_points_indices[i]]
             try:
                 value_obj = kernel.get_value(point, con_points)
                 # Kernel returns either a single value or a tuple of values to insert into each output variable.

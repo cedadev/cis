@@ -105,10 +105,10 @@ class AbstractDataOnlyKernel(Kernel):
         :return: For return_size=1 a single value (number) otherwise a list of returns values, which represents some
             operation on the points provided
         """
-        values = data.vals
-        if len(values) == 0:
+        # values = data.values
+        if len(data) == 0:
             raise ValueError
-        return self.get_value_for_data_only(values)
+        return self.get_value_for_data_only(data)
 
     @abstractmethod
     def get_value_for_data_only(self, values):
