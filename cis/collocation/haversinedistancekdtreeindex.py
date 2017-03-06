@@ -79,3 +79,6 @@ class HaversineDistanceKDTreeIndex(object):
             list of the indices of its neighbors in ``other.data``.
         """
         return create_index(sample).query_ball_tree(self.index, distance)
+
+    def get_distance_matrix(self, sample, distance):
+        return create_index(sample).sparse_distance_matrix(self.index, distance)

@@ -556,7 +556,7 @@ class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
         variable = "AOT_440,AOT_870"
         filename = valid_aeronet_filename
         sample_file = valid_cloudsat_PRECIP_file
-        collocator_and_opts = 'box[h_sep=10m],kernel=mean'
+        collocator_and_opts = 'box[h_sep=700km],kernel=mean'
         arguments = ['col', variable + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
