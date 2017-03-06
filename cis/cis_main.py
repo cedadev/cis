@@ -71,6 +71,7 @@ def col_cmd(main_arguments):
     :param main_arguments:    The command line arguments (minus the col command)
     """
     from cis.collocation.col_framework import get_kernel
+    from cis.parse import check_boolean
 
     # Read the sample data
     missing_data_for_missing_sample = False
@@ -85,7 +86,8 @@ def col_cmd(main_arguments):
     col_name, col_options = main_arguments.samplegroup.get('collocator', ('', {}))
     kern_name, kern_options = main_arguments.samplegroup.get('kernel', ('', {}))
 
-    missing_data_for_missing_sample = col_options.pop('missing_data_for_missing_sample', missing_data_for_missing_sample)
+    missing_data_for_missing_sample = check_boolean(col_options.pop('missing_data_for_missing_sample',
+                                                                    missing_data_for_missing_sample), logging)
 
     kernel = get_kernel(kern_name)(**kern_options) if kern_name else None
 

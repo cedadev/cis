@@ -229,7 +229,6 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
-    @unittest.skip("Very resource intensive")
     def test_CALIOP_L1_onto_NetCDF_Gridded(self):
         vars = [valid_caliop_l1_variable]
         filename = valid_caliop_l1_filename
@@ -244,7 +243,6 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
         self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
 
-    @unittest.skip("Very resource intensive")
     def test_CALIOP_L2_onto_NetCDF_Gridded(self):
         vars = [valid_caliop_l2_variable]
         filename = valid_caliop_l2_filename
@@ -268,6 +266,22 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         sample_file = valid_hadgem_filename
         sample_var = valid_hadgem_variable
         collocator_and_opts = 'bin,kernel=mean,variable=%s' % sample_var
+        arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
+                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
+        self.check_output_col_grid(sample_file, sample_var, self.OUTPUT_FILENAME, vars)
+
+    @skip_pyhdf
+    def test_MODIS_L2_onto_NetCDF_Gridded_missing(self):
+        # Takes 20s
+        vars = ['Solar_Zenith', 'Optical_Depth_Ratio_Small_Land_And_Ocean']
+        filename = valid_modis_l2_filename
+        sample_file = valid_hadgem_filename
+        sample_var = valid_hadgem_variable
+        collocator_and_opts = 'bin[missing_data_for_missing_sample=False],variable=%s' % sample_var
         arguments = ['col', ",".join(vars) + ':' + escape_colons(filename),
                      escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
                      '-o', self.OUTPUT_FILENAME]
