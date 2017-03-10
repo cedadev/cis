@@ -231,6 +231,24 @@ class TestParse(ParseTestFiles):
             assert not _file_already_exists_and_no_overwrite(arguments)
             os.environ["CIS_FORCE_OVERWRITE"] = ""
 
+    def test_output_file_matches_an_existing_file_with_force_overwrite_env_FALSE(self):
+        from cis.parse import _file_already_exists_and_no_overwrite
+        from argparse import Namespace
+        from tempfile import NamedTemporaryFile
+
+        with NamedTemporaryFile() as tmpfile:
+            existing_file = tmpfile.name
+            arguments = Namespace(force_overwrite=False)
+            # Test output file is the same as input file
+            arguments.output = existing_file
+            os.environ["CIS_FORCE_OVERWRITE"] = "False"
+            with patch("six.moves.input", return_value='n') as in_patch:
+                # Check we're not going to overwrite the file
+                assert _file_already_exists_and_no_overwrite(arguments)
+                # Check we didn't have to ask for input to work that out
+                assert in_patch.call_count == 0
+            os.environ["CIS_FORCE_OVERWRITE"] = ""
+
     def test_output_file_matches_an_existing_file_with_no_force_overwrite_will_prompt(self):
         from cis.parse import _file_already_exists_and_no_overwrite
         from argparse import Namespace

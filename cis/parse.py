@@ -811,14 +811,19 @@ def _validate_output_file(arguments, parser, default_ext='.nc'):
 def _file_already_exists_and_no_overwrite(arguments):
     from six.moves import input
     # If the file already exists, and we haven't set the overwrite flag or env var, then prompt
-    if os.path.isfile(arguments.output) and \
-            not (arguments.force_overwrite or os.environ.get("CIS_FORCE_OVERWRITE", "false").lower() == "true"):
-        overwrite = None
-        while overwrite not in ['y', 'n', '']:
-            overwrite = input("The file: {} already exists. Overwrite? (y/[n])")
-        if overwrite != 'y':
-            return True
-        # Otherwise False
+    if os.path.isfile(arguments.output):
+        overwrite_env = os.environ.get("CIS_FORCE_OVERWRITE", "").lower()
+        if arguments.force_overwrite:
+            return False
+        elif overwrite_env:
+            return overwrite_env == 'false'
+        else:
+            overwrite = None
+            while overwrite not in ['y', 'n', '']:
+                overwrite = input("The file: {} already exists. Overwrite? (y/[n])")
+            if overwrite != 'y':
+                return True
+            # Otherwise False
     return False
 
 
