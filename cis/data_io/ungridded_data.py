@@ -134,7 +134,12 @@ class Metadata(object):
             try:
                 # Try some basic tidying up of unit
                 if isinstance(units, six.string_types):
-                    units = units.replace("since:", "since").replace(",", "").lower()
+                    if 'since' in units.lower():
+                        # Often this time since epoch units are weirdly capitalised, or include extra punctuation
+                        units = units.lower().replace("since:", "since").replace(",", "")
+                    else:
+                        # Replace number with 1 (e.g. #/cm3 == cm-3)
+                        units = units.replace('#', '1')
                 units = Unit(units)
             except ValueError:
                 logging.info("Unable to parse cf-units: {}. Some operations may not be available.".format(units))

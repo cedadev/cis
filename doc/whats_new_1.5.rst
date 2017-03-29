@@ -49,4 +49,5 @@ CIS 1.5.2 fixes
 
 CIS 1.5.3 fixes
 ===============
+ * Fixed a (potentially serious) bug in unit parsing which would convert any string to lowercase.
  * Minor fix when reading variables from PP files with spaces in the name

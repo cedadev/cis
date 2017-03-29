@@ -7,6 +7,7 @@ from cis.test.util.mock import make_regular_2d_ungridded_data, make_regular_2d_u
     make_regular_2d_with_time_ungridded_data
 
 import numpy as np
+from cf_units import Unit
 
 from cis.data_io.Coord import CoordList, Coord
 from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, Metadata, UngriddedDataList
@@ -18,6 +19,29 @@ except ImportError:
     pandas = None
 
 skip_pandas = skipIf(pandas is None, 'Test(s) require "pandas", which is not available.')
+
+
+class TestMetadata(TestCase):
+
+    def test_unit_setter(self):
+        # Standard units
+        m = Metadata(units='kg m-2 s-1')
+        assert m.units == Unit('kg m-2 s-1')
+        # Case sensitive units
+        m.units = 'hPa'
+        assert m.units == Unit('hPa')
+        # Units with number in
+        m.units = '#/cm3'
+        assert m.units == Unit('cm-3')
+        # standard time since units
+        m.units = 'days since 1999-01-01'
+        assert m.units == Unit('days since 1999-01-01')
+        # Capitalised time since
+        m.units = 'Days since 1999-01-01'
+        assert m.units == Unit('days since 1999-01-01')
+        # Time since with a colon and capital S
+        m.units = 'hours Since: 1999-01-01'
+        assert m.units == Unit('hours Since 1999-01-01')
 
 
 class TestUngriddedData(TestCase):
