@@ -180,9 +180,6 @@ class GriddedData(iris.cube.Cube, CommonData):
         else:
             self.attributes['history'] += '\n' + timestamp + new_history
 
-    def name(self):
-        return self.var_name
-
     @property
     def is_gridded(self):
         """Returns value indicating whether the data/coordinates are gridded.

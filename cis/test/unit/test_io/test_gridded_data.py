@@ -26,6 +26,27 @@ def test_get_all_points_returns_points():
 
 
 @istest
+def test_name_method():
+    d = gridded_data.make_from_cube(mock.make_mock_cube())
+
+    # Standard name
+    assert d.name() == 'rainfall_rate'
+    d.standard_name = None
+    # Long name
+    assert d.name() == 'TOTAL RAINFALL RATE: LS+CONV KG/M2/S'
+    d.long_name = ''
+    # Var_name
+    assert d.name() == 'rain'
+    d.var_name = None
+    # Default
+    assert d.name() == 'unknown'
+    # User specified default
+    assert d.name('test') == 'test'
+    # Empty default
+    assert d.name('') == ''
+
+
+@istest
 def test_get_non_masked_points_returns_points():
     gd = gridded_data.make_from_cube(mock.make_5x3_lon_lat_2d_cube_with_missing_data())
     points = gd.get_non_masked_points()

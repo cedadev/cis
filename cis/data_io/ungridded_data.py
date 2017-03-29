@@ -217,17 +217,13 @@ class LazyData(object):
             else:
                 raise InvalidDataTypeError
 
-    def name(self):
+    def name(self, default='unknown'):
         """
-        This routine returns the first name property which is not empty out of: _name, standard_name and long_name.
-        If they are all empty it returns an empty string
+        This routine returns the first name property which is not empty out of: standard_name, long_name and var_name.
+        If they are all empty it returns the default string (which is 'unknown' by default).
         :return: The name of the data object as a string
         """
-
-        for name in [self.metadata._name, self.metadata.standard_name, self.metadata.long_name]:
-            if name:
-                return name
-        return ''
+        return self.standard_name or self.long_name or self.var_name or default
 
     @property
     def shape(self):
@@ -256,6 +252,10 @@ class LazyData(object):
     @property
     def var_name(self):
         return self.metadata._name
+
+    @var_name.setter
+    def var_name(self, var_name):
+        self.metadata._name = var_name
 
     @property
     def units(self):

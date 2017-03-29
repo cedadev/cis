@@ -114,9 +114,9 @@ class TestUngriddedData(TestCase):
         ug_data = make_regular_2d_ungridded_data()
         df = ug_data.as_data_frame()
 
-        assert_that(df['rain'][5] == 6)
-        assert_that(df['lat'][7] == 0)
-        assert_that(df['rain'].median() == 8.0)
+        assert_that(df['rainfall_rate'][5] == 6)
+        assert_that(df['latitude'][7] == 0)
+        assert_that(df['rainfall_rate'].median() == 8.0)
 
     @skip_pandas
     def test_GIVEN_ungridded_data_with_missing_vals_WHEN_call_as_data_frame_THEN_returns_valid_data_frame(self):
@@ -125,10 +125,29 @@ class TestUngriddedData(TestCase):
         ug_data = make_regular_2d_ungridded_data_with_missing_values()
         df = ug_data.as_data_frame()
 
-        assert_that(df['rain'][5] == 6)
+        assert_that(df['rainfall_rate'][5] == 6)
         assert_that(df['latitude'][7] == 0)
-        assert_that(df['rain'].median() == 7.5)
-        assert_that(np.isnan(df['rain'][8]))
+        assert_that(df['rainfall_rate'].median() == 7.5)
+        assert_that(np.isnan(df['rainfall_rate'][8]))
+
+    def test_name_method(self):
+        from cis.test.util.mock import make_regular_2d_ungridded_data_with_missing_values
+        d = make_regular_2d_ungridded_data_with_missing_values()
+        # Standard name
+        assert d.name() == 'rainfall_rate'
+        d.standard_name = None
+        # Long name
+        assert d.name() == 'TOTAL RAINFALL RATE: LS+CONV KG/M2/S'
+        d.long_name = ''
+        # Var_name
+        assert d.name() == 'rain'
+        d.var_name = None
+        # Default
+        assert d.name() == 'unknown'
+        # User specified default
+        assert d.name('test') == 'test'
+        # Empty default
+        assert d.name('') == ''
 
 
 class TestUngriddedDataLazyLoading(TestCase):
@@ -343,7 +362,7 @@ class TestUngriddedDataList(TestCase):
     def test_can_get_string_of_list(self):
         s = str(self.ungridded_data_list)
         assert_that(s == "UngriddedDataList: \n0: Ungridded data: rainfall_flux / (kg m-2 s-1) \n"
-                         "1: Ungridded data: snowfall_flux / (kg m-2 s-1) \nCoordinates: \n  lat\n  lon\n")
+                         "1: Ungridded data: snowfall_flux / (kg m-2 s-1) \nCoordinates: \n  latitude\n  longitude\n")
 
     def test_GIVEN_data_containing_multiple_matching_coordinates_WHEN_coords_THEN_only_unique_coords_returned(self):
         unique_coords = self.ungridded_data_list.coords()
@@ -369,8 +388,8 @@ class TestUngriddedDataList(TestCase):
 
         assert_that(df['rainfall_flux'][5] == 6)
         assert_almost_equal(df['snowfall_flux'][5], 0.6)
-        assert_that(df['lat'][13] == 10)
-        assert_that(df['lon'][0] == -5)
+        assert_that(df['latitude'][13] == 10)
+        assert_that(df['longitude'][0] == -5)
 
     @skip_pandas
     def test_GIVEN_multiple_ungridded_data_with_missing_data_WHEN_call_as_data_frame_THEN_returns_valid_data_frame(self):
@@ -388,10 +407,10 @@ class TestUngriddedDataList(TestCase):
 
         assert_that(df['rainfall_flux'][5] == 6)
         assert_almost_equal(df['snowfall_flux'][5], 0.6)
-        assert_that(df['lat'][13] == 10)
-        assert_that(df['lon'][0] == -5)
-        assert_almost_equal(df['hail'][1], 11.0)
-        assert_that(np.isnan(df['hail'][np.ravel_multi_index([1, 2], (5, 3))]))
+        assert_that(df['latitude'][13] == 10)
+        assert_that(df['longitude'][0] == -5)
+        assert_almost_equal(df['TOTAL HAIL RATE: LS+CONV KG/M2/S'][1], 11.0)
+        assert_that(np.isnan(df['TOTAL HAIL RATE: LS+CONV KG/M2/S'][np.ravel_multi_index([1, 2], (5, 3))]))
 
         self.ungridded_data_list.pop()
 
