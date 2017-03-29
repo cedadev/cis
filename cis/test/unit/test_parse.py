@@ -643,6 +643,7 @@ class TestParseAggregate(ParseTestFiles):
             arguments.output = 'blah'
             assert not _output_file_matches_an_input_file(arguments)
 
+
 class TestParseCollocate(ParseTestFiles):
     """
     Tests specific to the collocate command
@@ -718,3 +719,58 @@ class TestParseCollocate(ParseTestFiles):
         eq_(('SepConstraint', {'h_sep': '1500', 'v_sep': '22000', 't_sep': '5000'}), args.samplegroup['constraint'])
         eq_(('nn', {}), args.samplegroup['kernel'])
         eq_(('bin', {}), args.samplegroup['collocator'])
+
+
+class TestParseInfo(ParseTestFiles):
+    """
+    Tests specific to the info command
+    """
+
+    def test_GIVEN_info_command_WHEN_single_file_present_THEN_empty_variable_and_product(self):
+        args = ["info", self.escaped_test_directory_files[0]]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
+        assert_that(dg[0].get('product', None), is_(None))
+        assert_that(dg[0]['variables'], is_(None))
+
+    def test_GIVEN_info_command_WHEN_many_files_present_THEN_empty_variable_and_product(self):
+        args = ["info", ",".join(self.escaped_test_directory_files)]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_(self.test_directory_files))
+        assert_that(dg[0].get('product', None), is_(None))
+        assert_that(dg[0]['variables'], is_(None))
+
+    def test_GIVEN_info_command_WHEN_files_and_single_var_present_THEN_single_variable_and_empty_product(self):
+        var1 = 'rain'
+        args = ["info", var1 + ':' + self.escaped_test_directory_files[0]]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
+        assert_that(dg[0].get('product', None), is_(None))
+        assert_that(dg[0]['variables'], is_([var1]))
+
+    def test_GIVEN_info_command_WHEN_files_and_many_vars_present_THEN_many_variable_and_empty_product(self):
+        var1, var2 = 'rain', 'snow'
+        args = ["info", var1 + "," + var2 + ':' + self.escaped_test_directory_files[0]]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
+        assert_that(dg[0].get('product', None), is_(None))
+        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
+
+    def test_GIVEN_info_command_WHEN_files_and_var_and_product_present_THEN_variable_and_product_set(self):
+        var1 = 'rain'
+        product = 'cis'
+        args = ["info", var1 + ':' + self.escaped_test_directory_files[0] + ':product=' + product]
+        main_args = parse_args(args)
+        dg = main_args.datagroups
+        assert_that(len(dg), is_(1))
+        assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
+        assert_that(dg[0].get('product', None), is_('cis'))
+        assert_that(dg[0]['variables'], is_([var1]))
