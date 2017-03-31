@@ -880,13 +880,17 @@ def validate_plot_args(arguments, parser):
 
 
 def validate_info_args(arguments, parser):
+    from collections import namedtuple
+    # See how many colon-split arguments there are (taking into account escaped colons)
     split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', arguments.datagroups[0])]
     if len(split_input) == 1:
-        # If there is only one part of the datagroup then it must be a file (or list of files). Return it as a dict to
-        #  match the behaviour of the datagroup parser.
-        arguments.datagroups = [{'filenames': expand_file_list(arguments.datagroups[0], parser),
-                                 'variables': None, 'product': None}]
+        # If there is only one part of the datagroup then it must be a file (or list of files).
+        DatagroupOptions = namedtuple('DatagroupOptions', ["filenames"])
+        datagroup_options = DatagroupOptions(expand_file_list)
+        arguments.datagroups = parse_colon_and_comma_separated_arguments(arguments.datagroups, parser,
+                                                                         datagroup_options, compulsory_args=1)
     else:
+        # Otherwise it's a standard datagroup
         arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     return arguments
 

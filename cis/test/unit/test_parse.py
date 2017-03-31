@@ -733,7 +733,7 @@ class TestParseInfo(ParseTestFiles):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
         assert_that(dg[0].get('product', None), is_(None))
-        assert_that(dg[0]['variables'], is_(None))
+        assert_that(dg[0].get('variables', None), is_(None))
 
     def test_GIVEN_info_command_WHEN_many_files_present_THEN_empty_variable_and_product(self):
         args = ["info", ",".join(self.escaped_test_directory_files)]
@@ -742,7 +742,7 @@ class TestParseInfo(ParseTestFiles):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_(self.test_directory_files))
         assert_that(dg[0].get('product', None), is_(None))
-        assert_that(dg[0]['variables'], is_(None))
+        assert_that(dg[0].get('variables', None), is_(None))
 
     def test_GIVEN_info_command_WHEN_files_and_single_var_present_THEN_single_variable_and_empty_product(self):
         var1 = 'rain'
@@ -752,7 +752,7 @@ class TestParseInfo(ParseTestFiles):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
         assert_that(dg[0].get('product', None), is_(None))
-        assert_that(dg[0]['variables'], is_([var1]))
+        assert_that(dg[0].get('variables', None), is_([var1]))
 
     def test_GIVEN_info_command_WHEN_files_and_many_vars_present_THEN_many_variable_and_empty_product(self):
         var1, var2 = 'rain', 'snow'
@@ -762,7 +762,7 @@ class TestParseInfo(ParseTestFiles):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
         assert_that(dg[0].get('product', None), is_(None))
-        assert_that(dg[0]['variables'], contains_inanyorder('rain', 'snow'))
+        assert_that(dg[0].get('variables', None), contains_inanyorder('rain', 'snow'))
 
     def test_GIVEN_info_command_WHEN_files_and_var_and_product_present_THEN_variable_and_product_set(self):
         var1 = 'rain'
@@ -773,4 +773,4 @@ class TestParseInfo(ParseTestFiles):
         assert_that(len(dg), is_(1))
         assert_that(dg[0]['filenames'], is_([self.test_directory_files[0]]))
         assert_that(dg[0].get('product', None), is_('cis'))
-        assert_that(dg[0]['variables'], is_([var1]))
+        assert_that(dg[0].get('variables', None), is_([var1]))
