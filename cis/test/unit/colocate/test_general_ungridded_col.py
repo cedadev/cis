@@ -30,8 +30,8 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         no_points = new_data[2]
 
         eq_(means.name(), 'rainfall_flux')
-        eq_(std_dev.name(), 'rainfall_flux_std_dev')
-        eq_(no_points.name(), 'rainfall_flux_num_points')
+        eq_(std_dev.name(), 'Corrected sample standard deviation of TOTAL RAINFALL RATE: LS+CONV KG/M2/S')
+        eq_(no_points.name(), 'Number of points used to calculate the mean of TOTAL RAINFALL RATE: LS+CONV KG/M2/S')
         assert means.coords()
         assert std_dev.coords()
         assert no_points.coords()

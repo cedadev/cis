@@ -14,6 +14,8 @@ def subset(data, constraint, **kwargs):
     Helper function for constraining a CommonData or CommonDataList object (data) given a SubsetConstraint
     class, the constraints should be specified using the kwargs of the form coord: [min, max]
 
+    A shape keyword can also be supplied as a WKT string or shapely object to subset in lat/lon by an arbitrary shape.
+
     :param CommonData or CommonDataList data: The data to subset
     :param class SubsetConstraint constraint: A SubsetConstraint class to do the constraining
     :param kwargs: The limits as slices or length 2 tuples of max and min.
@@ -42,7 +44,7 @@ def subset(data, constraint, **kwargs):
             # Create the lat/lon box - this will be used to speed up the shape subset
             constraints[data.coord(standard_name='longitude').name()] = slice(bounding_box[0], bounding_box[2])
             constraints[data.coord(standard_name='latitude').name()] = slice(bounding_box[1], bounding_box[3])
-            break
+            continue
 
         c = data._get_coord(dim_name)
         if c is None:
@@ -125,14 +127,27 @@ class GriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data or None if all data excluded.
         @rtype: cis.data_io.gridded_data.GriddedData
         """
+        _shape = self._limits.pop('shape', None)
         extract_constraint, intersection_constraint = self._make_extract_and_intersection_constraints(data)
         if extract_constraint is not None:
             data = data.extract(extract_constraint)
+            if data is None:
+                return None  # Don't do the intersection
         if intersection_constraint:
             try:
                 data = data.intersection(**intersection_constraint)
             except IndexError:
                 return None
+
+        if _shape is not None:
+            if data.ndim > 2:
+                raise NotImplementedError("Unable to perform shape subset for multidimensional gridded datasets")
+            mask = np.ones(data.shape, dtype=bool)
+            mask[np.unravel_index(_get_gridded_subset_region_indices(data, _shape), data.shape)] = False
+            if isinstance(data.data, np.ma.MaskedArray):
+                data.data.mask &= mask
+            else:
+                data.data = np.ma.masked_array(data.data, mask)
         return gridded_data.make_from_cube(data)
 
     def _make_extract_and_intersection_constraints(self, data):
@@ -144,19 +159,26 @@ class GriddedSubsetConstraint(SubsetConstraint):
         :param data:
         :return:
         """
-        extract_constraint = None
+        class Contains(object):
+            """
+            Callable object for checking if a value is within a preset range
+            """
+            def __init__(self, lower, upper):
+                self.lower = lower
+                self.upper = upper
+
+            def __call__(self, x):
+                return self.lower <= x.point <= self.upper
+
         intersection_constraint = {}
+        extract_constraint = iris.Constraint()
         for coord, limits in self._limits.items():
             if data.coord(coord).units.modulus is not None:
                 # These coordinates can be safely used with iris.cube.Cube.intersection()
                 intersection_constraint[coord] = (limits.start, limits.stop)
             else:
                 # These coordinates cannot be used with iris.cube.Cube.intersection(), will use iris.cube.Cube.extract()
-                constraint_function = lambda x: limits.start <= x.point <= limits.stop
-                if extract_constraint is None:
-                    extract_constraint = iris.Constraint(**{coord: constraint_function})
-                else:
-                    extract_constraint = extract_constraint & iris.Constraint(**{coord: constraint_function})
+                extract_constraint = extract_constraint & iris.Constraint(**{coord: Contains(limits.start, limits.stop)})
         return extract_constraint, intersection_constraint
 
 
@@ -164,6 +186,10 @@ class UngriddedSubsetConstraint(SubsetConstraint):
     """
     Implementation of SubsetConstraint for subsetting ungridded data.
     """
+    def __init__(self, limits):
+        super(UngriddedSubsetConstraint, self).__init__(limits)
+        self._shape_indices = None
+        self._combined_mask = None
 
     def constrain(self, data):
         """Subsets the supplied data.
@@ -172,38 +198,42 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data
         """
         import numpy as np
-        from cis.utils import listify
+        from cis.data_io.ungridded_data import UngriddedDataList
 
-        data = self._create_data_for_subset(data)
+        if isinstance(data, list):
+            # Calculating masks and indices will only take place on the first iteration,
+            # so we can just call this method recursively if we've got a list of data.
+            output = UngriddedDataList()
+            for var in data:
+                output.append(self.constrain(var))
+            return output
 
-        # Create the combined mask across all limits
-        shape = data.coords()[0].data.shape  # This assumes they are all the same shape
-        combined_mask = np.ones(shape, dtype=bool)
-        for coord, limit in self._limits.items():
-            # Select any points which are <= to the stop limit AND >= to the start limit
-            mask = (np.less_equal(data.coord(coord).data, limit.stop) &
-                    np.greater_equal(data.coord(coord).data, limit.start))
-            combined_mask = combined_mask & mask
+        _data = self._create_data_for_subset(data)
 
-        # Generate the new coordinates here (before we loop)
-        new_coords = data.coords()
-        for coord in new_coords:
-            coord.data = coord.data[combined_mask]
-            coord.metadata.shape = coord.data.shape
-            coord._data_flattened = None  # Otherwise Coord won't recalculate this.
+        _shape = self._limits.pop('shape', None)
 
-        # If the whole selection mask is False then the data will be empty - return None
-        if np.all(~combined_mask):
-            return None
+        if self._combined_mask is None:
+            # Create the combined mask across all limits
+            shape = _data.coords()[0].data.shape  # This assumes they are all the same shape
+            combined_mask = np.ones(shape, dtype=bool)
+            for coord, limit in self._limits.items():
+                # Select any points which are <= to the stop limit AND >= to the start limit
+                mask = (np.less_equal(_data.coord(coord).data, limit.stop) &
+                        np.greater_equal(_data.coord(coord).data, limit.start))
+                combined_mask &= mask
+            self._combined_mask = combined_mask
 
-        for variable in listify(data):
-            # Constrain each copy of the data object in-place
-            variable.data = variable.data[combined_mask]
+        _data = _data[self._combined_mask]
 
-            # Add the new compressed coordinates
-            variable._coords = new_coords
+        if _shape is not None:
+            if self._shape_indices is None:
+                self._shape_indices = _get_ungridded_subset_region_indices(_data, _shape)
+            _data = _data[np.unravel_index(self._shape_indices, _data.shape)]
 
-        return data
+        if _data.size == 0:
+            _data = None
+
+        return _data
 
     def _create_data_for_subset(self, data):
         """
@@ -212,11 +242,16 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :param data: Data being subsetted
         :return:
         """
+        from cis.exceptions import CoordinateNotFoundError
         # We need a copy with new data and coordinates
         data = data.copy()
         # Check for longitude coordinate in the limits
         for dim_name, limit in self._limits.items():
-            coord = data.coord(dim_name)
+            try:
+                coord = data.coord(dim_name)
+            except CoordinateNotFoundError:
+                # E.g. shape...
+                continue
             if coord.standard_name == 'longitude':
                 coord_min = coord.points.min()
                 coord_max = coord.points.max()
@@ -241,19 +276,23 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         return data
 
 
-def subset_region(ungridded_data, region):
+def _get_indices_for_lat_lon_points(lats, lons, region):
     from shapely.geometry import MultiPoint
 
-    cis_data = np.vstack([ungridded_data.lon.data, ungridded_data.lat.data, np.arange(len(ungridded_data.lat.data))])
-    points = MultiPoint(cis_data.T)
+    lat_lon_points = np.vstack([lats, lons])
+    points = MultiPoint(lat_lon_points.T)
 
-    # Perform the actual calculation
-    selection = region.intersection(points)
+    # Performance in this loop might be an issue, but I think it's essentially how GeoPandas does it. If I want to
+    #  improve it I might need to look at using something like rtree.
+    return [i for i, p in enumerate(points) if region.contains(p)]
 
-    # Pull out the indices
-    if selection.is_empty:
-        indices = []
-    else:
-        indices = np.asarray(selection).T[2].astype(np.int)
 
-    return ungridded_data[indices]
+def _get_ungridded_subset_region_indices(ungridded_data, region):
+    # We have to use flatten rather than flat, GEOS creates a copy of the data if it's a view anyway.
+    return _get_indices_for_lat_lon_points(ungridded_data.lon.data.flatten(), ungridded_data.lat.data.flatten(), region)
+
+
+def _get_gridded_subset_region_indices(gridded_data, region):
+    # Using X and Y is a bit more general than lat and lon - the shapefiles needn't actually represent lat/lon
+    x, y = np.meshgrid(gridded_data.coord(axis='X').points, gridded_data.coord(axis='Y').points)
+    return _get_indices_for_lat_lon_points(x.flat, y.flat, region)

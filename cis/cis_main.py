@@ -61,7 +61,7 @@ def info_cmd(main_arguments):
     """
     from cis.info import info
     dg = main_arguments.datagroups[0]
-    info(dg['filenames'], dg['variables'], dg.get('product', None), main_arguments.type)
+    info(dg['filenames'], dg.get('variables', None), dg.get('product', None), main_arguments.type)
 
 
 def col_cmd(main_arguments):
@@ -87,7 +87,7 @@ def col_cmd(main_arguments):
     kern_name, kern_options = main_arguments.samplegroup.get('kernel', ('', {}))
 
     missing_data_for_missing_sample = check_boolean(col_options.pop('missing_data_for_missing_sample',
-                                                                    missing_data_for_missing_sample), logging)
+                                                                    str(missing_data_for_missing_sample)), logging)
 
     kernel = get_kernel(kern_name)(**kern_options) if kern_name else None
 

@@ -134,7 +134,12 @@ class Metadata(object):
             try:
                 # Try some basic tidying up of unit
                 if isinstance(units, six.string_types):
-                    units = units.replace("since:", "since").replace(",", "").lower()
+                    if 'since' in units.lower():
+                        # Often this time since epoch units are weirdly capitalised, or include extra punctuation
+                        units = units.lower().replace("since:", "since").replace(",", "")
+                    else:
+                        # Replace number with 1 (e.g. #/cm3 == cm-3)
+                        units = units.replace('#', '1')
                 units = Unit(units)
             except ValueError:
                 logging.info("Unable to parse cf-units: {}. Some operations may not be available.".format(units))
@@ -212,17 +217,13 @@ class LazyData(object):
             else:
                 raise InvalidDataTypeError
 
-    def name(self):
+    def name(self, default='unknown'):
         """
-        This routine returns the first name property which is not empty out of: _name, standard_name and long_name.
-        If they are all empty it returns an empty string
+        This routine returns the first name property which is not empty out of: standard_name, long_name and var_name.
+        If they are all empty it returns the default string (which is 'unknown' by default).
         :return: The name of the data object as a string
         """
-
-        for name in [self.metadata._name, self.metadata.standard_name, self.metadata.long_name]:
-            if name:
-                return name
-        return ''
+        return self.standard_name or self.long_name or self.var_name or default
 
     @property
     def shape(self):
@@ -251,6 +252,10 @@ class LazyData(object):
     @property
     def var_name(self):
         return self.metadata._name
+
+    @var_name.setter
+    def var_name(self, var_name):
+        self.metadata._name = var_name
 
     @property
     def units(self):
@@ -748,9 +753,27 @@ class UngriddedData(LazyData, CommonData):
 
     def subset(self, **kwargs):
         """
-        Subset the CommonData object based on the specified constraints
-        :param kwargs:
-        :return:
+        Subset the data based on the specified constraints. Note that the limits are inclusive.
+
+        The subset region is defined by passing keyword arguments for each dimension to be subset over, each argument
+        must be a slice, or have two entries (a maximum and a minimum). Datetime objects can be used to specify upper
+        and lower datetime limits, or a single PartialDateTime object can be used to specify a datetime range.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(x=[0, 80], y=slice(10, 50))
+
+        or:
+            data.aggregate(t=PartialDateTime(2008,9))
+
+
+        A shape keyword can also be supplied as a WKT string or shapely object to subset in lat/lon by an arbitrary
+        shape. In this case the lat/lon bounds are taken as the bounding box of the shape.
+
+        :param kwargs: The constraints for each coordinate dimension
+        :return CommonData:
         """
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)

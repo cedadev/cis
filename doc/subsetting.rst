@@ -42,6 +42,11 @@ where:
       coordinates will be on the requested grid, not the grid of the source data.
 
     .. note::
+      An arbitrary lat/lon shape can also be provided using the ``shape`` limit and passing a valid WKT string as the
+      argument, e.g. ``shape=POLYGON((-10 50, 0 60, 10 50, 0 40, -10 50))``. See e.g.
+      https://en.wikipedia.org/wiki/Well-known_text for a description of the WKT format.
+
+    .. note::
       Date/times are specified in the format: ``YYYY-MM-DDThh:mm:ss`` in which ``YYYY-MM-DD`` is a date and ``hh:mm:ss``
       is a time. A colon or space can be used instead of the 'T' separator (but if a space is used, the argument must be
       quoted). Any trailing components of the date/time may be omitted. When a date/time is used as a range start, the

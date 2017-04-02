@@ -522,7 +522,10 @@ def get_subset_limits(subsetlimits, parser):
         # or
         # <dim_name>=[<start_value>]
         match = re.match(r'(?P<dim>[^=]+)=\[(?P<start>[^],]+)(?:,(?P<end>[^],]+))?\]$', seg)
-        if match is None or match.group('dim') is None or match.group('start') is None:
+        if seg.startswith('shape'):
+            # Don't use the regexp for this as it gets confused with the commas
+            limit_dict['shape'] = seg.split('=')[1]
+        elif match is None or match.group('dim') is None or match.group('start') is None:
             parser.error(
                 "A dimension for subsetting does not have dimension name, start value and/or end value specified")
         else:
@@ -629,7 +632,7 @@ def parse_colon_and_comma_separated_arguments(inputs, parser, options, compulsor
     return input_dicts
 
 
-def split_outside_brackets(input, seps=[','], brackets={'[': ']'}):
+def split_outside_brackets(input, seps=[','], brackets={'[': ']', '(': ')'}):
     """Splits an input string at separators that are not within brackets.
     :param input: input string to parse
     :param seps: list of separator characters - default: comma
@@ -808,14 +811,19 @@ def _validate_output_file(arguments, parser, default_ext='.nc'):
 def _file_already_exists_and_no_overwrite(arguments):
     from six.moves import input
     # If the file already exists, and we haven't set the overwrite flag or env var, then prompt
-    if os.path.isfile(arguments.output) and \
-            not (arguments.force_overwrite or os.environ.get("CIS_FORCE_OVERWRITE", "false").lower() == "true"):
-        overwrite = None
-        while overwrite not in ['y', 'n', '']:
-            overwrite = input("The file: {} already exists. Overwrite? (y/[n])")
-        if overwrite != 'y':
-            return True
-        # Otherwise False
+    if os.path.isfile(arguments.output):
+        overwrite_env = os.environ.get("CIS_FORCE_OVERWRITE", "").lower()
+        if arguments.force_overwrite:
+            return False
+        elif overwrite_env:
+            return overwrite_env == 'false'
+        else:
+            overwrite = None
+            while overwrite not in ['y', 'n', '']:
+                overwrite = input("The file: {} already exists. Overwrite? (y/[n])")
+            if overwrite != 'y':
+                return True
+            # Otherwise False
     return False
 
 
@@ -872,13 +880,17 @@ def validate_plot_args(arguments, parser):
 
 
 def validate_info_args(arguments, parser):
+    from collections import namedtuple
+    # See how many colon-split arguments there are (taking into account escaped colons)
     split_input = [re.sub(r'([\\]):', r':', word) for word in re.split(r'(?<!\\):', arguments.datagroups[0])]
     if len(split_input) == 1:
-        # If there is only one part of the datagroup then it must be a file (or list of files). Return it as a dict to
-        #  match the behaviour of the datagroup parser.
-        arguments.datagroups = [{'filenames': expand_file_list(arguments.datagroups[0], parser),
-                                 'variables': None, 'product': None}]
+        # If there is only one part of the datagroup then it must be a file (or list of files).
+        DatagroupOptions = namedtuple('DatagroupOptions', ["filenames"])
+        datagroup_options = DatagroupOptions(expand_file_list)
+        arguments.datagroups = parse_colon_and_comma_separated_arguments(arguments.datagroups, parser,
+                                                                         datagroup_options, compulsory_args=1)
     else:
+        # Otherwise it's a standard datagroup
         arguments.datagroups = get_basic_datagroups(arguments.datagroups, parser)
     return arguments
 
