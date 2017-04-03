@@ -1,3 +1,4 @@
+# cython: profile=True
 """
 Heavily modified, cython, version of the SciPy KD-tree implementation to calculate haversine distances.
 """
@@ -6,12 +7,12 @@ import scipy.sparse
 import numpy as np
 cimport numpy as np
 
-__all__ = ['haversine_distance', 'cHaversineDistanceKDTree']
+__all__ = ['haversine_distance', 'HaversineDistanceKDTree']
 
-RADIUS_EARTH = 6378.0
-HALF_PI = np.pi / 2.0
-PI = np.pi
-TWO_PI = np.pi * 2.0
+cdef np.float_t RADIUS_EARTH = 6378.0
+cdef np.float_t HALF_PI = np.pi / 2.0
+cdef np.float_t PI = np.pi
+cdef np.float_t TWO_PI = np.pi * 2.0
 
 
 cdef haversine_distance(float x_lat, float x_lon, float y_lat, float y_lon):
@@ -419,9 +420,9 @@ def _build(np.int_t[:] idx, np.float_t[:] maxes, np.float_t[:] mins, np.int_t le
             less_idx = np.arange(len(local_single_dim_points)-1)
             greater_idx = np.array([len(local_single_dim_points)-1])
 
-        lessmaxes = maxes[:]
+        lessmaxes = np.copy(maxes)
         lessmaxes[d] = split
-        greatermins = mins[:]
+        greatermins = np.copy(mins)
         greatermins[d] = split
 
         less_idx_vals = np.empty((len(less_idx), ), dtype=np.int)
