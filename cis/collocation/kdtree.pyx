@@ -344,12 +344,110 @@ cdef void traverse(object result,
         traverse(result, node1.greater, greater1, node2.greater, greater2, max_distance, self, other)
 
 
-class HaversineDistanceKDTree(object):
+def _build(np.int_t[:] idx, np.float_t[:] maxes, np.float_t[:] mins, np.int_t leafsize, np.float_t[:, :] data):
+
+    cdef np.int_t[:] less_idx_vals, greater_idx_vals
+    cdef np.float_t[:, :] local_data
+    cdef np.float_t[:] local_single_dim_points
+    cdef float split
+    cdef int n_points
+
+    n_points = len(idx)
+    local_data = np.empty((n_points, 2), dtype=np.float)
+
+    less_idx, greater_idx = [], []
+
+    if len(idx) <= leafsize:
+        return leafnode(idx)
+    else:
+        for i in range(n_points):
+            local_data[i] = data[idx[i]]
+
+        d = -1
+        local_max = 0.0
+        for i in range(2):
+            diff = maxes[i] - mins[i]
+            if diff > local_max:
+                local_max = diff
+                d = i
+        # Replaced by the loop above
+        # In which dimension is the biggest difference?
+        # d = np.argmax(maxes-mins)
+        # TODO: I'm not sure this is valid for Haversine distance trees - what about lon wraparound??
+        # What is that difference
+        maxval = maxes[d]
+        minval = mins[d]
+        if maxval == minval:
+            # all points are identical; warn user?
+            return leafnode(idx)
+        # Choose all the points in that dimension
+        local_single_dim_points = local_data[:, d]
+
+        # sliding midpoint rule; see Maneewongvatana and Mount 1999
+        # for arguments that this is a good idea.
+        # TODO: This won't work for longitudes either
+        split = (maxval+minval)/2
+        for i in range(n_points):
+            if local_single_dim_points[i] <= split:
+                less_idx.append(i)
+            else:
+                greater_idx.append(i)
+
+        if len(less_idx) == 0:
+            less_idx, greater_idx = [], []
+            split = np.amin(local_single_dim_points)
+
+            for i in range(n_points):
+                if local_single_dim_points[i] <= split:
+                    less_idx.append(i)
+                else:
+                    greater_idx.append(i)
+
+        if len(greater_idx) == 0:
+            less_idx, greater_idx = [], []
+
+            split = np.amax(local_single_dim_points)
+            for i in range(n_points):
+                if local_single_dim_points[i] < split:
+                    less_idx.append(i)
+                else:
+                    greater_idx.append(i)
+
+        if len(less_idx) == 0:
+            # _still_ zero? all must have the same value
+            split = local_single_dim_points[0]
+            less_idx = np.arange(len(local_single_dim_points)-1)
+            greater_idx = np.array([len(local_single_dim_points)-1])
+
+        lessmaxes = maxes[:]
+        lessmaxes[d] = split
+        greatermins = mins[:]
+        greatermins[d] = split
+
+        less_idx_vals = np.empty((len(less_idx), ), dtype=np.int)
+        greater_idx_vals = np.empty((len(greater_idx), ), dtype=np.int)
+
+        for i in range(len(less_idx)):
+            less_idx_vals[i] = idx[less_idx[i]]
+
+        for i in range(len(greater_idx)):
+            greater_idx_vals[i] = idx[greater_idx[i]]
+
+        return innernode(d, split,
+                _build(less_idx_vals,lessmaxes,mins,leafsize,data),
+                _build(greater_idx_vals,maxes,greatermins,leafsize,data))
+
+
+cdef class HaversineDistanceKDTree(object):
     """Modification of the scipy.spatial.KDTree class to allow querying for
     nearest neighbours measured by distance along the Earth's surface.
     """
+    cdef public np.float_t[:] maxes, mins
+    cdef public np.float_t[:, :] data
+    cdef public np.int_t m, n, leafsize
+    cdef public node tree
 
-    def __init__(self, np.ndarray data, np.ndarray mask, int leafsize=10):
+    def __init__(self, data, mask, int leafsize=10):
 
         self.data = data
         self.n, self.m = np.shape(self.data)
@@ -362,50 +460,7 @@ class HaversineDistanceKDTree(object):
         indices = np.arange(self.n)
         indices = np.ma.array(indices, mask=mask)
         indices = indices.compressed()
-        self.tree = self._build(indices, self.maxes, self.mins)
-
-    def _build(self, np.ndarray[np.int_t] idx, maxes, mins):
-
-        if len(idx) <= self.leafsize:
-            return leafnode(idx)
-        else:
-            data = self.data[idx]
-            d = np.argmax(maxes-mins)
-            maxval = maxes[d]
-            minval = mins[d]
-            if maxval == minval:
-                # all points are identical; warn user?
-                return leafnode(idx)
-            data = data[:,d]
-
-            # sliding midpoint rule; see Maneewongvatana and Mount 1999
-            # for arguments that this is a good idea.
-            split = (maxval+minval)/2
-            less_idx = np.nonzero(data <= split)[0]
-            greater_idx = np.nonzero(data > split)[0]
-            if len(less_idx) == 0:
-                split = np.amin(data)
-                less_idx = np.nonzero(data <= split)[0]
-                greater_idx = np.nonzero(data > split)[0]
-            if len(greater_idx) == 0:
-                split = np.amax(data)
-                less_idx = np.nonzero(data < split)[0]
-                greater_idx = np.nonzero(data >= split)[0]
-            if len(less_idx) == 0:
-                # _still_ zero? all must have the same value
-                if not np.all(data == data[0]):
-                    raise ValueError("Troublesome data array: %s" % data)
-                split = data[0]
-                less_idx = np.arange(len(data)-1)
-                greater_idx = np.array([len(data)-1])
-
-            lessmaxes = np.copy(maxes)
-            lessmaxes[d] = split
-            greatermins = np.copy(mins)
-            greatermins[d] = split
-            return innernode(d, split,
-                    self._build(idx[less_idx],lessmaxes,mins),
-                    self._build(idx[greater_idx],maxes,greatermins))
+        self.tree = _build(indices, self.maxes, self.mins, leafsize, data)
 
     def sparse_distance_matrix(self, other, max_distance):
         """
