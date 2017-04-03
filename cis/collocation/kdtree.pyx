@@ -6,6 +6,7 @@ import scipy.sparse
 
 import numpy as np
 cimport numpy as np
+from math import sqrt, sin, cos, asin
 
 __all__ = ['haversine_distance', 'HaversineDistanceKDTree']
 
@@ -13,21 +14,22 @@ cdef np.float_t RADIUS_EARTH = 6378.0
 cdef np.float_t HALF_PI = np.pi / 2.0
 cdef np.float_t PI = np.pi
 cdef np.float_t TWO_PI = np.pi * 2.0
+cdef np.float_t HALF_PI_DEGREES = np.pi / 180
 
 
-cdef haversine_distance(float x_lat, float x_lon, float y_lat, float y_lon):
+cdef float haversine_distance(float x_lat, float x_lon, float y_lat, float y_lon):
     """Computes the Haversine distance in kilometres between two points
     :param x: first point as array of latitude, longitude in radians
     :param y: second point as array of latitude, longitude in radians
     :return: distance between the two points in kilometres
     """
-    lat1 = x_lat * np.pi / 180
-    lat2 = y_lat * np.pi / 180
-    lon1 = x_lon * np.pi / 180
-    lon2 = y_lon * np.pi / 180
+    lat1 = x_lat * HALF_PI_DEGREES
+    lat2 = y_lat * HALF_PI_DEGREES
+    lon1 = x_lon * HALF_PI_DEGREES
+    lon2 = y_lon * HALF_PI_DEGREES
 
-    arclen = 2 * np.arcsin(np.sqrt((np.sin((lat2 - lat1) / 2)) ** 2 +
-                                   np.cos(lat1) * np.cos(lat2) * (np.sin((lon2 - lon1) / 2)) ** 2))
+    arclen = 2 * asin(sqrt((sin((lat2 - lat1) / 2)) ** 2 +
+                                   cos(lat1) * cos(lat2) * (sin((lon2 - lon1) / 2)) ** 2))
     return arclen * RADIUS_EARTH
 
 
@@ -313,7 +315,7 @@ cdef class innernode(node):
 cdef void traverse(object result,
                    node node1, RectangleHaversine rect1,
                    node node2, RectangleHaversine rect2,
-                   float max_distance, object self, object other):
+                   float max_distance, np.float_t[:, :] self_data, np.float_t[:, :] other_data):
 
     cdef int i, j
     cdef float d
@@ -324,25 +326,25 @@ cdef void traverse(object result,
         if isinstance(node2, leafnode):
             for i in node1.idx:
                 for j in node2.idx:
-                    d = haversine_distance(self.data[i, 0], self.data[i, 1], other.data[j, 0], other.data[j, 1])
+                    d = haversine_distance(self_data[i, 0], self_data[i, 1], other_data[j, 0], other_data[j, 1])
                     if d <= max_distance:
                         # Set the dict values directly to bypass the scipy type checking
                         dict.__setitem__(result, (i, j), d)
         else:
             less, greater = rect2.split(node2.split_dim, node2.split)
-            traverse(result, node1, rect1, node2.less, less, max_distance, self, other)
-            traverse(result, node1, rect1, node2.greater, greater, max_distance, self, other)
+            traverse(result, node1, rect1, node2.less, less, max_distance, self_data, other_data)
+            traverse(result, node1, rect1, node2.greater, greater, max_distance, self_data, other_data)
     elif isinstance(node2, leafnode):
         less, greater = rect1.split(node1.split_dim, node1.split)
-        traverse(result, node1.less, less, node2, rect2, max_distance, self, other)
-        traverse(result, node1.greater, greater, node2, rect2, max_distance, self, other)
+        traverse(result, node1.less, less, node2, rect2, max_distance, self_data, other_data)
+        traverse(result, node1.greater, greater, node2, rect2, max_distance, self_data, other_data)
     else:
         less1, greater1 = rect1.split(node1.split_dim, node1.split)
         less2, greater2 = rect2.split(node2.split_dim, node2.split)
-        traverse(result, node1.less, less1, node2.less, less2, max_distance, self, other)
-        traverse(result, node1.less, less1, node2.greater, greater2, max_distance, self, other)
-        traverse(result, node1.greater, greater1, node2.less, less2, max_distance, self, other)
-        traverse(result, node1.greater, greater1, node2.greater, greater2, max_distance, self, other)
+        traverse(result, node1.less, less1, node2.less, less2, max_distance, self_data, other_data)
+        traverse(result, node1.less, less1, node2.greater, greater2, max_distance, self_data, other_data)
+        traverse(result, node1.greater, greater1, node2.less, less2, max_distance, self_data, other_data)
+        traverse(result, node1.greater, greater1, node2.greater, greater2, max_distance, self_data, other_data)
 
 
 def _build(np.int_t[:] idx, np.float_t[:] maxes, np.float_t[:] mins, np.int_t leafsize, np.float_t[:, :] data):
@@ -485,7 +487,7 @@ cdef class HaversineDistanceKDTree(object):
         traverse(result,
                  self.tree, RectangleHaversine(self.maxes, self.mins),
                  other.tree, RectangleHaversine(other.maxes, other.mins),
-                 max_distance, self, other)
+                 max_distance, self.data, other.data)
 
         return result
 
