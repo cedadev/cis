@@ -6,6 +6,8 @@ from pkg_resources import require, DistributionNotFound, VersionConflict
 from cis.test.runner import nose_test
 from cis import __version__, __website__
 
+from Cython.Build import cythonize
+import numpy
 
 root_path = os.path.dirname(__file__)
 
@@ -76,5 +78,7 @@ setup(
               "test": nose_test},
     install_requires=dependencies,
     extras_require=optional_dependencies,
-    tests_require=test_dependencies
+    tests_require=test_dependencies,
+    ext_modules=cythonize("cis/collocation/kdtree.pyx"),
+    include_dirs=[numpy.get_include()]
 )

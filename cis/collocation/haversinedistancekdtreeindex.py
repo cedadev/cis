@@ -28,7 +28,7 @@ def create_index(data, leafsize=10):
     if hasattr(data, 'data'):
         mask = np.ma.getmask(data.data).ravel()
     else:
-        mask = None
+        mask = np.array(data.shape, dtype=bool)
     return HaversineDistanceKDTree(spatial_points, mask=mask, leafsize=leafsize)
 
 

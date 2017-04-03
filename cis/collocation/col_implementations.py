@@ -99,6 +99,7 @@ class GeneralUngriddedCollocator(Collocator):
             sample_enumerator = sample_points.enumerate_all_points
 
         # TODO: A ball-tree (such as in sklearn) might be more efficient here.
+        # TODO: This needs merging back into the constraint object
         distance_matrix = constraint.haversine_distance_kd_tree_index.get_distance_matrix(sample_points, constraint.h_sep)
 
         # values_only_df = data_points_df[data_points_df.columns[-1]].values
@@ -124,6 +125,8 @@ class GeneralUngriddedCollocator(Collocator):
         # df = pd.concat(dfs)
         # max_entries = max([len(x) for x in con_points])
         # np.concatenate([np.zeros(max_entries, dtype=bool), np.ones(max_entries), dtype=bool)])
+
+        # TODO: Figure out how to make this fit the current kernel structure
         values = np.mean(matrix,axis=1), np.mean(matrix,axis=1), np.std(matrix,axis=1)
 
         # for i, point in sample_enumerator():

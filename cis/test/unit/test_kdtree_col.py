@@ -3,7 +3,7 @@ import datetime as dt
 from hamcrest import *
 from nose.tools import istest, eq_
 import numpy as np
-from cis.collocation.kdtree import KDTree
+from cis.collocation.kdtree import leafnode
 
 import cis.data_io.gridded_data as gridded_data
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
@@ -111,11 +111,11 @@ class TestSepConstraint(object):
         # This should leave us with 4 points
         ref_vals = np.array([10, 11, 13, 14])
 
-        indices = constraint.haversine_distance_kd_tree_index.find_points_within_distance_sample(sample_points_view, 400)
+        indices = constraint.haversine_distance_kd_tree_index.get_distance_matrix(sample_points_view, 400)
 
-        new_vals = ug_data.data.flat[indices]
+        new_vals = ug_data.data.flat[[k[1] for k in sorted(indices.keys())]]
 
-        eq_(ref_vals.size, len(new_vals[0]))
+        eq_(ref_vals.size, new_vals.size)
         assert (np.equal(ref_vals, new_vals).all())
 
     @istest
@@ -202,7 +202,7 @@ class TestSepConstraint(object):
         assert (np.equal(ref_vals, new_vals).all())
 
     def get_max_depth(self, node, depth):
-        if isinstance(node, KDTree.leafnode):
+        if isinstance(node, leafnode):
             return depth
         return max(self.get_max_depth(node.less, depth + 1), self.get_max_depth(node.greater, depth + 1))
 
