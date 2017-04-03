@@ -110,6 +110,19 @@ class TestNNHorizontal(unittest.TestCase):
         eq_(new_data.data[2], 10.0)
         eq_(new_data.data[3], 4.0)
 
+    def test_coordinates_across_dateline_col_ungridded_to_ungridded_in_2d(self):
+        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
+
+        ug_data = mock.make_regular_2d_ungridded_data(lat_dim_length=1, lon_min=-175, lon_max=180)
+        sample_points = UngriddedData.from_points_array(
+            [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 175.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -175.5)])
+        col = GeneralUngriddedCollocator()
+        new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal())[0]
+        eq_(new_data.data[0], 12.0)
+        eq_(new_data.data[1], 6.0)
+        eq_(new_data.data[2], 10.0)
+        eq_(new_data.data[3], 4.0)
+
 
 class TestNNTime(unittest.TestCase):
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
