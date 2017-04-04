@@ -92,17 +92,7 @@ class GeneralUngriddedCollocator(Collocator):
         cell_count = 0
         total_count = 0
 
-        # Check if we want to sample missing points
-        if self.missing_data_for_missing_sample:
-            sample_enumerator = sample_points.enumerate_non_masked_points
-        else:
-            sample_enumerator = sample_points.enumerate_all_points
-
-        all_con_points_indices = constraint.haversine_distance_kd_tree_index.find_points_within_distance_sample(sample_points, constraint.h_sep)
-
-        values_only_df = data_points_df[data_points_df.columns[-1]].values
-
-        for i, point in sample_enumerator():
+        for i, point, con_points in constraint.get_iterator():
             # Log progress periodically.
             cell_count += 1
             if cell_count == 1000:
@@ -113,7 +103,6 @@ class GeneralUngriddedCollocator(Collocator):
             # FIXME this doesn't work for HyperPointListViews, perhaps Dataframes would be easier?
             # DataFrames work but are very slow... If we only need numbers then numpy arrays are fast.
 
-            con_points = values_only_df[all_con_points_indices[i]]
             try:
                 value_obj = kernel.get_value(point, con_points)
                 # Kernel returns either a single value or a tuple of values to insert into each output variable.
@@ -322,17 +311,15 @@ class SepConstraintKdtree(PointConstraint):
                 raise InvalidCommandLineOptionError(e)
             self.checks.append(self.time_constraint)
 
-    def time_constraint(self, point, ref_point):
-        return point.time_sep(ref_point) < self.t_sep
+    def time_constraint(self, points, ref_point):
+        return np.argwhere(np.abs(points.time - ref_point.time) < self.t_sep)
 
-    def alt_constraint(self, point, ref_point):
-        return point.alt_sep(ref_point) < self.a_sep
+    def alt_constraint(self, points, ref_point):
+        return np.argwhere(np.abs(points.altitude - ref_point.altitude) < self.t_sep)
 
     def pressure_constraint(self, point, ref_point):
+        # TODO
         return point.pres_sep(ref_point) < self.p_sep
-
-    def horizontal_constraint(self, point, ref_point):
-        return point.haversine_dist(ref_point) < self.h_sep
 
     def constrain_points(self, ref_point, data):
         con_points = HyperPointList()
@@ -361,6 +348,60 @@ class SepConstraintKdtree(PointConstraint):
     def _add_cached_indices(self, ref_point, indices):
         key = ref_point[0:5]  # Don't use the value as a key (it's both irrelevant and un-hashable)
         self._index_cache[key] = indices
+
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
+        from cis.collocation.col_framework import index_iterator_for_non_masked_data, index_iterator_nditer
+        indices = False
+
+        if missing_data_for_missing_sample:
+            iterator = index_iterator_for_non_masked_data(shape, points)
+        else:
+            iterator = index_iterator_nditer(shape, output_data[0])
+
+        if self.haversine_distance_kd_tree_index and self.h_sep:
+
+            indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points, self.h_sep)
+
+        for i in iterator:
+            p = points[i]
+            if indices:
+                # Note that data_points has to be a dataframe at this point because of the indexing
+                d_points = data_points[indices[i]]
+            else:
+                d_points = data_points
+            for check in self.checks:
+                con_points_indices = check(d_points, p)
+                d_points = d_points[con_points_indices]
+
+            yield i, p, d_points
+
+    def get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape,
+                                   points,
+                                   values):
+        """
+        The method returns an iterator over the output indices and a numpy array slice of the data values. This may not
+        be called by all collocators who may choose to iterate over all sample points instead.
+
+        :param missing_data_for_missing_sample: If true anywhere there is missing data on the sample then final point is
+         missing; otherwise just use the sample
+        :param coord_map: Not needed for the data only kernel
+        :param coords: Not needed for the data only kernel
+        :param data_points: The (non-masked) data points
+        :param shape: Not needed
+        :param points: The original points object, these are the points to collocate
+        :param values: Not needed
+        :return: Iterator which iterates through (sample indices and data slice) to be placed in these points
+        """
+        data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
+        if missing_data_for_missing_sample:
+            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+                if points.data[out_indices] is not np.ma.masked:
+                    data_slice = data_points_sorted[slice(*slice_start_end)]
+                    yield out_indices, data_slice
+        else:
+            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
+                data_slice = data_points_sorted[slice(*slice_start_end)]
+                yield out_indices, data_slice
 
 
 # noinspection PyPep8Naming
@@ -920,6 +961,7 @@ class GeneralGriddedCollocator(Collocator):
 
 
 class CubeCellConstraint(CellConstraint):
+    #TODO Delete me
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
     """
 
@@ -943,6 +985,7 @@ class CubeCellConstraint(CellConstraint):
 
 
 class BinningCubeCellConstraint(IndexedConstraint):
+    #TODO Delete me
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
 
     Uses the index_data method to bin all the points
