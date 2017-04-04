@@ -262,6 +262,6 @@ A list of available colour maps for 3D plots, such as heatmaps, scatter and cont
 For a list of available scatter point styles, see here: `scatter point styles`_.
 
 .. _`html colour`: http://www.w3schools.com/html/html_colornames.asp
-.. _`colour maps`: http://www.scipy.org/Cookbook/Matplotlib/Show_colormaps
+.. _`colour maps`: http://scipy-cookbook.readthedocs.io/items/Matplotlib_Show_colormaps.html
 .. _`scatter point styles`: http://matplotlib.org/api/markers_api.html#module-matplotlib.markers
 

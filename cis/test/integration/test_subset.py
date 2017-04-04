@@ -25,6 +25,19 @@ class TestSubsetIntegration(BaseIntegrationTest):
         self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
 
+    def test_GIVEN_shape_WHEN_subset_ungridded_data_THEN_subsetted_correctly(self):
+        variable = valid_aerosol_cci_variable
+        filename = valid_aerosol_cci_filename
+        lon_min, lon_max = -10, 10
+        lat_min, lat_max = 40, 60
+        shape_wkt = "POLYGON((-10 50, 0 60, 10 50, 0 40, -10 50))"
+        arguments = ['subset', variable + ':' + escape_colons(filename),
+                     'shape=%s' % shape_wkt, '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        subset_cmd(main_arguments)
+        self.check_latlon_subsetting(lat_max, lat_min, lon_max, lon_min)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, [variable])
+
     def test_GIVEN_single_variable_as_var_name_in_ungridded_file_WHEN_subset_THEN_subsetted_correctly(self):
         variable = valid_aerosol_cci_variable
         filename = valid_aerosol_cci_filename

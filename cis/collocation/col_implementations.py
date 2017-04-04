@@ -46,8 +46,6 @@ class GeneralUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        metadata = data.metadata
-
         sample_points = points.get_all_points()
 
         data_points = data.get_non_masked_points()
@@ -76,9 +74,9 @@ class GeneralUngriddedCollocator(Collocator):
         logging.info("--> Collocating...")
 
         # Create output arrays.
-        self.var_name = data.name()
-        self.var_long_name = metadata.long_name
-        self.var_standard_name = metadata.standard_name
+        self.var_name = data.var_name
+        self.var_long_name = data.long_name
+        self.var_standard_name = data.standard_name
         self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
                                                       self.var_standard_name, self.var_units)
@@ -202,7 +200,7 @@ class GriddedUngriddedCollocator(Collocator):
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
-        metadata = Metadata(self.var_name or data.name(), long_name=self.var_long_name or data.metadata.long_name,
+        metadata = Metadata(self.var_name or data.var_name, long_name=self.var_long_name or data.long_name,
                             shape=values.shape, missing_value=self.fill_value, units=self.var_units or data.units)
         set_standard_name_if_valid(metadata, data.standard_name)
         return_data = UngriddedDataList([UngriddedData(values, metadata, points.coords())])

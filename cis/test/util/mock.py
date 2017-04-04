@@ -12,6 +12,8 @@ from cis.data_io.common_data import CommonData
 from cis.data_io.hyperpoint import HyperPointList
 from cis.time_util import convert_datetime_to_std_time
 
+WKT_DIAMOND = "POLYGON ((-5.5 0, 0 5.5, 5.5 0, 0 -5.5, -5.5 0))"
+
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
                    time_dim_length=0,
@@ -127,7 +129,8 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
         data = np.ma.asarray(data)
         data.mask = mask
 
-    return_cube = Cube(data, dim_coords_and_dims=coord_list)
+    return_cube = Cube(data, dim_coords_and_dims=coord_list, var_name='rain', standard_name='rainfall_rate',
+                       long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1")
 
     if hybrid_ht_len:
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 40,
