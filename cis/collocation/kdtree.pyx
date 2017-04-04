@@ -1,4 +1,4 @@
-# cython: profile=True
+# cython: boundscheck=False, wraparound=False, nonecheck=False
 """
 Heavily modified, cython, version of the SciPy KD-tree implementation to calculate haversine distances.
 """
@@ -6,18 +6,18 @@ import scipy.sparse
 
 import numpy as np
 cimport numpy as np
-from math import sqrt, sin, cos, asin
+from libc.math cimport sqrt, sin, cos, asin, pi
 
 __all__ = ['haversine_distance', 'HaversineDistanceKDTree']
 
-cdef np.float_t RADIUS_EARTH = 6378.0
-cdef np.float_t HALF_PI = np.pi / 2.0
-cdef np.float_t PI = np.pi
-cdef np.float_t TWO_PI = np.pi * 2.0
-cdef np.float_t HALF_PI_DEGREES = np.pi / 180
+cdef double RADIUS_EARTH = 6378.0
+cdef double HALF_PI = pi / 2.0
+cdef double PI = pi
+cdef double TWO_PI = pi * 2.0
+cdef double HALF_PI_DEGREES = pi / 180
 
 
-cdef float haversine_distance(float x_lat, float x_lon, float y_lat, float y_lon):
+cdef double haversine_distance(double x_lat, double x_lon, double y_lat, double y_lon):
     """Computes the Haversine distance in kilometres between two points
     :param x: first point as array of latitude, longitude in radians
     :param y: second point as array of latitude, longitude in radians
@@ -353,7 +353,7 @@ def _build(np.int_t[:] idx, np.float_t[:] maxes, np.float_t[:] mins, np.int_t le
     cdef np.float_t[:, :] local_data
     cdef np.float_t[:] local_single_dim_points
     cdef float split
-    cdef int n_points
+    cdef int n_points, d, i
 
     n_points = len(idx)
     local_data = np.empty((n_points, 2), dtype=np.float)
@@ -367,12 +367,12 @@ def _build(np.int_t[:] idx, np.float_t[:] maxes, np.float_t[:] mins, np.int_t le
             local_data[i] = data[idx[i]]
 
         d = -1
-        local_max = 0.0
-        for i in range(2):
-            diff = maxes[i] - mins[i]
+        local_max = -np.inf
+        for d_i in range(2):
+            diff = maxes[d_i] - mins[d_i]
             if diff > local_max:
                 local_max = diff
-                d = i
+                d = d_i
         # Replaced by the loop above
         # In which dimension is the biggest difference?
         # d = np.argmax(maxes-mins)
