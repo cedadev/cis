@@ -83,31 +83,27 @@ class GeneralUngriddedCollocator(Collocator):
 
         logging.info("    {} sample points".format(sample_points_count))
         # Apply constraint and/or kernel to each sample point.
-        cell_count = 0
-        total_count = 0
 
-        for i, point, con_points in constraint.get_iterator(self.missing_data_for_missing_sample, None, None,
+        if isinstance(kernel, nn_horizontal_kdtree):
+            values[0, :] = kernel.get_value(sample_points, data_points)
+        else:
+            for i, point, con_points in constraint.get_iterator(self.missing_data_for_missing_sample, None, None,
                                                             data_points, None, sample_points, None):
-            # Log progress periodically.
-            cell_count += 1
-            if cell_count == 1000:
-                total_count += cell_count
-                cell_count = 0
-                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
 
-            try:
-                value_obj = kernel.get_value(point, con_points)
-                # Kernel returns either a single value or a tuple of values to insert into each output variable.
-                if isinstance(value_obj, tuple):
-                    for idx, val in enumerate(value_obj):
-                        if not np.isnan(val):
-                            values[idx, i] = val
-                else:
-                    values[0, i] = value_obj
-            except CoordinateMultiDimError as e:
-                raise NotImplementedError(e)
-            except ValueError as e:
-                pass
+                try:
+                    value_obj = kernel.get_value(point, con_points)
+                    # Kernel returns either a single value or a tuple of values to insert into each output variable.
+                    # TODO, this could be tidied up I think
+                    if isinstance(value_obj, tuple):
+                        for idx, val in enumerate(value_obj):
+                            if not np.isnan(val):
+                                values[idx, i] = val
+                    else:
+                        values[0, i] = value_obj
+                except CoordinateMultiDimError as e:
+                    raise NotImplementedError(e)
+                except ValueError as e:
+                    pass
         log_memory_profile("GeneralUngriddedCollocator after running kernel on sample points")
 
         return_data = UngriddedDataList()
@@ -339,12 +335,24 @@ class SepConstraintKdtree(PointConstraint):
         self._index_cache[tuple(ref_point[['latitude', 'longitude']].values)] = indices
 
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
+        cell_count = 0
+        total_count = 0
+        sample_points_count = len(points)
+
         indices = False
 
         if self.haversine_distance_kd_tree_index and self.h_sep:
             indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points, self.h_sep)
 
         for i, p in points.iterrows():
+
+            # Log progress periodically.
+            cell_count += 1
+            if cell_count == 1000:
+                total_count += cell_count
+                cell_count = 0
+                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
+
             # If missing_data_for_missing_sample
             if not (missing_data_for_missing_sample and (hasattr(p, 'vals') and np.isnan(p.vals))):
                 if indices:
@@ -356,34 +364,6 @@ class SepConstraintKdtree(PointConstraint):
                     d_points = d_points.iloc[check(d_points, p)]
 
                 yield i, p, d_points
-
-    def get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape,
-                                   points,
-                                   values):
-        """
-        The method returns an iterator over the output indices and a numpy array slice of the data values. This may not
-        be called by all collocators who may choose to iterate over all sample points instead.
-
-        :param missing_data_for_missing_sample: If true anywhere there is missing data on the sample then final point is
-         missing; otherwise just use the sample
-        :param coord_map: Not needed for the data only kernel
-        :param coords: Not needed for the data only kernel
-        :param data_points: The (non-masked) data points
-        :param shape: Not needed
-        :param points: The original points object, these are the points to collocate
-        :param values: Not needed
-        :return: Iterator which iterates through (sample indices and data slice) to be placed in these points
-        """
-        data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
-        if missing_data_for_missing_sample:
-            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
-                if points.data[out_indices] is not np.ma.masked:
-                    data_slice = data_points_sorted[slice(*slice_start_end)]
-                    yield out_indices, data_slice
-        else:
-            for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
-                data_slice = data_points_sorted[slice(*slice_start_end)]
-                yield out_indices, data_slice
 
 
 # noinspection PyPep8Naming
@@ -510,17 +490,13 @@ class nn_horizontal_kdtree(Kernel):
     def __init__(self):
         self.haversine_distance_kd_tree_index = None
 
-    def get_value(self, point, data):
+    def get_value(self, points, data):
         """
         Collocation using nearest neighbours along the face of the earth using a k-D tree index.
         """
-        nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(point)
-        if nearest_index is None:
-            raise ValueError
-        if nearest_index > len(data):
-            pass
-        nearest_point = data[nearest_index]
-        return nearest_point.val[0]
+        nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(points)
+        nearest_points = data.iloc[nearest_index]
+        return nearest_points.vals
 
 
 class nn_altitude(Kernel):

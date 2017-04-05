@@ -33,19 +33,19 @@ class HaversineDistanceKDTreeIndex(object):
         :param coord_map: (not used) list of tuples relating index in HyperPoint
                           to index in sample point coords and in coords to be output
         """
-        self.index = create_index(data, leafsize=leafsize)
+        try:
+            self.index = create_index(data, leafsize=leafsize)
+        except KeyError:
+            pass # Unable to create index
 
     def find_nearest_point(self, point):
         """Finds the indexed point nearest to a specified point.
         :param point: point for which the nearest point is required
         :return: index in data of closest point
         """
-        query_pt = [[point.latitude, point.longitude]]
+        query_pt = point[['latitude', 'longitude']]
         (distances, indices) = self.index.query(query_pt)
-        if distances[0] == np.inf:
-            return None
-        else:
-            return indices[0]
+        return indices
 
     def find_points_within_distance(self, point, distance):
         """Finds the points within a specified distance of a specified point.
