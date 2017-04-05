@@ -46,21 +46,15 @@ class GeneralUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        sample_points = points.get_all_points()
+        sample_points = points.as_data_frame(time_index=False, name='vals')
+        data_points = data.as_data_frame(time_index=False, name='vals').dropna(axis=0)
 
-        data_points = data.get_non_masked_points()
-
-        # TODO This really duplicates the above...
-        data_points_df = data.as_data_frame()
-        data_points_df.dropna(axis=1, inplace=True)
-
-        print(len(data_points_df))
         print(len(data_points))
 
-        # First fix the sample points so that they all fall within the same 360 degree longitude range
-        _fix_longitude_range(points.coords(), sample_points)
-        # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
         # TODO This doesn't work for dataframes
+        # First fix the sample points so that they all fall within the same 360 degree longitude range
+        # _fix_longitude_range(points.coords(), sample_points)
+        # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
         # _fix_longitude_range(points.coords(), data_points)
 
         log_memory_profile("GeneralUngriddedCollocator after data retrieval")
@@ -92,16 +86,14 @@ class GeneralUngriddedCollocator(Collocator):
         cell_count = 0
         total_count = 0
 
-        for i, point, con_points in constraint.get_iterator():
+        for i, point, con_points in constraint.get_iterator(self.missing_data_for_missing_sample, None, None,
+                                                            data_points, None, sample_points, None):
             # Log progress periodically.
             cell_count += 1
             if cell_count == 1000:
                 total_count += cell_count
                 cell_count = 0
                 logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
-
-            # FIXME this doesn't work for HyperPointListViews, perhaps Dataframes would be easier?
-            # DataFrames work but are very slow... If we only need numbers then numpy arrays are fast.
 
             try:
                 value_obj = kernel.get_value(point, con_points)
@@ -312,68 +304,58 @@ class SepConstraintKdtree(PointConstraint):
             self.checks.append(self.time_constraint)
 
     def time_constraint(self, points, ref_point):
-        return np.argwhere(np.abs(points.time - ref_point.time) < self.t_sep)
+        return np.nonzero(np.abs(points.time - ref_point.time) < self.t_sep)[0]
 
     def alt_constraint(self, points, ref_point):
-        return np.argwhere(np.abs(points.altitude - ref_point.altitude) < self.t_sep)
+        return np.nonzero(np.abs(points.altitude - ref_point.altitude) < self.a_sep)[0]
 
-    def pressure_constraint(self, point, ref_point):
-        # TODO
-        return point.pres_sep(ref_point) < self.p_sep
+    def pressure_constraint(self, points, ref_point):
+        greater_pressures = np.nonzero(((points.air_pressure / ref_point.air_pressure) < self.p_sep) &
+                                       (points.air_pressure > ref_point.air_pressure))[0]
+        lesser_pressures = np.nonzero(((ref_point.air_pressure / points.air_pressure) < self.p_sep) &
+                                      (points.air_pressure <= ref_point.air_pressure))[0]
+        return np.concatenate([lesser_pressures, greater_pressures])
 
     def constrain_points(self, ref_point, data):
-        con_points = HyperPointList()
         if self.haversine_distance_kd_tree_index and self.h_sep:
             point_indices = self._get_cached_indices(ref_point)
             if point_indices is None:
                 point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
                 self._add_cached_indices(ref_point, point_indices)
-            for idx in point_indices:
-                point = data[idx]
-                if all(check(point, ref_point) for check in self.checks):
-                    con_points.append(point)
+            con_points = data.iloc[point_indices]
         else:
-            for point in data:
-                if all(check(point, ref_point) for check in self.checks):
-                    con_points.append(point)
+            con_points = data
+        for check in self.checks:
+            con_points = con_points.iloc[check(con_points, ref_point)]
+
         return con_points
 
     def _get_cached_indices(self, ref_point):
-        key = ref_point[0:5]  # Don't use the value as a key (it's both irrelevant and un-hashable)
-        try:
-            return self._index_cache[key]
-        except KeyError:
-            return None
+        # Don't use the value as a key (it's both irrelevant and un-hashable)
+        return self._index_cache.get(tuple(ref_point[['latitude', 'longitude']].values), None)
 
     def _add_cached_indices(self, ref_point, indices):
-        key = ref_point[0:5]  # Don't use the value as a key (it's both irrelevant and un-hashable)
-        self._index_cache[key] = indices
+        # Don't use the value as a key (it's both irrelevant and un-hashable)
+        self._index_cache[tuple(ref_point[['latitude', 'longitude']].values)] = indices
 
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
-        from cis.collocation.col_framework import index_iterator_for_non_masked_data, index_iterator_nditer
         indices = False
 
-        if missing_data_for_missing_sample:
-            iterator = index_iterator_for_non_masked_data(shape, points)
-        else:
-            iterator = index_iterator_nditer(shape, output_data[0])
-
         if self.haversine_distance_kd_tree_index and self.h_sep:
-
             indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points, self.h_sep)
 
-        for i in iterator:
-            p = points[i]
-            if indices:
-                # Note that data_points has to be a dataframe at this point because of the indexing
-                d_points = data_points[indices[i]]
-            else:
-                d_points = data_points
-            for check in self.checks:
-                con_points_indices = check(d_points, p)
-                d_points = d_points[con_points_indices]
+        for i, p in points.iterrows():
+            # If missing_data_for_missing_sample
+            if not (missing_data_for_missing_sample and (hasattr(p, 'vals') and np.isnan(p.vals))):
+                if indices:
+                    # Note that data_points has to be a dataframe at this point because of the indexing
+                    d_points = data_points.iloc[indices[i]]
+                else:
+                    d_points = data_points
+                for check in self.checks:
+                    d_points = d_points.iloc[check(d_points, p)]
 
-            yield i, p, d_points
+                yield i, p, d_points
 
     def get_iterator_for_data_only(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape,
                                    points,
@@ -511,16 +493,17 @@ class nn_horizontal(Kernel):
             Collocation using nearest neighbours along the face of the earth where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+        from cis.collocation.kdtree import haversine
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.compdist(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if (haversine(point, nearest_point) > haversine(point, data_point)):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
 class nn_horizontal_kdtree(Kernel):
@@ -546,34 +529,46 @@ class nn_altitude(Kernel):
             Collocation using nearest neighbours in altitude, where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.compalt(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if abs(point.altitude - nearest_point.altitude) > abs(point.altitude - data_point.altitude):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
 class nn_pressure(Kernel):
+
+
     def get_value(self, point, data):
         """
             Collocation using nearest neighbours in pressure, where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+
+        def pres_sep(point1, point2):
+            """
+                Computes the pressure ratio between two points, this is always >= 1.
+            """
+            if point1.air_pressure > point2.air_pressure:
+                return point1.air_pressure / point2.air_pressure
+            else:
+                return point2.air_pressure / point1.air_pressure
+
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.comppres(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if pres_sep(point, nearest_point) > pres_sep(point, data_point):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
 class nn_time(Kernel):
@@ -582,16 +577,16 @@ class nn_time(Kernel):
             Collocation using nearest neighbours in time, where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.comptime(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if abs(point.time - nearest_point.time) > abs(point.time - data_point.time):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
 # These classes act as abbreviations for kernel classes above:

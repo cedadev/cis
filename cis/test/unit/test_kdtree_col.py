@@ -1,10 +1,11 @@
 import datetime as dt
+import pandas as pd
 
 from hamcrest import *
 from nose.tools import istest, eq_
 import numpy as np
 from cis.collocation.kdtree import KDTree
-
+from cis.time_util import cis_standard_time_unit
 import cis.data_io.gridded_data as gridded_data
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import UngriddedData
@@ -91,11 +92,11 @@ class TestSepConstraint(object):
         from cis.data_io.Coord import Coord, CoordList
         from cis.data_io.ungridded_data import Metadata
         ug_data = mock.make_regular_2d_ungridded_data()
-        ug_data_points = ug_data.get_non_masked_points()
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
         sample_points = UngriddedData(np.array([0.0]), Metadata(),
                                       CoordList([Coord(np.array([7.5]), Metadata(standard_name='latitude')),
                                                  Coord(np.array([-2.5]), Metadata(standard_name='longitude'))]))
-        sample_points_view = sample_points.get_all_points()
+        sample_points_view = sample_points.as_data_frame(time_index=False, name='vals').dropna(axis=1)
         # sample_point = HyperPoint(lat=7.5, lon=-2.5)
         # sample_points = HyperPointList([sample_point])
         coord_map = None
@@ -121,7 +122,7 @@ class TestSepConstraint(object):
     @istest
     def test_horizontal_constraint_in_2d_with_missing_values(self):
         ug_data = mock.make_regular_2d_ungridded_data_with_missing_values()
-        ug_data_points = ug_data.get_non_masked_points()
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=0)
         coord_map = None
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
@@ -133,13 +134,13 @@ class TestSepConstraint(object):
         index.index_data(sample_points, ug_data_points, coord_map, leafsize=2)
         constraint.haversine_distance_kd_tree_index = index
 
-        for sample_point in ug_data.get_all_points():
+        for i, sample_point in ug_data.as_data_frame(time_index=False, name='vals').iterrows():
             new_points = constraint.constrain_points(sample_point, ug_data_points)
             new_vals = new_points.vals
-            if sample_point.val[0] is np.ma.masked:
+            if np.isnan(sample_point.vals):
                 ref_vals = np.array([])
             else:
-                ref_vals = np.array([sample_point.val])
+                ref_vals = np.array([sample_point.vals])
 
             eq_(ref_vals.size, new_vals.size)
             assert (np.equal(ref_vals, new_vals).all())
@@ -147,9 +148,9 @@ class TestSepConstraint(object):
     @istest
     def test_horizontal_constraint_in_4d(self):
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
-        sample_points = HyperPointList([sample_point])
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
+        sample_points = pd.DataFrame(data={'longitude': [0.0], 'latitude': [0.0], 'altitude': [50.0],
+                                              'time': [dt.datetime(1984, 8, 29)]})
         coord_map = None
 
         # Constraint distance selects the central three points.
@@ -162,7 +163,7 @@ class TestSepConstraint(object):
         # This should leave us with 30 points
         ref_vals = np.reshape(np.arange(50) + 1.0, (10, 5))[:, 1:4].flatten()
 
-        new_points = constraint.constrain_points(sample_point, ug_data_points)
+        new_points = constraint.constrain_points(sample_points.iloc[0], ug_data_points)
         new_vals = np.sort(new_points.vals)
 
         eq_(ref_vals.size, new_vals.size)
@@ -171,9 +172,10 @@ class TestSepConstraint(object):
     @istest
     def test_all_constraints_in_4d(self):
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, pres=50.0, t=dt.datetime(1984, 8, 29))
-
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
+        sample_point = pd.DataFrame(data={'longitude': [0.0], 'latitude': [0.0], 'altitude': [50.0],
+                                          'air_pressure': [50.0],
+                                          'time': [cis_standard_time_unit.date2num(dt.datetime(1984, 8, 29))]}).iloc[0]
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         #  in each direction
         h_sep = 1000
@@ -209,9 +211,8 @@ class TestSepConstraint(object):
     @istest
     def test_horizontal_constraint_in_2d_when_lats_are_the_same_produces_a_balanced_tree(self):
         ug_data = mock.make_regular_2d_ungridded_data(lat_dim_length=1001, lat_max=10, lat_min=10)
-        ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=7.5, lon=-2.5)
-        sample_points = HyperPointList([sample_point])
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
+        sample_points = pd.DataFrame(data={'longitude': [-2.5], 'latitude': [7.5]})
         coord_map = None
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
@@ -238,9 +239,9 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
-
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
+        sample_point = pd.Series({'longitude': [0.0], 'latitude': [0.0], 'altitude':[50.0],
+                                  'time': [cis_standard_time_unit.date2num(dt.datetime(1984, 8, 29))]})
         # 15m altitude separation
         a_sep = 15
 
@@ -264,8 +265,9 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
+        sample_point = pd.Series({'longitude': [0.0], 'latitude': [0.0], 'altitude':[50.0],
+                                  'time': [cis_standard_time_unit.date2num(dt.datetime(1984, 8, 29))]})
 
         # 1 day (and a little bit) time seperation
         constraint = SepConstraintKdtree(t_sep='P1dT1M')
@@ -286,9 +288,9 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
         import numpy as np
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0, 24.0, dt.datetime(1984, 8, 29))
-
+        ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
+        sample_point = pd.Series({'longitude': [0.0], 'latitude': [0.0], 'altitude':[50.0], 'air_pressure': [24.0],
+                                  'time': [cis_standard_time_unit.date2num(dt.datetime(1984, 8, 29))]})
         constraint = SepConstraintKdtree(p_sep=2)
 
         # This should leave us with 20 points:  [  6.   7.   8.   9.  10.]
@@ -303,83 +305,6 @@ class TestSepConstraintWithoutHorizontalSeparation(object):
 
         eq_(ref_vals.size, new_vals.size)
         assert (np.equal(ref_vals, new_vals).all())
-
-
-class TestSepConstraintWithGriddedData(object):
-    @istest
-    def test_horizontal_constraint_for_same_2d_grids_returns_original_data(self):
-        # Simple case of lat/lon grid with dimensions in that order.
-        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube())
-        data_cube = gridded_data.make_from_cube(mock.make_mock_cube())
-
-        data_points = data_cube.get_non_masked_points()
-
-        sample_points = sample_cube.get_all_points()
-        coord_map = make_coord_map(sample_cube, data_cube)
-
-        # Make separation constraint small enough to include only the corresponding point in the data cube.
-        constraint = SepConstraintKdtree(h_sep=400)
-
-        index = HaversineDistanceKDTreeIndex()
-        index.index_data(sample_points, data_points, coord_map, leafsize=2)
-        constraint.haversine_distance_kd_tree_index = index
-
-        for idx, sample_point in enumerate(sample_points):
-            out_points = constraint.constrain_points(sample_point, data_points)
-            assert (len(out_points) == 1)
-            assert (out_points[0].val[0] == data_points[idx].val[0])
-
-    @istest
-    def test_horizontal_constraint_for_same_3d_grids_returns_original_data(self):
-        # Create sample and data cubes that include a time coordinate with the dimensions in reverse of normal order.
-        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube(
-            lat_dim_length=5, lon_dim_length=3, time_dim_length=2, dim_order=['time', 'lon', 'lat']))
-        data_cube = gridded_data.make_from_cube(mock.make_mock_cube(
-            lat_dim_length=5, lon_dim_length=3, time_dim_length=2, dim_order=['time', 'lon', 'lat']))
-
-        data_points = data_cube.get_non_masked_points()
-
-        sample_points = sample_cube.get_all_points()
-        coord_map = make_coord_map(sample_cube, data_cube)
-
-        # Make separation constraint small enough to include only the corresponding point in the data cube.
-        constraint = SepConstraintKdtree(h_sep=400)
-
-        index = HaversineDistanceKDTreeIndex()
-        index.index_data(sample_points, data_points, coord_map, leafsize=2)
-        constraint.haversine_distance_kd_tree_index = index
-
-        for idx, sample_point in enumerate(sample_points):
-            out_points = constraint.constrain_points(sample_point, data_points)
-            # Two times for each spatial position.
-            assert (len(out_points) == 2)
-            assert (data_points[idx].val[0] in [p.val[0] for p in out_points])
-
-    @istest
-    def test_horizontal_constraint_in_2d_with_missing_values(self):
-        # Test with standard 2d grids but with missing data.
-        sample_cube = gridded_data.make_from_cube(mock.make_mock_cube())
-        data_cube = gridded_data.make_from_cube(mock.make_square_5x3_2d_cube_with_missing_data())
-
-        data_points = data_cube.get_non_masked_points()
-
-        sample_points = sample_cube.get_all_points()
-        coord_map = make_coord_map(sample_cube, data_cube)
-
-        # Make separation constraint small enough to include only the corresponding point in the data cube.
-        constraint = SepConstraintKdtree(h_sep=400)
-
-        index = HaversineDistanceKDTreeIndex()
-        index.index_data(sample_points, data_points, coord_map, leafsize=2)
-        constraint.haversine_distance_kd_tree_index = index
-
-        for idx, sample_point in enumerate(sample_points):
-            out_points = constraint.constrain_points(sample_point, data_points)
-            if data_points[idx].val[0] is np.ma.masked:
-                assert (len(out_points) == 0)
-            else:
-                assert (len(out_points) == 1)
-                assert (out_points[0].val[0] == data_points[idx].val[0])
 
 
 if __name__ == '__main__':

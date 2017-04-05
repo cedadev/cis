@@ -10,21 +10,7 @@ def create_index(data, leafsize=10):
 
     :param data: list of HyperPoints to index
     """
-    if len(data.coords[0].shape) > 1:
-        # Flatten coordinates.
-        lat_idx = [key for key, value in list(data.dims_to_std_coords_map.items())
-                   if value == HyperPoint.LATITUDE][0]
-        lon_idx = [key for key, value in list(data.dims_to_std_coords_map.items())
-                   if value == HyperPoint.LONGITUDE][0]
-        flattened_coords = np.meshgrid(*data.coords, indexing='ij')
-        lat = flattened_coords[lat_idx].ravel()
-        lon = flattened_coords[lon_idx].ravel()
-    else:
-        lat = data.coords[HyperPoint.LATITUDE]
-        lon = data.coords[HyperPoint.LONGITUDE]
-    spatial_points = np.ma.empty((len(data), 2))
-    spatial_points[:, 0] = lat
-    spatial_points[:, 1] = lon
+    spatial_points = data[['latitude', 'longitude']]
     if hasattr(data, 'data'):
         mask = np.ma.getmask(data.data).ravel()
     else:

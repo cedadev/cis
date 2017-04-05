@@ -604,19 +604,19 @@ class UngriddedData(LazyData, CommonData):
                           self.coord(standard_name='air_pressure').data.flat[index],
                           self.data.flat[index])
 
-    def as_data_frame(self, copy=True):
+    def as_data_frame(self, copy=True, time_index=True, name=None):
         """
         Convert an UngriddedData object to a Pandas DataFrame.
 
         :param copy: Create a copy of the data for the new DataFrame? Default is True.
         :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
         """
-        df = _coords_as_data_frame(self.coords())
+        df = _coords_as_data_frame(self.coords(), time_index=time_index)
         try:
-            df[self.name()] = _to_flat_ndarray(self.data, copy)
+            df[name or self.name()] = _to_flat_ndarray(self.data, copy)
         except ValueError:
             logging.warn("Copy created of MaskedArray for {} when creating Pandas DataFrame".format(self.name()))
-            df[self.name()] = _to_flat_ndarray(self.data, True)
+            df[name or self.name()] = _to_flat_ndarray(self.data, True)
 
         return df
 
@@ -680,6 +680,7 @@ class UngriddedData(LazyData, CommonData):
         """
         from cis.data_io.Coord import Coord, CoordList
         from cis.data_io.hyperpoint import HyperPointList
+        from cis.time_util import cis_standard_time_unit
 
         if not isinstance(hyperpoints, HyperPointList):
             hyperpoints = HyperPointList(hyperpoints)
@@ -701,7 +702,7 @@ class UngriddedData(LazyData, CommonData):
         if altitude is not None:
             coord_list.append(Coord(altitude, Metadata(standard_name='altitude', units='meters')))
         if time is not None:
-            coord_list.append(Coord(time, Metadata(standard_name='time', units='seconds')))
+            coord_list.append(Coord(time, Metadata(standard_name='time', units=cis_standard_time_unit)))
         coords = CoordList(coord_list)
 
         return cls(values, Metadata(), coords)
@@ -936,14 +937,14 @@ class UngriddedCoordinates(CommonData):
                           self.coord(standard_name='air_pressure').data.flat[index],
                           None)
 
-    def as_data_frame(self, copy=True):
+    def as_data_frame(self, copy=True, time_index=True, name=None):
         """
         Convert an UngriddedCoordinates object to a Pandas DataFrame.
 
         :param copy: Create a copy of the data for the new DataFrame? Default is True.
         :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
         """
-        return _coords_as_data_frame(self._coords)
+        return _coords_as_data_frame(self._coords, time_index=time_index)
 
     def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, var_name=None,
                dim_coords=True):
@@ -1150,7 +1151,7 @@ class UngriddedDataList(CommonDataList):
         return _aggregate_ungridded(self, how, **kwargs)
 
 
-def _coords_as_data_frame(coord_list, copy=True):
+def _coords_as_data_frame(coord_list, copy=True, time_index=True):
     """
     Convert a CoordList object to a Pandas DataFrame.
 
@@ -1171,7 +1172,7 @@ def _coords_as_data_frame(coord_list, copy=True):
             logging.warn("Copy created of MaskedArray for {} when creating Pandas DataFrame".format(coord.name()))
             data = _to_flat_ndarray(coord.data, True)
 
-        if coord.standard_name == 'time':
+        if time_index and coord.standard_name == 'time':
             if str(coord.units).lower() == 'datetime object':
                 time = data
             elif isinstance(coord.units, Unit):

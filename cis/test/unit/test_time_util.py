@@ -154,7 +154,6 @@ class TestTimeUtils(TestCase):
         from datetime import datetime
 
         ug = make_regular_2d_with_time_ungridded_data()
-        ug.coord('time').convert_datetime_to_standard_time()
 
         change_year_of_ungridded_data(ug, 2007)
 
