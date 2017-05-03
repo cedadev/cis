@@ -794,6 +794,7 @@ class GeneralGriddedCollocator(Collocator):
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
         :return: GriddedDataList of collocated data
         """
+        log_memory_profile("GeneralGriddedCollocator Initial")
         if isinstance(data, list):
             # If data is a list then call this method recursively over each element
             output_list = []
@@ -803,6 +804,8 @@ class GeneralGriddedCollocator(Collocator):
             return GriddedDataList(output_list)
 
         data_points = data.get_non_masked_points()
+
+        log_memory_profile("GeneralGriddedCollocator Created data hyperpoint list view")
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = make_coord_map(points, data)
@@ -831,9 +834,13 @@ class GeneralGriddedCollocator(Collocator):
 
         _fix_longitude_range(coords, data_points)
 
+        log_memory_profile("GeneralGriddedCollocator Created output coord map")
+
         # Create index if constraint supports it.
         data_index.create_indexes(constraint, coords, data_points, coord_map)
         data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        log_memory_profile("GeneralGriddedCollocator Created indexes")
 
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = []
@@ -875,6 +882,8 @@ class GeneralGriddedCollocator(Collocator):
                     # We don't need to do anything.
                     pass
 
+        log_memory_profile("GeneralGriddedCollocator Completed collocation")
+
         # Construct an output cube containing the collocated data.
         kernel_var_details = kernel.get_variable_details(self.var_name or data.var_name,
                                                          self.var_long_name or data.long_name,
@@ -901,6 +910,8 @@ class GeneralGriddedCollocator(Collocator):
             transpose_order = [coord[2] for coord in coord_map]
             cube.transpose(transpose_order)
             output.append(cube)
+
+        log_memory_profile("GeneralGriddedCollocator Finished")
 
         return output
 
