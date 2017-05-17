@@ -333,6 +333,45 @@ class TestGriddedListAggregation(TestCase):
         assert_arrays_almost_equal(result2, cube_out[1].data)
         assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
+    def test_collapse_vertical_coordinate(self):
+        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
+
+        data1 = make_from_cube(make_mock_cube(alt_dim_length=6))
+        data2 = make_from_cube(make_mock_cube(alt_dim_length=6, data_offset=1))
+        datalist = GriddedDataList([data1, data2])
+        cube_out = datalist.collapsed(['z'], how=self.kernel)
+
+        result1 = data1.data.mean(axis=2)
+        result2 = result1 + 1
+
+        assert isinstance(cube_out, GriddedDataList)
+
+        # There is a small deviation to the weighting correction applied by Iris when completely collapsing
+        assert_arrays_almost_equal(result1, cube_out[0].data)
+        assert_arrays_almost_equal(result2, cube_out[1].data)
+        assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+
+    def test_collapse_vertical_coordinate_weighted_aggregator(self):
+        """
+        We use a weighted aggregator, though no weights should be applied since we're only summing over the vertical
+        """
+        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
+
+        data1 = make_from_cube(make_mock_cube(alt_dim_length=6))
+        data2 = make_from_cube(make_mock_cube(alt_dim_length=6, data_offset=1))
+        datalist = GriddedDataList([data1, data2])
+        cube_out = datalist.collapsed(['z'], how=iris.analysis.SUM)
+
+        result1 = np.sum(data1.data, axis=2)
+        result2 = np.sum(data2.data, axis=2)
+
+        assert isinstance(cube_out, GriddedDataList)
+
+        # There is a small deviation to the weighting correction applied by Iris when completely collapsing
+        assert_arrays_almost_equal(result1, cube_out[0].data)
+        assert_arrays_almost_equal(result2, cube_out[1].data)
+        assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+
     def test_aggregate_mean(self):
         from cis.data_io.gridded_data import GriddedDataList, make_from_cube
 
