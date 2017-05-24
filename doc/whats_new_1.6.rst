@@ -21,3 +21,4 @@ Bugs fixed
  * In previous versions of CIS cartographic weights were calculated for all collapse operations regardless of the
  dimensions being collapsed. This may have given unexpected values in some cases. CIS now only calculates weights
  when collapsing over latitude.
+ * Fixed an issue where `UngriddedData.copy()` didn't copy metadata

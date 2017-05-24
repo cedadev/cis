@@ -145,6 +145,11 @@ class TestAPI(TestCase):
         # This dataset should still be the same as the alternative one (this checks data and metadata)
         assert self.ug == self.ug_1
 
+    def test_copy_copies_metadata(self):
+        res = self.ug.copy()
+        res.var_name = 'test'
+        assert self.ug.var_name != 'test'
+
     def test_change_units(self):
         from numpy.testing import assert_almost_equal
         assert self.ug.data[0, 0] == 1
