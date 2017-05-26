@@ -23,3 +23,4 @@ Bugs fixed
  when collapsing over latitude.
  * Plot colourbars are now associated with the plot axes rather than the figure, which makes it easier to make
  multi-axes plots with CIS.
+ * Fixed an issue where `UngriddedData.copy()` didn't copy metadata
