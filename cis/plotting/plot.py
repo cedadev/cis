@@ -277,7 +277,7 @@ def set_map_ticks(ax, xticks, yticks, transform=None):
         ax.gridlines()
 
 
-def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
+def add_color_bar(ax, mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
     """
     Adds a colour bar to a plot
     Allows specifying of tick spacing and orientation
@@ -300,7 +300,7 @@ def add_color_bar(mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
     if cbarorient is not None:
         cbar_kwargs['orientation'] = cbarorient
 
-    cbar = plt.colorbar(mappable, **cbar_kwargs)
+    cbar = plt.colorbar(mappable, ax=ax, **cbar_kwargs)
 
     if not logv:
         cbar.formatter.set_scientific(True)

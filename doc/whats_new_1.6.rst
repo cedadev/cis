@@ -21,3 +21,5 @@ Bugs fixed
  * In previous versions of CIS cartographic weights were calculated for all collapse operations regardless of the
  dimensions being collapsed. This may have given unexpected values in some cases. CIS now only calculates weights
  when collapsing over latitude.
+ * Plot colourbars are now associated with the plot axes rather than the figure, which makes it easier to make
+ multi-axes plots with CIS.
