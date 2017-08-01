@@ -40,25 +40,25 @@ class TestGriddedCollapse(TestCase):
     def test_can_name_variables_by_standard_name(self):
         cube_out = self.cube.collapsed(['longitude', 'latitude'], how=self.kernel)
 
-        result = numpy.array(8.0)
+        result = numpy.array([8.0])
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert numpy.equal(result, cube_out[0].data)
 
     @istest
     def test_can_name_variables_by_variable_name(self):
         cube_out = self.cube.collapsed(['lon', 'lat'], how=self.kernel)
 
-        result = numpy.array(8.0)
+        result = numpy.array([8.0])
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert numpy.equal(result, cube_out[0].data)
 
     @istest
     def test_collapsing_everything_returns_a_single_value(self):
         cube_out = self.cube.collapsed(['x', 'y'], how=self.kernel)
 
-        result = numpy.array(8.0)
+        result = numpy.array([8.0])
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert numpy.equal(result, cube_out[0].data)
 
     @istest
     def test_collapsing_everything_returns_a_single_value_with_missing_values(self):
