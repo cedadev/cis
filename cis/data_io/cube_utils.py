@@ -60,31 +60,31 @@ def make_new_with_same_coordinates(cube, data=None, var_name=None, standard_name
     return data
 
 
-def get_coordinates_points(self):
+def get_coordinates_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, self.data)
+    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
+    return GriddedHyperPointView(all_coords, cube.data)
 
 
-def get_all_points(self):
+def get_all_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, self.data)
+    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
+    return GriddedHyperPointView(all_coords, cube.data)
 
 
-def get_non_masked_points(self):
+def get_non_masked_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in self.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, self.data, non_masked_iteration=True)
+    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
+    return GriddedHyperPointView(all_coords, cube.data, non_masked_iteration=True)
 
 
-def find_standard_coords(self):
+def find_standard_coords(cube):
     """Constructs a list of the standard coordinates.
     The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
     list in this order.
@@ -92,7 +92,7 @@ def find_standard_coords(self):
     """
     ret_list = []
 
-    coords = self.coords(dim_coords=True)
+    coords = cube.coords(dim_coords=True)
     for name in HyperPoint.standard_names:
         coord_and_dim = None
         for idx, coord in enumerate(coords):
@@ -104,17 +104,17 @@ def find_standard_coords(self):
     return ret_list
 
 
-def add_history(self, new_history):
+def add_history(cube, new_history):
     """Appends to, or creates, the history attribute using the supplied history string.
 
     The new entry is prefixed with a timestamp.
     :param new_history: history string
     """
     timestamp = strftime("%Y-%m-%dT%H:%M:%SZ ", gmtime())
-    if 'history' not in self.attributes:
-        self.attributes['history'] = timestamp + new_history
+    if 'history' not in cube.attributes:
+        cube.attributes['history'] = timestamp + new_history
     else:
-        self.attributes['history'] += '\n' + timestamp + new_history
+        cube.attributes['history'] += '\n' + timestamp + new_history
 
 
 def is_gridded(cube, coords):
@@ -129,7 +129,7 @@ def is_gridded(cube, coords):
     return all(cube.coords(c, dim_coords=True) for c in coords)
 
 
-def set_longitude_range(self, range_start):
+def set_longitude_range(cube, range_start):
     """Rotates the longitude coordinate array and changes its values by
     360 as necessary to force the values to be within a 360 range starting
     at the specified value, i.e.,
@@ -140,11 +140,11 @@ def set_longitude_range(self, range_start):
 
     :param range_start: starting value of required longitude range
     """
-    lon_coord = self.coords(standard_name="longitude")
+    lon_coord = cube.coords(standard_name="longitude")
     if len(lon_coord) == 0:
         return
     lon_coord = lon_coord[0]
-    lon_idx = self.dim_coords.index(lon_coord)
+    lon_idx = cube.dim_coords.index(lon_coord)
     # Check if there are bounds which we will need to wrap as well
     roll_bounds = (lon_coord.bounds is not None) and (lon_coord.bounds.size != 0)
     idx1 = np.searchsorted(lon_coord.points, range_start)
@@ -180,25 +180,25 @@ def set_longitude_range(self, range_start):
             new_lon_bounds[indices_to_shift_value_of] -= 360.0
     if shift != 0:
         # Ensure we also roll any auxilliary coordinates
-        for aux_coord in self.aux_coords:
+        for aux_coord in cube.aux_coords:
             # Find all of the data dimensions which the auxiliary coordinate spans...
-            dims = self.coord_dims(aux_coord)
+            dims = cube.coord_dims(aux_coord)
             # .. and check if longitude is one of those dimensions
             if lon_idx in dims:
                 # Now roll the axis of the auxiliary coordinate which is associated with the longitude data
                 # dimension: dims.index(lon_idx)
                 new_points = np.roll(aux_coord.points, shift, dims.index(lon_idx))
                 aux_coord.points = new_points
-        # Now roll the data itself
-        new_data = np.roll(self.data, shift, lon_idx)
-        self.data = new_data
+        # Now roll the data itcube
+        new_data = np.roll(cube.data, shift, lon_idx)
+        cube.data = new_data
         # Put the new coordinates back in their relevant places
-        self.dim_coords[lon_idx].points = new_lon_points
+        cube.dim_coords[lon_idx].points = new_lon_points
         if roll_bounds:
-            self.dim_coords[lon_idx].bounds = new_lon_bounds
+            cube.dim_coords[lon_idx].bounds = new_lon_bounds
 
 
-def add_attributes(self, attributes):
+def add_attributes(cube, attributes):
     """
     Add a variable attribute to this data
     :param attributes: Dictionary of attribute names (keys) and values.
@@ -206,51 +206,51 @@ def add_attributes(self, attributes):
     """
     for key, value in list(attributes.items()):
         try:
-            self.attributes[key] = value
+            cube.attributes[key] = value
         except ValueError:
             try:
-                setattr(self, key, value)
+                setattr(cube, key, value)
             except ValueError as e:
                 logging.warning("Could not set NetCDF attribute '%s' because %s" % (key, e.args[0]))
     # Record that this is a local (variable) attribute, not a global attribute
-    self._local_attributes.extend(list(attributes.keys()))
+    cube._local_attributes.extend(list(attributes.keys()))
 
 
-def remove_attribute(self, key):
+def remove_attribute(cube, key):
     """
     Remove a variable attribute to this data
     :param key: Attribute key to remove
     :return:
     """
-    self.attributes.pop(key, None)
+    cube.attributes.pop(key, None)
     try:
-        self._local_attributes.remove(key)
+        cube._local_attributes.remove(key)
     except ValueError:
         pass
 
 
-def save_data(self, output_file):
+def save_data(cube, output_file):
     """
     Save this data object to a given output file
     :param output_file: Output file to save to.
     """
     logging.info('Saving data to %s' % output_file)
-    save_args = {'local_keys': self._local_attributes}
+    save_args = {'local_keys': cube._local_attributes}
     # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
-    if self.coords('time'):
+    if cube.coords('time'):
         save_args['unlimited_dimensions'] = ['time']
     else:
         iris.FUTURE.netcdf_no_unlimited = True
-    iris.save(self, output_file, **save_args)
+    iris.save(cube, output_file, **save_args)
 
 
-def _get_default_plot_type(self, lat_lon=False):
-    if self.ndim == 1:
+def _get_default_plot_type(cube, lat_lon=False):
+    if cube.ndim == 1:
         return 'line'
-    elif self.ndim ==2:
+    elif cube.ndim ==2:
         return 'heatmap'
     else:
-        raise ValueError("Unable to determine plot type for data with {} dimensions".format(self.ndim))
+        raise ValueError("Unable to determine plot type for data with {} dimensions".format(cube.ndim))
 
 
 def _collapse_gridded(data, coords, kernel):
@@ -294,7 +294,7 @@ def _collapse_gridded(data, coords, kernel):
     return data
 
 
-def _get_coord(self, name):
+def _get_coord(cube, name):
     from cis.utils import standard_axes
     import cis.exceptions as cis_ex
     import iris.exceptions as iris_ex
@@ -306,8 +306,8 @@ def _get_coord(self, name):
             coord = None
         return coord
 
-    coord = _try_coord(self, dict(name_or_coord=name)) or _try_coord(self, dict(standard_name=name)) \
-        or _try_coord(self, dict(standard_name=standard_axes.get(name.upper(), None))) or \
-            _try_coord(self, dict(var_name=name)) or _try_coord(self, dict(axis=name))
+    coord = _try_coord(cube, dict(name_or_coord=name)) or _try_coord(cube, dict(standard_name=name)) \
+        or _try_coord(cube, dict(standard_name=standard_axes.get(name.upper(), None))) or \
+            _try_coord(cube, dict(var_name=name)) or _try_coord(cube, dict(axis=name))
 
     return coord
