@@ -8,9 +8,7 @@ from nose.tools import eq_
 import numpy as np
 
 from cis.data_io.datalist import DataList
-from cis.collocation.col_implementations import GeneralUngriddedCollocator, DummyConstraint, moments, \
-    SepConstraintKdtree
-from cis.data_io.hyperpoint import HyperPoint
+from cis.collocation.col_implementations import GeneralUngriddedCollocator, moments, SepConstraintKdtree
 from cis.test.util import mock
 
 
@@ -19,8 +17,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
     def test_averaging_basic_col_in_4d(self):
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0], lon=[1.0], alt=[12.0], time=[dt.datetime(1984, 8, 29, 8, 34)])
 
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), moments())
@@ -37,10 +34,11 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
 
     def test_ungridded_ungridded_box_moments(self):
         data = mock.make_regular_2d_ungridded_data()
-        sample = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        sample = mock.make_dummy_sample_points(lat=[1.0, 3.0, -1.0], lon=[1.0, 3.0, -1.0], alt=[12.0, 7.0, 5.0],
+                                               time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                     dt.datetime(1984, 8, 29, 8, 34),
+                                                     dt.datetime(1984, 8, 29, 8, 34)])
+
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
@@ -58,10 +56,11 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
 
     def test_ungridded_ungridded_box_moments_missing_data_for_missing_sample(self):
         data = mock.make_regular_2d_ungridded_data()
-        sample = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        sample = mock.make_dummy_sample_points(lat=[1.0, 3.0, -1.0], lon=[1.0, 3.0, -1.0], alt=[12.0, 7.0, 5.0],
+                                               time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                     dt.datetime(1984, 8, 29, 8, 34),
+                                                     dt.datetime(1984, 8, 29, 8, 34)])
+
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
@@ -79,10 +78,11 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
 
     def test_ungridded_ungridded_box_moments_no_missing_data_for_missing_sample(self):
         data = mock.make_regular_2d_ungridded_data()
-        sample = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        sample = mock.make_dummy_sample_points(lat=[1.0, 3.0, -1.0], lon=[1.0, 3.0, -1.0], alt=[12.0, 7.0, 5.0],
+                                               time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                     dt.datetime(1984, 8, 29, 8, 34),
+                                                     dt.datetime(1984, 8, 29, 8, 34)])
+
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
 

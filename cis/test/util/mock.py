@@ -726,6 +726,23 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=Non
                 aux_coords_and_dims=coords)
 
 
+def make_dummy_sample_points(lat=None, lon=None, time=None, alt=None, pres=None):
+    # Find the length of the first non-None array
+    n_values = len(lat or lon or time or alt or pres)
+    sample = Cube(np.empty((n_values,)))
+    if lat is not None:
+        sample.add_aux_coord(AuxCoord(lat, standard_name='latitude'), 0)
+    if lon is not None:
+        sample.add_aux_coord(AuxCoord(lon, standard_name='longitude'), 0)
+    if time is not None:
+        sample.add_aux_coord(AuxCoord(time, standard_name='time'), 0)
+    if alt is not None:
+        sample.add_aux_coord(AuxCoord(alt, standard_name='altitude'), 0)
+    if pres is not None:
+        sample.add_aux_coord(AuxCoord(pres, standard_name='air_pressure'), 0)
+    return sample
+
+
 def make_dummy_ungridded_data_two_points_with_different_values(lat=0.0, lon=0.0, value1=1.0, value2=2.0):
     x = AuxCoord(np.array([lat, lat]), standard_name='latitude')
     y = AuxCoord(np.array([lon, lon]), standard_name='longitude')
