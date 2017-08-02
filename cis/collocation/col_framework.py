@@ -110,6 +110,7 @@ class AbstractDataOnlyKernel(Kernel):
             raise ValueError
         return self.get_value_for_data_only(values)
 
+
     @abstractmethod
     def get_value_for_data_only(self, values):
         """

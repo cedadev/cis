@@ -23,7 +23,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
             [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
 
         col = GeneralUngriddedCollocator()
-        new_data = col.collocate(sample_points, ug_data, DummyConstraint(), moments())
+        new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), moments())
         means = new_data[0]
         std_dev = new_data[1]
         no_points = new_data[2]
@@ -124,38 +124,6 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         assert np.allclose(output[2].data, expected_n)
         assert np.allclose(output[3].data, expected_result + 3)
         assert all(output[4].data.mask)
-        assert np.allclose(output[5].data, expected_n)
-
-    def test_list_gridded_ungridded_box_moments(self):
-        data1 = mock.make_mock_cube()
-        data1.name = lambda: 'Name1'
-        data1.var_name = 'var_name1'
-        data1._standard_name = 'y_wind'
-        data2 = mock.make_mock_cube(data_offset=3)
-        data2.name = lambda: 'Name1'
-        data2.var_name = 'var_name2'
-        data2._standard_name = 'x_wind'
-        data_list = DataList([data1, data2])
-        sample = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
-             HyperPoint(lat=-1.0, lon=-1.0, alt=5.0, t=dt.datetime(1984, 8, 29, 8, 34))])
-        constraint = SepConstraintKdtree('500km')
-        kernel = moments()
-
-        col = GeneralUngriddedCollocator()
-        output = col.collocate(sample, data_list, constraint, kernel)
-
-        expected_result = np.array([28.0/3, 10.0, 20.0/3])
-        expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
-        expected_n = np.array([3, 4, 3])
-        assert len(output) == 6
-        assert isinstance(output, DataList)
-        assert np.allclose(output[0].data, expected_result)
-        assert np.allclose(output[1].data, expected_stddev)
-        assert np.allclose(output[2].data, expected_n)
-        assert np.allclose(output[3].data, expected_result + 3)
-        assert np.allclose(output[4].data, expected_stddev)
         assert np.allclose(output[5].data, expected_n)
 
 if __name__ == '__main__':

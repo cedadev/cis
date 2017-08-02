@@ -884,6 +884,7 @@ def make_regular_2d_with_time_ungridded_data():
         as you step through the array in order - so downwards as it's written above
     """
     import datetime
+    from cis.time_util import cis_standard_time_unit
 
     x_points = np.arange(-10, 11, 5)
     y_points = np.arange(-5, 6, 5)
@@ -894,7 +895,7 @@ def make_regular_2d_with_time_ungridded_data():
 
     x = AuxCoord(x, standard_name='latitude', units='degrees')
     y = AuxCoord(y, standard_name='longitude', units='degrees')
-    t = AuxCoord(times, standard_name='time', units='DateTime Object')
+    t = AuxCoord(cis_standard_time_unit.date2num(times), standard_name='time', units=cis_standard_time_unit)
 
     data = np.reshape(np.arange(15) + 1.0, (5, 3))
 
