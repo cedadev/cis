@@ -9,7 +9,6 @@ from iris.coords import DimCoord
 from iris.cube import Cube
 import numpy as np
 
-from cis.data_io.cube_utils import make_from_cube
 from cis.plotting.formatted_plot import Plotter
 from cis.plotting.genericplot import Generic2DPlot
 from cis.test.utils_for_testing import assert_arrays_equal
@@ -54,8 +53,7 @@ class TestPlotting(unittest.TestCase):
     def test_get_axis_gridded(self):
         from cis.plotting.plot import get_axis
         from cis.test.util.mock import make_mock_cube
-        from cis.data_io.cube_utils import make_from_cube
-        d = make_from_cube(make_mock_cube())
+        d = make_mock_cube()
         assert get_axis(d, "x").name() == 'longitude'
         assert get_axis(d, "y").name() == 'latitude'
 
@@ -69,7 +67,7 @@ class TestHeatMap(unittest.TestCase):
         values = np.array([[1, 2], [3, 4]])
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
-        data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
+        data = Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
         out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
                                                                    latitude.contiguous_bounds())
         expected_x = np.array([-1, 0, 1])
@@ -86,7 +84,7 @@ class TestHeatMap(unittest.TestCase):
         values = np.array([[1, 2], [3, 4]])
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
-        data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
+        data = Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
         out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
                                                                    latitude.contiguous_bounds())
         expected_x = np.array([0, 1, 2])
@@ -103,7 +101,7 @@ class TestHeatMap(unittest.TestCase):
         values = np.array([[1, 2], [3, 4]])
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
-        data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
+        data = Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
         out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
                                                                    latitude.contiguous_bounds())
         expected_x = np.array([1, 0, -1])
@@ -120,7 +118,7 @@ class TestHeatMap(unittest.TestCase):
         values = np.arange(len(y) * len(x)).reshape((len(y), len(x)))
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
-        data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
+        data = Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
         out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
                                                                    latitude.contiguous_bounds())
         x_bounds = np.arange(-179, 190, 10)
@@ -134,7 +132,7 @@ class TestHeatMap(unittest.TestCase):
         values = np.arange(len(y) * len(x)).reshape((len(y), len(x)))
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
-        data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
+        data = Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
         out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
                                                                    latitude.contiguous_bounds())
         x_bounds = np.arange(0, 380, 20)
@@ -148,7 +146,7 @@ class TestHeatMap(unittest.TestCase):
         values = np.arange(len(y) * len(x)).reshape((len(y), len(x)))
         latitude = DimCoord(y, standard_name='latitude', units='degrees')
         longitude = DimCoord(x, standard_name='longitude', units='degrees')
-        data = make_from_cube(Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)]))
+        data = Cube(values, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
         out_values, out_x, out_y= Generic2DPlot._cube_manipulation(data, longitude.contiguous_bounds(),
                                                                    latitude.contiguous_bounds())
         x_bounds = np.arange(0, 361, 1)

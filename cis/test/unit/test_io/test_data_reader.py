@@ -1,9 +1,6 @@
 from unittest import TestCase
-from hamcrest import assert_that, is_, instance_of
+from hamcrest import assert_that, is_
 from mock import MagicMock
-import os
-from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
-from cis.data_io.cube_utils import GriddedData, GriddedDataList, make_from_cube
 from cis.data_io.data_reader import DataReader
 from cis.test.util.mock import make_square_5x3_2d_cube, make_regular_2d_ungridded_data
 
@@ -14,7 +11,6 @@ class TestDataReader(TestCase):
         filenames = 'filename1'
         product = None
         gridded_data = make_square_5x3_2d_cube()
-        gridded_data.__class__ = GriddedData
         get_data_func = MagicMock(return_value=gridded_data)
         reader = DataReader(get_data_func=get_data_func)
         data = reader.read_data_list(filenames, variables, product)[0]
@@ -27,7 +23,6 @@ class TestDataReader(TestCase):
         assert_that(call_args[2], is_(product))
 
         # Check the data we got back is as expected
-        assert_that(data, instance_of(GriddedData))
         assert_that(data.data.tolist(), is_(make_square_5x3_2d_cube().data.tolist()))
 
     def test_GIVEN_single_variable_ungridded_WHEN_read_data_THEN_GriddedData_returned(self):
@@ -46,7 +41,6 @@ class TestDataReader(TestCase):
         assert_that(call_args[2], is_(product))
 
         # Check the data we got back is as expected
-        assert_that(data, instance_of(UngriddedData))
         assert_that(data.data.tolist(), is_(make_regular_2d_ungridded_data().data.tolist()))
 
     def test_GIVEN_multiple_variable_gridded_WHEN_read_data_THEN_GriddedDataList_returned(self):
@@ -54,7 +48,6 @@ class TestDataReader(TestCase):
         filenames = 'filename1'
         product = None
         gridded_data = make_square_5x3_2d_cube()
-        gridded_data.__class__ = GriddedData
         get_data_func = MagicMock(return_value=gridded_data)
         reader = DataReader(get_data_func=get_data_func)
         data = reader.read_data_list(filenames, variables, product)
@@ -69,7 +62,6 @@ class TestDataReader(TestCase):
         assert_that(first_call_args[2], is_(product))
 
         # Check the data we got back is as expected
-        assert_that(data, instance_of(GriddedDataList))
         assert_that(data[0].data.tolist(), is_(make_square_5x3_2d_cube().data.tolist()))
         assert_that(data[1].data.tolist(), is_(data[0].data.tolist()))
 
@@ -91,7 +83,6 @@ class TestDataReader(TestCase):
         assert_that(first_call_args[2], is_(product))
 
         # Check the data we got back is as expected
-        assert_that(data, instance_of(UngriddedDataList))
         assert_that(data[0].data.tolist(), is_(make_regular_2d_ungridded_data().data.tolist()))
         assert_that(data[1].data.tolist(), is_(data[0].data.tolist()))
 
@@ -100,7 +91,6 @@ class TestDataReader(TestCase):
         filenames = 'filename1'
         product = None
         gridded_data = make_square_5x3_2d_cube()
-        gridded_data.__class__ = GriddedData
         ungridded_data = make_regular_2d_ungridded_data()
         get_data_func = MagicMock(side_effect=[gridded_data, ungridded_data])
         reader = DataReader(get_data_func=get_data_func)
@@ -186,9 +176,9 @@ class TestDataReader(TestCase):
         datagroup_2 = {'variables': ['var3'],
                        'filenames': ['filename2.nc'],
                        'product': 'cis'}
-        var1 = make_from_cube(make_square_5x3_2d_cube())
-        var2 = make_from_cube(make_square_5x3_2d_cube())
-        var3 = make_from_cube(make_square_5x3_2d_cube())
+        var1 = make_square_5x3_2d_cube()
+        var2 = make_square_5x3_2d_cube()
+        var3 = make_square_5x3_2d_cube()
         get_data_func = MagicMock(side_effect=[var1, var2, var3])
         get_var_func = MagicMock(side_effect=lambda f: {'filename1.nc': ['var1', 'var2'],
                                                         'filename2.nc': ['var3']}[f])
@@ -204,7 +194,7 @@ class TestDataReader(TestCase):
                      'filenames': ['filename1.nc'],
                      'product': None,
                      'aliases': None}
-        var1 = make_from_cube(make_square_5x3_2d_cube())
+        var1 = make_square_5x3_2d_cube()
         get_data_func = MagicMock(side_effect=[var1])
         get_var_func = MagicMock(side_effect=['var1'])
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
@@ -215,7 +205,7 @@ class TestDataReader(TestCase):
         datagroup = {'variables': ['var1'],
                      'filenames': ['filename1.nc'],
                      'product': None}
-        var1 = make_from_cube(make_square_5x3_2d_cube())
+        var1 = make_square_5x3_2d_cube()
         get_data_func = MagicMock(side_effect=[var1])
         get_var_func = MagicMock(side_effect=['var1'])
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
@@ -227,8 +217,8 @@ class TestDataReader(TestCase):
                      'filenames': ['filename1.nc'],
                      'product': None,
                      'aliases': ['alias1']}
-        var1 = make_from_cube(make_square_5x3_2d_cube())
-        var2 = make_from_cube(make_square_5x3_2d_cube())
+        var1 = make_square_5x3_2d_cube()
+        var2 = make_square_5x3_2d_cube()
         get_data_func = MagicMock(side_effect=[var1, var2])
         get_var_func = MagicMock(side_effect=['var1', 'var2'])
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
@@ -240,7 +230,7 @@ class TestDataReader(TestCase):
                      'filenames': ['filename1.nc'],
                      'product': None,
                      'aliases': ['alias1']}
-        get_data_func = MagicMock(return_value=make_from_cube(make_square_5x3_2d_cube()))
+        get_data_func = MagicMock(return_value=make_square_5x3_2d_cube())
         get_var_func = MagicMock(return_value=['var1'])
         reader = DataReader(get_data_func=get_data_func, get_variables_func=get_var_func)
         data = reader.read_datagroups([datagroup])

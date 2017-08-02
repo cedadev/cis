@@ -1,8 +1,7 @@
 import fnmatch
 import logging
 
-from cis.data_io.cube_utils import GriddedDataList
-from cis.data_io.ungridded_data import UngriddedDataList
+from cis.data_io.datalist import DataList
 from cis.data_io.products.AProduct import get_data, get_coordinates, get_variables
 from cis.utils import listify
 
@@ -95,7 +94,7 @@ class DataReader(object):
                 except IndexError:
                     raise ValueError("Number of aliases does not match number of variables")
             if data_list is None:
-                data_list = GriddedDataList() if var_data.is_gridded else UngriddedDataList()
+                data_list = DataList()
             data_list.append(var_data)
         assert data_list is not None
         return data_list

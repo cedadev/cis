@@ -4,20 +4,19 @@ import numpy as np
 from hamcrest import assert_that, is_, close_to
 
 from cis.stats import StatsAnalyzer
-from cis.data_io.cube_utils import GriddedData
 from cis.test.util import mock
-
+from iris.cube import Cube
 
 class TestStatsAnalyser(unittest.TestCase):
 
     def setUp(self):
-        self.data1 = GriddedData(np.array([[1.0, -2.0, 3.0, 4.0, 5.0],
+        self.data1 = Cube(np.array([[1.0, -2.0, 3.0, 4.0, 5.0],
                                            [6.0,  7.0, 8.0, 9.0, 10.0]]))
-        self.data2 = GriddedData(np.array([[0.8, -1.7, 3.6, 3.7, 5.1],
+        self.data2 = Cube(np.array([[0.8, -1.7, 3.6, 3.7, 5.1],
                                            [6.0,  7.3, 7.9, 9.1, 10.1]]))
-        self.missing1 = GriddedData(np.ma.masked_equal([[1.0, -2.0, 3.0, 4.0, -999],
+        self.missing1 = Cube(np.ma.masked_equal([[1.0, -2.0, 3.0, 4.0, -999],
                                                         [6.0, -999, 8.0, -100, -999]], -999))
-        self.missing2 = GriddedData(np.ma.masked_equal([[-999, -2.1, 4.1, 3.2, -999],
+        self.missing2 = Cube(np.ma.masked_equal([[-999, -2.1, 4.1, 3.2, -999],
                                                         [6.0, 7.3,  8.1, -120, -999]], -999))
 
     def test_GIVEN_datasets_WHEN_analyze_THEN_StatisticsResults_returned(self):

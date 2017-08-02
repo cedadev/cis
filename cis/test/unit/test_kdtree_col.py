@@ -6,12 +6,10 @@ from nose.tools import istest, eq_
 import numpy as np
 from cis.collocation.kdtree import KDTree
 from cis.time_util import cis_standard_time_unit
-import cis.data_io.cube_utils as gridded_data
-from cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from cis.data_io.ungridded_data import UngriddedData
+from cis.data_io.hyperpoint import HyperPoint
 from cis.test.util import mock
 from cis.collocation.col_implementations import (GeneralUngriddedCollocator, nn_horizontal_kdtree, DummyConstraint,
-                                                 SepConstraintKdtree, make_coord_map)
+                                                 SepConstraintKdtree)
 from cis.collocation.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 
 
@@ -89,8 +87,6 @@ class Test_nn_horizontal_kdtree(object):
 class TestSepConstraint(object):
     @istest
     def test_horizontal_constraint_in_2d(self):
-        from cis.data_io.Coord import Coord, CoordList
-        from cis.data_io.ungridded_data import Metadata
         ug_data = mock.make_regular_2d_ungridded_data()
         ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
         sample_points = UngriddedData(np.array([0.0]), Metadata(),
