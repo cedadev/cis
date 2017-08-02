@@ -5,7 +5,7 @@ from nose.tools import istest, nottest, raises
 import numpy as np
 
 import cis.test.util.mock as mock
-import cis.data_io.gridded_data as gridded_data
+import cis.data_io.cube_utils as gridded_data
 
 
 @istest

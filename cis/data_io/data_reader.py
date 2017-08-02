@@ -1,7 +1,7 @@
 import fnmatch
 import logging
 
-from cis.data_io.gridded_data import GriddedDataList
+from cis.data_io.cube_utils import GriddedDataList
 from cis.data_io.ungridded_data import UngriddedDataList
 from cis.data_io.products.AProduct import get_data, get_coordinates, get_variables
 from cis.utils import listify

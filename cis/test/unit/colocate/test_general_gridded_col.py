@@ -5,8 +5,7 @@ from hamcrest import *
 import numpy
 
 from cis.exceptions import UserPrintableException
-from cis.data_io.gridded_data import GriddedDataList
-from cis.data_io.ungridded_data import UngriddedDataList
+from cis.data_io.datalist import DataList
 from cis.collocation.col_implementations import GeneralGriddedCollocator, mean, CubeCellConstraint, \
     BinningCubeCellConstraint, moments, BinnedCubeCellOnlyConstraint
 from cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
@@ -413,7 +412,7 @@ def can_collocate_list_of_data(constraint, kernel):
     sample = make_square_5x3_2d_cube()
     data1 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5, 0)
     data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5, 10)
-    output = col.collocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
+    output = col.collocate(sample, DataList([data1, data2]), constraint, kernel)
     assert len(output) == 2
     expected_data2 = numpy.array([[14.5, 16.5, 18.5],
                                   [26.5, 28.5, 30.5],
@@ -452,7 +451,7 @@ def single_moments(constraint, kernel):
     expected_stddev = numpy.ones((5, 3)) * 3.5118845842842465
     expected_num = numpy.ones((5, 3)) * 4
     assert len(output) == 3
-    assert isinstance(output, GriddedDataList)
+    assert isinstance(output, DataList)
     assert output[0].var_name == 'rain'
     assert output[1].var_name == 'rain_std_dev'
     assert output[2].var_name == 'rain_num_points'
@@ -468,7 +467,7 @@ def list_moments(constraint, kernel):
     data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
     data2.metadata._name = 'snow'
     data2.data *= 2
-    output = col.collocate(sample, UngriddedDataList([data1, data2]), constraint, kernel)
+    output = col.collocate(sample, DataList([data1, data2]), constraint, kernel)
     assert len(output) == 6
     assert output[0].var_name == 'rain'
     assert output[1].var_name == 'rain_std_dev'

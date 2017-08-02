@@ -6,7 +6,7 @@ from nose.tools import istest, eq_
 import numpy as np
 from cis.collocation.kdtree import KDTree
 from cis.time_util import cis_standard_time_unit
-import cis.data_io.gridded_data as gridded_data
+import cis.data_io.cube_utils as gridded_data
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import UngriddedData
 from cis.test.util import mock

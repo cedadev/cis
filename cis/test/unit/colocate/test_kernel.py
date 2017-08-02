@@ -4,12 +4,10 @@ Tests the various kernels
 import unittest
 
 from nose.tools import eq_
-from numpy.testing import assert_almost_equal, assert_equal
+from numpy.testing import assert_almost_equal
 import numpy as np
 
-from cis.data_io import gridded_data
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from cis.data_io.ungridded_data import UngriddedData
 from cis.test.util import mock
 
 

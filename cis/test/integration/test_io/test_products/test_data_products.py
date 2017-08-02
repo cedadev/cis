@@ -97,7 +97,7 @@ class ProductTests(object):
             assert_that(len(vars), is_(self.valid_vars_count), "Number of valid variables in the file")
 
     def test_create_data_object(self):
-        from cis.data_io.common_data import CommonData
+        from cis.data_io.datalist import CommonData
         data = self.product().create_data_object([self.filename], self.valid_variable)
         assert_is_instance(data, CommonData)
 

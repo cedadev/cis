@@ -2,8 +2,8 @@ import unittest
 
 from hamcrest import assert_that, is_, ends_with
 import numpy
-
-from cis.data_io.gridded_data import make_from_cube, GriddedDataList, GriddedData
+from iris.cube import Cube
+from cis.data_io.datalist import DataList
 from cis.evaluate import Calculator, EvaluationError
 from cis.test.util import mock
 from cis.test.utils_for_testing import compare_masked_arrays
@@ -13,18 +13,18 @@ from cis import __version__
 class TestCalculator(unittest.TestCase):
     def setUp(self):
         self.calc = Calculator()
-        self.data = GriddedDataList([make_from_cube(mock.make_mock_cube())])
+        self.data = DataList([mock.make_mock_cube()])
         self.data[0].var_name = 'var_name'
 
     def _make_two_gridded(self):
-        data1 = make_from_cube(mock.make_mock_cube())
-        data2 = make_from_cube(mock.make_mock_cube(data_offset=10))
+        data1 = mock.make_mock_cube()
+        data2 = mock.make_mock_cube(data_offset=10)
         data1.var_name = 'var1'
         data2._var_name = 'var2'
         data1.filenames = ['filename1']
         data2.filenames = ['filename2']
         self.data = [data1, data2]
-        self.data = GriddedDataList([data1, data2])
+        self.data = DataList([data1, data2])
 
     def _make_two_ungridded_data(self):
         data1 = mock.make_regular_2d_ungridded_data_with_missing_values()
@@ -136,7 +136,7 @@ class TestCalculator(unittest.TestCase):
         expected_standard_name = None
         expected_long_name = 'Calculated value for expression "%s"' % expr
 
-        assert_that(isinstance(res, GriddedData))
+        assert_that(isinstance(res, Cube))
         assert_that(res.var_name, is_(expected_var_name))
         assert_that(res.standard_name, is_(expected_standard_name))
         assert_that(res.long_name, is_(expected_long_name))

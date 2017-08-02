@@ -9,7 +9,7 @@ import numpy
 
 from cis.exceptions import ClassNotFoundError
 from cis.collocation.col_implementations import GriddedCollocator, gridded_gridded_nn, gridded_gridded_li, nn_p
-import cis.data_io.gridded_data as gridded_data
+import cis.data_io.cube_utils as gridded_data
 from cis.test.util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
     make_dummy_2d_cube_with_small_offset_in_lat, make_dummy_2d_cube_with_small_offset_in_lon, \
     make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres, make_mock_cube
@@ -1249,7 +1249,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         assert c == 8
 
     def test_gridded_gridded_li_for_GriddedDataList(self):
-        from cis.data_io.common_data import DataList
+        from cis.data_io.datalist import DataList
 
         sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
         data_cube1 = make_mock_cube(
@@ -1297,7 +1297,7 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_for_GriddedDataList(self):
-        from cis.data_io.common_data import DataList
+        from cis.data_io.datalist import DataList
 
         sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
 

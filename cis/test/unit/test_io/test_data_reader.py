@@ -3,7 +3,7 @@ from hamcrest import assert_that, is_, instance_of
 from mock import MagicMock
 import os
 from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
-from cis.data_io.gridded_data import GriddedData, GriddedDataList, make_from_cube
+from cis.data_io.cube_utils import GriddedData, GriddedDataList, make_from_cube
 from cis.data_io.data_reader import DataReader
 from cis.test.util.mock import make_square_5x3_2d_cube, make_regular_2d_ungridded_data
 

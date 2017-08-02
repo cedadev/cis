@@ -9,7 +9,7 @@ from iris.coords import DimCoord
 from iris.cube import Cube
 import numpy as np
 
-from cis.data_io.gridded_data import make_from_cube
+from cis.data_io.cube_utils import make_from_cube
 from cis.plotting.formatted_plot import Plotter
 from cis.plotting.genericplot import Generic2DPlot
 from cis.test.utils_for_testing import assert_arrays_equal
@@ -54,7 +54,7 @@ class TestPlotting(unittest.TestCase):
     def test_get_axis_gridded(self):
         from cis.plotting.plot import get_axis
         from cis.test.util.mock import make_mock_cube
-        from cis.data_io.gridded_data import make_from_cube
+        from cis.data_io.cube_utils import make_from_cube
         d = make_from_cube(make_mock_cube())
         assert get_axis(d, "x").name() == 'longitude'
         assert get_axis(d, "y").name() == 'latitude'

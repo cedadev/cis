@@ -118,7 +118,7 @@ class GriddedCollapsor(object):
         return new_data
 
     def __call__(self, kernel):
-        from cis.data_io.common_data import DataList
+        from cis.data_io.datalist import DataList
         from cis.aggregation.collapse_kernels import MultiKernel
 
         # Make sure all coordinate have bounds - important for weighting and aggregating

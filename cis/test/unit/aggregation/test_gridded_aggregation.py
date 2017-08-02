@@ -3,7 +3,7 @@ from unittest import TestCase
 from nose.tools import istest, eq_
 import iris.analysis
 
-from cis.data_io.common_data import DataList
+from cis.data_io.datalist import DataList
 from cis.aggregation.gridded_collapsor import GriddedCollapsor
 from cis.test.utils_for_testing import *
 from cis.aggregation.collapse_kernels import aggregation_kernels

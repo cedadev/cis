@@ -331,8 +331,8 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     import cartopy.crs as ccrs
     from cartopy.mpl.geoaxes import GeoAxes
     import matplotlib.pyplot as plt
-    from cis.data_io.common_data import CommonData
-    from cis.data_io.gridded_data import GriddedData
+    from cis.data_io.datalist import CommonData
+    from cis.data_io.cube_utils import GriddedData
     from cis.utils import squeeze
     from cis.plotting.genericplot import GenericPlot
 

@@ -10,8 +10,8 @@ from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, 
 from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
                                            IndexedConstraint, Kernel, AbstractDataOnlyKernel)
 import cis.exceptions
-from cis.data_io.common_data import DataList
-from cis.data_io.gridded_data import make_new_with_same_coordinates
+from cis.data_io.datalist import DataList
+from cis.data_io.cube_utils import make_new_with_same_coordinates
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 import cis.collocation.data_index as data_index
 from cis.utils import log_memory_profile, set_standard_name_if_valid

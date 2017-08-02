@@ -6,7 +6,7 @@ import numpy as np
 from cis.collocation.col_implementations import GriddedUngriddedCollocator
 from cis.data_io.hyperpoint import HyperPoint
 from cis.test.util import mock
-from cis.data_io.common_data import DataList
+from cis.data_io.datalist import DataList
 from numpy.testing import assert_almost_equal, assert_equal, assert_raises
 from nose.tools import eq_
 
@@ -127,7 +127,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         from iris.cube import Cube
         from iris.coords import DimCoord
         import numpy as np
-        from cis.data_io.gridded_data import make_from_cube
+        from cis.data_io.cube_utils import make_from_cube
         from cis.data_io.ungridded_data import UngriddedCoordinates, Metadata
         from cis.data_io.Coord import Coord
 

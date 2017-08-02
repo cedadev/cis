@@ -1,24 +1,5 @@
-import iris
 import logging
-
-
-def _get_coord(self, name):
-    from cis.utils import standard_axes
-    import cis.exceptions as cis_ex
-    import iris.exceptions as iris_ex
-
-    def _try_coord(data, coord_dict):
-        try:
-            coord = data.coord(**coord_dict)
-        except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
-            coord = None
-        return coord
-
-    coord = _try_coord(self, dict(name_or_coord=name)) or _try_coord(self, dict(standard_name=name)) \
-        or _try_coord(self, dict(standard_name=standard_axes.get(name.upper(), None))) or \
-            _try_coord(self, dict(var_name=name)) or _try_coord(self, dict(axis=name))
-
-    return coord
+import iris
 
 
 class DataList(iris.cube.CubeList):
@@ -200,7 +181,7 @@ class DataList(iris.cube.CubeList):
     def is_gridded(self, coords):
         """Returns value indicating whether the data/coordinates are gridded.
         """
-        from cis.data_io.gridded_data import is_gridded
+        from cis.data_io.cube_utils import is_gridded
         return is_gridded(self[0], coords)
 
     def save_data(self, output_file):

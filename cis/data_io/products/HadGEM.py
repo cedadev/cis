@@ -31,7 +31,7 @@ class HadGEM_CONVSH(NetCDF_Gridded):
         import six
         from cis.exceptions import InvalidVariableError
         from cis.data_io.products.gridded_NetCDF import DisplayConstraint
-        from cis.data_io.gridded_data import load_cube
+        from cis.data_io.cube_utils import load_cube
         from iris.exceptions import CoordinateNotFoundError
 
         # Check if the files given actually exist.

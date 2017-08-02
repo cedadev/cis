@@ -1,6 +1,6 @@
 import logging
 import iris
-from cis.data_io import gridded_data as gridded_data
+from cis.data_io import cube_utils as gridded_data
 from cis.data_io.products import AProduct
 
 

@@ -7,7 +7,7 @@ import datetime as dt
 from nose.tools import eq_
 import numpy as np
 
-from cis.data_io.common_data import DataList
+from cis.data_io.datalist import DataList
 from cis.collocation.col_implementations import GeneralUngriddedCollocator, DummyConstraint, moments, \
     SepConstraintKdtree
 from cis.data_io.hyperpoint import HyperPoint

@@ -128,7 +128,7 @@ def aggregate_cmd(main_arguments):
     :param main_arguments: The command line arguments (minus the aggregate command)
     """
     import cis.exceptions as ex
-    from cis.data_io.gridded_data import GriddedDataList
+    from cis.data_io.cube_utils import GriddedDataList
 
     if len(main_arguments.datagroups) > 1:
         __error_occurred("Aggregation can only be performed on one data group")
@@ -193,7 +193,7 @@ def stats_cmd(main_arguments):
     :param main_arguments: The command line arguments (minus the stats command)
     """
     from cis.stats import StatsAnalyzer
-    from cis.data_io.gridded_data import GriddedDataList
+    from cis.data_io.cube_utils import GriddedDataList
     data_reader = DataReader()
     data_list = data_reader.read_datagroups(main_arguments.datagroups)
     analyzer = StatsAnalyzer(*data_list)

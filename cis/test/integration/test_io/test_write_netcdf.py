@@ -2,7 +2,7 @@ import unittest
 import os
 from netCDF4 import Dataset
 
-from cis.data_io.gridded_data import make_from_cube, GriddedDataList
+from cis.data_io.cube_utils import make_from_cube, GriddedDataList
 from cis.test.util.mock import make_dummy_2d_ungridded_data, make_mock_cube
 from cis.test.integration_test_data import valid_cis_col_file, valid_cis_col_variable
 from cis.data_io.write_netcdf import write

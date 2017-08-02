@@ -4,7 +4,7 @@ import numpy as np
 from hamcrest import assert_that, is_, close_to
 
 from cis.stats import StatsAnalyzer
-from cis.data_io.gridded_data import GriddedData
+from cis.data_io.cube_utils import GriddedData
 from cis.test.util import mock
 
 

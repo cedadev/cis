@@ -6,7 +6,7 @@ import numpy as np
 import iris
 import iris.coords
 
-import cis.data_io.gridded_data as gridded_data
+import cis.data_io.cube_utils as gridded_data
 
 
 def subset(data, constraint, **kwargs):

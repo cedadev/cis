@@ -180,7 +180,7 @@ class MODIS_L3(AProduct):
         return self.create_data_object(filenames, variable_name)
 
     def create_data_object(self, filenames, variable):
-        from cis.data_io.gridded_data import make_from_cube
+        from cis.data_io.cube_utils import make_from_cube
         logging.debug("Creating data object for variable " + variable)
 
         cube = self._create_cube(filenames, variable)

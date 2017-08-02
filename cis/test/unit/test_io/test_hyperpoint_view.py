@@ -3,7 +3,7 @@ import numpy as np
 
 from cis.data_io.hyperpoint_view import UngriddedHyperPointView, GriddedHyperPointView
 import cis.test.util.mock as mock
-import cis.data_io.gridded_data as gridded_data
+import cis.data_io.cube_utils as gridded_data
 
 
 class TestUngriddedHyperPointView(object):

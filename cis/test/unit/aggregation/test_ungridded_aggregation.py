@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from nose.tools import istest
 
-from cis.data_io.common_data import DataList
+from cis.data_io.datalist import DataList
 from cis.collocation.col_implementations import mean, max, min, stddev, moments
 from cis.test.utils_for_testing import *
 

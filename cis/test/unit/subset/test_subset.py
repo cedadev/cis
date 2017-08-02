@@ -4,8 +4,8 @@ Unit tests for the top-level subsetting routines.
 import datetime
 from unittest import TestCase
 import numpy as np
-from cis.data_io.common_data import DataList
-from cis.data_io.gridded_data import make_new_with_same_coordinates
+from cis.data_io.datalist import DataList
+from cis.data_io.cube_utils import make_new_with_same_coordinates
 import cis.test.util.mock
 
 

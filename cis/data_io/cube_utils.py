@@ -292,3 +292,22 @@ def _collapse_gridded(data, coords, kernel):
     data.add_history(history)
 
     return data
+
+
+def _get_coord(self, name):
+    from cis.utils import standard_axes
+    import cis.exceptions as cis_ex
+    import iris.exceptions as iris_ex
+
+    def _try_coord(data, coord_dict):
+        try:
+            coord = data.coord(**coord_dict)
+        except (iris_ex.CoordinateNotFoundError, cis_ex.CoordinateNotFoundError):
+            coord = None
+        return coord
+
+    coord = _try_coord(self, dict(name_or_coord=name)) or _try_coord(self, dict(standard_name=name)) \
+        or _try_coord(self, dict(standard_name=standard_axes.get(name.upper(), None))) or \
+            _try_coord(self, dict(var_name=name)) or _try_coord(self, dict(axis=name))
+
+    return coord
