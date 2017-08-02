@@ -4,7 +4,6 @@ Test the CommonData API: slicing, maths operations, equality, all main API funct
 from unittest import TestCase
 from nose.tools import assert_raises
 from cis.test.util.mock import make_mock_cube, make_regular_2d_ungridded_data
-from cis.data_io.gridded_data import make_from_cube
 import numpy as np
 from numpy.testing.utils import assert_array_almost_equal
 
@@ -16,8 +15,8 @@ class TestAPI(TestCase):
         """
         self.ug = make_regular_2d_ungridded_data()
         self.ug_1 = make_regular_2d_ungridded_data()
-        self.gd = make_from_cube(make_mock_cube())
-        self.gd_large = make_from_cube(make_mock_cube(50, 30))
+        self.gd = make_mock_cube()
+        self.gd_large = make_mock_cube(50, 30)
 
     def test_can_slice_ungridded_data(self):
         res = self.ug[2:5]

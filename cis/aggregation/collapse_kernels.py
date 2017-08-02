@@ -5,6 +5,7 @@ import iris.analysis
 from numpy import ma, zeros
 
 
+# TODO - this is already in Iris and shouldn't be here as well
 class StddevKernel(iris.analysis.Aggregator):
     """
     Custom standard deviation kernel (to allow calculation of standard deviation with appropriate metadata).
@@ -27,6 +28,7 @@ class StddevKernel(iris.analysis.Aggregator):
         cube.var_name = '{var_name}_std_dev'.format(var_name=cube.var_name)
 
 
+# TODO This is probably in Iris too?
 class CountKernel(iris.analysis.Aggregator):
     """
     Custom counting kernel (to allow calculation of the number of points used in an aggregation cell,
@@ -56,6 +58,7 @@ class CountKernel(iris.analysis.Aggregator):
         cube.units = None
 
 
+# TODO: I need to try and make this an iris Aggregator so I can pass it to a Cube
 class MultiKernel(object):
     """
     Represents a set of kernels to be applied each in turn

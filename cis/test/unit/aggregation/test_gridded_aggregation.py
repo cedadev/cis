@@ -3,17 +3,16 @@ from unittest import TestCase
 from nose.tools import istest, eq_
 import iris.analysis
 
-from cis.data_io.gridded_data import GriddedDataList
+from cis.data_io.common_data import DataList
 from cis.aggregation.gridded_collapsor import GriddedCollapsor
 from cis.test.utils_for_testing import *
 from cis.aggregation.collapse_kernels import aggregation_kernels
 from cis.test.util.mock import *
-from cis.data_io.gridded_data import make_from_cube
 
 
 class TestGriddedCollapse(TestCase):
     def setUp(self):
-        self.cube = make_from_cube(make_mock_cube())
+        self.cube = make_mock_cube()
         self.kernel = iris.analysis.MEAN
 
     @istest
@@ -62,7 +61,7 @@ class TestGriddedCollapse(TestCase):
 
     @istest
     def test_collapsing_everything_returns_a_single_value_with_missing_values(self):
-        self.cube = make_from_cube(make_5x3_lon_lat_2d_cube_with_missing_data())
+        self.cube = make_5x3_lon_lat_2d_cube_with_missing_data()
 
         cube_out = self.cube.collapsed(['x', 'y'], how=self.kernel)
 
@@ -101,7 +100,7 @@ class TestGriddedCollapse(TestCase):
 
     @istest
     def test_aggregation_on_three_dimensional_grid_with_time(self):
-        self.cube = make_from_cube(make_mock_cube(time_dim_length=7))
+        self.cube = make_mock_cube(time_dim_length=7)
 
         cube_out = self.cube.collapsed(['t', 'x', 'y'], how=self.kernel)
 
@@ -109,7 +108,7 @@ class TestGriddedCollapse(TestCase):
         assert_arrays_almost_equal(result_data, cube_out[0].data)
 
     def test_aggregation_over_multidimensional_coord(self):
-        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         cube_out = self.cube.collapsed(['t', 'x', 'y', 'air_pressure'], how=self.kernel)
 
         result_data = numpy.array(263)
@@ -117,7 +116,7 @@ class TestGriddedCollapse(TestCase):
 
     def test_partial_aggregation_over_multidimensional_coord(self):
         # JASCIS-126
-        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         cube_out = self.cube.collapsed(['t'], how=self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
@@ -153,7 +152,7 @@ class TestGriddedCollapse(TestCase):
         # JASCIS-126
         from cis.aggregation.collapse_kernels import MultiKernel, StddevKernel, CountKernel
         self.kernel = MultiKernel('moments', [iris.analysis.MEAN, StddevKernel(), CountKernel()])
-        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         cube_out = self.cube.collapsed(['t'], how=self.kernel)
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
@@ -188,7 +187,7 @@ class TestGriddedCollapse(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
     def test_partial_aggregation_over_more_than_one_dim_on_multidimensional_coord(self):
-        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         cube_out = self.cube.collapsed(['t', 'x'], how=self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
@@ -203,7 +202,7 @@ class TestGriddedCollapse(TestCase):
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
     def test_partial_aggregation_over_more_than_one_multidimensional_coord(self):
-        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5, geopotential_height=True))
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5, geopotential_height=True)
         cube_out = self.cube.collapsed(['t', 'x'], how=self.kernel)
 
         result_data = numpy.array([[51.0, 52.0, 53.0, 54.0, 55.0],
@@ -222,7 +221,7 @@ class TestGriddedCollapse(TestCase):
 
     def test_partial_aggregation_over_multidimensional_coord_along_middle_of_cube(self):
         # JASCIS-126
-        self.cube = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
+        self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
         cube_out = self.cube.collapsed(['x'], how=self.kernel)
 
         result_data = numpy.array([[[36.0, 37.0, 38.0, 39.0, 40.0],
@@ -316,17 +315,16 @@ class TestGriddedListAggregation(TestCase):
         self.kernel = iris.analysis.MEAN
 
     def test_collapse_coordinate(self):
-        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
 
-        data1 = make_from_cube(make_mock_cube())
-        data2 = make_from_cube(make_mock_cube(data_offset=1))
-        datalist = GriddedDataList([data1, data2])
+        data1 = make_mock_cube()
+        data2 = make_mock_cube(data_offset=1)
+        datalist = DataList([data1, data2])
         cube_out = datalist.collapsed(['x'], how=self.kernel)
 
         result1 = numpy.array([2, 5, 8, 11, 14])
         result2 = result1 + 1
 
-        assert isinstance(cube_out, GriddedDataList)
+        assert isinstance(cube_out, DataList)
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result1, cube_out[0].data)
@@ -334,17 +332,16 @@ class TestGriddedListAggregation(TestCase):
         assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     def test_collapse_vertical_coordinate(self):
-        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
 
-        data1 = make_from_cube(make_mock_cube(alt_dim_length=6))
-        data2 = make_from_cube(make_mock_cube(alt_dim_length=6, data_offset=1))
-        datalist = GriddedDataList([data1, data2])
+        data1 = make_mock_cube(alt_dim_length=6)
+        data2 = make_mock_cube(alt_dim_length=6, data_offset=1)
+        datalist = DataList([data1, data2])
         cube_out = datalist.collapsed(['z'], how=self.kernel)
 
         result1 = data1.data.mean(axis=2)
         result2 = result1 + 1
 
-        assert isinstance(cube_out, GriddedDataList)
+        assert isinstance(cube_out, DataList)
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result1, cube_out[0].data)
@@ -355,17 +352,16 @@ class TestGriddedListAggregation(TestCase):
         """
         We use a weighted aggregator, though no weights should be applied since we're only summing over the vertical
         """
-        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
 
-        data1 = make_from_cube(make_mock_cube(alt_dim_length=6))
-        data2 = make_from_cube(make_mock_cube(alt_dim_length=6, data_offset=1))
-        datalist = GriddedDataList([data1, data2])
+        data1 = make_mock_cube(alt_dim_length=6)
+        data2 = make_mock_cube(alt_dim_length=6, data_offset=1)
+        datalist = DataList([data1, data2])
         cube_out = datalist.collapsed(['z'], how=iris.analysis.SUM)
 
         result1 = np.sum(data1.data, axis=2)
         result2 = np.sum(data2.data, axis=2)
 
-        assert isinstance(cube_out, GriddedDataList)
+        assert isinstance(cube_out, DataList)
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result1, cube_out[0].data)
@@ -373,17 +369,16 @@ class TestGriddedListAggregation(TestCase):
         assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     def test_aggregate_mean(self):
-        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
 
-        data1 = make_from_cube(make_mock_cube())
-        data2 = make_from_cube(make_mock_cube(data_offset=1))
-        datalist = GriddedDataList([data1, data2])
+        data1 = make_mock_cube()
+        data2 = make_mock_cube(data_offset=1)
+        datalist =DataList([data1, data2])
         cube_out = datalist.collapsed(['y'], how=self.kernel)
 
         result1 = numpy.array([7, 8, 9])
         result2 = result1 + 1
 
-        assert isinstance(cube_out, GriddedDataList)
+        assert isinstance(cube_out, DataList)
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result1, cube_out[0].data)
@@ -391,12 +386,12 @@ class TestGriddedListAggregation(TestCase):
 
     def test_complete_collapse_one_dim_using_moments_kernel(self):
         self.kernel = aggregation_kernels['moments']
-        data1 = make_from_cube(make_5x3_lon_lat_2d_cube_with_missing_data())
+        data1 = make_5x3_lon_lat_2d_cube_with_missing_data()
         data1.var_name = 'var1'
-        data2 = make_from_cube(make_5x3_lon_lat_2d_cube_with_missing_data())
+        data2 = make_5x3_lon_lat_2d_cube_with_missing_data()
         data2.var_name = 'var2'
         data2.data += 10
-        data = GriddedDataList([data1, data2])
+        data = DataList([data1, data2])
 
         output = data.collapsed(['x'], how=self.kernel)
 
@@ -404,7 +399,7 @@ class TestGriddedListAggregation(TestCase):
         expect_stddev = numpy.array([numpy.sqrt(15), numpy.sqrt(26.25), numpy.sqrt(30)])
         expect_count = numpy.array([[4, 4, 4]])
 
-        assert isinstance(output, GriddedDataList)
+        assert isinstance(output, DataList)
         assert len(output) == 6
         mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
         assert mean_1.var_name == 'var1'
@@ -422,19 +417,19 @@ class TestGriddedListAggregation(TestCase):
 
     def test_complete_collapse_two_dims_using_moments_kernel(self):
         self.kernel = aggregation_kernels['moments']
-        data1 = make_from_cube(make_5x3_lon_lat_2d_cube_with_missing_data())
+        data1 = make_5x3_lon_lat_2d_cube_with_missing_data()
         data1.var_name = 'var1'
-        data2 = make_from_cube(make_5x3_lon_lat_2d_cube_with_missing_data())
+        data2 = make_5x3_lon_lat_2d_cube_with_missing_data()
         data2.var_name = 'var2'
         data2.data += 10
-        data = GriddedDataList([data1, data2])
+        data = DataList([data1, data2])
         output = data.collapsed(['x', 'y'], how=self.kernel)
 
         expect_mean = numpy.array(7.75)
         expect_stddev = numpy.array(numpy.sqrt(244.25 / 11))
         expect_count = numpy.array(12)
 
-        assert isinstance(output, GriddedDataList)
+        assert isinstance(output, DataList)
         assert len(output) == 6
         mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
         assert mean_1.var_name == 'var1'
@@ -452,11 +447,10 @@ class TestGriddedListAggregation(TestCase):
         assert numpy.allclose(count_2.data, expect_count)
 
     def test_partial_aggregation_over_more_than_one_dim_on_multidimensional_coord(self):
-        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
 
-        data1 = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5))
-        data2 = make_from_cube(make_mock_cube(time_dim_length=7, hybrid_pr_len=5, data_offset=1))
-        datalist = GriddedDataList([data1, data2])
+        data1 = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
+        data2 = make_mock_cube(time_dim_length=7, hybrid_pr_len=5, data_offset=1)
+        datalist = DataList([data1, data2])
 
         cube_out = datalist.collapsed(['t', 'x'], how=self.kernel)
 

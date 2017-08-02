@@ -2,8 +2,7 @@ from unittest import TestCase
 
 from nose.tools import istest
 
-from cis.data_io.gridded_data import GriddedDataList
-from cis.data_io.ungridded_data import UngriddedDataList
+from cis.data_io.common_data import DataList
 from cis.collocation.col_implementations import mean, max, min, stddev, moments
 from cis.test.utils_for_testing import *
 
@@ -212,7 +211,7 @@ class TestUngriddedAggregation(TestCase):
         expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26 / 3.0)]])
         expect_count = numpy.array([[5], [7]])
 
-        assert isinstance(output, GriddedDataList)
+        assert isinstance(output, DataList)
         assert len(output) == 3
         actual_mean, actual_stddev, actual_count = output
         assert actual_mean.var_name == 'rain'
@@ -233,7 +232,7 @@ class TestUngriddedAggregation(TestCase):
                                      [numpy.sqrt(13.0 / 3), numpy.sqrt(4.5)]])
         expect_count = numpy.array([[5, 2], [3, 2]])
 
-        assert isinstance(output, GriddedDataList)
+        assert isinstance(output, DataList)
         assert len(output) == 3
         actual_mean, actual_stddev, actual_count = output
         assert actual_mean.var_name == 'rain'
@@ -336,7 +335,7 @@ class TestUngriddedListAggregation(TestCase):
     def test_aggregating_list_of_datasets_over_two_dims(self):
         grid = {'x': slice(-7.5, 7.5, 5), 'y': slice(-12.5, 12.5, 5)}
 
-        datalist = UngriddedDataList([make_regular_2d_ungridded_data_with_missing_values(),
+        datalist = DataList([make_regular_2d_ungridded_data_with_missing_values(),
                                       make_regular_2d_ungridded_data_with_missing_values()])
 
         cube_out = datalist.aggregate(how=self.kernel, **grid)
@@ -362,7 +361,7 @@ class TestUngriddedListAggregation(TestCase):
         data2 = make_regular_2d_ungridded_data_with_missing_values()
         data2.metadata._name = 'snow'
         data2._data += 10
-        data = UngriddedDataList([data1, data2])
+        data = DataList([data1, data2])
         grid = {'y': slice(-12.5, 12.5, 12.5)}
 
         output = data.aggregate(how=self.kernel, **grid)
@@ -371,7 +370,7 @@ class TestUngriddedListAggregation(TestCase):
         expect_stddev = numpy.array([[numpy.sqrt(3.7)], [numpy.sqrt(26.0 / 3)]])
         expect_count = numpy.array([[5], [7]])
 
-        assert isinstance(output, GriddedDataList)
+        assert isinstance(output, DataList)
         assert len(output) == 6
         mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
         assert mean_1.var_name == 'rain'
@@ -393,7 +392,7 @@ class TestUngriddedListAggregation(TestCase):
         data2 = make_regular_2d_ungridded_data_with_missing_values()
         data2.metadata._name = 'snow'
         data2._data += 10
-        data = UngriddedDataList([data1, data2])
+        data = DataList([data1, data2])
         grid = {'y': slice(-12.5, 12.5, 15), 'x': slice(-7.5, 7.5, 10)}
 
         output = data.aggregate(how=self.kernel, **grid)
@@ -403,7 +402,7 @@ class TestUngriddedListAggregation(TestCase):
                                      [numpy.sqrt(13.0 / 3), numpy.sqrt(4.5)]])
         expect_count = numpy.array([[5, 2], [3, 2]])
 
-        assert isinstance(output, GriddedDataList)
+        assert isinstance(output, DataList)
         assert len(output) == 6
         mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
         assert mean_1.var_name == 'rain'
@@ -428,7 +427,7 @@ class TestUngriddedListAggregation(TestCase):
 
         var_1.data.mask = 1
 
-        datalist = UngriddedDataList([var_0, var_1])
+        datalist = DataList([var_0, var_1])
 
         cube_out = datalist.aggregate(how=self.kernel, **grid)
 

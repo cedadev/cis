@@ -2,6 +2,7 @@ import logging
 
 import iris
 import iris.coords
+from iris.cube import Cube
 from iris.exceptions import CoordinateMultiDimError
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, sum as np_sum
@@ -9,9 +10,9 @@ from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, 
 from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
                                            IndexedConstraint, Kernel, AbstractDataOnlyKernel)
 import cis.exceptions
-from cis.data_io.gridded_data import GriddedData, make_from_cube, GriddedDataList
+from cis.data_io.common_data import DataList
+from cis.data_io.gridded_data import make_new_with_same_coordinates
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
-from cis.data_io.ungridded_data import Metadata, UngriddedDataList, UngriddedData
 import cis.collocation.data_index as data_index
 from cis.utils import log_memory_profile, set_standard_name_if_valid
 
@@ -34,14 +35,14 @@ class GeneralUngriddedCollocator(Collocator):
                            returns a subset of that data based on it's internal parameters
         :param kernel: An instance of a Kernel subclass which takes a number of points and returns
                        a single value
-        :return UngriddedData or UngriddedDataList: Depending on the input
+        :return UngriddedData or DataList: Depending on the input
         """
         log_memory_profile("GeneralUngriddedCollocator Initial")
 
         if isinstance(data, list):
             # Indexing and constraints (for SepConstraintKdTree) will only take place on the first iteration,
             # so we really can just call this method recursively if we've got a list of data.
-            output = UngriddedDataList()
+            output = DataList()
             for var in data:
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
@@ -117,12 +118,12 @@ class GeneralUngriddedCollocator(Collocator):
                 pass
         log_memory_profile("GeneralUngriddedCollocator after running kernel on sample points")
 
-        return_data = UngriddedDataList()
+        return_data = DataList()
         for idx, var_details in enumerate(var_set_details):
-            var_metadata = Metadata(name=var_details[0], long_name=var_details[1], shape=(len(sample_points),),
-                                    missing_value=self.fill_value, units=var_details[3])
-            set_standard_name_if_valid(var_metadata, var_details[2])
-            return_data.append(UngriddedData(values[idx, :], var_metadata, points.coords()))
+            new = make_new_with_same_coordinates(points, values[idx, :], var_name=var_details[0],
+                                                              long_name=var_details[1], units=var_details[3])
+            set_standard_name_if_valid(new, var_details[2])
+            return_data.append(new)
         log_memory_profile("GeneralUngriddedCollocator final")
 
         return return_data
@@ -148,7 +149,7 @@ class GriddedUngriddedCollocator(Collocator):
         the input data object.
 
         :param UngriddedData or UngriddedCoordinates points: Objects defining the sample points
-        :param GriddedData or GriddedDataList data: Data to resample
+        :param GriddedData or DataList data: Data to resample
         :param constraint: An instance of a Constraint subclass which takes a data object and
                            returns a subset of that data based on it's internal parameters
         :param kernel: An instance of a Kernel subclass which takes a number of points and returns
@@ -161,7 +162,7 @@ class GriddedUngriddedCollocator(Collocator):
         if isinstance(data, list):
             # Indexing and constraints (for SepConstraintKdTree) will only take place on the first iteration,
             # so we really can just call this method recursively if we've got a list of data.
-            output = UngriddedDataList()
+            output = DataList()
             for var in data:
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
@@ -188,34 +189,15 @@ class GriddedUngriddedCollocator(Collocator):
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
-        metadata = Metadata(self.var_name or data.var_name, long_name=self.var_long_name or data.long_name,
-                            shape=values.shape, missing_value=self.fill_value, units=self.var_units or data.units)
-        set_standard_name_if_valid(metadata, data.standard_name)
-        return_data = UngriddedDataList([UngriddedData(values, metadata, points.coords())])
+        new = make_new_with_same_coordinates(points, values, var_name=self.var_name or data.var_name,
+                                             long_name=self.var_long_name or data.long_name,
+                                             units=self.var_units or data.units)
+        set_standard_name_if_valid(new, data.standard_name)
+        return_data = DataList([new])
 
         log_memory_profile("GriddedUngriddedCollocator final")
 
         return return_data
-
-
-class DummyCollocator(Collocator):
-    def collocate(self, points, data, constraint, kernel):
-        """
-            This collocator does no collocation at all - it just returns the original data values. This might be useful
-            if the input data for one variable is already known to be on the same grid as points. This routine could
-            check the coordinates are the same but currently does no such check.
-
-        :param points: A list of HyperPoints
-        :param data: An UngriddedData object or Cube
-        :param constraint: Unused
-        :param kernel: Unused
-        :return: A single LazyData object
-        """
-        from cis.data_io.ungridded_data import LazyData
-
-        logging.info("--> Collocating...")
-        data = cis.utils.listify(data)
-        return [LazyData(var.data, var.metadata) for var in data]
 
 
 class DummyConstraint(Constraint):
@@ -672,7 +654,7 @@ class GriddedCollocator(Collocator):
                                              kernel, output_mask, points, self.extrapolate)
 
         if not isinstance(output_cube, list):
-            return GriddedDataList([output_cube])
+            return DataList([output_cube])
         else:
             return output_cube
 
@@ -714,8 +696,8 @@ class GriddedCollocator(Collocator):
 
         # The result here will be a cube with the correct dimensions for the output, so interpolated over all points
         # in coord_names_and_sizes_for_output_grid.
-        output_cube = make_from_cube(data.interpolate(coordinate_point_pairs,
-                                                      kernel.interpolater(extrapolation_mode=extrapolate)))
+        output_cube = data.interpolate(coordinate_point_pairs,
+                                                      kernel.interpolater(extrapolation_mode=extrapolate))
 
         # Iris outputs interpolated cubes with the dimensions in the order of the data grid, not the sample grid,
         # so we need to rearrange the order of the dimensions.
@@ -768,7 +750,7 @@ class GeneralGriddedCollocator(Collocator):
         :param constraint: instance of a Constraint subclass, which takes a data object and returns a subset of that
                            data based on it's internal parameters
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
-        :return: GriddedDataList of collocated data
+        :return: DataList of collocated data
         """
         if isinstance(data, list):
             # If data is a list then call this method recursively over each element
@@ -776,7 +758,7 @@ class GeneralGriddedCollocator(Collocator):
             for variable in data:
                 collocated = self.collocate(points, variable, constraint, kernel)
                 output_list.extend(collocated)
-            return GriddedDataList(output_list)
+            return DataList(output_list)
 
         data_points = data.get_non_masked_points()
 
@@ -856,7 +838,7 @@ class GeneralGriddedCollocator(Collocator):
                                                          self.var_long_name or data.long_name,
                                                          data.standard_name,
                                                          self.var_units or data.units)
-        output = GriddedDataList([])
+        output = DataList([])
         for idx, val in enumerate(values):
             cube = self._create_collocated_cube(data, val, output_coords)
             data_with_nan_and_inf_removed = np.ma.masked_invalid(cube.data)
@@ -899,7 +881,7 @@ class GeneralGriddedCollocator(Collocator):
         dim_coords_and_dims = []
         for idx, coord in enumerate(coords):
             dim_coords_and_dims.append((coord, idx))
-        cube = GriddedData(data, standard_name=src_data.standard_name,
+        cube = Cube(data, standard_name=src_data.standard_name,
                            long_name=src_data.long_name,
                            var_name=src_data.var_name,
                            units=src_data.units,

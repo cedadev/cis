@@ -1025,10 +1025,9 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
     def test_gridded_gridded_bin_when_grids_have_different_dims_order(self):
         # JASCIS-204
-        from cis.data_io.gridded_data import make_from_cube
-        sample = make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time']))
-        data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
-                                             time_dim_length=10, dim_order=['time', 'lon', 'lat']))
+        sample = make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time'])
+        data = make_mock_cube(lat_dim_length=11, lon_dim_length=13,
+                                             time_dim_length=10, dim_order=['time', 'lon', 'lat'])
 
         col = GeneralGriddedCollocator()
         constraint = BinningCubeCellConstraint()
@@ -1038,10 +1037,9 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
     def test_gridded_gridded_bin_when_grids_have_different_dims_order_2(self):
         # JASCIS-204
-        from cis.data_io.gridded_data import make_from_cube
-        sample = make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'time', 'lon']))
-        data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
-                                             time_dim_length=10, dim_order=['lon', 'lat', 'time']))
+        sample = make_mock_cube(time_dim_length=7, dim_order=['lat', 'time', 'lon'])
+        data = make_mock_cube(lat_dim_length=11, lon_dim_length=13,
+                                             time_dim_length=10, dim_order=['lon', 'lat', 'time'])
 
         col = GeneralGriddedCollocator()
         constraint = BinningCubeCellConstraint()
@@ -1051,10 +1049,9 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
     def test_gridded_gridded_bin_when_sample_has_dimension_data_doesnt(self):
         # JASCIS-204
-        from cis.data_io.gridded_data import make_from_cube
-        sample = make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time']))
-        data = make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
-                                             time_dim_length=0, dim_order=['time', 'lon', 'lat']))
+        sample = make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time'])
+        data = make_mock_cube(lat_dim_length=11, lon_dim_length=13,
+                                             time_dim_length=0, dim_order=['time', 'lon', 'lat'])
 
         col = GeneralGriddedCollocator()
         constraint = BinningCubeCellConstraint()

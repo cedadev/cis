@@ -4,13 +4,12 @@ from cis.collocation.col_framework import get_kernel
 from cis.test.util import mock
 from cis.aggregation.collapse_kernels import aggregation_kernels, CountKernel
 from cis.test.utils_for_testing import *
-from cis.data_io.gridded_data import make_from_cube
 
 
 class TestMomentsKernel(unittest.TestCase):
 
     def test_GIVEN_gridded_data_WHEN_full_collapse_THEN_calculations_correct(self):
-        cube = make_from_cube(mock.make_mock_cube())
+        cube = mock.make_mock_cube()
         kernel = aggregation_kernels['moments']
         result = cube.collapsed(['y'], how=kernel)
 
@@ -23,7 +22,7 @@ class TestMomentsKernel(unittest.TestCase):
         assert_that(numpy.array_equal(result[2].data, expected_no))
 
     def test_GIVEN_gridded_data_WHEN_full_collapse_THEN_metadata_correct(self):
-        cube = make_from_cube(mock.make_mock_cube())
+        cube = mock.make_mock_cube()
         cube.standard_name = 'age_of_sea_ice'  # Use a CF compliant name
         cube.long_name = 'Age of sea ice'
         cube.var_name = 'age_ice'
@@ -46,7 +45,7 @@ class TestMomentsKernel(unittest.TestCase):
         assert_that(num.units, is_(None))
 
     def test_GIVEN_grid_contains_single_points_WHEN_collapse_THEN_stddev_undefined(self):
-        cube = make_from_cube(mock.make_mock_cube(2, 2))
+        cube = mock.make_mock_cube(2, 2)
         cube.data = numpy.ma.masked_invalid([[float('Nan'), 1], [float('Nan'), float('Nan')]])
         kernel = aggregation_kernels['moments']
         result = cube.collapsed(['y'], how=kernel)

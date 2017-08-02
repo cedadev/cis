@@ -5,11 +5,9 @@ from nose.tools import raises
 import numpy as np
 import numpy.ma as ma
 from iris.cube import Cube
-from iris.coords import DimCoord
+from iris.coords import DimCoord, AuxCoord
 import datetime
 
-from cis.data_io.common_data import CommonData
-from cis.data_io.hyperpoint import HyperPointList
 from cis.time_util import convert_datetime_to_std_time
 
 WKT_DIAMOND = "POLYGON ((-5.5 0, 0 5.5, 5.5 0, 0 -5.5, -5.5 0))"
@@ -185,8 +183,6 @@ def make_dummy_2d_cube():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36
     """
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(np.arange(-85., 105., 10.), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(0., 360., 10.), standard_name='longitude', units='degrees')
@@ -200,8 +196,6 @@ def make_dummy_2d_cube_with_circular_lon():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36
     """
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(np.arange(-90., 100., 10.), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(0., 360., 10.), standard_name='longitude', units='degrees', circular=True)
@@ -215,13 +209,10 @@ def make_dummy_2d_cube_with_small_offset_in_lat():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36
     """
-    import numpy
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(list(range(-84, 106, 10)), standard_name='latitude', units='degrees')
     longitude = DimCoord(list(range(0, 360, 10)), standard_name='longitude', units='degrees')
-    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    cube = Cube(np.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
 
@@ -230,13 +221,10 @@ def make_dummy_2d_cube_with_small_offset_in_lon():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36
     """
-    import numpy
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(list(range(-85, 105, 10)), standard_name='latitude', units='degrees')
     longitude = DimCoord(list(range(1, 361, 10)), standard_name='longitude', units='degrees')
-    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    cube = Cube(np.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
 
@@ -245,13 +233,10 @@ def make_dummy_2d_cube_with_small_offset_in_lat_and_lon():
     """
         Makes a dummy cube filled with random datapoints of shape 19x36
     """
-    import numpy
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(list(range(-84, 106, 10)), standard_name='latitude', units='degrees')
     longitude = DimCoord(list(range(1, 361, 10)), standard_name='longitude', units='degrees')
-    cube = Cube(numpy.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    cube = Cube(np.random.rand(19, 36), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube
 
@@ -270,23 +255,20 @@ def make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres():
 
     For the second cube the values contained are a checkerboard of 0s and 1s, starting with 0 for the first cell
     """
-    import numpy
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(list(range(0, 10, 2)), standard_name='latitude', units='degrees')
     longitude = DimCoord(list(range(0, 10, 2)), standard_name='longitude', units='degrees')
-    cube1 = Cube(numpy.random.rand(5, 5), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
+    cube1 = Cube(np.random.rand(5, 5), dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
-    checkerboard = numpy.zeros((5, 5))
+    checkerboard = np.zeros((5, 5))
 
     for i in range(0, 5):
         for j in range(0, 5):
             if (i + j) % 2 == 1:
                 checkerboard[i, j] = 1
 
-    latitude = DimCoord(numpy.arange(1, 11, 2), standard_name='latitude', units='degrees')
-    longitude = DimCoord(numpy.arange(1, 11, 2), standard_name='longitude', units='degrees')
+    latitude = DimCoord(np.arange(1, 11, 2), standard_name='latitude', units='degrees')
+    longitude = DimCoord(np.arange(1, 11, 2), standard_name='longitude', units='degrees')
     cube2 = Cube(checkerboard, dim_coords_and_dims=[(latitude, 0), (longitude, 1)])
 
     return cube1, cube2
@@ -308,9 +290,6 @@ def make_square_5x3_2d_cube():
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(np.arange(-10., 11., 5), var_name='lat', standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5., 6., 5), var_name='lon', standard_name='longitude', units='degrees')
@@ -338,9 +317,6 @@ def make_square_5x3_2d_cube_with_extra_dim():
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(np.linspace(-10, 10, 5), var_name='lat', standard_name='latitude', units='degrees')
     longitude = DimCoord(np.linspace(-5, 5, 3), var_name='lon', standard_name='longitude', units='degrees')
@@ -367,9 +343,6 @@ def make_square_5x3_2d_cube_with_missing_data():
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(np.arange(-10, 11, 5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
@@ -399,9 +372,6 @@ def make_5x3_lon_lat_2d_cube_with_missing_data():
     They are different lengths to make it easier to distinguish. Note the longitude increases
     as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.coords import DimCoord
-    from iris.cube import Cube
 
     longitude = DimCoord(np.arange(-10, 11, 5), standard_name='longitude', units='degrees')
     latitude = DimCoord(np.arange(-5, 6, 5), standard_name='latitude', units='degrees')
@@ -431,9 +401,6 @@ def make_square_5x3_2d_cube_with_decreasing_latitude():
     They are different lengths to make it easier to distinguish. Note the latitude increases
     as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     latitude = DimCoord(np.arange(10, -11, -5), standard_name='latitude', units='degrees')
     longitude = DimCoord(np.arange(-5, 6, 5), standard_name='longitude', units='degrees')
@@ -475,9 +442,6 @@ def make_square_5x3_2d_cube_with_time(offset=0, time_offset=0):
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
     import datetime
 
     t0 = datetime.datetime(1984, 8, 27)
@@ -511,9 +475,6 @@ def make_square_5x3_2d_cube_with_scalar_time(time_offset=0):
         time_bounds:
             [1984-08-22, 1984-09-01]
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
     from cis.time_util import cis_standard_time_unit
 
     t0 = datetime.datetime(1984, 8, 27)
@@ -569,9 +530,6 @@ def make_square_NxM_2d_cube_with_time(start_lat=-10, end_lat=10, lat_point_count
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
     import datetime
 
     t0 = datetime.datetime(1984, 8, 27)
@@ -620,9 +578,6 @@ def make_square_5x3_2d_cube_with_altitude(offset=0, altitude_offset=0):
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     altitude = DimCoord(np.arange(0, 7, 1) + altitude_offset, standard_name='altitude', units='metres')
     latitude = DimCoord(np.arange(-10 + offset, 11 + offset, 5), standard_name='latitude', units='degrees')
@@ -665,9 +620,6 @@ def make_square_5x3_2d_cube_with_pressure(offset=0):
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from iris.cube import Cube
-    from iris.coords import DimCoord
 
     pressure = DimCoord(np.arange(0, 7, 1), standard_name='air_pressure', units='hPa')
     latitude = DimCoord(np.arange(-10 + offset, 11 + offset, 5), standard_name='latitude', units='degrees')
@@ -679,12 +631,8 @@ def make_square_5x3_2d_cube_with_pressure(offset=0):
 
 
 def make_dummy_1d_cube():
-    import numpy
-    from iris.cube import Cube
-    from iris.coords import DimCoord
-
     latitude = DimCoord(list(range(-85, 105, 10)), standard_name='latitude', units='degrees')
-    cube = Cube(numpy.random.rand(19), dim_coords_and_dims=[(latitude, 0)])
+    cube = Cube(np.random.rand(19), dim_coords_and_dims=[(latitude, 0)])
 
     return cube
 
@@ -736,99 +684,82 @@ def make_dummy_ungridded_data_time_series(len=10):
     """
     from datetime import datetime, timedelta
     from cis.time_util import cis_standard_time_unit
-    from cis.data_io.Coord import Coord, CoordList
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
 
     t0 = datetime(1984, 8, 27)
     times = np.array([t0 + timedelta(days=d) for d in range(len)])
 
-    x = Coord(np.zeros(len) + 65.2, Metadata(standard_name='latitude', units='degrees'))
-    y = Coord(np.zeros(len) - 12.1, Metadata(standard_name='longitude', units='degrees'))
-    t = Coord(cis_standard_time_unit.date2num(times),
-              Metadata(standard_name='time', units=cis_standard_time_unit), axis='x')
+    x = AuxCoord(np.zeros(len) + 65.2, standard_name='latitude', units='degrees')
+    y = AuxCoord(np.zeros(len) - 12.1, standard_name='longitude', units='degrees')
+    t = AuxCoord(cis_standard_time_unit.date2num(times), standard_name='time', units=cis_standard_time_unit)
     data = np.arange(len) + 1.0
+    index = DimCoord(range(len), var_name="Obs")
 
-    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), CoordList([x, y, t]))
+    return Cube(data, standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                units="kg m-2 s-1", dim_coords_and_dims=[(index, 0)], aux_coords_and_dims=[(x, 0), (y, 0), (t, 0)])
 
 
 def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=None, altitude=None, pressure=None,
                                            mask=None):
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
-    import datetime
-    import numpy
 
-    x = Coord(numpy.array(lat), Metadata('latitude'), 'x')
-    y = Coord(numpy.array(lon), Metadata('longitude'), 'y')
+    x = AuxCoord(np.array(lat), standard_name='latitude')
+    y = AuxCoord(np.array(lon), standard_name='longitude')
 
     if (time is not None) + (altitude is not None) + (pressure is not None) > 1:
         raises(NotImplementedError)
     elif time is None and altitude is None and pressure is None:
-        coords = CoordList([x, y])
+        coords = [(x, 0), (y, 0)]
     elif altitude is not None:
-        z = Coord(numpy.array(altitude), Metadata('altitude'), 'z')
-        coords = CoordList([x, y, z])
+        z = AuxCoord(np.array(altitude), standard_name='altitude')
+        coords = [(x, 0), (y, 0), (z, 0)]
     elif time is not None:
-        t = Coord(numpy.array(time), Metadata('time'), 't')
-        coords = CoordList([x, y, t])
+        t = AuxCoord(np.array(time), standard_name='time')
+        coords = [(x, 0), (y, 0), (t, 0)]
     elif pressure is not None:
-        p = Coord(numpy.array(pressure), Metadata('air_pressure'), 'p')
-        coords = CoordList([x, y, p])
+        p = AuxCoord(np.array(pressure), standard_name='air_pressure')
+        coords = [(x, 0), (y, 0), (p, 0)]
 
-    data = numpy.array(value)
+    data = np.array(value)
     if mask:
         data = ma.masked_array(data, mask=mask)
-    return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    return Cube(data, var_name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
+                units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord([0], var_name="Obs"), 0)],
+                aux_coords_and_dims=coords)
 
 
 def make_dummy_ungridded_data_two_points_with_different_values(lat=0.0, lon=0.0, value1=1.0, value2=2.0):
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
-    import numpy
-
-    x = Coord(numpy.array([lat, lat]), Metadata('latitude'), 'x')
-    y = Coord(numpy.array([lon, lon]), Metadata('longitude'), 'y')
-    coords = CoordList([x, y])
-    data = numpy.array([value1, value2])
-    return UngriddedData(data, Metadata(name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    x = AuxCoord(np.array([lat, lat]), standard_name='latitude')
+    y = AuxCoord(np.array([lon, lon]), standard_name='longitude')
+    data = np.array([value1, value2])
+    return Cube(data, var_name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",
+                units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord([0, 1], var_name="Obs"), 0)],
+                aux_coords_and_dims=[(x,0), (y,0)])
 
 
 def make_dummy_1d_ungridded_data():
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
-
-    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
-    coords = CoordList([x])
+    x = AuxCoord(gen_random_lat_array((5,)), standard_name='latitude')
     data = gen_random_data_array((5,), 4.0, 1.0)
-    return UngriddedData(data, Metadata(name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    return Cube(data, var_name='rain', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(5), var_name="Obs"), 0)],
+                aux_coords_and_dims=[(x,0)])
 
 
 def make_dummy_1d_ungridded_data_with_invalid_standard_name():
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
-
-    x = Coord(gen_random_lat_array((5,)), Metadata('latitude'), 'x')
-    coords = CoordList([x])
+    x = AuxCoord(gen_random_lat_array((5,)), standard_name='latitude')
     data = gen_random_data_array((5,), 4.0, 1.0)
-    return UngriddedData(data, Metadata(name='rain', standard_name='notavalidname',
+    return Cube(data, var_name='rain', standard_name='notavalidname',
                                         long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+                                        units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(5), var_name="Obs"), 0)],
+                aux_coords_and_dims=[(x, 0)])
 
 
 def make_dummy_2d_ungridded_data():
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
-
-    x = Coord(gen_random_lat_array((5, 5)), Metadata('latitude'), 'x')
-    y = Coord(gen_random_lon_array((5, 5)), Metadata('longitude'), 'y')
-    coords = CoordList([x, y])
+    x = AuxCoord(gen_random_lat_array((5, 5)), standard_name='latitude')
+    y = AuxCoord(gen_random_lat_array((5, 5)), standard_name='longitude')
     data = gen_random_data_array((5, 5), 4.0, 1.0)
-    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    return Cube(data, standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                                        units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(5), var_name="x"), 0),
+                                                                                 (DimCoord(range(5), var_name="y"), 1)],
+                aux_coords_and_dims=[(x, (0, 1)), (y, (0, 1))])
 
 
 def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lon_dim_length=3, lon_min=-5, lon_max=5,
@@ -866,25 +797,22 @@ def make_regular_2d_ungridded_data(lat_dim_length=5, lat_min=-10, lat_max=10, lo
     :param mask: missing value mask
     :return: UngriddedData object as specified
     """
-    import numpy as np
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
 
     x_points = np.linspace(lat_min, lat_max, lat_dim_length)
     y_points = np.linspace(lon_min, lon_max, lon_dim_length)
     y, x = np.meshgrid(y_points, x_points)
 
-    x = Coord(x, Metadata(name='lat', standard_name='latitude', units='degrees'), axis='Y')
-    y = Coord(y, Metadata(name='lon', standard_name='longitude', units='degrees'), axis= 'X')
+    x = AuxCoord(x, var_name='lat', standard_name='latitude', units='degrees')
+    y = AuxCoord(y, var_name='lon', standard_name='longitude', units='degrees')
     data = np.reshape(np.arange(lat_dim_length * lon_dim_length) + data_offset + 1.0, (lat_dim_length, lon_dim_length))
     if mask:
         data = np.ma.asarray(data)
         data.mask = mask
 
-    coords = CoordList([x, y])
-    return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_rate',
-                                        long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    return Cube(data, var_name='rain', standard_name='rainfall_rate', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(lat_dim_length), var_name="x"), 0),
+                                                         (DimCoord(range(lon_dim_length), var_name="y"), 1)],
+                aux_coords_and_dims=[(x, (0, 1)), (y, (0, 1))])
 
 
 def make_regular_2d_ungridded_data_with_missing_values():
@@ -912,28 +840,23 @@ def make_regular_2d_ungridded_data_with_missing_values():
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
 
     x_points = np.arange(-10, 11, 5)
     y_points = np.arange(-5, 6, 5)
     y, x = np.meshgrid(y_points, x_points)
 
-    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
-    y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
+    x = AuxCoord(x, standard_name='latitude', units='degrees')
+    y = AuxCoord(y, standard_name='longitude', units='degrees')
     values = np.ma.arange(15) + 1.0
     values[4] = np.ma.masked
     values[8] = np.ma.masked
     values[12] = np.ma.masked
     data = np.reshape(values, (5, 3))
 
-    coords = CoordList([x, y])
-    return UngriddedData(data,
-                         Metadata(name='rain', standard_name='rainfall_rate',
-                                  long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                  units="kg m-2 s-1", missing_value=-999),
-                         coords)
+    return Cube(data, var_name='rain', standard_name='rainfall_rate', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(5), var_name="x"), 0),
+                                                         (DimCoord(range(3), var_name="y"), 1)],
+                aux_coords_and_dims=[(x, (0, 1)), (y, (0, 1))])
 
 
 def make_regular_2d_with_time_ungridded_data():
@@ -960,9 +883,6 @@ def make_regular_2d_with_time_ungridded_data():
         They are different lengths to make it easier to distinguish. Note the latitude increases
         as you step through the array in order - so downwards as it's written above
     """
-    import numpy as np
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
 
     x_points = np.arange(-10, 11, 5)
@@ -972,15 +892,16 @@ def make_regular_2d_with_time_ungridded_data():
     t0 = datetime.datetime(1984, 8, 27)
     times = np.reshape(np.array([t0 + datetime.timedelta(days=d) for d in range(15)]), (5, 3))
 
-    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
-    y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
-    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
+    x = AuxCoord(x, standard_name='latitude', units='degrees')
+    y = AuxCoord(y, standard_name='longitude', units='degrees')
+    t = AuxCoord(times, standard_name='time', units='DateTime Object')
 
     data = np.reshape(np.arange(15) + 1.0, (5, 3))
 
-    coords = CoordList([x, y, t])
-    return UngriddedData(data, Metadata(name='rain', standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    return Cube(data, var_name='rain', standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(5), var_name="x"), 0),
+                                                         (DimCoord(range(3), var_name="y"), 1)],
+                aux_coords_and_dims=[(x, (0, 1)), (y, (0, 1)), (t, (0, 1))])
 
 
 def make_MODIS_time_steps():
@@ -988,21 +909,17 @@ def make_MODIS_time_steps():
         Useful for debugging MODIS collocation
     :return:
     """
-    import numpy as np
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
-
     x = np.zeros(4)
     times = np.array([149754, 149762, 149770, 149778])
 
-    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
-    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
+    x = AuxCoord(x, standard_name='latitude', units='degrees')
+    t = AuxCoord(times, standard_name='time')
 
     data = np.arange(4.0)
 
-    coords = CoordList([x, t])
-    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    return Cube(data, standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(4), var_name="Obs"), 0)],
+                aux_coords_and_dims=[(x,0), (t,0)])
 
 
 def make_regular_4d_ungridded_data():
@@ -1083,9 +1000,6 @@ def make_regular_4d_ungridded_data():
 
         They are shaped to represent a typical lidar type satelite data set.
     """
-    import numpy as np
-    from cis.data_io.Coord import CoordList, Coord
-    from cis.data_io.ungridded_data import UngriddedData, Metadata
     from cis.time_util import cis_standard_time_unit
     import datetime
 
@@ -1105,15 +1019,16 @@ def make_regular_4d_ungridded_data():
     p[0, :] = 4
     p[1, :] = 16
 
-    a = Coord(a, Metadata(standard_name='altitude', units='meters'))
-    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
-    y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
-    p = Coord(p, Metadata(standard_name='air_pressure', units='Pa'))
-    t = Coord(t, Metadata(standard_name='time', units=cis_standard_time_unit))
+    a = AuxCoord(a, standard_name='altitude', units='meters')
+    x = AuxCoord(x, standard_name='latitude', units='degrees')
+    y = AuxCoord(y, standard_name='longitude', units='degrees')
+    p = AuxCoord(p, standard_name='air_pressure', units='Pa')
+    t = AuxCoord(t, standard_name='time', units=cis_standard_time_unit)
 
-    coords = CoordList([x, y, a, p, t])
-    return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
-                                        units="kg m-2 s-1", missing_value=-999), coords)
+    return Cube(data, standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
+                units="kg m-2 s-1", dim_coords_and_dims=[(DimCoord(range(10), var_name="z"), 0),
+                                                         (DimCoord(range(5), var_name="t"), 1)],
+                aux_coords_and_dims=[(x, (0, 1)), (y, (0, 1)), (t, (0, 1)), (a, (0, 1)), (p, (0, 1))])
 
 
 class ScatterData(object):
@@ -1161,28 +1076,3 @@ def gen_random_data_array(shape, mean=0.0, var=1.0):
     from numpy.random import randn
     return var * randn(*shape) + mean
 
-
-class MockUngriddedData(CommonData):
-    """
-    Fake UngriddedData that uses data in a HyperPointList.
-    """
-
-    def __init__(self, hyperpointlist):
-        if isinstance(hyperpointlist, HyperPointList):
-            self.hyperpointlist = hyperpointlist
-        elif isinstance(hyperpointlist, list):
-            self.hyperpointlist = HyperPointList(hyperpointlist)
-        else:
-            raise ValueError("Expected HyperPointList or list of HyperPoints")
-
-    def get_coordinates_points(self):
-        return self.hyperpointlist
-
-    def get_all_points(self):
-        return self.hyperpointlist
-
-    def get_non_masked_points(self):
-        return self.hyperpointlist
-
-    def is_gridded(self):
-        return False

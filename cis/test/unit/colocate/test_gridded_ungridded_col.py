@@ -3,12 +3,10 @@ import datetime as dt
 
 import numpy as np
 
-from cis.data_io.gridded_data import make_from_cube
 from cis.collocation.col_implementations import GriddedUngriddedCollocator
 from cis.data_io.hyperpoint import HyperPoint
-from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 from cis.test.util import mock
-
+from cis.data_io.common_data import DataList
 from numpy.testing import assert_almost_equal, assert_equal, assert_raises
 from nose.tools import eq_
 
@@ -16,7 +14,7 @@ from nose.tools import eq_
 class TestGriddedUngriddedCollocator(unittest.TestCase):
 
     def test_gridded_ungridded_nn(self):
-        data = make_from_cube(mock.make_mock_cube())
+        data = mock.make_mock_cube()
         data.name = lambda: 'Name'
         data.var_name = 'var_name'
         data._standard_name = 'y_wind'
@@ -31,11 +29,11 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
 
         expected_result = np.array([8, 12, 8])
         assert len(output) == 1
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert np.allclose(output[0].data, expected_result)
 
     def test_gridded_ungridded_lin(self):
-        data = make_from_cube(mock.make_mock_cube())
+        data = mock.make_mock_cube()
         data.name = lambda: 'Name'
         data.var_name = 'var_name'
         data._standard_name = 'y_wind'
@@ -50,11 +48,11 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
 
         expected_result = np.array([8.8, 10.4, 7.2])
         assert len(output) == 1
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert np.allclose(output[0].data, expected_result)
 
     def test_missing_data_for_missing_sample(self):
-        data = make_from_cube(mock.make_mock_cube())
+        data = mock.make_mock_cube()
         data.name = lambda: 'Name'
         data.var_name = 'var_name'
         data._standard_name = 'y_wind'
@@ -71,11 +69,11 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         output = col.collocate(sample, data, constraint, 'nn')
 
         assert len(output) == 1
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert np.array_equal(output[0].data.mask, sample_mask)
 
     def test_no_missing_data_for_missing_sample(self):
-        data = make_from_cube(mock.make_mock_cube())
+        data = mock.make_mock_cube()
         data.name = lambda: 'Name'
         data.var_name = 'var_name'
         data._standard_name = 'y_wind'
@@ -92,11 +90,11 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         output = col.collocate(sample, data, constraint, 'nn')
 
         assert len(output) == 1
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert not any(output[0].data.mask)
 
     def test_missing_data_for_missing_sample_with_no_extrapolation(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, alt=5550.0, t=dt.datetime(1984, 8, 28)),
@@ -115,7 +113,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         assert np.ma.is_masked(new_data.data[2])
 
     def test_collocation_of_pres_points_on_hybrid_altitude_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=-4.0, lon=-4.0, pres=100.0, t=dt.datetime(1984, 8, 27))])
@@ -170,7 +168,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
 class TestNN(unittest.TestCase):
 
     def test_basic_col_gridded_to_ungridded_in_2d(self):
-        cube = make_from_cube(mock.make_square_5x3_2d_cube())
+        cube = mock.make_square_5x3_2d_cube()
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=1.0),
@@ -183,7 +181,7 @@ class TestNN(unittest.TestCase):
         eq_(new_data.data[2], 4.0)  # float(cube[1,0].data))
 
     def test_basic_col_with_circular_lon(self):
-        cube = make_from_cube(mock.make_dummy_2d_cube_with_circular_lon())
+        cube = mock.make_dummy_2d_cube_with_circular_lon()
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(0.0, 0.0), HyperPoint(0.0, 355.0), HyperPoint(0.0, 360.0),
@@ -198,7 +196,7 @@ class TestNN(unittest.TestCase):
 
     def test_negative_lon_points_dont_matter_with_0_360_grid_in_2d(self):
         # This cube is defined over a 0-360 longitude grid
-        cube = make_from_cube(mock.make_dummy_2d_cube())
+        cube = mock.make_dummy_2d_cube()
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=1.0),
@@ -216,7 +214,7 @@ class TestNN(unittest.TestCase):
         """This should be identical to above but there was an issue in iris where this caused a problem"""
 
         # This cube is defined over a 0-360 longitude grid
-        cube = make_from_cube(mock.make_dummy_2d_cube())
+        cube = mock.make_dummy_2d_cube()
         cube.coord(standard_name='longitude').guess_bounds()
 
         sample_points = UngriddedData.from_points_array(
@@ -233,7 +231,7 @@ class TestNN(unittest.TestCase):
 
     def test_lon_points_over_360_dont_matter_with_0_360_grid_in_2d(self):
         # This cube is defined over a 0-360 longitude grid
-        cube = make_from_cube(mock.make_dummy_2d_cube())
+        cube = mock.make_dummy_2d_cube()
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=0.0),
@@ -248,7 +246,7 @@ class TestNN(unittest.TestCase):
         eq_(new_data.data[3], 327.0)  # float(cube[9,2].data))
 
     def test_already_collocated_in_col_gridded_to_ungridded_in_2d(self):
-        cube = make_from_cube(mock.make_square_5x3_2d_cube())
+        cube = mock.make_square_5x3_2d_cube()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = UngriddedData.from_points_array([HyperPoint(0.0, 0.0)])
         col = GriddedUngriddedCollocator()
@@ -274,7 +272,7 @@ class TestNN(unittest.TestCase):
 
     def test_negative_lon_points_on_hybrid_altitude_coordinates_dont_matter(self):
         """This should give the same results as above"""
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -316,7 +314,7 @@ class TestNN(unittest.TestCase):
         """
         Redundant pressure coordinates should be ignored by the kernel
         """
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -335,7 +333,7 @@ class TestNN(unittest.TestCase):
         """
             When only pressure coordinate is present this should be used for the collocation
         """
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
         sample_points = UngriddedData.from_points_array(
             # This point actually lies outside the lower bounds for altitude at this point in space
@@ -398,7 +396,7 @@ class TestNN(unittest.TestCase):
                 bound and less than or equal to it's upper bound. Where a cell is an imaginary boundary around a
                 datapoint which divides the grid.
         """
-        cube = make_from_cube(mock.make_square_5x3_2d_cube())
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
         col = GriddedUngriddedCollocator()
@@ -409,7 +407,7 @@ class TestNN(unittest.TestCase):
         eq_(new_data.data[3], 4.0)
 
     def test_coordinates_outside_grid_in_col_gridded_to_ungridded_in_2d(self):
-        cube = make_from_cube(mock.make_square_5x3_2d_cube())
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
         col = GriddedUngriddedCollocator(extrapolate=True)
@@ -420,7 +418,7 @@ class TestNN(unittest.TestCase):
         eq_(new_data.data[3], 4.0)
 
     def test_basic_col_gridded_to_ungridded_in_2d_with_time(self):
-        cube = make_from_cube(mock.make_square_5x3_2d_cube_with_time())
+        cube = mock.make_square_5x3_2d_cube_with_time()
 
         sample_points = [HyperPoint(lat=1.0, lon=1.0, t=dt.datetime(1984, 8, 28, 8, 34)),
                          HyperPoint(lat=4.0, lon=4.0, t=dt.datetime(1984, 8, 31, 1, 23)),
@@ -435,7 +433,7 @@ class TestNN(unittest.TestCase):
 
 class TestLinear(unittest.TestCase):
     def test_basic_col_gridded_to_ungridded_using_li_in_2d(self):
-        cube = make_from_cube(mock.make_square_5x3_2d_cube())
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
         col = GriddedUngriddedCollocator()
@@ -445,7 +443,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[2], 4.8)
 
     def test_basic_col_with_circular_lon(self):
-        cube = make_from_cube(mock.make_dummy_2d_cube_with_circular_lon())
+        cube = mock.make_dummy_2d_cube_with_circular_lon()
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(0.0, 0.0), HyperPoint(0.0, 355.0), HyperPoint(0.0, 360.0),
@@ -463,7 +461,7 @@ class TestLinear(unittest.TestCase):
             This is exactly the same test as above, except we ommit the point with negative longitude, this makes the
             collocator wrap the longitude coordinate and gives a slightly different interpolation result...
         """
-        cube = make_from_cube(mock.make_square_5x3_2d_cube())
+        cube = mock.make_square_5x3_2d_cube()
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0)])
         col = GriddedUngriddedCollocator()
@@ -472,7 +470,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 11.2)
 
     def test_collocation_of_points_on_hybrid_altitude_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, alt=5550.0, t=dt.datetime(1984, 8, 28)),
@@ -491,7 +489,7 @@ class TestLinear(unittest.TestCase):
             This is exactly the same test as above, except we ommit the point with negative longitude, this makes the
             collocator wrap the longitude coordinate and gives a slightly different interpolation result...
         """
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28)),
@@ -521,7 +519,7 @@ class TestLinear(unittest.TestCase):
         eq_(new_data.data[1], 2185.0)
 
     def test_collocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, alt=5550.0, pres=10000.0, t=dt.datetime(1984, 8, 28)),
@@ -536,7 +534,7 @@ class TestLinear(unittest.TestCase):
         assert np.ma.is_masked(new_data.data[2])
 
     def test_alt_extrapolation(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=-4.0, lon=-4.0, alt=6382.8, t=dt.datetime(1984, 8, 27))])
@@ -546,7 +544,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 126.0, decimal=7)
 
     def test_collocation_of_pres_points_on_hybrid_pressure_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
@@ -565,7 +563,7 @@ class TestLinear(unittest.TestCase):
         assert np.ma.is_masked(new_data.data[3])
 
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
@@ -584,7 +582,7 @@ class TestLinear(unittest.TestCase):
         assert np.ma.is_masked(new_data.data[3])
 
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_nn(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3))
+        cube = mock.make_mock_cube(time_dim_length=3)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
@@ -603,7 +601,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[3], 12.4, decimal=7)
 
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_multi_var(self):
-        cube_list = [make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))]
+        cube_list = [mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)]
         cube_list.append(make_from_cube(mock.make_mock_cube(time_dim_length=3,
                                                             hybrid_pr_len=10,
                                                             data_offset=100)))
@@ -638,7 +636,7 @@ class TestLinear(unittest.TestCase):
         assert np.ma.is_masked(new_data.data[3])
 
     def test_negative_lon_points_on_hybrid_pressure_coordinates_dont_matter(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
@@ -666,7 +664,7 @@ class TestLinear(unittest.TestCase):
         eq_(new_data.data[1], 3266.1930161260775)
 
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
         sample_points = UngriddedData.from_points_array(
             # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
@@ -676,7 +674,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates_multi_var(self):
-        cube_list = [make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10))]
+        cube_list = [mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)]
         cube_list.append(make_from_cube(mock.make_mock_cube(time_dim_length=3,
                                                             hybrid_pr_len=10,
                                                             data_offset=100)))
@@ -720,7 +718,7 @@ class TestLinear(unittest.TestCase):
 
     def test_collocation_over_scalar_coord(self):
         # A scalar time coordinate should make no difference when collocating points with a time value.
-        cube = make_from_cube(mock.make_square_5x3_2d_cube_with_scalar_time())
+        cube = mock.make_square_5x3_2d_cube_with_scalar_time()
 
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(1.0, 1.0, t=dt.datetime(1984, 8, 22, 0, 0, 0)),

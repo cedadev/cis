@@ -147,3 +147,64 @@ def aggregation_grid_array(start, end, delta):
         # This goes via datetimes with all the associated overheads but is probably safer than doing it manually
         new_grid = cis_standard_time_unit.date2num(new_grid.astype(datetime))
     return new_grid
+
+
+def aggregate_ungridded(data, how, **kwargs):
+    """
+    Aggregate an UngriddedData or UngriddedDataList based on the specified grids
+    :param UngriddedData or UngriddedDataList data: The data object to aggregate
+    :param cis.collocation.col_framework.Kernel kernel: The kernel to use in the aggregation
+    :param kwargs: The grid specifications for each coordinate dimension
+    :return:
+    """
+    from cis.collocation.col import get_kernel
+    from cis.time_util import PartialDateTime
+    from datetime import datetime, timedelta
+    from cis import __version__
+
+    kernel = get_kernel(how)
+    grid_spec = {}
+    for dim_name, grid in kwargs.items():
+        c = data._get_coord(dim_name)
+        if all(hasattr(grid, att) for att in ('start', 'stop', 'step')):
+            g = grid
+        elif len(grid) == 2 and isinstance(grid[0], PartialDateTime):
+            g = slice(grid[0].min(), grid[0].max(), grid[1])
+        elif len(grid) == 3:
+            g = slice(grid[0], grid[1], grid[2])
+        else:
+            raise ValueError("Invalid subset arguments: {}".format(grid))
+
+        # Fill in defaults
+        grid_start = g.start if g.start is not None else c.points.min()
+        if isinstance(grid_start, datetime):
+            grid_start = c.units.date2num(grid_start)
+
+        grid_end = g.stop if g.stop is not None else c.points.max()
+        if isinstance(grid_end, datetime):
+            grid_end = c.units.date2num(grid_end)
+
+        if g.step is None:
+            raise ValueError("Grid step must not be None")
+        else:
+            grid_step = g.step
+
+        if isinstance(grid_step, timedelta):
+            # Standard time is days since, so turn this into a fractional number of days
+            grid_step = grid_step.total_seconds() / (24*60*60)
+
+        grid_spec[c.name()] = slice(grid_start, grid_end, grid_step)
+
+    # We have to make the history before doing the aggregation as the grid dims get popped-off during the operation
+    history = "Aggregated using CIS version " + __version__ + \
+              "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
+              "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
+              "\n using new grid: " + str(grid_spec) + \
+              "\n with kernel: " + str(kernel) + "."
+
+    aggregator = UngriddedAggregator(grid_spec)
+    data = aggregator.aggregate(data, kernel)
+
+    data.add_history(history)
+
+    return data

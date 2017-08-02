@@ -7,11 +7,10 @@ import datetime as dt
 from nose.tools import eq_
 import numpy as np
 
-from cis.data_io.gridded_data import make_from_cube, GriddedDataList
+from cis.data_io.common_data import DataList
 from cis.collocation.col_implementations import GeneralUngriddedCollocator, DummyConstraint, moments, \
     SepConstraintKdtree
 from cis.data_io.hyperpoint import HyperPoint
-from cis.data_io.ungridded_data import UngriddedData, UngriddedDataList
 from cis.test.util import mock
 
 
@@ -52,7 +51,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
         expected_n = np.array([3, 4, 3])
         assert len(output) == 3
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert np.allclose(output[0].data, expected_result)
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)
@@ -73,7 +72,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         output = col.collocate(sample, data, constraint, kernel)
 
         assert len(output) == 3
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert np.array_equal(output[0].data.mask, sample_mask)
         assert np.array_equal(output[1].data.mask, sample_mask)
         assert np.array_equal(output[2].data.mask, sample_mask)
@@ -94,7 +93,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         output = col.collocate(sample, data, constraint, kernel)
 
         assert len(output) == 3
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert not any(output[0].data.mask)
         assert not any(output[1].data.mask)
         assert not any(output[2].data.mask)
@@ -106,7 +105,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         ug_data_2.standard_name = 'snowfall_flux'
         ug_data_2.metadata._name = 'snow'
 
-        data_list = UngriddedDataList([ug_data_1, ug_data_2])
+        data_list = DataList([ug_data_1, ug_data_2])
         sample_points = mock.make_regular_2d_ungridded_data()
         constraint = SepConstraintKdtree('500km')
         kernel = moments()
@@ -116,7 +115,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         expected_result = np.array(list(range(1, 16)))
         expected_n = np.array(15 * [1])
         assert len(output) == 6
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert output[3].var_name == 'snow'
         assert output[4].var_name == 'snow_std_dev'
         assert output[5].var_name == 'snow_num_points'
@@ -128,15 +127,15 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         assert np.allclose(output[5].data, expected_n)
 
     def test_list_gridded_ungridded_box_moments(self):
-        data1 = make_from_cube(mock.make_mock_cube())
+        data1 = mock.make_mock_cube()
         data1.name = lambda: 'Name1'
         data1.var_name = 'var_name1'
         data1._standard_name = 'y_wind'
-        data2 = make_from_cube(mock.make_mock_cube(data_offset=3))
+        data2 = mock.make_mock_cube(data_offset=3)
         data2.name = lambda: 'Name1'
         data2.var_name = 'var_name2'
         data2._standard_name = 'x_wind'
-        data_list = GriddedDataList([data1, data2])
+        data_list = DataList([data1, data2])
         sample = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)),
              HyperPoint(lat=3.0, lon=3.0, alt=7.0, t=dt.datetime(1984, 8, 29, 8, 34)),
@@ -151,7 +150,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
         expected_n = np.array([3, 4, 3])
         assert len(output) == 6
-        assert isinstance(output, UngriddedDataList)
+        assert isinstance(output, DataList)
         assert np.allclose(output[0].data, expected_result)
         assert np.allclose(output[1].data, expected_stddev)
         assert np.allclose(output[2].data, expected_n)

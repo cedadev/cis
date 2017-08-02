@@ -30,8 +30,8 @@ class GriddedGriddedCollocatorTests(object):
     @istest
     @raises(ClassNotFoundError)
     def invalid_kernel_throws_error(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube())
-        data_cube = gridded_data.make_from_cube(make_mock_cube())
+        sample_cube = make_mock_cube()
+        data_cube = make_mock_cube()
 
         col = self.collocator
 
@@ -39,8 +39,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_nn_for_same_grids_check_returns_original_data(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube())
-        data_cube = gridded_data.make_from_cube(make_mock_cube())
+        sample_cube = make_mock_cube()
+        data_cube = make_mock_cube()
 
         col = self.collocator
 
@@ -52,8 +52,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_nn(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
+        sample_cube = make_mock_cube(data_offset=100)
+        data_cube = make_mock_cube(horizontal_offset=0.1)
 
         col = self.collocator
 
@@ -67,9 +67,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_different_grid_size_using_nn(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10,
-                                                               lon_dim_length=6, horizontal_offset=0.0))
+        sample_cube = make_mock_cube(data_offset=100)
+        data_cube = make_mock_cube(lat_dim_length=10, lon_dim_length=6, horizontal_offset=0.0)
 
         col = self.collocator
 
@@ -86,8 +85,6 @@ class GriddedGriddedCollocatorTests(object):
     @istest
     def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_nn(self):
         sample_cube, data_cube = make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres()
-        sample_cube = gridded_data.make_from_cube(sample_cube)
-        data_cube = gridded_data.make_from_cube(data_cube)
 
         col = self.collocator
 
@@ -103,8 +100,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_li_for_same_grids_check_returns_original_data(self):
-        sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
-        data_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube()
 
         col = self.collocator
 
@@ -117,8 +114,8 @@ class GriddedGriddedCollocatorTests(object):
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_using_li(self):
         # Test fails on Iris 1.5.1., but passes on version 1.6.1
-        sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
-        data_cube = gridded_data.make_from_cube(make_dummy_2d_cube_with_small_offset_in_lat())
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube_with_small_offset_in_lat()
 
         col = self.collocator
 
@@ -131,8 +128,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lon_using_li(self):
-        sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
-        data_cube = gridded_data.make_from_cube(make_dummy_2d_cube_with_small_offset_in_lon())
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube_with_small_offset_in_lon()
 
         col = self.collocator
 
@@ -146,8 +143,8 @@ class GriddedGriddedCollocatorTests(object):
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_using_li(self):
         # Test fails on Iris 1.5.1., but passes on version 1.6.1
-        sample_cube = gridded_data.make_from_cube(make_dummy_2d_cube())
-        data_cube = gridded_data.make_from_cube(make_dummy_2d_cube_with_small_offset_in_lat_and_lon())
+        sample_cube = make_dummy_2d_cube()
+        data_cube = make_dummy_2d_cube_with_small_offset_in_lat_and_lon()
 
         col = self.collocator
 
@@ -160,9 +157,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_for_one_grid_with_slight_offset_in_lat_and_lon_different_grid_size_using_li(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=100))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=10,
-                                                               lon_dim_length=6, horizontal_offset=0.0))
+        sample_cube = make_mock_cube(data_offset=100)
+        data_cube = make_mock_cube(lat_dim_length=10, lon_dim_length=6, horizontal_offset=0.0)
 
         col = self.collocator
 
@@ -180,8 +176,6 @@ class GriddedGriddedCollocatorTests(object):
     def test_gridded_gridded_for_two_grids_offset_by_half_grid_spacing_using_li(self):
         # Test fails on Iris 1.5.1., but passes on version 1.6.1
         sample_cube, data_cube = make_list_with_2_dummy_2d_cubes_where_verticies_are_in_cell_centres()
-        sample_cube = gridded_data.make_from_cube(sample_cube)
-        data_cube = gridded_data.make_from_cube(data_cube)
 
         col = self.collocator
 
@@ -199,8 +193,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_nn_with_one_grid_containing_time(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube())
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        sample_cube = make_mock_cube()
+        data_cube = make_mock_cube(time_dim_length=7)
 
         col = self.collocator
 
@@ -213,8 +207,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_li_with_one_grid_containing_altitude(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube())
-        data_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=7))
+        sample_cube = make_mock_cube()
+        data_cube = make_mock_cube(alt_dim_length=7)
 
         col = self.collocator
 
@@ -227,8 +221,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_nn_with_one_grid_containing_time_and_slightly_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=0.1))
+        sample_cube = make_mock_cube(data_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7, horizontal_offset=0.1)
 
         col = self.collocator
 
@@ -241,8 +235,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_nn_with_one_grid_containing_time_and_moderate_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube())
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=2.6))
+        sample_cube = make_mock_cube()
+        data_cube = make_mock_cube(time_dim_length=7, horizontal_offset=2.6)
 
         col = self.collocator
 
@@ -275,8 +269,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_li_with_one_grid_containing_time_and_slightly_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, horizontal_offset=0.1))
+        sample_cube = make_mock_cube(data_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7, horizontal_offset=0.1)
 
         col = self.collocator
 
@@ -309,9 +303,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_nn_with_sample_containing_time_and_pressure_and_small_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
-                                                                 pres_dim_length=10, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1, time_offset=0.1))
+        sample_cube = make_mock_cube(time_dim_length=7, pres_dim_length=10, data_offset=1.0)
+        data_cube = make_mock_cube(horizontal_offset=0.1, time_offset=0.1)
 
         col = self.collocator
 
@@ -325,8 +318,8 @@ class GriddedGriddedCollocatorTests(object):
 
     @istest
     def test_gridded_gridded_li_with_sample_grid_4d_and_slightly_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=7, time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=0.1))
+        sample_cube = make_mock_cube(alt_dim_length=7, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(horizontal_offset=0.1)
 
         col = self.collocator
 
@@ -355,9 +348,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_with_both_grids_containing_time_and_small_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
-                                                               horizontal_offset=0.1, time_offset=0.1))
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7, horizontal_offset=0.1, time_offset=0.1)
 
         col = self.collocator
 
@@ -375,8 +367,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         import datetime
         from cis.time_util import convert_datetime_to_std_time
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        sample_cube = make_mock_cube(data_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7)
 
         sample_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
                                                        standard_name='time',
@@ -401,8 +393,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         from iris.util import squeeze
         import datetime
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0, time_dim_length=1, time_offset=1))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        sample_cube = make_mock_cube(data_offset=1.0, time_dim_length=1, time_offset=1)
+        data_cube = make_mock_cube(time_dim_length=7)
 
         col = self.collocator
 
@@ -424,8 +416,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         import datetime
         from cis.time_util import convert_datetime_to_std_time
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0, horizontal_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        sample_cube = make_mock_cube(data_offset=1.0, horizontal_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7)
 
         sample_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
                                                        standard_name='time',
@@ -450,8 +442,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         import datetime
         from cis.time_util import convert_datetime_to_std_time
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
-        data_cube = gridded_data.make_from_cube(make_mock_cube())
+        sample_cube = make_mock_cube(time_dim_length=7)
+        data_cube = make_mock_cube()
 
         data_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
                                                      standard_name='time',
@@ -473,8 +465,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     def test_gridded_gridded_nn_with_data_grid_containing_time_length_one(self):
         import numpy as np
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=1, time_offset=3))
+        sample_cube = make_mock_cube(time_dim_length=7)
+        data_cube = make_mock_cube(time_dim_length=1, time_offset=3)
 
         col = self.collocator
 
@@ -496,8 +488,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     @istest
     def test_gridded_gridded_nn_with_data_grid_containing_no_time(self):
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=1.0, time_dim_length=7))
-        data_cube = gridded_data.make_from_cube(make_mock_cube())
+        sample_cube = make_mock_cube(horizontal_offset=1.0, time_dim_length=7)
+        data_cube = make_mock_cube()
 
         col = self.collocator
 
@@ -510,8 +502,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     @istest
     def test_gridded_gridded_nn_with_sample_grid_containing_no_time(self):
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(horizontal_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        sample_cube = make_mock_cube(horizontal_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7)
 
         col = self.collocator
 
@@ -525,8 +517,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
     def test_gridded_gridded_li_with_data_grid_containing_time_length_one(self):
         import numpy as np
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=1, time_offset=1))
+        sample_cube = make_mock_cube(time_dim_length=7)
+        data_cube = make_mock_cube(time_dim_length=1, time_offset=1)
 
         col = self.collocator
 
@@ -552,8 +544,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         import datetime
         from cis.time_util import convert_datetime_to_std_time
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
+        sample_cube = make_mock_cube(data_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7)
 
         sample_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
                                                        standard_name='time',
@@ -578,8 +570,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         import datetime
         from cis.time_util import convert_datetime_to_std_time
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7))
-        data_cube = gridded_data.make_from_cube(make_mock_cube())
+        sample_cube = make_mock_cube(time_dim_length=7)
+        data_cube = make_mock_cube()
 
         data_cube.add_aux_coord(iris.coords.DimCoord(convert_datetime_to_std_time(datetime.datetime(1984, 8, 28)),
                                                      standard_name='time',
@@ -599,9 +591,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_with_both_grids_containing_time_and_moderate_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
-                                                               horizontal_offset=2.6, time_offset=1.5))
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7, horizontal_offset=2.6, time_offset=1.5)
 
         col = self.collocator
 
@@ -634,9 +625,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_li_with_both_grids_containing_time_and_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
-                                                               horizontal_offset=0.1, time_offset=0.5))
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(time_dim_length=7, horizontal_offset=0.1, time_offset=0.5)
 
         col = self.collocator
 
@@ -669,10 +659,10 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_with_both_grids_containing_time_with_moderate_offset_and_different_grids(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
-            time_offset=1.5))
+            time_offset=1.5)
 
         col = self.collocator
 
@@ -705,10 +695,10 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_li_with_both_grids_containing_time_with_moderate_offset_and_different_grids(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
-            time_offset=1.5))
+            time_offset=1.5)
 
         col = self.collocator
 
@@ -741,11 +731,11 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_with_4d_data_and_small_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=4,
-                                                                 time_dim_length=3, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(alt_dim_length=4, time_dim_length=3,
+        sample_cube = make_mock_cube(alt_dim_length=4,
+                                                                 time_dim_length=3, data_offset=1.0)
+        data_cube = make_mock_cube(alt_dim_length=4, time_dim_length=3,
                                                                horizontal_offset=0.1, altitude_offset=0.1,
-                                                               time_offset=0.1))
+                                                               time_offset=0.1)
 
         col = self.collocator
 
@@ -759,11 +749,10 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_li_with_4d_data_and_small_offset(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            alt_dim_length=2, time_dim_length=3, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(alt_dim_length=2, time_dim_length=3, data_offset=1.0)
+        data_cube = make_mock_cube(
             alt_dim_length=2, time_dim_length=3, horizontal_offset=0.1, altitude_offset=0.1,
-            time_offset=0.1))
+            time_offset=0.1)
 
         col = self.collocator
 
@@ -822,10 +811,10 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_li_with_sample_grid_4d_data_grid_with_time_with_moderate_offset_and_different_grids(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(pres_dim_length=3, time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(pres_dim_length=3, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
-            time_offset=1.5))
+            time_offset=1.5)
 
         col = self.collocator
 
@@ -858,10 +847,10 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_with_data_grid_4d_sample_grid_with_time_with_moderate_offset_and_different_grids(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(
             lat_dim_length=3, lon_dim_length=3, alt_dim_length=2, time_dim_length=2,
-            horizontal_offset=2.6, time_offset=1.5))
+            horizontal_offset=2.6, time_offset=1.5)
 
         col = self.collocator
 
@@ -995,10 +984,10 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_li_with_data_grid_4d_sample_grid_with_time_with_moderate_offset_and_different_grids(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(
             lat_dim_length=3, lon_dim_length=3, alt_dim_length=2, time_dim_length=2,
-            horizontal_offset=2.6, time_offset=1.5))
+            horizontal_offset=2.6, time_offset=1.5)
 
         col = self.collocator
 
@@ -1057,11 +1046,11 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_with_very_different_grids(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            lon_dim_length=0, alt_dim_length=10, time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(
+            lon_dim_length=0, alt_dim_length=10, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(
             lat_dim_length=0, pres_dim_length=6, time_dim_length=15,
-            horizontal_offset=2.6, time_offset=1.5))
+            horizontal_offset=2.6, time_offset=1.5)
 
         # Result should maintain longitude, pressure and time, and discard latitude and altitude
 
@@ -1079,11 +1068,10 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_li_with_very_different_grids(self):
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            lon_dim_length=0, alt_dim_length=10, time_dim_length=7, data_offset=1.0))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(lon_dim_length=0, alt_dim_length=10, time_dim_length=7, data_offset=1.0)
+        data_cube = make_mock_cube(
             lat_dim_length=0, pres_dim_length=6, time_dim_length=15,
-            horizontal_offset=2.6, time_offset=1.5))
+            horizontal_offset=2.6, time_offset=1.5)
 
         # Result should maintain time, longitude and pressure (in that order) and discard latitude and altitude
 
@@ -1105,10 +1093,9 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         mask = [[False, False, False, False, False],
                 [False, True, False, True, False],
                 [False, False, True, False, False]]
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
-            time_dim_length=4, dim_order=['time', 'lat', 'lon']))
+        sample_cube = make_mock_cube(
+            lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, dim_order=['time', 'lat', 'lon'])
 
         # Result should have longitude, latitude and time.
 
@@ -1151,10 +1138,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
                  [False, False, False, False, False],
                  [False, False, False, False, False],
                  [False, False, False, False, False]]]
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            lat_dim_length=5, lon_dim_length=3, time_dim_length=4,
-            dim_order=['lon', 'time', 'lat'], mask=mask))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(dim_order=['lat', 'lon']))
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, time_dim_length=4,dim_order=['lon', 'time', 'lat'], mask=mask)
+        data_cube = make_mock_cube(dim_order=['lat', 'lon'])
 
         # Result should have latitude and longitude.
 
@@ -1179,10 +1164,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         mask = [[False, False, False, False, False],
                 [False, True, False, True, False],
                 [False, False, False, False, False]]
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
-            time_dim_length=4, dim_order=['lat', 'time', 'lon']))
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, dim_order=['lat', 'time', 'lon'])
 
         # Result should have longitude, latitude and time.
 
@@ -1210,10 +1193,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         mask = [[False, False, False, False, False],
                 [False, True, False, True, False],
                 [False, False, False, False, False]]
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
-            time_dim_length=4, dim_order=['time', 'lat', 'lon']))
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, dim_order=['lon', 'lat'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, dim_order=['time', 'lat', 'lon'])
 
         # Result should have longitude, latitude and time.
 
@@ -1243,10 +1224,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
                 [False, False, False],
                 [False, False, True],
                 [False, False, False]]
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(
-            lat_dim_length=5, lon_dim_length=3, dim_order=['lat', 'lon'], mask=mask))
-        data_cube = gridded_data.make_from_cube(make_mock_cube(
-            time_dim_length=4, pres_dim_length=2, dim_order=['lon', 'pres', 'lat', 'time']))
+        sample_cube = make_mock_cube(lat_dim_length=5, lon_dim_length=3, dim_order=['lat', 'lon'], mask=mask)
+        data_cube = make_mock_cube(time_dim_length=4, pres_dim_length=2, dim_order=['lon', 'pres', 'lat', 'time'])
 
         # Result should have latitude, longitude, pressure and time.
 
@@ -1270,16 +1249,16 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
         assert c == 8
 
     def test_gridded_gridded_li_for_GriddedDataList(self):
-        from cis.data_io.gridded_data import GriddedDataList
+        from cis.data_io.common_data import DataList
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
-        data_cube1 = gridded_data.make_from_cube(make_mock_cube(
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
+        data_cube1 = make_mock_cube(
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
-            time_offset=1.5))
-        data_cube2 = gridded_data.make_from_cube(make_mock_cube(
+            time_offset=1.5)
+        data_cube2 = make_mock_cube(
             lon_dim_length=10, lat_dim_length=6, time_dim_length=14, horizontal_offset=2.6,
-            time_offset=1.5, data_offset=3))
-        data_list = GriddedDataList([data_cube1, data_cube2])
+            time_offset=1.5, data_offset=3)
+        data_list = DataList([data_cube1, data_cube2])
 
         col = self.collocator
 
@@ -1318,15 +1297,13 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     @istest
     def test_gridded_gridded_nn_for_GriddedDataList(self):
-        from cis.data_io.gridded_data import GriddedDataList
+        from cis.data_io.common_data import DataList
 
-        sample_cube = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=1.0))
+        sample_cube = make_mock_cube(time_dim_length=7, data_offset=1.0)
 
-        data_cube1 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7,
-                                                                horizontal_offset=2.6, time_offset=1.5))
-        data_cube2 = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, data_offset=3,
-                                                                horizontal_offset=2.6, time_offset=1.5))
-        data_list = GriddedDataList([data_cube1, data_cube2])
+        data_cube1 = make_mock_cube(time_dim_length=7, horizontal_offset=2.6, time_offset=1.5)
+        data_cube2 = make_mock_cube(time_dim_length=7, data_offset=3, horizontal_offset=2.6, time_offset=1.5)
+        data_list = DataList([data_cube1, data_cube2])
 
         col = self.collocator
 
@@ -1363,9 +1340,8 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     def test_gridded_gridded_li_when_grids_have_different_dims_order(self):
         # JASCIS-201
-        sample = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time']))
-        data = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
-                                                          time_dim_length=10, dim_order=['time', 'lon', 'lat']))
+        sample = make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time'])
+        data = make_mock_cube(lat_dim_length=11, lon_dim_length=13, time_dim_length=10, dim_order=['time', 'lon', 'lat'])
 
         col = self.collocator
         out_cube = col.collocate(points=sample, data=data, constraint=None, kernel=gridded_gridded_li())
@@ -1373,9 +1349,9 @@ class TestGriddedGriddedCollocator(GriddedGriddedCollocatorTests, TestCase):
 
     def test_gridded_gridded_nn_when_grids_have_different_dims_order(self):
         # JASCIS-201
-        sample = gridded_data.make_from_cube(make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time']))
-        data = gridded_data.make_from_cube(make_mock_cube(lat_dim_length=11, lon_dim_length=13,
-                                                          time_dim_length=10, dim_order=['time', 'lon', 'lat']))
+        sample = make_mock_cube(time_dim_length=7, dim_order=['lat', 'lon', 'time'])
+        data = make_mock_cube(lat_dim_length=11, lon_dim_length=13,
+                                                          time_dim_length=10, dim_order=['time', 'lon', 'lat'])
 
         col = self.collocator
         out_cube = col.collocate(points=sample, data=data, constraint=None, kernel=gridded_gridded_nn())

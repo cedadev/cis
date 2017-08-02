@@ -4,10 +4,8 @@ Unit tests for the top-level subsetting routines.
 import datetime
 from unittest import TestCase
 import numpy as np
-from cis.data_io.gridded_data import GriddedDataList
-
-from cis.data_io.ungridded_data import UngriddedData, Metadata, UngriddedDataList
-from cis.data_io.gridded_data import make_from_cube
+from cis.data_io.common_data import DataList
+from cis.data_io.gridded_data import make_new_with_same_coordinates
 import cis.test.util.mock
 
 
@@ -17,32 +15,32 @@ class TestGriddedSubsetConstraint(TestCase):
     """
 
     def test_null_subset_2d_gridded_data(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset()
         np.testing.assert_array_equal(subset.data, data.data)
 
     def test_can_subset_2d_gridded_data_by_longitude(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset(longitude=[0.0, 5.0])
         assert (subset.data.tolist() == [[2, 3], [5, 6], [8, 9], [11, 12], [14, 15]])
 
     def test_can_subset_2d_gridded_data_by_latitude(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset(latitude=[0.0, 10.0])
         assert (subset.data.tolist() == [[7, 8, 9], [10, 11, 12], [13, 14, 15]])
 
     def test_can_subset_2d_gridded_data_by_latitude_with_None_min(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset(latitude=[0.0, None])
         assert (subset.data.tolist() == [[7, 8, 9], [10, 11, 12], [13, 14, 15]])
 
     def test_can_subset_2d_gridded_data_by_latitude_with_None_max(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset(latitude=[None, 0.0])
         assert (subset.data.tolist() == [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     def test_can_subset_3d_gridded_data_by_altitude(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_altitude())
+        data = cis.test.util.mock.make_square_5x3_2d_cube_with_altitude()
         subset = data.subset(altitude=[2, 5])
         assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
                                          [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
@@ -51,7 +49,7 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
 
     def test_can_subset_3d_gridded_data_by_pressure(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_pressure())
+        data = cis.test.util.mock.make_square_5x3_2d_cube_with_pressure()
         subset = data.subset(air_pressure=[2, 5])
         assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
                                          [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
@@ -60,7 +58,7 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
 
     def test_can_subset_2d_gridded_data_by_time(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_time())
+        data = cis.test.util.mock.make_square_5x3_2d_cube_with_time()
         subset = data.subset(time=[140494, 140497])
         assert (subset.data.tolist() == [[[3, 4, 5, 6], [10, 11, 12, 13], [17, 18, 19, 20]],
                                          [[24, 25, 26, 27], [31, 32, 33, 34], [38, 39, 40, 41]],
@@ -69,12 +67,12 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
 
     def test_can_subset_gridded_data_using_multiple_extract_constraints(self):
-        data = make_from_cube(cis.test.util.mock.make_mock_cube(time_dim_length=3, alt_dim_length=6))
+        data = cis.test.util.mock.make_mock_cube(time_dim_length=3, alt_dim_length=6)
         subset = data.subset(time=[140492, 140493], altitude=[0, 3])
         assert subset.data.shape == (5, 3, 3, 2)
 
     def test_can_subset_gridded_data_by_shape(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND)
         # The corner should be masked, but the center not
         assert np.ma.is_masked(subset.data[0, 0])
@@ -84,7 +82,7 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [None, 11.0, None]])
 
     def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
-        data = make_from_cube(cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
+        data = cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9)
         long_coord = data.coord('longitude')
         long_coord.points = np.arange(-175, 185, 40)
         long_coord.bounds = None
@@ -97,7 +95,7 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [45, 37, 38, 39]])
 
     def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_360(self):
-        data = make_from_cube(cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
+        data = cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9)
         long_coord = data.coord('longitude')
         long_coord.points = np.arange(5, 365, 40)
         long_coord.bounds = None
@@ -113,12 +111,12 @@ class TestGriddedSubsetConstraint(TestCase):
         """This test just shows that missing values do not interfere with subsetting -
         nothing special happens to the missing values.
         """
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube_with_missing_data())
+        data = cis.test.util.mock.make_square_5x3_2d_cube_with_missing_data()
         subset = data.subset(longitude=[0.0, 5.0])
         assert (subset.data.tolist(fill_value=-999) == [[2, 3], [-999, 6], [8, -999], [11, 12], [14, 15]])
 
     def test_can_subset_2d_gridded_data_by_longitude_latitude(self):
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset(longitude=[0.0, 5.0], latitude=[-5.0, 5.0])
         assert (subset.data.tolist() == [[5, 6], [8, 9], [11, 12]])
 
@@ -129,7 +127,7 @@ class TestGriddedSubsetConstraint(TestCase):
 
         This test constrains the subsetting algorithm as defined in the CIS paper so be very careful about changing it!
         """
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         subset = data.subset(longitude=[0.0, 4.5], latitude=[-5.5, 5.5])
         assert (subset.data.tolist() == [[5,], [8,], [11,]])
 
@@ -140,7 +138,7 @@ class TestGriddedSubsetConstraint(TestCase):
 
         This test constrains the subsetting algorithm as defined in the CIS paper so be very careful about changing it!
         """
-        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        data = cis.test.util.mock.make_square_5x3_2d_cube()
         for c in data.coords():
             c.guess_bounds()
         subset = data.subset(longitude=[0.0, 4.5], latitude=[-2.50, 2.50])
@@ -151,7 +149,7 @@ class TestGriddedSubsetConstraint(TestCase):
         Checks that the convention of returning None if subsetting results in an empty subset.
         Longitude has a modulus and so uses the IRIS intersection method
         """
-        data = GriddedDataList([cis.test.util.mock.make_square_5x3_2d_cube()])
+        data = DataList([cis.test.util.mock.make_square_5x3_2d_cube()])
         subset = data.subset(longitude=[1.0, 3.0])
         assert (subset is None)
 
@@ -160,16 +158,16 @@ class TestGriddedSubsetConstraint(TestCase):
         Checks that the convention of returning None if subsetting results in an empty subset.
         Longitude has no modulus and so uses the IRIS extract method
         """
-        data = GriddedDataList([cis.test.util.mock.make_square_5x3_2d_cube_with_time()])
+        data = DataList([cis.test.util.mock.make_square_5x3_2d_cube_with_time()])
         subset = data.subset(time=[140500, 140550])
         assert (subset is None)
 
-    def test_GIVEN_GriddedDataList_WHEN_constrain_THEN_correctly_subsetted_GriddedDataList_returned(self):
+    def test_GIVEN_DataList_WHEN_constrain_THEN_correctly_subsetted_DataList_returned(self):
         gridded1 = cis.test.util.mock.make_square_5x3_2d_cube()
         gridded2 = cis.test.util.mock.make_square_5x3_2d_cube()
-        datalist = GriddedDataList([gridded1, gridded2])
+        datalist = DataList([gridded1, gridded2])
         subset = datalist.subset(longitude=[0.0, 5.0], latitude=[-5.0, 5.0])
-        assert isinstance(subset, GriddedDataList)
+        assert isinstance(subset, DataList)
         assert (subset[0].data.tolist() == [[5, 6], [8, 9], [11, 12]])
         assert (subset[1].data.tolist() == [[5, 6], [8, 9], [11, 12]])
 
@@ -260,14 +258,13 @@ class TestUngriddedSubsetConstraint(TestCase):
         subset = data.subset(longitude=[0.0, 5.0])
         assert (subset.data.tolist() == [2, 3, None, 6, 8, None, 11, 12, 14, 15])
 
-    def test_GIVEN_UngriddedDataList_WHEN_constrain_THEN_correctly_subsetted_UngriddedDataList_returned(self):
+    def test_GIVEN_DataList_WHEN_constrain_THEN_correctly_subsetted_DataList_returned(self):
         ug_data = cis.test.util.mock.make_regular_2d_ungridded_data()
-        ug_data2 = UngriddedData(ug_data.data + 1, Metadata(name='snow', standard_name='snowfall_flux',
-                                                            long_name="TOTAL SNOWFALL RATE: LS+CONV KG/M2/S",
-                                                            units="kg m-2 s-1", missing_value=-999), ug_data.coords())
-        datalist = UngriddedDataList([ug_data, ug_data2])
+        ug_data2 = make_new_with_same_coordinates(ug_data, ug_data.data + 1)
+
+        datalist = DataList([ug_data, ug_data2])
         subset = datalist.subset(longitude=[0.0, 5.0], latitude=[-5.0, 10.0])
 
-        assert isinstance(subset, UngriddedDataList)
+        assert isinstance(subset, DataList)
         assert subset[0].data.tolist() == [5, 6, 8, 9, 11, 12, 14, 15]
         assert subset[1].data.tolist() == [6, 7, 9, 10, 12, 13, 15, 16]
