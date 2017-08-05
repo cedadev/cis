@@ -7,7 +7,6 @@ from nose.tools import eq_
 from numpy.testing import assert_almost_equal
 import numpy as np
 
-from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.test.util import mock
 
 
@@ -18,8 +17,8 @@ class TestFullAverage(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0], lon=[1.0], alt=[12.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34)])
 
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), moments())
@@ -37,8 +36,8 @@ class TestFullAverage(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, pres=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0], lon=[1.0], alt=[12.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34)])
 
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), moments())
@@ -56,8 +55,7 @@ class TestNNHorizontal(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
 
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal())[0]
         eq_(new_data.data[0], 8.0)
@@ -69,7 +67,7 @@ class TestNNHorizontal(unittest.TestCase):
 
         ug_data = mock.make_regular_2d_ungridded_data()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
-        sample_points = UngriddedData.from_points_array([HyperPoint(0.0, 0.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal())[0]
         eq_(new_data.data[0], 8.0)
@@ -86,8 +84,7 @@ class TestNNHorizontal(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
 
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5), HyperPoint(-2.5, -2.5)])
+        sample_points = mock.make_dummy_sample_points(lat=[2.5, -2.5, 2.5, -2.5], lon=[2.5, 2.5, -2.5, -2.5])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal())[0]
         eq_(new_data.data[0], 11.0)
@@ -99,8 +96,7 @@ class TestNNHorizontal(unittest.TestCase):
         from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
 
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5), HyperPoint(-5.5, -5.5)])
+        sample_points = mock.make_dummy_sample_points(lat=[5.5, -5.5, 5.5, -5.5], lon=[5.5, 5.5, -5.5, -5.5])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal())[0]
         eq_(new_data.data[0], 12.0)
@@ -115,8 +111,7 @@ class TestNNTime(unittest.TestCase):
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
         col = GeneralUngriddedCollocator()
         with self.assertRaises(AttributeError):
             new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_time())[0]
@@ -126,11 +121,10 @@ class TestNNTime(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, t=dt.datetime(1984, 8, 29, 8, 34)))
-        sample_points.append(HyperPoint(lat=4.0, lon=4.0, t=dt.datetime(1984, 9, 2, 1, 23)))
-        sample_points.append(HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 9, 4, 15, 54)))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                            dt.datetime(1984, 9, 2, 1, 23),
+                                                            dt.datetime(1984, 9, 4, 15, 54)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_time())[0]
         eq_(new_data.data[0], 3.0)
@@ -145,12 +139,9 @@ class TestNNTime(unittest.TestCase):
 
         ref = np.array([0.0, 1.0, 2.0, 3.0])
 
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=149751.369618055))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=149759.378055556, ))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=149766.373969907))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=149776.375995371))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 0.0, 0.0], lon=[0.0, 0.0, 0.0, 0.0],
+                                                      time=[149751.369618055, 149759.378055556, 149766.373969907,
+                                                            149776.375995371])
 
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_time())[0]
@@ -162,12 +153,10 @@ class TestNNTime(unittest.TestCase):
         import numpy as np
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
-        sample_points = HyperPointList()
 
-        t0 = dt.datetime(1984, 8, 27)
-        for d in range(15):
-            sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=t0 + dt.timedelta(days=d)))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[0.0]*15, lon=[0.0]*15,
+                                                      time=[dt.datetime(1984, 8, 27) +
+                                                            dt.timedelta(days=d) for d in range(15)])
 
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_time())[0]
@@ -185,8 +174,7 @@ class TestNNTime(unittest.TestCase):
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
         # Choose a time at midday
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 29, 12))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], time=[dt.datetime(1984, 8, 29, 12)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_time())[0]
         eq_(new_data.data[0], 3.0)
@@ -196,11 +184,10 @@ class TestNNTime(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 26)))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1884, 8, 26)))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1994, 8, 27)))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 0.0], lon=[0.0, 0.0, 0.0],
+                                                      time=[dt.datetime(1984, 8, 26),
+                                                            dt.datetime(1984, 8, 26),
+                                                            dt.datetime(1984, 8, 27)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_time())[0]
         eq_(new_data.data[0], 1.0)
@@ -214,8 +201,7 @@ class TestNNAltitude(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
         col = GeneralUngriddedCollocator()
         with self.assertRaises(AttributeError):
             new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_altitude())[0]
@@ -225,11 +211,11 @@ class TestNNAltitude(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34)))
-        sample_points.append(HyperPoint(lat=4.0, lon=4.0, alt=34.0, t=dt.datetime(1984, 9, 2, 1, 23)))
-        sample_points.append(HyperPoint(lat=-4.0, lon=-4.0, alt=89.0, t=dt.datetime(1984, 9, 4, 15, 54)))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0],
+                                                      alt=[12.0, 34.0, 89.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                            dt.datetime(1984, 9, 2, 1, 23),
+                                                            dt.datetime(1984, 9, 4, 15, 54)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_altitude())[0]
         eq_(new_data.data[0], 6.0)
@@ -241,8 +227,8 @@ class TestNNAltitude(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, alt=80.0, t=dt.datetime(1984, 9, 4, 15, 54))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[80.0],
+                                                      time=[dt.datetime(1984, 9, 4, 15, 54)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_altitude())[0]
         eq_(new_data.data[0], 41.0)
@@ -259,8 +245,8 @@ class TestNNAltitude(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Choose a time at midday
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, alt=35.0, t=dt.datetime(1984, 8, 29, 12))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[35.0],
+                                                      time=[dt.datetime(1984, 8, 29, 12)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_altitude())[0]
         eq_(new_data.data[0], 16.0)
@@ -270,11 +256,12 @@ class TestNNAltitude(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=-12.0, t=dt.datetime(1984, 8, 29, 8, 34)))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=91.0, t=dt.datetime(1984, 9, 2, 1, 23)))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, alt=890.0, t=dt.datetime(1984, 9, 4, 15, 54)))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 0.0], lon=[0.0, 0.0, 0.0],
+                                                      alt=[-12.0, 91.0, 890.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                            dt.datetime(1984, 9, 2, 1, 23),
+                                                            dt.datetime(1984, 9, 4, 15, 54)])
+
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_altitude())[0]
         eq_(new_data.data[0], 1.0)
@@ -288,8 +275,7 @@ class TestNNPressure(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
         col = GeneralUngriddedCollocator()
         with self.assertRaises(AttributeError):
             new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_pressure())[0]
@@ -299,11 +285,11 @@ class TestNNPressure(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=1.0, lon=1.0, pres=12.0, t=dt.datetime(1984, 8, 29, 8, 34)))
-        sample_points.append(HyperPoint(lat=4.0, lon=4.0, pres=34.0, t=dt.datetime(1984, 9, 2, 1, 23)))
-        sample_points.append(HyperPoint(lat=-4.0, lon=-4.0, pres=89.0, t=dt.datetime(1984, 9, 4, 15, 54)))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0],
+                                                      pres=[12.0, 34.0, 89.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                            dt.datetime(1984, 9, 2, 1, 23),
+                                                            dt.datetime(1984, 9, 4, 15, 54)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_pressure())[0]
         eq_(new_data.data[0], 6.0)
@@ -315,8 +301,8 @@ class TestNNPressure(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=80.0, t=dt.datetime(1984, 9, 4, 15, 54))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], pres=[80.0],
+                                                      time=[dt.datetime(1984, 9, 4, 15, 54)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_pressure())[0]
         eq_(new_data.data[0], 41.0)
@@ -333,8 +319,8 @@ class TestNNPressure(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Choose a time at midday
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=8, t=dt.datetime(1984, 8, 29, 12))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], pres=[8.0],
+                                                      time=[dt.datetime(1984, 8, 29, 12)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_pressure())[0]
         eq_(new_data.data[0], 1.0)
@@ -344,11 +330,11 @@ class TestNNPressure(unittest.TestCase):
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
-        sample_points = HyperPointList()
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=0.1, t=dt.datetime(1984, 8, 29, 8, 34)))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=91.0, t=dt.datetime(1984, 9, 2, 1, 23)))
-        sample_points.append(HyperPoint(lat=0.0, lon=0.0, pres=890.0, t=dt.datetime(1984, 9, 4, 15, 54)))
-        sample_points = UngriddedData.from_points_array(sample_points)
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 0.0], lon=[0.0, 0.0, 0.0],
+                                                      pres=[0.1, 91.0, 890.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34),
+                                                            dt.datetime(1984, 9, 2, 1, 23),
+                                                            dt.datetime(1984, 9, 4, 15, 54)])
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_pressure())[0]
         eq_(new_data.data[0], 1.0)
@@ -363,8 +349,8 @@ class TestMean(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Note - This isn't actually used for averaging
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0, alt=12.0, t=dt.datetime(1984, 8, 29, 8, 34))])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0], lon=[1.0], alt=[12.0],
+                                                      time=[dt.datetime(1984, 8, 29, 8, 34)])
 
         col = GeneralUngriddedCollocator()
         new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), mean())[0]

@@ -637,45 +637,6 @@ def make_dummy_1d_cube():
     return cube
 
 
-def get_random_1d_point():
-    """
-        Creates a hyper point at some random point along the Grenwich meridian (lon = 0.0)
-    """
-    from cis.data_io.hyperpoint import HyperPoint
-    return HyperPoint(gen_random_lat())
-
-
-def get_random_2d_point():
-    """
-        Creates a random point on the surface of the globe
-    """
-    from cis.data_io.hyperpoint import HyperPoint
-    return HyperPoint(gen_random_lat(), gen_random_lon())
-
-
-def get_random_3d_point():
-    """
-        Creates a random point in 3d space upto 100km above the surface of the globe
-    """
-    import random
-    from cis.data_io.hyperpoint import HyperPoint
-    return HyperPoint(gen_random_lat(), gen_random_lon(), random.randrange(0.0, 100.0))
-
-
-def make_dummy_1d_points_list(num):
-    """
-        Create a list of 1d points 'num' long
-    """
-    return [get_random_1d_point() for i in range(0, num)]
-
-
-def make_dummy_2d_points_list(num):
-    """
-        Create a list of 2d points 'num' long
-    """
-    return [get_random_2d_point() for i in range(0, num)]
-
-
 def make_dummy_ungridded_data_time_series(len=10):
     """
     Create a time series of ungridded data of length len, with a single lat/lon coordinate (65.2, -12.1)

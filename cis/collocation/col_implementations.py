@@ -7,12 +7,10 @@ from iris.exceptions import CoordinateMultiDimError
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, sum as np_sum
 
-from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
-                                           IndexedConstraint, Kernel, AbstractDataOnlyKernel)
+from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, Kernel, AbstractDataOnlyKernel)
 import cis.exceptions
 from cis.data_io.datalist import DataList
 from cis.data_io.cube_utils import make_new_with_same_coordinates
-from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 import cis.collocation.data_index as data_index
 from cis.utils import log_memory_profile, set_standard_name_if_valid
 
@@ -223,6 +221,7 @@ class SepConstraint(PointConstraint):
                 raise InvalidCommandLineOptionError(e)
             self.checks.append(self.time_constraint)
 
+    # TODO The points no longer have these methods so this will need refactoring (to work on whole DFs at a time)
     def time_constraint(self, point, ref_point):
         return point.time_sep(ref_point) < self.t_sep
 
@@ -236,11 +235,11 @@ class SepConstraint(PointConstraint):
         return point.haversine_dist(ref_point) < self.h_sep
 
     def constrain_points(self, ref_point, data):
-        con_points = HyperPointList()
-        for point in data:
-            if all(check(point, ref_point) for check in self.checks):
-                con_points.append(point)
-        return con_points
+        import operator
+        from functools import reduce
+        # Each check returns a boolean series, just || them together
+        matching_points = reduce(operator.or_, [check(data, ref_point) for check in self.checks], False)
+        return data[matching_points]
 
 
 class SepConstraintKdtree(PointConstraint):
@@ -924,58 +923,6 @@ class GeneralGriddedCollocator(Collocator):
         return cube
 
 
-class CubeCellConstraint(CellConstraint):
-    #TODO Delete me
-    """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
-    """
-
-    def constrain_points(self, sample_point, data):
-        """Returns HyperPoints lying within a cell.
-        :param sample_point: HyperPoint of cells defining sample region
-        :param data: list of HyperPoints to check
-        :return: HyperPointList of points found within cell
-        """
-        con_points = HyperPointList()
-        for point in data:
-            include = True
-            for idx in range(HyperPoint.number_standard_names):
-                cell = sample_point[idx]
-                if cell is not None:
-                    if not (np.min(cell.bound) <= point[idx] < np.max(cell.bound)):
-                        include = False
-            if include:
-                con_points.append(point)
-        return con_points
-
-
-class BinningCubeCellConstraint(IndexedConstraint):
-    #TODO Delete me
-    """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
-
-    Uses the index_data method to bin all the points
-    """
-
-    def __init__(self):
-        super(BinningCubeCellConstraint, self).__init__()
-        self.grid_cell_bin_index = None
-
-    def constrain_points(self, sample_point, data):
-        """Returns HyperPoints lying within a cell.
-
-        This implementation returns the points that have been stored in the
-        appropriate bin by the index_data method.
-        :param sample_point: HyperPoint of indices of cells defining sample region
-        :param data: list of HyperPoints to check
-        :return: HyperPointList of points found within cell
-        """
-        point_list = self.grid_cell_bin_index.get_points_by_indices(sample_point)
-        con_points = HyperPointList()
-        if point_list is not None:
-            for point in point_list:
-                con_points.append(data[point])
-        return con_points
-
-
 class BinnedCubeCellOnlyConstraint(Constraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell. With an iterator which only
     travels over those cells with a value in.
@@ -1049,40 +996,14 @@ def make_coord_map(points, data):
     # If there are coordinates in the sample grid that are not present for the data,
     # omit the from the set of coordinates in the output grid. Find a mask of coordinates
     # that are present to use when determining the output grid shape.
+
+    # TODO The find_standard_coords method no longer exists so I'll have to come up with another way of doing this...
+    #  It should be easier using Iris coords rather than HyperPoints anyway
     coordinate_mask = [False if c is None else True for c in data.find_standard_coords()]
 
     # Find the mapping of standard coordinates to those in the sample points and those to be used
     # in the output data.
-    return _find_standard_coords(points, coordinate_mask)
-
-
-def _find_standard_coords(cube, coordinate_mask):
-    """Finds the mapping of sample point coordinates to the standard ones used by HyperPoint.
-
-    :param cube: cube among the coordinates of which to find the standard coordinates
-    :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
-    :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
-    """
-    coord_map = []
-    cube_coord_lookup = {}
-
-    cube_coords = cube.coords()
-    for idx, coord in enumerate(cube_coords):
-        cube_coord_lookup[coord] = idx
-
-    shape_idx = 0
-    for hpi, name in enumerate(HyperPoint.standard_names):
-        if coordinate_mask[hpi]:
-            # Get the dimension coordinates only - these correspond to dimensions of data array.
-            cube_coords = cube.coords(standard_name=name, dim_coords=True)
-            if len(cube_coords) > 1:
-                msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
-                       % (len(cube_coords), ', '.join(coord.name() for coord in cube_coords)))
-                raise cis.exceptions.CoordinateNotFoundError(msg)
-            elif len(cube_coords) == 1:
-                coord_map.append((hpi, cube_coord_lookup[cube_coords[0]], shape_idx))
-                shape_idx += 1
-    return coord_map
+    # TODO
 
 
 def _find_longitude_range(coords):

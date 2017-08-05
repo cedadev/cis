@@ -3,10 +3,9 @@ import logging
 
 import iris
 from iris.cube import Cube
+from iris.pandas import as_data_frame
 import numpy as np
 
-from cis.data_io.hyperpoint import HyperPoint
-from cis.data_io.hyperpoint_view import GriddedHyperPointView
 import six
 
 
@@ -64,44 +63,21 @@ def get_coordinates_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, cube.data)
+    return as_data_frame(cube)
 
 
 def get_all_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, cube.data)
+    return as_data_frame(cube)
 
 
 def get_non_masked_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, cube.data, non_masked_iteration=True)
-
-
-def find_standard_coords(cube):
-    """Constructs a list of the standard coordinates.
-    The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
-    list in this order.
-    :return: list of coordinates or None if coordinate not present
-    """
-    ret_list = []
-
-    coords = cube.coords(dim_coords=True)
-    for name in HyperPoint.standard_names:
-        coord_and_dim = None
-        for idx, coord in enumerate(coords):
-            if coord.standard_name == name:
-                coord_and_dim = (coord, idx)
-                break
-        ret_list.append(coord_and_dim)
-
-    return ret_list
+    return as_data_frame(cube).dropna()
 
 
 def add_history(cube, new_history):
