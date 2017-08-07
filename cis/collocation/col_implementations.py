@@ -10,7 +10,7 @@ from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, 
 from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, Kernel, AbstractDataOnlyKernel)
 import cis.exceptions
 from cis.data_io.datalist import DataList
-from cis.data_io.cube_utils import make_new_with_same_coordinates
+from cis.data_io.cube_utils import make_new_with_same_coordinates, get_all_points, get_non_masked_points
 import cis.collocation.data_index as data_index
 from cis.utils import log_memory_profile, set_standard_name_if_valid
 
@@ -784,7 +784,7 @@ class GeneralGriddedCollocator(Collocator):
                 output_list.extend(collocated)
             return DataList(output_list)
 
-        data_points = data.get_non_masked_points()
+        data_points = get_non_masked_points(data)
 
         log_memory_profile("GeneralGriddedCollocator Created data hyperpoint list view")
 
@@ -1026,6 +1026,7 @@ def _fix_longitude_range(coords, data_points):
     :param coords: coordinates for grid on which to collocate
     :param data_points: HyperPointList or GriddedData of data to fix
     """
+    from cis.data_io.cube_utils import set_longitude_range
     range_start = _find_longitude_range(coords)
     if range_start is not None:
-        data_points.set_longitude_range(range_start)
+        set_longitude_range(data_points, range_start)
