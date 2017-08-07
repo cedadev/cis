@@ -3,7 +3,6 @@ import unittest
 from hamcrest import *
 
 from cis.collocation import data_index
-from cis.data_io.hyperpoint import HyperPoint
 from cis.collocation.col_implementations import make_coord_map, BinnedCubeCellOnlyConstraint
 from cis.test.util.mock import *
 from cis.time_util import convert_datetime_to_std_time
@@ -34,7 +33,7 @@ class TestGridCellBinIndex(unittest.TestCase):
         final_points_index = [(out_index, hp, points) for out_index, hp, points in iterator]
         assert_that(len(final_points_index), is_(1), "There is one mapping from sample_cube to the final grid")
         assert_that(final_points_index[0][0], is_((2, 1, 1)), "The points should map to index")
-        assert_that(final_points_index[0][1], is_(HyperPoint(lat=0, lon=0, t=datetime.datetime(1984, 8, 28))),
+        assert_that(final_points_index[0][1], is_(make_dummy_ungridded_data_single_point(0.0, 0.0, time=datetime.datetime(1984, 8, 28))),
                     "The points should map to index")
         assert_that(final_points_index[0][2].latitudes, is_([0.5]), "The points should map to index")
         assert_that(final_points_index[0][2].longitudes, is_([0.5]), "The points should map to index")
