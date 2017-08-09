@@ -45,16 +45,13 @@ class GeneralUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        sample_points = points.as_data_frame(time_index=False, name='vals')
-        data_points = data.as_data_frame(time_index=False, name='vals').dropna(axis=0)
-
-        print(len(data_points))
-
-        # TODO This doesn't work for dataframes
         # First fix the sample points so that they all fall within the same 360 degree longitude range
-        # _fix_longitude_range(points.coords(), sample_points)
+        _fix_longitude_range(points.coords(), points)
         # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
-        # _fix_longitude_range(points.coords(), data_points)
+        _fix_longitude_range(points.coords(), data)
+
+        sample_points = get_all_points(points)
+        data_points = get_non_masked_points(data)
 
         log_memory_profile("GeneralUngriddedCollocator after data retrieval")
 
@@ -67,8 +64,8 @@ class GeneralUngriddedCollocator(Collocator):
         logging.info("--> Collocating...")
 
         # Create output arrays.
-        self.var_name = data.var_name
-        self.var_long_name = data.long_name
+        self.var_name = data.var_name or 'var'
+        self.var_long_name = data.long_name or ''
         self.var_standard_name = data.standard_name
         self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
@@ -166,7 +163,7 @@ class GriddedUngriddedCollocator(Collocator):
         log_memory_profile("GriddedUngriddedCollocator after data retrieval")
 
         logging.info("--> Collocating...")
-        logging.info("    {} sample points".format(points.size))
+        logging.info("    {} sample points".format(points.shape[0]))
 
         if self.interpolator is None:
             # Cache the interpolator
@@ -1026,7 +1023,14 @@ def _fix_longitude_range(coords, data_points):
     :param coords: coordinates for grid on which to collocate
     :param data_points: HyperPointList or GriddedData of data to fix
     """
+    # TODO This needs refactoring
+    # FIXME this is essentially a switch on ungridded/gridded - can I do this better?
     from cis.data_io.cube_utils import set_longitude_range
+    from cis.utils import fix_longitude_range
     range_start = _find_longitude_range(coords)
     if range_start is not None:
-        set_longitude_range(data_points, range_start)
+        if data_points.coords('longitude', dim_coords=True):
+            set_longitude_range(data_points, range_start)
+        else:
+            fix_longitude_range(data_points.coord('longitude').points, range_start)
+

@@ -97,7 +97,7 @@ class GriddedUngriddedInterpolator(object):
 
                 grid_points.append(coord_points)
 
-        sample_points = [sample.coord(c).data_flattened for c in coords]
+        sample_points = [sample.coord(c).points.flat for c in coords]
 
         if len(data.coords('altitude', dim_coords=False)) > 0 and sample.coords(standard_name='altitude'):
             hybrid_dims = data.coord_dims(data.coord('altitude'))
@@ -106,13 +106,13 @@ class GriddedUngriddedInterpolator(object):
                 # Lookup the dimension on the hybrid data array
                 hybrid_coord_dim = hybrid_dims.index(coord_dim)
                 hybrid_coord = extend_circular_data(hybrid_coord, hybrid_coord_dim)
-            sample_points.append(sample.coord(standard_name="altitude").data_flattened)
+            sample_points.append(sample.coord(standard_name="altitude").points.flat)
         elif len(data.coords('air_pressure', dim_coords=False)) > 0 and sample.coords(standard_name='air_pressure'):
             hybrid_coord = data.coord('air_pressure').points
             for coord_dim in self._circular_coord_dims:
                 hybrid_coord = extend_circular_data(hybrid_coord, coord_dim)
             hybrid_dims = data.coord_dims(data.coord('air_pressure'))
-            sample_points.append(sample.coord(standard_name="air_pressure").data_flattened)
+            sample_points.append(sample.coord(standard_name="air_pressure").points.flat)
         else:
             hybrid_coord = None
             hybrid_dims = None

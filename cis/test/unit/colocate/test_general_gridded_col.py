@@ -12,7 +12,7 @@ from cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_single_
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
     make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
     make_square_5x3_2d_cube_with_decreasing_latitude, make_square_5x3_2d_cube, make_regular_2d_ungridded_data, \
-    make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim
+    make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim, make_dummy_sample_points
 from cis.test.utils_for_testing import assert_arrays_equal, assert_arrays_almost_equal
 
 
@@ -132,7 +132,7 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
 
 def single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(con, kernel):
     sample_cube = make_mock_cube()
-    data_point = make_dummy_ungridded_data_single_point([0.5, 99], [0.5, 99], [1.2, 5])
+    data_point = make_dummy_sample_points([0.5, 99], [0.5, 99], [1.2, 5])
     col = GeneralGriddedCollocator(fill_value=-999.9)
     out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
@@ -145,7 +145,7 @@ def single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(
 
 def multiple_points_inside_grid_and_outside(con, kernel):
     sample_cube = make_mock_cube()
-    data_point = make_dummy_ungridded_data_single_point([0.5, 99, 0.6, 3.0, -9], [0.5, 99, 0.6, 0.5, -3],
+    data_point = make_dummy_sample_points([0.5, 99, 0.6, 3.0, -9], [0.5, 99, 0.6, 0.5, -3],
                                                         [1.2, 5, 3.4, 5, 8])
     col = GeneralGriddedCollocator(fill_value=-999.9)
     out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
@@ -464,7 +464,7 @@ def list_moments(constraint, kernel):
     sample = make_square_5x3_2d_cube()
     data1 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
     data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
-    data2.metadata._name = 'snow'
+    data2.var_name = 'snow'
     data2.data *= 2
     output = col.collocate(sample, DataList([data1, data2]), constraint, kernel)
     assert len(output) == 6

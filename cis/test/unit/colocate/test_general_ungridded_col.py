@@ -103,7 +103,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         ug_data_2 = mock.make_regular_2d_ungridded_data(data_offset=3)
         ug_data_2.long_name = 'TOTAL SNOWFALL RATE: LS+CONV KG/M2/S'
         ug_data_2.standard_name = 'snowfall_flux'
-        ug_data_2.metadata._name = 'snow'
+        ug_data_2.var_name = 'snow'
 
         data_list = DataList([ug_data_1, ug_data_2])
         sample_points = mock.make_regular_2d_ungridded_data()

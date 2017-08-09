@@ -679,7 +679,7 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=Non
         p = AuxCoord(np.array(pressure), standard_name='air_pressure')
         coords = [(x, 0), (y, 0), (p, 0)]
 
-    data = np.array(value)
+    data = np.array([value])
     if mask:
         data = ma.masked_array(data, mask=mask)
     return Cube(data, var_name='Rain', standard_name='rainfall_rate', long_name="Total Rainfall",

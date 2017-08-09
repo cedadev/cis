@@ -3,7 +3,6 @@ import logging
 
 import iris
 from iris.cube import Cube
-from iris.pandas import as_data_frame
 import numpy as np
 
 import six
@@ -287,3 +286,22 @@ def _get_coord(cube, name):
             _try_coord(cube, dict(var_name=name)) or _try_coord(cube, dict(axis=name))
 
     return coord
+
+
+def as_data_frame(cube):
+    # TODO This is currently used in place of a GriddedHyperPointView but I'm not sure it can be used like that...?
+    from iris.pandas import as_data_frame, as_series, _as_pandas_coord
+    import pandas as pd
+    if cube.ndim == 1:
+        df = as_series(cube)
+        if cube.coords(dim_coords=False):
+            t_coord = cube.coords(standard_name='time')
+            index = _as_pandas_coord(t_coord[0]) if t_coord else None
+            data_dict = {cube.name(): df}
+            data_dict.update({c.standard_name: c.points for c in cube.coords(dim_coords=False)})
+            df = pd.DataFrame(data=data_dict, index=index)
+    elif cube.ndim == 2:
+        df = as_data_frame(cube)
+    else:
+        raise ValueError("Only cubes of 1 or 2 dimensions can be converted to dataframes")
+    return df
