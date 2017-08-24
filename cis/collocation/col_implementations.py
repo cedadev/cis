@@ -84,7 +84,7 @@ class GeneralUngriddedCollocator(Collocator):
             values[0, :] = kernel.get_value(sample_points, data_points)
         else:
             for i, point, con_points in constraint.get_iterator(self.missing_data_for_missing_sample, None, None,
-                                                            data_points, None, sample_points, None):
+                                                            data_points, None, sample_points, values):
 
                 try:
                     value_obj = kernel.get_value(point, con_points)
@@ -312,36 +312,32 @@ class SepConstraintKdtree(PointConstraint):
         # Don't use the value as a key (it's both irrelevant and un-hashable)
         self._index_cache[tuple(ref_point[['latitude', 'longitude']].values)] = indices
 
-    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
-        cell_count = 0
-        total_count = 0
-        sample_points_count = len(points)
-
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points,
+                     output_data):
+        from cis.collocation.col_framework import index_iterator_for_non_masked_data, index_iterator_nditer
         indices = False
 
+        if missing_data_for_missing_sample:
+            iterator = index_iterator_for_non_masked_data(shape, points)
+        else:
+            iterator = index_iterator_nditer(shape, output_data[0])
+
         if self.haversine_distance_kd_tree_index and self.h_sep:
-            indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points, self.h_sep)
+            indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points,
+                                                                                               self.h_sep)
 
-        for i, p in points.iterrows():
+        for i in iterator:
+            p = points.iloc[0]
+            if indices:
+                # Note that data_points has to be a dataframe at this point because of the indexing
+                d_points = data_points[indices[i]]
+            else:
+                d_points = data_points
+            for check in self.checks:
+                con_points_indices = check(d_points, p)
+                d_points = d_points[con_points_indices]
 
-            # Log progress periodically.
-            cell_count += 1
-            if cell_count == 1000:
-                total_count += cell_count
-                cell_count = 0
-                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
-
-            # If missing_data_for_missing_sample
-            if not (missing_data_for_missing_sample and (hasattr(p, 'vals') and np.isnan(p.vals))):
-                if indices:
-                    # Note that data_points has to be a dataframe at this point because of the indexing
-                    d_points = data_points.iloc[indices[i]]
-                else:
-                    d_points = data_points
-                for check in self.checks:
-                    d_points = d_points.iloc[check(d_points, p)]
-
-                yield i, p, d_points
+            yield i, p, d_points
 
 
 # noinspection PyPep8Naming
