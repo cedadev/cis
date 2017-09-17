@@ -389,5 +389,5 @@ class DataList(iris.cube.CubeList):
         :param kwargs: The constraint arguments
         :return CommonDataList: The subset of each of the data
         """
-        from cis.subsetting.subset import subset, GriddedSubsetConstraint
-        return subset(self, GriddedSubsetConstraint, **kwargs)
+        from cis.subsetting.subset import subset
+        return subset(self, **kwargs)
