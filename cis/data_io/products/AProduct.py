@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import logging
 import traceback
-from cis.exceptions import FileFormatError
 from cis.data_io.aeronet import get_aeronet_file_variables
 from cis.data_io.hdf import get_hdf4_file_variables
 from cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
@@ -33,17 +32,6 @@ class AProduct(object):
 
         :raise FileIOError: Unable to read a file
         :raise InvalidVariableError: Variable not present in file
-        """
-
-    @abstractmethod
-    def create_coords(self, filenames):
-        """
-        Reads the coordinates from one or more files. Note that this method may have to make certain assumptions about
-        the file in order to return a single coordinate set. The user should be warned through the logger if this is the
-        case.
-
-        :param list filenames: List of filenames to read coordinates from
-        :return: :class:`.CommonData` object
         """
 
     @abstractmethod
@@ -95,23 +83,6 @@ class AProduct(object):
                 file_variables = get_aeronet_file_variables(filename)
             variables.extend(file_variables)
         return set(variables)
-
-    def get_file_format(self, filename):
-        """
-        Returns a file format hierarchy separated by slashes, of the form
-        ``TopLevelFormat/SubFormat/SubFormat/Version``.
-        E.g. ``NetCDF/GASSP/1.0``, ``ASCII/ASCIIHyperpoint`` or ``HDF4/CloudSat``. This is mainly used within the
-        ceda_di indexing tool. If not set it will default to the products name.
-
-        A filename of an example file can be provided to enable the determination of, for example, a dataset version
-        number.
-
-        :param str filename: Filename of file to be inspected
-        :returns: File format, of the form ``[parent/]format/specific instance/version``, or the class name
-        :rtype: str
-        :raises: FileFormatError if there is an error
-        """
-        return self.__class__.__name__
 
     def get_file_type_error(self, filename):
         """
@@ -206,28 +177,6 @@ def get_data(filenames, variable, product=None):
                                      % (product_cls.__name__, type(e).__name__, e.args[0]), e)
 
 
-def get_coordinates(filenames, product=None):
-    """
-    Top level routine for calling the correct product's :meth:`create_coords` routine.
-
-    :param list filenames: A list of filenames to read data from
-    :param str product: The product to read data with - this should be a string which matches the name of one of the
-     subclasses of AProduct
-    :return: A :class:`CoordList` object
-    """
-    product_cls = __get_class(filenames[0], product)
-
-    logging.info("Retrieving coordinates using product " + product_cls.__name__)
-    try:
-        coord = product_cls().create_coords(filenames)
-        return coord
-    except Exception as e:
-        logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
-        raise ProductPluginException("An error occurred retrieving coordinates using the product %s. Check that this "
-                                     "is the correct product plugin for your chosen data. Exception was %s: %s."
-                                     % (product_cls.__name__, type(e).__name__, e.args[0]), e)
-
-
 def get_variables(filenames, product=None, data_type=None):
     """
     Top level routine for calling the correct product's :meth:`get_variable_names` routine.
@@ -248,34 +197,6 @@ def get_variables(filenames, product=None, data_type=None):
         raise ProductPluginException("An error occurred retrieving variables using the product %s. Check that this "
                                      "is the correct product plugin for your chosen data. Exception was %s: %s."
                                      % (product_cls.__name__, type(e).__name__, e.args[0]), e)
-
-
-def get_file_format(filenames, product=None):
-    """
-    Returns the files format of throws FileFormatError if there is an error in the format
-
-    :param list filenames: the filenames to read
-    :param str product: the product to use, if not specified search
-    :return: File format
-    :raises ClassNotFoundError: if there is no reader for this class
-    """
-    product_cls = __get_class(filenames[0], product)
-
-    logging.info("Retrieving file format using product " + product_cls.__name__ + "...")
-    try:
-        file_format = product_cls().get_file_format(filenames[0])
-    except Exception as e:
-        logging.debug("Error in product plugin %s:\n%s" % (product_cls.__name__, traceback.format_exc()))
-        raise ProductPluginException(
-            "An error occurred retrieving the file format using the product %s. Check that this "
-            "is the correct product plugin for your chosen data. Exception was %s: %s."
-            % (product_cls.__name__, type(e).__name__, e.args[0]), e)
-
-    try:
-        product_cls().create_coords(filenames)
-    except Exception as ex:
-        raise FileFormatError(error_list=['Could not read coordinates from the file', ex.args[0]])
-    return file_format
 
 
 def get_product_full_name(filenames, product=None):
