@@ -255,19 +255,19 @@ def set_year(datetime, new_year):
     return new_dt
 
 
-def change_year_of_ungridded_data(data, new_year):
+def change_year(data, new_year):
     """
      This slightly roundabout method works fine, but isn't particularly quick.
       I could just add the number of years times 365, but that does't take leap years into account. If I want to take
       leap years into account I can't use fractional days which would break the time. In principle I could take calculate
       the exact difference in integer days between the first date and the first date in the new year then apply that
       scaling - but THAT won't work if the data set spans a leap day...
-    :param data: An ungridded data object to update in-place
+    :param data: A data object to update in-place
     :param int new_year: The year to change the data to
     """
     import numpy as np
 
-    dates = data.coord('time').data
+    dates = data.coord('time').points
 
     dt = convert_std_time_to_datetime(dates)
 
@@ -276,4 +276,4 @@ def change_year_of_ungridded_data(data, new_year):
     updated_dt = np_set_year(dt, new_year)
     new_dates = convert_datetime_to_std_time(updated_dt)
 
-    data.coord('time').data = new_dates
+    data.coord('time').points = new_dates
