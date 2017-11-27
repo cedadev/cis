@@ -2,7 +2,7 @@ import fnmatch
 import logging
 
 from cis.data_io.datalist import DataList
-from cis.data_io.products.AProduct import get_data, get_coordinates, get_variables
+from cis.data_io.products.AProduct import get_data, get_variables
 from cis.utils import listify
 
 
@@ -51,16 +51,14 @@ class DataReader(object):
     Principally, manages operations between one or multiple variables, and gridded or un-gridded data.
     """
 
-    def __init__(self, get_data_func=get_data, get_coords_func=get_coordinates, get_variables_func=get_variables):
+    def __init__(self, get_data_func=get_data, get_variables_func=get_variables):
         """
         Construct a new DataReader object
 
         :param get_data_func: Function to read data from file and return a CommonDataList
-        :param get_coords_func: Function to read data from a file and return a CoordList
         :param get_variables_func: Function to read variables from a file and return a list of variable strings
         """
         self._get_data_func = get_data_func
-        self._get_coords_func = get_coords_func
         self._get_vars_func = get_variables_func
 
     def read_data_list(self, filenames, variables, product=None, aliases=None):
@@ -177,15 +175,3 @@ class DataReader(object):
         data = self.read_data_list(datagroup['filenames'], datagroup['variables'],
                                    datagroup.get('product', None), aliases)
         return data
-
-    def read_coordinates(self, filenames, product=None):
-        """
-        Read the coordinates from a file
-        :param filenames:   The filename of the files to read
-        :return: A CoordList object
-        """
-
-        # if filenames is not a list, make it a list of 1 element
-        filenames = listify(filenames)
-
-        return self._get_coords_func(filenames, product)
