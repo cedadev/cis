@@ -20,7 +20,6 @@
 
 from __future__ import division, print_function, absolute_import
 
-from cis.test.utils_for_testing import compare_masked_arrays
 import itertools
 import numpy as np
 from numpy.testing import (assert_array_almost_equal, assert_raises,

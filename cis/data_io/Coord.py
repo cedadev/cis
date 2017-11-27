@@ -119,8 +119,9 @@ class Coord(LazyData):
 
         :return: Copied :class:`Coord`
         """
+        from copy import deepcopy
         data = data if data is not None else numpy.ma.copy(self.data)  # Will call lazy load method
-        return Coord(data, self.metadata, axis=self.axis)
+        return Coord(data, deepcopy(self.metadata), axis=deepcopy(self.axis))
 
 
 class CoordList(list):

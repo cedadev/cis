@@ -164,7 +164,7 @@ class Generic2DPlot(APlot):
 
         # Either setup the colour bar - or if we're not doing one then we need to set the title
         if self.colourbar:
-            add_color_bar(self.mappable, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
+            add_color_bar(ax, self.mappable, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
         else:
             ax.set_title(self.label)
 

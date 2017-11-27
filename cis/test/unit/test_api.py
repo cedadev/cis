@@ -135,10 +135,20 @@ class TestAPI(TestCase):
         res = self.gd.collapsed('x')
         assert self.gd == gd_copy
 
+    def test_basic_gridded_collapse_using_coord_objects(self):
+        gd_copy = self.gd.copy()
+        res = self.gd.collapsed(self.gd.coords())
+        assert self.gd == gd_copy
+
     def test_basic_ungridded_aggregation(self):
         res = self.ug.aggregate(x=[-5, 0, 1])
         # This dataset should still be the same as the alternative one (this checks data and metadata)
         assert self.ug == self.ug_1
+
+    def test_copy_copies_metadata(self):
+        res = self.ug.copy()
+        res.var_name = 'test'
+        assert self.ug.var_name != 'test'
 
     def test_change_units(self):
         from numpy.testing import assert_almost_equal

@@ -58,4 +58,4 @@ class Histogram2D(ComparativeScatter):
         ax.set_ylabel(self.ylabel)
 
         if self.colourbar:
-            add_color_bar(self.map, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)
+            add_color_bar(ax, self.map, self.vstep, self.logv, self.cbarscale, self.cbarorient, self.cbarlabel)

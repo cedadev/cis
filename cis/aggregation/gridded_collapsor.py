@@ -69,14 +69,6 @@ class GriddedCollapsor(object):
         from copy import deepcopy
         from cis.exceptions import ClassNotFoundError
         ag_args = {}
-        if isinstance(kernel, iris.analysis.WeightedAggregator):
-            # If this is a list we can calculate weights using the first item (all variables should be on
-            # same grid)
-            data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
-            # Weights to correctly calculate areas.
-            ag_args['weights'] = iris.analysis.cartography.area_weights(data_for_weights)
-        elif not isinstance(kernel, iris.analysis.Aggregator):
-            raise ClassNotFoundError('Error - unexpected aggregator type.')
 
         dims_to_collapse = set()
         for coord in self.coords:
@@ -92,6 +84,16 @@ class GriddedCollapsor(object):
                     set(coord_dims).difference(dims_to_collapse):
                 # ... add it to our list of partial coordinates to collapse.
                 coords_for_partial_collapse.append((coord, coord_dims))
+
+        if isinstance(kernel, iris.analysis.WeightedAggregator) and \
+                        'latitude' in [c.standard_name for c in self.coords]:
+            # If this is a list we can calculate weights using the first item (all variables should be on
+            # same grid)
+            data_for_weights = self.data[0] if isinstance(self.data, list) else self.data
+            # Weights to correctly calculate areas.
+            ag_args['weights'] = iris.analysis.cartography.area_weights(data_for_weights)
+        elif not isinstance(kernel, iris.analysis.Aggregator):
+            raise ClassNotFoundError('Error - unexpected aggregator type.')
 
         # Before we remove the coordinates which need to be partially collapsed we take a copy of the data. We need
         #  this so that the aggregation doesn't have any side effects on the input data. This is particularly important

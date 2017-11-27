@@ -556,9 +556,10 @@ class UngriddedData(LazyData, CommonData):
 
         :return: Copied UngriddedData object
         """
+        from copy import deepcopy
         data = data if data is not None else numpy.ma.copy(self.data)  # This will load the data if lazy load
         coords = self.coords().copy()
-        return UngriddedData(data=data, metadata=self.metadata, coords=coords)
+        return UngriddedData(data=data, metadata=deepcopy(self.metadata), coords=coords)
 
     @property
     def size(self):
