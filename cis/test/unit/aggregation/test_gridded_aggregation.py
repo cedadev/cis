@@ -42,7 +42,7 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array([8.0])
 
-        assert numpy.equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_can_name_variables_by_variable_name(self):
@@ -50,7 +50,7 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array([8.0])
 
-        assert numpy.equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_collapsing_everything_returns_a_single_value(self):
@@ -58,7 +58,7 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array([8.0])
 
-        assert numpy.equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_collapsing_everything_returns_a_single_value_with_missing_values(self):
