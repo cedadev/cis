@@ -25,7 +25,6 @@ def subset(data, constraint, **kwargs):
     from cis.time_util import PartialDateTime
     from cis.exceptions import CoordinateNotFoundError
     from shapely.wkt import loads
-    from shapely.geos import ReadingError
 
     constraints = {}
 
@@ -35,7 +34,7 @@ def subset(data, constraint, **kwargs):
             if isinstance(limit, six.string_types):
                 try:
                     shape = loads(limit)
-                except ReadingError:
+                except Exception:
                     raise ValueError("Invalid shape string: " + limit)
             else:
                 shape = limit
