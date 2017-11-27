@@ -1,12 +1,12 @@
 """
 module to test the time conversion utilities
 """
-from nose.tools import eq_, assert_almost_equal, istest, raises
+from nose.tools import eq_, assert_almost_equal, raises
 import datetime as dt
 from unittest import TestCase
 
 from cis.time_util import convert_sec_since_to_std_time, convert_datetime_to_std_time, \
-    convert_julian_date_to_std_time, PartialDateTime, find_last_day_of_month, set_year, change_year_of_ungridded_data
+    convert_julian_date_to_std_time, PartialDateTime, find_last_day_of_month, set_year, change_year
 
 
 class TestTimeUtils(TestCase):
@@ -155,6 +155,6 @@ class TestTimeUtils(TestCase):
 
         ug = make_regular_2d_with_time_ungridded_data()
 
-        change_year_of_ungridded_data(ug, 2007)
+        change_year(ug, 2007)
 
         eq_(ug.coord('time').points[0, 0], convert_datetime_to_std_time(datetime(2007, 8, 27)))
