@@ -1,7 +1,6 @@
 import numpy as np
 
 from cis.collocation.kdtree import HaversineDistanceKDTree
-from cis.data_io.hyperpoint import HyperPoint
 
 
 def create_index(data, leafsize=10):

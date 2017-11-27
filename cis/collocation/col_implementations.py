@@ -7,12 +7,10 @@ from iris.exceptions import CoordinateMultiDimError
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, sum as np_sum
 
-from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, CellConstraint,
-                                           IndexedConstraint, Kernel, AbstractDataOnlyKernel)
+from cis.collocation.col_framework import (Collocator, Constraint, PointConstraint, Kernel, AbstractDataOnlyKernel)
 import cis.exceptions
 from cis.data_io.datalist import DataList
-from cis.data_io.cube_utils import make_new_with_same_coordinates
-from cis.data_io.hyperpoint import HyperPoint, HyperPointList
+from cis.data_io.cube_utils import make_new_with_same_coordinates, get_all_points, get_non_masked_points
 import cis.collocation.data_index as data_index
 from cis.utils import log_memory_profile, set_standard_name_if_valid
 
@@ -47,16 +45,13 @@ class GeneralUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        sample_points = points.as_data_frame(time_index=False, name='vals')
-        data_points = data.as_data_frame(time_index=False, name='vals').dropna(axis=0)
-
-        print(len(data_points))
-
-        # TODO This doesn't work for dataframes
         # First fix the sample points so that they all fall within the same 360 degree longitude range
-        # _fix_longitude_range(points.coords(), sample_points)
+        _fix_longitude_range(points.coords(), points)
         # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
-        # _fix_longitude_range(points.coords(), data_points)
+        _fix_longitude_range(points.coords(), data)
+
+        sample_points = get_all_points(points)
+        data_points = get_non_masked_points(data)
 
         log_memory_profile("GeneralUngriddedCollocator after data retrieval")
 
@@ -69,8 +64,8 @@ class GeneralUngriddedCollocator(Collocator):
         logging.info("--> Collocating...")
 
         # Create output arrays.
-        self.var_name = data.var_name
-        self.var_long_name = data.long_name
+        self.var_name = data.var_name or 'var'
+        self.var_long_name = data.long_name or ''
         self.var_standard_name = data.standard_name
         self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
@@ -89,7 +84,7 @@ class GeneralUngriddedCollocator(Collocator):
             values[0, :] = kernel.get_value(sample_points, data_points)
         else:
             for i, point, con_points in constraint.get_iterator(self.missing_data_for_missing_sample, None, None,
-                                                            data_points, None, sample_points, None):
+                                                            data_points, None, sample_points, values):
 
                 try:
                     value_obj = kernel.get_value(point, con_points)
@@ -168,7 +163,7 @@ class GriddedUngriddedCollocator(Collocator):
         log_memory_profile("GriddedUngriddedCollocator after data retrieval")
 
         logging.info("--> Collocating...")
-        logging.info("    {} sample points".format(points.size))
+        logging.info("    {} sample points".format(points.shape[0]))
 
         if self.interpolator is None:
             # Cache the interpolator
@@ -223,6 +218,7 @@ class SepConstraint(PointConstraint):
                 raise InvalidCommandLineOptionError(e)
             self.checks.append(self.time_constraint)
 
+    # TODO The points no longer have these methods so this will need refactoring (to work on whole DFs at a time)
     def time_constraint(self, point, ref_point):
         return point.time_sep(ref_point) < self.t_sep
 
@@ -236,11 +232,11 @@ class SepConstraint(PointConstraint):
         return point.haversine_dist(ref_point) < self.h_sep
 
     def constrain_points(self, ref_point, data):
-        con_points = HyperPointList()
-        for point in data:
-            if all(check(point, ref_point) for check in self.checks):
-                con_points.append(point)
-        return con_points
+        import operator
+        from functools import reduce
+        # Each check returns a boolean series, just || them together
+        matching_points = reduce(operator.or_, [check(data, ref_point) for check in self.checks], False)
+        return data[matching_points]
 
 
 class SepConstraintKdtree(PointConstraint):
@@ -316,36 +312,32 @@ class SepConstraintKdtree(PointConstraint):
         # Don't use the value as a key (it's both irrelevant and un-hashable)
         self._index_cache[tuple(ref_point[['latitude', 'longitude']].values)] = indices
 
-    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
-        cell_count = 0
-        total_count = 0
-        sample_points_count = len(points)
-
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points,
+                     output_data):
+        from cis.collocation.col_framework import index_iterator_for_non_masked_data, index_iterator_nditer
         indices = False
 
+        if missing_data_for_missing_sample:
+            iterator = index_iterator_for_non_masked_data(shape, points)
+        else:
+            iterator = index_iterator_nditer(shape, output_data[0])
+
         if self.haversine_distance_kd_tree_index and self.h_sep:
-            indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points, self.h_sep)
+            indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points,
+                                                                                               self.h_sep)
 
-        for i, p in points.iterrows():
+        for i in iterator:
+            p = points.iloc[0]
+            if indices:
+                # Note that data_points has to be a dataframe at this point because of the indexing
+                d_points = data_points[indices[i]]
+            else:
+                d_points = data_points
+            for check in self.checks:
+                con_points_indices = check(d_points, p)
+                d_points = d_points[con_points_indices]
 
-            # Log progress periodically.
-            cell_count += 1
-            if cell_count == 1000:
-                total_count += cell_count
-                cell_count = 0
-                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
-
-            # If missing_data_for_missing_sample
-            if not (missing_data_for_missing_sample and (hasattr(p, 'vals') and np.isnan(p.vals))):
-                if indices:
-                    # Note that data_points has to be a dataframe at this point because of the indexing
-                    d_points = data_points.iloc[indices[i]]
-                else:
-                    d_points = data_points
-                for check in self.checks:
-                    d_points = d_points.iloc[check(d_points, p)]
-
-                yield i, p, d_points
+            yield i, p, d_points
 
 
 # noinspection PyPep8Naming
@@ -785,7 +777,7 @@ class GeneralGriddedCollocator(Collocator):
                 output_list.extend(collocated)
             return DataList(output_list)
 
-        data_points = data.get_non_masked_points()
+        data_points = get_non_masked_points(data)
 
         log_memory_profile("GeneralGriddedCollocator Created data hyperpoint list view")
 
@@ -924,58 +916,6 @@ class GeneralGriddedCollocator(Collocator):
         return cube
 
 
-class CubeCellConstraint(CellConstraint):
-    #TODO Delete me
-    """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
-    """
-
-    def constrain_points(self, sample_point, data):
-        """Returns HyperPoints lying within a cell.
-        :param sample_point: HyperPoint of cells defining sample region
-        :param data: list of HyperPoints to check
-        :return: HyperPointList of points found within cell
-        """
-        con_points = HyperPointList()
-        for point in data:
-            include = True
-            for idx in range(HyperPoint.number_standard_names):
-                cell = sample_point[idx]
-                if cell is not None:
-                    if not (np.min(cell.bound) <= point[idx] < np.max(cell.bound)):
-                        include = False
-            if include:
-                con_points.append(point)
-        return con_points
-
-
-class BinningCubeCellConstraint(IndexedConstraint):
-    #TODO Delete me
-    """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
-
-    Uses the index_data method to bin all the points
-    """
-
-    def __init__(self):
-        super(BinningCubeCellConstraint, self).__init__()
-        self.grid_cell_bin_index = None
-
-    def constrain_points(self, sample_point, data):
-        """Returns HyperPoints lying within a cell.
-
-        This implementation returns the points that have been stored in the
-        appropriate bin by the index_data method.
-        :param sample_point: HyperPoint of indices of cells defining sample region
-        :param data: list of HyperPoints to check
-        :return: HyperPointList of points found within cell
-        """
-        point_list = self.grid_cell_bin_index.get_points_by_indices(sample_point)
-        con_points = HyperPointList()
-        if point_list is not None:
-            for point in point_list:
-                con_points.append(data[point])
-        return con_points
-
-
 class BinnedCubeCellOnlyConstraint(Constraint):
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell. With an iterator which only
     travels over those cells with a value in.
@@ -1049,40 +989,14 @@ def make_coord_map(points, data):
     # If there are coordinates in the sample grid that are not present for the data,
     # omit the from the set of coordinates in the output grid. Find a mask of coordinates
     # that are present to use when determining the output grid shape.
+
+    # TODO The find_standard_coords method no longer exists so I'll have to come up with another way of doing this...
+    #  It should be easier using Iris coords rather than HyperPoints anyway
     coordinate_mask = [False if c is None else True for c in data.find_standard_coords()]
 
     # Find the mapping of standard coordinates to those in the sample points and those to be used
     # in the output data.
-    return _find_standard_coords(points, coordinate_mask)
-
-
-def _find_standard_coords(cube, coordinate_mask):
-    """Finds the mapping of sample point coordinates to the standard ones used by HyperPoint.
-
-    :param cube: cube among the coordinates of which to find the standard coordinates
-    :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
-    :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
-    """
-    coord_map = []
-    cube_coord_lookup = {}
-
-    cube_coords = cube.coords()
-    for idx, coord in enumerate(cube_coords):
-        cube_coord_lookup[coord] = idx
-
-    shape_idx = 0
-    for hpi, name in enumerate(HyperPoint.standard_names):
-        if coordinate_mask[hpi]:
-            # Get the dimension coordinates only - these correspond to dimensions of data array.
-            cube_coords = cube.coords(standard_name=name, dim_coords=True)
-            if len(cube_coords) > 1:
-                msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
-                       % (len(cube_coords), ', '.join(coord.name() for coord in cube_coords)))
-                raise cis.exceptions.CoordinateNotFoundError(msg)
-            elif len(cube_coords) == 1:
-                coord_map.append((hpi, cube_coord_lookup[cube_coords[0]], shape_idx))
-                shape_idx += 1
-    return coord_map
+    # TODO
 
 
 def _find_longitude_range(coords):
@@ -1105,6 +1019,14 @@ def _fix_longitude_range(coords, data_points):
     :param coords: coordinates for grid on which to collocate
     :param data_points: HyperPointList or GriddedData of data to fix
     """
+    # TODO This needs refactoring
+    # FIXME this is essentially a switch on ungridded/gridded - can I do this better?
+    from cis.data_io.cube_utils import set_longitude_range
+    from cis.utils import fix_longitude_range
     range_start = _find_longitude_range(coords)
     if range_start is not None:
-        data_points.set_longitude_range(range_start)
+        if data_points.coords('longitude', dim_coords=True):
+            set_longitude_range(data_points, range_start)
+        else:
+            fix_longitude_range(data_points.coord('longitude').points, range_start)
+

@@ -28,6 +28,8 @@ from numpy.testing import (assert_array_almost_equal, assert_raises,
 
 from cis.collocation.gridded_interpolation import _RegularGridInterpolator, GriddedUngriddedInterpolator
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
+import datetime as dt
+from cis.test.util import mock
 
 
 class TestRegularGridInterpolator(TestCase):
@@ -215,13 +217,8 @@ class TestRegularGridInterpolator(TestCase):
         assert_array_almost_equal(interp(values), interp_qhull(sample))
 
     def test_2d_cube(self):
-        from cis.test.util.mock import make_square_5x3_2d_cube
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
-
-        cube = make_square_5x3_2d_cube()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(1.0, 1.0), HyperPoint(4.0, 4.0), HyperPoint(-4.0, -4.0)])
+        cube = mock.make_square_5x3_2d_cube()
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
@@ -229,17 +226,15 @@ class TestRegularGridInterpolator(TestCase):
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_Coord_nn(self):
-        from cis.test.util.mock import make_mock_cube
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
-        import datetime as dt
-        cube = make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      pres=[111100040.5, 113625040.5, 177125044.5, 166600039.0],
+                                                      alt=[5000, 4000, 3000, 3500],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nn')
         values = interpolator(cube)
@@ -247,17 +242,14 @@ class TestRegularGridInterpolator(TestCase):
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_Coord_without_hybrid_coord(self):
-        from cis.test.util.mock import make_mock_cube
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
         import datetime as dt
-        cube = make_mock_cube(time_dim_length=3)
+        cube = mock.make_mock_cube(time_dim_length=3)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
@@ -265,17 +257,15 @@ class TestRegularGridInterpolator(TestCase):
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_Coord(self):
-        from cis.test.util.mock import make_mock_cube
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
-        import datetime as dt
-        cube = make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      pres=[111100040.5, 113625040.5, 177125044.5, 166600039.0],
+                                                      alt=[5000, 4000, 3000, 3500],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
@@ -283,19 +273,17 @@ class TestRegularGridInterpolator(TestCase):
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_pres_Coord_order_doesnt_matter(self):
-        from cis.test.util.mock import make_mock_cube
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
-        import datetime as dt
-        cube = make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
         cube.transpose()
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      pres=[111100040.5, 113625040.5, 177125044.5, 166600039.0],
+                                                      alt=[5000, 4000, 3000, 3500],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
@@ -303,21 +291,15 @@ class TestRegularGridInterpolator(TestCase):
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_alt_Coord_order_doesnt_matter(self):
-        from cis.test.util.mock import make_mock_cube
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
-        import datetime as dt
-        cube = make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
         cube.transpose()
 
-        sample_points = UngriddedData.from_points_array(
-            # This point actually lies outside the lower bounds for altitude at this point in space
-            [HyperPoint(lat=1.0, lon=1.0, alt=5000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
-             # This point lies in the middle of the altitude bounds at this point
-             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, t=dt.datetime(1984, 8, 28, 8, 34)),
-             # This point lies outside the upper bounds for altitude at this point
-             HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, t=dt.datetime(1984, 8, 27, 2, 18, 52))])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0],
+                                                      alt=[5000.0, 6000.0, 6500.0],
+                                                      time=[dt.datetime(1984, 8, 28, 8, 34),
+                                                            dt.datetime(1984, 8, 28, 8, 34),
+                                                            dt.datetime(1984, 8, 27, 2, 18, 52)])
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nn')
         values = interpolator(cube, fill_value=None)
@@ -346,17 +328,9 @@ class TestRegularGridInterpolator(TestCase):
         interpolator(values, fill_value=0.)
 
     def test_missing_values(self):
-        from cis.test.util.mock import make_square_5x3_2d_cube_with_missing_data
+        cube = mock.make_square_5x3_2d_cube_with_missing_data()
 
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
-
-        cube = make_square_5x3_2d_cube_with_missing_data()
-
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0),
-             HyperPoint(lat=0.0, lon=4.0),
-             HyperPoint(lat=-4.0, lon=1.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, -4.0], lon=[0.0, 4.0, 1.0])
 
         wanted = np.ma.array([8.0, np.nan, np.nan], mask=[False, True, True])
 
@@ -367,17 +341,9 @@ class TestRegularGridInterpolator(TestCase):
         assert_array_almost_equal(interpolator(cube), wanted)
 
     def test_missing_values_with_extrapolation(self):
-        from cis.test.util.mock import make_square_5x3_2d_cube_with_missing_data
+        cube = mock.make_square_5x3_2d_cube_with_missing_data()
 
-        from cis.data_io.ungridded_data import UngriddedData
-        from cis.data_io.hyperpoint import HyperPoint
-
-        cube = make_square_5x3_2d_cube_with_missing_data()
-
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=-5.0, lon=10.0),
-             HyperPoint(lat=0.0, lon=10.0),
-             HyperPoint(lat=-4.0, lon=1.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[-5.0, 0.0, -4.0], lon=[10.0, 10.0, 1.0])
 
         wanted = np.ma.array([6.0, np.nan, np.nan], mask=[False, True, True])
 

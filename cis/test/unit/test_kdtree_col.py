@@ -6,7 +6,6 @@ from nose.tools import istest, eq_
 import numpy as np
 from cis.collocation.kdtree import KDTree
 from cis.time_util import cis_standard_time_unit
-from cis.data_io.hyperpoint import HyperPoint
 from cis.test.util import mock
 from cis.collocation.col_implementations import (GeneralUngriddedCollocator, nn_horizontal_kdtree, DummyConstraint,
                                                  SepConstraintKdtree)
@@ -32,8 +31,8 @@ class Test_nn_horizontal_kdtree(object):
     def test_basic_col_in_2d(self):
         # lat: -10 to 10 step 5; lon -5 to 5 step 5
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
+
         col = GeneralUngriddedCollocator(fill_value=-999)
         new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 8.0)
@@ -44,7 +43,7 @@ class Test_nn_horizontal_kdtree(object):
     def test_already_collocated_in_col_ungridded_to_ungridded_in_2d(self):
         ug_data = mock.make_regular_2d_ungridded_data()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
-        sample_points = UngriddedData.from_points_array([HyperPoint(0.0, 0.0)])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0])
         col = GeneralUngriddedCollocator(fill_value=-999)
         new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 8.0)
@@ -60,9 +59,7 @@ class Test_nn_horizontal_kdtree(object):
         together. This test is only really for documenting the behaviour for equidistant points.
         """
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5),
-             HyperPoint(-2.5, -2.5)])
+        sample_points = mock.make_dummy_sample_points(lat=[2.5, -2.5, 2.5, -2.5], lon=[2.5, 2.5, -2.5, -2.5])
         col = GeneralUngriddedCollocator(fill_value=-999)
         new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 11.0)
@@ -73,9 +70,7 @@ class Test_nn_horizontal_kdtree(object):
     @istest
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
         ug_data = mock.make_regular_2d_ungridded_data()
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5),
-             HyperPoint(-5.5, -5.5)])
+        sample_points = mock.make_dummy_sample_points(lat=[5.5, -5.5, 5.5, -5.5], lon=[5.5, 5.5, -5.5, -5.5])
         col = GeneralUngriddedCollocator(fill_value=-999)
         new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
         eq_(new_data.data[0], 12.0)
@@ -89,12 +84,8 @@ class TestSepConstraint(object):
     def test_horizontal_constraint_in_2d(self):
         ug_data = mock.make_regular_2d_ungridded_data()
         ug_data_points = ug_data.as_data_frame(time_index=False, name='vals').dropna(axis=1)
-        sample_points = UngriddedData(np.array([0.0]), Metadata(),
-                                      CoordList([Coord(np.array([7.5]), Metadata(standard_name='latitude')),
-                                                 Coord(np.array([-2.5]), Metadata(standard_name='longitude'))]))
+        sample_points = mock.make_dummy_sample_points(lat=[7.5], lon=[-2.5])
         sample_points_view = sample_points.as_data_frame(time_index=False, name='vals').dropna(axis=1)
-        # sample_point = HyperPoint(lat=7.5, lon=-2.5)
-        # sample_points = HyperPointList([sample_point])
         coord_map = None
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees

@@ -9,7 +9,7 @@ import iris.coords
 import cis.data_io.cube_utils as gridded_data
 
 
-def subset(data, constraint, **kwargs):
+def subset(data, **kwargs):
     """
     Helper function for constraining a CommonData or CommonDataList object (data) given a SubsetConstraint
     class, the constraints should be specified using the kwargs of the form coord: [min, max]
@@ -26,6 +26,7 @@ def subset(data, constraint, **kwargs):
     from cis.exceptions import CoordinateNotFoundError
     from shapely.wkt import loads
     from shapely.geos import ReadingError
+    from cis.data_io.cube_utils import _get_coord
 
     constraints = {}
 
@@ -46,7 +47,7 @@ def subset(data, constraint, **kwargs):
             constraints[data.coord(standard_name='latitude').name()] = slice(bounding_box[1], bounding_box[3])
             continue
 
-        c = data._get_coord(dim_name)
+        c = _get_coord(data, dim_name)
         if c is None:
             raise CoordinateNotFoundError("No coordinate found that matches '{}'. Please check the "
                                           "coordinate name.".format(dim_name))
@@ -72,9 +73,9 @@ def subset(data, constraint, **kwargs):
         limit_end = l.stop if l.stop is not None else c.points.max()
         if isinstance(limit_end, datetime):
             limit_end = c.units.date2num(limit_end)
-        constraints[data._get_coord(dim_name).name()] = slice(limit_start, limit_end)
+        constraints[_get_coord(data, dim_name).name()] = slice(limit_start, limit_end)
 
-    subset_constraint = constraint(constraints)
+    subset_constraint = GriddedSubsetConstraint(constraints)
 
     subset = subset_constraint.constrain(data)
 
@@ -129,6 +130,7 @@ class GriddedSubsetConstraint(SubsetConstraint):
         """
         _shape = self._limits.pop('shape', None)
         extract_constraint, intersection_constraint = self._make_extract_and_intersection_constraints(data)
+        # TODO this doesn't deal with Multi-dimensional coordinates
         if extract_constraint is not None:
             data = data.extract(extract_constraint)
             if data is None:
@@ -148,7 +150,7 @@ class GriddedSubsetConstraint(SubsetConstraint):
                 data.data.mask &= mask
             else:
                 data.data = np.ma.masked_array(data.data, mask)
-        return gridded_data.make_from_cube(data)
+        return data
 
     def _make_extract_and_intersection_constraints(self, data):
         """
@@ -180,100 +182,6 @@ class GriddedSubsetConstraint(SubsetConstraint):
                 # These coordinates cannot be used with iris.cube.Cube.intersection(), will use iris.cube.Cube.extract()
                 extract_constraint = extract_constraint & iris.Constraint(**{coord: Contains(limits.start, limits.stop)})
         return extract_constraint, intersection_constraint
-
-
-class UngriddedSubsetConstraint(SubsetConstraint):
-    """
-    Implementation of SubsetConstraint for subsetting ungridded data.
-    """
-    def __init__(self, limits):
-        super(UngriddedSubsetConstraint, self).__init__(limits)
-        self._shape_indices = None
-        self._combined_mask = None
-
-    def constrain(self, data):
-        """Subsets the supplied data.
-
-        :param data: data to be subsetted
-        :return: subsetted data
-        """
-        import numpy as np
-        from cis.data_io.ungridded_data import UngriddedDataList
-
-        if isinstance(data, list):
-            # Calculating masks and indices will only take place on the first iteration,
-            # so we can just call this method recursively if we've got a list of data.
-            output = UngriddedDataList()
-            for var in data:
-                output.append(self.constrain(var))
-            return output
-
-        _data = self._create_data_for_subset(data)
-
-        _shape = self._limits.pop('shape', None)
-
-        if self._combined_mask is None:
-            # Create the combined mask across all limits
-            shape = _data.coords()[0].data.shape  # This assumes they are all the same shape
-            combined_mask = np.ones(shape, dtype=bool)
-            for coord, limit in self._limits.items():
-                # Select any points which are <= to the stop limit AND >= to the start limit
-                mask = (np.less_equal(_data.coord(coord).data, limit.stop) &
-                        np.greater_equal(_data.coord(coord).data, limit.start))
-                combined_mask &= mask
-            self._combined_mask = combined_mask
-
-        _data = _data[self._combined_mask]
-
-        if _shape is not None:
-            if self._shape_indices is None:
-                self._shape_indices = _get_ungridded_subset_region_indices(_data, _shape)
-            _data = _data[np.unravel_index(self._shape_indices, _data.shape)]
-
-        if _data.size == 0:
-            _data = None
-
-        return _data
-
-    def _create_data_for_subset(self, data):
-        """
-        Produce a copy of the data so that the original is not altered,
-        with longitudes mapped onto the right domain for the requested limits
-        :param data: Data being subsetted
-        :return:
-        """
-        from cis.exceptions import CoordinateNotFoundError
-        # We need a copy with new data and coordinates
-        data = data.copy()
-        # Check for longitude coordinate in the limits
-        for dim_name, limit in self._limits.items():
-            try:
-                coord = data.coord(dim_name)
-            except CoordinateNotFoundError:
-                # E.g. shape...
-                continue
-            if coord.standard_name == 'longitude':
-                coord_min = coord.points.min()
-                coord_max = coord.points.max()
-                data_below_zero = coord_min < 0
-                data_above_180 = coord_max > 180
-                limits_below_zero = limit.start < 0 or limit.stop < 0
-                limits_above_180 = limit.start > 180 or limit.stop > 180
-
-                if data_below_zero and not data_above_180:
-                    # i.e. data is in the range -180 -> 180
-                    # Only convert the data if the limits are above 180:
-                    if limits_above_180 and not limits_below_zero:
-                        # Convert data from -180 -> 180 to 0 -> 360
-                        range_start = 0
-                        coord.set_longitude_range(range_start)
-                elif data_above_180 and not data_below_zero:
-                    # i.e. data is in the range 0 -> 360
-                    if limits_below_zero and not limits_above_180:
-                        # Convert data from 0 -> 360 to -180 -> 180
-                        range_start = -180
-                        coord.set_longitude_range(range_start)
-        return data
 
 
 def _get_indices_for_lat_lon_points(lats, lons, region):

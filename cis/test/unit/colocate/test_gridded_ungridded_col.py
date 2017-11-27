@@ -486,8 +486,7 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 222.4814815, decimal=7)
 
     def test_wrapping_of_alt_points_on_hybrid_height_coordinates_on_0_360_grid(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36,
-                                                  lon_range=(0., 350.)))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10, lon_dim_length=36, lon_range=(0., 350.))
 
         # Shift the cube around so that the dim which isn't hybrid (time) is at the front. This breaks the fix we used
         #  for air pressure...
@@ -495,9 +494,11 @@ class TestLinear(unittest.TestCase):
         # Ensure the longitude coord is circular
         cube.coord(standard_name='longitude').circular = True
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=4.0, lon=355.0, alt=11438.0, t=dt.datetime(1984, 8, 28)),
-             HyperPoint(lat=0.0, lon=2.0, alt=10082.0, t=dt.datetime(1984, 8, 28))])
+        sample_points = mock.make_dummy_sample_points(lat=[4.0, 0.0], lon=[355.0, 2.0],
+                                                      alt=[11438.0, 10082.0],
+                                                      time=[dt.datetime(1984, 8, 28),
+                                                            dt.datetime(1984, 8, 28)])
+
         col = GriddedUngriddedCollocator(extrapolate=False)
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         eq_(new_data.data[0], 3563.0)
@@ -506,10 +507,12 @@ class TestLinear(unittest.TestCase):
     def test_collocation_of_alt_pres_points_on_hybrid_altitude_coordinates(self):
         cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, alt=5550.0, pres=10000.0, t=dt.datetime(1984, 8, 28)),
-             HyperPoint(lat=4.0, lon=4.0, alt=6000.0, pres=1000.0, t=dt.datetime(1984, 8, 28)),
-             HyperPoint(lat=-4.0, lon=-4.0, alt=6500.0, pres=100.0, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 4.0, -4.0], lon=[0.0, 4.0, -4.0],
+                                                      alt=[5550.0, 6000.0, 6500.0],
+                                                      pres=[10000.0, 1000.0, 100.0],
+                                                      time=[dt.datetime(1984, 8, 28),
+                                                            dt.datetime(1984, 8, 28),
+                                                            dt.datetime(1984, 8, 27)])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
@@ -521,8 +524,8 @@ class TestLinear(unittest.TestCase):
     def test_alt_extrapolation(self):
         cube = mock.make_mock_cube(time_dim_length=3, hybrid_ht_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=-4.0, lon=-4.0, alt=6382.8, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[-4.0], lon=[-4.0], alt=[6382.8],
+                                                      time=[dt.datetime(1984, 8, 27)])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN, extrapolate=True)
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
@@ -531,11 +534,13 @@ class TestLinear(unittest.TestCase):
     def test_collocation_of_pres_points_on_hybrid_pressure_coordinates(self):
         cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      pres=[111100040.0, 113625040.0, 177125044.0, 166600039.0],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
+
         col = GriddedUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
@@ -550,11 +555,14 @@ class TestLinear(unittest.TestCase):
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates(self):
         cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      pres=[111100040.0, 113625040.0, 177125044.0, 166600039.0],
+                                                      alt=[5000, 4000, 3000, 3500],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
+
         col = GriddedUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
@@ -569,11 +577,12 @@ class TestLinear(unittest.TestCase):
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_nn(self):
         cube = mock.make_mock_cube(time_dim_length=3)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
+
         col = GriddedUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
@@ -586,16 +595,17 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[3], 12.4, decimal=7)
 
     def test_collocation_of_pres_alt_points_on_hybrid_pressure_coordinates_multi_var(self):
-        cube_list = [mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)]
-        cube_list.append(make_from_cube(mock.make_mock_cube(time_dim_length=3,
-                                                            hybrid_pr_len=10,
-                                                            data_offset=100)))
+        cube_list = [mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10),
+                     mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10, data_offset=100)]
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, alt=5000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=0.0, lon=0.0, pres=113625040.5, alt=4000, t=dt.datetime(1984, 8, 28, 12, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, alt=3000, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=-4.0, lon=-4.0, pres=166600039.0, alt=3500, t=dt.datetime(1984, 8, 27))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 5.0, -4.0], lon=[0.0, 0.0, 2.5, -4.0],
+                                                      pres=[111100040.0, 113625040.0, 177125044.0, 166600039.0],
+                                                      alt=[5000, 4000, 3000, 3500],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 12, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27)])
+
         col = GriddedUngriddedCollocator()
         outlist = col.collocate(sample_points, cube_list, None, 'lin')
         # First data set:
@@ -623,9 +633,11 @@ class TestLinear(unittest.TestCase):
     def test_negative_lon_points_on_hybrid_pressure_coordinates_dont_matter(self):
         cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=0.0, pres=111100040.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=177125044.5, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 5.0], lon=[0.0, 2.5],
+                                                      pres=[111100040.0, 177125044.0],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0)])
+
         col = GriddedUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
@@ -634,15 +646,16 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 330.5, decimal=7)
 
     def test_wrapping_of_pres_points_on_hybrid_pressure_coordinates_on_0_360_grid(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10, lon_dim_length=36,
-                                                  lon_range=(0., 350.)))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10, lon_dim_length=36, lon_range=(0., 350.))
 
         # Ensure the longitude coord is circular
         cube.coord(standard_name='longitude').circular = True
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(lat=0.0, lon=355.0, pres=1482280045.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=5.0, lon=2.5, pres=1879350048.0, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 5.0], lon=[355.0, 2.5],
+                                                      pres=[1482280045.0, 1879350048.0],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 27, 0, 0, 0)])
+
         col = GriddedUngriddedCollocator(extrapolate=False)
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         eq_(new_data.data[0], 2701.0011131725005)
@@ -651,22 +664,21 @@ class TestLinear(unittest.TestCase):
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates(self):
         cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)
 
-        sample_points = UngriddedData.from_points_array(
-            # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
-            [HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
+        # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
+        sample_points = mock.make_dummy_sample_points(lat=[-4.0], lon=[-4.0], pres=[68400050.0],
+                                                      time=[dt.datetime(1984, 8, 27)])
+
         col = GriddedUngriddedCollocator(extrapolate=True)
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates_multi_var(self):
-        cube_list = [mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10)]
-        cube_list.append(make_from_cube(mock.make_mock_cube(time_dim_length=3,
-                                                            hybrid_pr_len=10,
-                                                            data_offset=100)))
+        cube_list = [mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10),
+                     mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10, data_offset=100)]
 
-        sample_points = UngriddedData.from_points_array(
-            # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
-            [HyperPoint(lat=-4.0, lon=-4.0, pres=68400050.0, t=dt.datetime(1984, 8, 27))])
+        # Point interpolated in the horizontal and then extrapolated past the top vertical layer (by one layer)
+        sample_points = mock.make_dummy_sample_points(lat=[-4.0], lon=[-4.0], pres=[68400050.0],
+                                                      time=[dt.datetime(1984, 8, 27)])
 
         col = GriddedUngriddedCollocator(extrapolate=True)
         new_data = col.collocate(sample_points, cube_list, None, 'lin')
@@ -674,14 +686,14 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data[1].data[0], 225.0, decimal=7)
 
     def test_collocation_of_alt_points_on_hybrid_altitude_and_pressure_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
-                                                  geopotential_height=True))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10, geopotential_height=True)
 
-        sample_points = UngriddedData.from_points_array(
-            # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
-            #  present in the data cube)
-            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             HyperPoint(lat=5.0, lon=5.0, alt=355.5, t=dt.datetime(1984, 8, 28, 0, 0))])
+        # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
+        #  present in the data cube)
+        sample_points = mock.make_dummy_sample_points(lat=[0.0, 5.0], lon=[0.0, 5.0],
+                                                      alt=[234.5, 355.5],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 0, 0, 0)])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
@@ -689,13 +701,12 @@ class TestLinear(unittest.TestCase):
         assert_almost_equal(new_data.data[1], 346.5, decimal=7)
 
     def test_collocation_of_alt_pres_points_on_hybrid_altitude_and_pressure_coordinates(self):
-        cube = make_from_cube(mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10,
-                                                  geopotential_height=True))
+        cube = mock.make_mock_cube(time_dim_length=3, hybrid_pr_len=10, geopotential_height=True)
 
-        sample_points = UngriddedData.from_points_array(
-            # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
-            #  present in the data cube)
-            [HyperPoint(lat=0.0, lon=0.0, alt=234.5, pres=1000, t=dt.datetime(1984, 8, 28, 0, 0, 0))])
+        # Test point with both pressure and altitude should interpolate over the altitude only (since that is also
+        #  present in the data cube)
+        sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[234.5], pres=[1000],
+                                                      time=[dt.datetime(1984, 8, 28, 0, 0, 0)])
 
         col = GriddedUngriddedCollocator(fill_value=np.NAN)
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
@@ -705,12 +716,13 @@ class TestLinear(unittest.TestCase):
         # A scalar time coordinate should make no difference when collocating points with a time value.
         cube = mock.make_square_5x3_2d_cube_with_scalar_time()
 
-        sample_points = UngriddedData.from_points_array(
-            [HyperPoint(1.0, 1.0, t=dt.datetime(1984, 8, 22, 0, 0, 0)),
-             HyperPoint(4.0, 4.0, t=dt.datetime(1984, 8, 28, 0, 0, 0)),
-             # Note that it doesn't even matter if the point is outside the bounds of the scalar time...
-             # TODO: Is this correct behaviour?
-             HyperPoint(-4.0, -4.0, t=dt.datetime(1984, 10, 1, 0, 0, 0))])
+        # Note that it doesn't even matter if the point is outside the bounds of the scalar time...
+        # TODO: Is this correct behaviour?
+        sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0],
+                                                      time=[dt.datetime(1984, 8, 22, 0, 0, 0),
+                                                            dt.datetime(1984, 8, 28, 0, 0, 0),
+                                                            dt.datetime(1984, 10, 1, 0, 0, 0)])
+
         col = GriddedUngriddedCollocator()
         new_data = col.collocate(sample_points, cube, None, 'lin')[0]
 

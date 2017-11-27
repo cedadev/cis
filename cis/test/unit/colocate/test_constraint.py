@@ -6,7 +6,6 @@ import unittest
 from nose.tools import eq_
 
 from cis.test.util import mock
-from cis.data_io.hyperpoint import HyperPoint
 
 
 class TestSepConstraint(unittest.TestCase):
@@ -18,8 +17,8 @@ class TestSepConstraint(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, pres=50.0, t=dt.datetime(1984, 8, 29))
-
+        sample_point = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[50.0], pres=[50.0],
+                                                     time=[dt.datetime(1984, 8, 29)])
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         # in each direction
         h_sep = 1000
@@ -50,7 +49,8 @@ class TestSepConstraint(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
+        sample_point = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[50.0],
+                                                     time=[dt.datetime(1984, 8, 29)])
 
         # 15m altitude seperation
         a_sep = 15
@@ -75,7 +75,8 @@ class TestSepConstraint(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
+        sample_point = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[50.0],
+                                                     time=[dt.datetime(1984, 8, 29)])
 
         # One degree near 0, 0 is about 110km in latitude and longitude, so 300km should keep us to within 3 degrees
         # in each direction
@@ -97,7 +98,8 @@ class TestSepConstraint(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(lat=0.0, lon=0.0, alt=50.0, t=dt.datetime(1984, 8, 29))
+        sample_point = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[50.0],
+                                                     time=[dt.datetime(1984, 8, 29)])
 
         # 1 day (and a little bit) time seperation
         constraint = SepConstraint(t_sep='P1dT1M')
@@ -118,7 +120,8 @@ class TestSepConstraint(unittest.TestCase):
 
         ug_data = mock.make_regular_4d_ungridded_data()
         ug_data_points = ug_data.get_non_masked_points()
-        sample_point = HyperPoint(0.0, 0.0, 50.0, 24.0, dt.datetime(1984, 8, 29))
+        sample_point = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[50.0], pres=[24.0],
+                                                     time=[dt.datetime(1984, 8, 29)])
 
         constraint = SepConstraint(p_sep=2)
 

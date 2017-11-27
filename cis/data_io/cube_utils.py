@@ -5,8 +5,6 @@ import iris
 from iris.cube import Cube
 import numpy as np
 
-from cis.data_io.hyperpoint import HyperPoint
-from cis.data_io.hyperpoint_view import GriddedHyperPointView
 import six
 
 
@@ -64,44 +62,21 @@ def get_coordinates_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, cube.data)
+    return as_data_frame(cube)
 
 
 def get_all_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, cube.data)
+    return as_data_frame(cube)
 
 
 def get_non_masked_points(cube):
     """Returns a HyperPointView of the points.
     :return: HyperPointView of all the data points
     """
-    all_coords = [((c[0].points, c[1]) if c is not None else None) for c in cube.find_standard_coords()]
-    return GriddedHyperPointView(all_coords, cube.data, non_masked_iteration=True)
-
-
-def find_standard_coords(cube):
-    """Constructs a list of the standard coordinates.
-    The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
-    list in this order.
-    :return: list of coordinates or None if coordinate not present
-    """
-    ret_list = []
-
-    coords = cube.coords(dim_coords=True)
-    for name in HyperPoint.standard_names:
-        coord_and_dim = None
-        for idx, coord in enumerate(coords):
-            if coord.standard_name == name:
-                coord_and_dim = (coord, idx)
-                break
-        ret_list.append(coord_and_dim)
-
-    return ret_list
+    return as_data_frame(cube).dropna()
 
 
 def add_history(cube, new_history):
@@ -311,3 +286,22 @@ def _get_coord(cube, name):
             _try_coord(cube, dict(var_name=name)) or _try_coord(cube, dict(axis=name))
 
     return coord
+
+
+def as_data_frame(cube):
+    # TODO This is currently used in place of a GriddedHyperPointView but I'm not sure it can be used like that...?
+    from iris.pandas import as_data_frame, as_series, _as_pandas_coord
+    import pandas as pd
+    if cube.ndim == 1:
+        df = as_series(cube)
+        if cube.coords(dim_coords=False):
+            t_coord = cube.coords(standard_name='time')
+            index = _as_pandas_coord(t_coord[0]) if t_coord else None
+            data_dict = {cube.name(): df}
+            data_dict.update({c.standard_name: c.points for c in cube.coords(dim_coords=False)})
+            df = pd.DataFrame(data=data_dict, index=index)
+    elif cube.ndim == 2:
+        df = as_data_frame(cube)
+    else:
+        raise ValueError("Only cubes of 1 or 2 dimensions can be converted to dataframes")
+    return df
