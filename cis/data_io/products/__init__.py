@@ -3,7 +3,7 @@ Module with standard cis Data Products in it
 """
 
 from .AProduct import AProduct
-from .products import Aeronet, ASCII_Hyperpoints, cis
+from .products import Aeronet, cis
 from .cloudsat import CloudSat
 from .gridded_NetCDF import NetCDF_Gridded
 from .NCAR_NetCDF_RAF import NCAR_NetCDF_RAF
@@ -25,7 +25,6 @@ __all__ = [
     "Cloud_CCI",
     "Aerosol_CCI",
     "Aeronet",
-    "ASCII_Hyperpoints",
     "cis",
     "HadGEM_CONVSH",
     "HadGEM_PP"]
