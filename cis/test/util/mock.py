@@ -688,6 +688,7 @@ def make_dummy_ungridded_data_single_point(lat=0.0, lon=0.0, value=1.0, time=Non
 
 
 def make_dummy_sample_points(lat=None, lon=None, time=None, alt=None, pres=None):
+    from cis.time_util import cis_standard_time_unit
     # Find the length of the first non-None array
     n_values = len(lat or lon or time or alt or pres)
     sample = Cube(np.empty((n_values,)))
@@ -696,7 +697,8 @@ def make_dummy_sample_points(lat=None, lon=None, time=None, alt=None, pres=None)
     if lon is not None:
         sample.add_aux_coord(AuxCoord(lon, standard_name='longitude'), 0)
     if time is not None:
-        sample.add_aux_coord(AuxCoord(time, standard_name='time'), 0)
+        sample.add_aux_coord(AuxCoord(cis_standard_time_unit.date2num(time), standard_name='time',
+                                      units=cis_standard_time_unit), 0)
     if alt is not None:
         sample.add_aux_coord(AuxCoord(alt, standard_name='altitude'), 0)
     if pres is not None:
