@@ -244,6 +244,7 @@ class TestUngriddedSubsetConstraint(TestCase):
 
     def test_can_subset_ungridded_data_by_shape(self):
         data = cis.test.util.mock.make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
         subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND)
         # The corners should be masked, but the center not
         assert (subset.data.tolist() == [5, 7, 8, 9, 11])
