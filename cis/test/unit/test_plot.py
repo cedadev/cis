@@ -34,7 +34,7 @@ class TestPlotting(unittest.TestCase):
         d = make_dummy_1d_ungridded_data()
         assert get_label(d) == "TOTAL RAINFALL RATE: LS+CONV KG/M2/S (kg m-2 s-1)"
         assert get_label(d, False) == "TOTAL RAINFALL RATE: LS+CONV KG/M2/S"
-        d.var_name = ""
+        d.var_name = None
         d.long_name = ""
         assert get_label(d) == "unknown (kg m-2 s-1)"
         assert get_label(d, False) == "unknown"
@@ -43,12 +43,12 @@ class TestPlotting(unittest.TestCase):
         from cis.plotting.plot import get_axis
         from cis.test.util.mock import make_dummy_2d_ungridded_data
         d = make_dummy_2d_ungridded_data()
-        assert get_axis(d, "x").name() == 'latitude'
+        assert get_axis(d, "x").name() == 'longitude'
         assert get_axis(d, "x", 'latitude').name() == 'latitude'
-        assert get_axis(d, "x", 'bad_name').name() == 'latitude'  # Falls back on axis name
-        assert get_axis(d, "y").name() == 'longitude'
+        assert get_axis(d, "x", 'bad_name').name() == 'longitude'  # Falls back on axis name
+        assert get_axis(d, "y").name() == 'latitude'
         assert get_axis(d, "y", 'longitude').name() == 'longitude'
-        assert get_axis(d, "y", 'bad_name').name() == 'longitude'  # Falls back on axis name
+        assert get_axis(d, "y", 'bad_name').name() == 'latitude'  # Falls back on axis name
 
     def test_get_axis_gridded(self):
         from cis.plotting.plot import get_axis
