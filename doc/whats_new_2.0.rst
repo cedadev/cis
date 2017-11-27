@@ -1,19 +1,19 @@
 
 =====================
-What's new in CIS 1.6
+What's new in CIS 2.0
 =====================
 
-This page documents the new features added, and bugs fixed in CIS since version 1.5.0. See all changes here: https://github.com/cedadev/cis/compare/1.5.0...1.6.0
+This page documents the new features added, and bugs fixed in CIS since version 1.5.0. See all changes here: https://github.com/cedadev/cis/compare/1.5.0...2.0.0
 
 
-CIS 1.5 features
+CIS 2.0 features
 ================
  * Ungridded - ungridded collocation performance improvements
 
 
 Incompatible changes
 ====================
- *
+ * Complete API overhaul
 
 Bugs fixed
 ==========
