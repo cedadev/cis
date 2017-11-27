@@ -496,7 +496,7 @@ class nn_horizontal_kdtree(Kernel):
         """
         nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(points)
         nearest_points = data.iloc[nearest_index]
-        return nearest_points.vals
+        return nearest_points.vals.values
 
 
 class nn_altitude(Kernel):
