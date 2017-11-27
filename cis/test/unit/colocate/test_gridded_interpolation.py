@@ -20,6 +20,7 @@
 
 from __future__ import division, print_function, absolute_import
 
+from cis.test.utils_for_testing import compare_masked_arrays
 import itertools
 import numpy as np
 from numpy.testing import (assert_array_almost_equal, assert_raises,
@@ -242,7 +243,7 @@ class TestRegularGridInterpolator(TestCase):
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'nn')
         values = interpolator(cube)
-        wanted = np.asarray([221.0, 223.0, 318.0, np.nan])
+        wanted = np.ma.masked_invalid(np.ma.array([221.0, 223.0, 318.0, np.nan]))
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_Coord_without_hybrid_coord(self):
@@ -278,7 +279,7 @@ class TestRegularGridInterpolator(TestCase):
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
-        wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
+        wanted = np.ma.masked_invalid(np.ma.array([221.5, 226.5, 330.5, np.nan]))
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_pres_Coord_order_doesnt_matter(self):
@@ -298,7 +299,7 @@ class TestRegularGridInterpolator(TestCase):
 
         interpolator = GriddedUngriddedInterpolator(cube, sample_points, 'lin')
         values = interpolator(cube)
-        wanted = np.asarray([221.5, 226.5, 330.5, np.nan])
+        wanted = np.ma.masked_invalid(np.ma.array([221.5, 226.5, 330.5, np.nan]))
         assert_array_almost_equal(values, wanted)
 
     def test_hybrid_alt_Coord_order_doesnt_matter(self):
