@@ -6,7 +6,6 @@ import iris.analysis
 from cis.data_io.datalist import DataList
 from cis.aggregation.gridded_collapsor import GriddedCollapsor
 from cis.test.utils_for_testing import *
-from cis.aggregation.collapse_kernels import aggregation_kernels
 from cis.test.util.mock import *
 
 
@@ -150,10 +149,10 @@ class TestGriddedCollapse(TestCase):
 
     def test_partial_aggregation_over_multidimensional_coord_with_multi_kernel(self):
         # JASCIS-126
-        from cis.aggregation.collapse_kernels import MultiKernel, StddevKernel, CountKernel
-        self.kernel = MultiKernel('moments', [iris.analysis.MEAN, StddevKernel(), CountKernel()])
+        from iris.analysis import MEAN, STD_DEV
+        from cis.data_io.cube_utils import _collapse_gridded
         self.cube = make_mock_cube(time_dim_length=7, hybrid_pr_len=5)
-        cube_out = self.cube.collapsed(['t'], how=self.kernel)
+        cube_out = [_collapse_gridded(self.cube, 'time', kernel) for kernel in [MEAN, STD_DEV]]
 
         result_data = numpy.array([[[16.0, 17.0, 18.0, 19.0, 20.0],
                                     [51.0, 52.0, 53.0, 54.0, 55.0],
@@ -183,7 +182,6 @@ class TestGriddedCollapse(TestCase):
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[1].data, np.ones(result_data.shape)*10.8012345)
-        assert_arrays_almost_equal(cube_out[2].data, np.ones(result_data.shape) * 7)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
 
     def test_partial_aggregation_over_more_than_one_dim_on_multidimensional_coord(self):
@@ -384,67 +382,6 @@ class TestGriddedListAggregation(TestCase):
         assert_arrays_almost_equal(result1, cube_out[0].data)
         assert_arrays_almost_equal(result2, cube_out[1].data)
 
-    def test_complete_collapse_one_dim_using_moments_kernel(self):
-        self.kernel = aggregation_kernels['moments']
-        data1 = make_5x3_lon_lat_2d_cube_with_missing_data()
-        data1.var_name = 'var1'
-        data2 = make_5x3_lon_lat_2d_cube_with_missing_data()
-        data2.var_name = 'var2'
-        data2.data += 10
-        data = DataList([data1, data2])
-
-        output = data.collapsed(['x'], how=self.kernel)
-
-        expect_mean = numpy.array([[5.5, 8.75, 9]])
-        expect_stddev = numpy.array([numpy.sqrt(15), numpy.sqrt(26.25), numpy.sqrt(30)])
-        expect_count = numpy.array([[4, 4, 4]])
-
-        assert isinstance(output, DataList)
-        assert len(output) == 6
-        mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
-        assert mean_1.var_name == 'var1'
-        assert stddev_1.var_name == 'var1_std_dev'
-        assert count_1.var_name == 'var1_num_points'
-        assert mean_2.var_name == 'var2'
-        assert stddev_2.var_name == 'var2_std_dev'
-        assert count_2.var_name == 'var2_num_points'
-        assert_arrays_almost_equal(mean_1.data, expect_mean)
-        assert_arrays_almost_equal(mean_2.data, expect_mean + 10)
-        assert_arrays_almost_equal(stddev_1.data, expect_stddev)
-        assert_arrays_almost_equal(stddev_2.data, expect_stddev)
-        assert_arrays_almost_equal(count_1.data, expect_count)
-        assert_arrays_almost_equal(count_2.data, expect_count)
-
-    def test_complete_collapse_two_dims_using_moments_kernel(self):
-        self.kernel = aggregation_kernels['moments']
-        data1 = make_5x3_lon_lat_2d_cube_with_missing_data()
-        data1.var_name = 'var1'
-        data2 = make_5x3_lon_lat_2d_cube_with_missing_data()
-        data2.var_name = 'var2'
-        data2.data += 10
-        data = DataList([data1, data2])
-        output = data.collapsed(['x', 'y'], how=self.kernel)
-
-        expect_mean = numpy.array(7.75)
-        expect_stddev = numpy.array(numpy.sqrt(244.25 / 11))
-        expect_count = numpy.array(12)
-
-        assert isinstance(output, DataList)
-        assert len(output) == 6
-        mean_1, stddev_1, count_1, mean_2, stddev_2, count_2 = output
-        assert mean_1.var_name == 'var1'
-        assert stddev_1.var_name == 'var1_std_dev'
-        assert count_1.var_name == 'var1_num_points'
-        assert mean_2.var_name == 'var2'
-        assert stddev_2.var_name == 'var2_std_dev'
-        assert count_2.var_name == 'var2_num_points'
-        # Latitude area weighting means these aren't quite right so increase the rtol.
-        assert numpy.allclose(mean_1.data, expect_mean, 1e-3)
-        assert numpy.allclose(mean_2.data, expect_mean + 10, 1e-3)
-        assert numpy.allclose(stddev_1.data, expect_stddev)
-        assert numpy.allclose(stddev_2.data, expect_stddev)
-        assert numpy.allclose(count_1.data, expect_count)
-        assert numpy.allclose(count_2.data, expect_count)
 
     def test_partial_aggregation_over_more_than_one_dim_on_multidimensional_coord(self):
 

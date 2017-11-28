@@ -236,34 +236,21 @@ def _collapse_gridded(data, coords, kernel):
     :param str or iris.analysis.Aggregator kernel: The kernel to use in the aggregation
     :return:
     """
-    from cis.aggregation.collapse_kernels import aggregation_kernels, MultiKernel
-    from iris.analysis import Aggregator as IrisAggregator
     from cis.aggregation.gridded_collapsor import GriddedCollapsor
     from cis import __version__
     from cis.utils import listify
 
     # Ensure the coords are all Coord instances
-    coords = [data._get_coord(c) for c in listify(coords)]
-
-    # The kernel can be a string or object, so catch both defaults
-    if kernel is None or kernel == '':
-        kernel = 'moments'
-
-    if isinstance(kernel, six.string_types):
-        kernel_inst = aggregation_kernels[kernel]
-    elif isinstance(kernel, (IrisAggregator, MultiKernel)):
-        kernel_inst = kernel
-    else:
-        raise ValueError("Invalid kernel specified: " + str(kernel))
+    coords = [_get_coord(data, c) for c in listify(coords)]
 
     aggregator = GriddedCollapsor(data, coords)
-    data = aggregator(kernel_inst)
+    data = aggregator(kernel)
 
     history = "Collapsed using CIS version " + __version__ + \
               "\n variables: " + str(getattr(data, "var_name", "Unknown")) + \
               "\n from files: " + str(getattr(data, "filenames", "Unknown")) + \
               "\n over coordinates: " + ", ".join(c.name() for c in coords) + \
-              "\n with kernel: " + str(kernel_inst) + "."
+              "\n with kernel: " + str(kernel) + "."
     data.add_history(history)
 
     return data

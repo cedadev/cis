@@ -118,8 +118,6 @@ class GriddedCollapsor(object):
         return new_data
 
     def __call__(self, kernel):
-        from cis.data_io.datalist import DataList
-        from cis.aggregation.collapse_kernels import MultiKernel
 
         # Make sure all coordinate have bounds - important for weighting and aggregating
         # Only try and guess bounds on Dim Coords
@@ -131,12 +129,5 @@ class GriddedCollapsor(object):
                 self.data.remove_coord(coord.name())
                 self.data.add_dim_coord(coord, new_coord_number)
 
-        output = DataList([])
-        if isinstance(kernel, MultiKernel):
-            for sub_kernel in kernel.sub_kernels:
-                sub_kernel_out = self._gridded_full_collapse(sub_kernel)
-                output.append_or_extend(sub_kernel_out)
-        else:
-            output.append_or_extend(self._gridded_full_collapse(kernel))
-        return output
+        return self._gridded_full_collapse(kernel)
 
