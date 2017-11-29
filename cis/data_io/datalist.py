@@ -4,11 +4,12 @@ import iris
 
 class DataList(iris.cube.CubeList):
     """
-    Interface for common list methods implemented for both gridded and ungridded data.
+    An extension of the iris.CubeList which all elements must have the same coordinates and coordinate values.
 
-    Note that all objects in a CommonDataList must have the same coordinates and coordinate values.
+    This is essentially an xarray Dataset object translated to Iris.
 
-    This is essentially an xarray Dataset object translated to Iris
+    Many operatins are currently just applied in turn, but some (collocation and subsetting) cache indices to
+    allow faster operations over multiple variables.
     """
     filenames = []
 
@@ -107,6 +108,7 @@ class DataList(iris.cube.CubeList):
             filenames.extend(data.filenames)
         return filenames
 
+    # TODO There are many of these helper methods which could probably be wrapped in a decorator
     def add_history(self, new_history):
         """
         Appends to, or creates, the metadata history attribute using the supplied history string.
