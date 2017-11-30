@@ -6,7 +6,8 @@ import numpy
 
 from cis.exceptions import UserPrintableException
 from cis.data_io.datalist import DataList
-from cis.collocation.col_implementations import GeneralGriddedCollocator, mean, moments, BinnedCubeCellOnlyConstraint
+from cis.collocation.col_implementations import mean, moments
+from cis.collocation.bin import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
 from cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
     make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \

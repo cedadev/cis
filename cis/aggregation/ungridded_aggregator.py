@@ -15,7 +15,8 @@ class UngriddedAggregator(object):
         """
         from cis.exceptions import CoordinateNotFoundError
         from iris.cube import Cube
-        from cis.collocation.col_implementations import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
+        from cis.collocation.bin import BinnedCubeCellOnlyConstraint
+        from cis.collocation.bin import GeneralGriddedCollocator
         new_cube_coords = []
         new_cube_shape = []
 

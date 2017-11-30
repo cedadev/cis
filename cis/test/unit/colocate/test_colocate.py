@@ -7,7 +7,8 @@ from nose.tools import assert_raises
 
 class TestCollocate(unittest.TestCase):
     def test_get_kernel(self):
-        from cis.collocation.col_implementations import moments, nn_pressure, mean
+        from cis.collocation.col_implementations import moments, mean
+        from cis.collocation.box import nn_pressure
         from cis.collocation.col import get_kernel
 
         assert isinstance(get_kernel('moments'), moments)

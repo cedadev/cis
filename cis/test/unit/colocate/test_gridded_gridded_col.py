@@ -8,7 +8,8 @@ from iris.exceptions import CoordinateNotFoundError
 import numpy
 
 from cis.exceptions import ClassNotFoundError
-from cis.collocation.col_implementations import GriddedCollocator, gridded_gridded_nn, gridded_gridded_li, nn_p
+from cis.collocation.general_regrid import GriddedCollocator, gridded_gridded_nn, gridded_gridded_li
+from cis.collocation.box import nn_p
 import cis.data_io.cube_utils as gridded_data
 from cis.test.util.mock import make_dummy_2d_cube, make_dummy_2d_cube_with_small_offset_in_lat_and_lon, \
     make_dummy_2d_cube_with_small_offset_in_lat, make_dummy_2d_cube_with_small_offset_in_lon, \

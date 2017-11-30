@@ -3,7 +3,8 @@ import unittest
 from hamcrest import *
 
 from cis.collocation import data_index
-from cis.collocation.col_implementations import make_coord_map, BinnedCubeCellOnlyConstraint
+from cis.collocation.col_implementations import make_coord_map
+from cis.collocation.bin import BinnedCubeCellOnlyConstraint
 from cis.test.util.mock import *
 from cis.time_util import convert_datetime_to_std_time
 

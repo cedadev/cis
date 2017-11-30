@@ -12,7 +12,9 @@ from cis.test.util import mock
 
 class TestFullAverage(unittest.TestCase):
     def test_basic_col_in_4d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, moments, SepConstraintKdtree
+        from cis.collocation.col_implementations import moments
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -31,7 +33,9 @@ class TestFullAverage(unittest.TestCase):
         eq_(no_points.data[0], 50)
 
     def test_basic_col_in_4d_with_pressure_not_altitude(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, moments, SepConstraintKdtree
+        from cis.collocation.col_implementations import moments
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -52,7 +56,9 @@ class TestFullAverage(unittest.TestCase):
 
 class TestNNHorizontal(unittest.TestCase):
     def test_basic_col_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
+        from cis.collocation.box import nn_horizontal
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
 
         ug_data = mock.make_regular_2d_ungridded_data()
         sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
@@ -63,7 +69,9 @@ class TestNNHorizontal(unittest.TestCase):
         eq_(new_data.data[2], 4.0)
 
     def test_already_collocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
+        from cis.collocation.box import nn_horizontal
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
 
         ug_data = mock.make_regular_2d_ungridded_data()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
@@ -81,7 +89,9 @@ class TestNNHorizontal(unittest.TestCase):
                 probably down to floating points errors in the haversine calculation as these test points are pretty
                 close together. This test is only really for documenting the behaviour for equidistant points.
         """
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
+        from cis.collocation.box import nn_horizontal
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
 
         ug_data = mock.make_regular_2d_ungridded_data()
         sample_points = mock.make_dummy_sample_points(lat=[2.5, -2.5, 2.5, -2.5], lon=[2.5, 2.5, -2.5, -2.5])
@@ -93,7 +103,9 @@ class TestNNHorizontal(unittest.TestCase):
         eq_(new_data.data[3], 4.0)
 
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_horizontal, SepConstraintKdtree
+        from cis.collocation.box import nn_horizontal
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
 
         ug_data = mock.make_regular_2d_ungridded_data()
         sample_points = mock.make_dummy_sample_points(lat=[5.5, -5.5, 5.5, -5.5], lon=[5.5, 5.5, -5.5, -5.5])
@@ -107,7 +119,9 @@ class TestNNHorizontal(unittest.TestCase):
 
 class TestNNTime(unittest.TestCase):
     def test_basic_col_with_incompatible_points_throws_an_AttributeError(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_time, SepConstraintKdtree
+        from cis.collocation.box import nn_time
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
         # Make sample points with no time dimension specified
@@ -117,7 +131,9 @@ class TestNNTime(unittest.TestCase):
             new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_time())[0]
 
     def test_basic_col_in_2d_with_time(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_time, SepConstraintKdtree
+        from cis.collocation.box import nn_time
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
@@ -132,7 +148,9 @@ class TestNNTime(unittest.TestCase):
         eq_(new_data.data[2], 10.0)
 
     def test_basic_col_with_time(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_time, SepConstraintKdtree
+        from cis.collocation.box import nn_time
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import numpy as np
 
         ug_data = mock.make_MODIS_time_steps()
@@ -148,7 +166,9 @@ class TestNNTime(unittest.TestCase):
         assert (np.equal(new_data.data, ref).all())
 
     def test_already_collocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_time, SepConstraintKdtree
+        from cis.collocation.box import nn_time
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
         import numpy as np
 
@@ -169,7 +189,9 @@ class TestNNTime(unittest.TestCase):
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
         """
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_time, SepConstraintKdtree
+        from cis.collocation.box import nn_time
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
@@ -180,7 +202,9 @@ class TestNNTime(unittest.TestCase):
         eq_(new_data.data[0], 3.0)
 
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_time, SepConstraintKdtree
+        from cis.collocation.box import nn_time
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_2d_with_time_ungridded_data()
@@ -197,7 +221,9 @@ class TestNNTime(unittest.TestCase):
 
 class TestNNAltitude(unittest.TestCase):
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_altitude, SepConstraintKdtree
+        from cis.collocation.box import nn_altitude
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
@@ -207,7 +233,9 @@ class TestNNAltitude(unittest.TestCase):
             new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_altitude())[0]
 
     def test_basic_col_in_4d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_altitude, SepConstraintKdtree
+        from cis.collocation.box import nn_altitude
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -223,7 +251,9 @@ class TestNNAltitude(unittest.TestCase):
         eq_(new_data.data[2], 46.0)
 
     def test_already_collocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_altitude, SepConstraintKdtree
+        from cis.collocation.box import nn_altitude
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -240,7 +270,9 @@ class TestNNAltitude(unittest.TestCase):
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
         """
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_altitude, SepConstraintKdtree
+        from cis.collocation.box import nn_altitude
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -252,7 +284,9 @@ class TestNNAltitude(unittest.TestCase):
         eq_(new_data.data[0], 16.0)
 
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_altitude, SepConstraintKdtree
+        from cis.collocation.box import nn_altitude
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -271,7 +305,9 @@ class TestNNAltitude(unittest.TestCase):
 
 class TestNNPressure(unittest.TestCase):
     def test_basic_col_with_incompatible_points_throws_a_TypeError(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_pressure, SepConstraintKdtree
+        from cis.collocation.box import nn_pressure
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
 
         ug_data = mock.make_regular_4d_ungridded_data()
         # Make sample points with no time dimension specified
@@ -281,7 +317,9 @@ class TestNNPressure(unittest.TestCase):
             new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_pressure())[0]
 
     def test_basic_col_in_4d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_pressure, SepConstraintKdtree
+        from cis.collocation.box import nn_pressure
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -297,7 +335,9 @@ class TestNNPressure(unittest.TestCase):
         eq_(new_data.data[2], 46.0)
 
     def test_already_collocated_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_pressure, SepConstraintKdtree
+        from cis.collocation.box import nn_pressure
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -314,7 +354,9 @@ class TestNNPressure(unittest.TestCase):
                 points finding any points which are closer than the current closest. If two distances were exactly
                 the same the first point to be chosen.
         """
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_pressure, SepConstraintKdtree
+        from cis.collocation.box import nn_pressure
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -326,7 +368,9 @@ class TestNNPressure(unittest.TestCase):
         eq_(new_data.data[0], 1.0)
 
     def test_coordinates_outside_grid_in_col_ungridded_to_ungridded_in_2d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, nn_pressure, SepConstraintKdtree
+        from cis.collocation.box import nn_pressure
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()
@@ -344,7 +388,9 @@ class TestNNPressure(unittest.TestCase):
 
 class TestMean(unittest.TestCase):
     def test_basic_col_in_4d(self):
-        from cis.collocation.col_implementations import GeneralUngriddedCollocator, mean, SepConstraintKdtree
+        from cis.collocation.col_implementations import mean
+        from cis.collocation.box import SepConstraintKdtree
+        from cis.collocation.box import GeneralUngriddedCollocator
         import datetime as dt
 
         ug_data = mock.make_regular_4d_ungridded_data()

@@ -8,7 +8,8 @@ from nose.tools import eq_
 import numpy as np
 
 from cis.data_io.datalist import DataList
-from cis.collocation.col_implementations import GeneralUngriddedCollocator, moments, SepConstraintKdtree
+from cis.collocation.col_implementations import moments
+from cis.collocation.box import GeneralUngriddedCollocator, SepConstraintKdtree
 from cis.test.util import mock
 
 

@@ -7,8 +7,8 @@ import numpy as np
 from cis.collocation.kdtree import KDTree
 from cis.time_util import cis_standard_time_unit
 from cis.test.util import mock
-from cis.collocation.col_implementations import (GeneralUngriddedCollocator, nn_horizontal_kdtree, DummyConstraint,
-                                                 SepConstraintKdtree)
+from cis.collocation.col_implementations import (DummyConstraint)
+from cis.collocation.box import GeneralUngriddedCollocator, SepConstraintKdtree, nn_horizontal_kdtree
 from cis.collocation.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 
 

@@ -164,6 +164,27 @@ class GridCellBinIndexInSlices(object):
             out_indices = tuple(self._indices[:, cell_slice_indices[0]])
             yield out_indices, cell_slice_indices
 
+    def get_data_iterator(self, missing_data_for_missing_sample, data_points, points):
+        """
+        The method returns an iterator over the output indices and a numpy array slice of the data values. This may not
+        be called by all collocators who may choose to iterate over all sample points instead.
+
+        :param missing_data_for_missing_sample: If true anywhere there is missing data on the sample then final point is
+         missing; otherwise just use the sample
+        :param data_points: The (non-masked) data points
+        :param points: The original points object, these are the points to collocate
+        :return: Iterator which iterates through (sample indices and data slice) to be placed in these points
+        """
+        data_points_sorted = data_points.data[self.sort_order]
+        if missing_data_for_missing_sample:
+            for out_indices, slice_start_end in self.get_iterator():
+                if points.data[out_indices] is not np.ma.masked:
+                    data_slice = data_points_sorted[slice(*slice_start_end)]
+                    yield out_indices, data_slice
+        else:
+            for out_indices, slice_start_end in self.get_iterator():
+                data_slice = data_points_sorted[slice(*slice_start_end)]
+                yield out_indices, data_slice
 
 class GridCellBinIndex(object):
     def __init__(self):

@@ -3,7 +3,7 @@ import datetime as dt
 
 import numpy as np
 
-from cis.collocation.col_implementations import GriddedUngriddedCollocator
+from cis.collocation.interpolate import GriddedUngriddedCollocator
 from cis.test.util import mock
 from cis.data_io.datalist import DataList
 from numpy.testing import assert_almost_equal, assert_equal, assert_raises
