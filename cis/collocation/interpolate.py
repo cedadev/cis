@@ -1,6 +1,5 @@
 import logging
 
-from cis.collocation.col_implementations import DummyConstraint, _fix_longitude_range
 from cis.data_io.cube_utils import make_new_with_same_coordinates
 from cis.data_io.datalist import DataList
 from cis.utils import log_memory_profile, set_standard_name_if_valid
@@ -40,15 +39,6 @@ def collocate(points, data, constraint=None, kernel='', fill_value=None,
         for var in data:
             output.extend(collocate(points, var, constraint, kernel))
         return output
-
-    if constraint is not None and not isinstance(constraint, DummyConstraint):
-        raise ValueError("A constraint cannot be specified for the GriddedUngriddedCollocator")
-    data_points = data
-
-    # First fix the sample points so that they all fall within the same 360 degree longitude range
-    _fix_longitude_range(points.coords(), points)
-    # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
-    _fix_longitude_range(points.coords(), data_points)
 
     log_memory_profile("GriddedUngriddedCollocator after data retrieval")
 

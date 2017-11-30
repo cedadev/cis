@@ -117,7 +117,7 @@ def get_x_wrap_start(data_list, user_xmin=None):
     :param float user_xmin: An optional user supplied x_min.
     :return: The left-hand most longitude of the plot.
     """
-    from cis.utils import find_longitude_wrap_start as find_start
+    from cis.utils import find_longitude_base as find_start
     from datetime import datetime
 
     # FIND THE WRAP START OF THE DATA

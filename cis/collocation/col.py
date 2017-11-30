@@ -1,49 +1,8 @@
 """
     Top level collocation objects
 """
-import logging
 import six
 from functools import wraps
-
-
-def collocate(data, sample, collocator, constraint, kernel):
-    """
-    Perform the collocation.
-
-    :param CommonData or CommonDataList data: Data to collocate
-    :param CommonData sample: Sampling to collocate onto
-    :param cis.collocation.col_framework.Collocator collocator: The collocator object to use
-    :param cis.collocation.col_framework.Constraint constraint: The constraint object
-    :param cis.collocation.col_framework.Kernel  kernel: The kernel to use
-    :return CommonData: The collocated data
-    :raises CoordinateNotFoundError: If the collocator was unable to compare the sample and data points
-    """
-    from cis.exceptions import CoordinateNotFoundError
-    from time import time
-    from cis import __version__
-
-    logging.info("Collocator: " + str(collocator))
-    logging.info("Kernel: " + str(kernel))
-
-    logging.info("Collocating, this could take a while...")
-    t1 = time()
-    try:
-        new_data = collocator.collocate(sample, data, constraint, kernel)
-    except (TypeError, AttributeError) as e:
-        raise CoordinateNotFoundError('Collocator was unable to compare data points, check the dimensions of each '
-                                      'data set and the collocation methods chosen. \n' + str(e))
-
-    logging.info("Completed. Total time taken: " + str(time() - t1))
-
-    for d in new_data:
-        history = "Collocated onto sampling from: " + str(getattr(sample, "filenames", "Unknown")) + " " + \
-                  "\nusing CIS version " + __version__ + " " + \
-                  "\nvariables: " + str(getattr(data, "var_name", "Unknown")) + " " + \
-                  "\nwith files: " + str(getattr(data, "filenames", "Unknown")) + " " + \
-                  "\nusing collocator: " + str(collocator) + " " + \
-                  "\nkernel: " + str(kernel)
-        d.add_history(history)
-    return new_data
 
 
 def get_kernel(kernel):
@@ -75,14 +34,53 @@ def cube_unify_col_wrapper(xr_func):
     """
     from cis.data_io.convert import from_iris, to_iris
     from iris.util import unify_time_units
+    from cis import __version__
 
     @wraps
     def cube_func(a, b, *args, **kwargs):
-        # TODO UNIFY OTHER COORDS AND LONGITUDES HERE
+
+        # Unify the coordinate units
+        for a_c in a.coords():
+            for b_c in b.coords(standard_name=a_c.standard_name):
+                a_c.convert_units(b_c.units)
+        # Fix the longitude ranges
+        if a.coords(standard_name='longitude'):
+            lon_min = a.coord(standard_name='longitude').points.min()
+            # First fix the sample points so that they all fall within the same 360 degree longitude range
+            _fix_longitude_range(a, lon_min)
+            # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
+            _fix_longitude_range(b, lon_min)
+
         unify_time_units([a, b])
+        # Convert to xarray
         ds_a = from_iris(a)
         ds_b = from_iris(b)
+        # Collocate
         ds = xr_func(ds_a, ds_b, *args, **kwargs)
-        return to_iris(ds)
+        # Convert back and return
+        res = to_iris(ds)
+
+        history = "Collocated {} onto sampling from {}".format(a.name(), b.name()) + " " + \
+                  "\nusing CIS version " + __version__ + " " + \
+                  "\nwith collocator: " + str(xr_func)
+        res.add_history(history)
+
+        return res
+
     return cube_func
 
+
+def _fix_longitude_range(data_points, range_start):
+    """Sets the longitude range of the data points to match that of the sample coordinates.
+    :param range_start: The longitude
+    :param data_points: HyperPointList or GriddedData of data to fix
+    """
+    from cis.data_io.cube_utils import set_longitude_range
+    from iris.analysis.cartography import wrap_lons
+
+    if data_points.coords('longitude', dim_coords=True) and (len(data_points.shape) > 1):
+        # For multidimensional cubes we need to rotate the whole object to keep the points monotonic
+        set_longitude_range(data_points, range_start)
+    else:
+        # But we can just wrap auxilliary longitude coordinates
+        data_points.coord('longitude').points = wrap_lons(data_points.coord('longitude').points, range_start, 360)

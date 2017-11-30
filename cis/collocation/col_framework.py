@@ -1,48 +1,4 @@
 from abc import ABCMeta, abstractmethod
-import six
-from cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
-import numpy as np
-
-
-@six.add_metaclass(ABCMeta)
-class Collocator(object):
-    """
-    Class which provides a method for performing collocation. This just defines the interface which
-    the subclasses must implement.
-    """
-    def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False):
-        """
-        Initialise the fill_value, missing data flag and variable attributes.
-
-        :param fill_value: The value to use when the kernel is unable to return a value. The default is NaN.
-        :param var_name: The name of the variable to use when creating the output data object
-        :param var_long_name: The long name of the variable to use when creating the output data object
-        :param var_units: The units of the variable to use when creating the output data object
-        :param missing_data_for_missing_sample: If True then sample points which have a missing value will result in
-         data points with a missing value - regardless of the collocation result. The default is False.
-        :return:
-        """
-        self.fill_value = float(fill_value) if fill_value is not None else np.nan
-        self.var_name = var_name
-        self.var_long_name = var_long_name
-        self.var_units = var_units
-        self.missing_data_for_missing_sample = missing_data_for_missing_sample
-
-    @abstractmethod
-    def collocate(self, points, data, constraint, kernel):
-        """
-        The method is responsible for setting up and running the collocation. It should take a set of data and map that
-        onto the given (sample) points using the constraint and kernel provided.
-
-        :param points: A set of sample points onto which we will collocate some other 'data'
-        :param data: Some other data to be collocated onto the 'points'
-        :param constraint: A :class:`.Constraint` instance which provides a :meth:`.Constraint.constrain_points` method,
-         and optionally an :meth:`.Constraint.get_iterator` method
-        :param kernel: A :class:`.Kernel` instance which provides a :meth:`.Kernel.get_value` method
-        :return: One or more :class:`.CommonData` (or subclasses of) objects whose coordinates lie on the points
-         defined above.
-        """
 
 
 class Kernel(object):
@@ -166,79 +122,7 @@ class Constraint(object):
         :return: Iterator which iterates through (sample indices, hyper point and constrained points) to be placed in
          these points
         """
-        from cis.collocation.col_implementations import HyperPoint
-        if missing_data_for_missing_sample:
-            iterator = index_iterator_for_non_masked_data(shape, points)
-        else:
-            iterator = index_iterator_nditer(shape, output_data[0])
-
-        for indices in iterator:
-            hp_values = [None] * HyperPoint.number_standard_names
-            for (hpi, ci, shi) in coord_map:
-                hp_values[hpi] = coords[ci].points[indices[shi]]
-
-            hp = HyperPoint(*hp_values)
-            constrained_points = self.constrain_points(hp, data_points)
-            yield indices, hp, constrained_points
-
-
-class PointConstraint(Constraint):
-    """Superclass of constraints acting on sample points.
-
-    The point argument in constrain_points is a HyperPoint.
-    """
-    __metaclass__ = ABCMeta
-    pass
-
-
-class CellConstraint(Constraint):
-    """Superclass of constraints acting on cells surrounding sample points.
-
-    The point argument in constrain_points is a HyperPoint in which the
-    coordinate values are of type iris.coords.Cell.
-    """
-    __metaclass__ = ABCMeta
-
-    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
-        from cis.collocation.col_implementations import HyperPoint
-        if missing_data_for_missing_sample:
-            iterator = index_iterator_for_non_masked_data(shape, points)
-        else:
-            iterator = index_iterator_nditer(shape, output_data[0])
-
-        for indices in iterator:
-            hp_values = [None] * HyperPoint.number_standard_names
-            hp_cell_values = [None] * HyperPoint.number_standard_names
-            for (hpi, ci, shi) in coord_map:
-                hp_values[hpi] = coords[ci].points[indices[shi]]
-                hp_cell_values[hpi] = coords[ci].cell(indices[shi])
-
-            hp = HyperPoint(*hp_values)
-            constrained_points = self.constrain_points(HyperPoint(*hp_cell_values), data_points)
-            yield indices, hp, constrained_points
-
-
-# noinspection PyAbstractClass
-class IndexedConstraint(Constraint):
-    """Superclass of constraints that expect points to be referenced by index.
-    """
-    __metaclass__ = ABCMeta
-
-    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
-        from cis.collocation.col_implementations import HyperPoint
-        if missing_data_for_missing_sample:
-            iterator = index_iterator_for_non_masked_data(shape, points)
-        else:
-            iterator = index_iterator_nditer(shape, output_data[0])
-
-        for indices in iterator:
-            hp_values = [None] * HyperPoint.number_standard_names
-            for (hpi, ci, shi) in coord_map:
-                hp_values[hpi] = coords[ci].points[indices[shi]]
-
-            hp = HyperPoint(*hp_values)
-            constrained_points = self.constrain_points(indices, data_points)
-            yield indices, hp, constrained_points
+        pass
 
 
 def __get_class(parent_class, name=None):

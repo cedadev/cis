@@ -3,7 +3,7 @@ import datetime as dt
 
 import numpy as np
 
-from cis.collocation.interpolate import GriddedUngriddedCollocator
+from cis.collocation.interpolate import collocate
 from cis.test.util import mock
 from cis.data_io.datalist import DataList
 from numpy.testing import assert_almost_equal, assert_equal, assert_raises
@@ -23,8 +23,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
                                                      dt.datetime(1984, 8, 29, 8, 34)])
         constraint = None
 
-        col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, data, constraint, 'nn')
+        output = collocate(sample, data, constraint, 'nn')
 
         expected_result = np.array([8, 12, 8])
         assert len(output) == 1
@@ -42,8 +41,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
                                                      dt.datetime(1984, 8, 29, 8, 34)])
         constraint = None
 
-        col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, data, constraint, 'lin')
+        output = collocate(sample, data, constraint, 'lin')
 
         expected_result = np.array([8.8, 10.4, 7.2])
         assert len(output) == 1
@@ -64,8 +62,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample_mask = [False, True, False]
         sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
-        col = GriddedUngriddedCollocator(missing_data_for_missing_sample=True)
-        output = col.collocate(sample, data, constraint, 'nn')
+        output = collocate(sample, data, constraint, 'nn', missing_data_for_missing_sample=True)
 
         assert len(output) == 1
         assert isinstance(output, DataList)
@@ -85,8 +82,7 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample_mask = [False, True, False]
         sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
-        col = GriddedUngriddedCollocator(missing_data_for_missing_sample=False)
-        output = col.collocate(sample, data, constraint, 'nn')
+        output = collocate(sample, data, constraint, 'nn', missing_data_for_missing_sample=False)
 
         assert len(output) == 1
         assert isinstance(output, DataList)
@@ -104,8 +100,8 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample_mask = [False, True, False]
         sample_points.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN, missing_data_for_missing_sample=True)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', fill_value=np.NAN, 
+                             missing_data_for_missing_sample=True)[0]
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         # This point should be masked because of the sampling
         assert np.ma.is_masked(new_data.data[1])
@@ -118,10 +114,8 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample_points = mock.make_dummy_sample_points(lat=[-4.0], lon=[-4.0], pres=[100.0],
                                                       time=[dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN)
-
         # Since there is no corresponding pressure field in the source data a ValueError should be raised
-        assert_raises(ValueError, col.collocate, sample_points, cube, None, 'lin')
+        assert_raises(ValueError, collocate, sample_points, cube, None, 'lin', fill_value=np.NAN)
 
     def test_order_of_coords_doesnt_matter(self):
         from iris.cube import Cube
@@ -147,16 +141,13 @@ class TestGriddedUngriddedCollocator(unittest.TestCase):
         sample = mock.make_dummy_sample_points(lat=sample_lats, lon=sample_longs, alt=sample_alts,
                                                       time=sample_times)
 
-        col = GriddedUngriddedCollocator()
-        output = col.collocate(sample, source, None, 'nn')[0]
+        output = collocate(sample, source, None, 'nn')[0]
 
         source.transpose()
-        col = GriddedUngriddedCollocator()
-        assert_equal(col.collocate(sample, source, None, 'nn')[0].data, output.data)
+        assert_equal(collocate(sample, source, None, 'nn')[0].data, output.data)
 
         source.transpose((2, 1, 0, 3))
-        col = GriddedUngriddedCollocator()
-        assert_equal(col.collocate(sample, source, None, 'nn')[0].data, output.data)
+        assert_equal(collocate(sample, source, None, 'nn')[0].data, output.data)
 
 
 class TestNN(unittest.TestCase):
@@ -166,8 +157,7 @@ class TestNN(unittest.TestCase):
 
         sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 8.0)  # float(cube[2,1].data))
         eq_(new_data.data[1], 12.0)  # float(cube[3,2].data))
         eq_(new_data.data[2], 4.0)  # float(cube[1,0].data))
@@ -178,8 +168,7 @@ class TestNN(unittest.TestCase):
         sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 0.0, 80.0, 85.0, 90.0, -80.0, -85.0, -90.0],
                                                       lon=[0.0, 355.0, 360.0, 0.0, 355.0, 360.0, 0.0, 355.0, 360.0])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn')[0]
         wanted = np.asarray([325.0, 360.0, 325.0,
                              613.0, 648.0, 649.0,
                              37.0, 36.0, 1.0])
@@ -191,8 +180,7 @@ class TestNN(unittest.TestCase):
 
         sample_points = mock.make_dummy_sample_points(lat=[1.0, 19.0, -4.0, -4.0], lon=[1.0, 44.0, -14.0, -44.0])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 325.0)  # float(cube[9,0].data)
         eq_(new_data.data[1], 365.0)  # float(cube[10,4].data))
         eq_(new_data.data[2], 324.0)  # float(cube[8,35].data))
@@ -207,8 +195,7 @@ class TestNN(unittest.TestCase):
 
         sample_points = mock.make_dummy_sample_points(lat=[1.0, 19.0, -4.0, -4.0], lon=[1.0, 44.0, -14.0, -44.0])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 325.0)  # float(cube[9,0].data)
         eq_(new_data.data[1], 365.0)  # float(cube[10,4].data))
         eq_(new_data.data[2], 324.0)  # float(cube[8,35].data))
@@ -220,8 +207,7 @@ class TestNN(unittest.TestCase):
 
         sample_points = mock.make_dummy_sample_points(lat=[1.0, 1.0, 1.0, 1.0], lon=[0.0, 20.0, 361.0, 381.0])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], 325.0)  # float(cube[9,0].data))
         eq_(new_data.data[1], 327.0)  # float(cube[9,0].data))
         eq_(new_data.data[2], 325.0)  # float(cube[9,0].data))
@@ -231,8 +217,7 @@ class TestNN(unittest.TestCase):
         cube = mock.make_square_5x3_2d_cube()
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0])
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 8.0)
 
     def test_collocation_of_alt_points_on_hybrid_altitude_coordinates(self):
@@ -245,8 +230,7 @@ class TestNN(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 27, 2, 18, 52)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], 221.0)  # float(cube[2,1,1,0].data))
         eq_(new_data.data[1], 345.0)  # float(cube[3,2,1,4].data))
         eq_(new_data.data[2], 100.0)  # float(cube[1,0,0,9].data))
@@ -261,8 +245,7 @@ class TestNN(unittest.TestCase):
                                                       time=[dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 28, 8, 34)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 221.0)  # float(cube[2,1,1,0].data))
         eq_(new_data.data[1], 345.0)  # float(cube[3,2,1,4].data))
 
@@ -274,8 +257,7 @@ class TestNN(unittest.TestCase):
                                                       time=[dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 28, 8, 34)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], 2501.0)  # float(cube[2,11,1,0].data))
         eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
 
@@ -288,8 +270,7 @@ class TestNN(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 27, 2, 18, 52)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], 2501.0)  # float(cube[2,11,1,0].data))
         eq_(new_data.data[1], 3675.0)  # float(cube[3,14,1,4].data))
         eq_(new_data.data[2], 2139.0)  # float(cube[1,35,0,8].data))
@@ -308,8 +289,7 @@ class TestNN(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 27, 2, 18, 52)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -327,8 +307,7 @@ class TestNN(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 27, 2, 18, 52)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -348,8 +327,7 @@ class TestNN(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 27, 2, 18, 52)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -367,8 +345,7 @@ class TestNN(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28, 8, 34),
                                                             dt.datetime(1984, 8, 27, 2, 18, 52)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], float(cube[2, 1, 1, 0].data))
         eq_(new_data.data[1], float(cube[3, 2, 1, 4].data))
         eq_(new_data.data[2], float(cube[1, 0, 0, 9].data))
@@ -382,8 +359,7 @@ class TestNN(unittest.TestCase):
         """
         cube = mock.make_square_5x3_2d_cube()
         sample_points = mock.make_dummy_sample_points(lat=[2.5, -2.5, 2.5, -2.5], lon=[2.5, 2.5, -2.5, -2.5])
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn')[0]
         eq_(new_data.data[0], 8.0)
         eq_(new_data.data[1], 5.0)
         eq_(new_data.data[2], 7.0)
@@ -392,8 +368,7 @@ class TestNN(unittest.TestCase):
     def test_coordinates_outside_grid_in_col_gridded_to_ungridded_in_2d(self):
         cube = mock.make_square_5x3_2d_cube()
         sample_points = mock.make_dummy_sample_points(lat=[5.5, -5.5, 5.5, -5.5], lon=[5.5, 5.5, -5.5, -5.5])
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], 12.0)
         eq_(new_data.data[1], 6.0)
         eq_(new_data.data[2], 10.0)
@@ -407,8 +382,7 @@ class TestNN(unittest.TestCase):
                                                             dt.datetime(1984, 8, 31, 1, 23),
                                                             dt.datetime(1984, 9, 2, 15, 54)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'nn')[0]
+        new_data = collocate(sample_points, cube, None, 'nn', extrapolate=True)[0]
         eq_(new_data.data[0], 51.0)
         eq_(new_data.data[1], 82.0)
         eq_(new_data.data[2], 28.0)
@@ -419,8 +393,7 @@ class TestLinear(unittest.TestCase):
         cube = mock.make_square_5x3_2d_cube()
         sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0, -4.0], lon=[1.0, 4.0, -4.0])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)
         assert_almost_equal(new_data.data[2], 4.8)
@@ -431,8 +404,7 @@ class TestLinear(unittest.TestCase):
         sample_points = mock.make_dummy_sample_points(lat=[0.0, 0.0, 0.0, 80.0, 85.0, 90.0, -80.0, -85.0, -90.0],
                                                       lon=[0.0, 355.0, 360.0, 0.0, 355.0, 360.0, 0.0, 355.0, 360.0])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
         wanted = np.asarray([325.0, 342.5, 325.0,
                              613.0, (630.5 + 666.5) / 2, 649.0,
                              37.0, (54.5 + 18.5) / 2, 1.0])
@@ -445,8 +417,7 @@ class TestLinear(unittest.TestCase):
         """
         cube = mock.make_square_5x3_2d_cube()
         sample_points = mock.make_dummy_sample_points(lat=[1.0, 4.0], lon=[1.0, 4.0])
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)
 
@@ -460,8 +431,7 @@ class TestLinear(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28),
                                                             dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', fill_value=np.NAN)[0]
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
@@ -480,8 +450,7 @@ class TestLinear(unittest.TestCase):
                                                       time=[dt.datetime(1984, 8, 28),
                                                             dt.datetime(1984, 8, 28)])
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', fill_value=np.NAN)[0]
         assert_almost_equal(new_data.data[0], 321.0467626, decimal=7)
         assert_almost_equal(new_data.data[1], 222.4814815, decimal=7)
 
@@ -499,8 +468,7 @@ class TestLinear(unittest.TestCase):
                                                       time=[dt.datetime(1984, 8, 28),
                                                             dt.datetime(1984, 8, 28)])
 
-        col = GriddedUngriddedCollocator(extrapolate=False)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', extrapolate=False)[0]
         eq_(new_data.data[0], 3563.0)
         eq_(new_data.data[1], 2185.0)
 
@@ -514,8 +482,7 @@ class TestLinear(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28),
                                                             dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', fill_value=np.NAN)[0]
         assert_almost_equal(new_data.data[0], 222.4814815, decimal=7)
         assert_almost_equal(new_data.data[1], 321.0467626, decimal=7)
         # Test that points outside the cell are returned as masked, rather than extrapolated by default
@@ -527,8 +494,7 @@ class TestLinear(unittest.TestCase):
         sample_points = mock.make_dummy_sample_points(lat=[-4.0], lon=[-4.0], alt=[6382.8],
                                                       time=[dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN, extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', fill_value=np.NAN, extrapolate=True)[0]
         assert_almost_equal(new_data.data[0], 126.0, decimal=7)
 
     def test_collocation_of_pres_points_on_hybrid_pressure_coordinates(self):
@@ -541,8 +507,7 @@ class TestLinear(unittest.TestCase):
                                                             dt.datetime(1984, 8, 27, 0, 0, 0),
                                                             dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 221.5, decimal=5)
         # Exactly on the lat, lon, points, interpolated over time and pressure
@@ -563,8 +528,7 @@ class TestLinear(unittest.TestCase):
                                                             dt.datetime(1984, 8, 27, 0, 0, 0),
                                                             dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 221.5, decimal=5)
         # Exactly on the lat, lon, points, interpolated over time and pressure
@@ -583,8 +547,7 @@ class TestLinear(unittest.TestCase):
                                                             dt.datetime(1984, 8, 27, 0, 0, 0),
                                                             dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 23.0, decimal=5)
         # Exactly on the lat, lon, points, interpolated over time and pressure
@@ -606,8 +569,7 @@ class TestLinear(unittest.TestCase):
                                                             dt.datetime(1984, 8, 27, 0, 0, 0),
                                                             dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator()
-        outlist = col.collocate(sample_points, cube_list, None, 'lin')
+        outlist = collocate(sample_points, cube_list, None, 'lin')
         # First data set:
         new_data = outlist[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
@@ -638,8 +600,7 @@ class TestLinear(unittest.TestCase):
                                                       time=[dt.datetime(1984, 8, 28, 0, 0, 0),
                                                             dt.datetime(1984, 8, 27, 0, 0, 0)])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
         # Exactly on the lat, lon, time points, interpolated over pressure
         assert_almost_equal(new_data.data[0], 221.5, decimal=5)
         # Exactly on the lat, time points, interpolated over latitude and pressure
@@ -656,8 +617,7 @@ class TestLinear(unittest.TestCase):
                                                       time=[dt.datetime(1984, 8, 28, 0, 0, 0),
                                                             dt.datetime(1984, 8, 27, 0, 0, 0)])
 
-        col = GriddedUngriddedCollocator(extrapolate=False)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', extrapolate=False)[0]
         eq_(new_data.data[0], 2701.0011131725005)
         eq_(new_data.data[1], 3266.1930161260775)
 
@@ -668,8 +628,7 @@ class TestLinear(unittest.TestCase):
         sample_points = mock.make_dummy_sample_points(lat=[-4.0], lon=[-4.0], pres=[68400050.0],
                                                       time=[dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', extrapolate=True)[0]
         assert_almost_equal(new_data.data[0], 125.0, decimal=7)
 
     def test_extrapolation_of_pres_points_on_hybrid_pressure_coordinates_multi_var(self):
@@ -680,8 +639,7 @@ class TestLinear(unittest.TestCase):
         sample_points = mock.make_dummy_sample_points(lat=[-4.0], lon=[-4.0], pres=[68400050.0],
                                                       time=[dt.datetime(1984, 8, 27)])
 
-        col = GriddedUngriddedCollocator(extrapolate=True)
-        new_data = col.collocate(sample_points, cube_list, None, 'lin')
+        new_data = collocate(sample_points, cube_list, None, 'lin', extrapolate=True)
         assert_almost_equal(new_data[0].data[0], 125.0, decimal=7)
         assert_almost_equal(new_data[1].data[0], 225.0, decimal=7)
 
@@ -695,8 +653,7 @@ class TestLinear(unittest.TestCase):
                                                       time=[dt.datetime(1984, 8, 28, 0, 0, 0),
                                                             dt.datetime(1984, 8, 28, 0, 0, 0)])
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', fill_value=np.NAN)[0]
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
         assert_almost_equal(new_data.data[1], 346.5, decimal=7)
 
@@ -708,8 +665,7 @@ class TestLinear(unittest.TestCase):
         sample_points = mock.make_dummy_sample_points(lat=[0.0], lon=[0.0], alt=[234.5], pres=[1000],
                                                       time=[dt.datetime(1984, 8, 28, 0, 0, 0)])
 
-        col = GriddedUngriddedCollocator(fill_value=np.NAN)
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin', fill_value=np.NAN)[0]
         assert_almost_equal(new_data.data[0], 225.5, decimal=7)
 
     def test_collocation_over_scalar_coord(self):
@@ -723,8 +679,7 @@ class TestLinear(unittest.TestCase):
                                                             dt.datetime(1984, 8, 28, 0, 0, 0),
                                                             dt.datetime(1984, 10, 1, 0, 0, 0)])
 
-        col = GriddedUngriddedCollocator()
-        new_data = col.collocate(sample_points, cube, None, 'lin')[0]
+        new_data = collocate(sample_points, cube, None, 'lin')[0]
 
         assert_almost_equal(new_data.data[0], 8.8)
         assert_almost_equal(new_data.data[1], 11.2)

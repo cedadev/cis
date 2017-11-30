@@ -333,7 +333,7 @@ def basic_plot(data, how=None, ax=None, xaxis=None, yaxis=None, projection=None,
     import matplotlib.pyplot as plt
     from cis.data_io.datalist import CommonData
     from cis.data_io.cube_utils import GriddedData
-    from cis.utils import squeeze
+    from iris.util import squeeze
     from cis.plotting.genericplot import GenericPlot
 
     # Remove any extra gridded data dimensions

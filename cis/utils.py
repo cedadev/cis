@@ -226,31 +226,21 @@ def fix_longitude_range(lons, range_start):
     return wrap_lons(lons, range_start, 360)
 
 
-def find_longitude_wrap_start(packed_data_item):
+def find_longitude_base(cube):
     """
-    ONLY WORK OUT THE WRAP START OF THE DATA
-    :param packed_data_item:
-    :return:
+    Work out the range the longitude data is on (-180 - 180 otr 0 - 360)
+    :param cube:
+    :return: -180 if there are negative longitudes otherwise 0
     """
     from iris.exceptions import CoordinateNotFoundError
     try:
-        x_points_min = packed_data_item.coord(standard_name='longitude').points.min()
+        lon_points_min = cube.coord(standard_name='longitude').points.min()
     except CoordinateNotFoundError:
-        x_wrap_start = None
+        lon_base = None
     else:
-        x_wrap_start = -180 if x_points_min < 0 else 0
+        lon_base = -180 if lon_points_min < 0 else 0
 
-    return x_wrap_start
-
-
-def wrap_longitude_coordinate_values(x_min, x_max):
-    if x_min > x_max:
-        if x_min >= 180:
-            x_min -= 360
-        else:
-            x_max += 360
-
-    return x_min, x_max
+    return lon_base
 
 
 def copy_attributes(source, dest):
@@ -706,16 +696,6 @@ def single_warnings_only():
     with warnings.catch_warnings():
         warnings.simplefilter("once")
         yield
-
-
-def squeeze(data):
-    from iris.cube import Cube
-    from iris.util import squeeze
-    from cis.data_io.cube_utils import make_from_cube
-    if isinstance(data, Cube):
-        return make_from_cube(squeeze(data))
-    else:
-        return data
 
 
 @contextlib.contextmanager

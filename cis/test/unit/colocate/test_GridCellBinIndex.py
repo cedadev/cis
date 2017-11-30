@@ -1,10 +1,9 @@
 import unittest
 
 from hamcrest import *
-
+from cis.collocation.data_index import GridCellBinIndexInSlices
 from cis.collocation import data_index
 from cis.collocation.col_implementations import make_coord_map
-from cis.collocation.bin import BinnedCubeCellOnlyConstraint
 from cis.test.util.mock import *
 from cis.time_util import convert_datetime_to_std_time
 
@@ -26,10 +25,9 @@ class TestGridCellBinIndex(unittest.TestCase):
             if not coord.has_bounds():
                 coord.guess_bounds()
 
-        constraint = BinnedCubeCellOnlyConstraint()
-        data_index.create_indexes(constraint, coords, data_point.get_non_masked_points(), coord_map)
-        iterator = constraint.get_iterator(False, coord_map, coords, data_point.get_non_masked_points(), None,
-                                           sample_cube, None)
+        index = GridCellBinIndexInSlices()
+        index.index_data(coords, data_point.get_non_masked_points(), coord_map)
+        iterator = index.get_data_iterator(False, data_point.get_non_masked_points(), sample_cube)
 
         final_points_index = [(out_index, hp, points) for out_index, hp, points in iterator]
         assert_that(len(final_points_index), is_(1), "There is one mapping from sample_cube to the final grid")
@@ -59,10 +57,9 @@ class TestGridCellBinIndex(unittest.TestCase):
             if not coord.has_bounds():
                 coord.guess_bounds()
 
-        constraint = BinnedCubeCellOnlyConstraint()
-        data_index.create_indexes(constraint, coords, data_point.get_non_masked_points(), coord_map)
-        iterator = constraint.get_iterator(False, coord_map, coords, data_point.get_non_masked_points(), None,
-                                           sample_cube, None)
+        index = GridCellBinIndexInSlices()
+        index.index_data(coords, data_point.get_non_masked_points(), coord_map)
+        iterator = index.get_data_iterator(False, data_point.get_non_masked_points(), sample_cube)
 
         final_points_index = [(out_index, hp, points) for out_index, hp, points in iterator]
         assert_that(len(final_points_index), is_(0), "Masked points should not be iterated over")

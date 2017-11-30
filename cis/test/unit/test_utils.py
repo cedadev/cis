@@ -300,11 +300,11 @@ class TestFindLongitudeWrapStart(unittest.TestCase):
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=-175., lon_max=145.)
 
-        eq_(find_longitude_wrap_start(data), -180)
+        eq_(find_longitude_base(data), -180)
 
     def test_GIVEN_data_is_minus_0_to_360_THEN_returns_0(self):
         from cis.test.util.mock import make_regular_2d_ungridded_data
 
         data = make_regular_2d_ungridded_data(lat_dim_length=2, lon_dim_length=90, lon_min=5, lon_max=345.)
 
-        eq_(find_longitude_wrap_start(data), 0)
+        eq_(find_longitude_base(data), 0)

@@ -1,7 +1,6 @@
 import iris
 import numpy as np
 
-from cis.collocation.col_implementations import _fix_longitude_range
 from cis.data_io.datalist import DataList
 from cis.utils import apply_mask_to_numpy_array
 
@@ -23,9 +22,6 @@ def collocate(points, data, kernel='', extrapolate='mask', missing_data_for_miss
         kernel = Nearest
     else:
         raise ValueError("Invalid method specified for gridded -> gridded collocation: " + kernel)
-
-    # Force the data longitude range to be the same as that of the sample grid.
-    _fix_longitude_range(points.coords(), data)
 
     # Initialise variables used to create an output mask based on the sample data mask.
     sample_coord_lookup = {}  # Maps coordinate in sample data -> location in dimension order

@@ -1,63 +1,7 @@
 import numpy as np
 from numpy import mean as np_mean, std as np_std, min as np_min, max as np_max, sum as np_sum
 
-import cis.exceptions
-from cis.collocation.col_framework import (Constraint, PointConstraint, AbstractDataOnlyKernel)
-
-
-class DummyConstraint(Constraint):
-    def constrain_points(self, point, data):
-        # This is a null constraint - all of the points just get passed back
-        return data
-
-
-class SepConstraint(PointConstraint):
-    def __init__(self, h_sep=None, a_sep=None, p_sep=None, t_sep=None):
-        from cis.exceptions import InvalidCommandLineOptionError
-
-        super(SepConstraint, self).__init__()
-
-        self.checks = []
-
-        if h_sep is not None:
-            self.h_sep = cis.utils.parse_distance_with_units_to_float_km(h_sep)
-            self.checks.append(self.horizontal_constraint)
-        if a_sep is not None:
-            self.a_sep = cis.utils.parse_distance_with_units_to_float_m(a_sep)
-            self.checks.append(self.alt_constraint)
-        if p_sep is not None:
-            try:
-                self.p_sep = float(p_sep)
-            except:
-                raise InvalidCommandLineOptionError('Separation Constraint p_sep must be a valid float')
-            self.checks.append(self.pressure_constraint)
-        if t_sep is not None:
-            from cis.parse_datetime import parse_datetimestr_delta_to_float_days
-            try:
-                self.t_sep = parse_datetimestr_delta_to_float_days(t_sep)
-            except ValueError as e:
-                raise InvalidCommandLineOptionError(e)
-            self.checks.append(self.time_constraint)
-
-    # TODO The points no longer have these methods so this will need refactoring (to work on whole DFs at a time)
-    def time_constraint(self, point, ref_point):
-        return point.time_sep(ref_point) < self.t_sep
-
-    def alt_constraint(self, point, ref_point):
-        return point.alt_sep(ref_point) < self.a_sep
-
-    def pressure_constraint(self, point, ref_point):
-        return point.pres_sep(ref_point) < self.p_sep
-
-    def horizontal_constraint(self, point, ref_point):
-        return point.haversine_dist(ref_point) < self.h_sep
-
-    def constrain_points(self, ref_point, data):
-        import operator
-        from functools import reduce
-        # Each check returns a boolean series, just || them together
-        matching_points = reduce(operator.or_, [check(data, ref_point) for check in self.checks], False)
-        return data[matching_points]
+from cis.collocation.col_framework import (AbstractDataOnlyKernel)
 
 
 # noinspection PyPep8Naming
@@ -161,7 +105,24 @@ class moments(AbstractDataOnlyKernel):
         return np_mean(values), np_std(values, ddof=1), np.size(values)
 
 
-# These classes act as abbreviations for kernel classes above:
+def find_standard_coords(data):
+    """Constructs a list of the standard coordinates.
+    The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
+    list in this order.
+    :return: list of coordinates or None if coordinate not present
+    """
+    ret_list = []
+
+    coords = data.coords(dim_coords=True)
+    for name in HyperPoint.standard_names:
+        coord_and_dim = None
+        for idx, coord in enumerate(coords):
+            if coord.standard_name == name:
+                coord_and_dim = (coord, idx)
+                break
+        ret_list.append(coord_and_dim)
+
+    return ret_list
 
 
 def make_coord_map(points, data):
@@ -179,41 +140,41 @@ def make_coord_map(points, data):
 
     # TODO The find_standard_coords method no longer exists so I'll have to come up with another way of doing this...
     #  It should be easier using Iris coords rather than HyperPoints anyway
-    coordinate_mask = [False if c is None else True for c in data.find_standard_coords()]
+
+    coordinate_mask = [False if c is None else True for c in find_standard_coords(data)]
 
     # Find the mapping of standard coordinates to those in the sample points and those to be used
     # in the output data.
     # TODO
+    # Find the mapping of standard coordinates to those in the sample points and those to be used
+    # in the output data.
+    return _find_standard_coords(points, coordinate_mask)
 
 
-def _find_longitude_range(coords):
-    """Finds the start of the longitude range, assumed to be either 0,360 or -180,180
-    :param coords: coordinates to check
-    :return: starting value for longitude range or None if no longitude coordinate found
+def _find_standard_coords(cube, coordinate_mask):
+    """Finds the mapping of sample point coordinates to the standard ones used by HyperPoint.
+
+    :param cube: cube among the coordinates of which to find the standard coordinates
+    :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
+    :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
     """
-    low = None
-    for coord in coords:
-        if coord.standard_name == 'longitude':
-            low = 0.0
-            min_val = coord.points.min()
-            if min_val < 0.0:
-                low = -180.0
-    return low
+    coord_map = []
+    cube_coord_lookup = {}
 
+    cube_coords = cube.coords()
+    for idx, coord in enumerate(cube_coords):
+        cube_coord_lookup[coord] = idx
 
-def _fix_longitude_range(coords, data_points):
-    """Sets the longitude range of the data points to match that of the sample coordinates.
-    :param coords: coordinates for grid on which to collocate
-    :param data_points: HyperPointList or GriddedData of data to fix
-    """
-    # TODO This needs refactoring
-    # FIXME this is essentially a switch on ungridded/gridded - can I do this better?
-    from cis.data_io.cube_utils import set_longitude_range
-    from cis.utils import fix_longitude_range
-    range_start = _find_longitude_range(coords)
-    if range_start is not None:
-        if data_points.coords('longitude', dim_coords=True):
-            set_longitude_range(data_points, range_start)
-        else:
-            fix_longitude_range(data_points.coord('longitude').points, range_start)
-
+    shape_idx = 0
+    for hpi, name in enumerate(HyperPoint.standard_names):
+        if coordinate_mask[hpi]:
+            # Get the dimension coordinates only - these correspond to dimensions of data array.
+            cube_coords = cube.coords(standard_name=name, dim_coords=True)
+            if len(cube_coords) > 1:
+                msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
+                       % (len(cube_coords), ', '.join(coord.name() for coord in cube_coords)))
+                raise cis.exceptions.CoordinateNotFoundError(msg)
+            elif len(cube_coords) == 1:
+                coord_map.append((hpi, cube_coord_lookup[cube_coords[0]], shape_idx))
+                shape_idx += 1
+    return coord_map

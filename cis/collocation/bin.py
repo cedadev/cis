@@ -5,7 +5,7 @@ from iris.cube import Cube
 
 import cis.exceptions
 from cis.collocation import data_index as data_index
-from cis.collocation.col_implementations import make_coord_map, _fix_longitude_range
+from cis.collocation.col_implementations import make_coord_map
 from cis.data_io.cube_utils import get_non_masked_points
 from cis.data_io.datalist import DataList
 from cis.utils import log_memory_profile, set_standard_name_if_valid
@@ -64,8 +64,6 @@ def collocate(points, data, kernel=None, fill_value=None, missing_data_for_missi
             coord.guess_bounds()
         shape.append(coord.shape[0])
         output_coords.append(coord)
-
-    _fix_longitude_range(coords, data_points)
 
     log_memory_profile("GeneralGriddedCollocator Created output coord map")
 

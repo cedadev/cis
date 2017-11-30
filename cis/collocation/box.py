@@ -4,8 +4,7 @@ import numpy as np
 from iris.exceptions import CoordinateMultiDimError
 
 from cis.collocation import data_index as data_index
-from cis.collocation.col_framework import PointConstraint, Kernel
-from cis.collocation.col_implementations import _fix_longitude_range
+from cis.collocation.col_framework import Kernel
 from cis.data_io.cube_utils import get_all_points, get_non_masked_points, make_new_with_same_coordinates
 from cis.data_io.datalist import DataList
 from cis.utils import log_memory_profile, set_standard_name_if_valid
@@ -42,11 +41,6 @@ def collocate(points, data, kernel=None, constraint=None, fill_value=None, missi
         for var in data:
             output.extend(collocate(points, var, constraint, kernel))
         return output
-
-    # First fix the sample points so that they all fall within the same 360 degree longitude range
-    _fix_longitude_range(points.coords(), points)
-    # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
-    _fix_longitude_range(points.coords(), data)
 
     sample_points = get_all_points(points)
     data_points = get_non_masked_points(data)
@@ -100,7 +94,7 @@ def collocate(points, data, kernel=None, constraint=None, fill_value=None, missi
     return return_data
 
 
-class SepConstraintKdtree(PointConstraint):
+class SepConstraintKdtree:
     """A separation constraint that uses a k-D tree to optimise spatial constraining.
     If no horizontal separation parameter is supplied, this reduces to an exhaustive
     search using the other parameter(s).
@@ -175,7 +169,7 @@ class SepConstraintKdtree(PointConstraint):
 
     def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points,
                      output_data):
-        from cis.collocation.col_framework import index_iterator_for_non_masked_data, index_iterator_nditer
+        from cis.utils import index_iterator_for_non_masked_data, index_iterator_nditer
         indices = False
 
         if missing_data_for_missing_sample:
