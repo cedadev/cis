@@ -9,7 +9,7 @@ import numpy as np
 
 from cis.data_io.datalist import DataList
 from cis.collocation.col_implementations import moments
-from cis.collocation.box import GeneralUngriddedCollocator, SepConstraintKdtree
+from cis.collocation.box import collocate
 from cis.test.util import mock
 
 
@@ -20,8 +20,7 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
         # Note - This isn't actually used for averaging
         sample_points = mock.make_dummy_sample_points(lat=[1.0], lon=[1.0], alt=[12.0], time=[dt.datetime(1984, 8, 29, 8, 34)])
 
-        col = GeneralUngriddedCollocator()
-        new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), moments())
+        new_data = collocate(sample_points, ug_data, moments())
         means = new_data[0]
         std_dev = new_data[1]
         no_points = new_data[2]
@@ -40,11 +39,9 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
                                                      dt.datetime(1984, 8, 29, 8, 34),
                                                      dt.datetime(1984, 8, 29, 8, 34)])
 
-        constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
-        col = GeneralUngriddedCollocator()
-        output = col.collocate(sample, data, constraint, kernel)
+        output = collocate(sample, data, kernel, h_sep='500km')
 
         expected_result = np.array([28.0/3, 10.0, 20.0/3])
         expected_stddev = np.array([1.52752523, 1.82574186, 1.52752523])
@@ -62,14 +59,12 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
                                                      dt.datetime(1984, 8, 29, 8, 34),
                                                      dt.datetime(1984, 8, 29, 8, 34)])
 
-        constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
         sample_mask = [False, True, False]
         sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
-        col = GeneralUngriddedCollocator(missing_data_for_missing_sample=True)
-        output = col.collocate(sample, data, constraint, kernel)
+        output = collocate(sample, data, kernel, h_sep='500km', missing_data_for_missing_sample=True)
 
         assert len(output) == 3
         assert isinstance(output, DataList)
@@ -84,14 +79,12 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
                                                      dt.datetime(1984, 8, 29, 8, 34),
                                                      dt.datetime(1984, 8, 29, 8, 34)])
 
-        constraint = SepConstraintKdtree('500km')
         kernel = moments()
 
         sample_mask = [False, True, False]
         sample.data = np.ma.array([0, 0, 0], mask=sample_mask)
 
-        col = GeneralUngriddedCollocator(missing_data_for_missing_sample=False)
-        output = col.collocate(sample, data, constraint, kernel)
+        output = collocate(sample, data, kernel, h_sep='500km', missing_data_for_missing_sample=False)
 
         assert len(output) == 3
         assert isinstance(output, DataList)
@@ -108,10 +101,8 @@ class TestGeneralUngriddedCollocator(unittest.TestCase):
 
         data_list = DataList([ug_data_1, ug_data_2])
         sample_points = mock.make_regular_2d_ungridded_data()
-        constraint = SepConstraintKdtree('500km')
         kernel = moments()
-        col = GeneralUngriddedCollocator()
-        output = col.collocate(sample_points, data_list, constraint, kernel)
+        output = collocate(sample_points, data_list, kernel, h_sep='500km')
 
         expected_result = np.array(list(range(1, 16)))
         expected_n = np.array(15 * [1])

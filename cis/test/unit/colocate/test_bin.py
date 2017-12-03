@@ -7,10 +7,10 @@ import numpy
 from cis.exceptions import UserPrintableException
 from cis.data_io.datalist import DataList
 from cis.collocation.col_implementations import mean, moments
-from cis.collocation.bin import GeneralGriddedCollocator, BinnedCubeCellOnlyConstraint
+from cis.collocation.bin import collocate
 from cis.test.util.mock import make_mock_cube, make_dummy_ungridded_data_single_point, \
     make_dummy_ungridded_data_two_points_with_different_values, make_dummy_1d_ungridded_data, \
-    make_dummy_1d_ungridded_data_with_invalid_standard_name, make_square_5x3_2d_cube_with_time, \
+    make_square_5x3_2d_cube_with_time, \
     make_square_5x3_2d_cube_with_altitude, make_square_5x3_2d_cube_with_pressure, \
     make_square_5x3_2d_cube_with_decreasing_latitude, make_square_5x3_2d_cube, make_regular_2d_ungridded_data, \
     make_square_NxM_2d_cube_with_time, make_square_5x3_2d_cube_with_extra_dim, make_dummy_sample_points
@@ -69,11 +69,10 @@ class SlowMoments(object):
         return self.moments.get_variable_details(var_name, var_long_name, var_standard_name, var_units)
 
 
-def single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel):
+def single_point_results_in_single_value_in_cell_using_kernel_and_con(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.0, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -82,11 +81,10 @@ def single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kerne
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel):
+def single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, mask=True)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.0, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -95,7 +93,7 @@ def single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(con, kernel):
+def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(kernel):
     mask = [[False, False, False],
             [False, False, False],
             [False, True, False],
@@ -103,8 +101,8 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
             [False, False, False]]
     sample_cube = make_mock_cube(mask=mask)
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9, missing_data_for_missing_sample=True)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.0, 
+                         kernel=kernel, missing_data_for_missing_sample=True)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -113,7 +111,7 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_false(con, kernel):
+def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_false(kernel):
     mask = [[False, False, False],
             [False, False, False],
             [False, True, False],
@@ -121,8 +119,8 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
             [False, False, False]]
     sample_cube = make_mock_cube(mask=mask)
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9, missing_data_for_missing_sample=False)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, 
+                         missing_data_for_missing_sample=False, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -131,11 +129,10 @@ def single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_mis
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(con, kernel):
+def single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_sample_points([0.5, 99], [0.5, 99], [1.2, 5])
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -144,12 +141,11 @@ def single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def multiple_points_inside_grid_and_outside(con, kernel):
+def multiple_points_inside_grid_and_outside(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_sample_points([0.5, 99, 0.6, 3.0, -9], [0.5, 99, 0.6, 0.5, -3],
                                                         [1.2, 5, 3.4, 5, 8])
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[8, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 2.3, -999.9],
@@ -158,11 +154,10 @@ def multiple_points_inside_grid_and_outside(con, kernel):
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel):
+def two_points_in_a_cell_results_in_mean_value_in_cell(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_two_points_with_different_values(0.5, 0.5, 1.2, 1.4)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.3, -999.9],
@@ -171,11 +166,10 @@ def two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel):
     assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
 
 
-def point_on_a_lat_boundary_appears_in_higher_cell(con, kernel):
+def point_on_a_lat_boundary_appears_in_higher_cell(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 0.0, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -184,11 +178,10 @@ def point_on_a_lat_boundary_appears_in_higher_cell(con, kernel):
     assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
 
 
-def point_on_highest_lat_boundary_is_excluded(con, kernel):
+def point_on_highest_lat_boundary_is_excluded(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(12.5, 0.0, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -197,11 +190,10 @@ def point_on_highest_lat_boundary_is_excluded(con, kernel):
     assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
 
 
-def point_on_180_is_included_in_lower_bound(con, kernel):
+def point_on_180_is_included_in_lower_bound(kernel):
     sample_cube = make_square_NxM_2d_cube_with_time(start_lon=-135, end_lon=135, lon_point_count=4)
     data_point = make_dummy_ungridded_data_single_point(0, 180.0, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9, -999.9],
                                    [1.2, -999.9, -999.9, -999.9],
@@ -210,11 +202,10 @@ def point_on_180_is_included_in_lower_bound(con, kernel):
     assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
 
 
-def point_on_a_lon_boundary_appears_in_higher_cell(con, kernel):
+def point_on_a_lon_boundary_appears_in_higher_cell(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(0.0, 2.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, 1.2],
@@ -223,11 +214,10 @@ def point_on_a_lon_boundary_appears_in_higher_cell(con, kernel):
     assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
 
 
-def point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel):
+def point_on_a_lat_lon_boundary_appears_in_highest_cell(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(2.5, 2.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -236,11 +226,10 @@ def point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel):
     assert_arrays_almost_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_outside_grid_is_excluded(con, kernel):
+def single_point_outside_grid_is_excluded(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(99, 99, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -249,11 +238,10 @@ def single_point_outside_grid_is_excluded(con, kernel):
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_on_grid_corner_is_counted_once(con, kernel):
+def single_point_on_grid_corner_is_counted_once(kernel):
     sample_cube = make_mock_cube()
     data_point = make_dummy_ungridded_data_single_point(10, 5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -262,11 +250,10 @@ def single_point_on_grid_corner_is_counted_once(con, kernel):
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(con, kernel):
+def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -275,19 +262,18 @@ def single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_tim
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(con, kernel):
+def single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9, missing_data_for_missing_sample=True)
-    assert_that(calling(col.collocate).with_args(points=sample_cube, data=data_point, constraint=con, kernel=kernel),
+    assert_that(calling(collocate).with_args(points=sample_cube, data=data_point, fill_value=-999.9,
+                                             missing_data_for_missing_sample=True, kernel=kernel),
                 raises(UserPrintableException, pattern=".*sample variable.*"))
 
 
-def single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel):
+def single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(kernel):
     sample_cube = make_square_5x3_2d_cube_with_time()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, time=datetime.datetime(1984, 8, 28, 0, 0))
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
@@ -310,12 +296,11 @@ def single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel):
+def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(kernel):
     sample_cube = make_square_5x3_2d_cube_with_extra_dim()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=18)
     print(sample_cube.data)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -324,12 +309,11 @@ def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(con, kernel):
+def single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(kernel):
     sample_cube = make_square_5x3_2d_cube_with_altitude()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
     print(sample_cube.data)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -338,11 +322,10 @@ def single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(con, kernel):
+def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(kernel):
     sample_cube = make_square_5x3_2d_cube_with_altitude()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, altitude=1.0)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
@@ -365,12 +348,11 @@ def single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_al
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(con, kernel):
+def single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(kernel):
     sample_cube = make_square_5x3_2d_cube_with_pressure()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2)
     print(sample_cube.data)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
@@ -379,11 +361,10 @@ def single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(con, kernel):
+def single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(kernel):
     sample_cube = make_square_5x3_2d_cube_with_pressure()
     data_point = make_dummy_ungridded_data_single_point(0.5, 0.5, 1.2, pressure=1.0)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[[-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9],
                                     [-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9]],
@@ -407,12 +388,11 @@ def single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pr
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def can_collocate_list_of_data(constraint, kernel):
-    col = GeneralGriddedCollocator()
+def can_collocate_list_of_data(kernel):
     sample = make_square_5x3_2d_cube()
     data1 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5, 0)
     data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5, 10)
-    output = col.collocate(sample, DataList([data1, data2]), constraint, kernel)
+    output = collocate(sample, DataList([data1, data2]), kernel)
     assert len(output) == 2
     expected_data2 = numpy.array([[14.5, 16.5, 18.5],
                                   [26.5, 28.5, 30.5],
@@ -424,11 +404,10 @@ def can_collocate_list_of_data(constraint, kernel):
     assert_arrays_equal(output[1].data, expected_data2)
 
 
-def single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, kernel):
+def single_point_results_in_single_value_in_cell_with_decreasing_latitude(kernel):
     sample_cube = make_square_5x3_2d_cube_with_decreasing_latitude()
     data_point = make_dummy_ungridded_data_single_point(3.0, 0.5, 1.2)
-    col = GeneralGriddedCollocator(fill_value=-999.9)
-    out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=kernel)[0]
+    out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=kernel)[0]
     expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                    [-999.9, 1.2, -999.9],
                                    [-999.9, -999.9, -999.9],
@@ -438,11 +417,10 @@ def single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, k
     assert_arrays_equal(out_cube.data.filled(), expected_result)
 
 
-def single_moments(constraint, kernel):
-    col = GeneralGriddedCollocator()
+def single_moments(kernel):
     sample = make_square_5x3_2d_cube()
     data = make_regular_2d_ungridded_data(10, -9.9, 9.9, 6, -4.9, 4.9, 10)
-    output = col.collocate(sample, data, constraint, kernel)
+    output = collocate(sample, data, kernel)
     expected_data = numpy.array([[14.5, 16.5, 18.5],
                                  [26.5, 28.5, 30.5],
                                  [38.5, 40.5, 42.5],
@@ -460,14 +438,13 @@ def single_moments(constraint, kernel):
     assert numpy.array_equal(output[2].data, expected_num)
 
 
-def list_moments(constraint, kernel):
-    col = GeneralGriddedCollocator()
+def list_moments(kernel):
     sample = make_square_5x3_2d_cube()
     data1 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
     data2 = make_regular_2d_ungridded_data(10, -10, 10, 6, -5, 5)
     data2.var_name = 'snow'
     data2.data *= 2
-    output = col.collocate(sample, DataList([data1, data2]), constraint, kernel)
+    output = collocate(sample, DataList([data1, data2]), kernel)
     assert len(output) == 6
     assert output[0].var_name == 'rain'
     assert output[1].var_name == 'rain_std_dev'
@@ -497,10 +474,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         sample_cube = make_mock_cube()
         data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
 
-        col = GeneralGriddedCollocator(fill_value=-999.9)
-        con = BinnedCubeCellOnlyConstraint()
-
-        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=SlowMean())[0]
+        out_cube = collocate(points=sample_cube, data=data_point, fill_value=-999.9, kernel=SlowMean())[0]
 
         expected_result = numpy.array([[-999.9, -999.9, -999.9],
                                        [-999.9, -999.9, -999.9],
@@ -514,10 +488,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         sample_cube = make_mock_cube()
         data_point = make_dummy_ungridded_data_single_point(99, 99, 0.0)
 
-        col = GeneralGriddedCollocator()
-        con = BinnedCubeCellOnlyConstraint()
-
-        out_cube = col.collocate(points=sample_cube, data=data_point, constraint=con, kernel=SlowMean())[0]
+        out_cube = collocate(points=sample_cube, data=data_point, kernel=SlowMean())[0]
 
         expected_result = numpy.array([[float('nan'), float('nan'), float('nan')],
                                        [float('nan'), float('nan'), float('nan')],
@@ -528,499 +499,414 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         numpy.testing.assert_array_equal(out_cube.data.filled(), expected_result)
 
     def test_single_point_results_in_single_value_in_cell(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_point_results_in_single_value_in_cell_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_point_results_in_single_value_in_cell_using_binned_cells_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_point_results_in_single_value_in_cell_using_binned_cells_only_and_fast_kernel(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_masked_point_results_in_single_value_in_cell_using_kernel_and_con_binned(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_point_results_in_single_value_in_masked_cell_using_fast_kernel_and_con_missing_for_masked_true(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(con, kernel)
+        single_masked_point_results_in_single_value_in_cell_using_kernel_and_con(kernel)
 
     def test_single_point_gives_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true_binned_only(
             self):
         from cis.collocation.col_implementations import max
-        con = BinnedCubeCellOnlyConstraint()
         kernel = max()
 
-        single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(con, kernel)
+        single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(kernel)
 
     def test_single_point_gives_single_val_in_masked_cell_using_fast_kernel_and_con_missing_for_masked_true_binned_only(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(con, kernel)
+        single_point_results_in_single_value_in_masked_cell_using_kernel_and_con_missing_for_masked_true(kernel)
 
     def test_two_points_in_a_cell_results_in_mean_value_in_cell(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel)
+        two_points_in_a_cell_results_in_mean_value_in_cell(kernel)
 
     def test_two_points_in_a_cell_results_in_mean_value_in_cell_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel)
+        two_points_in_a_cell_results_in_mean_value_in_cell(kernel)
 
     def test_two_points_in_a_cell_results_in_mean_value_in_cell_using_binned_cells_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel)
+        two_points_in_a_cell_results_in_mean_value_in_cell(kernel)
 
     def test_two_points_in_a_cell_results_in_fast_mean_value_in_cell_using_binned_cells_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
-        two_points_in_a_cell_results_in_mean_value_in_cell(con, kernel)
+        two_points_in_a_cell_results_in_mean_value_in_cell(kernel)
 
     def test_point_on_a_lat_boundary_appears_in_higher_cell(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_a_lat_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lat_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_a_lat_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lat_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_a_lat_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lat_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_a_lat_boundary_appears_in_higher_cell_using_binned_only_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        point_on_a_lat_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lat_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_highest_lat_boundary_is_excluded(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_highest_lat_boundary_is_excluded(con, kernel)
+        point_on_highest_lat_boundary_is_excluded(kernel)
 
     def test_point_on_highest_lat_boundary_is_excluded_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_highest_lat_boundary_is_excluded(con, kernel)
+        point_on_highest_lat_boundary_is_excluded(kernel)
 
     def test_point_on_highest_lat_boundary_is_excluded_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_highest_lat_boundary_is_excluded(con, kernel)
+        point_on_highest_lat_boundary_is_excluded(kernel)
 
     def test_point_on_highest_lat_boundary_is_excluded_binned_only_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        point_on_highest_lat_boundary_is_excluded(con, kernel)
+        point_on_highest_lat_boundary_is_excluded(kernel)
 
     def test_point_on_180_is_included_in_lower_bound_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_180_is_included_in_lower_bound(con, kernel)
+        point_on_180_is_included_in_lower_bound(kernel)
 
     def test_point_on_180_is_included_in_lower_bound_binned_only_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        point_on_180_is_included_in_lower_bound(con, kernel)
+        point_on_180_is_included_in_lower_bound(kernel)
 
     def test_point_on_a_lon_boundary_appears_in_higher_cell(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_a_lon_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lon_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_a_lon_boundary_appears_in_higher_cell_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        point_on_a_lon_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lon_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_a_lon_boundary_appears_in_higher_cell_using_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        point_on_a_lon_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lon_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_a_lon_boundary_appears_in_higher_cell_using_binned_only_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
-        point_on_a_lon_boundary_appears_in_higher_cell(con, kernel)
+        point_on_a_lon_boundary_appears_in_higher_cell(kernel)
 
     def test_point_on_a_lat_lon_boundary_appears_in_highest_cell(self):
-        con = BinnedCubeCellOnlyConstraint()
 
         kernel = SlowMean()
 
-        point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel)
+        point_on_a_lat_lon_boundary_appears_in_highest_cell(kernel)
 
     def test_point_on_a_lat_lon_boundary_appears_in_highest_cell_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel)
+        point_on_a_lat_lon_boundary_appears_in_highest_cell(kernel)
 
     def test_point_on_a_lat_lon_boundary_appears_in_highest_cell_using_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel)
+        point_on_a_lat_lon_boundary_appears_in_highest_cell(kernel)
 
     def test_point_on_a_lat_lon_boundary_appears_in_highest_cell_using_binned_only_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        point_on_a_lat_lon_boundary_appears_in_highest_cell(con, kernel)
+        point_on_a_lat_lon_boundary_appears_in_highest_cell(kernel)
 
     def test_single_point_outside_grid_is_excluded(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_outside_grid_is_excluded(con, kernel)
+        single_point_outside_grid_is_excluded(kernel)
 
     def test_single_point_outside_grid_is_excluded_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_outside_grid_is_excluded(con, kernel)
+        single_point_outside_grid_is_excluded(kernel)
 
     def test_single_point_outside_grid_is_excluded_using_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_outside_grid_is_excluded(con, kernel)
+        single_point_outside_grid_is_excluded(kernel)
 
     def test_single_point_outside_grid_is_excluded_using_binned_only_fast(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_outside_grid_is_excluded(con, kernel)
+        single_point_outside_grid_is_excluded(kernel)
 
     def test_single_point_outside_grid_and_one_inside_excludes_outside_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(con, kernel)
+        single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(kernel)
 
     def test_single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(con, kernel)
+        single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(kernel)
 
     def test_single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(con, kernel)
+        single_point_outside_grid_and_one_inside_excludes_outside_using_binned_only(kernel)
 
     def test_multiple_points_inside_grid_and_outside_using_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        multiple_points_inside_grid_and_outside(con, kernel)
+        multiple_points_inside_grid_and_outside(kernel)
 
     def test_multiple_points_inside_grid_and_outside_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        multiple_points_inside_grid_and_outside(con, kernel)
+        multiple_points_inside_grid_and_outside(kernel)
 
     def test_multiple_points_inside_grid_and_outside_using_binning_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        multiple_points_inside_grid_and_outside(con, kernel)
+        multiple_points_inside_grid_and_outside(kernel)
 
     def test_single_point_on_grid_corner_is_counted_once(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_on_grid_corner_is_counted_once(con, kernel)
+        single_point_on_grid_corner_is_counted_once(kernel)
 
     def test_single_point_on_grid_corner_is_counted_once_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_on_grid_corner_is_counted_once(con, kernel)
+        single_point_on_grid_corner_is_counted_once(kernel)
 
     def test_single_point_on_grid_corner_is_counted_once_using_bined_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_on_grid_corner_is_counted_once(con, kernel)
+        single_point_on_grid_corner_is_counted_once(kernel)
 
     def test_single_point_on_grid_corner_is_counted_once_using_bined_only_fast(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_on_grid_corner_is_counted_once(con, kernel)
+        single_point_on_grid_corner_is_counted_once(kernel)
 
     def test_single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(con, kernel)
+        single_point_gives_single_val_in_cell_w_no_time_with_cube_w_time_and_missing_samples_THEN_error(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time_binned_only_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_time_with_cube_with_time(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel)
+        single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel)
+        single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(kernel)
 
     def test_single_point_results_in_single_val_in_cell_with_time_on_boundary_with_cube_with_time_binned_only_fast_mean(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(con, kernel)
+        single_point_results_in_single_value_in_cell_with_time_on_boundary_with_cube_with_time(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
-        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(kernel)
 
     def test_single_point_results_in_single_val_in_cell_with_altitude_with_cube_with_no_altitude_binned_only_fast_mean(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
-        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_no_altitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(kernel)
 
     def test_single_point_results_in_single_val_in_cell_with_no_altitude_with_cube_with_altitude_binned_only_fast_mean(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_altitude_with_cube_with_altitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude_binned_only_fast_mean(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_altitude_with_cube_with_altitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(kernel)
 
     def test_single_point_results_in_single_val_in_cell_with_no_pressure_with_cube_with_pressure_binned_only_fast_mean(
             self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(con, kernel)
+        single_point_results_in_single_value_in_cell_with_no_pressure_with_cube_with_pressure(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(self):
-        con = BinnedCubeCellOnlyConstraint()
 
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(con, kernel)
+        single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure_binned_only(self):
-        con = BinnedCubeCellOnlyConstraint()
 
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(con, kernel)
+        single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure_binned_only_fast_mean(
             self):
-        con = BinnedCubeCellOnlyConstraint()
 
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(con, kernel)
+        single_point_results_in_single_value_in_cell_with_pressure_with_cube_with_pressure(kernel)
 
     def test_data_with_no_standard_name(self):
         sample_cube = make_mock_cube()
         data_points = make_dummy_1d_ungridded_data()
 
-        col = GeneralGriddedCollocator(fill_value=-999.9)
-        con = BinnedCubeCellOnlyConstraint()
-
-        out_cube = col.collocate(points=sample_cube, data=data_points, constraint=con, kernel=SlowMean())[0]
+        out_cube = collocate(points=sample_cube, data=data_points, fill_value=-999.9, kernel=SlowMean())[0]
 
     def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_decreasing_latitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude_binned_only_con(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_decreasing_latitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude_using_binning(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_decreasing_latitude(kernel)
 
     def test_single_point_results_in_single_value_in_cell_with_decreasing_latitude_using_binned_fast_mean(self):
-        con = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        single_point_results_in_single_value_in_cell_with_decreasing_latitude(con, kernel)
+        single_point_results_in_single_value_in_cell_with_decreasing_latitude(kernel)
 
     def test_can_collocate_list_of_data(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        can_collocate_list_of_data(constraint, kernel)
+        can_collocate_list_of_data(kernel)
 
     def test_can_collocate_list_of_data_binned_only_con(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = SlowMean()
 
-        can_collocate_list_of_data(constraint, kernel)
+        can_collocate_list_of_data(kernel)
 
     def test_can_collocate_list_of_data_binned_only_con_fast_mean(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = FastMean()
 
-        can_collocate_list_of_data(constraint, kernel)
+        can_collocate_list_of_data(kernel)
 
     def test_single_moments(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = moments()
-
-        single_moments(constraint, kernel)
+        single_moments(kernel)
 
     def test_single_moments_binned_only_con(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = SlowMoments()
 
-        single_moments(constraint, kernel)
+        single_moments(kernel)
 
     def test_single_moments_binned_only_con_fast_moment(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = FastMoments()
 
-        single_moments(constraint, kernel)
+        single_moments(kernel)
 
     def test_list_moments(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = moments()
 
-        list_moments(constraint, kernel)
+        list_moments(kernel)
 
     def test_list_moments_binned_only_con(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = SlowMoments()
 
-        list_moments(constraint, kernel)
+        list_moments(kernel)
 
     def test_list_moments_binned_only_con_fast_moment(self):
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = FastMoments()
 
-        list_moments(constraint, kernel)
+        list_moments(kernel)
 
     def test_gridded_gridded_bin_when_grids_have_different_dims_order(self):
         # JASCIS-204
@@ -1028,10 +914,8 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         data = make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                              time_dim_length=10, dim_order=['time', 'lon', 'lat'])
 
-        col = GeneralGriddedCollocator()
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = mean()
-        out_cube = col.collocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        out_cube = collocate(points=sample, data=data, kernel=kernel)
         assert out_cube[0].shape == sample.shape
 
     def test_gridded_gridded_bin_when_grids_have_different_dims_order_2(self):
@@ -1040,10 +924,8 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         data = make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                              time_dim_length=10, dim_order=['lon', 'lat', 'time'])
 
-        col = GeneralGriddedCollocator()
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = mean()
-        out_cube = col.collocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        out_cube = collocate(points=sample, data=data, kernel=kernel)
         assert out_cube[0].shape == sample.shape
 
     def test_gridded_gridded_bin_when_sample_has_dimension_data_doesnt(self):
@@ -1052,8 +934,6 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         data = make_mock_cube(lat_dim_length=11, lon_dim_length=13,
                                              time_dim_length=0, dim_order=['time', 'lon', 'lat'])
 
-        col = GeneralGriddedCollocator()
-        constraint = BinnedCubeCellOnlyConstraint()
         kernel = mean()
-        out_cube = col.collocate(points=sample, data=data, constraint=constraint, kernel=kernel)
+        out_cube = collocate(points=sample, data=data, kernel=kernel)
         assert out_cube[0].shape == (5, 3)
