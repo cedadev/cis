@@ -993,15 +993,15 @@ def make_MODIS_time_steps():
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
-    x = np.zeros(4)
     times = np.array([149754, 149762, 149770, 149778])
 
-    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+    x = Coord(np.zeros(4), Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(np.zeros(4), Metadata(standard_name='longitude', units='degrees'))
     t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
 
     data = np.arange(4.0)
 
-    coords = CoordList([x, t])
+    coords = CoordList([x, y, t])
     return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 
