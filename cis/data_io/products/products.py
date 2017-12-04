@@ -27,7 +27,8 @@ class cis(AProduct):
 
         coord_variables = [(v, axis_lookup[v]) for v in file_variables if v in axis_lookup]
 
-        all_variables = coord_variables.copy()
+        # Create a copy to contain all the variables to read
+        all_variables = list(coord_variables)
         if usr_variable is not None:
             all_variables.append((usr_variable, ''))
 
