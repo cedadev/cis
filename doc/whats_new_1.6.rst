@@ -3,12 +3,12 @@
 What's new in CIS 1.6
 =====================
 
-This page documents the new features added, and bugs fixed in CIS since version 1.5.0. See all changes here: https://github.com/cedadev/cis/compare/1.5.0...1.6.0
+This page documents the new features added, and bugs fixed in CIS since version 1.5.0. See all changes here: https://github.com/cedadev/cis/compare/1.5.4...1.6.0
 
 
 CIS 1.5 features
 ================
- * Ungridded - ungridded collocation performance improvements
+ * Implemented ungridded - ungridded collocation performance improvements (#9)
 
 
 Incompatible changes
@@ -24,3 +24,5 @@ Bugs fixed
  * Plot colourbars are now associated with the plot axes rather than the figure, which makes it easier to make
  multi-axes plots with CIS.
  * Fixed an issue where `UngriddedData.copy()` didn't copy metadata
+ * [JASCIS-373] get_variable_names now gets passed the product argument from read_data_list
+ * Fix #11 by relying on shapely exception which moved

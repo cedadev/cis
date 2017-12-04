@@ -83,7 +83,7 @@ class DataReader(object):
         variables = listify(variables)
         aliases = listify(aliases) if aliases else None
 
-        variables = self._expand_wildcards(variables, filenames)
+        variables = self._expand_wildcards(variables, filenames, product)
 
         data_list = None
         for idx, variable in enumerate(variables):
@@ -100,7 +100,7 @@ class DataReader(object):
         assert data_list is not None
         return data_list
 
-    def _expand_wildcards(self, variables, filenames):
+    def _expand_wildcards(self, variables, filenames, product):
         """
         Convert any wildcards into actual variable names by inspecting the file
 
@@ -114,7 +114,7 @@ class DataReader(object):
             file_variables = None
             if is_wildcard:
                 if file_variables is None:
-                    file_variables = self._get_vars_func(filenames)
+                    file_variables = self._get_vars_func(filenames, product)
                 matches = fnmatch.filter(file_variables, variable)
                 if len(matches) == 0:
                     logging.warning("No variables matching wildcard '%s' found in file." % variable)
