@@ -1181,7 +1181,7 @@ def _coords_as_data_frame(coord_list, copy=True, time_index=True):
             else:
                 time = cis_standard_time_unit.num2date(data)
         else:
-            columns[coord.name()] = data
+            columns[coord.standard_name] = data
 
     return pd.DataFrame(columns, index=time)
 

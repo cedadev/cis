@@ -46,23 +46,20 @@ class GeneralUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
+        # First fix the sample points so that they all fall within the same 360 degree longitude range
+        _fix_longitude_range(points.coords(), points)
+        # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
+        _fix_longitude_range(points.coords(), data)
+
+        # Convert to dataframes for fancy indexing
         sample_points = points.as_data_frame(time_index=False, name='vals')
         data_points = data.as_data_frame(time_index=False, name='vals').dropna(axis=0)
-
-        print(len(data_points))
-
-        # TODO This doesn't work for dataframes
-        # First fix the sample points so that they all fall within the same 360 degree longitude range
-        # _fix_longitude_range(points.coords(), sample_points)
-        # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
-        # _fix_longitude_range(points.coords(), data_points)
 
         log_memory_profile("GeneralUngriddedCollocator after data retrieval")
 
         # Create index if constraint and/or kernel require one.
         coord_map = None
         data_index.create_indexes(constraint, points, data_points, coord_map)
-        data_index.create_indexes(kernel, points, data_points, coord_map)
         log_memory_profile("GeneralUngriddedCollocator after indexing")
 
         logging.info("--> Collocating...")
@@ -84,27 +81,25 @@ class GeneralUngriddedCollocator(Collocator):
         logging.info("    {} sample points".format(sample_points_count))
         # Apply constraint and/or kernel to each sample point.
 
-        if isinstance(kernel, nn_horizontal_kdtree):
-            values[0, :] = kernel.get_value(sample_points, data_points)
+        if isinstance(kernel, nn_horizontal_only):
+            # Only find the nearest point using the kd-tree, without constraint in other dimensions
+            nearest_points = data_points.iloc[constraint.haversine_distance_kd_tree_index.find_nearest_point(sample_points)]
+            values[0, :] = nearest_points.vals.values
         else:
             for i, point, con_points in constraint.get_iterator(self.missing_data_for_missing_sample, None, None,
-                                                            data_points, None, sample_points, None):
+                                                                data_points, None, sample_points, None):
 
                 try:
-                    value_obj = kernel.get_value(point, con_points)
+                    values[:, i] = kernel.get_value(point, con_points)
                     # Kernel returns either a single value or a tuple of values to insert into each output variable.
-                    # TODO, this could be tidied up I think
-                    if isinstance(value_obj, tuple):
-                        for idx, val in enumerate(value_obj):
-                            if not np.isnan(val):
-                                values[idx, i] = val
-                    else:
-                        values[0, i] = value_obj
                 except CoordinateMultiDimError as e:
                     raise NotImplementedError(e)
                 except ValueError as e:
                     pass
         log_memory_profile("GeneralUngriddedCollocator after running kernel on sample points")
+
+        # Mask any bad values
+        values = np.ma.masked_invalid(values)
 
         return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
@@ -486,17 +481,12 @@ class nn_horizontal(Kernel):
         return nearest_point.vals
 
 
-class nn_horizontal_kdtree(Kernel):
-    def __init__(self):
-        self.haversine_distance_kd_tree_index = None
-
-    def get_value(self, points, data):
-        """
-        Collocation using nearest neighbours along the face of the earth using a k-D tree index.
-        """
-        nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(points)
-        nearest_points = data.iloc[nearest_index]
-        return nearest_points.vals.values
+class nn_horizontal_only(Kernel):
+    """
+    Used to shortcut the constraint checks in dimensions other than the horizontal to allow quick kd-tree lookup
+    """
+    def get_value(self, point, data):
+        pass
 
 
 class nn_altitude(Kernel):

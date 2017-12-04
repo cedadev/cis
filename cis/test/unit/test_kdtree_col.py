@@ -10,7 +10,7 @@ import cis.data_io.gridded_data as gridded_data
 from cis.data_io.hyperpoint import HyperPoint, HyperPointList
 from cis.data_io.ungridded_data import UngriddedData
 from cis.test.util import mock
-from cis.collocation.col_implementations import (GeneralUngriddedCollocator, nn_horizontal_kdtree, DummyConstraint,
+from cis.collocation.col_implementations import (GeneralUngriddedCollocator, nn_horizontal_only, DummyConstraint,
                                                  SepConstraintKdtree, make_coord_map)
 from cis.collocation.haversinedistancekdtreeindex import HaversineDistanceKDTreeIndex
 
@@ -37,7 +37,7 @@ class Test_nn_horizontal_kdtree(object):
         sample_points = UngriddedData.from_points_array(
             [HyperPoint(lat=1.0, lon=1.0), HyperPoint(lat=4.0, lon=4.0), HyperPoint(lat=-4.0, lon=-4.0)])
         col = GeneralUngriddedCollocator(fill_value=-999)
-        new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
+        new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal_only())[0]
         eq_(new_data.data[0], 8.0)
         eq_(new_data.data[1], 12.0)
         eq_(new_data.data[2], 4.0)
@@ -48,7 +48,7 @@ class Test_nn_horizontal_kdtree(object):
         # This point already exists on the cube with value 5 - which shouldn't be a problem
         sample_points = UngriddedData.from_points_array([HyperPoint(0.0, 0.0)])
         col = GeneralUngriddedCollocator(fill_value=-999)
-        new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
+        new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal_only())[0]
         eq_(new_data.data[0], 8.0)
 
     @istest
@@ -66,7 +66,7 @@ class Test_nn_horizontal_kdtree(object):
             [HyperPoint(2.5, 2.5), HyperPoint(-2.5, 2.5), HyperPoint(2.5, -2.5),
              HyperPoint(-2.5, -2.5)])
         col = GeneralUngriddedCollocator(fill_value=-999)
-        new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
+        new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal_only())[0]
         eq_(new_data.data[0], 11.0)
         eq_(new_data.data[1], 5.0)
         eq_(new_data.data[2], 10.0)
@@ -79,7 +79,7 @@ class Test_nn_horizontal_kdtree(object):
             [HyperPoint(5.5, 5.5), HyperPoint(-5.5, 5.5), HyperPoint(5.5, -5.5),
              HyperPoint(-5.5, -5.5)])
         col = GeneralUngriddedCollocator(fill_value=-999)
-        new_data = col.collocate(sample_points, ug_data, DummyConstraint(), nn_horizontal_kdtree())[0]
+        new_data = col.collocate(sample_points, ug_data, SepConstraintKdtree(), nn_horizontal_only())[0]
         eq_(new_data.data[0], 12.0)
         eq_(new_data.data[1], 6.0)
         eq_(new_data.data[2], 10.0)

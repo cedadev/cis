@@ -19,19 +19,6 @@ class TestUngriddedGriddedCollocate(BaseIntegrationTest):
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, ['ATX'])
 
-    def test_GIVEN_single_variable_WHEN_collocate_box_THEN_successful_collocation(self):
-        # Takes 13 s
-        variable = cis_test_files["NCAR_NetCDF_RAF"].data_variable_name
-        filename = cis_test_files["NCAR_NetCDF_RAF"].master_filename
-        sample_file = valid_echamham_filename
-        collocator_and_opts = 'box[h_sep=10],kernel=mean'
-        arguments = ['col', variable + ':' + escape_colons(filename),
-                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
-                     '-o', self.OUTPUT_FILENAME]
-        main_arguments = parse_args(arguments)
-        col_cmd(main_arguments)
-        self.check_output_contains_variables(self.OUTPUT_FILENAME, ['ATX'])
-
     def test_GIVEN_multiple_variables_on_same_coords_WHEN_collocate_THEN_successful_collocation(self):
         variables = valid_aerosol_cci_variable, valid_aerosol_cci_variable_2,
         filename = valid_aerosol_cci_filename
@@ -535,6 +522,20 @@ class TestUngriddedUngriddedCollocate(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         col_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, vars)
+
+    @skip_pyhdf
+    def test_Aeronet_onto_CloudSat_nn(self):
+        # Takes 5hrs
+        variable = "AOT_440,AOT_870"
+        filename = valid_aeronet_filename
+        sample_file = valid_cloudsat_PRECIP_file
+        collocator_and_opts = 'box[h_sep=700km],kernel=nn_horizontal_kdtree'
+        arguments = ['col', variable + ':' + escape_colons(filename),
+                     escape_colons(sample_file) + ':collocator=' + collocator_and_opts,
+                     '-o', self.OUTPUT_FILENAME]
+        main_arguments = parse_args(arguments)
+        col_cmd(main_arguments)
+        self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(","))
 
     @skip_pyhdf
     def test_Aeronet_onto_CloudSat(self):
