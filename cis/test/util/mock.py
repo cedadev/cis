@@ -964,6 +964,7 @@ def make_regular_2d_with_time_ungridded_data():
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
+    from cis.time_util import cis_standard_time_unit
 
     x_points = np.arange(-10, 11, 5)
     y_points = np.arange(-5, 6, 5)
@@ -974,7 +975,7 @@ def make_regular_2d_with_time_ungridded_data():
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
-    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
+    t = Coord(cis_standard_time_unit.date2num(times), Metadata(standard_name='time', units=cis_standard_time_unit))
 
     data = np.reshape(np.arange(15) + 1.0, (5, 3))
 

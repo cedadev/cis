@@ -100,7 +100,7 @@ class Coord(LazyData):
     def convert_standard_time_to_datetime(self):
         from cis.time_util import convert_std_time_to_datetime, cis_standard_time_unit
         if self.units == cis_standard_time_unit:
-            self._data = convert_std_time_to_datetime(self.data)
+            self.data = convert_std_time_to_datetime(self.data)
             self.units = "DateTime Object"
 
     def set_longitude_range(self, range_start):

@@ -29,7 +29,7 @@ def collocate(data, sample, collocator, constraint, kernel):
     t1 = time()
     try:
         new_data = collocator.collocate(sample, data, constraint, kernel)
-    except TypeError as e:
+    except (TypeError, AttributeError) as e:
         raise CoordinateNotFoundError('Collocator was unable to compare data points, check the dimensions of each '
                                       'data set and the collocation methods chosen. \n' + str(e))
 

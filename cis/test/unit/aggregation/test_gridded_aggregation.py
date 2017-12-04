@@ -24,7 +24,7 @@ class TestGriddedCollapse(TestCase):
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result, cube_out[0].data)
-        assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+        assert_arrays_almost_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     @istest
     def test_collapsing_coordinate_takes_start_end_but_ignores_them(self):
@@ -34,7 +34,7 @@ class TestGriddedCollapse(TestCase):
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result, cube_out[0].data)
-        assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+        assert_arrays_almost_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     @istest
     def test_can_name_variables_by_standard_name(self):
@@ -78,7 +78,7 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array(15)
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_aggregating_using_min_kernel_returns_minimums(self):
@@ -87,7 +87,7 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array(1)
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_aggregating_using_std_dev_kernel_returns_sample_standard_deviation(self):
@@ -96,8 +96,8 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array([numpy.sqrt(22.5), numpy.sqrt(22.5), numpy.sqrt(22.5)])
 
-        assert numpy.array_equal(result, cube_out[0].data)
-        assert numpy.array_equal(self.cube.coords('longitude')[0].points, cube_out.coords('longitude')[0].points)
+        assert_arrays_almost_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(self.cube.coords('longitude')[0].points, cube_out.coords('longitude')[0].points)
 
     @istest
     def test_aggregation_on_three_dimensional_grid_with_time(self):

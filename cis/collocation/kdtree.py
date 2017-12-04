@@ -395,6 +395,30 @@ class RectangleHaversine(RectangleBase):
         furthest_point = np.where(self.maxes - x > x - self.mins, self.maxes, self.mins)
         return haversine_distance(x, furthest_point)
 
+    def min_distance_rectangle(self, other):
+        """
+        Compute the minimum distance between points in the two hyperrectangles.
+
+        :param other: hyperrectangle
+            Input.
+        :param p: float
+            Input.
+
+        """
+        return haversine_distance([0.0, 0.0], np.maximum(0, np.maximum(self.mins - other.maxes, other.mins - self.maxes)))
+
+    def max_distance_rectangle(self, other):
+        """
+        Compute the maximum distance between points in the two hyperrectangles.
+
+        :param other: hyperrectangle
+            Input.
+        :param p: float, optional
+            Input.
+
+        """
+        return haversine_distance([0.0, 0.0], np.maximum(self.maxes - other.mins, other.maxes - self.mins))
+
 
 class KDTree(object):
     """
@@ -1233,6 +1257,69 @@ class HaversineDistanceKDTree(KDTree):
             return sorted([(-d, i) for (d, i) in neighbors])
         else:
             return sorted([((-d) ** (1. / p), i) for (d, i) in neighbors])
+
+    def query_ball_tree(self, other, r, p=2., eps=0):
+        """Find all pairs of points whose distance is at most r
+
+        :param other: KDTree instance
+            The tree containing points to search against.
+        :param r: float
+            The maximum distance, has to be positive.
+        :param p: float (NOT USED)
+        :param eps: float, optional
+            Approximate search.  Branches of the tree are not explored
+            if their nearest points are further than ``r/(1+eps)``, and
+            branches are added in bulk if their furthest points are nearer
+            than ``r * (1+eps)``.  `eps` has to be non-negative.
+
+        :returns:  list of lists
+            For each element ``self.data[i]`` of this tree, ``results[i]`` is a
+            list of the indices of its neighbors in ``other.data``.
+
+        """
+        results = [[] for i in range(self.n)]
+
+        def traverse_checking(node1, rect1, node2, rect2):
+            if rect1.min_distance_rectangle(rect2) > r / (1. + eps):
+                return
+            elif rect1.max_distance_rectangle(rect2) < r * (1. + eps):
+                traverse_no_checking(node1, node2)
+            elif isinstance(node1, KDTree.leafnode):
+                if isinstance(node2, KDTree.leafnode):
+                    d = other.data[node2.idx]
+                    for i in node1.idx:
+                        results[i] += node2.idx[haversine_distance(d, self.data[i]) <= r].tolist()
+                else:
+                    less, greater = rect2.split(node2.split_dim, node2.split)
+                    traverse_checking(node1, rect1, node2.less, less)
+                    traverse_checking(node1, rect1, node2.greater, greater)
+            elif isinstance(node2, KDTree.leafnode):
+                less, greater = rect1.split(node1.split_dim, node1.split)
+                traverse_checking(node1.less, less, node2, rect2)
+                traverse_checking(node1.greater, greater, node2, rect2)
+            else:
+                less1, greater1 = rect1.split(node1.split_dim, node1.split)
+                less2, greater2 = rect2.split(node2.split_dim, node2.split)
+                traverse_checking(node1.less, less1, node2.less, less2)
+                traverse_checking(node1.less, less1, node2.greater, greater2)
+                traverse_checking(node1.greater, greater1, node2.less, less2)
+                traverse_checking(node1.greater, greater1, node2.greater, greater2)
+
+        def traverse_no_checking(node1, node2):
+            if isinstance(node1, KDTree.leafnode):
+                if isinstance(node2, KDTree.leafnode):
+                    for i in node1.idx:
+                        results[i] += node2.idx.tolist()
+                else:
+                    traverse_no_checking(node1, node2.less)
+                    traverse_no_checking(node1, node2.greater)
+            else:
+                traverse_no_checking(node1.less, node2)
+                traverse_no_checking(node1.greater, node2)
+
+        traverse_checking(self.tree, RectangleHaversine(self.maxes, self.mins),
+                          other.tree, RectangleHaversine(other.maxes, other.mins))
+        return results
 
     def _query_ball_point(self, x, r, p=2., eps=0):
         R = RectangleHaversine(self.maxes, self.mins)
