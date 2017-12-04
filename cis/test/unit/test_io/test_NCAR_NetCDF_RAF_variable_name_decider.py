@@ -64,7 +64,7 @@ class TestDataReader(TestCase):
         expected_time_var = "time_var"
         variables = [{expected_time_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
-                      "Station_Lat": "27.2"}
+                      "Station_Lat": 27.2}
 
         with self.assertRaises(InvalidVariableError) as cm:
             NCAR_NetCDF_RAF_variable_name_selector(attributes, variables)
@@ -73,8 +73,8 @@ class TestDataReader(TestCase):
 
     def test_GIVEN_time_coordinate_station_lat_and_lon_variable_WHEN_construct_THEN_names_are_correct(self):
         expected_time_var = "time_var"
-        expected_station_latitude = "27.1"
-        expected_station_longitude = "10"
+        expected_station_latitude = 27.1
+        expected_station_longitude = 10
         variables = [{expected_time_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
                       "Station_Lat": expected_station_latitude,
@@ -93,8 +93,8 @@ class TestDataReader(TestCase):
 
     def test_GIVEN_station_alt_WHEN_construct_THEN_alt_set(self):
         expected_time_var = "time_var"
-        expected_station_latitude = "27.1"
-        expected_station_longitude = "10"
+        expected_station_latitude = 27.1
+        expected_station_longitude = 10
         expected_alt = 125.4
         variables = [{expected_time_var: self.MockVar()}]
         attributes = {"Time_Coordinate": expected_time_var,
@@ -109,8 +109,8 @@ class TestDataReader(TestCase):
     def test_GIVEN_station_coords_in_different_cases_WHEN_construct_THEN_values_are_correct(
             self):
         expected_time_var = "time_var"
-        expected_station_latitude = "27.1"
-        expected_station_longitude = "10"
+        expected_station_latitude = 27.1
+        expected_station_longitude = 10
         expected_alt = 125.4
         variables = [{expected_time_var: self.MockVar()}]
         attributes = {"tIME_CoorDinate": expected_time_var,
