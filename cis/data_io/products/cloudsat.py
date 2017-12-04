@@ -58,6 +58,42 @@ class CloudSat(AProduct):
             arrays.append(time)
         return utils.concatenate(arrays)
 
+    def _create_one_dimensional_coord_list(self, filenames):
+        from cis.time_util import cis_standard_time_unit
+        # list of coordinate variables we are interested in
+        variables = ['Latitude', 'Longitude', 'TAI_start', 'Profile_time']
+
+        # reading the various files
+        logging.info("Listing coordinates: " + str(variables))
+        sdata, vdata = hdf.read(filenames, variables)
+
+        # latitude
+        lat = vdata['Latitude']
+        lat_data = hdf.read_data(lat, self._get_cloudsat_vds_data)
+        lat_metadata = hdf.read_metadata(lat, "VD")
+        lat_metadata.shape = lat_data.shape
+        lat_coord = Coord(lat_data, lat_metadata)
+
+        # longitude
+        lon = vdata['Longitude']
+        lon_data = hdf.read_data(lon, self._get_cloudsat_vds_data)
+        lon_metadata = hdf.read_metadata(lon, "VD")
+        lon_metadata.shape = lon_data.shape
+        lon_coord = Coord(lon_data, lon_metadata)
+
+        # time coordinate
+        time_data = self._generate_time_array(vdata)
+        time_coord = Coord(time_data, Metadata(name='Profile_time', standard_name='time', shape=time_data.shape,
+                                               units=cis_standard_time_unit), "X")
+
+        # create object containing list of coordinates
+        coords = CoordList()
+        coords.append(lat_coord)
+        coords.append(lon_coord)
+        coords.append(time_coord)
+
+        return coords
+
     def _create_coord_list(self, filenames):
         from cis.time_util import cis_standard_time_unit
         # list of coordinate variables we are interested in
@@ -124,23 +160,18 @@ class CloudSat(AProduct):
     def create_data_object(self, filenames, variable):
         logging.debug("Creating data object for variable " + variable)
 
-        # reading coordinates
-        coords = self._create_coord_list(filenames)
-
         # reading of variables
         sdata, vdata = hdf.read(filenames, variable)
 
         # retrieve data + its metadata
         if variable in vdata:
-            # vdata should be expanded in the same way as the coordinates are expanded
-            try:
-                height_length = coords.get_coord('Height').shape[1]
-                var = utils.expand_1d_to_2d_array(hdf.read_data(vdata[variable], self._get_cloudsat_vds_data),
-                                                  height_length, axis=1)
-            except CoordinateNotFoundError:
-                var = hdf.read_data(vdata[variable], self._get_cloudsat_vds_data)
+            # reading (un-expanded) coordinates, since the data is 1-dimensional
+            coords = self._create_one_dimensional_coord_list(filenames)
+            var = hdf.read_data(vdata[variable], self._get_cloudsat_vds_data)
             metadata = hdf.read_metadata(vdata[variable], "VD")
         elif variable in sdata:
+            # reading coordinates
+            coords = self._create_coord_list(filenames)
             var = hdf.read_data(sdata[variable], self._get_cloudsat_sds_data)
             metadata = hdf.read_metadata(sdata[variable], "SD")
         else:

@@ -29,3 +29,4 @@ Bugs fixed
  * [JASCIS-373] get_variable_names now gets passed the product argument from read_data_list
  * Fix #11 by relying on shapely exception which moved
  * [JASCIS-375] Ensure the mask is retained when expanding coordinates from 1d to 2d
+ * The Cloudsat reader no longer expands coordinate arrays for 1-d datasets (such as ice-water path)
