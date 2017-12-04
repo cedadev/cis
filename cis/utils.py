@@ -117,15 +117,20 @@ def expand_1d_to_2d_array(array, length, axis=0):
     :param axis:
     :return:
     """
-    from numpy.lib.stride_tricks import broadcast_to
+    from numpy.ma import MaskedArray
 
     if axis == 0:
-        array_2d = broadcast_to(array, (length, array.size))
-        # array_2d = np.lib.stride_tricks.as_strided(array_1d, (length, array_1d.size), (0, array_1d.itemsize))
+        new_shape = (length, array.size)
+        reshaped = array
     else:
+        new_shape = (array.size, length)
         reshaped = array.reshape(array.size, 1)
-        array_2d = broadcast_to(reshaped, (array.size, length))
-        # array_2d = np.lib.stride_tricks.as_strided(array_1d, (array_1d.size, length), (array_1d.itemsize, 0))
+
+    array_2d = np.broadcast_to(reshaped, new_shape, subok=True)
+
+    # Broadcast the mask too (this gets lost otherwise)
+    if isinstance(array, MaskedArray):
+        array_2d.mask = np.broadcast_to(reshaped.mask, new_shape)
 
     return array_2d
 

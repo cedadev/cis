@@ -26,3 +26,4 @@ Bugs fixed
  * Fixed an issue where `UngriddedData.copy()` didn't copy metadata
  * [JASCIS-373] get_variable_names now gets passed the product argument from read_data_list
  * Fix #11 by relying on shapely exception which moved
+ * [JASCIS-375] Ensure the mask is retained when expanding coordinates from 1d to 2d
