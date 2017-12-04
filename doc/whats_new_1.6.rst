@@ -11,6 +11,7 @@ CIS 1.6 features
  * Implemented ungridded - ungridded collocation performance improvements (#9)
  * Improved reading of NCAR-RAF style NetCDF files
  * Performance improvement when reading many (100s of) NetCDF files
+ * Improved support for reading CALIOP L2 data
 
 Incompatible changes
 ====================
