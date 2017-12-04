@@ -6,10 +6,11 @@ What's new in CIS 1.6
 This page documents the new features added, and bugs fixed in CIS since version 1.5.0. See all changes here: https://github.com/cedadev/cis/compare/1.5.4...1.6.0
 
 
-CIS 1.5 features
+CIS 1.6 features
 ================
  * Implemented ungridded - ungridded collocation performance improvements (#9)
-
+ * Improved reading of NCAR-RAF style NetCDF files
+ * Performance improvement when reading many (100s of) NetCDF files
 
 Incompatible changes
 ====================
