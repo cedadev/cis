@@ -68,6 +68,7 @@ def collocate(points, data, kernel=None, fill_value=None, missing_data_for_missi
     log_memory_profile("GeneralGriddedCollocator Created output coord map")
 
     # TODO <<___ probably belongs one layer up and should be iris specific
+    # TODO - Need to think about how bounds work for xarray objects
 
     index.index_data(coords, data_points, coord_map)
     data_index.create_indexes(kernel, points, data_points, coord_map)
@@ -158,3 +159,80 @@ def _create_collocated_cube(src_data, data, coords):
                        units=src_data.units,
                        dim_coords_and_dims=dim_coords_and_dims)
     return cube
+
+
+# TODO - These all need removing and replacing. I should be able to just match on variable name and assume this has been
+#  taken care of higher up
+def find_standard_coords(data):
+    """Constructs a list of the standard coordinates.
+    The standard coordinates are latitude, longitude, altitude, air_pressure and time; they occur in the return
+    list in this order.
+    :return: list of coordinates or None if coordinate not present
+    """
+    ret_list = []
+
+    coords = data.coords(dim_coords=True)
+    for name in HyperPoint.standard_names:
+        coord_and_dim = None
+        for idx, coord in enumerate(coords):
+            if coord.standard_name == name:
+                coord_and_dim = (coord, idx)
+                break
+        ret_list.append(coord_and_dim)
+
+    return ret_list
+
+
+def make_coord_map(points, data):
+    """
+    Create a map for how coordinates from the sample points map to the standard hyperpoint coordinates. Ignoring
+    coordinates which are not present in the data
+    :param points: sample points
+    :param data: data to map
+    :return: list of tuples, each tuple is index of coordinate to use
+    tuple is (hyper point coord index, sample point coord index, output coord index)
+    """
+    # If there are coordinates in the sample grid that are not present for the data,
+    # omit the from the set of coordinates in the output grid. Find a mask of coordinates
+    # that are present to use when determining the output grid shape.
+
+    # TODO The find_standard_coords method no longer exists so I'll have to come up with another way of doing this...
+    #  It should be easier using Iris coords rather than HyperPoints anyway
+
+    coordinate_mask = [False if c is None else True for c in find_standard_coords(data)]
+
+    # Find the mapping of standard coordinates to those in the sample points and those to be used
+    # in the output data.
+    # TODO
+    # Find the mapping of standard coordinates to those in the sample points and those to be used
+    # in the output data.
+    return _find_standard_coords(points, coordinate_mask)
+
+
+def _find_standard_coords(cube, coordinate_mask):
+    """Finds the mapping of sample point coordinates to the standard ones used by HyperPoint.
+
+    :param cube: cube among the coordinates of which to find the standard coordinates
+    :param coordinate_mask: list of booleans indicating HyperPoint coordinates that are present
+    :return: list of tuples relating index in HyperPoint to index in coords and in coords to be iterated over
+    """
+    coord_map = []
+    cube_coord_lookup = {}
+
+    cube_coords = cube.coords()
+    for idx, coord in enumerate(cube_coords):
+        cube_coord_lookup[coord] = idx
+
+    shape_idx = 0
+    for hpi, name in enumerate(HyperPoint.standard_names):
+        if coordinate_mask[hpi]:
+            # Get the dimension coordinates only - these correspond to dimensions of data array.
+            cube_coords = cube.coords(standard_name=name, dim_coords=True)
+            if len(cube_coords) > 1:
+                msg = ('Expected to find exactly 1 coordinate, but found %d. They were: %s.'
+                       % (len(cube_coords), ', '.join(coord.name() for coord in cube_coords)))
+                raise cis.exceptions.CoordinateNotFoundError(msg)
+            elif len(cube_coords) == 1:
+                coord_map.append((hpi, cube_coord_lookup[cube_coords[0]], shape_idx))
+                shape_idx += 1
+    return coord_map
