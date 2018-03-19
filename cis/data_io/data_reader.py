@@ -144,7 +144,7 @@ class DataReader(object):
 
                  {'filenames': ['filename1.nc', 'filename2.nc'],
                    'variables': ['variable1', 'variable2'],
-                   'product' : 'Aerosol_CCI'}
+                   'product' : 'Aerosol_CCI_L2'}
 
         :return list: A list of CommonData objects (either GriddedData or UngriddedData, *or a combination*)
         """
@@ -170,7 +170,7 @@ class DataReader(object):
 
                  {'filenames': ['filename1.nc', 'filename2.nc'],
                    'variables': ['variable1', 'variable2'],
-                   'product' : 'Aerosol_CCI'}
+                   'product' : 'Aerosol_CCI_L2'}
 
         :return CommonDataList: Either a GriddedDataLise or an UngriddedDataList
         """

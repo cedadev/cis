@@ -35,7 +35,7 @@ def read_data(filenames, variable, product=None):
      include all files in that directory, or wildcards such as ``*`` or ``?``.
     :type filenames: string or list
     :param str variable: The variable to read from the files
-    :param str product:  The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
+    :param str product:  The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI_L2``).
     :return:  The specified data as either a :class:`GriddedData` or :class:`UngriddedData` object.
     """
     data_list = read_data_list(filenames, variable, product)
@@ -54,7 +54,7 @@ def read_data_list(filenames, variables, product=None, aliases=None):
     :type filenames: string or list
     :param variables: One or more variables to read from the files
     :type variables: string or list
-    :param str product: The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
+    :param str product: The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI_L2``).
     :param aliases: List of aliases to put on each variable's data object as an alternative means of identifying them.
     :type aliases: string or list
     :return:  A list of the data read out (either a :class:`GriddedDataList` or :class:`UngriddedDataList` depending on
@@ -78,7 +78,7 @@ def get_variables(filenames, product=None, type=None):
      separated list, or a :class:`list` of string filenames. Filenames can include directories which will be expanded to
      include all files in that directory, or wildcards such as ``*`` or ``?``.
     :type filenames: string or list
-    :param str product: The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI``).
+    :param str product: The name of the data reading plugin to use to read the data (e.g. ``Cloud_CCI_L2``).
     :param str type: The type of HDF data to read, i.e. 'VD' or 'SD'
     :return:  A list of the variables
     """

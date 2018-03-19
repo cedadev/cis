@@ -51,25 +51,25 @@ class CCI(object):
         return UngriddedData(var[variable], metadata, coords)
 
 
-class Cloud_CCI(CCI, AProduct):
+class Cloud_CCI_L2(CCI, AProduct):
 
     def get_file_signature(self):
-        return [r'.*ESACCI.*CLOUD.*']
+        return [r'.*ESACCI-L2-CLOUD.*']
 
     def _fix_time(self, coord):
         coord.convert_julian_to_std_time()
         return coord
 
     def get_file_format(self, filenames):
-        return "NetCDF/Cloud_CCI"
+        return "NetCDF/Cloud_CCI_L2"
 
 
-class Aerosol_CCI(CCI, AProduct):
+class Aerosol_CCI_L2(CCI, AProduct):
 
     valid_dimensions = ["pixel_number"]
 
     def get_file_signature(self):
-        return [r'.*ESACCI.*AEROSOL.*']
+        return [r'.*ESACCI-L2P_AEROSOL.*']
 
     def _fix_time(self, coord):
         import datetime
@@ -77,4 +77,4 @@ class Aerosol_CCI(CCI, AProduct):
         return coord
 
     def get_file_format(self, filename):
-        return "NetCDF/Aerosol_CCI"
+        return "NetCDF/Aerosol_CCI_L2"
