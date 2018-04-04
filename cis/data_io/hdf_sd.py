@@ -105,6 +105,18 @@ class HDF_SDS(object):
         finally:
             self._close_sds()
 
+    def dimensions(self):
+        """
+        Call pyhdf.SD.SDS.dimensions(), opening and closing the file
+        """
+        from collections import OrderedDict
+        try:
+            self._open_sds()
+            var_description = self._sd.datasets()[self._variable]
+            return OrderedDict(zip(var_description[0], var_description[1]))
+        finally:
+            self._close_sds()
+
 
 def read(filename, variables=None, datadict=None):
     """
