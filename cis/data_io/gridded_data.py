@@ -18,8 +18,6 @@ def load_cube(*args, **kwargs):
     :raises ValueError: If 0 or more than one cube is found
     """
     from iris.exceptions import MergeError, ConcatenateError
-    # Removes warnings and prepares for future Iris change
-    iris.FUTURE.netcdf_promote = True
 
     cubes = iris.load(*args, **kwargs)
 
