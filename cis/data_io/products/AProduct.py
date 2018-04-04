@@ -2,7 +2,6 @@ from abc import ABCMeta, abstractmethod
 import logging
 import traceback
 from cis.exceptions import FileFormatError
-from cis.data_io.aeronet import get_aeronet_file_variables
 from cis.data_io.hdf import get_hdf4_file_variables
 from cis.data_io.netcdf import get_netcdf_file_variables, remove_variables_with_non_spatiotemporal_dimensions
 from cis import __version__
@@ -91,8 +90,6 @@ class AProduct(object):
                     data_type = "SD"
                 sd_vars, vd_vars = get_hdf4_file_variables(filename, data_type)
                 file_variables = list((sd_vars or {}).keys()) + list((vd_vars or {}).keys())
-            elif filename.endswith(".lev20"):
-                file_variables = get_aeronet_file_variables(filename)
             variables.extend(file_variables)
         return set(variables)
 

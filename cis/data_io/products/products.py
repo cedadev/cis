@@ -119,6 +119,15 @@ class Aeronet(AProduct):
                              Metadata(name=name, long_name=variable, shape=(len(data_obj),), units=units,
                                       missing_value=-999.0), coords)
 
+    def get_variable_names(self, filenames, data_type=None):
+        from cis.data_io.aeronet import get_aeronet_file_variables
+
+        variables = []
+        for filename in filenames:
+            file_variables = get_aeronet_file_variables(filename)
+            variables.extend(file_variables)
+        return set(variables)
+
 
 class ASCII_Hyperpoints(AProduct):
     def get_file_signature(self):
