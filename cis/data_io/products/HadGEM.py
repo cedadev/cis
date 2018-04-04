@@ -118,4 +118,7 @@ class HadGEM_PP(NetCDF_Gridded):
         try:
             cube.var_name = var_name
         except ValueError as e:
-            logging.info("Unable to set var_name due to error: {}".format(e))
+            try:
+                cube.var_name = var_name.replace(' ', '_')
+            except ValueError as e:
+                logging.info("Unable to set var_name due to error: {}".format(e))
