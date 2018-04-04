@@ -79,7 +79,7 @@ class cis(AProduct):
 
 class Aeronet(AProduct):
     def get_file_signature(self):
-        return [r'.*\.lev20']
+        return [r'.*\.lev20', r'.*\.ONEILL_lev20', r'.*\.ONEILL_20']
 
     def _create_coord_list(self, filenames, data=None):
         from cis.data_io.ungridded_data import Metadata
@@ -109,11 +109,17 @@ class Aeronet(AProduct):
         data_obj = load_multiple_aeronet(filenames, [variable])
 
         coords = self._create_coord_list(filenames, data_obj)
-        # The name is text before any brackets, the units is what's after it (minus the closing bracket)
-        name_units = variable.split('(')
-        name = name_units[0]
-        # For Aeronet we can assume that if there are no units then it is unitless (AOT, Angstrom exponent, etc)
-        units = name_units[1][:-1] if len(name_units) > 1 else '1'
+
+        if variable[-1] == ')':
+            # The name is text before any brackets, the units is what's after it (minus the closing bracket)
+            name_units = variable.split('(')
+            name = name_units[0]
+            # For Aeronet we can assume that if there are no units then it is unitless (AOT, Angstrom exponent, etc)
+            units = name_units[1][:-1] if len(name_units) > 1 else '1'
+        else:
+            # SDA variable names include () that don't specify units. Ignoring Exact_Wavelengths.
+            name = variable
+            units = '1'
 
         return UngriddedData(data_obj[variable],
                              Metadata(name=name, long_name=variable, shape=(len(data_obj),), units=units,
@@ -127,6 +133,16 @@ class Aeronet(AProduct):
             file_variables = get_aeronet_file_variables(filename)
             variables.extend(file_variables)
         return set(variables)
+
+    def get_file_format(self, filename):
+        from cis.data_io.aeronet import get_aeronet_version
+
+        version, sda, man = get_aeronet_version(filename)
+
+        topformat = "ASCII/MAN" if man else "ASCII/AERONET"
+        if sda:
+            topformat += "-SDA"
+        return topformat + "/{:d}".format(version)
 
 
 class ASCII_Hyperpoints(AProduct):
