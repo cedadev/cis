@@ -18,12 +18,12 @@ def get_aeronet_file_variables(filename):
     return [var.strip() for var in vars]
 
 
-def load_multiple_aeronet(fnames, variables=None):
+def load_multiple_aeronet(filenames, variables=None):
     from cis.utils import add_element_to_list_in_dict, concatenate
 
     adata = {}
 
-    for filename in fnames:
+    for filename in filenames:
         logging.debug("reading file: " + filename)
 
         # reading in all variables into a dictionary:
@@ -38,14 +38,14 @@ def load_multiple_aeronet(fnames, variables=None):
     return adata
 
 
-def load_aeronet(fname, variables=None):
+def load_aeronet(filename, variables=None):
     """
     loads aeronet lev 2.0 csv file.
 
         Originally from http://code.google.com/p/metamet/
         License: GNU GPL v3
 
-    :param fname: data file name
+    :param filename: data file name
     :param variables: A list of variables to return
     :return: A dictionary of variables names and numpy arrays containing the data for that variable
     """
@@ -57,7 +57,7 @@ def load_aeronet(fname, variables=None):
 
     std_day = cis_standard_time_unit.num2date(0)
 
-    ordered_vars = get_aeronet_file_variables(fname)
+    ordered_vars = get_aeronet_file_variables(filename)
 
     def date2daynum(datestr):
         the_day = datetime(int(datestr[-4:]), int(datestr[3:5]), int(datestr[:2]))
@@ -68,14 +68,14 @@ def load_aeronet(fname, variables=None):
         return td.total_seconds()/(24.0*60.0*60.0)
 
     try:
-        rawd = np.genfromtxt(fname, skip_header=5, delimiter=',', names=ordered_vars,
+        rawd = np.genfromtxt(filename, skip_header=5, delimiter=',', names=ordered_vars,
                              converters={0: date2daynum, 1: time2fractionalday, 'Last_Processing_Date': date2daynum},
                              dtype=np.float64, missing_values='N/A', usemask=True)
     except (StopIteration, IndexError) as e:
         raise IOError(e)
 
     lend = len(rawd)
-    # The date and time column are already in days since cis standard time, and fractional days respectively, so we can 
+    # The date and time column are already in days since cis standard time, and fractional days respectively, so we can
     # just add them together
     # Find the columns by number rather than name as some older versions of numpy mangle the special characters
     datetimes = rawd[rawd.dtype.names[0]] + rawd[rawd.dtype.names[1]]
@@ -92,7 +92,7 @@ def load_aeronet(fname, variables=None):
                 # Again, we can't trust the numpy names so we have to use our pre-read names to index the right column
                 data_dict[key] = rawd[rawd.dtype.names[ordered_vars.index(key)]]
             except ValueError:
-                raise InvalidVariableError(key + " does not exist in " + fname)
+                raise InvalidVariableError(key + " does not exist in " + filename)
 
     data_dict["datetime"] = ma.array(datetimes)
     data_dict["longitude"] = ma.array(lon)

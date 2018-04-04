@@ -107,7 +107,7 @@ class AProduct(object):
         number.
 
         :param str filename: Filename of file to be inspected
-        :returns: File format, of the form ``[parent/]format/specific instance/version``, or the class name
+        :return: File format, of the form ``[parent/]format/specific instance/version``, or the class name
         :rtype: str
         :raises: FileFormatError if there is an error
         """

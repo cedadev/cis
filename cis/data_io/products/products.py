@@ -179,4 +179,3 @@ class ASCII_Hyperpoints(AProduct):
         Returns the file format
         """
         return "ASCII/ASCIIHyperpoints"
-

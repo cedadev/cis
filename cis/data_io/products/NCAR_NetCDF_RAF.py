@@ -130,7 +130,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         Throws InvalidVariableError if the attribute or variable does not exist
         :param attribute_name: the name of the attribute to read
         :param coordinate_display_name: the display name of the attribute read
-        :returns: the variable name
+        :return: the variable name
         """
         if attribute_name.lower() in self._attributes[0]:
             variable_name = self._attributes[0][attribute_name.lower()]
@@ -519,7 +519,7 @@ class NCAR_NetCDF_RAF(AProduct):
             m = get_metadata(d)
             m.standard_name = standard_name
             coordinate_data_objects.append(Coord(d, m, coord_axis))
-        
+
         return Coord.from_many_coordinates(coordinate_data_objects)
 
     def _create_time_coord(self, timestamp, time_variable_name, data_variables, coord_axis='T', standard_name='time'):
@@ -585,7 +585,7 @@ class NCAR_NetCDF_RAF(AProduct):
         Return the file format, in general this string is parent format/specific instance/version
         e.g. NetCDF/GASSP/1.0
         :param str filename: Filename of a an example file from the dataset
-        :returns: File format, of the form parent format/specific instance/version
+        :return: File format, of the form parent format/specific instance/version
         :rtype: str
         :raises: FileFormatError if files type is not determinable
         """
