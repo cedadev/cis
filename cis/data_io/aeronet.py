@@ -141,86 +141,58 @@ def load_multiple_aeronet(filenames, variables=None):
 
 def load_aeronet(filename, variables=None):
     """
-    loads aeronet lev 2.0 csv file.
-
-        Originally from http://code.google.com/p/metamet/
-        License: GNU GPL v3
+    Loads aeronet csv file.
 
     :param filename: data file name
     :param variables: A list of variables to return
     :return: A dictionary of variables names and numpy arrays containing the data for that variable
     """
-    import numpy as np
-    from numpy import ma
-    from datetime import datetime, timedelta
-    from cis.time_util import cis_standard_time_unit
     from cis.exceptions import InvalidVariableError
-
-    std_day = cis_standard_time_unit.num2date(0)
+    from cis.time_util import cis_standard_time_unit
+    from copy import copy
+    from numpy.ma import masked_invalid
+    from pandas import read_csv, to_datetime
 
     version = get_aeronet_version(filename)
     ordered_vars = get_aeronet_file_variables(filename, version)
     if len(ordered_vars) == 0:
         return {}
 
-    def date2daynum(datestr):
-        the_day = datetime(int(datestr[-4:]), int(datestr[3:5]), int(datestr[:2]))
-        return float((the_day - std_day).days)
+    # Load all available geolocation information and any requested variables
+    cols = [var for var in ("date", "time", "latitude", "longitude", "altitude") if var in ordered_vars]
+    if cols is not None:
+        cols.extend(variables)
 
-    def time2fractionalday(timestr):
-        td = timedelta(hours=int(timestr[:2]), minutes=int(timestr[3:5]), seconds=int(timestr[6:8]))
-        return td.total_seconds()/(24.0*60.0*60.0)
+    dtypes = {var:'str' if var in ("date", "time") else "float" for var in cols}
 
     try:
-        rawd = np.genfromtxt(filename, skip_header=AERONET_HEADER_LENGTH[version], delimiter=',', names=ordered_vars,
-                             converters={0: date2daynum, 1: time2fractionalday, 'Last_Processing_Date': date2daynum},
-                             dtype=np.float64, missing_values=AERONET_MISSING_VALUE[version], usemask=True,
-                             invalid_raise=False)
-        # Turn off exceptions for invalid lines as they're not uncommon in Aeronet files
-    except (StopIteration, IndexError) as e:
-        raise IOError(e)
+        rawd = read_csv(filename, sep=",", header=AERONET_HEADER_LENGTH[version]-1, names=ordered_vars,
+                        index_col=False, usecols=cols, na_values=AERONET_MISSING_VALUE[version], dtype=dtypes,
+                        parse_dates={"datetime":["date", "time"]}, infer_datetime_format=True, dayfirst=True,
+                        error_bad_lines=False, warn_bad_lines=True, #low_memory="All_Sites_Times_All_Points" in filename
+        )
+    except ValueError:
+        raise InvalidVariableError("{} not available in {}".format(variables, filename))
 
-    lend = len(rawd)
-    # The date and time column are already in days since cis standard time, and fractional days respectively, so we can
-    # just add them together
-    # Find the columns by number rather than name as some older versions of numpy mangle the special characters
-    datetimes = rawd[rawd.dtype.names[0]] + rawd[rawd.dtype.names[1]]
+    # Empty file
+    if rawd.shape[0] == 0:
+        return {"datetime":[], "latitude":[], "longitude":[], "altitude":[]}
 
-    # Geolocation information is stored in different places for different file versions
-    if man:
-        # MAN data lists the lat/lon in each line
-        lon = rawd["Longitude"]
-        lat = rawd["Latitude"]
-        alt = 0.
+    # Convert pandas Timestamps into CIS standard numbers
+    rawd["datetime"] = [cis_standard_time_unit.date2num(timestamp.to_pydatetime())
+                        for timestamp in to_datetime(rawd["datetime"], format='%d:%m:%Y %H:%M:%S')]
 
-    elif version == 2:
-        # Specified in header
+    # Add position metadata that isn't listed in every line for some formats
+    if version.startswith("MAN"):
+        rawd["altitude"] = 0.
+
+    elif version.endswith("2"):
         metadata = get_file_metadata(filename)
-        lon = np.zeros(lend) + float(metadata.misc[2][1].split("=")[1])
-        lat = np.zeros(lend) + float(metadata.misc[2][2].split("=")[1])
-        alt = np.zeros(lend) + float(metadata.misc[2][3].split("=")[1])
+        rawd["longitude"] = float(metadata.misc[2][1].split("=")[1])
+        rawd["latitude"] = float(metadata.misc[2][2].split("=")[1])
+        rawd["altitude"] = float(metadata.misc[2][3].split("=")[1])
 
-    elif version == 3:
-        # Geolocation now in each line
-        lon = np.unique(rawd[rawd.dtype.names[ordered_vars.index("Site_Longitude(Degrees)")]])
-        lat = np.unique(rawd[rawd.dtype.names[ordered_vars.index("Site_Latitude(Degrees)")]])
-        alt = np.unique(rawd[rawd.dtype.names[ordered_vars.index("Site_Elevation(m)")]])
-
-    data_dict = {}
-    if variables is not None:
-        for key in variables:
-            try:
-                # Again, we can't trust the numpy names so we have to use our pre-read names to index the right column
-                data_dict[key] = rawd[rawd.dtype.names[ordered_vars.index(key)]]
-            except ValueError:
-                raise InvalidVariableError(key + " does not exist in " + filename)
-
-    data_dict["datetime"] = ma.array(datetimes)
-    data_dict["longitude"] = ma.array(lon)
-    data_dict["latitude"] = ma.array(lat)
-    data_dict["altitude"] = ma.array(alt)
-
-    return data_dict
+    return {var : masked_invalid(arr) for var, arr in rawd.items()}
 
 
 def get_file_metadata(filename, variable='', shape=None):
