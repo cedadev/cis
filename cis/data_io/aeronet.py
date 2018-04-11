@@ -10,6 +10,26 @@ AERONET_MISSING_VALUE = {"AERONET-SDA/2" : 'N/A', "AERONET/2" :'N/A', "MAN-SDA/2
 V2_HEADER = "Version 2 Direct Sun Algorithm"
 V3_HEADER = "AERONET Version 3;"
 
+AERONET_COORDINATE_RENAME = {
+    "Date(dd:mm:yy)" : "date",
+    "Date(dd-mm-yy)" : "date",
+    "Date(dd:mm:yyyy)" : "date",
+    "Date(dd-mm-yyyy)" : "date",
+    "Date_(dd:mm:yy)" : "date",
+    "Date_(dd-mm-yy)" : "date",
+    "Date_(dd:mm:yyyy)" : "date",
+    "Date_(dd-mm-yyyy)" : "date",
+    "Time(hh:mm:ss)" : "time",
+    "Time(hh-mm-ss)" : "time",
+    "Time_(hh:mm:ss)" : "time",
+    "Time_(hh-mm-ss)" : "time",
+    "Latitude" : "latitude",
+    "Longitude" : "longitude",
+    "Site_Latitude(Degrees)" : "latitude",
+    "Site_Longitude(Degrees)" : "longitude",
+    "Site_Elevation(m)" : "altitude",
+}
+
 def get_slice_of_lines_from_file(filename, start, end):
     """Grab a subset of lines from a file, defined using slice-style start:end.
 
@@ -51,6 +71,7 @@ def get_aeronet_file_variables(filename, version=None):
     :param filename: Full path to the file to read
     :return: A list of Aeronet variable names in the order they appear in the file
     """
+    from collections import Counter
 
     if version is None:
         version = get_aeronet_version(filename)
@@ -65,22 +86,37 @@ def get_aeronet_file_variables(filename, version=None):
     variables = first_line.replace("\n", "").split(",")
 
     # The SDA files don't list all of the columns
-    if vars[-1] == "Exact_Wavelengths_for_Input_AOD(um)" or vars[-1] == "Exact_Wavelengths_for_Input_AOD(nm)":
-        original_name = vars.pop(-1)
+    if variables[-1] == "Exact_Wavelengths_for_Input_AOD(um)" or variables[-1] == "Exact_Wavelengths_for_Input_AOD(nm)":
+        original_name = variables[-1]
 
-        # Find all of the valid wavelengths from the first data line
-        values = linecache.getline(filename, AERONET_HEADER_LENGTH[version]+1).split(",")
-        for var, value in zip(vars, values):
-            try:
-                if var.endswith("_Input_AOD") and float(value) != -999.0:
-                    vars.append(original_name + "_" + var[:var.index("_")])
-            except ValueError:
-                pass
+        # Find the number of wavelengths from the first data line
+        values = second_line.split(",")
+        n_wavelengths = int(values[len(variables)-2])
+        for i in range(n_wavelengths-1):
+            variables.append(original_name)
 
-    for i in range(0, len(vars)):
+    repeated_items = {var:-1 for var, num in Counter(variables).items() if num > 1}
+
+    final_variables = []
+    for var in variables:
+        # Add a numerical counter to repeated variable names
+        if var in repeated_items:
+            repeated_items[var] += 1
+            var += ".{}".format(repeated_items[var])
+
+        # Remove nonstandard characters
         for char in defaultdeletechars:
-            vars[i] = vars[i].replace(char, "")
-    return [var.strip() for var in vars]
+            var = var.replace(char, "")
+
+        var = var.strip()
+
+        # Enforce standardised names for the coordinate fields
+        try:
+            final_variables.append(AERONET_COORDINATE_RENAME[var])
+        except KeyError:
+            final_variables.append(var)
+
+    return final_variables
 
 
 def load_multiple_aeronet(filenames, variables=None):
