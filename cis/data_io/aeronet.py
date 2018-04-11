@@ -2,8 +2,10 @@ import logging
 
 defaultdeletechars = """~!@#$%^&*=+~\|]}[{'; /?.>,<"""
 
-AERONET_HEADER_LENGTH = {2 : 5, 3 : 7}
-AERONET_MISSING_VALUE = {2 : 'N/A', 3 : -999.0}
+AERONET_HEADER_LENGTH = {"AERONET-SDA/2" : 5, "AERONET/2" : 5, "MAN-SDA/2" : 5, "MAN/2" : 5,
+                         "AERONET-SDA/3" : 7, "AERONET/3" : 7}
+AERONET_MISSING_VALUE = {"AERONET-SDA/2" : 'N/A', "AERONET/2" :'N/A', "MAN-SDA/2" : -999.0, "MAN/2" : (-999.0, -10000),
+                         "AERONET-SDA/3" : -999.0, "AERONET/3" : -999.0}
 
 V2_HEADER = "Version 2 Direct Sun Algorithm"
 V3_HEADER = "AERONET Version 3;"
@@ -20,9 +22,7 @@ def get_aeronet_version(filename):
     """
     Classifies the format of an Aeronet file based on it's header.
     :param filename: Full path to the file to read.
-    :return tuple: 0) an integer giving the Aeronet version number (2 or 3).
-       1) a bool flagging if the file is for the Spectral De-convolution Algorithm (SDA).
-       2) a bool flagging if the file is from the Maritime Aerosol Network (MAN).
+    :return str: AERONET or MAN, followed by an optional -SDA, and /# where # is the version number.
     """
     from cis.exceptions import FileFormatError
 
@@ -32,26 +32,28 @@ def get_aeronet_version(filename):
     sda = "SDA" in first_line
 
     if man:
-        return 2, sda, man
+        return "MAN-SDA/2" if sda else "MAN/2"
 
     if first_line.startswith(V3_HEADER):
-        return 3, sda, man
+        return "AERONET-SDA/3" if sda else "AERONET/3"
 
     if second_line.startswith(V2_HEADER):
-        return 2, sda, man
+        return "AERONET-SDA/2" if sda else "AERONET/2"
 
     raise FileFormatError(["Unable to determine Aeronet file version", filename],
                           "Unable to determine Aeronet file version " + filename)
 
 
-def get_aeronet_file_variables(filename):
+def get_aeronet_file_variables(filename, version=None):
     """
     Return a list of valid Aeronet file variables with invalid characters removed. We need to remove invalid characters
     primarily for writing back out to CF-compliant NetCDF.
     :param filename: Full path to the file to read
     :return: A list of Aeronet variable names in the order they appear in the file
     """
-    version, _, _ = get_aeronet_version(filename)
+
+    if version is None:
+        version = get_aeronet_version(filename)
 
     try:
         first_line, second_line = get_slice_of_lines_from_file(filename, AERONET_HEADER_LENGTH[version]-1,
@@ -120,9 +122,10 @@ def load_aeronet(filename, variables=None):
 
     std_day = cis_standard_time_unit.num2date(0)
 
-    ordered_vars = get_aeronet_file_variables(filename)
-
-    version, _, man = get_aeronet_version(filename)
+    version = get_aeronet_version(filename)
+    ordered_vars = get_aeronet_file_variables(filename, version)
+    if len(ordered_vars) == 0:
+        return {}
 
     def date2daynum(datestr):
         the_day = datetime(int(datestr[-4:]), int(datestr[3:5]), int(datestr[:2]))
@@ -190,7 +193,7 @@ def get_file_metadata(filename, variable='', shape=None):
 
     if variable is None:
         variable = ''
-    version, _, _ = get_aeronet_version(filename)
+    version = get_aeronet_version(filename)
     metadata = Metadata(name=variable, long_name=variable, shape=shape)
     lines = []
     for i in range(0, AERONET_HEADER_LENGTH[version]-1):

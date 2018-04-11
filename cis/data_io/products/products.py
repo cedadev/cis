@@ -137,12 +137,7 @@ class Aeronet(AProduct):
     def get_file_format(self, filename):
         from cis.data_io.aeronet import get_aeronet_version
 
-        version, sda, man = get_aeronet_version(filename)
-
-        topformat = "ASCII/MAN" if man else "ASCII/AERONET"
-        if sda:
-            topformat += "-SDA"
-        return topformat + "/{:d}".format(version)
+        return "ASCII" + get_aeronet_version(filename)
 
 
 class ASCII_Hyperpoints(AProduct):
