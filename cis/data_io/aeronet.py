@@ -8,6 +8,14 @@ AERONET_MISSING_VALUE = {2 : 'N/A', 3 : -999.0}
 V2_HEADER = "Version 2 Direct Sun Algorithm"
 V3_HEADER = "AERONET Version 3;"
 
+def get_slice_of_lines_from_file(filename, start, end):
+    """Grab a subset of lines from a file, defined using slice-style start:end.
+
+    This uses less memory than the equivalent linecache.getline()."""
+    from itertools import islice
+    with open(filename) as fileobj:
+        return list(islice(fileobj, start, end))
+
 def get_aeronet_version(filename):
     """
     Classifies the format of an Aeronet file based on it's header.
@@ -16,11 +24,9 @@ def get_aeronet_version(filename):
        1) a bool flagging if the file is for the Spectral De-convolution Algorithm (SDA).
        2) a bool flagging if the file is from the Maritime Aerosol Network (MAN).
     """
-    import linecache
     from cis.exceptions import FileFormatError
 
-    first_line = linecache.getline(filename, 1)
-    second_line = linecache.getline(filename, 2)
+    first_line, second_line = get_slice_of_lines_from_file(filename, 0, 2)
 
     man = "Maritime Aerosol Network" in first_line
     sda = "SDA" in first_line
@@ -44,9 +50,16 @@ def get_aeronet_file_variables(filename):
     :param filename: Full path to the file to read
     :return: A list of Aeronet variable names in the order they appear in the file
     """
-    import linecache
     version, _, _ = get_aeronet_version(filename)
-    vars = linecache.getline(filename, AERONET_HEADER_LENGTH[version]).replace("\n", "").split(",")
+
+    try:
+        first_line, second_line = get_slice_of_lines_from_file(filename, AERONET_HEADER_LENGTH[version]-1,
+                                                               AERONET_HEADER_LENGTH[version]+1)
+    except ValueError:
+        # Aeronet files can, for some reason, contain no data
+        return []
+
+    variables = first_line.replace("\n", "").split(",")
 
     # The SDA files don't list all of the columns
     if vars[-1] == "Exact_Wavelengths_for_Input_AOD(um)" or vars[-1] == "Exact_Wavelengths_for_Input_AOD(nm)":
