@@ -4,7 +4,7 @@
 # Python dependencies
 matplotlib
 numpy>=1.10
-iris
+iris>=2.0.0
 scipy
 pandas
 six
@@ -12,7 +12,7 @@ six
 # IO Dependencies
 hdf4
 hdf5
-pyhdf
+pyhdf>=0.9.0
 libnetcdf
 netcdf4
 zlib
