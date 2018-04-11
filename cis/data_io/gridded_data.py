@@ -291,8 +291,6 @@ class GriddedData(iris.cube.Cube, CommonData):
         # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
         if self.coords('time'):
             save_args['unlimited_dimensions'] = ['time']
-        else:
-            iris.FUTURE.netcdf_no_unlimited = True
         iris.save(self, output_file, **save_args)
 
     def as_data_frame(self, copy=True):
@@ -440,8 +438,6 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
         if self.coords('time'):
             save_args['unlimited_dimensions'] = ['time']
-        else:
-            iris.FUTURE.netcdf_no_unlimited = True
 
         iris.save(self, output_file, **save_args)
 

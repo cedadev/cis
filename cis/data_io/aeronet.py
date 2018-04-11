@@ -40,7 +40,8 @@ def get_aeronet_version(filename):
     if second_line.startswith(V2_HEADER):
         return 2, sda, man
 
-    raise FileFormatError(["Unable to determine Aeronet file version", filename])
+    raise FileFormatError(["Unable to determine Aeronet file version", filename],
+                          "Unable to determine Aeronet file version " + filename)
 
 
 def get_aeronet_file_variables(filename):
