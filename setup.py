@@ -21,7 +21,7 @@ else:
                     "netcdf4>=1.0",
                     "numpy",
                     "scipy>=0.15.0",
-                    "iris>=2.0.0",
+                    "scitools-iris>=2.0.0",
                     'psutil>=2.0.0',
                     'six']
 
