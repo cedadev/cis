@@ -90,7 +90,7 @@ class UngriddedAggregator(object):
         cell_start, cell_end, cell_centre = self._get_coord_start_end_centre(coord)
         cell_points = np.array([cell_centre])
         cell_bounds = np.array([[-np.inf, np.inf]])
-        new_coord = DimCoord(cell_points, var_name=coord.name(), standard_name=coord.standard_name,
+        new_coord = DimCoord(cell_points, var_name=coord.var_name or None, standard_name=coord.standard_name,
                              units=self._get_CF_coordinate_units(coord), bounds=cell_bounds)
         return new_coord
 
@@ -106,7 +106,7 @@ class UngriddedAggregator(object):
         """
         from iris.coords import DimCoord
         new_coordinate_grid = aggregation_grid_array(grid.start, grid.stop, grid.step)
-        new_coord = DimCoord(new_coordinate_grid, var_name=coord.name(), standard_name=coord.standard_name,
+        new_coord = DimCoord(new_coordinate_grid, var_name=coord.var_name or None, standard_name=coord.standard_name,
                              units=self._get_CF_coordinate_units(coord))
         if len(new_coord.points) == 1:
             new_coord.bounds = [[grid.start, grid.stop]]
