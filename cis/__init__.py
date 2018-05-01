@@ -24,6 +24,35 @@ __website__ = "http://www.cistools.net/"
 __all__ = ['read_data', 'read_data_list', 'get_variables']
 
 
+from contextlib import contextmanager
+
+
+@contextmanager
+def cis_readers():
+    import iris.fileformats
+    from cis.plugin import find_plugin_classes
+
+    # TODO Pull in the different plugins as a list of iris.FormatSpecifications here
+    #   I can use the underlying scripts to find classes which subclass this in the same way
+    #   The e.g. ECHAM plugins which only need a callback can call the iris.fileformats.netcdf.load_cubes(..,
+    # callback='') method and pass this through
+    # TODO Iris currently can only take one FileElement argument and so only provide one 'constraint' on finding the
+    #  right file. Phil agreed that adding this could be done and shouldn't take long. I can add it as an issue at
+    # some point if needed
+
+    # TODO I need to figure out a way of passing the kwargs through....
+    cis_specs = [cls() for cls in find_plugin_classes(iris.fileformats.FormatSpecification,
+                                                      'cis.data_io.products')]
+    # Register the NAME loader with iris, use extend rather than adding each one at a time
+    iris.fileformats.FORMAT_AGENT._format_specs.extend(cis_specs)
+    # Sort the agents (which takes priority into account)
+    iris.fileformats.FORMAT_AGENT._format_specs.sort()
+    yield
+    # The spec should have unique keys so remove should be fine
+    for spec in cis_specs:
+        iris.fileformats.FORMAT_AGENT._format_specs.remove(spec)
+
+
 def read_data(filenames, variable, product=None):
     """
     Read a specific variable from a list of files
