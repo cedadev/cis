@@ -21,9 +21,8 @@ else:
                     "netcdf4>=1.0",
                     "numpy",
                     "scipy>=0.15.0",
-                    "scitools-iris>=2.0.0",
-                    'psutil>=2.0.0',
-                    'six']
+                    "psutil>=2.0.0",
+                    "six"]
 
     optional_dependencies = {"HDF": ["pyhdf>=0.9.0"], "Pandas": ["pandas"]}
 
