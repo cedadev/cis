@@ -53,7 +53,7 @@ class check_dep(Command):
                 print(dep + "... MISSING!")
 
 # Extract long-description from README
-README = open(os.path.join(root_path, 'README.md')).read()
+README = open(os.path.join(root_path, 'README.md'), 'rb').read().decode('utf-8')
 
 setup(
     name='cis',
