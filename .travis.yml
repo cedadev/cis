@@ -7,7 +7,7 @@ sudo: false
 
 env:
   - TEST_TARGET=unit PYTHON_TARGET=2.7
-  - TEST_TARGET=unit PYTHON_TARGET=3.4
+  - TEST_TARGET=unit PYTHON_TARGET=3.6
   # - TEST_TARGET=integration
 
 install:
