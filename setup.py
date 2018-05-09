@@ -17,7 +17,7 @@ if on_rtd:
     test_dependencies = []
 
 else:
-    dependencies = ["matplotlib>=1.2.0",
+    dependencies = ["matplotlib>=1.2.0,<1.9.0",
                     "netcdf4>=1.0",
                     "numpy",
                     "scipy>=0.15.0",
