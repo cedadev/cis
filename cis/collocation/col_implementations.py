@@ -46,31 +46,28 @@ class GeneralUngriddedCollocator(Collocator):
                 output.extend(self.collocate(points, var, constraint, kernel))
             return output
 
-        metadata = data.metadata
-
-        sample_points = points.get_all_points()
-
-        data_points = data.get_non_masked_points()
-
         # First fix the sample points so that they all fall within the same 360 degree longitude range
-        _fix_longitude_range(points.coords(), sample_points)
+        _fix_longitude_range(points.coords(), points)
         # Then fix the data points so that they fall onto the same 360 degree longitude range as the sample points
-        _fix_longitude_range(points.coords(), data_points)
+        _fix_longitude_range(points.coords(), data)
+
+        # Convert to dataframes for fancy indexing
+        sample_points = points.as_data_frame(time_index=False, name='vals')
+        data_points = data.as_data_frame(time_index=False, name='vals').dropna(axis=0)
 
         log_memory_profile("GeneralUngriddedCollocator after data retrieval")
 
         # Create index if constraint and/or kernel require one.
         coord_map = None
         data_index.create_indexes(constraint, points, data_points, coord_map)
-        data_index.create_indexes(kernel, points, data_points, coord_map)
         log_memory_profile("GeneralUngriddedCollocator after indexing")
 
         logging.info("--> Collocating...")
 
         # Create output arrays.
-        self.var_name = data.name()
-        self.var_long_name = metadata.long_name
-        self.var_standard_name = metadata.standard_name
+        self.var_name = data.var_name
+        self.var_long_name = data.long_name
+        self.var_standard_name = data.standard_name
         self.var_units = data.units
         var_set_details = kernel.get_variable_details(self.var_name, self.var_long_name,
                                                       self.var_standard_name, self.var_units)
@@ -83,41 +80,26 @@ class GeneralUngriddedCollocator(Collocator):
 
         logging.info("    {} sample points".format(sample_points_count))
         # Apply constraint and/or kernel to each sample point.
-        cell_count = 0
-        total_count = 0
 
-        # Check if we want to sample missing points
-        if self.missing_data_for_missing_sample:
-            sample_enumerator = sample_points.enumerate_non_masked_points
+        if isinstance(kernel, nn_horizontal_only):
+            # Only find the nearest point using the kd-tree, without constraint in other dimensions
+            nearest_points = data_points.iloc[constraint.haversine_distance_kd_tree_index.find_nearest_point(sample_points)]
+            values[0, :] = nearest_points.vals.values
         else:
-            sample_enumerator = sample_points.enumerate_all_points
+            for i, point, con_points in constraint.get_iterator(self.missing_data_for_missing_sample, None, None,
+                                                                data_points, None, sample_points, None):
 
-        for i, point in sample_enumerator():
-            # Log progress periodically.
-            cell_count += 1
-            if cell_count == 1000:
-                total_count += cell_count
-                cell_count = 0
-                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
-
-            if constraint is None:
-                con_points = data_points
-            else:
-                con_points = constraint.constrain_points(point, data_points)
-            try:
-                value_obj = kernel.get_value(point, con_points)
-                # Kernel returns either a single value or a tuple of values to insert into each output variable.
-                if isinstance(value_obj, tuple):
-                    for idx, val in enumerate(value_obj):
-                        if not np.isnan(val):
-                            values[idx, i] = val
-                else:
-                    values[0, i] = value_obj
-            except CoordinateMultiDimError as e:
-                raise NotImplementedError(e)
-            except ValueError as e:
-                pass
+                try:
+                    values[:, i] = kernel.get_value(point, con_points)
+                    # Kernel returns either a single value or a tuple of values to insert into each output variable.
+                except CoordinateMultiDimError as e:
+                    raise NotImplementedError(e)
+                except ValueError as e:
+                    pass
         log_memory_profile("GeneralUngriddedCollocator after running kernel on sample points")
+
+        # Mask any bad values
+        values = np.ma.masked_invalid(values)
 
         return_data = UngriddedDataList()
         for idx, var_details in enumerate(var_set_details):
@@ -190,7 +172,7 @@ class GriddedUngriddedCollocator(Collocator):
 
         log_memory_profile("GriddedUngriddedCollocator after running kernel on sample points")
 
-        metadata = Metadata(self.var_name or data.name(), long_name=self.var_long_name or data.metadata.long_name,
+        metadata = Metadata(self.var_name or data.var_name, long_name=self.var_long_name or data.long_name,
                             shape=values.shape, missing_value=self.fill_value, units=self.var_units or data.units)
         set_standard_name_if_valid(metadata, data.standard_name)
         return_data = UngriddedDataList([UngriddedData(values, metadata, points._coords.flatten())])
@@ -312,45 +294,71 @@ class SepConstraintKdtree(PointConstraint):
                 raise InvalidCommandLineOptionError(e)
             self.checks.append(self.time_constraint)
 
-    def time_constraint(self, point, ref_point):
-        return point.time_sep(ref_point) < self.t_sep
+    def time_constraint(self, points, ref_point):
+        return np.nonzero(np.abs(points.time - ref_point.time) < self.t_sep)[0]
 
-    def alt_constraint(self, point, ref_point):
-        return point.alt_sep(ref_point) < self.a_sep
+    def alt_constraint(self, points, ref_point):
+        return np.nonzero(np.abs(points.altitude - ref_point.altitude) < self.a_sep)[0]
 
-    def pressure_constraint(self, point, ref_point):
-        return point.pres_sep(ref_point) < self.p_sep
-
-    def horizontal_constraint(self, point, ref_point):
-        return point.haversine_dist(ref_point) < self.h_sep
+    def pressure_constraint(self, points, ref_point):
+        greater_pressures = np.nonzero(((points.air_pressure / ref_point.air_pressure) < self.p_sep) &
+                                       (points.air_pressure > ref_point.air_pressure))[0]
+        lesser_pressures = np.nonzero(((ref_point.air_pressure / points.air_pressure) < self.p_sep) &
+                                      (points.air_pressure <= ref_point.air_pressure))[0]
+        return np.concatenate([lesser_pressures, greater_pressures])
 
     def constrain_points(self, ref_point, data):
-        con_points = HyperPointList()
         if self.haversine_distance_kd_tree_index and self.h_sep:
             point_indices = self._get_cached_indices(ref_point)
             if point_indices is None:
                 point_indices = self.haversine_distance_kd_tree_index.find_points_within_distance(ref_point, self.h_sep)
                 self._add_cached_indices(ref_point, point_indices)
-            for idx in point_indices:
-                point = data[idx]
-                if all(check(point, ref_point) for check in self.checks):
-                    con_points.append(point)
+            con_points = data.iloc[point_indices]
         else:
-            for point in data:
-                if all(check(point, ref_point) for check in self.checks):
-                    con_points.append(point)
+            con_points = data
+        for check in self.checks:
+            con_points = con_points.iloc[check(con_points, ref_point)]
+
         return con_points
 
     def _get_cached_indices(self, ref_point):
-        key = ref_point[0:5]  # Don't use the value as a key (it's both irrelevant and un-hashable)
-        try:
-            return self._index_cache[key]
-        except KeyError:
-            return None
+        # Don't use the value as a key (it's both irrelevant and un-hashable)
+        return self._index_cache.get(tuple(ref_point[['latitude', 'longitude']].values), None)
 
     def _add_cached_indices(self, ref_point, indices):
-        key = ref_point[0:5]  # Don't use the value as a key (it's both irrelevant and un-hashable)
-        self._index_cache[key] = indices
+        # Don't use the value as a key (it's both irrelevant and un-hashable)
+        self._index_cache[tuple(ref_point[['latitude', 'longitude']].values)] = indices
+
+    def get_iterator(self, missing_data_for_missing_sample, coord_map, coords, data_points, shape, points, output_data):
+        cell_count = 0
+        total_count = 0
+        sample_points_count = len(points)
+
+        indices = False
+
+        if self.haversine_distance_kd_tree_index and self.h_sep:
+            indices = self.haversine_distance_kd_tree_index.find_points_within_distance_sample(points, self.h_sep)
+
+        for i, p in points.iterrows():
+
+            # Log progress periodically.
+            cell_count += 1
+            if cell_count == 1000:
+                total_count += cell_count
+                cell_count = 0
+                logging.info("    Processed {} points of {}".format(total_count, sample_points_count))
+
+            # If missing_data_for_missing_sample
+            if not (missing_data_for_missing_sample and (hasattr(p, 'vals') and np.isnan(p.vals))):
+                if indices:
+                    # Note that data_points has to be a dataframe at this point because of the indexing
+                    d_points = data_points.iloc[indices[i]]
+                else:
+                    d_points = data_points
+                for check in self.checks:
+                    d_points = d_points.iloc[check(d_points, p)]
+
+                yield i, p, d_points
 
 
 # noinspection PyPep8Naming
@@ -460,33 +468,25 @@ class nn_horizontal(Kernel):
             Collocation using nearest neighbours along the face of the earth where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+        from cis.collocation.kdtree import haversine
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.compdist(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if (haversine(point, nearest_point) > haversine(point, data_point)):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
-class nn_horizontal_kdtree(Kernel):
-    def __init__(self):
-        self.haversine_distance_kd_tree_index = None
-
+class nn_horizontal_only(Kernel):
+    """
+    Used to shortcut the constraint checks in dimensions other than the horizontal to allow quick kd-tree lookup
+    """
     def get_value(self, point, data):
-        """
-        Collocation using nearest neighbours along the face of the earth using a k-D tree index.
-        """
-        nearest_index = self.haversine_distance_kd_tree_index.find_nearest_point(point)
-        if nearest_index is None:
-            raise ValueError
-        if nearest_index > len(data):
-            pass
-        nearest_point = data[nearest_index]
-        return nearest_point.val[0]
+        pass
 
 
 class nn_altitude(Kernel):
@@ -495,34 +495,46 @@ class nn_altitude(Kernel):
             Collocation using nearest neighbours in altitude, where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.compalt(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if abs(point.altitude - nearest_point.altitude) > abs(point.altitude - data_point.altitude):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
 class nn_pressure(Kernel):
+
+
     def get_value(self, point, data):
         """
             Collocation using nearest neighbours in pressure, where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+
+        def pres_sep(point1, point2):
+            """
+                Computes the pressure ratio between two points, this is always >= 1.
+            """
+            if point1.air_pressure > point2.air_pressure:
+                return point1.air_pressure / point2.air_pressure
+            else:
+                return point2.air_pressure / point1.air_pressure
+
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.comppres(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if pres_sep(point, nearest_point) > pres_sep(point, data_point):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
 class nn_time(Kernel):
@@ -531,16 +543,16 @@ class nn_time(Kernel):
             Collocation using nearest neighbours in time, where both points and
               data are a list of HyperPoints. The default point is the first point.
         """
-        iterator = data.__iter__()
+        iterator = data.iterrows()
         try:
-            nearest_point = next(iterator)
+            nearest_point = next(iterator)[1]
         except StopIteration:
             # No points to check
             raise ValueError
-        for data_point in iterator:
-            if point.comptime(nearest_point, data_point):
+        for idx, data_point in iterator:
+            if abs(point.time - nearest_point.time) > abs(point.time - data_point.time):
                 nearest_point = data_point
-        return nearest_point.val[0]
+        return nearest_point.vals
 
 
 # These classes act as abbreviations for kernel classes above:
@@ -772,6 +784,7 @@ class GeneralGriddedCollocator(Collocator):
         :param kernel: instance of a Kernel subclass which takes a number of points and returns a single value
         :return: GriddedDataList of collocated data
         """
+        log_memory_profile("GeneralGriddedCollocator Initial")
         if isinstance(data, list):
             # If data is a list then call this method recursively over each element
             output_list = []
@@ -781,6 +794,8 @@ class GeneralGriddedCollocator(Collocator):
             return GriddedDataList(output_list)
 
         data_points = data.get_non_masked_points()
+
+        log_memory_profile("GeneralGriddedCollocator Created data hyperpoint list view")
 
         # Work out how to iterate over the cube and map HyperPoint coordinates to cube coordinates.
         coord_map = make_coord_map(points, data)
@@ -809,9 +824,13 @@ class GeneralGriddedCollocator(Collocator):
 
         _fix_longitude_range(coords, data_points)
 
+        log_memory_profile("GeneralGriddedCollocator Created output coord map")
+
         # Create index if constraint supports it.
         data_index.create_indexes(constraint, coords, data_points, coord_map)
         data_index.create_indexes(kernel, points, data_points, coord_map)
+
+        log_memory_profile("GeneralGriddedCollocator Created indexes")
 
         # Initialise output array as initially all masked, and set the appropriate fill value.
         values = []
@@ -853,6 +872,8 @@ class GeneralGriddedCollocator(Collocator):
                     # We don't need to do anything.
                     pass
 
+        log_memory_profile("GeneralGriddedCollocator Completed collocation")
+
         # Construct an output cube containing the collocated data.
         kernel_var_details = kernel.get_variable_details(self.var_name or data.var_name,
                                                          self.var_long_name or data.long_name,
@@ -879,6 +900,8 @@ class GeneralGriddedCollocator(Collocator):
             transpose_order = [coord[2] for coord in coord_map]
             cube.transpose(transpose_order)
             output.append(cube)
+
+        log_memory_profile("GeneralGriddedCollocator Finished")
 
         return output
 
@@ -910,6 +933,7 @@ class GeneralGriddedCollocator(Collocator):
 
 
 class CubeCellConstraint(CellConstraint):
+    #TODO Delete me
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
     """
 
@@ -933,6 +957,7 @@ class CubeCellConstraint(CellConstraint):
 
 
 class BinningCubeCellConstraint(IndexedConstraint):
+    #TODO Delete me
     """Constraint for constraining HyperPoints to be within an iris.coords.Cell.
 
     Uses the index_data method to bin all the points

@@ -161,20 +161,40 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
                                 "({default}m)".format(alt_string=altitude_string, default=self.DEFAULT_ALTITUDE))
                 return self.DEFAULT_ALTITUDE
 
+    @staticmethod
+    def _parse_station_lat_lon(lat_lon_string):
+        """
+        Parse a station's latitude or longitude string. Will try and read it directly as a float, otherwise will try and
+         read the first white-space separated part of the string (e.g. '80 degrees north' -> float(80)).
+        :param lat_lon_string:
+        :return:
+        """
+        from cis.exceptions import InvalidVariableError
+        try:
+            return float(lat_lon_string)
+        except ValueError:
+            try:
+                return float(lat_lon_string.split()[0])
+            except ValueError:
+                raise InvalidVariableError("Couldn't parse station attribute '{}'".format(lat_lon_string))
+
     def _stationary_setup(self):
         """
         Set up object when latitude and longitude are fixed
         """
+        from cis.exceptions import InvalidVariableError
         if self.STATION_LATITUDE_NAME.lower() not in self._attributes[0]:
             raise InvalidVariableError("No attributes indicating latitude, expecting '{}'"
                                        .format(self.STATION_LATITUDE_NAME))
         # We need a bunch of different latitudes for different files
-        self.station_latitude = [attr[self.STATION_LATITUDE_NAME.lower()] for attr in self._attributes]
+        self.station_latitude = [self._parse_station_lat_lon(attr[self.STATION_LATITUDE_NAME.lower()])
+                                 for attr in self._attributes]
 
         if self.STATION_LONGITUDE_NAME.lower() not in self._attributes[0]:
             raise InvalidVariableError("No attributes indicating longitude, expecting '{}'"
                                        .format(self.STATION_LONGITUDE_NAME))
-        self.station_longitude = [attr[self.STATION_LONGITUDE_NAME.lower()] for attr in self._attributes]
+        self.station_longitude = [self._parse_station_lat_lon(attr[self.STATION_LONGITUDE_NAME.lower()])
+                                  for attr in self._attributes]
         self.station = True
 
         if self.STATION_ALTITUDE_NAME.lower() in self._attributes[0]:
@@ -251,7 +271,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
             #  the auxiliary dimension.
             else:
                 for v, dims in self._variable_dimensions[0].items():
-                    if dims == [aux_coords[0]]:
+                    if dims[0] == aux_coords[0]:
                         aux_coord_name = v
                         break
         return aux_coord_name

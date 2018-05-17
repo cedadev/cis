@@ -24,7 +24,7 @@ class TestGriddedCollapse(TestCase):
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result, cube_out[0].data)
-        assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+        assert_arrays_almost_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     @istest
     def test_collapsing_coordinate_takes_start_end_but_ignores_them(self):
@@ -34,31 +34,31 @@ class TestGriddedCollapse(TestCase):
 
         # There is a small deviation to the weighting correction applied by Iris when completely collapsing
         assert_arrays_almost_equal(result, cube_out[0].data)
-        assert numpy.array_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+        assert_arrays_almost_equal(self.cube.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
 
     @istest
     def test_can_name_variables_by_standard_name(self):
         cube_out = self.cube.collapsed(['longitude', 'latitude'], how=self.kernel)
 
-        result = numpy.array(8.0)
+        result = numpy.array([8.0])
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_can_name_variables_by_variable_name(self):
         cube_out = self.cube.collapsed(['lon', 'lat'], how=self.kernel)
 
-        result = numpy.array(8.0)
+        result = numpy.array([8.0])
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_collapsing_everything_returns_a_single_value(self):
         cube_out = self.cube.collapsed(['x', 'y'], how=self.kernel)
 
-        result = numpy.array(8.0)
+        result = numpy.array([8.0])
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_collapsing_everything_returns_a_single_value_with_missing_values(self):
@@ -78,7 +78,7 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array(15)
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_aggregating_using_min_kernel_returns_minimums(self):
@@ -87,7 +87,7 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array(1)
 
-        assert numpy.array_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(result, cube_out[0].data)
 
     @istest
     def test_aggregating_using_std_dev_kernel_returns_sample_standard_deviation(self):
@@ -96,8 +96,8 @@ class TestGriddedCollapse(TestCase):
 
         result = numpy.array([numpy.sqrt(22.5), numpy.sqrt(22.5), numpy.sqrt(22.5)])
 
-        assert numpy.array_equal(result, cube_out[0].data)
-        assert numpy.array_equal(self.cube.coords('longitude')[0].points, cube_out.coords('longitude')[0].points)
+        assert_arrays_almost_equal(result, cube_out[0].data)
+        assert_arrays_almost_equal(self.cube.coords('longitude')[0].points, cube_out.coords('longitude')[0].points)
 
     @istest
     def test_aggregation_on_three_dimensional_grid_with_time(self):
@@ -325,6 +325,45 @@ class TestGriddedListAggregation(TestCase):
 
         result1 = numpy.array([2, 5, 8, 11, 14])
         result2 = result1 + 1
+
+        assert isinstance(cube_out, GriddedDataList)
+
+        # There is a small deviation to the weighting correction applied by Iris when completely collapsing
+        assert_arrays_almost_equal(result1, cube_out[0].data)
+        assert_arrays_almost_equal(result2, cube_out[1].data)
+        assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+
+    def test_collapse_vertical_coordinate(self):
+        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
+
+        data1 = make_from_cube(make_mock_cube(alt_dim_length=6))
+        data2 = make_from_cube(make_mock_cube(alt_dim_length=6, data_offset=1))
+        datalist = GriddedDataList([data1, data2])
+        cube_out = datalist.collapsed(['z'], how=self.kernel)
+
+        result1 = data1.data.mean(axis=2)
+        result2 = result1 + 1
+
+        assert isinstance(cube_out, GriddedDataList)
+
+        # There is a small deviation to the weighting correction applied by Iris when completely collapsing
+        assert_arrays_almost_equal(result1, cube_out[0].data)
+        assert_arrays_almost_equal(result2, cube_out[1].data)
+        assert numpy.array_equal(data1.coords('latitude')[0].points, cube_out.coords('latitude')[0].points)
+
+    def test_collapse_vertical_coordinate_weighted_aggregator(self):
+        """
+        We use a weighted aggregator, though no weights should be applied since we're only summing over the vertical
+        """
+        from cis.data_io.gridded_data import GriddedDataList, make_from_cube
+
+        data1 = make_from_cube(make_mock_cube(alt_dim_length=6))
+        data2 = make_from_cube(make_mock_cube(alt_dim_length=6, data_offset=1))
+        datalist = GriddedDataList([data1, data2])
+        cube_out = datalist.collapsed(['z'], how=iris.analysis.SUM)
+
+        result1 = np.sum(data1.data, axis=2)
+        result2 = np.sum(data2.data, axis=2)
 
         assert isinstance(cube_out, GriddedDataList)
 

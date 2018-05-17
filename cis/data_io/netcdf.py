@@ -259,8 +259,8 @@ def get_data(var):
     """
     import numpy as np
     import logging
-    # Turn off scaling as we need to apply the valid_min, max and range masks first
-    var.set_auto_scale(False)
+    # Turn off scaling and masking as we're a bit more lenient about the type of valid min/max.
+    var.set_auto_maskandscale(False)
     # This will still automatically return a masked array based on _FillValue and missing_value
     data = var[:]
 

@@ -12,6 +12,8 @@ from cis.data_io.common_data import CommonData
 from cis.data_io.hyperpoint import HyperPointList
 from cis.time_util import convert_datetime_to_std_time
 
+WKT_DIAMOND = "POLYGON ((-5.5 0, 0 5.5, 5.5 0, 0 -5.5, -5.5 0))"
+
 
 def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_length=0, pres_dim_length=0,
                    time_dim_length=0,
@@ -127,7 +129,8 @@ def make_mock_cube(lat_dim_length=5, lon_dim_length=3, lon_range=None, alt_dim_l
         data = np.ma.asarray(data)
         data.mask = mask
 
-    return_cube = Cube(data, dim_coords_and_dims=coord_list)
+    return_cube = Cube(data, dim_coords_and_dims=coord_list, var_name='rain', standard_name='rainfall_rate',
+                       long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S", units="kg m-2 s-1")
 
     if hybrid_ht_len:
         return_cube.add_aux_coord(iris.coords.AuxCoord(np.arange(hybrid_ht_len, dtype='i8') + 40,
@@ -961,6 +964,7 @@ def make_regular_2d_with_time_ungridded_data():
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
     import datetime
+    from cis.time_util import cis_standard_time_unit
 
     x_points = np.arange(-10, 11, 5)
     y_points = np.arange(-5, 6, 5)
@@ -971,7 +975,7 @@ def make_regular_2d_with_time_ungridded_data():
 
     x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
     y = Coord(y, Metadata(standard_name='longitude', units='degrees'))
-    t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
+    t = Coord(cis_standard_time_unit.date2num(times), Metadata(standard_name='time', units=cis_standard_time_unit))
 
     data = np.reshape(np.arange(15) + 1.0, (5, 3))
 
@@ -989,15 +993,15 @@ def make_MODIS_time_steps():
     from cis.data_io.Coord import CoordList, Coord
     from cis.data_io.ungridded_data import UngriddedData, Metadata
 
-    x = np.zeros(4)
     times = np.array([149754, 149762, 149770, 149778])
 
-    x = Coord(x, Metadata(standard_name='latitude', units='degrees'))
+    x = Coord(np.zeros(4), Metadata(standard_name='latitude', units='degrees'))
+    y = Coord(np.zeros(4), Metadata(standard_name='longitude', units='degrees'))
     t = Coord(times, Metadata(standard_name='time', units='DateTime Object'))
 
     data = np.arange(4.0)
 
-    coords = CoordList([x, t])
+    coords = CoordList([x, y, t])
     return UngriddedData(data, Metadata(standard_name='rainfall_flux', long_name="TOTAL RAINFALL RATE: LS+CONV KG/M2/S",
                                         units="kg m-2 s-1", missing_value=-999), coords)
 

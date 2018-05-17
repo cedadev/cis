@@ -14,19 +14,31 @@ class cis(AProduct):
         return [r'.*\.nc']
 
     def create_coords(self, filenames, usr_variable=None):
-        from cis.data_io.netcdf import read_many_files_individually, get_metadata
-        from cis.data_io.Coord import Coord
+        from cis.data_io.netcdf import read_many_files_individually, get_metadata, get_netcdf_file_variables
+        from cis.data_io.Coord import Coord, CoordList
+        from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData
         from cis.exceptions import InvalidVariableError
 
-        variables = [("longitude", "x"), ("latitude", "y"), ("altitude", "z"), ("time", "t"), ("air_pressure", "p")]
+        # We have to read it once first to find out which variables are in there. We assume the set of coordinates in
+        # all the files are the same
+        file_variables = get_netcdf_file_variables(filenames[0])
 
-        logging.info("Listing coordinates: " + str(variables))
+        axis_lookup = {"longitude": "x", 'latitude': 'y', 'altitude': 'z', 'time': 't', 'air_pressure': 'p'}
+
+        coord_variables = [(v, axis_lookup[v]) for v in file_variables if v in axis_lookup]
+
+        # Create a copy to contain all the variables to read
+        all_variables = list(coord_variables)
+        if usr_variable is not None:
+            all_variables.append((usr_variable, ''))
+
+        logging.info("Listing coordinates: " + str(all_variables))
 
         coords = CoordList()
-        for variable in variables:
+        var_data = read_many_files_individually(filenames, [v[0] for v in all_variables])
+        for name, axis in coord_variables:
             try:
-                var_data = read_many_files_individually(filenames, variable[0])[variable[0]]
-                coords.append(Coord(var_data, get_metadata(var_data[0]), axis=variable[1]))
+                coords.append(Coord(var_data[name], get_metadata(var_data[name][0]), axis=axis))
             except InvalidVariableError:
                 pass
 
@@ -36,8 +48,7 @@ class cis(AProduct):
         if usr_variable is None:
             res = UngriddedCoordinates(coords)
         else:
-            usr_var_data = read_many_files_individually(filenames, usr_variable)[usr_variable]
-            res = UngriddedData(usr_var_data, get_metadata(usr_var_data[0]), coords)
+            res = UngriddedData(var_data[usr_variable], get_metadata(var_data[usr_variable][0]), coords)
 
         return res
 

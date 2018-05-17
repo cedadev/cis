@@ -180,9 +180,6 @@ class GriddedData(iris.cube.Cube, CommonData):
         else:
             self.attributes['history'] += '\n' + timestamp + new_history
 
-    def name(self):
-        return self.var_name
-
     @property
     def is_gridded(self):
         """Returns value indicating whether the data/coordinates are gridded.
@@ -323,9 +320,29 @@ class GriddedData(iris.cube.Cube, CommonData):
 
     def subset(self, **kwargs):
         """
-        Subset the CommonData object based on the specified constraints
-        :param kwargs:
-        :return:
+        Subset the data based on the specified constraints. Note that the limits are inclusive.
+
+        The subset region is defined by passing keyword arguments for each dimension to be subset over, each argument
+        must be a slice, or have two entries (a maximum and a minimum). Datetime objects can be used to specify upper
+        and lower datetime limits, or a single PartialDateTime object can be used to specify a datetime range.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(x=[0, 80], y=slice(10, 50))
+
+        or:
+            data.aggregate(t=PartialDateTime(2008,9))
+
+
+        A shape keyword can also be supplied as a WKT string or shapely object to subset in lat/lon by an arbitrary
+        shape. In this case the lat/lon bounds are taken as the bounding box of the shape. Note that the shape of the
+        output remains the same, but a mask is applied to the data over the relevant coordinates. Only 2-dimensional
+        datasets are supported at this time.
+
+        :param kwargs: The constraints for each coordinate dimension
+        :return CommonData:
         """
         from cis.subsetting.subset import subset, GriddedSubsetConstraint
         return subset(self, GriddedSubsetConstraint, **kwargs)

@@ -155,7 +155,7 @@ class UngriddedHyperPointView(HyperPointView):
 
         :param range_start: starting value of required longitude range
         """
-        if self.longitudes is None:
+        if self.longitude is None:
             return
 
         range_end = range_start + 360.0
@@ -169,23 +169,23 @@ class UngriddedHyperPointView(HyperPointView):
         return self.data
 
     @property
-    def latitudes(self):
+    def latitude(self):
         return self.coords[HyperPoint.LATITUDE]
 
     @property
-    def longitudes(self):
+    def longitude(self):
         return self.coords[HyperPoint.LONGITUDE]
 
     @property
-    def altitudes(self):
+    def altitude(self):
         return self.coords[HyperPoint.ALTITUDE]
 
     @property
-    def air_pressures(self):
+    def air_pressure(self):
         return self.coords[HyperPoint.AIR_PRESSURE]
 
     @property
-    def times(self):
+    def time(self):
         return self.coords[HyperPoint.TIME]
 
 

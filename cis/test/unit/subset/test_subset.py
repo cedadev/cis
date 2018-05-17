@@ -68,6 +68,21 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [[66, 67, 68, 69], [73, 74, 75, 76], [80, 81, 82, 83]],
                                          [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
 
+    def test_can_subset_gridded_data_using_multiple_extract_constraints(self):
+        data = make_from_cube(cis.test.util.mock.make_mock_cube(time_dim_length=3, alt_dim_length=6))
+        subset = data.subset(time=[140492, 140493], altitude=[0, 3])
+        assert subset.data.shape == (5, 3, 3, 2)
+
+    def test_can_subset_gridded_data_by_shape(self):
+        data = make_from_cube(cis.test.util.mock.make_square_5x3_2d_cube())
+        subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND)
+        # The corner should be masked, but the center not
+        assert np.ma.is_masked(subset.data[0, 0])
+        assert ~np.ma.is_masked(subset.data[2, 1])
+        assert (subset.data.tolist() == [[None, 5.0, None], 
+                                         [7.0, 8.0, 9.0],
+                                         [None, 11.0, None]])
+
     def test_can_subset_2d_gridded_data_by_longitude_with_wrapping_at_180(self):
         data = make_from_cube(cis.test.util.mock.make_mock_cube(lat_dim_length=5, lon_dim_length=9))
         long_coord = data.coord('longitude')
@@ -226,6 +241,20 @@ class TestUngriddedSubsetConstraint(TestCase):
         subset = data.subset(time=[datetime.datetime(1984, 8, 28), datetime.datetime(1984, 8, 29)],
                              altitude=[45.0, 75.0])
         assert (subset.data.tolist() == [27, 28, 32, 33, 37, 38])
+
+    def test_can_subset_ungridded_data_by_shape(self):
+        data = cis.test.util.mock.make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
+        subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND)
+        # The corners should be masked, but the center not
+        assert (subset.data.tolist() == [5, 7, 8, 9, 11])
+
+    def test_can_subset_ungridded_data_by_shape_and_time(self):
+        data = cis.test.util.mock.make_regular_2d_with_time_ungridded_data()
+        data.time.convert_to_std_time()
+        subset = data.subset(shape=cis.test.util.mock.WKT_DIAMOND, time=[datetime.datetime(1984, 8, 28),
+                                                                         datetime.datetime(1984, 9, 3)])
+        assert (subset.data.tolist() == [5, 7, 8])
 
     def test_can_subset_2d_ungridded_data_with_missing_values(self):
         data = cis.test.util.mock.make_regular_2d_ungridded_data_with_missing_values()

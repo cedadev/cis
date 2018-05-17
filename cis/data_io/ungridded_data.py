@@ -134,7 +134,12 @@ class Metadata(object):
             try:
                 # Try some basic tidying up of unit
                 if isinstance(units, six.string_types):
-                    units = units.replace("since:", "since").replace(",", "").lower()
+                    if 'since' in units.lower():
+                        # Often this time since epoch units are weirdly capitalised, or include extra punctuation
+                        units = units.lower().replace("since:", "since").replace(",", "")
+                    else:
+                        # Replace number with 1 (e.g. #/cm3 == cm-3)
+                        units = units.replace('#', '1')
                 units = Unit(units)
             except ValueError:
                 logging.info("Unable to parse cf-units: {}. Some operations may not be available.".format(units))
@@ -212,17 +217,13 @@ class LazyData(object):
             else:
                 raise InvalidDataTypeError
 
-    def name(self):
+    def name(self, default='unknown'):
         """
-        This routine returns the first name property which is not empty out of: _name, standard_name and long_name.
-        If they are all empty it returns an empty string
+        This routine returns the first name property which is not empty out of: standard_name, long_name and var_name.
+        If they are all empty it returns the default string (which is 'unknown' by default).
         :return: The name of the data object as a string
         """
-
-        for name in [self.metadata._name, self.metadata.standard_name, self.metadata.long_name]:
-            if name:
-                return name
-        return ''
+        return self.standard_name or self.long_name or self.var_name or default
 
     @property
     def shape(self):
@@ -251,6 +252,10 @@ class LazyData(object):
     @property
     def var_name(self):
         return self.metadata._name
+
+    @var_name.setter
+    def var_name(self, var_name):
+        self.metadata._name = var_name
 
     @property
     def units(self):
@@ -551,9 +556,10 @@ class UngriddedData(LazyData, CommonData):
 
         :return: Copied UngriddedData object
         """
+        from copy import deepcopy
         data = data if data is not None else numpy.ma.copy(self.data)  # This will load the data if lazy load
         coords = self.coords().copy()
-        return UngriddedData(data=data, metadata=self.metadata, coords=coords)
+        return UngriddedData(data=data, metadata=deepcopy(self.metadata), coords=coords)
 
     @property
     def size(self):
@@ -599,19 +605,19 @@ class UngriddedData(LazyData, CommonData):
                           self.coord(standard_name='air_pressure').data.flat[index],
                           self.data.flat[index])
 
-    def as_data_frame(self, copy=True):
+    def as_data_frame(self, copy=True, time_index=True, name=None):
         """
         Convert an UngriddedData object to a Pandas DataFrame.
 
         :param copy: Create a copy of the data for the new DataFrame? Default is True.
         :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
         """
-        df = _coords_as_data_frame(self.coords())
+        df = _coords_as_data_frame(self.coords(), time_index=time_index)
         try:
-            df[self.name()] = _to_flat_ndarray(self.data, copy)
+            df[name or self.name()] = _to_flat_ndarray(self.data, copy)
         except ValueError:
             logging.warn("Copy created of MaskedArray for {} when creating Pandas DataFrame".format(self.name()))
-            df[self.name()] = _to_flat_ndarray(self.data, True)
+            df[name or self.name()] = _to_flat_ndarray(self.data, True)
 
         return df
 
@@ -675,6 +681,7 @@ class UngriddedData(LazyData, CommonData):
         """
         from cis.data_io.Coord import Coord, CoordList
         from cis.data_io.hyperpoint import HyperPointList
+        from cis.time_util import cis_standard_time_unit
 
         if not isinstance(hyperpoints, HyperPointList):
             hyperpoints = HyperPointList(hyperpoints)
@@ -696,7 +703,7 @@ class UngriddedData(LazyData, CommonData):
         if altitude is not None:
             coord_list.append(Coord(altitude, Metadata(standard_name='altitude', units='meters')))
         if time is not None:
-            coord_list.append(Coord(time, Metadata(standard_name='time', units='seconds')))
+            coord_list.append(Coord(time, Metadata(standard_name='time', units=cis_standard_time_unit)))
         coords = CoordList(coord_list)
 
         return cls(values, Metadata(), coords)
@@ -748,9 +755,27 @@ class UngriddedData(LazyData, CommonData):
 
     def subset(self, **kwargs):
         """
-        Subset the CommonData object based on the specified constraints
-        :param kwargs:
-        :return:
+        Subset the data based on the specified constraints. Note that the limits are inclusive.
+
+        The subset region is defined by passing keyword arguments for each dimension to be subset over, each argument
+        must be a slice, or have two entries (a maximum and a minimum). Datetime objects can be used to specify upper
+        and lower datetime limits, or a single PartialDateTime object can be used to specify a datetime range.
+
+        The keyword keys are used to find the relevant coordinate, they are looked for in order of name, standard_name,
+        axis and var_name.
+
+        For example:
+            data.subset(x=[0, 80], y=slice(10, 50))
+
+        or:
+            data.aggregate(t=PartialDateTime(2008,9))
+
+
+        A shape keyword can also be supplied as a WKT string or shapely object to subset in lat/lon by an arbitrary
+        shape. In this case the lat/lon bounds are taken as the bounding box of the shape.
+
+        :param kwargs: The constraints for each coordinate dimension
+        :return CommonData:
         """
         from cis.subsetting.subset import subset, UngriddedSubsetConstraint
         return subset(self, UngriddedSubsetConstraint, **kwargs)
@@ -917,14 +942,14 @@ class UngriddedCoordinates(CommonData):
                           self.coord(standard_name='air_pressure').data.flat[index],
                           None)
 
-    def as_data_frame(self, copy=True):
+    def as_data_frame(self, copy=True, time_index=True, name=None):
         """
         Convert an UngriddedCoordinates object to a Pandas DataFrame.
 
         :param copy: Create a copy of the data for the new DataFrame? Default is True.
         :return: A Pandas DataFrame representing the data and coordinates. Note that this won't include any metadata.
         """
-        return _coords_as_data_frame(self._coords)
+        return _coords_as_data_frame(self._coords, time_index=time_index)
 
     def coords(self, name_or_coord=None, standard_name=None, long_name=None, attributes=None, axis=None, var_name=None,
                dim_coords=True):
@@ -1131,7 +1156,7 @@ class UngriddedDataList(CommonDataList):
         return _aggregate_ungridded(self, how, **kwargs)
 
 
-def _coords_as_data_frame(coord_list, copy=True):
+def _coords_as_data_frame(coord_list, copy=True, time_index=True):
     """
     Convert a CoordList object to a Pandas DataFrame.
 
@@ -1152,7 +1177,7 @@ def _coords_as_data_frame(coord_list, copy=True):
             logging.warn("Copy created of MaskedArray for {} when creating Pandas DataFrame".format(coord.name()))
             data = _to_flat_ndarray(coord.data, True)
 
-        if coord.standard_name == 'time':
+        if time_index and coord.standard_name == 'time':
             if str(coord.units).lower() == 'datetime object':
                 time = data
             elif isinstance(coord.units, Unit):
@@ -1160,7 +1185,7 @@ def _coords_as_data_frame(coord_list, copy=True):
             else:
                 time = cis_standard_time_unit.num2date(data)
         else:
-            columns[coord.name()] = data
+            columns[coord.standard_name] = data
 
     return pd.DataFrame(columns, index=time)
 

@@ -13,7 +13,7 @@ from cis.parse import parse_args
 
 class BaseAggregationTest(BaseIntegrationTest):
     def check_grid_aggregation(self, lat_start, lat_end, lat_delta, lon_start, lon_end, lon_delta,
-                               lat_name='lat', lon_name='lon'):
+                               lat_name='latitude', lon_name='longitude'):
         self.ds = Dataset(self.OUTPUT_FILENAME)
         expected_lat_bnds = np.array([[y, y + lat_delta] for y in np.arange(lat_start, lat_end, lat_delta)])
         expected_lon_bnds = np.array([[x, x + lon_delta] for x in np.arange(lon_start, lon_end, lon_delta)])
@@ -161,7 +161,7 @@ class TestAggregation(BaseAggregationTest):
         t_delta = dt.timedelta(hours=6)
         str_delta = 'PT6H'
         self.do_temporal_aggregate(variable, filename, t_start, t_end, str_delta)
-        self.check_temporal_aggregation(t_start, t_end, t_delta, 'DateTime')
+        self.check_temporal_aggregation(t_start, t_end, t_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
         # Read the aggregated data
@@ -243,8 +243,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -160, -157, 1
         lat_min, lat_max, lat_delta = 30, 50, 5
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='LATC', lon_name='LONC')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     def test_aggregate_GASSP(self):
         variable = '*'
@@ -252,8 +251,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -94, 95, 0.1
         lat_min, lat_max, lat_delta = 30, 31, 0.1
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='GpsLat', lon_name='GpsLon')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     def test_aggregate_GASSP2(self):
         # see issue JASCIS-144
@@ -262,8 +260,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -180, 180, 10
         lat_min, lat_max, lat_delta = -90, 90, 10
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='LAT_500', lon_name='LON_502')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     def test_aggregate_Aeronet(self):
         # Takes 50s
@@ -272,8 +269,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -1.5, 1.4, 0.01
         lat_min, lat_max, lat_delta = 15, 15.5, 0.1
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='Latitude', lon_name='Longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     def test_aggregate_netCDF_gridded_HadGem(self):
         # Test aggregating a gridded file, it should work but throw a deprecation
@@ -293,8 +289,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = 1, 3, 0.3
         lat_min, lat_max, lat_delta = 41, 42, 0.1
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='latitude', lon_name='longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     @skip_pyhdf
     def test_aggregate_MODIS_L2(self):
@@ -304,8 +299,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -150, 150, 25
         lat_min, lat_max, lat_delta = -72, -63, 1
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='Latitude', lon_name='Longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     @skip_pyhdf
     def test_aggregate_CloudSatPRECIP(self):
@@ -315,8 +309,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -10, 10, 2
         lat_min, lat_max, lat_delta = 40, 60, 2
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='Latitude', lon_name='Longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     @unittest.skip("Very resource intensive")
     def test_aggregate_Caliop_L1(self):
@@ -326,8 +319,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = 0, 60, 20
         lat_min, lat_max, lat_delta = -30, 30, 20
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='Latitude', lon_name='Longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     @skip_pyhdf
     def test_aggregate_CloudSatRVOD(self):
@@ -338,8 +330,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -10, 10, 2
         lat_min, lat_max, lat_delta = 40, 60, 2
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='Latitude', lon_name='Longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
@@ -350,8 +341,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = 0, 60, 6
         lat_min, lat_max, lat_delta = -30, 30, 6
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='Latitude', lon_name='Longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
     def test_subset_ASCII(self):
         # Takes 1s
@@ -360,8 +350,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
         lon_min, lon_max, lon_delta = -10, 10, 2
         lat_min, lat_max, lat_delta = 1, 6, 1
         self.do_spatial_aggregate(variable, filename, lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
-        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta,
-                                    lat_name='latitude', lon_name='longitude')
+        self.check_grid_aggregation(lat_min, lat_max, lat_delta, lon_min, lon_max, lon_delta)
 
 
 class TestTemporalAggregationByDataProduct(BaseAggregationTest):
@@ -386,7 +375,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(days=5)
         str_delta = 'P5D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Cloud_CCI(self):
@@ -397,7 +386,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(days=5)
         str_delta = 'P5D'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_NCAR_RAF(self):
@@ -409,7 +398,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_NCAR_RAF_with_named_time_variable_standard_name(self):
@@ -426,7 +415,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         main_arguments = parse_args(arguments)
         aggregate_cmd(main_arguments)
 
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_GASSP(self):
@@ -436,7 +425,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='UTC_mid')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_GASSP_aux_coord(self):
@@ -447,7 +436,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='TIME')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Aeronet(self):
@@ -458,7 +447,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(hours=6)
         str_delta = 'PT6H'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_Aeronet_multi_var(self):
@@ -470,7 +459,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(hours=6)
         str_delta = 'PT6H'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='DateTime')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
         self.check_output_vars_are_different(self.OUTPUT_FILENAME, variable.split(',')[:5])
 
@@ -494,7 +483,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=1)
         str_delta = 'PT1M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Scan_Start_Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
@@ -507,7 +496,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(',') +
                                              ['aggregated_Profile_time'])
 
@@ -519,7 +508,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=30)
         str_delta = 'PT30M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, [valid_cloudsat_PRECIP_variable])
 
     @skip_pyhdf
@@ -531,7 +520,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=23)
         str_delta = 'PT23M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @unittest.skip("Very resource intensive")
@@ -543,7 +532,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=15)
         str_delta = 'PT15M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     @skip_pyhdf
@@ -556,7 +545,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
         time_delta = dt.timedelta(minutes=15)
         str_delta = 'PT15M'
         self.do_temporal_aggregate(variable, filename, time_min, time_max, str_delta)
-        self.check_temporal_aggregation(time_min, time_max, time_delta, time_name='Profile_Time')
+        self.check_temporal_aggregation(time_min, time_max, time_delta)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
 
     def test_aggregate_ASCII(self):

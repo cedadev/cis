@@ -52,12 +52,11 @@ def can_find_many_coords_from_a_list_of_coordinates():
     list.append(Coord(numpy.array([5, 4]), Metadata(name='testZ'), axis='Z'))
     list.append(Coord(numpy.array([5, 4]), Metadata(name='testZ', standard_name='air_pressure')))
     assert (len(list) == 4)
-    coords = list.get_coords(name_or_coord='testZ')
+    coords = list.get_coords(var_name='testZ')
     assert (len(coords) == 2)
-    assert (coords[0].name() == 'testZ')
     assert (coords[0].axis == 'Z')
     assert (coords[1].axis == '')
-
+    assert (coords[1].name() == 'air_pressure')
 
 @istest
 def can_convert_time_without_since_in_units():

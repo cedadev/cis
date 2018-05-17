@@ -231,12 +231,6 @@ class CommonDataList(list):
     """
     filenames = []
 
-    def __new__(cls, iterable=()):
-        cube_list = list.__new__(cls, iterable)
-        # Use extend to check all the types are the same - this gets overridden by each list sub-type
-        cube_list.extend(iterable)
-        return cube_list
-
     def __init__(self, iterable=()):
         super(CommonDataList, self).__init__()
         self.extend(iterable)

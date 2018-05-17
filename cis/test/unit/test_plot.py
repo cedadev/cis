@@ -33,12 +33,12 @@ class TestPlotting(unittest.TestCase):
         from cis.plotting.plot import get_label
         from cis.test.util.mock import make_dummy_1d_ungridded_data
         d = make_dummy_1d_ungridded_data()
-        assert get_label(d) == "rain (kg m-2 s-1)"
-        assert get_label(d, False) == "rain"
-        d.metadata._name = ""
-        d.metadata.long_name = ""
-        assert get_label(d) == "(kg m-2 s-1)"
-        assert get_label(d, False) == ""
+        assert get_label(d) == "TOTAL RAINFALL RATE: LS+CONV KG/M2/S (kg m-2 s-1)"
+        assert get_label(d, False) == "TOTAL RAINFALL RATE: LS+CONV KG/M2/S"
+        d.var_name = ""
+        d.long_name = ""
+        assert get_label(d) == "unknown (kg m-2 s-1)"
+        assert get_label(d, False) == "unknown"
 
     def test_get_axis_ungridded(self):
         from cis.plotting.plot import get_axis
