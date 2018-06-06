@@ -1,29 +1,11 @@
 import logging
 
 
-def get_all_subclasses(parent_class, mod):
-    """
-        This will recursively find subclasses of parent_class in mod.
-        The use of importlib allows mod to be of the form package.module
-        Take extreme care when changing the function as it has been known to break!
-
-    :param parent_class: The class to find subclasses of
-    :param mod: The module to find subclasses in
-    :return: A list of subclasses
-    """
-    import importlib
-    importlib.import_module(mod)
-    subclasses = []
-    for subclass in parent_class.__subclasses__():
-        subclasses += get_all_subclasses(subclass, mod)
-    subclasses += parent_class.__subclasses__()
-    return subclasses
-
-
-def find_plugins(plugin_dir, parent_class_name, verbose):
+def find_plugins(plugin_dir, verbose):
     import logging
     import os
     import sys
+    import importlib
 
     # if plugin_dir is None, there is no plugin to import, so return an empty list
     if plugin_dir is None:
@@ -49,35 +31,32 @@ def find_plugins(plugin_dir, parent_class_name, verbose):
 
     sys.path.insert(0, plugin_dir)
 
-    product_classes = []
+    plugin_modules = []
     for plugin in plugin_files:
         if verbose:
             logging.info("Importing plugin: " + str(plugin))
-        module = __import__(plugin)
-        classes = [getattr(module, x) for x in dir(module) if isinstance(getattr(module, x), type)]
-        product_classes = [cls for cls in classes if parent_class_name in str(cls.__bases__[0])]
+        plugin_modules.append(importlib.import_module(plugin))
 
-    return product_classes
+    return plugin_modules
 
 
-def find_plugin_classes(parent_class, built_in_module, verbose=True):
+def find_plugin_classes(verbose=True):
     import os
+    import iris.fileformats
+    # Import the built-in plugins
+    import cis.data_io.products as built_in
+
     # find plugin classes, if any
     ENV_PATH = "CIS_PLUGIN_HOME"
     plugin_dir = os.environ.get(ENV_PATH, None)
-    plugin_classes = find_plugins(plugin_dir, parent_class.__name__, verbose)
 
-    # find built-in classes, i.e. subclasses of parent_class
-    subclasses = get_all_subclasses(parent_class, built_in_module)
-    all_classes = plugin_classes + subclasses
+    plugins = find_plugins(plugin_dir, verbose) + [built_in]
 
-    for subclass in all_classes:
-        if subclass.__name__.startswith('abstract') or subclass.__name__.startswith('Abstract'):
-            all_classes.remove(subclass)
-
-    all_classes = sorted(all_classes, key=lambda subclass: subclass.__name__)
-
+    specs = [o for plugin in plugins 
+             for o in dir(plugin) if 
+             isinstance(o, iris.fileformats.FormatSpecification)]
+    
     if verbose:
-        logging.debug(parent_class.__name__ + " subclasses are: " + str(all_classes))
+        logging.debug("Plugins are: " + str(specs))
 
-    return all_classes
+    return specs
