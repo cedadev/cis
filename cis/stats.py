@@ -407,7 +407,7 @@ class StatsAnalyzer(object):
 
         :return: List of StatisticsResults
         """
-        spearman = scipy.stats.mstats.spearmanr(self._data1, self._data2, None)[0]
+        spearman = scipy.stats.mstats.spearmanr(self._data1, self._data2)[0]
         return [SpearmansRank(spearman)]
 
     def linear_regression(self):
