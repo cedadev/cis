@@ -22,8 +22,8 @@ else:
                     "numpy",
                     "scipy>=0.15.0",
                     "scitools-iris>=1.8.0",
-                    'psutil>=2.0.0',
-                    'six']
+                    "psutil>=2.0.0",
+                    "six"]
 
     optional_dependencies = {"HDF": ["pyhdf"], "Pandas": ["pandas"]}
 
@@ -53,7 +53,7 @@ class check_dep(Command):
                 print(dep + "... MISSING!")
 
 # Extract long-description from README
-README = open(os.path.join(root_path, 'README.md')).read()
+README = open(os.path.join(root_path, 'README.md'), 'rb').read().decode('utf-8')
 
 setup(
     name='cis',
