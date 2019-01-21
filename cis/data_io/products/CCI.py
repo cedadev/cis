@@ -60,7 +60,7 @@ class Cloud_CCI_L2(CCI_L2, AProduct):
     """Climate Change Initiative cloud data at satellite resolution (1km)."""
 
     def get_file_signature(self):
-        return [r'.*ESACCI-L2-CLOUD.*']
+        return [r'.*ESACCI-L2_CLOUD.*']
 
     def _fix_time(self, coord):
         coord.convert_julian_to_std_time()
