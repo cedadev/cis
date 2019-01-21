@@ -176,7 +176,7 @@ class GriddedUngriddedInterpolator(object):
 
         if self.missing_mask is not None:
             # Pack the interpolated values back into the original shape
-            expanded_result = np.ma.masked_array(np.zeros(self.missing_mask.shape), mask=self.missing_mask,
+            expanded_result = np.ma.masked_array(np.zeros(self.missing_mask.shape), mask=self.missing_mask.copy(),
                                                  fill_value=fill_value)
             expanded_result[~self.missing_mask] = result
             result = expanded_result
