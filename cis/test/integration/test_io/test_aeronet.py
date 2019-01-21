@@ -16,7 +16,8 @@ class TestAeronet(unittest.TestCase):
 
         assert_equal(aeronet_data[0].name(), "AOT_440")
         assert_equal(aeronet_data[0].units, Unit('1'))
-        assert_equal(aeronet_data[1].name(), "Water")
+        assert_equal(aeronet_data[1].name(), "Water(cm)")
+        assert_equal(aeronet_data[1].var_name, "Water")
         assert_equal(aeronet_data[1].units, Unit('cm'))
 
     def test_aeronet_time_parsing(self):

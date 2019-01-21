@@ -96,7 +96,7 @@ class Aeronet(AProduct):
                                                        units="degrees_north", range=(-90, 90))))
         coords.append(Coord(data['altitude'], Metadata(name="Altitude", shape=(len(data),), units="meters")))
         coords.append(Coord(data["datetime"], Metadata(name="DateTime", standard_name='time', shape=(len(data),),
-                                                       units=str(ct)), "X"))
+                                                       units=ct), "X"))
 
         return coords
 

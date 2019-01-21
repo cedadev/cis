@@ -9,10 +9,9 @@ from tempfile import mkdtemp
 
 from hamcrest import *
 from nose.tools import istest, eq_, raises, nottest, with_setup, assert_is_instance
-from iris.exceptions import TranslationError
 
 from cis.data_io.products import *
-from cis.exceptions import InvalidVariableError
+from cis.exceptions import InvalidVariableError, FileFormatError
 from cis.test.integration_test_data import non_netcdf_file, cis_test_files, skip_pyhdf
 from cis.data_io.products import CloudSat
 
@@ -128,7 +127,7 @@ class ProductTests(object):
     def test_should_raise_ioerror_with_invalid_filename(self):
         self.product().create_data_object([invalid_filename], self.valid_variable)
 
-    @raises(IOError, TranslationError)
+    @raises(IOError, FileFormatError)
     def test_should_raise_ioerror_or_translationerror_with_file_that_is_not_a_recognised_format(self):
         self.product().create_data_object([invalid_format], self.valid_variable)
 
@@ -285,6 +284,7 @@ class TestAeronet(ProductTests, unittest.TestCase):
         from cis.test.integration_test_data import valid_aeronet_filename, another_valid_aeronet_filename
         self.setup(cis_test_files["aeronet"], Aeronet)
         self.filenames = [valid_aeronet_filename, another_valid_aeronet_filename]
+        self.file_format = "ASCIIAERONET/2"
 
     @istest
     def test_create_data_object_from_multiple_files(self):

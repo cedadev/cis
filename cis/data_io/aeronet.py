@@ -149,7 +149,6 @@ def load_aeronet(filename, variables=None):
     """
     from cis.exceptions import InvalidVariableError
     from cis.time_util import cis_standard_time_unit
-    from copy import copy
     from numpy.ma import masked_invalid
     from pandas import read_csv, to_datetime
 
@@ -160,7 +159,7 @@ def load_aeronet(filename, variables=None):
 
     # Load all available geolocation information and any requested variables
     cols = [var for var in ("date", "time", "latitude", "longitude", "altitude") if var in ordered_vars]
-    if cols is not None:
+    if cols is not None and variables is not None:
         cols.extend(variables)
 
     dtypes = {var:'str' if var in ("date", "time") else "float" for var in cols}
