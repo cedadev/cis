@@ -18,8 +18,6 @@ def load_cube(*args, **kwargs):
     :raises ValueError: If 0 or more than one cube is found
     """
     from iris.exceptions import MergeError, ConcatenateError
-    # Removes warnings and prepares for future Iris change
-    iris.FUTURE.netcdf_promote = True
 
     cubes = iris.load(*args, **kwargs)
 
@@ -293,8 +291,6 @@ class GriddedData(iris.cube.Cube, CommonData):
         # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
         if self.coords('time'):
             save_args['unlimited_dimensions'] = ['time']
-        else:
-            iris.FUTURE.netcdf_no_unlimited = True
         iris.save(self, output_file, **save_args)
 
     def as_data_frame(self, copy=True):
@@ -442,8 +438,6 @@ class GriddedDataList(iris.cube.CubeList, CommonDataList):
         # If we have a time coordinate then use that as the unlimited dimension, otherwise don't have any
         if self.coords('time'):
             save_args['unlimited_dimensions'] = ['time']
-        else:
-            iris.FUTURE.netcdf_no_unlimited = True
 
         iris.save(self, output_file, **save_args)
 

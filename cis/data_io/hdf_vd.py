@@ -23,7 +23,7 @@ def get_hdf_VD_file_variables(filename):
     Get all the variables from an HDF VD file
 
     :param filename: The filename of the file to get the variables from
-    :returns: An OrderedDict containing the variables from the file
+    :return: An OrderedDict containing the variables from the file
     """
     variables = None
     if not HDF:

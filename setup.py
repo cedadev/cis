@@ -25,7 +25,7 @@ else:
                     "psutil>=2.0.0",
                     "six"]
 
-    optional_dependencies = {"HDF": ["pyhdf"], "Pandas": ["pandas"]}
+    optional_dependencies = {"HDF": ["pyhdf>=0.9.0"], "Pandas": ["pandas"]}
 
     test_dependencies = ["pyhamcrest", "mock", "nose"]
 

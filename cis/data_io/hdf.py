@@ -76,8 +76,7 @@ def _read_hdf4(filename, variables):
 
         vds_dict = hdf_vd.read(filename, vdvariables)
     except HDF4Error as e:
-        joined_up_message = "".join(e)
-        raise IOError(joined_up_message)
+        raise IOError(str(e))
 
     for variable in variables:
         if variable not in sds_dict and variable not in vds_dict:

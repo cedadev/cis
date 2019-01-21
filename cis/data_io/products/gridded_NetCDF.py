@@ -25,8 +25,6 @@ class NetCDF_Gridded(AProduct):
         import iris
         import cf_units as unit
         from cis.utils import single_warnings_only
-        # Removes warnings and prepares for future Iris change
-        iris.FUTURE.netcdf_promote = True
 
         variables = []
 

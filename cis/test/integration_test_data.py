@@ -153,8 +153,8 @@ valid_aerosol_cci_variable_2 = "AOD870"
 
 cis_test_files["Aerosol_CCI"] = TestFileTestData(
     master_filename=valid_aerosol_cci_filename,
-    file_format="NetCDF/Aerosol_CCI",
-    product_name="Aerosol_CCI",
+    file_format="NetCDF/Aerosol_CCI_L2",
+    product_name="Aerosol_CCI_L2",
     start_datetime=datetime(2008, 6, 12, 10, 1, 23),
     end_datetime=datetime(2008, 6, 12, 10, 43, 37),
     lat_min=-44.91,
@@ -174,8 +174,8 @@ valid_cloud_cci_8_bit_variable = "illum"
 
 cis_test_files["Cloud_CCI"] = TestFileTestData(
     master_filename=valid_cloud_cci_filename,
-    file_format="NetCDF/Cloud_CCI",
-    product_name="Cloud_CCI",
+    file_format="NetCDF/Cloud_CCI_L2",
+    product_name="Cloud_CCI_L2",
     start_datetime=datetime(2007, 6, 29, 12, 55, 3),
     end_datetime=datetime(2007, 6, 29, 14, 33, 56),
     lat_min=-81.84876,

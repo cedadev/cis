@@ -261,12 +261,12 @@ class TestMODIS_L2(ProductTests, unittest.TestCase):
 
 class TestCloud_CCI(ProductTests, unittest.TestCase):
     def setUp(self):
-        self.setup(cis_test_files["Cloud_CCI"], Cloud_CCI)
+        self.setup(cis_test_files["Cloud_CCI"], Cloud_CCI_L2)
 
 
 class TestAerosol_CCI(ProductTests, unittest.TestCase):
     def setUp(self):
-        self.setup(cis_test_files["Aerosol_CCI"], Aerosol_CCI)
+        self.setup(cis_test_files["Aerosol_CCI"], Aerosol_CCI_L2)
 
     def check_valid_vars(self, vars):
         exclude_vars = ["sun_zenith", "satellite_zenith", "relative_azimuth", "instrument_view"]

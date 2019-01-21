@@ -82,9 +82,6 @@ class HadGEM_CONVSH(NetCDF_Gridded):
         # Don't do any checks on valid variables at the moment as iris can't parse the hybrid height dimension units...
         import iris
         from cis.utils import single_warnings_only
-        # Removes warnings and prepares for future Iris change
-        iris.FUTURE.netcdf_promote = True
-
         # Filter the warnings so that they only appear once - otherwise you get lots of repeated warnings
         with single_warnings_only():
             cubes = iris.load(filenames)
@@ -118,4 +115,7 @@ class HadGEM_PP(NetCDF_Gridded):
         try:
             cube.var_name = var_name
         except ValueError as e:
-            logging.info("Unable to set var_name due to error: {}".format(e))
+            try:
+                cube.var_name = var_name.replace(' ', '_')
+            except ValueError as e:
+                logging.info("Unable to set var_name due to error: {}".format(e))

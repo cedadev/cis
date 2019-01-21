@@ -15,7 +15,7 @@ def get_hdf_SD_file_variables(filename):
     Get all the variables from an HDF SD file
 
     :param str filename: The filename of the file to get the variables from
-    :returns: An OrderedDict containing the variables from the file
+    :return: An OrderedDict containing the variables from the file
     """
     if not SD:
         raise ImportError("HDF support was not installed, please reinstall with pyhdf to read HDF files.")
@@ -105,10 +105,22 @@ class HDF_SDS(object):
         finally:
             self._close_sds()
 
+    def dimensions(self):
+        """
+        Call pyhdf.SD.SDS.dimensions(), opening and closing the file
+        """
+        from collections import OrderedDict
+        try:
+            self._open_sds()
+            var_description = self._sd.datasets()[self._variable]
+            return OrderedDict(zip(var_description[0], var_description[1]))
+        finally:
+            self._close_sds()
+
 
 def read(filename, variables=None, datadict=None):
     """
-    Reads SD from a HDF4 file into a dictionary. 
+    Reads SD from a HDF4 file into a dictionary.
 
     :param str filename: The name (with path) of the HDF file to read.
     :param iterable names: A sequence of variable (dataset) names to read from the
