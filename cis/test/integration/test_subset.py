@@ -123,6 +123,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
 
     def check_temporal_subsetting(self, t_min, t_max):
         import datetime
+        from cf_units import Unit
         self.ds = Dataset(self.OUTPUT_FILENAME)
         cis_standard = datetime.datetime(1600, 1, 1, 0, 0, 0)
         time = self.ds.variables['time']
@@ -131,7 +132,7 @@ class TestTemporalSubsetAllProductsNamedVariables(BaseIntegrationTest):
         # Expand the search by a second either way to avoid rounding problems
         datetime_min -= datetime.timedelta(seconds=1.5)
         datetime_max += datetime.timedelta(seconds=1.5)
-        time_vals = convert_time_since_to_std_time(time[:], time.units)
+        time_vals = convert_time_since_to_std_time(time[:], Unit(time.units))
         for time_val in time_vals:
             delta = datetime.timedelta(days=time_val)
             datetime_value = cis_standard + delta
@@ -360,7 +361,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
 
     def test_subset_Aeronet(self):
         # Takes 60s
-        variable = '*'
+        variable = 'AOT_*'
         filename = valid_aeronet_filename
         lon_min, lon_max = -1.5, 1.4
         lat_min, lat_max = 15, 15.5
@@ -437,7 +438,7 @@ class TestSpatialSubsetAllProductsAllValidVariables(BaseIntegrationTest):
     def test_subset_CloudSatRVOD(self):
         # 257s exit code 137
         variable = '*'  # Gets killed by Jenkins
-        variable = "RVOD_liq_water_content,RVOD_ice_water_path"
+        variable = "RVOD_liq_water_path,RVOD_ice_water_path"
         filename = valid_cloudsat_RVOD_file
         lon_min, lon_max = -10, 10
         lat_min, lat_max = 40, 60

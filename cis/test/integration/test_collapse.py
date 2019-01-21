@@ -36,7 +36,7 @@ class TestCollapse(BaseIntegrationTest):
         main_arguments = parse_args(arguments)
         collapse_cmd(main_arguments)
         self.check_output_contains_variables(self.OUTPUT_FILENAME, variable.split(','))
-        self.check_shape_collapse('od550aer', (192, 76))
+        self.check_shape_collapse('od550aer', (1, 192, 76))
 
     @skip_pyhdf
     def test_collapse_MODIS_L3(self):
@@ -95,7 +95,7 @@ class TestCollapse(BaseIntegrationTest):
         variable = 'Optical_Depth_Ratio_Small_Land_And_Ocean_Std_Deviation_Mean,Solar_Zenith_Std_Deviation_Mean,' \
                    'Solar_Azimuth_Std_Deviation_Mean,Optical_Depth_Ratio_Small_Land_And_Ocean_Pixel_Counts,' \
                    'Optical_Depth_Ratio_Small_Land_QA_Std_Deviation_Mean'
-        filename = valid_modis_l3_filename + ',' + valid_modis_l3_filename2
+        filename = valid_modis_l3_filename
         arguments = ['collapse', variable + ':' + escape_colons(filename), 't', '-o', self.OUTPUT_FILENAME]
         main_arguments = parse_args(arguments)
         collapse_cmd(main_arguments)

@@ -143,7 +143,7 @@ class TestAggregation(BaseAggregationTest):
                                0.12211483395949896, 0.09108650039336486, 0.139907898276485,
                                0.24998173519681813, 0.29386406702711093, 0.38747846944250536,
                                0.6303785410104443, 0.999659818761489, 0.6851485338292652,
-                               0.37053351032777904, i, 0.336047126251517, 0.22054079781591365,
+                               0.37053351032777904, 0.2074383, 0.336047126251517, 0.22054079781591365,
                                0.11859528582197681, 0.07632432809566862, 0.062386703491210935,
                                0.053831556108262804]]])
         arr_550 = ma.masked_invalid(arr_550)
@@ -264,7 +264,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
 
     def test_aggregate_Aeronet(self):
         # Takes 50s
-        variable = '*'
+        variable = 'AOT_*'
         filename = valid_aeronet_filename
         lon_min, lon_max, lon_delta = -1.5, 1.4, 0.01
         lat_min, lat_max, lat_delta = 15, 15.5, 0.1
@@ -325,7 +325,7 @@ class TestSpatialAggregationByDataProduct(BaseAggregationTest):
     def test_aggregate_CloudSatRVOD(self):
         # Takes 200s
         variable = '*'  # Slow and runs out of memory
-        variable = 'RVOD_liq_water_content,RVOD_ice_water_path'
+        variable = 'RVOD_liq_water_path,RVOD_ice_water_path'
         filename = valid_cloudsat_RVOD_file
         lon_min, lon_max, lon_delta = -10, 10, 2
         lat_min, lat_max, lat_delta = 40, 60, 2
@@ -514,7 +514,7 @@ class TestTemporalAggregationByDataProduct(BaseAggregationTest):
     @skip_pyhdf
     def test_aggregate_CloudSatRVOD(self):
         # Takes 41s
-        variable = 'RVOD_liq_water_content,RVOD_ice_water_path'
+        variable = 'RVOD_liq_water_path,RVOD_ice_water_path'
         filename = valid_cloudsat_RVOD_file
         time_min, time_max = dt.datetime(2007, 6, 29, 13, 12, 0), dt.datetime(2007, 6, 29, 14, 29, 0)
         time_delta = dt.timedelta(minutes=23)

@@ -70,7 +70,7 @@ class TestStats(BaseIntegrationTest):
     @skip_pyhdf
     def test_CloudSat(self):
         # Takes 140s
-        args = ['stats', "%s,%s:%s" % (valid_cloudsat_RVOD_sdata_variable, valid_cloudsat_RVOD_vdata_variable,
+        args = ['stats', "%s,%s:%s" % ("RVOD_liq_water_content", "RVOD_ice_water_content",
                                        escape_colons(valid_cloudsat_RVOD_file)),
                 '-o', self.OUTPUT_FILENAME]
         arguments = parse_args(args)

@@ -24,9 +24,9 @@ class TestWriteNetcdf(unittest.TestCase):
     def test_write_col_and_reload_1(self):
         # Copy a collocated file and try to reload it.  This exposes a bug where
         # var.shape is set in the NetCDF metadata
-        from cis.data_io.products import Aerosol_CCI
+        from cis.data_io.products import Aerosol_CCI_L2
 
-        prod = Aerosol_CCI()
+        prod = Aerosol_CCI_L2()
         data_object = prod.create_data_object([valid_cis_col_file], valid_cis_col_variable)
         write(data_object, tmp_file)
 
