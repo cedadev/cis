@@ -69,8 +69,9 @@ class TestGriddedSubsetConstraint(TestCase):
                                          [[87, 88, 89, 90], [94, 95, 96, 97], [101, 102, 103, 104]]])
 
     def test_can_subset_gridded_data_using_multiple_extract_constraints(self):
+        from cis.time_util import convert_std_time_to_datetime
         data = make_from_cube(cis.test.util.mock.make_mock_cube(time_dim_length=3, alt_dim_length=6))
-        subset = data.subset(time=[140492, 140493], altitude=[0, 3])
+        subset = data.subset(time=convert_std_time_to_datetime([140492, 140493]), altitude=[0, 3])
         assert subset.data.shape == (5, 3, 3, 2)
 
     def test_can_subset_gridded_data_by_shape(self):

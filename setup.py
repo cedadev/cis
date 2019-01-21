@@ -17,12 +17,13 @@ if on_rtd:
     test_dependencies = []
 
 else:
-    dependencies = ["matplotlib>=1.2.0",
+    dependencies = ["matplotlib>=2.0",
                     "netcdf4>=1.0",
                     "numpy",
                     "scipy>=0.15.0",
-                    "psutil>=2.0.0",
-                    "six"]
+                    "scitools-iris>=1.8.0",
+                    'psutil>=2.0.0',
+                    'six']
 
     optional_dependencies = {"HDF": ["pyhdf>=0.9.0"], "Pandas": ["pandas"]}
 
