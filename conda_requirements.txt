@@ -2,8 +2,9 @@
 # $ conda create --name <env> --file <this file>
 
 # Python dependencies
-matplotlib
-numpy>=1.10
+#  Match the iris requirement for matplotlib<3
+matplotlib>=2,<3
+numpy>=1.10,<1.16
 iris
 scipy
 pandas
@@ -24,8 +25,3 @@ nose
 mock
 psutil
 pyhamcrest
-
-
-
-
-
