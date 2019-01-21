@@ -21,7 +21,6 @@ def subset(data, constraint, **kwargs):
     :param kwargs: The limits as slices or length 2 tuples of max and min.
     :return:
     """
-    from datetime import datetime
     from cis.time_util import PartialDateTime
     from cis.exceptions import CoordinateNotFoundError
     from shapely.wkt import loads
@@ -53,24 +52,18 @@ def subset(data, constraint, **kwargs):
         if all(hasattr(limit, att) for att in ('start', 'stop')):
             l = limit
         elif isinstance(limit, PartialDateTime):
-            l = slice(c.units.date2num(limit.min()),
-                      c.units.date2num(limit.max()))
+            l = slice(limit.min(), limit.max())
         elif len(limit) == 1 and isinstance(limit[0], PartialDateTime):
-            l = slice(c.units.date2num(limit[0].min()),
-                      c.units.date2num(limit[0].max()))
+            l = slice(limit[0].min(), limit[0].max())
         elif len(limit) == 2:
             l = slice(limit[0], limit[1])
         else:
             raise ValueError("Invalid subset arguments: {}".format(limit))
 
-        # Fill in defaults and convert datetimes
+        # Fill in defaults
         limit_start = l.start if l.start is not None else c.points.min()
-        if isinstance(limit_start, datetime):
-            limit_start = c.units.date2num(limit_start)
-
         limit_end = l.stop if l.stop is not None else c.points.max()
-        if isinstance(limit_end, datetime):
-            limit_end = c.units.date2num(limit_end)
+
         constraints[data._get_coord(dim_name).name()] = slice(limit_start, limit_end)
 
     subset_constraint = constraint(constraints)
@@ -197,6 +190,7 @@ class UngriddedSubsetConstraint(SubsetConstraint):
         :return: subsetted data
         """
         import numpy as np
+        from datetime import datetime
         from cis.data_io.ungridded_data import UngriddedDataList
 
         if isinstance(data, list):
@@ -216,9 +210,13 @@ class UngriddedSubsetConstraint(SubsetConstraint):
             shape = _data.coords()[0].data.shape  # This assumes they are all the same shape
             combined_mask = np.ones(shape, dtype=bool)
             for coord, limit in self._limits.items():
+                # Convert the points to datetimes if the limit is a datetime
+                if isinstance(limit.start, datetime):
+                    points = _data.coord(coord).units.num2date(_data.coord(coord).data)
+                else:
+                    points = _data.coord(coord).data
                 # Select any points which are <= to the stop limit AND >= to the start limit
-                mask = (np.less_equal(_data.coord(coord).data, limit.stop) &
-                        np.greater_equal(_data.coord(coord).data, limit.start))
+                mask = (np.less_equal(points, limit.stop) & np.greater_equal(points, limit.start))
                 combined_mask &= mask
             self._combined_mask = combined_mask
 

@@ -179,8 +179,6 @@ class GriddedUngriddedInterpolator(object):
             expanded_result = np.ma.masked_array(np.zeros(self.missing_mask.shape), mask=self.missing_mask,
                                                  fill_value=fill_value)
             expanded_result[~self.missing_mask] = result
-            if hasattr(result, 'mask'):
-                expanded_result.mask[~self.missing_mask] = result.mask
             result = expanded_result
 
         return result

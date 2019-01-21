@@ -8,6 +8,7 @@ sudo: false
 env:
   - TEST_TARGET=unit PYTHON_TARGET=2.7
   - TEST_TARGET=unit PYTHON_TARGET=3.6
+  - TEST_TARGET=unit PYTHON_TARGET=3.7
   # - TEST_TARGET=integration
 
 install:
@@ -15,11 +16,11 @@ install:
   # Install miniconda
   # -----------------
   - if [[ $PYTHON_TARGET == 2* ]]; then
-      export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda;
+      export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda2;
     else
       export CONDA_BASE=http://repo.continuum.io/miniconda/Miniconda3;
     fi
-  - wget ${CONDA_BASE}-3.7.0-Linux-x86_64.sh -O miniconda.sh;
+  - wget ${CONDA_BASE}-latest-Linux-x86_64.sh -O miniconda.sh;
 
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
