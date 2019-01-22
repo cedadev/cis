@@ -79,7 +79,9 @@ class cis(AProduct):
 
 class Aeronet(AProduct):
     def get_file_signature(self):
-        return [r'.*\.lev20', r'.*\.ONEILL_lev20', r'.*\.ONEILL_20', r'.*\.lev15', r'.*\.ONEILL_lev15', r'.*\.ONEILL_15', r'.*All_Sites_Times.*dat']
+        return [r'.*\.lev20', r'.*\.ONEILL_lev20', r'.*\.ONEILL_20', r'.*\.lev15',
+                r'.*\.ONEILL_lev15', r'.*\.ONEILL_15', r'.*All_Sites_Times.*dat',
+                r'.*\.all']
 
     def _create_coord_list(self, filenames, data=None):
         from cis.data_io.ungridded_data import Metadata

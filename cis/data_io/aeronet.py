@@ -2,13 +2,13 @@ import logging
 
 defaultdeletechars = """~!@#$%^&*=+~\|]}[{'; /?.>,<"""
 
-AERONET_HEADER_LENGTH = {"AERONET-SDA/2" : 5, "AERONET/2" : 5, "MAN-SDA/2" : 5, "MAN/2" : 5,
-                         "AERONET-SDA/3" : 7, "AERONET/3" : 7}
-AERONET_MISSING_VALUE = {"AERONET-SDA/2" : 'N/A', "AERONET/2" :'N/A', "MAN-SDA/2" : -999.0, "MAN/2" : (-999.0, -10000),
-                         "AERONET-SDA/3" : -999.0, "AERONET/3" : -999.0}
+AERONET_HEADER_LENGTH = {"AERONET-SDA/2": 5, "AERONET/2": 5, "MAN-SDA/2": 5, "MAN/2": 5,
+                         "AERONET-SDA/3": 7, "AERONET/3": 7}
+AERONET_MISSING_VALUE = {"AERONET-SDA/2": 'N/A', "AERONET/2": 'N/A', "MAN-SDA/2": -999.0, "MAN/2": (-999.0, -10000),
+                         "AERONET-SDA/3": -999.0, "AERONET/3": -999.0}
 
 V2_HEADER = "Version 2 Direct Sun Algorithm"
-V3_HEADER = "AERONET Version 3;"
+V3_HEADER = "AERONET Version 3"
 
 AERONET_COORDINATE_RENAME = {
     "Date(dd:mm:yy)" : "date",
@@ -25,10 +25,14 @@ AERONET_COORDINATE_RENAME = {
     "Time_(hh-mm-ss)" : "time",
     "Latitude" : "latitude",
     "Longitude" : "longitude",
+    "Latitude(Degrees)": "latitude",
+    "Longitude(Degrees)": "longitude",
     "Site_Latitude(Degrees)" : "latitude",
     "Site_Longitude(Degrees)" : "longitude",
     "Site_Elevation(m)" : "altitude",
+    "Elevation(m)": "altitude"
 }
+
 
 def get_slice_of_lines_from_file(filename, start, end):
     """Grab a subset of lines from a file, defined using slice-style start:end.
@@ -37,6 +41,7 @@ def get_slice_of_lines_from_file(filename, start, end):
     from itertools import islice
     with open(filename) as fileobj:
         return list(islice(fileobj, start, end))
+
 
 def get_aeronet_version(filename):
     """
