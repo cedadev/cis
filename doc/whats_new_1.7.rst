@@ -10,11 +10,11 @@ CIS 1.7 features
 ================
  * Extended the definition of the MODIS_L3 plugin to include monthly files.
  * Added plugins Aerosol_CCI_L3 and Cloud_CCI_L3 to read Level 3 CCI products.
- * Extended the Aeronet plugin to read files from,
-   * The Version 3 Direct Sun Algorithm,
-   * The Maritime Aerosol Network,
-   * All versions of the Spectral Decomposition Algorithm,
-   * The All_Sites_Times_*.dat files now distributed under the "Download All Sites" link.
+ * Extended the Aeronet plugin to read files from:
+    * The Version 3 Direct Sun Algorithm,
+    * The Maritime Aerosol Network,
+    * All versions of the Spectral Decomposition Algorithm,
+    * The All_Sites_Times_*.dat files now distributed under the "Download All Sites" link.
 
 Incompatible changes
 ====================
