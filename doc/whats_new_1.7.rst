@@ -30,3 +30,4 @@ Bugs fixed
 CIS 1.7.1 fixes
 ===============
  * Fixed an issue where interpolation would unmask masked source arrays
+ * Support for Pandas 0.24
