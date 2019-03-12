@@ -301,10 +301,10 @@ class SepConstraintKdtree(PointConstraint):
         return np.nonzero(np.abs(points.altitude - ref_point.altitude) < self.a_sep)[0]
 
     def pressure_constraint(self, points, ref_point):
-        greater_pressures = np.nonzero(((points.air_pressure / ref_point.air_pressure) < self.p_sep) &
-                                       (points.air_pressure > ref_point.air_pressure))[0]
-        lesser_pressures = np.nonzero(((ref_point.air_pressure / points.air_pressure) < self.p_sep) &
-                                      (points.air_pressure <= ref_point.air_pressure))[0]
+        greater_pressures = np.nonzero(((points.air_pressure.values / ref_point.air_pressure) < self.p_sep) &
+                                       (points.air_pressure.values > ref_point.air_pressure))[0]
+        lesser_pressures = np.nonzero(((ref_point.air_pressure / points.air_pressure.values) < self.p_sep) &
+                                      (points.air_pressure.values <= ref_point.air_pressure))[0]
         return np.concatenate([lesser_pressures, greater_pressures])
 
     def constrain_points(self, ref_point, data):
