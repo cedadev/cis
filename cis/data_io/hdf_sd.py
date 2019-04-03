@@ -46,9 +46,12 @@ class HDF_SDS(object):
     _filename = None
     _variable = None
 
-    def __init__(self, filename, variable):
+    def __init__(self, filename, variable, start=None, count=None, stride=None):
         self._filename = filename
         self._variable = variable
+        self._start = start
+        self._count = count
+        self._stride = stride
 
     def _open_sds(self):
         """
@@ -72,13 +75,19 @@ class HDF_SDS(object):
             if self._sd is not None:
                 self._sd.end()
 
-    def get(self):
+    def get(self, start=None, count=None, stride=None):
         """
         Call pyhdf.SD.SDS.get(), opening and closing the file
         """
+        if start is None:
+            start = self._start
+        if count is None:
+            count = self._count
+        if stride is None:
+            stride = self._stride
         try:
             self._open_sds()
-            data = self._sds.get()
+            data = self._sds.get(start, count, stride)
             return data
         finally:
             self._close_sds()

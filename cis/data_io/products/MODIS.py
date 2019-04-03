@@ -18,6 +18,10 @@ def _get_MODIS_SDS_data(sds):
     data = sds.get()
     attributes = sds.attributes()
 
+    # Squeeze dimensions that have been sliced
+    if sds._count is not None and any(np.array(sds._count) == 1):
+        data = data.squeeze()
+
     # Apply Fill Value
     missing_value = attributes.get('_FillValue', None)
     if missing_value is not None:
