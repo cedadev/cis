@@ -2,7 +2,7 @@ import logging
 from cis.data_io import hdf as hdf
 from cis.data_io.Coord import CoordList, Coord
 from cis.data_io.products import AProduct
-from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData
+from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, UngriddedDataList
 
 
 def _get_MODIS_SDS_data(sds):
@@ -296,6 +296,8 @@ class MODIS_L2(AProduct):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
+        from itertools import product
+
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -309,8 +311,24 @@ class MODIS_L2(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, _get_MODIS_SDS_data)
+        # Check the dimension of this variable
+        info = var[0].info()
+        if info[1] == 2:
+            return UngriddedData(var, metadata, coords, _get_MODIS_SDS_data)
 
+        elif info[1] < 2:
+            raise NotImplementedError("1D field in MODIS L2 data.")
+
+        else:
+            result = UngriddedDataList()
+
+            # Iterate over all but the last two dimensions
+            ranges = [range(n) for n in info[2][:-2]]
+            for indices in product(*ranges):
+                var[0]._start = list(indices) + [0, 0]
+                var[0]._count = [1] * len(indices) + info[2][-2:]
+                result.append(UngriddedData(var, metadata, coords, _get_MODIS_SDS_data))
+            return result
 
     def get_file_format(self, filenames):
         """
