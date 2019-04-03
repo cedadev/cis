@@ -233,7 +233,7 @@ class MODIS_L2(AProduct):
         """
         Interpolates the given 2D field by the factor,
         edge pixels are defined by the ones in the centre,
-        odd factords only!
+        odd factors only!
         """
         import numpy as np
 

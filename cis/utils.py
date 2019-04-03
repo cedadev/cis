@@ -198,7 +198,7 @@ def get_coord(data_object, variable, data):
     Find a specified coord
 
     :param data_object:
-    :param variable: 
+    :param variable:
     :param data:
     :return:
     """
