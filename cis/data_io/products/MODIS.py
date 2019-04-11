@@ -312,21 +312,22 @@ class MODIS_L2(AProduct):
         metadata = hdf.read_metadata(var, "SD")
 
         # Check the dimension of this variable
-        info = var[0].info()
-        if info[1] == 2:
+        _, ndim, dim_len, _, _ = var[0].info()
+        if ndim == 2:
             return UngriddedData(var, metadata, coords, _get_MODIS_SDS_data)
 
-        elif info[1] < 2:
+        elif ndim < 2:
             raise NotImplementedError("1D field in MODIS L2 data.")
 
         else:
             result = UngriddedDataList()
 
             # Iterate over all but the last two dimensions
-            ranges = [range(n) for n in info[2][:-2]]
+            ranges = [range(n) for n in dim_len[:-2]]
             for indices in product(*ranges):
-                var[0]._start = list(indices) + [0, 0]
-                var[0]._count = [1] * len(indices) + info[2][-2:]
+                for manager in var:
+                    manager._start = list(indices) + [0, 0]
+                    manager._count = [1] * len(indices) + manager.info()[2][-2:]
                 result.append(UngriddedData(var, metadata, coords, _get_MODIS_SDS_data))
             return result
 
