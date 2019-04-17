@@ -346,7 +346,7 @@ class _RegularGridInterpolator(object):
             weight = 1.
             for ei, i, yi in zip(edge_indices, indices, norm_distances):
                 weight *= np.where(ei == i, 1 - yi, yi)
-            value += np.asarray(values[edge_indices]) * weight[vslice]
+            value += np.ma.asarray(values[edge_indices]) * weight[vslice]
         return value
 
     @staticmethod

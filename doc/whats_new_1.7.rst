@@ -26,3 +26,8 @@ Incompatible changes
 Bugs fixed
 ==========
  * In a PP file, if a var_name contains spaces the plugin will now attempt to replace them with underscores.
+
+CIS 1.7.1 fixes
+===============
+ * Fixed an issue where interpolation would unmask masked source arrays
+ * Support for Pandas 0.24
