@@ -328,7 +328,7 @@ class MODIS_L2(AProduct):
                 for manager in var:
                     manager._start = list(indices) + [0, 0]
                     manager._count = [1] * len(indices) + manager.info()[2][-2:]
-                result.append(UngriddedData(var, metadata, coords, _get_MODIS_SDS_data))
+                result.append(UngriddedData(var, metadata, coords.copy(), _get_MODIS_SDS_data))
             return result
 
     def get_file_format(self, filenames):
