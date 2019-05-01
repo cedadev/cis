@@ -1243,7 +1243,8 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
     elif isinstance(data, GriddedData) or isinstance(data, GriddedDataList):
         col = ci.GriddedUngriddedCollocator(fill_value=fill_value, var_name=var_name, var_long_name=var_long_name,
                                             var_units=var_units,
-                                            missing_data_for_missing_sample=missing_data_for_missing_sample)
+                                            missing_data_for_missing_sample=missing_data_for_missing_sample,
+                                            **kwargs)
         con = None
         kernel = 'lin'
     else:

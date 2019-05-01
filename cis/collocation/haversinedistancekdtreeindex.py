@@ -64,4 +64,4 @@ class HaversineDistanceKDTreeIndex(object):
         For each element ``self.data[i]`` of this tree, ``results[i]`` is a
             list of the indices of its neighbors in ``other.data``.
         """
-        return create_index(sample).query_ball_tree(self.index, distance)
+        return create_index(sample).query_ball_tree(self.index, distance, eps=100.)

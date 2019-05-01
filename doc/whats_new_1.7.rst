@@ -31,3 +31,9 @@ CIS 1.7.1 fixes
 ===============
  * Fixed an issue where interpolation would unmask masked source arrays
  * Support for Pandas 0.24
+
+CIS 1.7.2 fixes
+===============
+ * Allowed the specification of the dimension corresponding to the vertical
+  dimension when interpolating hybrid height/pressure fields
+

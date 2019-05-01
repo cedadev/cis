@@ -118,11 +118,12 @@ class GriddedUngriddedCollocator(Collocator):
     """
 
     def __init__(self, fill_value=None, var_name='', var_long_name='', var_units='',
-                 missing_data_for_missing_sample=False, extrapolate=False):
+                 missing_data_for_missing_sample=False, extrapolate=False, vertical_dim=None):
         super(GriddedUngriddedCollocator, self).__init__(fill_value, var_name, var_long_name, var_units,
                                                          missing_data_for_missing_sample)
         self.extrapolate = extrapolate
         self.interpolator = None
+        self.vertical_dim = vertical_dim
 
     def collocate(self, points, data, constraint, kernel):
         """
@@ -166,7 +167,9 @@ class GriddedUngriddedCollocator(Collocator):
 
         if self.interpolator is None:
             # Cache the interpolator
-            self.interpolator = GriddedUngriddedInterpolator(data, points, kernel, self.missing_data_for_missing_sample)
+            self.interpolator = GriddedUngriddedInterpolator(data, points, kernel,
+                                                             self.missing_data_for_missing_sample,
+                                                             vertical_dim=self.vertical_dim)
 
         values = self.interpolator(data, fill_value=self.fill_value, extrapolate=self.extrapolate)
 
