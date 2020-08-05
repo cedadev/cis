@@ -1,4 +1,4 @@
-from matplotlib.ticker import LogFormatter, is_close_to_int, nearest_long
+from matplotlib.ticker import LogFormatter, is_close_to_int
 from matplotlib import rcParams
 import math
 
@@ -44,6 +44,6 @@ class LogFormatterMathtextSpecial(LogFormatter):
                 return '$\mathdefault{%s\\times%s%s^{%d}}$' % ('%1.1f' % decimal_part, sign_string, base, fx)
         else:
             if usetex:
-                return r'$%s%s^{%d}$' % (sign_string, base, nearest_long(fx))
+                return r'$%s%s^{%d}$' % (sign_string, base, round(fx))
             else:
-                return r'$\mathdefault{%s%s^{%d}}$' % (sign_string, base, nearest_long(fx))
+                return r'$\mathdefault{%s%s^{%d}}$' % (sign_string, base, round(fx))

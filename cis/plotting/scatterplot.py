@@ -46,7 +46,7 @@ class ScatterPlot2D(Generic2DPlot):
             self.mplkwargs["edgecolors"] = self.edgecolor
         else:
             # For 2D scatter plots set the edgecolors off by default
-            self.mplkwargs["edgecolors"] = ''
+            self.mplkwargs["edgecolors"] = None
             
         self.mplkwargs["c"] = self.data
 
