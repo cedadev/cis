@@ -157,7 +157,7 @@ def convert_time_using_time_stamp_info_to_std_time(time_array, units, time_stamp
     """
     from cf_units import Unit
     units = str(units).split()
-    if len(units) is 0:
+    if len(units) == 0:
         raise ValueError("Units is empty when converting time")
 
     units_in_since_form = Unit(units[0] + " since " + time_stamp_info)

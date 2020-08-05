@@ -79,7 +79,7 @@ class MODIS_L3(AProduct):
             matches = re.findall('".*"', ssubsub)
             if len(matches) > 0:
                 res = matches[0].replace('\"', '')
-                if res is not "":
+                if res != "":
                     break
         return res
 
@@ -266,7 +266,7 @@ class MODIS_L2(AProduct):
         apply_interpolation = False
         if variable is not None:
             scale = self.__get_data_scale(filenames[0], variable)
-            apply_interpolation = True if scale is "1km" else False
+            apply_interpolation = True if scale == "1km" else False
 
         lat = sdata['Latitude']
         sd_lat = hdf.read_data(lat, _get_MODIS_SDS_data)
