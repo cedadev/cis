@@ -295,10 +295,10 @@ class SepConstraintKdtree(PointConstraint):
             self.checks.append(self.time_constraint)
 
     def time_constraint(self, points, ref_point):
-        return np.nonzero(np.abs(points.time - ref_point.time) < self.t_sep)[0]
+        return (np.abs(points.time - ref_point.time) < self.t_sep).to_numpy().nonzero()[0]
 
     def alt_constraint(self, points, ref_point):
-        return np.nonzero(np.abs(points.altitude - ref_point.altitude) < self.a_sep)[0]
+        return (np.abs(points.altitude - ref_point.altitude) < self.a_sep).to_numpy().nonzero()[0]
 
     def pressure_constraint(self, points, ref_point):
         greater_pressures = np.nonzero(((points.air_pressure.values / ref_point.air_pressure) < self.p_sep) &

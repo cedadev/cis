@@ -31,3 +31,9 @@ CIS 1.7.1 fixes
 ===============
  * Fixed an issue where interpolation would unmask masked source arrays
  * Support for Pandas 0.24
+
+CIS 1.7.2 fixes
+===============
+ * We no-longer officially support Python 2.7. We won't yet explicitly remove Python 2.7 features but we no longer
+test against Python 2 and won't fix issues relating to it.
+ * Support for Pandas 1.1
