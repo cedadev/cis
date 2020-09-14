@@ -104,7 +104,7 @@ class TestUngriddedData(TestCase):
 
         assert_that(df['rainfall_flux'][5] == 6)
         assert_that(df['latitude'][17] == 0)
-        assert_that(df['latitude'].ix[datetime(1984,8,31)][0] == 10)
+        assert_that(df.loc[datetime(1984,8,31), 'latitude'][0] == 10)
         assert_that(df['rainfall_flux'].median() == 25.5)
 
     @skip_pandas
