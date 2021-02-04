@@ -1036,6 +1036,30 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
         out_cube = col.collocate(points=sample, data=data, constraint=constraint, kernel=kernel)
         assert out_cube[0].shape == sample.shape
 
+    def test_ungridded_gridded_bin_when_grids_have_different_dims_order(self):
+        from cis.data_io.gridded_data import make_from_cube
+        from test.util.mock import make_regular_2d_with_time_ungridded_data
+        sample = make_from_cube(make_mock_cube(time_dim_length=12, dim_order=['lat', 'lon', 'time']))
+        data_point = make_regular_2d_with_time_ungridded_data()
+
+        col = GeneralGriddedCollocator(missing_data_for_missing_sample=True)
+        constraint = BinnedCubeCellOnlyConstraint()
+        kernel = mean()
+        out_cube = col.collocate(points=sample, data=data_point, constraint=constraint, kernel=kernel)
+        assert out_cube[0].shape == sample.shape
+
+    def test_ungridded_gridded_bin_when_grids_have_different_dims_order_1(self):
+        from cis.data_io.gridded_data import make_from_cube
+        from test.util.mock import make_regular_2d_with_time_ungridded_data
+        sample = make_from_cube(make_mock_cube(time_dim_length=12, dim_order=['time', 'lat', 'lon']))
+        data_point = make_regular_2d_with_time_ungridded_data()
+
+        col = GeneralGriddedCollocator(missing_data_for_missing_sample=True)
+        constraint = BinnedCubeCellOnlyConstraint()
+        kernel = moments()
+        out_cube = col.collocate(points=sample, data=data_point, constraint=constraint, kernel=kernel)
+        assert out_cube[0].shape == sample.shape
+
     def test_gridded_gridded_bin_when_grids_have_different_dims_order_2(self):
         # JASCIS-204
         from cis.data_io.gridded_data import make_from_cube
