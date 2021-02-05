@@ -20,7 +20,7 @@ class TestCalculator(unittest.TestCase):
         data1 = make_from_cube(mock.make_mock_cube())
         data2 = make_from_cube(mock.make_mock_cube(data_offset=10))
         data1.var_name = 'var1'
-        data2._var_name = 'var2'
+        data2.var_name = 'var2'
         data1.filenames = ['filename1']
         data2.filenames = ['filename2']
         self.data = [data1, data2]
