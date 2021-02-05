@@ -1038,7 +1038,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
     def test_ungridded_gridded_bin_when_grids_have_different_dims_order(self):
         from cis.data_io.gridded_data import make_from_cube
-        from test.util.mock import make_regular_2d_with_time_ungridded_data
+        from cis.test.util.mock import make_regular_2d_with_time_ungridded_data
         sample = make_from_cube(make_mock_cube(time_dim_length=12, dim_order=['lat', 'lon', 'time']))
         data_point = make_regular_2d_with_time_ungridded_data()
 
@@ -1050,7 +1050,7 @@ class TestGeneralGriddedCollocator(unittest.TestCase):
 
     def test_ungridded_gridded_bin_when_grids_have_different_dims_order_1(self):
         from cis.data_io.gridded_data import make_from_cube
-        from test.util.mock import make_regular_2d_with_time_ungridded_data
+        from cis.test.util.mock import make_regular_2d_with_time_ungridded_data
         sample = make_from_cube(make_mock_cube(time_dim_length=12, dim_order=['time', 'lat', 'lon']))
         data_point = make_regular_2d_with_time_ungridded_data()
 
