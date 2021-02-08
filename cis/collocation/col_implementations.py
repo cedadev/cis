@@ -1036,7 +1036,9 @@ class BinnedCubeCellOnlyConstraint(Constraint):
         data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
         if missing_data_for_missing_sample:
             for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
-                if points.data[out_indices] is not np.ma.masked:
+                # Remap the indices to match the data coordinate order, using the coord_map provided
+                remapped_indices = tuple(np.asarray(out_indices)[[c[2] for c in sorted(coord_map, key=lambda x: x[1])]])
+                if points.data[remapped_indices] is not np.ma.masked:
                     data_slice = data_points_sorted[slice(*slice_start_end)]
                     yield out_indices, data_slice
         else:
