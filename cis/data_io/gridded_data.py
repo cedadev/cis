@@ -1,7 +1,8 @@
 from time import gmtime, strftime
 import logging
 
-import iris
+import iris.cube
+import iris.std_names
 import numpy as np
 
 from cis.data_io.common_data import CommonData, CommonDataList
