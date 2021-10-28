@@ -319,7 +319,7 @@ def haversine(lat, lon, lat2, lon2):
     return arclen * R_E
 
 
-class OrderedSet(collections.MutableSet):
+class OrderedSet(collections.abc.MutableSet):
     """
     From http://code.activestate.com/recipes/576694/
     """

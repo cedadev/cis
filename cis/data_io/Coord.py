@@ -175,7 +175,7 @@ class CoordList(list):
         :return: A :class:`CoordList` of coordinates fitting the given criteria
         """
         import six
-        from collections import Mapping
+        from collections.abc import Mapping
         coords = self
 
         if isinstance(name_or_coord, six.string_types):
