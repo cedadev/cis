@@ -295,10 +295,10 @@ class SepConstraintKdtree(PointConstraint):
             self.checks.append(self.time_constraint)
 
     def time_constraint(self, points, ref_point):
-        return np.nonzero(np.abs(points.time - ref_point.time) < self.t_sep)[0]
+        return (np.abs(points.time - ref_point.time) < self.t_sep).to_numpy().nonzero()[0]
 
     def alt_constraint(self, points, ref_point):
-        return np.nonzero(np.abs(points.altitude - ref_point.altitude) < self.a_sep)[0]
+        return (np.abs(points.altitude - ref_point.altitude) < self.a_sep).to_numpy().nonzero()[0]
 
     def pressure_constraint(self, points, ref_point):
         greater_pressures = np.nonzero(((points.air_pressure.values / ref_point.air_pressure) < self.p_sep) &
@@ -1036,7 +1036,9 @@ class BinnedCubeCellOnlyConstraint(Constraint):
         data_points_sorted = data_points.data[self.grid_cell_bin_index_slices.sort_order]
         if missing_data_for_missing_sample:
             for out_indices, slice_start_end in self.grid_cell_bin_index_slices.get_iterator():
-                if points.data[out_indices] is not np.ma.masked:
+                # Remap the indices to match the data coordinate order, using the coord_map provided
+                remapped_indices = tuple(np.asarray(out_indices)[[c[2] for c in sorted(coord_map, key=lambda x: x[1])]])
+                if points.data[remapped_indices] is not np.ma.masked:
                     data_slice = data_points_sorted[slice(*slice_start_end)]
                     yield out_indices, data_slice
         else:

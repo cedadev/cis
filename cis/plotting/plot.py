@@ -283,8 +283,7 @@ def add_color_bar(ax, mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
     Allows specifying of tick spacing and orientation
     """
     import matplotlib.pyplot as plt
-    from .formatter import LogFormatterMathtextSpecial
-    from matplotlib.ticker import MultipleLocator
+    from matplotlib.ticker import MultipleLocator, LogFormatterMathtext
 
     cbar_kwargs = {}
 
@@ -292,7 +291,7 @@ def add_color_bar(ax, mappable, vstep, logv, cbarscale, cbarorient, cbarlabel):
         cbar_kwargs['ticks'] = MultipleLocator(vstep)
 
     if logv:
-        cbar_kwargs['format'] = LogFormatterMathtextSpecial(10, labelOnlyBase=False)
+        cbar_kwargs['format'] = LogFormatterMathtext(10, labelOnlyBase=False)
     #
     if cbarscale is not None:
         cbar_kwargs['shrink'] = cbarscale
