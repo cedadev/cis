@@ -202,8 +202,7 @@ def convert_julian_date_to_std_time(days_since):
     :param days_since: numpy array of fractional days since 12:00 January 1, 4713 BC
     :return: fractional days since cis standard time
     """
-    from cf_units import date2julian_day
-    offset = date2julian_day(cis_standard_time_unit.num2date(0), 'standard')
+    offset = cis_standard_time_unit.num2date(0).toordinal()
     return days_since - offset
 
 
