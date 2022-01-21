@@ -1,6 +1,6 @@
 import logging
 
-import iris
+import iris.cube
 import iris.coords
 from iris.exceptions import CoordinateMultiDimError
 import numpy as np
