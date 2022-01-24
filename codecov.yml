@@ -1,2 +1,4 @@
 ignore:
   - "cis/test"       # Ignore tests (which includes lots of integration tests)
+  - "cis/plotting"       # Ignore plotting which isn't covered by unit tests
+  
