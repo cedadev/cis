@@ -3,6 +3,7 @@ CIS
 
 [![Join the chat at https://gitter.im/cedadev/cis](https://badges.gitter.im/cedadev/cis.svg)](https://gitter.im/cedadev/cis?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://circleci.com/gh/cedadev/cis/tree/master.svg?style=svg)](https://circleci.com/gh/cedadev/cis/tree/master)
+[![codecov](https://codecov.io/gh/cedadev/cis/branch/master/graph/badge.svg?token=8QTY6ZZN95)](https://codecov.io/gh/cedadev/cis)
 [![Documentation Status](https://readthedocs.org/projects/cis/badge/?version=latest)](https://readthedocs.org/projects/cis/?badge=latest)
 [![Downloads](https://anaconda.org/conda-forge/cis/badges/downloads.svg)](https://anaconda.org/conda-forge/cis/files)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4518867.svg)](https://doi.org/10.5281/zenodo.4518867)
