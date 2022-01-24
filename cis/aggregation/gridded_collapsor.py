@@ -1,5 +1,5 @@
 import logging
-import iris
+import iris.cube
 
 
 class GriddedCollapsor(object):

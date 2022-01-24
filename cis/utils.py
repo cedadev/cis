@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 import re
 import logging
 import warnings
