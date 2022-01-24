@@ -25,3 +25,4 @@ nose
 mock
 psutil
 pyhamcrest
+pytest
