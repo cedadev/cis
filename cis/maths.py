@@ -7,8 +7,9 @@ Basic mathematical and statistical operations.
 import math
 import operator
 
-import cf_units
 import numpy as np
+
+from cf_units import Unit
 
 
 def abs(ungridded_data, in_place=False):
@@ -242,7 +243,7 @@ def exp(ungridded_data, in_place=False):
         An instance of :class:`cis.data_io.ungridded_data.LazyData`.
 
     """
-    return _math_op_common(ungridded_data, np.exp, cf_units.Unit('1'), in_place=in_place)
+    return _math_op_common(ungridded_data, np.exp, Unit('1'), in_place=in_place)
 
 
 def log(ungridded_data, in_place=False):

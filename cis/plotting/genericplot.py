@@ -87,7 +87,7 @@ class GenericPlot(APlot):
 
         if self.xaxis.standard_name == 'time':
             # Convert to matplotlib datetime
-            self.x = self.xaxis.units.convert(self.xaxis.points, 'days since 001-01-01 00:00:00')
+            self.x = self.xaxis.units.convert(self.xaxis.points, 'days since 1970-01-01 00:00:00')
         else:
             self.x = self.xaxis.points
 

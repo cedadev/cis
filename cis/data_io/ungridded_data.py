@@ -115,7 +115,7 @@ class Metadata(object):
         if standard_name is None or standard_name in STD_NAMES:
             # If the standard name is actually changing from one to another then log the fact
             if self.standard_name is not None \
-                    and self.standard_name.strip() is not "" \
+                    and self.standard_name.strip() != "" \
                     and self.standard_name != standard_name:
                 logging.debug("Changing standard name for dataset from '{}' to '{}'".format(self.standard_name,
                                                                                             standard_name))

@@ -198,7 +198,7 @@ def get_coord(data_object, variable, data):
     Find a specified coord
 
     :param data_object:
-    :param variable: 
+    :param variable:
     :param data:
     :return:
     """
@@ -659,7 +659,8 @@ def listify(item):
     :param item: Item which may or may not be a list
     :return: List
     """
-    if isinstance(item, tuple):
+    from types import GeneratorType
+    if isinstance(item, (tuple, GeneratorType)):
         return list(item)
     if not isinstance(item, list):
         return [item]

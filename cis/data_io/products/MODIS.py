@@ -2,7 +2,7 @@ import logging
 from cis.data_io import hdf as hdf
 from cis.data_io.Coord import CoordList, Coord
 from cis.data_io.products import AProduct
-from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData
+from cis.data_io.ungridded_data import UngriddedCoordinates, UngriddedData, UngriddedDataList
 
 
 def _get_MODIS_SDS_data(sds):
@@ -17,6 +17,10 @@ def _get_MODIS_SDS_data(sds):
 
     data = sds.get()
     attributes = sds.attributes()
+
+    # Squeeze dimensions that have been sliced
+    if sds._count is not None and any(np.array(sds._count) == 1):
+        data = data.squeeze()
 
     # Apply Fill Value
     missing_value = attributes.get('_FillValue', None)
@@ -75,7 +79,7 @@ class MODIS_L3(AProduct):
             matches = re.findall('".*"', ssubsub)
             if len(matches) > 0:
                 res = matches[0].replace('\"', '')
-                if res is not "":
+                if res != "":
                     break
         return res
 
@@ -233,7 +237,7 @@ class MODIS_L2(AProduct):
         """
         Interpolates the given 2D field by the factor,
         edge pixels are defined by the ones in the centre,
-        odd factords only!
+        odd factors only!
         """
         import numpy as np
 
@@ -262,7 +266,7 @@ class MODIS_L2(AProduct):
         apply_interpolation = False
         if variable is not None:
             scale = self.__get_data_scale(filenames[0], variable)
-            apply_interpolation = True if scale is "1km" else False
+            apply_interpolation = True if scale == "1km" else False
 
         lat = sdata['Latitude']
         sd_lat = hdf.read_data(lat, _get_MODIS_SDS_data)
@@ -292,6 +296,8 @@ class MODIS_L2(AProduct):
         return UngriddedCoordinates(self._create_coord_list(filenames))
 
     def create_data_object(self, filenames, variable):
+        from itertools import product
+
         logging.debug("Creating data object for variable " + variable)
 
         # reading coordinates
@@ -305,8 +311,25 @@ class MODIS_L2(AProduct):
         var = sdata[variable]
         metadata = hdf.read_metadata(var, "SD")
 
-        return UngriddedData(var, metadata, coords, _get_MODIS_SDS_data)
+        # Check the dimension of this variable
+        _, ndim, dim_len, _, _ = var[0].info()
+        if ndim == 2:
+            return UngriddedData(var, metadata, coords, _get_MODIS_SDS_data)
 
+        elif ndim < 2:
+            raise NotImplementedError("1D field in MODIS L2 data.")
+
+        else:
+            result = UngriddedDataList()
+
+            # Iterate over all but the last two dimensions
+            ranges = [range(n) for n in dim_len[:-2]]
+            for indices in product(*ranges):
+                for manager in var:
+                    manager._start = list(indices) + [0, 0]
+                    manager._count = [1] * len(indices) + manager.info()[2][-2:]
+                result.append(UngriddedData(var, metadata, coords.copy(), _get_MODIS_SDS_data))
+            return result
 
     def get_file_format(self, filenames):
         """

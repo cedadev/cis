@@ -229,7 +229,6 @@ class CommonDataList(list):
 
     Note that all objects in a CommonDataList must have the same coordinates and coordinate values.
     """
-    filenames = []
 
     def __init__(self, iterable=()):
         super(CommonDataList, self).__init__()
@@ -338,6 +337,14 @@ class CommonDataList(list):
         for data in self:
             filenames.extend(data.filenames)
         return filenames
+
+    @filenames.setter
+    def filenames(self, names):
+        """
+        Add these filenames to this data list
+        """
+        for data in self:
+            data.filenames.extend(names)
 
     def add_history(self, new_history):
         """

@@ -234,7 +234,7 @@ class NCAR_NetCDF_RAF_variable_name_selector(object):
         if coordinates is not None:
             coordinates_vars = coordinates.split()  # split on whitespace
 
-        if len(coordinates_vars) is not 4:
+        if len(coordinates_vars) != 4:
             raise InvalidVariableError('The coordinate attribute does not have four entries. '
                                        'It should be space separated "longitude latitude altitude time"')
 

@@ -23,7 +23,7 @@ class NetCDF_Gridded(AProduct):
 
     def get_variable_names(self, filenames, data_type=None):
         import iris
-        import cf_units as unit
+        from cf_units import Unit
         from cis.utils import single_warnings_only
 
         variables = []
@@ -40,7 +40,7 @@ class NetCDF_Gridded(AProduct):
                         not units.is_time() and \
                         not units.is_time_reference() and \
                         not units.is_vertical() and \
-                        not units.is_convertible(unit.Unit('degrees')):
+                        not units.is_convertible(Unit('degrees')):
                     is_time_lat_lon_pressure_altitude_or_has_only_1_point = False
                     break
             if is_time_lat_lon_pressure_altitude_or_has_only_1_point:
