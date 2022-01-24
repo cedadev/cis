@@ -1,0 +1,2 @@
+ignore:
+  - "cis/test"       # Ignore tests (which includes lots of integration tests)
