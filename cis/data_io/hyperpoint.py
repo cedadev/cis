@@ -22,8 +22,6 @@ class HyperPoint(namedtuple('HyperPoint', ['latitude', 'longitude', 'altitude', 
             Small constructor for the HyperPoint named tuple to allow optional arguments
              and set-up value list.
         """
-        from numpy import ndarray
-
         # If no value was specified create an empty list, otherwise create a list with one entry
         try:
             if val is None or len(val) == 0:
