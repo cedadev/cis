@@ -40,7 +40,7 @@ jobs:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: |
-            pytest -v --cov=./cis --junitxml=./test_results/all_tests/results.xml -n 2
+            pytest cis/test/unit/ -v --cov=./cis --junitxml=./test_results/all_tests/results.xml -n 2
       - run:
           name: Upload coverage report
           command: |
