@@ -25,4 +25,5 @@ nose
 mock
 psutil
 pyhamcrest
-pytest
+pytest-cov
+pytest-xdist
