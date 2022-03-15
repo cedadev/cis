@@ -437,7 +437,7 @@ def multilayer_plot(data_list, how=None, ax=None, yaxis=None, layer_opts=None, *
 
         legend = ax.legend(loc="best")
         if legend is not None:
-            legend.draggable(state=True)
+            legend.set_draggable(True)
 
     return plot, ax
 
