@@ -402,7 +402,7 @@ class LazyData(object):
                              cis_standard_time_unit.num2date(self.data.max()))
                 else:
                     range = (self.data.min(), self.data.max())
-            except ValueError as e:
+            except Exception as e:   #MRR: ValueError fails with string variables, need Exception
                 # If we can't set a range for some reason then just leave it blank
                 range = ()
 

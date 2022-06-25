@@ -176,8 +176,8 @@ def drawcoastlines(ax, coastlinescolour):
     ext = _get_extent(ax)
 
     if _test_natural_earth_available():
-        coastline_res = coastline_scales[0][1]
-        for scale, res in coastline_scales[1:]:
+        coastline_res = coastline_scales[2][1]   #MRR: change default to highest res 
+        for scale, res in coastline_scales[0:]:
             if scale > ext:
                 coastline_res = res
 
