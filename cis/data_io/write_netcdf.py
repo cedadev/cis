@@ -109,7 +109,7 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
     else:
         out_type = types[str(data.data.dtype)]
     #MRR commented 1 line below            
-###    out_type = types[str(data.data.dtype)]
+#    out_type = types[str(data.data.dtype)]
     logging.info("Creating variable: {name}({index}) {type}".format(name=name, index=index_name, type=out_type))
     if name not in nc_file.variables:
         # Generate a warning if we have insufficient disk space
