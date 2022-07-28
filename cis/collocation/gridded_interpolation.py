@@ -354,7 +354,7 @@ class _RegularGridInterpolator(object):
         idx_res = []
         for i, yi in zip(indices, norm_distances):
             idx_res.append(np.where(yi <= .5, i, i + 1))
-        return values[idx_res]
+        return values[tuple(idx_res)]
 
     @staticmethod
     def _find_indices(points, coords):
