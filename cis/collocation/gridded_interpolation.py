@@ -146,7 +146,7 @@ class GriddedUngriddedInterpolator(object):
         dim_slices = [slice(None)] * data.ndim
         for dim in self._decreasing_coord_dims:
                 dim_slices[dim] = slice(-1, None, -1)
-        data = data[dim_slices]
+        data = data[tuple(dim_slices)]
         return data
 
     def __call__(self, data, fill_value=np.nan, extrapolate=False):
