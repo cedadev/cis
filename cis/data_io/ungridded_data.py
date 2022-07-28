@@ -1245,10 +1245,10 @@ def _ungridded_sampled_from(sample, data, how='', kernel=None, missing_data_for_
                                             var_units=var_units,
                                             missing_data_for_missing_sample=missing_data_for_missing_sample)
         con = None
-        if how not in ['lin', 'nn']:
+        if how not in ['', 'lin', 'nn']:
             raise ValueError("Invalid method specified for gridded -> ungridded collocation: " + how)
 
-        kernel = how
+        kernel = how or 'lin'
     else:
         raise ValueError("Invalid argument, data must be either GriddedData or UngriddedData")
 
