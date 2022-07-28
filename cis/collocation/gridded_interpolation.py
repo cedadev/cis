@@ -146,7 +146,7 @@ class GriddedUngriddedInterpolator(object):
         dim_slices = [slice(None)] * data.ndim
         for dim in self._decreasing_coord_dims:
                 dim_slices[dim] = slice(-1, None, -1)
-        data = data[dim_slices]
+        data = data[tuple(dim_slices)]
         return data
 
     def __call__(self, data, fill_value=np.nan, extrapolate=False):
@@ -354,7 +354,7 @@ class _RegularGridInterpolator(object):
         idx_res = []
         for i, yi in zip(indices, norm_distances):
             idx_res.append(np.where(yi <= .5, i, i + 1))
-        return values[idx_res]
+        return values[tuple(idx_res)]
 
     @staticmethod
     def _find_indices(points, coords):
