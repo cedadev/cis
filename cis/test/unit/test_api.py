@@ -94,6 +94,10 @@ class TestAPI(TestCase):
         # This dataset should still be the same as the alternative one (this checks data and metadata)
         assert self.ug == self.ug_1
 
+    def test_basic_gridded_to_ungridded_collocation_invalid_method(self):
+        with assert_raises(ValueError):
+            self.gd.collocated_onto(self.ug, how='blah')
+
     def test_basic_ungridded_to_ungridded_collocation(self):
         res = self.ug.collocated_onto(self.ug_1)
         res_1 = self.ug_1.sampled_from(self.ug)
