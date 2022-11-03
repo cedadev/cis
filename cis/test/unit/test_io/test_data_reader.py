@@ -104,7 +104,7 @@ class TestDataReader(TestCase):
         ungridded_data = make_regular_2d_ungridded_data()
         get_data_func = MagicMock(side_effect=[gridded_data, ungridded_data])
         reader = DataReader(get_data_func=get_data_func)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(Error):
             data = reader.read_data_list(filenames, variables, product)[0]
 
     def test_GIVEN_wildcards_WHEN_read_data_THEN_matching_variables_identified(self):
