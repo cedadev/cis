@@ -138,13 +138,13 @@ class TestGriddedCollapse(TestCase):
 
                                    [[436.0, 437.0, 438.0, 439.0, 440.0],
                                     [471.0, 472.0, 473.0, 474.0, 475.0],
-                                    [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=np.float)
+                                    [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=float)
 
         multidim_coord_points = numpy.array([[300000., 1000000., 1700000.],
                                              [2400000., 3100000., 3800000.],
                                              [4500000., 5200000., 5900000.],
                                              [6600000., 7300000., 8000000.],
-                                             [8700000., 9400000., 10100000.]], dtype=np.float)
+                                             [8700000., 9400000., 10100000.]], dtype=float)
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
@@ -174,13 +174,13 @@ class TestGriddedCollapse(TestCase):
 
                                    [[436.0, 437.0, 438.0, 439.0, 440.0],
                                     [471.0, 472.0, 473.0, 474.0, 475.0],
-                                    [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=np.float)
+                                    [506.0, 507.0, 508.0, 509.0, 510.0]]], dtype=float)
 
         multidim_coord_points = numpy.array([[300000., 1000000., 1700000.],
                                              [2400000., 3100000., 3800000.],
                                              [4500000., 5200000., 5900000.],
                                              [6600000., 7300000., 8000000.],
-                                             [8700000., 9400000., 10100000.]], dtype=np.float)
+                                             [8700000., 9400000., 10100000.]], dtype=float)
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[1].data, np.ones(result_data.shape)*10.8012345)
@@ -195,9 +195,9 @@ class TestGriddedCollapse(TestCase):
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
                                    [261.0, 262.0, 263.0, 264.0, 265.0],
                                    [366.0, 367.0, 368.0, 369.0, 370.0],
-                                   [471.0, 472.0, 473.0, 474.0, 475.0]], dtype=np.float)
+                                   [471.0, 472.0, 473.0, 474.0, 475.0]], dtype=float)
 
-        multidim_coord_points = numpy.array([1000000.,  3100000., 5200000., 7300000., 9400000.], dtype=np.float)
+        multidim_coord_points = numpy.array([1000000.,  3100000., 5200000., 7300000., 9400000.], dtype=float)
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
@@ -210,11 +210,11 @@ class TestGriddedCollapse(TestCase):
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
                                    [261.0, 262.0, 263.0, 264.0, 265.0],
                                    [366.0, 367.0, 368.0, 369.0, 370.0],
-                                   [471.0, 472.0, 473.0, 474.0, 475.0]], dtype=np.float)
+                                   [471.0, 472.0, 473.0, 474.0, 475.0]], dtype=float)
 
         altitude_points = result_data + 9
 
-        surface_air_pressure_points = numpy.array([1000000., 3100000., 5200000., 7300000., 9400000.], dtype=np.float)
+        surface_air_pressure_points = numpy.array([1000000., 3100000., 5200000., 7300000., 9400000.], dtype=float)
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, surface_air_pressure_points)
@@ -263,14 +263,14 @@ class TestGriddedCollapse(TestCase):
                                     [471.0, 472.0, 473.0, 474.0, 475.0],
                                     [476.0, 477.0, 478.0, 479.0, 480.0],
                                     [481.0, 482.0, 483.0, 484.0, 485.0],
-                                    [486.0, 487.0, 488.0, 489.0, 490.0]]], dtype=np.float)
+                                    [486.0, 487.0, 488.0, 489.0, 490.0]]], dtype=float)
 
         multidim_coord_points = numpy.array([[700000., 800000., 900000., 1000000., 1100000., 1200000., 1300000.],
                                              [2800000., 2900000., 3000000., 3100000., 3200000., 3300000., 3400000.],
                                              [4900000., 5000000., 5100000., 5200000., 5300000., 5400000., 5500000.],
                                              [7000000., 7100000., 7200000., 7300000., 7400000., 7500000., 7600000.],
                                              [9100000., 9200000., 9300000., 9400000., 9500000., 9600000., 9700000.]],
-                                            dtype=np.float)
+                                            dtype=float)
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[0].coord('surface_air_pressure').points, multidim_coord_points)
@@ -464,9 +464,9 @@ class TestGriddedListAggregation(TestCase):
                                    [156.0, 157.0, 158.0, 159.0, 160.0],
                                    [261.0, 262.0, 263.0, 264.0, 265.0],
                                    [366.0, 367.0, 368.0, 369.0, 370.0],
-                                   [471.0, 472.0, 473.0, 474.0, 475.0]], dtype=np.float)
+                                   [471.0, 472.0, 473.0, 474.0, 475.0]], dtype=float)
 
-        multidim_coord_points = numpy.array([1000000., 3100000., 5200000., 7300000., 9400000.], dtype=np.float)
+        multidim_coord_points = numpy.array([1000000., 3100000., 5200000., 7300000., 9400000.], dtype=float)
 
         assert_arrays_almost_equal(cube_out[0].data, result_data)
         assert_arrays_almost_equal(cube_out[1].data, result_data+1)
