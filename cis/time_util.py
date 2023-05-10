@@ -179,7 +179,7 @@ def convert_sec_since_to_std_time(seconds, ref):
     import numpy as np
     # Don't copy the array if this is a standard numpy array, unfortunately masked arrays don't have this option
     kwargs = {} if isinstance(seconds, np.ma.MaskedArray) else {'copy': False}
-    days_since = seconds.astype('float64', **kwargs) / (3600*24.0)
+    days_since = seconds.astype(float, **kwargs) / (3600*24.0)
     offset = ref - cis_standard_time_unit.num2date(0)
     return offset.days + days_since
 

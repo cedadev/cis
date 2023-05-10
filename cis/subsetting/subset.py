@@ -281,7 +281,7 @@ def _get_indices_for_lat_lon_points(lats, lons, region):
 
     # Performance in this loop might be an issue, but I think it's essentially how GeoPandas does it. If I want to
     #  improve it I might need to look at using something like rtree.
-    return [i for i, p in enumerate(points) if region.contains(p)]
+    return [i for i, p in enumerate(points.geoms) if region.contains(p)]
 
 
 def _get_ungridded_subset_region_indices(ungridded_data, region):

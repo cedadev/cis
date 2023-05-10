@@ -1201,7 +1201,7 @@ def _to_flat_ndarray(data, copy=True):
             raise ValueError("Masked arrays must always be copied.")
         # We need to cast the array to a float so that we can fill the array with NaNs for Pandas (which would do the
         #  same trick itself anyway)
-        ndarr = data.astype(float64).filled(np.NaN).flatten()
+        ndarr = data.astype(float).filled(np.NaN).flatten()
     elif copy:
         ndarr = data.flatten()
     else:
