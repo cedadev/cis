@@ -740,12 +740,12 @@ class KDTree(object):
             elif k > 1:
                 dd = np.empty(retshape + (k,), dtype=float)
                 dd.fill(np.inf)
-                ii = np.empty(retshape + (k,), dtype=np.int)
+                ii = np.empty(retshape + (k,), dtype=int)
                 ii.fill(self.n)
             elif k == 1:
                 dd = np.empty(retshape, dtype=float)
                 dd.fill(np.inf)
-                ii = np.empty(retshape, dtype=np.int)
+                ii = np.empty(retshape, dtype=int)
                 ii.fill(self.n)
             else:
                 raise ValueError("Requested %s nearest neighbors; acceptable numbers are integers greater than or equal"
@@ -777,7 +777,7 @@ class KDTree(object):
             elif k > 1:
                 dd = np.empty(k, dtype=float)
                 dd.fill(np.inf)
-                ii = np.empty(k, dtype=np.int)
+                ii = np.empty(k, dtype=int)
                 ii.fill(self.n)
                 for j in range(len(hits)):
                     dd[j], ii[j] = hits[j]
