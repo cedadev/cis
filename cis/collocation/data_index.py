@@ -77,11 +77,11 @@ class GridCellBinIndexInSlices(object):
         # Output is a list of coordinates which lists the indexes where the hyper points
         #    should be located in the grid
         indices = np.vstack(
-            np.where(
-                ci < max_coordinate_value,
-                np.searchsorted(bi, ci, side='right') - 1,
-                -1)
-            for bi, ci, max_coordinate_value in bounds_coords_max)
+            [np.where(
+                 ci < max_coordinate_value,
+                 np.searchsorted(bi, ci, side='right') - 1,
+                 -1)
+             for bi, ci, max_coordinate_value in bounds_coords_max])
 
         # D-tuple giving the shape of the output grid
         grid_shape = tuple(len(bi_ci[0]) for bi_ci in bounds_coords_max)
