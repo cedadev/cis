@@ -11,9 +11,11 @@ from .MODIS import MODIS_L2, MODIS_L3
 from .caliop import abstract_Caliop, Caliop_L1, Caliop_L2
 from .CCI import Aerosol_CCI_L2, Cloud_CCI_L2
 from .HadGEM import HadGEM_PP, HadGEM_CONVSH
+from .EarthCARE import EarthCARE_MSI_ATL
 
 # list of all data products
 __all__ = [
+    "EarthCARE_MSI_ATL",
     "AProduct",
     "NCAR_NetCDF_RAF",
     "NetCDF_Gridded",
@@ -28,4 +30,5 @@ __all__ = [
     "ASCII_Hyperpoints",
     "cis",
     "HadGEM_CONVSH",
-    "HadGEM_PP"]
+    "HadGEM_PP"
+    ]
