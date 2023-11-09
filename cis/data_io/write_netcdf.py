@@ -13,7 +13,8 @@ types = {'int8': 'i1',
          'uint32': "u4",
          'uint64': "u8",
          'float32': "f4",
-         'float64': "f8"}
+         'float64': "f8", #MRR
+         'object': "S2"} #MRR 
 
 index_name = 'obs'
 
@@ -102,7 +103,13 @@ def __create_variable(nc_file, data, prefer_standard_name=False):
     if (name is None) or prefer_standard_name:
         if (data.metadata.standard_name is not None) and (len(data.metadata.standard_name) > 0):
             name = data.metadata.standard_name
-    out_type = types[str(data.data.dtype)]
+    #MRR added 4 lines below to deal with string type variables
+    if str(data.data.dtype)[0:2] == "<U":
+        out_type = 'S'+str(data.data.dtype)[2]
+    else:
+        out_type = types[str(data.data.dtype)]
+    #MRR commented 1 line below            
+#    out_type = types[str(data.data.dtype)]
     logging.info("Creating variable: {name}({index}) {type}".format(name=name, index=index_name, type=out_type))
     if name not in nc_file.variables:
         # Generate a warning if we have insufficient disk space
